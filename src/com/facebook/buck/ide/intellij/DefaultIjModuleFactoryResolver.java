@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -76,8 +76,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   }
 
   @Override
-  public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
-    return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().manifest);
+  public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
+    return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().getManifest());
   }
 
   @Override
@@ -94,8 +94,11 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   @Override
   public Optional<Path> getProguardConfigPath(
-      TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
-    return targetNode.getConstructorArg().proguardConfig.map(this::getRelativePathAndRecordRule);
+      TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
+    return targetNode
+        .getConstructorArg()
+        .getProguardConfig()
+        .map(this::getRelativePathAndRecordRule);
   }
 
   @Override

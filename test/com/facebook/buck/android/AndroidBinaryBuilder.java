@@ -26,7 +26,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,8 +37,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBinaryBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        AndroidBinaryDescription.Arg, AndroidBinaryDescription, AndroidBinary> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        AndroidBinaryDescriptionArg.Builder, AndroidBinaryDescriptionArg, AndroidBinaryDescription,
+        AndroidBinary> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
@@ -60,95 +61,95 @@ public class AndroidBinaryBuilder
   }
 
   public AndroidBinaryBuilder setManifest(SourcePath manifest) {
-    arg.manifest = manifest;
+    getArgForPopulating().setManifest(manifest);
     return this;
   }
 
   public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildTarget> originalDeps) {
-    arg.deps = originalDeps;
+    getArgForPopulating().setDeps(originalDeps);
     return this;
   }
 
   public AndroidBinaryBuilder setKeystore(BuildTarget keystore) {
-    arg.keystore = keystore;
-    amend(arg.deps, keystore);
+    getArgForPopulating().setKeystore(keystore);
+    getArgForPopulating().addDeps(keystore);
     return this;
   }
 
   public AndroidBinaryBuilder setPackageType(String packageType) {
-    arg.packageType = Optional.of(packageType);
+    getArgForPopulating().setPackageType(Optional.of(packageType));
     return this;
   }
 
   public AndroidBinaryBuilder setShouldSplitDex(boolean shouldSplitDex) {
-    arg.useSplitDex = shouldSplitDex;
+    getArgForPopulating().setUseSplitDex(shouldSplitDex);
     return this;
   }
 
   public AndroidBinaryBuilder setDexCompression(DexStore dexStore) {
-    arg.dexCompression = Optional.of(dexStore);
+    getArgForPopulating().setDexCompression(Optional.of(dexStore));
     return this;
   }
 
   public AndroidBinaryBuilder setLinearAllocHardLimit(long limit) {
-    arg.linearAllocHardLimit = Optional.of(limit);
+    getArgForPopulating().setLinearAllocHardLimit(limit);
     return this;
   }
 
   public AndroidBinaryBuilder setPrimaryDexScenarioOverflowAllowed(boolean allowed) {
-    arg.primaryDexScenarioOverflowAllowed = allowed;
+    getArgForPopulating().setPrimaryDexScenarioOverflowAllowed(allowed);
     return this;
   }
 
   public AndroidBinaryBuilder setBuildTargetsToExcludeFromDex(
       Set<BuildTarget> buildTargetsToExcludeFromDex) {
-    arg.noDx = Optional.of(buildTargetsToExcludeFromDex);
+    getArgForPopulating().setNoDx(buildTargetsToExcludeFromDex);
     return this;
   }
 
   public AndroidBinaryBuilder setResourceCompressionMode(
       ResourceCompressionMode resourceCompressionMode) {
-    arg.resourceCompression = Optional.of(resourceCompressionMode.toString());
+    getArgForPopulating().setResourceCompression(Optional.of(resourceCompressionMode.toString()));
     return this;
   }
 
   public AndroidBinaryBuilder setResourceFilter(ResourceFilter resourceFilter) {
     List<String> rawFilters = ImmutableList.copyOf(resourceFilter.getFilter());
-    arg.resourceFilter = rawFilters;
+    getArgForPopulating().setResourceFilter(rawFilters);
     return this;
   }
 
   public AndroidBinaryBuilder setIntraDexReorderResources(
       boolean enableReorder, SourcePath reorderTool, SourcePath reorderData) {
-    arg.reorderClassesIntraDex = enableReorder;
-    arg.dexReorderToolFile = Optional.of(reorderTool);
-    arg.dexReorderDataDumpFile = Optional.of(reorderData);
+    getArgForPopulating().setReorderClassesIntraDex(enableReorder);
+    getArgForPopulating().setDexReorderToolFile(Optional.of(reorderTool));
+    getArgForPopulating().setDexReorderDataDumpFile(Optional.of(reorderData));
     return this;
   }
 
   public AndroidBinaryBuilder setNoDx(Set<BuildTarget> noDx) {
-    arg.noDx = Optional.of(noDx);
+    getArgForPopulating().setNoDx(noDx);
     return this;
   }
 
   public AndroidBinaryBuilder setDuplicateResourceBehavior(
-      AndroidBinaryDescription.Arg.DuplicateResourceBehaviour value) {
-    arg.duplicateResourceBehavior = value;
+      AndroidBinaryDescriptionArg.DuplicateResourceBehaviour value) {
+    getArgForPopulating().setDuplicateResourceBehavior(value);
     return this;
   }
 
   public AndroidBinaryBuilder setBannedDuplicateResourceTypes(Set<RDotTxtEntry.RType> value) {
-    arg.bannedDuplicateResourceTypes = value;
+    getArgForPopulating().setBannedDuplicateResourceTypes(value);
     return this;
   }
 
   public AndroidBinaryBuilder setAllowedDuplicateResourceTypes(Set<RDotTxtEntry.RType> value) {
-    arg.allowedDuplicateResourceTypes = value;
+    getArgForPopulating().setAllowedDuplicateResourceTypes(value);
     return this;
   }
 
   public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<String> command) {
-    arg.postFilterResourcesCmd = command;
+    getArgForPopulating().setPostFilterResourcesCmd(command);
     return this;
   }
 }

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceBuilder;
@@ -659,7 +659,7 @@ public class IjModuleGraphTest {
 
               @Override
               public Path getAndroidManifestPath(
-                  TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
+                  TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
                 return Paths.get("TestAndroidManifest.xml");
               }
 
@@ -671,7 +671,7 @@ public class IjModuleGraphTest {
 
               @Override
               public Optional<Path> getProguardConfigPath(
-                  TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
+                  TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
                 return Optional.empty();
               }
 

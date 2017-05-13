@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.model;
 
-import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -38,7 +38,7 @@ public interface IjModuleFactoryResolver {
    * @param targetNode node describing the Android binary to get the manifest of.
    * @return path on disk to the AndroidManifest.
    */
-  Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode);
+  Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode);
 
   /**
    * @param targetNode node describing the Android library to get the manifest of.
@@ -51,7 +51,7 @@ public interface IjModuleFactoryResolver {
    * @param targetNode node describing the Android binary to get the Proguard config of.
    * @return path on disk to the proguard config.
    */
-  Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode);
+  Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode);
 
   /**
    * @param targetNode node describing the Android resources to get the path of.

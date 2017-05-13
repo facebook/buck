@@ -453,7 +453,8 @@ public class AndroidBinaryTest {
         AndroidBinaryBuilder.createBuilder(target)
             .setPostFilterResourcesCmd(Optional.of("cmd"))
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
-            .setKeystore(keystoreRule.getBuildTarget());
+            .setKeystore(keystoreRule.getBuildTarget())
+            .setManifest(new FakeSourcePath("manifest"));
     builder.build(resolver);
 
     BuildRule aaptPackageRule =
@@ -480,7 +481,8 @@ public class AndroidBinaryTest {
         AndroidBinaryBuilder.createBuilder(target)
             .setPostFilterResourcesCmd(Optional.of("cmd"))
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
-            .setKeystore(keystoreRule.getBuildTarget());
+            .setKeystore(keystoreRule.getBuildTarget())
+            .setManifest(new FakeSourcePath("manifest"));
     BuildRule buildRule = builder.build(resolver);
 
     BuildRule aaptPackageRule =
