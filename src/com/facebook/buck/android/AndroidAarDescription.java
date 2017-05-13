@@ -109,12 +109,15 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
         ImmutableList.<BuildRule>builder().addAll(originalBuildRuleParams.getExtraDeps().get());
 
     /* android_manifest */
-    AndroidManifestDescription.Arg androidManifestArgs = new AndroidManifestDescription.Arg();
-    androidManifestArgs.skeleton = args.getManifestSkeleton();
-    androidManifestArgs.deps = args.getDeps();
-
     BuildRuleParams androidManifestParams =
         originalBuildRuleParams.withAppendedFlavor(AAR_ANDROID_MANIFEST_FLAVOR);
+
+    AndroidManifestDescriptionArg androidManifestArgs =
+        AndroidManifestDescriptionArg.builder()
+            .setName(androidManifestParams.getBuildTarget().getShortName())
+            .setSkeleton(args.getManifestSkeleton())
+            .setDeps(args.getDeps())
+            .build();
 
     AndroidManifest manifest =
         androidManifestDescription.createBuildRule(

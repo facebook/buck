@@ -21,7 +21,6 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
@@ -113,9 +112,11 @@ public class AndroidManifestTest {
     // First, create the AndroidManifest object.
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(MANIFEST_TARGET).build();
     AndroidManifestDescription description = new AndroidManifestDescription();
-    AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();
-    arg.skeleton = new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml");
-    arg.deps = ImmutableSortedSet.<BuildTarget>of();
+    AndroidManifestDescriptionArg arg =
+        AndroidManifestDescriptionArg.builder()
+            .setName("some_manifest")
+            .setSkeleton(new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml"))
+            .build();
     return description.createBuildRule(
         TargetGraph.EMPTY,
         buildRuleParams,

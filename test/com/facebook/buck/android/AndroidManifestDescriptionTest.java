@@ -55,13 +55,12 @@ public class AndroidManifestDescriptionTest {
     SourcePath skeleton = ruleWithOutput.getSourcePathToOutput();
     buildRuleResolver.addToIndex(ruleWithOutput);
 
-    AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();
-    arg.skeleton = skeleton;
-    arg.deps = ImmutableSortedSet.of();
+    AndroidManifestDescriptionArg arg =
+        AndroidManifestDescriptionArg.builder().setName("baz").setSkeleton(skeleton).build();
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//foo:baz")
-            .setDeclaredDeps(buildRuleResolver.getAllRules(arg.deps))
+            .setDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()))
             .build();
     BuildRule androidManifest =
         new AndroidManifestDescription()
