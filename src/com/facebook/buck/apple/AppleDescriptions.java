@@ -283,7 +283,7 @@ public class AppleDescriptions {
       Tool actool) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
-    ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
+    ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(
             targetGraph, Optional.empty(), ImmutableList.of(targetNode));
 
@@ -295,33 +295,33 @@ public class AppleDescriptions {
 
     AppleAssetCatalogDescription.Optimization optimization = null;
 
-    for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
+    for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {
       if (optimization == null) {
-        optimization = arg.optimization;
+        optimization = arg.getOptimization();
       }
 
-      assetCatalogDirsBuilder.addAll(arg.dirs);
-      if (arg.appIcon.isPresent()) {
+      assetCatalogDirsBuilder.addAll(arg.getDirs());
+      if (arg.getAppIcon().isPresent()) {
         if (appIcon.isPresent()) {
           throw new HumanReadableException(
               "At most one asset catalog in the dependencies of %s " + "can have a app_icon",
               params.getBuildTarget());
         }
 
-        appIcon = arg.appIcon;
+        appIcon = arg.getAppIcon();
       }
 
-      if (arg.launchImage.isPresent()) {
+      if (arg.getLaunchImage().isPresent()) {
         if (launchImage.isPresent()) {
           throw new HumanReadableException(
               "At most one asset catalog in the dependencies of %s " + "can have a launch_image",
               params.getBuildTarget());
         }
 
-        launchImage = arg.launchImage;
+        launchImage = arg.getLaunchImage();
       }
 
-      if (arg.optimization != optimization) {
+      if (arg.getOptimization() != optimization) {
         throw new HumanReadableException(
             "At most one asset catalog optimisation style can be "
                 + "specified in the dependencies %s",

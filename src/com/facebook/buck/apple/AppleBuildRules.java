@@ -299,7 +299,7 @@ public final class AppleBuildRules {
         Iterables.filter(targetNodes, input -> isXcodeTargetDescription(input.getDescription())));
   }
 
-  public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg> collectRecursiveAssetCatalogs(
+  public static <T> ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       Iterable<TargetNode<T, ?>> targetNodes) {
@@ -312,7 +312,7 @@ public final class AppleBuildRules {
                     RecursiveDependenciesMode.COPYING,
                     input,
                     APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES))
-        .transform(input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
+        .transform(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
         .toSet();
   }
 
@@ -353,13 +353,13 @@ public final class AppleBuildRules {
         .toImmutableSet();
   }
 
-  public static ImmutableSet<AppleAssetCatalogDescription.Arg> collectDirectAssetCatalogs(
+  public static ImmutableSet<AppleAssetCatalogDescriptionArg> collectDirectAssetCatalogs(
       TargetGraph targetGraph, TargetNode<?, ?> targetNode) {
-    ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<AppleAssetCatalogDescriptionArg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
     for (TargetNode<?, ?> node : deps) {
       if (node.getDescription() instanceof AppleAssetCatalogDescription) {
-        builder.add((AppleAssetCatalogDescription.Arg) node.getConstructorArg());
+        builder.add((AppleAssetCatalogDescriptionArg) node.getConstructorArg());
       }
     }
     return builder.build();

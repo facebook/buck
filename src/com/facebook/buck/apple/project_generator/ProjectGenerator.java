@@ -20,7 +20,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBinaryDescriptionArg;
 import com.facebook.buck.apple.AppleBuildRules;
@@ -822,7 +822,7 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode,
       ImmutableSet<AppleResourceDescription.Arg> directResources,
-      ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
       throws IOException {
     boolean isShared =
@@ -871,8 +871,8 @@ public class ProjectGenerator {
       boolean includeFrameworks,
       ImmutableSet<AppleResourceDescription.Arg> recursiveResources,
       ImmutableSet<AppleResourceDescription.Arg> directResources,
-      ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs,
-      ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       ImmutableSet<AppleWrapperResourceArg> wrapperResources,
       Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
       Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)

@@ -34,7 +34,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
@@ -318,8 +318,11 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void assetCatalogsBuildPhaseBuildsAssetCatalogs() throws NoSuchBuildTargetException {
-    AppleAssetCatalogDescription.Arg arg = new AppleAssetCatalogDescription.Arg();
-    arg.dirs = ImmutableSortedSet.of(new FakeSourcePath("AssetCatalog1.xcassets"));
+    AppleAssetCatalogDescriptionArg arg =
+        AppleAssetCatalogDescriptionArg.builder()
+            .setName("some_rule")
+            .setDirs(ImmutableSortedSet.of(new FakeSourcePath("AssetCatalog1.xcassets")))
+            .build();
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setRecursiveAssetCatalogs(ImmutableSet.of(arg));

@@ -16,27 +16,28 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.SortedSet;
+import org.immutables.value.Value;
 
 /**
  * Description for an apple_asset_catalog rule, which identifies an asset catalog for an iOS or Mac
  * OS X library or binary.
  */
-public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
+public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<AppleAssetCatalogDescriptionArg> getConstructorArgType() {
+    return AppleAssetCatalogDescriptionArg.class;
   }
 
   @Override
@@ -45,7 +46,7 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args) {
+      AppleAssetCatalogDescriptionArg args) {
     return new NoopBuildRule(params);
   }
 
@@ -65,11 +66,19 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SortedSet<SourcePath> dirs;
-    public Optional<String> appIcon;
-    public Optional<String> launchImage;
-    public Optimization optimization = Optimization.SPACE;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAppleAssetCatalogDescriptionArg extends CommonDescriptionArg {
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getDirs();
+
+    Optional<String> getAppIcon();
+
+    Optional<String> getLaunchImage();
+
+    @Value.Default
+    default Optimization getOptimization() {
+      return Optimization.SPACE;
+    }
   }
 }

@@ -19,7 +19,7 @@ package com.facebook.buck.apple.project_generator;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
@@ -121,8 +121,8 @@ class NewNativeTargetProjectMutator {
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> recursiveResources = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> directResources = ImmutableSet.of();
-  private ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs = ImmutableSet.of();
-  private ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs = ImmutableSet.of();
+  private ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs = ImmutableSet.of();
+  private ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleWrapperResourceArg> wrapperResources = ImmutableSet.of();
   private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
@@ -266,14 +266,14 @@ class NewNativeTargetProjectMutator {
    *     targetNode.
    */
   public NewNativeTargetProjectMutator setRecursiveAssetCatalogs(
-      Set<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs) {
+      Set<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs) {
     this.recursiveAssetCatalogs = ImmutableSet.copyOf(recursiveAssetCatalogs);
     return this;
   }
 
   /** @param directAssetCatalogs List of asset catalog targets targetNode directly depends on */
   public NewNativeTargetProjectMutator setDirectAssetCatalogs(
-      Set<AppleAssetCatalogDescription.Arg> directAssetCatalogs) {
+      Set<AppleAssetCatalogDescriptionArg> directAssetCatalogs) {
     this.directAssetCatalogs = ImmutableSet.copyOf(directAssetCatalogs);
     return this;
   }
@@ -582,7 +582,7 @@ class NewNativeTargetProjectMutator {
 
   private void collectResourcePathsFromConstructorArgs(
       Set<AppleResourceDescription.Arg> resourceArgs,
-      Set<AppleAssetCatalogDescription.Arg> assetCatalogArgs,
+      Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
       Set<AppleWrapperResourceArg> resourcePathArgs,
       ImmutableSet.Builder<Path> resourceFilesBuilder,
       ImmutableSet.Builder<Path> resourceDirsBuilder,
@@ -593,8 +593,8 @@ class NewNativeTargetProjectMutator {
       variantResourceFilesBuilder.addAll(Iterables.transform(arg.variants, sourcePathResolver));
     }
 
-    for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
-      resourceDirsBuilder.addAll(Iterables.transform(arg.dirs, sourcePathResolver));
+    for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {
+      resourceDirsBuilder.addAll(Iterables.transform(arg.getDirs(), sourcePathResolver));
     }
 
     for (AppleWrapperResourceArg arg : resourcePathArgs) {
