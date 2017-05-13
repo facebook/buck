@@ -199,7 +199,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
 
-    this.ruleDeps = new RuleDepsCache(service, resolver);
+    this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker =
         createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
     this.defaultRuleKeyDiagnostics =
@@ -250,7 +250,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
 
-    this.ruleDeps = new RuleDepsCache(service, resolver);
+    this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker =
         createUnskippedRulesTracker(buildMode, ruleDeps, resolver, service);
     this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
@@ -1122,7 +1122,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         ImmutableList.builder();
     defaultRuleKeyDiagnostics.processRule(rule, diagnosticKeysBuilder::add);
     return Optional.of(
-        new BuildRuleDiagnosticData(ruleDeps.getComputed(rule), diagnosticKeysBuilder.build()));
+        new BuildRuleDiagnosticData(ruleDeps.get(rule), diagnosticKeysBuilder.build()));
   }
 
   private static Throwable maybeAttachBuildRuleNameToException(
@@ -1235,7 +1235,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   public ListenableFuture<?> walkRule(BuildRule rule, final Set<BuildRule> seen) {
     return Futures.transformAsync(
-        ruleDeps.get(rule),
+        Futures.immediateFuture(ruleDeps.get(rule)),
         deps -> {
           List<ListenableFuture<?>> results1 = Lists.newArrayListWithExpectedSize(deps.size());
           for (BuildRule dep : deps) {
@@ -1272,7 +1272,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // one, we need to wait for them to complete.
     ListenableFuture<List<RuleKey>> depKeys =
         Futures.transformAsync(
-            ruleDeps.get(rule),
+            Futures.immediateFuture(ruleDeps.get(rule)),
             deps -> {
               List<ListenableFuture<RuleKey>> depKeys1 =
                   Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
@@ -1301,7 +1301,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // Record the rule key future.
     ruleKeys.put(rule.getBuildTarget(), calculated);
-
     return calculated;
   }
 

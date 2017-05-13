@@ -105,7 +105,9 @@ public class UnskippedRulesTracker {
     future =
         Futures.transformAsync(
             future,
-            input -> Futures.transformAsync(ruleDepsCache.get(rule), releaseReferences, executor));
+            input ->
+                Futures.transformAsync(
+                    Futures.immediateFuture(ruleDepsCache.get(rule)), releaseReferences, executor));
 
     future.addListener(() -> sendEventIfStateChanged(eventBus), MoreExecutors.directExecutor());
 
@@ -126,7 +128,8 @@ public class UnskippedRulesTracker {
       unskippedRules.incrementAndGet();
       stateChanged.set(true);
       // Add references to all dependencies of the rule.
-      return Futures.transformAsync(ruleDepsCache.get(rule), acquireReferences, executor);
+      return Futures.transformAsync(
+          Futures.immediateFuture(ruleDepsCache.get(rule)), acquireReferences, executor);
     }
     return Futures.immediateFuture(null);
   }
@@ -147,7 +150,8 @@ public class UnskippedRulesTracker {
       unskippedRules.decrementAndGet();
       stateChanged.set(true);
       // Remove references from all dependencies of the rule.
-      return Futures.transformAsync(ruleDepsCache.get(rule), releaseReferences, executor);
+      return Futures.transformAsync(
+          Futures.immediateFuture(ruleDepsCache.get(rule)), releaseReferences, executor);
     }
     return Futures.immediateFuture(null);
   }

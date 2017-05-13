@@ -70,7 +70,7 @@ public class UnskippedRulesTrackerTest {
     sourcePathResolver = new SourcePathResolver(ruleFinder);
     ListeningExecutorService executor =
         listeningDecorator(MostExecutors.newMultiThreadExecutor("UnskippedRulesTracker", 7));
-    RuleDepsCache depsCache = new RuleDepsCache(executor, resolver);
+    RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver, executor);
     eventBus = new DefaultBuckEventBus(new FakeClock(1), new BuildId());
     eventBus.register(
