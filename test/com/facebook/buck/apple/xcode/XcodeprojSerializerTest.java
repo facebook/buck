@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+
 import org.junit.Test;
 
 public class XcodeprojSerializerTest {
