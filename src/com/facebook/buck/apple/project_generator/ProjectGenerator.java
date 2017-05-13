@@ -44,6 +44,7 @@ import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
 import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
@@ -743,14 +744,14 @@ public class ProjectGenerator {
                       filteredRules.add(node);
                     }
                   });
-          node.castArg(PrebuiltAppleFrameworkDescription.Arg.class)
+          node.castArg(PrebuiltAppleFrameworkDescriptionArg.class)
               .ifPresent(
                   prebuiltFramework -> {
                     // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case a static
                     // framework is used, they can escape the incorrect project generation by marking its
                     // preferred linkage static (what does preferred linkage even mean for a prebuilt thing?
                     // none of this makes sense anyways).
-                    if (prebuiltFramework.getConstructorArg().preferredLinkage
+                    if (prebuiltFramework.getConstructorArg().getPreferredLinkage()
                         != NativeLinkable.Linkage.STATIC) {
                       filteredRules.add(node);
                     }
@@ -1334,14 +1335,14 @@ public class ProjectGenerator {
               // If the item itself is a prebuilt framework, add it to framework_search_paths.
               // This is needed for prebuilt framework's headers to be reference-able.
               castedNode
-                  .castArg(PrebuiltAppleFrameworkDescription.Arg.class)
+                  .castArg(PrebuiltAppleFrameworkDescriptionArg.class)
                   .ifPresent(
                       prebuilt -> {
                         frameworkSearchPaths.add(
                             "$REPO_ROOT/"
-                                + resolveSourcePath(prebuilt.getConstructorArg().framework)
+                                + resolveSourcePath(prebuilt.getConstructorArg().getFramework())
                                     .getParent());
-                        if (prebuilt.getConstructorArg().preferredLinkage
+                        if (prebuilt.getConstructorArg().getPreferredLinkage()
                             != NativeLinkable.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
                           ldRunpathSearchPaths.add("@executable_path/Frameworks");
@@ -2278,14 +2279,15 @@ public class ProjectGenerator {
                     library.get().getConstructorArg().getLibraries());
               }
 
-              Optional<TargetNode<PrebuiltAppleFrameworkDescription.Arg, ?>> prebuilt =
-                  input.castArg(PrebuiltAppleFrameworkDescription.Arg.class);
+              Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg, ?>> prebuilt =
+                  input.castArg(PrebuiltAppleFrameworkDescriptionArg.class);
               if (prebuilt.isPresent()) {
                 return Iterables.concat(
                     prebuilt.get().getConstructorArg().getFrameworks(),
                     prebuilt.get().getConstructorArg().getLibraries(),
                     ImmutableList.of(
-                        FrameworkPath.ofSourcePath(prebuilt.get().getConstructorArg().framework)));
+                        FrameworkPath.ofSourcePath(
+                            prebuilt.get().getConstructorArg().getFramework())));
               }
 
               return ImmutableList.of();
@@ -2416,12 +2418,12 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
       productOutputName = productName;
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
-      PrebuiltAppleFrameworkDescription.Arg arg =
-          (PrebuiltAppleFrameworkDescription.Arg) targetNode.getConstructorArg();
+      PrebuiltAppleFrameworkDescriptionArg arg =
+          (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
       // Prebuilt frameworks reside in the source repo, not outputs dir.
       return new SourceTreePath(
           PBXReference.SourceTree.SOURCE_ROOT,
-          pathRelativizer.outputPathToSourcePath(arg.framework),
+          pathRelativizer.outputPathToSourcePath(arg.getFramework()),
           Optional.empty());
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());

@@ -25,33 +25,33 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 public class PrebuiltAppleFrameworkDescription
-    implements Description<PrebuiltAppleFrameworkDescription.Arg>,
+    implements Description<PrebuiltAppleFrameworkDescriptionArg>,
         Flavored,
-        MetadataProvidingDescription<PrebuiltAppleFrameworkDescription.Arg> {
+        MetadataProvidingDescription<PrebuiltAppleFrameworkDescriptionArg> {
 
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
 
@@ -85,8 +85,8 @@ public class PrebuiltAppleFrameworkDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<PrebuiltAppleFrameworkDescriptionArg> getConstructorArgType() {
+    return PrebuiltAppleFrameworkDescriptionArg.class;
   }
 
   @Override
@@ -95,26 +95,26 @@ public class PrebuiltAppleFrameworkDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final Arg args)
+      final PrebuiltAppleFrameworkDescriptionArg args)
       throws NoSuchBuildTargetException {
     return new PrebuiltAppleFramework(
         params,
         resolver,
         new SourcePathResolver(new SourcePathRuleFinder(resolver)),
-        args.framework,
-        args.preferredLinkage,
-        args.frameworks,
-        args.supportedPlatformsRegex,
+        args.getFramework(),
+        args.getPreferredLinkage(),
+        args.getFrameworks(),
+        args.getSupportedPlatformsRegex(),
         input ->
             CxxFlags.getFlagsWithPlatformMacroExpansion(
-                args.exportedLinkerFlags, args.exportedPlatformLinkerFlags, input));
+                args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input));
   }
 
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      PrebuiltAppleFrameworkDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -126,25 +126,21 @@ public class PrebuiltAppleFrameworkDescription
     return Optional.empty();
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasSystemFrameworkAndLibraries {
-    public SourcePath framework;
-    public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
-    public Optional<Pattern> supportedPlatformsRegex;
-    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
-    public PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags =
-        PatternMatchedCollection.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public NativeLinkable.Linkage preferredLinkage;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractPrebuiltAppleFrameworkDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSystemFrameworkAndLibraries {
+    SourcePath getFramework();
 
-    @Override
-    public ImmutableSortedSet<FrameworkPath> getFrameworks() {
-      return frameworks;
+    Optional<Pattern> getSupportedPlatformsRegex();
+
+    ImmutableList<String> getExportedLinkerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<String>> getExportedPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
     }
 
-    @Override
-    public ImmutableSortedSet<FrameworkPath> getLibraries() {
-      return ImmutableSortedSet.of();
-    }
+    NativeLinkable.Linkage getPreferredLinkage();
   }
 }

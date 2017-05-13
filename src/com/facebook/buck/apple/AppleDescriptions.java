@@ -609,15 +609,15 @@ public class AppleDescriptions {
     // This change simply treats all the immediate prebuilt framework dependencies as wishing to be
     // embedded, but in the future this should be dealt with with some greater sophistication.
     for (BuildTarget dep : deps) {
-      Optional<TargetNode<PrebuiltAppleFrameworkDescription.Arg, ?>> prebuiltNode =
+      Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg, ?>> prebuiltNode =
           targetGraph
               .getOptional(dep)
-              .flatMap(node -> node.castArg(PrebuiltAppleFrameworkDescription.Arg.class));
+              .flatMap(node -> node.castArg(PrebuiltAppleFrameworkDescriptionArg.class));
       if (prebuiltNode.isPresent()
           && !prebuiltNode
               .get()
               .getConstructorArg()
-              .preferredLinkage
+              .getPreferredLinkage()
               .equals(NativeLinkable.Linkage.STATIC)) {
         frameworksBuilder.add(resolver.requireRule(dep).getSourcePathToOutput());
       }
