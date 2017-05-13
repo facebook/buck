@@ -264,7 +264,6 @@ public class ProjectGenerator {
    */
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
-  private final Map<String, String> gidsToTargetNames;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -336,7 +335,6 @@ public class ProjectGenerator {
                 });
 
     targetConfigNamesBuilder = ImmutableSet.builder();
-    gidsToTargetNames = new HashMap<>();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
@@ -2009,9 +2007,7 @@ public class ProjectGenerator {
 
   /** Create the project bundle structure and write {@code project.pbxproj}. */
   private void writeProjectFile(PBXProject project) throws IOException {
-    XcodeprojSerializer serializer =
-        new XcodeprojSerializer(
-            new GidGenerator(ImmutableSet.copyOf(gidsToTargetNames.keySet())), project);
+    XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(), project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
