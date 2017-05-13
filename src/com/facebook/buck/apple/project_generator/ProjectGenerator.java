@@ -26,6 +26,7 @@ import com.facebook.buck.apple.AppleBinaryDescriptionArg;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleDescriptions;
@@ -454,8 +455,8 @@ public class ProjectGenerator {
 
   private static Optional<String> getProductNameForTargetNode(TargetNode<?, ?> targetNode) {
     return targetNode
-        .castArg(AppleBundleDescription.Arg.class)
-        .flatMap(node -> node.getConstructorArg().productName);
+        .castArg(AppleBundleDescriptionArg.class)
+        .flatMap(node -> node.getConstructorArg().getProductName());
   }
 
   @SuppressWarnings("unchecked")
@@ -487,15 +488,15 @@ public class ProjectGenerator {
               generateAppleBinaryTarget(
                   project, (TargetNode<AppleNativeTargetDescriptionArg, ?>) targetNode));
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
-      TargetNode<AppleBundleDescription.Arg, ?> bundleTargetNode =
-          (TargetNode<AppleBundleDescription.Arg, ?>) targetNode;
+      TargetNode<AppleBundleDescriptionArg, ?> bundleTargetNode =
+          (TargetNode<AppleBundleDescriptionArg, ?>) targetNode;
       result =
           Optional.of(
               generateAppleBundleTarget(
                   project,
                   bundleTargetNode,
                   (TargetNode<AppleNativeTargetDescriptionArg, ?>)
-                      targetGraph.get(bundleTargetNode.getConstructorArg().binary),
+                      targetGraph.get(bundleTargetNode.getConstructorArg().getBinary()),
                   Optional.empty()));
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       result =
@@ -613,7 +614,7 @@ public class ProjectGenerator {
 
   private PBXTarget generateAppleTestTarget(TargetNode<AppleTestDescriptionArg, ?> testTargetNode)
       throws IOException {
-    Optional<TargetNode<AppleBundleDescription.Arg, ?>> testHostBundle =
+    Optional<TargetNode<AppleBundleDescriptionArg, ?>> testHostBundle =
         testTargetNode
             .getConstructorArg()
             .getTestHostApp()
@@ -621,7 +622,7 @@ public class ProjectGenerator {
                 testHostBundleTarget -> {
                   TargetNode<?, ?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
                   return testHostBundleNode
-                      .castArg(AppleBundleDescription.Arg.class)
+                      .castArg(AppleBundleDescriptionArg.class)
                       .orElseGet(
                           () -> {
                             throw new HumanReadableException(
@@ -660,7 +661,7 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<? extends HasAppleBundleFields, ?> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg, ?> binaryNode,
-      Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode)
       throws IOException {
     Path infoPlistPath =
         Preconditions.checkNotNull(
@@ -735,7 +736,7 @@ public class ProjectGenerator {
     try {
       for (TargetNode<?, ?> node : traversal.traverse(ImmutableList.of(targetNode))) {
         if (node != targetNode) {
-          node.castArg(AppleBundleDescription.Arg.class)
+          node.castArg(AppleBundleDescriptionArg.class)
               .ifPresent(
                   appleBundleNode -> {
                     if (isFrameworkBundle(appleBundleNode.getConstructorArg())) {
@@ -769,7 +770,7 @@ public class ProjectGenerator {
         .filter(
             input ->
                 input
-                    .castArg(AppleBundleDescription.Arg.class)
+                    .castArg(AppleBundleDescriptionArg.class)
                     .map(argTargetNode -> !isFrameworkBundle(argTargetNode.getConstructorArg()))
                     .orElse(true))
         .toImmutableList();
@@ -806,7 +807,7 @@ public class ProjectGenerator {
   private PBXNativeTarget generateAppleLibraryTarget(
       PBXProject project,
       TargetNode<? extends AppleNativeTargetDescriptionArg, ?> targetNode,
-      Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode)
       throws IOException {
     PBXNativeTarget target =
         generateCxxLibraryTarget(
@@ -824,7 +825,7 @@ public class ProjectGenerator {
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
-      Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode)
       throws IOException {
     boolean isShared =
         targetNode.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -876,7 +877,7 @@ public class ProjectGenerator {
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       ImmutableSet<AppleWrapperResourceArg> wrapperResources,
       Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
-      Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode)
       throws IOException {
 
     LOG.debug("Generating binary target for node %s", targetNode);
@@ -1003,7 +1004,7 @@ public class ProjectGenerator {
               buildTargetName);
         }
       } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
-        TargetNode<AppleBundleDescription.Arg, ?> bundleLoader = bundleLoaderNode.get();
+        TargetNode<AppleBundleDescriptionArg, ?> bundleLoader = bundleLoaderNode.get();
         String bundleLoaderProductName =
             getProductNameForBuildTarget(bundleLoader.getBuildTarget());
         String bundleLoaderBundleName =
@@ -1897,9 +1898,9 @@ public class ProjectGenerator {
 
   private Optional<CopyFilePhaseDestinationSpec> getDestinationSpec(TargetNode<?, ?> targetNode) {
     if (targetNode.getDescription() instanceof AppleBundleDescription) {
-      AppleBundleDescription.Arg arg = (AppleBundleDescription.Arg) targetNode.getConstructorArg();
+      AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
       AppleBundleExtension extension =
-          arg.extension.isLeft() ? arg.extension.getLeft() : AppleBundleExtension.BUNDLE;
+          arg.getExtension().isLeft() ? arg.getExtension().getLeft() : AppleBundleExtension.BUNDLE;
       switch (extension) {
         case FRAMEWORK:
           return Optional.of(
@@ -2073,7 +2074,7 @@ public class ProjectGenerator {
     if (targetNode.getDescription() instanceof AppleBinaryDescription
         || targetNode.getDescription() instanceof AppleTestDescription
         || (targetNode.getDescription() instanceof AppleBundleDescription
-            && !isFrameworkBundle((AppleBundleDescription.Arg) targetNode.getConstructorArg()))) {
+            && !isFrameworkBundle((AppleBundleDescriptionArg) targetNode.getConstructorArg()))) {
       // TODO(grp): These should be inside the path below. Right now, that causes issues with
       // bundle loader paths hardcoded in .xcconfig files that don't expect the full target path.
       // It also causes issues where Xcode doesn't know where to look for a final .app to run it.
@@ -2100,14 +2101,14 @@ public class ProjectGenerator {
     if (nodeTypes.contains(targetNode.getDescription().getClass())) {
       nativeNode = Optional.of((TargetNode<CxxLibraryDescription.CommonArg, ?>) targetNode);
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
-      TargetNode<AppleBundleDescription.Arg, ?> bundle =
-          (TargetNode<AppleBundleDescription.Arg, ?>) targetNode;
+      TargetNode<AppleBundleDescriptionArg, ?> bundle =
+          (TargetNode<AppleBundleDescriptionArg, ?>) targetNode;
       Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
       if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
         nativeNode =
             Optional.of(
                 (TargetNode<CxxLibraryDescription.CommonArg, ?>)
-                    targetGraph.get(bundle.getConstructorArg().binary));
+                    targetGraph.get(bundle.getConstructorArg().getBinary()));
       }
     }
     return nativeNode;
@@ -2623,7 +2624,7 @@ public class ProjectGenerator {
    */
   private static boolean isWatchApplicationNode(TargetNode<?, ?> targetNode) {
     if (targetNode.getDescription() instanceof AppleBundleDescription) {
-      AppleBundleDescription.Arg arg = (AppleBundleDescription.Arg) targetNode.getConstructorArg();
+      AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
       return arg.getXcodeProductType()
           .equals(Optional.of(ProductType.WATCH_APPLICATION.getIdentifier()));
     }

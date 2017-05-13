@@ -25,8 +25,10 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -59,10 +61,16 @@ public class AppleBundleDescriptionTest {
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
-    AppleBundleDescription.Arg constructorArg = new AppleBundleDescription.Arg();
-    constructorArg.binary = binary;
-    constructorArg.deps =
-        ImmutableSortedSet.of(binary, unflavoredDep, flavoredDep, flavoredDepNotInDomain, watchDep);
+    AppleBundleDescriptionArg constructorArg =
+        AppleBundleDescriptionArg.builder()
+            .setName("bundle")
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setBinary(binary)
+            .setDeps(
+                ImmutableSortedSet.of(
+                    binary, unflavoredDep, flavoredDep, flavoredDepNotInDomain, watchDep))
+            .build();
 
     // Now call the find deps methods and verify it returns the targets with flavors.
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
@@ -111,16 +119,21 @@ public class AppleBundleDescriptionTest {
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
-    AppleBundleDescription.Arg constructorArg = new AppleBundleDescription.Arg();
-    constructorArg.binary = binary;
-    constructorArg.deps =
-        ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .add(binary)
-            .add(unflavoredDep)
-            .add(flavoredDep)
-            .add(flavoredDepNotInDomain)
-            .add(stripFlavorOnly)
-            .add(debugFlavorOnly)
+    AppleBundleDescriptionArg constructorArg =
+        AppleBundleDescriptionArg.builder()
+            .setName("bundle")
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setBinary(binary)
+            .setDeps(
+                ImmutableSortedSet.<BuildTarget>naturalOrder()
+                    .add(binary)
+                    .add(unflavoredDep)
+                    .add(flavoredDep)
+                    .add(flavoredDepNotInDomain)
+                    .add(stripFlavorOnly)
+                    .add(debugFlavorOnly)
+                    .build())
             .build();
 
     // Now call the find deps methods and verify it returns the targets with flavors.
@@ -150,7 +163,11 @@ public class AppleBundleDescriptionTest {
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//:bundle");
     TargetNode<?, ?> bundleNode =
-        new AppleBundleBuilder(bundleTarget).setBinary(binaryTarget).build();
+        new AppleBundleBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setBinary(binaryTarget)
+            .build();
 
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(

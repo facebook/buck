@@ -173,18 +173,18 @@ public final class AppleBuildRules {
           }
 
           if (node.getDescription() instanceof AppleBundleDescription) {
-            AppleBundleDescription.Arg arg = (AppleBundleDescription.Arg) node.getConstructorArg();
+            AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) node.getConstructorArg();
 
             ImmutableSortedSet.Builder<TargetNode<?, ?>> editedDeps =
                 ImmutableSortedSet.naturalOrder();
             ImmutableSortedSet.Builder<TargetNode<?, ?>> editedExportedDeps =
                 ImmutableSortedSet.naturalOrder();
             for (TargetNode<?, ?> rule : defaultDeps) {
-              if (!rule.getBuildTarget().equals(arg.binary)) {
+              if (!rule.getBuildTarget().equals(arg.getBinary())) {
                 editedDeps.add(rule);
               } else {
                 addDirectAndExportedDeps(
-                    targetGraph, targetGraph.get(arg.binary), editedDeps, editedExportedDeps);
+                    targetGraph, targetGraph.get(arg.getBinary()), editedDeps, editedExportedDeps);
               }
             }
 

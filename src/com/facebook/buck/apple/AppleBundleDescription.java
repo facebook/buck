@@ -23,25 +23,24 @@ import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -49,12 +48,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class AppleBundleDescription
-    implements Description<AppleBundleDescription.Arg>,
+    implements Description<AppleBundleDescriptionArg>,
         Flavored,
-        ImplicitDepsInferringDescription<AppleBundleDescription.Arg>,
-        MetadataProvidingDescription<AppleBundleDescription.Arg> {
+        ImplicitDepsInferringDescription<AppleBundleDescription.AbstractAppleBundleDescriptionArg>,
+        MetadataProvidingDescription<AppleBundleDescriptionArg> {
 
   public static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS =
       ImmutableSet.of(CxxDescriptionEnhancer.STATIC_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -93,8 +93,8 @@ public class AppleBundleDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<AppleBundleDescriptionArg> getConstructorArgType() {
+    return AppleBundleDescriptionArg.class;
   }
 
   @Override
@@ -135,7 +135,7 @@ public class AppleBundleDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      AppleBundleDescriptionArg args)
       throws NoSuchBuildTargetException {
     AppleDebugFormat flavoredDebugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
@@ -162,13 +162,13 @@ public class AppleBundleDescription
         resolver,
         codeSignIdentityStore,
         provisioningProfileStore,
-        args.binary,
-        args.extension,
-        args.productName,
-        args.infoPlist,
-        args.infoPlistSubstitutions,
-        args.deps,
-        args.tests,
+        args.getBinary(),
+        args.getExtension(),
+        args.getProductName(),
+        args.getInfoPlist(),
+        args.getInfoPlistSubstitutions(),
+        args.getDeps(),
+        args.getTests(),
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages());
@@ -182,7 +182,7 @@ public class AppleBundleDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractAppleBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
@@ -216,8 +216,8 @@ public class AppleBundleDescription
     }
 
     FluentIterable<BuildTarget> depsExcludingBinary =
-        FluentIterable.from(constructorArg.deps)
-            .filter(Predicates.not(constructorArg.binary::equals));
+        FluentIterable.from(constructorArg.getDeps())
+            .filter(Predicates.not(constructorArg.getBinary()::equals));
 
     // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
     // watch to the actual watch platform (simulator or device) so can't use
@@ -288,7 +288,7 @@ public class AppleBundleDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      Arg args,
+      AppleBundleDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
@@ -296,53 +296,18 @@ public class AppleBundleDescription
       // Bundles should be opaque to framework dependencies.
       return Optional.empty();
     }
-    return resolver.requireMetadata(args.binary, metadataClass);
+    return resolver.requireMetadata(args.getBinary(), metadataClass);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasAppleBundleFields, HasTests {
-    public Either<AppleBundleExtension, String> extension;
-    public BuildTarget binary;
-    public SourcePath infoPlist;
-    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAppleBundleDescriptionArg
+      extends CommonDescriptionArg, HasAppleBundleFields, HasDeclaredDeps, HasTests {
+    BuildTarget getBinary();
 
+    @Override
     @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-
-    public Optional<String> xcodeProductType;
-    public Optional<String> productName;
-
-    @Override
-    public Either<AppleBundleExtension, String> getExtension() {
-      return extension;
-    }
-
-    @Override
-    public SourcePath getInfoPlist() {
-      return infoPlist;
-    }
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests;
-    }
-
-    @Override
-    public Optional<String> getXcodeProductType() {
-      return xcodeProductType;
-    }
-
-    @Override
-    public Optional<String> getProductName() {
-      return productName;
-    }
-
-    @Override
-    public ImmutableMap<String, String> getInfoPlistSubstitutions() {
-      return infoPlistSubstitutions;
-    }
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getDeps();
   }
 }

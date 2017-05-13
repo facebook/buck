@@ -18,6 +18,7 @@ package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
@@ -611,20 +612,20 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder = ImmutableSet.builder();
     for (TargetNode<?, ?> projectTargetNode : projectGraph.getAll(projectBuildTargets)) {
       if (projectTargetNode.getDescription() instanceof AppleBundleDescription) {
-        AppleBundleDescription.Arg appleBundleDescriptionArg =
-            (AppleBundleDescription.Arg) projectTargetNode.getConstructorArg();
+        AppleBundleDescriptionArg appleBundleDescriptionArg =
+            (AppleBundleDescriptionArg) projectTargetNode.getConstructorArg();
         // We don't support apple_bundle rules referring to apple_binary rules
         // outside their current directory.
         Preconditions.checkState(
             appleBundleDescriptionArg
-                .binary
+                .getBinary()
                 .getBasePath()
                 .equals(projectTargetNode.getBuildTarget().getBasePath()),
             "apple_bundle target %s contains reference to binary %s outside base path %s",
             projectTargetNode.getBuildTarget(),
-            appleBundleDescriptionArg.binary,
+            appleBundleDescriptionArg.getBinary(),
             projectTargetNode.getBuildTarget().getBasePath());
-        binaryTargetsInsideBundlesBuilder.add(appleBundleDescriptionArg.binary);
+        binaryTargetsInsideBundlesBuilder.add(appleBundleDescriptionArg.getBinary());
       }
     }
     ImmutableSet<BuildTarget> binaryTargetsInsideBundles =

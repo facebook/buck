@@ -142,6 +142,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
             .setBinary(libraryTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
@@ -179,6 +180,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(fooFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(fooLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget barLibTarget =
@@ -194,6 +196,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(barFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
@@ -250,6 +253,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(fooFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(fooLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     // shared preferredLinkage overriden by static flavor should still propagate dependencies.
@@ -277,6 +281,7 @@ public class AppleBuildRulesTest {
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
             .setBinary(barBinaryTarget)
             .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
@@ -330,6 +335,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(fooFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(fooLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget barLibTarget =
@@ -345,6 +351,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(barFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget bazLibTarget =
@@ -359,6 +366,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(bazFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(bazLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
@@ -417,6 +425,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(barFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
@@ -467,6 +476,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(barFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
@@ -517,6 +527,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(barFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget bazLibTarget =
@@ -530,6 +541,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(bazFrameworkTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
             .setBinary(bazLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
@@ -572,6 +584,7 @@ public class AppleBuildRulesTest {
         AppleBundleBuilder.createBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
             .setBinary(libraryTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
