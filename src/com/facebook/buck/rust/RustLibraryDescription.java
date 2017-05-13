@@ -30,14 +30,15 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -45,8 +46,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -56,12 +57,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class RustLibraryDescription
-    implements Description<RustLibraryDescription.Arg>,
-        ImplicitDepsInferringDescription<RustLibraryDescription.Arg>,
+    implements Description<RustLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<RustLibraryDescription.AbstractRustLibraryDescriptionArg>,
         Flavored,
-        VersionPropagator<RustLibraryDescription.Arg> {
+        VersionPropagator<RustLibraryDescriptionArg> {
 
   private static final FlavorDomain<RustDescriptionEnhancer.Type> LIBRARY_TYPE =
       FlavorDomain.from("Rust Library Type", RustDescriptionEnhancer.Type.class);
@@ -80,8 +82,8 @@ public class RustLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<RustLibraryDescriptionArg> getConstructorArgType() {
+    return RustLibraryDescriptionArg.class;
   }
 
   private RustCompileRule requireBuild(
@@ -97,7 +99,7 @@ public class RustLibraryDescription
       String crate,
       CrateType crateType,
       Linker.LinkableDepType depType,
-      Arg args)
+      RustLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
@@ -107,9 +109,9 @@ public class RustLibraryDescription
             ruleFinder,
             cxxPlatform,
             crate,
-            args.crateRoot,
+            args.getCrateRoot(),
             ImmutableSet.of("lib.rs"),
-            args.srcs);
+            args.getSrcs());
     return RustCompileUtils.requireBuild(
         params,
         resolver,
@@ -132,7 +134,7 @@ public class RustLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Arg args)
+      RustLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -140,12 +142,12 @@ public class RustLibraryDescription
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 
-    RustCompileUtils.addFeatures(buildTarget, args.features, rustcArgs);
+    RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
 
-    rustcArgs.addAll(args.rustcFlags);
+    rustcArgs.addAll(args.getRustcFlags());
     rustcArgs.addAll(rustBuckConfig.getRustLibraryFlags());
 
-    String crate = args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName()));
+    String crate = args.getCrate().orElse(ruleToCrateName(params.getBuildTarget().getShortName()));
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -203,7 +205,7 @@ public class RustLibraryDescription
         if (isCheck) {
           crateType = CrateType.CHECK;
         } else {
-          switch (args.preferredLinkage) {
+          switch (args.getPreferredLinkage()) {
             case ANY:
             default:
               switch (depType) {
@@ -259,7 +261,7 @@ public class RustLibraryDescription
 
       @Override
       public Linkage getPreferredLinkage() {
-        return args.preferredLinkage;
+        return args.getPreferredLinkage();
       }
 
       @Override
@@ -342,7 +344,7 @@ public class RustLibraryDescription
 
       @Override
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return args.preferredLinkage;
+        return args.getPreferredLinkage();
       }
 
       @Override
@@ -377,7 +379,7 @@ public class RustLibraryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg,
+      AbstractRustLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
@@ -407,22 +409,22 @@ public class RustLibraryDescription
     return Optional.of(ImmutableSet.of(cxxPlatforms, LIBRARY_TYPE));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
-    public List<String> rustcFlags = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public NativeLinkable.Linkage preferredLinkage = NativeLinkable.Linkage.ANY;
-    public Optional<String> crate;
-    public Optional<SourcePath> crateRoot;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractRustLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getFeatures();
 
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    List<String> getRustcFlags();
 
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests;
+    @Value.Default
+    default NativeLinkable.Linkage getPreferredLinkage() {
+      return NativeLinkable.Linkage.ANY;
     }
+
+    Optional<String> getCrate();
+
+    Optional<SourcePath> getCrateRoot();
   }
 }
