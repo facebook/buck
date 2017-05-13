@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -96,10 +98,14 @@ public class ShTestDescriptionTest {
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
 
+    SourcePath test = new FakeSourcePath(filesystem, "some_test");
+    filesystem.touch(Paths.get("some_test"));
+
     // Create a test rule without resources attached.
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ShTest shTestWithoutResources = new ShTestBuilder(target).build(resolver, filesystem);
+    ShTest shTestWithoutResources =
+        new ShTestBuilder(target).setTest(test).build(resolver, filesystem);
     RuleKey ruleKeyWithoutResource = getRuleKey(shTestWithoutResources);
 
     // Create a rule with a resource attached.
@@ -107,6 +113,7 @@ public class ShTestDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ShTest shTestWithResources =
         new ShTestBuilder(target)
+            .setTest(test)
             .setResources(ImmutableSortedSet.of(resource))
             .build(resolver, filesystem);
     RuleKey ruleKeyWithResource = getRuleKey(shTestWithResources);
@@ -122,7 +129,10 @@ public class ShTestDescriptionTest {
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     TargetNode<?, ?> shTestWithResources =
-        new ShTestBuilder(target).setResources(ImmutableSortedSet.of(resource)).build();
+        new ShTestBuilder(target)
+            .setTest(new FakeSourcePath(filesystem, "some_test"))
+            .setResources(ImmutableSortedSet.of(resource))
+            .build();
     assertThat(shTestWithResources.getInputs(), Matchers.hasItem(resource));
   }
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,29 +26,30 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class ShTestBuilder
-    extends AbstractNodeBuilderWithMutableArg<ShTestDescription.Arg, ShTestDescription, ShTest> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        ShTestDescriptionArg.Builder, ShTestDescriptionArg, ShTestDescription, ShTest> {
 
   public ShTestBuilder(BuildTarget target) {
     super(new ShTestDescription(Optional.empty()), target);
   }
 
   public ShTestBuilder setTest(SourcePath path) {
-    arg.test = path;
+    getArgForPopulating().setTest(path);
     return this;
   }
 
   public ShTestBuilder setArgs(ImmutableList<String> args) {
-    arg.args = args;
+    getArgForPopulating().setArgs(args);
     return this;
   }
 
   public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
-    arg.env = env;
+    getArgForPopulating().setEnv(env);
     return this;
   }
 
   public ShTestBuilder setResources(ImmutableSortedSet<Path> resources) {
-    arg.resources = resources;
+    getArgForPopulating().setResources(resources);
     return this;
   }
 }
