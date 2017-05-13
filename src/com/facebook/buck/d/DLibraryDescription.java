@@ -23,26 +23,27 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 public class DLibraryDescription
-    implements Description<DLibraryDescription.Arg>, VersionPropagator<DLibraryDescription.Arg> {
+    implements Description<DLibraryDescriptionArg>, VersionPropagator<DLibraryDescriptionArg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -56,8 +57,8 @@ public class DLibraryDescription
   }
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<DLibraryDescriptionArg> getConstructorArgType() {
+    return DLibraryDescriptionArg.class;
   }
 
   @Override
@@ -66,7 +67,7 @@ public class DLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
-      Arg args)
+      DLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
@@ -74,7 +75,7 @@ public class DLibraryDescription
 
     if (params.getBuildTarget().getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          params.getBuildTarget(), params, ruleFinder, pathResolver, args.srcs);
+          params.getBuildTarget(), params, ruleFinder, pathResolver, args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
@@ -82,7 +83,7 @@ public class DLibraryDescription
     DIncludes dIncludes =
         DIncludes.builder()
             .setLinkTree(new DefaultBuildTargetSourcePath(sourceTreeTarget))
-            .setSources(args.srcs.getPaths())
+            .setSources(args.getSrcs().getPaths())
             .build();
 
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
@@ -95,7 +96,7 @@ public class DLibraryDescription
           cxxPlatform,
           dBuckConfig,
           /* compilerFlags */ ImmutableList.of(),
-          args.srcs,
+          args.getSrcs(),
           dIncludes,
           CxxSourceRuleFactory.PicType.PDC);
     }
@@ -152,10 +153,11 @@ public class DLibraryDescription
         compiledSources);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourceList srcs;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractDLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourceList getSrcs();
+
+    ImmutableList<String> getLinkerFlags();
   }
 }
