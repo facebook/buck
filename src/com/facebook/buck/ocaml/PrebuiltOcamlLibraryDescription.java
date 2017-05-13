@@ -17,31 +17,31 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Prebuilt OCaml library */
 public class PrebuiltOcamlLibraryDescription
-    implements Description<PrebuiltOcamlLibraryDescription.Arg>,
-        VersionPropagator<PrebuiltOcamlLibraryDescription.Arg> {
+    implements Description<PrebuiltOcamlLibraryDescriptionArg>,
+        VersionPropagator<PrebuiltOcamlLibraryDescriptionArg> {
 
   @Override
-  public Class<Arg> getConstructorArgType() {
-    return Arg.class;
+  public Class<PrebuiltOcamlLibraryDescriptionArg> getConstructorArgType() {
+    return PrebuiltOcamlLibraryDescriptionArg.class;
   }
 
   @Override
@@ -50,22 +50,20 @@ public class PrebuiltOcamlLibraryDescription
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final Arg args) {
+      final PrebuiltOcamlLibraryDescriptionArg args) {
 
     final BuildTarget target = params.getBuildTarget();
 
-    final boolean bytecodeOnly = args.bytecodeOnly.orElse(false);
+    final boolean bytecodeOnly = args.getBytecodeOnly();
 
-    final String libDir = args.libDir.orElse("lib");
+    final String libDir = args.getLibDir();
 
-    final String libName = args.libName.orElse(target.getShortName());
-
-    final String nativeLib = args.nativeLib.orElse(String.format("%s.cmxa", libName));
-    final String bytecodeLib = args.bytecodeLib.orElse(String.format("%s.cma", libName));
-    final ImmutableList<String> cLibs = args.cLibs;
+    final String nativeLib = args.getNativeLib();
+    final String bytecodeLib = args.getBytecodeLib();
+    final ImmutableList<String> cLibs = args.getCLibs();
 
     final Path libPath = target.getBasePath().resolve(libDir);
-    final Path includeDir = libPath.resolve(args.includeDir.orElse(""));
+    final Path includeDir = libPath.resolve(args.getIncludeDir());
 
     final Optional<SourcePath> staticNativeLibraryPath =
         bytecodeOnly
@@ -96,15 +94,40 @@ public class PrebuiltOcamlLibraryDescription
         includeDir);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<String> libDir;
-    public Optional<String> includeDir;
-    public Optional<String> libName;
-    public Optional<String> nativeLib;
-    public Optional<String> bytecodeLib;
-    public ImmutableList<String> cLibs = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<Boolean> bytecodeOnly;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractPrebuiltOcamlLibraryDescriptionArg implements CommonDescriptionArg {
+
+    @Value.Default
+    String getLibDir() {
+      return "lib";
+    }
+
+    @Value.Default
+    String getIncludeDir() {
+      return "";
+    }
+
+    @Value.Default
+    String getLibName() {
+      return getName();
+    }
+
+    @Value.Default
+    String getNativeLib() {
+      return String.format("%s.cmxa", getLibName());
+    }
+
+    @Value.Default
+    String getBytecodeLib() {
+      return String.format("%s.cma", getLibName());
+    }
+
+    abstract ImmutableList<String> getCLibs();
+
+    @Value.Default
+    boolean getBytecodeOnly() {
+      return false;
+    }
   }
 }
