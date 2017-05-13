@@ -16,14 +16,17 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.HasSrcs;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-@SuppressFieldNotInitialized
-public class XcodeScriptDescriptionArg extends AbstractDescriptionArg {
-  public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-  public ImmutableSortedSet<String> outputs = ImmutableSortedSet.of();
-  public String cmd;
+@BuckStyleImmutable
+@Value.Immutable
+interface AbstractXcodeScriptDescriptionArg extends CommonDescriptionArg, HasSrcs {
+  @Value.NaturalOrder
+  ImmutableSortedSet<String> getOutputs();
+
+  String getCmd();
 }

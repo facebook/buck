@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -26,24 +26,25 @@ import com.google.common.collect.ImmutableSortedSet;
 public abstract class AbstractXcodeScriptBuilder<
         T extends AbstractXcodeScriptBuilder<T, U>,
         U extends Description<XcodeScriptDescriptionArg>>
-    extends AbstractNodeBuilderWithMutableArg<XcodeScriptDescriptionArg, U, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        XcodeScriptDescriptionArg.Builder, XcodeScriptDescriptionArg, U, BuildRule> {
 
   public AbstractXcodeScriptBuilder(U description, BuildTarget target) {
     super(description, target);
   }
 
   public T setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return getThis();
   }
 
   public T setOutputs(ImmutableSortedSet<String> outputs) {
-    arg.outputs = outputs;
+    getArgForPopulating().setOutputs(outputs);
     return getThis();
   }
 
   public T setCmd(String cmd) {
-    arg.cmd = cmd;
+    getArgForPopulating().setCmd(cmd);
     return getThis();
   }
 

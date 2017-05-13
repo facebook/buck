@@ -677,13 +677,13 @@ class NewNativeTargetProjectMutator {
         shellScriptBuildPhase
             .getInputPaths()
             .addAll(
-                FluentIterable.from(arg.srcs)
+                FluentIterable.from(arg.getSrcs())
                     .transform(sourcePathResolver)
                     .transform(pathRelativizer::outputDirToRootRelative)
                     .transform(Object::toString)
                     .toSet());
-        shellScriptBuildPhase.getOutputPaths().addAll(arg.outputs);
-        shellScriptBuildPhase.setShellScript(arg.cmd);
+        shellScriptBuildPhase.getOutputPaths().addAll(arg.getOutputs());
+        shellScriptBuildPhase.setShellScript(arg.getCmd());
       } else if (node.getDescription() instanceof IosReactNativeLibraryDescription) {
         shellScriptBuildPhase.setShellScript(generateXcodeShellScript(node));
       } else {
