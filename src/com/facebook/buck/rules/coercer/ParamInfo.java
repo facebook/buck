@@ -21,25 +21,18 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.Types;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
@@ -48,32 +41,94 @@ public class ParamInfo implements Comparable<ParamInfo> {
   private final TypeCoercer<?> typeCoercer;
 
   private final String name;
-  private final ParamInteractor paramInteractor;
 
-  private static final LoadingCache<Class<?>, Object> EMPTY_CONSTRUCTOR_ARGS =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<Class<?>, Object>() {
-                @Override
-                public Object load(Class<?> cls) throws Exception {
-                  try {
-                    return cls.newInstance();
-                  } catch (Exception e) {
-                    throw new RuntimeException(
-                        "Failed to instantiate an empty constructor arg for class "
-                            + cls
-                            + ". "
-                            + "Check that the class has a public constructor that doesn't take any "
-                            + "parameters and that it is not a non-static inner (or anonymous) class.",
-                        e);
-                  }
+  private final Method setter;
+  /**
+   * Holds the closest getter for this property defined on the abstract class or interface.
+   *
+   * <p>Note that this may not be abstract, for instance if a @Value.Default is specified.
+   */
+  private final Supplier<Method> closestGetterOnAbstractClassOrInterface;
+
+  /** Holds the getter for the concrete Immutable class. */
+  private final Supplier<Method> concreteGetter;
+
+  private final Supplier<Boolean> isOptional;
+
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public ParamInfo(TypeCoercerFactory typeCoercerFactory, Method setter) {
+    Preconditions.checkArgument(
+        setter.getParameterCount() == 1,
+        "Setter is expected to have exactly one parameter but had %s",
+        setter.getParameterCount());
+    Preconditions.checkArgument(
+        setter.getName().startsWith("set"),
+        "Setter is expected to have name starting with 'set' but was %s",
+        setter.getName());
+    Preconditions.checkArgument(
+        setter.getName().length() > 3,
+        "Setter must have name longer than just 'set' but was %s",
+        setter.getName());
+    this.setter = setter;
+
+    this.closestGetterOnAbstractClassOrInterface =
+        Suppliers.memoize(this::findClosestGetterOnAbstractClassOrInterface);
+
+    this.concreteGetter =
+        Suppliers.memoize(
+            () -> {
+              // This needs to get (and invoke) the concrete Immutable class's getter, not the abstract
+              // getter from a superclass.
+              // Accordingly, we manually find the getter there, rather than using
+              // closestGetterOnAbstractClassOrInterface.
+              Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
+              if (enclosingClass == null) {
+                throw new IllegalStateException(
+                    String.format(
+                        "Couldn't find enclosing class of Builder %s", setter.getDeclaringClass()));
+              }
+              Iterable<String> getterNames = getGetterNames();
+              for (String possibleGetterName : getterNames) {
+                try {
+                  return enclosingClass.getMethod(possibleGetterName);
+                } catch (NoSuchMethodException e) {
+                  // Handled below
                 }
-              });
+              }
+              throw new IllegalStateException(
+                  String.format(
+                      "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
+                      setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
+            });
+    this.isOptional =
+        Suppliers.memoize(
+            () -> {
+              Method getter = closestGetterOnAbstractClassOrInterface.get();
+              Class<?> type = getter.getReturnType();
+              if (CoercedTypeCache.OPTIONAL_TYPES.contains(type)) {
+                return true;
+              }
 
-  public ParamInfo(TypeCoercerFactory typeCoercerFactory, ParamInteractor paramInteractor) {
-    this.paramInteractor = paramInteractor;
-    this.name = paramInteractor.getName();
-    this.typeCoercer = typeCoercerFactory.typeCoercerForType(paramInteractor.getGenericType());
+              if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
+                return true;
+              }
+
+              // Unfortunately @Value.Default isn't retained at runtime, so we use abstract-ness
+              // as a proxy for whether something has a default value.
+              if (!Modifier.isAbstract(getter.getModifiers())) {
+                return true;
+              }
+              return false;
+            });
+
+    StringBuilder builder = new StringBuilder();
+    builder.append(setter.getName().substring(3, 4).toLowerCase());
+    if (setter.getName().length() > 4) {
+      builder.append(setter.getName().substring(4));
+    }
+    this.name = builder.toString();
+
+    this.typeCoercer = typeCoercerFactory.typeCoercerForType(setter.getGenericParameterTypes()[0]);
   }
 
   public String getName() {
@@ -81,7 +136,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public boolean isOptional() {
-    return paramInteractor.isOptional();
+    return this.isOptional.get();
   }
 
   public String getPythonName() {
@@ -89,11 +144,23 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public boolean isDep() {
-    return paramInteractor.isDep();
+    Hint hint = getHint();
+    if (hint != null) {
+      return hint.isDep();
+    }
+    return Hint.DEFAULT_IS_DEP;
   }
 
   public boolean isInput() {
-    return paramInteractor.isInput();
+    Hint hint = getHint();
+    if (hint != null) {
+      return hint.isInput();
+    }
+    return Hint.DEFAULT_IS_INPUT;
+  }
+
+  private Hint getHint() {
+    return this.closestGetterOnAbstractClassOrInterface.get().getAnnotation(Hint.class);
   }
 
   /**
@@ -128,7 +195,15 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
   /** Get the value of this param as set on dto. */
   public Object get(Object dto) {
-    return paramInteractor.get(dto);
+    Method getter = this.concreteGetter.get();
+    try {
+      return getter.invoke(dto);
+    } catch (InvocationTargetException | IllegalAccessException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Error invoking getter %s on class %s", getter.getName(), getter.getDeclaringClass()),
+          e);
+    }
   }
 
   public boolean hasElementTypes(final Class<?>... types) {
@@ -161,28 +236,15 @@ public class ParamInfo implements Comparable<ParamInfo> {
       Object dto,
       @Nullable Object value)
       throws ParamInfoException {
-    Object result;
-
-    if (value != null) {
-      try {
-        result = typeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, value);
-      } catch (CoerceFailedException e) {
-        throw new ParamInfoException(name, e.getMessage(), e);
-      }
-    } else {
-      if (!paramInteractor.explicitSetDefaultValues()) {
-        return;
-      }
-      @Nullable Object defaultValue = paramInteractor.getDefaultValue();
-      if (defaultValue != null) {
-        result = defaultValue;
-      } else if (paramInteractor.isOptional()) {
-        result = Optional.empty();
-      } else {
-        throw new IllegalStateException("Parser did not specify value for non-optional field");
-      }
+    if (value == null) {
+      return;
     }
-    setCoercedValue(dto, result);
+    try {
+      setCoercedValue(
+          dto, typeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, value));
+    } catch (CoerceFailedException e) {
+      throw new ParamInfoException(name, e.getMessage(), e);
+    }
   }
 
   /**
@@ -191,7 +253,38 @@ public class ParamInfo implements Comparable<ParamInfo> {
    * <p>This is useful for things like making copies of dtos.
    */
   public void setCoercedValue(Object dto, Object value) {
-    paramInteractor.set(dto, value);
+    try {
+      setter.invoke(dto, value);
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /** Returns the most-overridden getter on the abstract Immutable. */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  private Method findClosestGetterOnAbstractClassOrInterface() {
+    Iterable<Class<?>> superClasses =
+        Iterables.skip(Types.getSupertypes(setter.getDeclaringClass().getEnclosingClass()), 1);
+    ImmutableList<String> getterNames = getGetterNames();
+
+    for (Class<?> clazz : superClasses) {
+      for (String getterName : getterNames) {
+        try {
+          return clazz.getDeclaredMethod(getterName);
+        } catch (NoSuchMethodException e) {
+          // Handled below
+        }
+      }
+    }
+    throw new IllegalStateException(
+        String.format(
+            "Couldn't find declared getter for %s#%s. Tried parent classes %s methods: %s",
+            setter.getDeclaringClass(), setter.getName(), superClasses, getterNames));
+  }
+
+  private ImmutableList<String> getGetterNames() {
+    String suffix = setter.getName().substring(3);
+    return ImmutableList.of("get" + suffix, "is" + suffix);
   }
 
   /** Only valid when comparing {@link ParamInfo} instances from the same description. */
@@ -220,330 +313,4 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public interface Traversal extends TypeCoercer.Traversal {}
-
-  /** Interface to manipulate the actual underlying param. */
-  interface ParamInteractor {
-    /** Set the value of the param to value, on target. */
-    void set(Object target, Object value);
-
-    /** @return the value of the param from target. */
-    Object get(Object target);
-
-    /** @return The default value which this param should have if un-set. */
-    @Nullable
-    Object getDefaultValue();
-
-    /** @return The type of the param. */
-    Class<?> getType();
-
-    /** @return The generic type of the param. */
-    Type getGenericType();
-
-    /** @return The name of the param. */
-    String getName();
-
-    /** See {@link Hint#isDep}. */
-    boolean isDep();
-
-    /** See {@link Hint#isInput()}. */
-    boolean isInput();
-
-    /** @return Whether the param is optional. */
-    boolean isOptional();
-
-    /**
-     * @return Whether, if the param is optional, the default value needs to be explicitly set when
-     *     setting.
-     */
-    boolean explicitSetDefaultValues();
-  }
-
-  /**
-   * ParamInteractor which interacts with a field by reflection.
-   *
-   * <p>This is a legacy implementation which only exists because not everything we need to interact
-   * with is an Immutable yet.
-   */
-  @VisibleForTesting
-  public static class FieldParamInteractor implements ParamInteractor {
-
-    private final Class<?> clazz;
-    private final Field field;
-
-    public FieldParamInteractor(Class<?> clazz, Field field) {
-      this.clazz = clazz;
-      this.field = field;
-    }
-
-    @Override
-    public void set(Object target, Object value) {
-      try {
-        field.set(target, value);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    public Object get(Object target) {
-      try {
-        return field.get(target);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    @Nullable
-    public Object getDefaultValue() {
-      Object emptyConstructorArg = EMPTY_CONSTRUCTOR_ARGS.getUnchecked(clazz);
-      try {
-        return field.get(emptyConstructorArg);
-      } catch (ReflectiveOperationException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    public Class<?> getType() {
-      return field.getType();
-    }
-
-    @Override
-    public Type getGenericType() {
-      return field.getGenericType();
-    }
-
-    @Override
-    public String getName() {
-      return field.getName();
-    }
-
-    @Override
-    public boolean isDep() {
-      Hint hint = getHint();
-      if (hint != null) {
-        return hint.isDep();
-      }
-      return Hint.DEFAULT_IS_DEP;
-    }
-
-    @Override
-    public boolean isInput() {
-      Hint hint = getHint();
-      if (hint != null) {
-        return hint.isInput();
-      }
-      return Hint.DEFAULT_IS_INPUT;
-    }
-
-    @Override
-    public boolean isOptional() {
-      return getDefaultValue() != null || Optional.class.isAssignableFrom(field.getType());
-    }
-
-    @Override
-    public boolean explicitSetDefaultValues() {
-      return true;
-    }
-
-    @Nullable
-    private Hint getHint() {
-      return field.getAnnotation(Hint.class);
-    }
-  }
-
-  /** ParamInteractor which interacts with a property of an Immutable and its Builder. */
-  @VisibleForTesting
-  public static class BuilderParamInteractor implements ParamInteractor {
-
-    private final Method setter;
-    /**
-     * Holds the closest getter for this property defined on the abstract class or interface.
-     *
-     * <p>Note that this may not be abstract, for instance if a @Value.Default is specified.
-     */
-    private final Supplier<Method> closestGetterOnAbstractClassOrInterface;
-
-    /** Holds the getter for the concrete Immutable class. */
-    private final Supplier<Method> concreteGetter;
-
-    private final Supplier<Boolean> isOptional;
-
-    @SuppressWarnings("PMD.EmptyCatchBlock")
-    public BuilderParamInteractor(Method setter) {
-      Preconditions.checkArgument(
-          setter.getParameterCount() == 1,
-          "Setter is expected to have exactly one parameter but had %s",
-          setter.getParameterCount());
-      Preconditions.checkArgument(
-          setter.getName().startsWith("set"),
-          "Setter is expected to have name starting with 'set' but was %s",
-          setter.getName());
-      Preconditions.checkArgument(
-          setter.getName().length() > 3,
-          "Setter must have name longer than just 'set' but was %s",
-          setter.getName());
-      this.setter = setter;
-
-      this.closestGetterOnAbstractClassOrInterface =
-          Suppliers.memoize(this::findClosestGetterOnAbstractClassOrInterface);
-
-      this.concreteGetter =
-          Suppliers.memoize(
-              () -> {
-                // This needs to get (and invoke) the concrete Immutable class's getter, not the abstract
-                // getter from a superclass.
-                // Accordingly, we manually find the getter there, rather than using
-                // closestGetterOnAbstractClassOrInterface.
-                Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
-                if (enclosingClass == null) {
-                  throw new IllegalStateException(
-                      String.format(
-                          "Couldn't find enclosing class of Builder %s",
-                          setter.getDeclaringClass()));
-                }
-                Iterable<String> getterNames = getGetterNames();
-                for (String possibleGetterName : getterNames) {
-                  try {
-                    return enclosingClass.getMethod(possibleGetterName);
-                  } catch (NoSuchMethodException e) {
-                    // Handled below
-                  }
-                }
-                throw new IllegalStateException(
-                    String.format(
-                        "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
-                        setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
-              });
-      this.isOptional =
-          Suppliers.memoize(
-              () -> {
-                Method getter = closestGetterOnAbstractClassOrInterface.get();
-                Class<?> type = getter.getReturnType();
-                if (CoercedTypeCache.OPTIONAL_TYPES.contains(type)) {
-                  return true;
-                }
-
-                if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
-                  return true;
-                }
-
-                // Unfortunately @Value.Default isn't retained at runtime, so we use abstract-ness
-                // as a proxy for whether something has a default value.
-                if (!Modifier.isAbstract(getter.getModifiers())) {
-                  return true;
-                }
-                return false;
-              });
-    }
-
-    @Override
-    public void set(Object builder, Object value) {
-      try {
-        setter.invoke(builder, value);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    /** @param target The built Immutable from which to get the value. */
-    @Override
-    public Object get(Object target) {
-      Method getter = this.concreteGetter.get();
-      try {
-        return getter.invoke(target);
-      } catch (InvocationTargetException | IllegalAccessException e) {
-        throw new IllegalStateException(
-            String.format(
-                "Error invoking getter %s on class %s",
-                getter.getName(), getter.getDeclaringClass()),
-            e);
-      }
-    }
-
-    @Override
-    public Object getDefaultValue() {
-      throw new IllegalStateException("Cannot call getDefaultValue on BuilderParamInteractor");
-    }
-
-    @Override
-    public Class<?> getType() {
-      return setter.getParameterTypes()[0];
-    }
-
-    @Override
-    public Type getGenericType() {
-      return setter.getGenericParameterTypes()[0];
-    }
-
-    @Override
-    public String getName() {
-      StringBuilder builder = new StringBuilder();
-      builder.append(setter.getName().substring(3, 4).toLowerCase());
-      if (setter.getName().length() > 4) {
-        builder.append(setter.getName().substring(4));
-      }
-      return builder.toString();
-    }
-
-    @Override
-    public boolean isDep() {
-      Hint hint = getHint();
-      if (hint != null) {
-        return hint.isDep();
-      }
-      return Hint.DEFAULT_IS_DEP;
-    }
-
-    @Override
-    public boolean isInput() {
-      Hint hint = getHint();
-      if (hint != null) {
-        return hint.isInput();
-      }
-      return Hint.DEFAULT_IS_INPUT;
-    }
-
-    @Override
-    public boolean isOptional() {
-      return this.isOptional.get();
-    }
-
-    @Override
-    public boolean explicitSetDefaultValues() {
-      return false;
-    }
-
-    /** Returns the most-overridden getter on the abstract Immutable. */
-    @SuppressWarnings("PMD.EmptyCatchBlock")
-    private Method findClosestGetterOnAbstractClassOrInterface() {
-      Iterable<Class<?>> superClasses =
-          Iterables.skip(Types.getSupertypes(setter.getDeclaringClass().getEnclosingClass()), 1);
-      ImmutableList<String> getterNames = getGetterNames();
-
-      for (Class<?> clazz : superClasses) {
-        for (String getterName : getterNames) {
-          try {
-            return clazz.getDeclaredMethod(getterName);
-          } catch (NoSuchMethodException e) {
-            // Handled below
-          }
-        }
-      }
-      throw new IllegalStateException(
-          String.format(
-              "Couldn't find declared getter for %s#%s. Tried parent classes %s methods: %s",
-              setter.getDeclaringClass(), setter.getName(), superClasses, getterNames));
-    }
-
-    private ImmutableList<String> getGetterNames() {
-      String suffix = setter.getName().substring(3);
-      return ImmutableList.of("get" + suffix, "is" + suffix);
-    }
-
-    private Hint getHint() {
-      return this.closestGetterOnAbstractClassOrInterface.get().getAnnotation(Hint.class);
-    }
-  }
 }

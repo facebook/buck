@@ -35,58 +35,17 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Optional;
 
 public final class ProjectGeneratorTestUtils {
 
   /** Utility class should not be instantiated. */
   private ProjectGeneratorTestUtils() {}
-
-  public static <T extends AbstractDescriptionArg> T populateArgWithDefaults(T arg) {
-    for (Field field : arg.getClass().getFields()) {
-      Object value;
-      if (field.getType().isAssignableFrom(ImmutableSortedSet.class)) {
-        value = ImmutableSortedSet.of();
-      } else if (field.getType().isAssignableFrom(ImmutableList.class)) {
-        value = ImmutableList.of();
-      } else if (field.getType().isAssignableFrom(ImmutableMap.class)) {
-        value = ImmutableMap.of();
-      } else if (field.getType().isAssignableFrom(Optional.class)) {
-        value = Optional.empty();
-      } else if (field.getType().isAssignableFrom(String.class)) {
-        value = "";
-      } else if (field.getType().isAssignableFrom(Path.class)) {
-        value = Paths.get("");
-      } else if (field.getType().isAssignableFrom(SourcePath.class)) {
-        value = new PathSourcePath(new FakeProjectFilesystem(), Paths.get(""));
-      } else if (field.getType().isPrimitive()) {
-        // do nothing, these are initialized with a zero value
-        continue;
-      } else {
-        // user should provide
-        continue;
-      }
-      try {
-        field.set(arg, value);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return arg;
-  }
 
   public static PBXTarget assertTargetExistsAndReturnTarget(
       PBXProject generatedProject, String name) {

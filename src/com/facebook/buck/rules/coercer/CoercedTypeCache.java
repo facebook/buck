@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Types;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -31,10 +30,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +46,7 @@ import java.util.function.Function;
 /** Caches the set of possible {@link ParamInfo}s for each param on a coercable type. */
 public class CoercedTypeCache {
 
-  public static final CoercedTypeCache INSTANCE = new CoercedTypeCache(false);
+  public static final CoercedTypeCache INSTANCE = new CoercedTypeCache();
 
   public static final ImmutableSet<Class<?>> OPTIONAL_TYPES =
       ImmutableSet.of(Optional.class, OptionalInt.class, OptionalLong.class, OptionalDouble.class);
@@ -67,56 +64,45 @@ public class CoercedTypeCache {
   @SuppressWarnings("unchecked")
   public static <T> Pair<Object, Function<Object, T>> instantiateSkeleton(
       Class<T> dtoType, BuildTarget buildTarget) {
-    if (AbstractDescriptionArg.class.isAssignableFrom(dtoType)) {
-      try {
-        return new Pair<>(dtoType.newInstance(), x -> (T) x);
-      } catch (IllegalAccessException | InstantiationException e) {
-        throw new IllegalStateException(
-            String.format(
-                "Could not instantiate mutable constructor arg type %s: %s",
-                dtoType, e.getMessage(), e));
-      }
-    } else {
-      try {
-        Object builder = dtoType.getMethod("builder").invoke(null);
-        Method buildMethod = builder.getClass().getMethod("build");
-        return new Pair<>(
-            builder,
-            x -> {
-              try {
-                return (T) buildMethod.invoke(x);
-              } catch (IllegalAccessException e) {
-                throw new IllegalStateException(
-                    String.format(
-                        "Error building immutable constructor arg for %s: %s",
-                        buildTarget, e.getMessage()),
-                    e);
-              } catch (InvocationTargetException e) {
-                if (e.getCause() instanceof IllegalStateException) {
-                  IllegalStateException cause = (IllegalStateException) e.getCause();
-                  if (cause.getMessage().contains("Cannot build")
-                      && cause.getMessage().contains("required")) {
-                    List<String> matches =
-                        Splitter.on(CharMatcher.anyOf("[]")).splitToList(cause.getMessage());
-                    if (matches.size() >= 2) {
-                      throw new HumanReadableException(
-                          "%s missing required argument(s): %s", buildTarget, matches.get(1));
-                    }
+    try {
+      Object builder = dtoType.getMethod("builder").invoke(null);
+      Method buildMethod = builder.getClass().getMethod("build");
+      return new Pair<>(
+          builder,
+          x -> {
+            try {
+              return (T) buildMethod.invoke(x);
+            } catch (IllegalAccessException e) {
+              throw new IllegalStateException(
+                  String.format(
+                      "Error building immutable constructor arg for %s: %s",
+                      buildTarget, e.getMessage()),
+                  e);
+            } catch (InvocationTargetException e) {
+              if (e.getCause() instanceof IllegalStateException) {
+                IllegalStateException cause = (IllegalStateException) e.getCause();
+                if (cause.getMessage().contains("Cannot build")
+                    && cause.getMessage().contains("required")) {
+                  List<String> matches =
+                      Splitter.on(CharMatcher.anyOf("[]")).splitToList(cause.getMessage());
+                  if (matches.size() >= 2) {
+                    throw new HumanReadableException(
+                        "%s missing required argument(s): %s", buildTarget, matches.get(1));
                   }
                 }
-                throw new RuntimeException(
-                    String.format(
-                        "Error building immutable constructor arg for %s: %s",
-                        buildTarget, e.getCause().getMessage()),
-                    e.getCause());
               }
-            });
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw new IllegalStateException(
-            String.format(
-                "Could not instantiate immutable constructor arg type %s: %s",
-                dtoType, e.getMessage(), e));
-      }
+              throw new RuntimeException(
+                  String.format(
+                      "Error building immutable constructor arg for %s: %s",
+                      buildTarget, e.getCause().getMessage()),
+                  e.getCause());
+            }
+          });
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      throw new IllegalStateException(
+          String.format(
+              "Could not instantiate immutable constructor arg type %s: %s",
+              dtoType, e.getMessage(), e));
     }
   }
 
@@ -124,9 +110,7 @@ public class CoercedTypeCache {
           TypeCoercerFactory, LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>>>
       coercedTypeCache;
 
-  // TODO(dwh): Remove this boolean when all Args are Immutable
-  @VisibleForTesting
-  public CoercedTypeCache(boolean allowRandomClassesToBeCoercedForTesting) {
+  private CoercedTypeCache() {
     coercedTypeCache =
         CacheBuilder.newBuilder()
             .build(
@@ -144,51 +128,27 @@ public class CoercedTypeCache {
 
                                 if (Types.getSupertypes(coercableType)
                                     .stream()
-                                    .anyMatch(
+                                    .noneMatch(
                                         c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
                                   // Sniff for @BuckStyleImmutable not @Value.Immutable because the
                                   // latter isn't retained at runtime.
-                                  Class<?> builderType;
-                                  try {
-                                    builderType =
-                                        coercableType.getMethod("builder").getReturnType();
-                                  } catch (NoSuchMethodException e) {
-                                    throw new IllegalArgumentException(
-                                        String.format(
-                                            "Tried to coerce non-Immutable type %s - all args should either "
-                                                + "be old-style (inherit from AbstractDescriptionArg) or "
-                                                + "immutable (in which case they should have a builder method)",
-                                            coercableType.getName()));
-                                  }
-                                  return extractForImmutableBuilder(
-                                      builderType, typeCoercerFactory);
-                                } else if (AbstractDescriptionArg.class.isAssignableFrom(
-                                        coercableType)
-                                    || allowRandomClassesToBeCoercedForTesting) {
-                                  // Old-style Arg which uses mutable fields.
-                                  // TODO(dwh): Remove this codepath when all constructor args are
-                                  // Immutables.
-                                  ImmutableMap.Builder<String, ParamInfo> allInfo =
-                                      new ImmutableMap.Builder<>();
-                                  for (Field field : coercableType.getFields()) {
-                                    if (Modifier.isFinal(field.getModifiers())) {
-                                      continue;
-                                    }
-                                    ParamInfo paramInfo =
-                                        new ParamInfo(
-                                            typeCoercerFactory,
-                                            new ParamInfo.FieldParamInteractor(
-                                                coercableType, field));
-                                    allInfo.put(paramInfo.getName(), paramInfo);
-                                  }
-                                  return allInfo.build();
+                                  throw new IllegalArgumentException(
+                                      String.format(
+                                          "Tried to coerce non-Immutable type %s - all args should be "
+                                              + "immutable, in which case its super-class should be annotated @BuckStyleImmutable",
+                                          coercableType.getName()));
                                 }
-                                throw new IllegalArgumentException(
-                                    String.format(
-                                        "Tried to coerce non-Immutable type %s - all args should either "
-                                            + "be old-style (inherit from AbstractDescriptionArg) or "
-                                            + "immutable (in which case its super-class should be annotated @BuckStyleImmutable)",
-                                        coercableType.getName()));
+                                Class<?> builderType;
+                                try {
+                                  builderType = coercableType.getMethod("builder").getReturnType();
+                                } catch (NoSuchMethodException e) {
+                                  throw new IllegalArgumentException(
+                                      String.format(
+                                          "Tried to coerce non-Immutable type %s - be "
+                                              + "immutable, in which case they should have a builder method",
+                                          coercableType.getName()));
+                                }
+                                return extractForImmutableBuilder(builderType, typeCoercerFactory);
                               }
                             });
                   }
@@ -210,9 +170,7 @@ public class CoercedTypeCache {
     for (Map.Entry<String, Set<Method>> entry : foundSetters.entrySet()) {
       if (entry.getValue().size() == 1) {
         ParamInfo paramInfo =
-            new ParamInfo(
-                typeCoercerFactory,
-                new ParamInfo.BuilderParamInteractor(Iterables.getOnlyElement(entry.getValue())));
+            new ParamInfo(typeCoercerFactory, Iterables.getOnlyElement(entry.getValue()));
         allInfo.put(paramInfo.getName(), paramInfo);
         continue;
       }
@@ -238,8 +196,7 @@ public class CoercedTypeCache {
                 "Builder for coercable type %s had 2 setters named %s but they were not Optional "
                     + "and non-Optional. Don't know how to coerce."));
       }
-      ParamInfo paramInfo =
-          new ParamInfo(typeCoercerFactory, new ParamInfo.BuilderParamInteractor(takesOptional));
+      ParamInfo paramInfo = new ParamInfo(typeCoercerFactory, takesOptional);
       allInfo.put(paramInfo.getName(), paramInfo);
     }
     return allInfo.build();

@@ -96,15 +96,6 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  public static class BadName extends AbstractDescriptionArg {
-    public int name;
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void theNameFieldMustBeAString() {
-    buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), BadName.class);
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractLotsOfOptions {
