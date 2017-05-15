@@ -384,8 +384,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    JavaLibrary libraryOneRule = (JavaLibrary) ruleResolver.requireRule(libraryOneTarget);
-    BuildRule libraryTwoRule = ruleResolver.requireRule(libraryTwoTarget);
+    DefaultJavaLibrary libraryOneRule =
+        (DefaultJavaLibrary) ruleResolver.requireRule(libraryOneTarget);
+    DefaultJavaLibrary libraryTwoRule =
+        (DefaultJavaLibrary) ruleResolver.requireRule(libraryTwoTarget);
 
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
@@ -641,7 +643,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   public void testStepsPresenceForForDirectJarSpooling() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRule javaLibraryBuildRule =
+    DefaultJavaLibrary javaLibraryBuildRule =
         createDefaultJavaLibraryRuleWithAbiKey(
             buildTarget,
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
@@ -665,7 +667,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRule javaLibraryBuildRule =
+    DefaultJavaLibrary javaLibraryBuildRule =
         createDefaultJavaLibraryRuleWithAbiKey(
             buildTarget,
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
@@ -690,7 +692,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRule javaLibraryBuildRule =
+    DefaultJavaLibrary javaLibraryBuildRule =
         createDefaultJavaLibraryRuleWithAbiKey(
             buildTarget,
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
@@ -1075,7 +1077,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
-  private BuildRule createDefaultJavaLibraryRuleWithAbiKey(
+  private DefaultJavaLibrary createDefaultJavaLibraryRuleWithAbiKey(
       BuildTarget buildTarget,
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
@@ -1371,7 +1373,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     public ImmutableList<String> buildAndGetCompileParameters()
         throws InterruptedException, IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-      BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
+      DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);
       BuildContext buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
@@ -1389,7 +1391,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       return options;
     }
 
-    private BuildRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
+    private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
       annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);

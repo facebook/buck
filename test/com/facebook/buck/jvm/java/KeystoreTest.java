@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -59,7 +58,7 @@ public class KeystoreTest {
   public void testBuildInternal() throws Exception {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
-    BuildRule keystore = createKeystoreRuleForTest();
+    Keystore keystore = createKeystoreRuleForTest();
     List<Step> buildSteps = keystore.getBuildSteps(buildContext, new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);
   }

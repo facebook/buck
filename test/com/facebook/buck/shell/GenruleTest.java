@@ -118,7 +118,7 @@ public class GenruleTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             filesystem.getRootPath(), "//src/com/facebook/katana:katana_manifest");
-    BuildRule genrule =
+    Genrule genrule =
         GenruleBuilder.newGenruleBuilder(buildTarget)
             .setBash("python convert_to_katana.py AndroidManifest.xml > $OUT")
             .setCmdExe("python convert_to_katana.py AndroidManifest.xml > %OUT%")
@@ -148,15 +148,14 @@ public class GenruleTest {
                     .getGenDir()
                     .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
             .toString(),
-        ((Genrule) genrule).getAbsoluteOutputFilePath(pathResolver));
+        genrule.getAbsoluteOutputFilePath(pathResolver));
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     ImmutableList<Path> inputsToCompareToOutputs =
         ImmutableList.of(
             filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
             filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"));
     assertEquals(
-        inputsToCompareToOutputs,
-        pathResolver.filterInputsToCompareToOutput(((Genrule) genrule).getSrcs()));
+        inputsToCompareToOutputs, pathResolver.filterInputsToCompareToOutput(genrule.getSrcs()));
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = genrule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -325,7 +324,7 @@ public class GenruleTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
-    BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
+    Genrule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     List<Step> steps =
@@ -353,21 +352,21 @@ public class GenruleTest {
   public void testIsWorkerGenruleReturnsTrue() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
-    assertTrue(((Genrule) genrule).isWorkerGenrule());
+    Genrule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
+    assertTrue(genrule.isWorkerGenrule());
   }
 
   @Test
   public void testIsWorkerGenruleReturnsFalse() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule genrule =
+    Genrule genrule =
         GenruleBuilder.newGenruleBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule_no_worker"))
             .setCmd("echo hello >> $OUT")
             .setOut("output.txt")
             .build(ruleResolver, filesystem);
-    assertFalse(((Genrule) genrule).isWorkerGenrule());
+    assertFalse(genrule.isWorkerGenrule());
   }
 
   @Test
@@ -428,7 +427,7 @@ public class GenruleTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:example");
-    BuildRule rule =
+    Genrule rule =
         GenruleBuilder.newGenruleBuilder(target, filesystem)
             .setBash("ignored")
             .setSrcs(
@@ -440,8 +439,7 @@ public class GenruleTest {
             .build(resolver);
 
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    ((Genrule) rule)
-        .addSymlinkCommands(FakeBuildContext.withSourcePathResolver(pathResolver), builder);
+    rule.addSymlinkCommands(FakeBuildContext.withSourcePathResolver(pathResolver), builder);
     ImmutableList<Step> commands = builder.build();
 
     Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
