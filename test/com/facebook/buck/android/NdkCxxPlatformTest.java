@@ -16,7 +16,10 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -25,10 +28,12 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
@@ -52,12 +57,16 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,7 +74,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -225,6 +236,7 @@ public class NdkCxxPlatformTest {
     assertThat(platform.getCxxPlatform().getCppflags(), hasItems("-std=gnu11", "-O2"));
   }
 
+  @Test
   public void testExtraNdkFlags() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
@@ -244,9 +256,10 @@ public class NdkCxxPlatformTest {
                 ImmutableMap.of(
                     "ndk",
                         ImmutableMap.of(
-                            "extra_cflags", "-fa-flag",
-                            "extra_cppflags", "-DSOME_FLAG -DSOME_OTHER_FLAG",
-                            "extra_cxxflags", "-fc++flag"),
+                            "extra_cflags", "-DSOME_CFLAG -DBUCK -std=buck -Og -Wno-buck",
+                            "extra_cppflags", "-DSOME_CPPFLAG",
+                            "extra_cxxflags",
+                                "-DSOME_CXXFLAG -DBUCK -std=buck++ -Og -Wno-buck -frtti -fexceptions"),
                     "cxx",
                         ImmutableMap.of(
                             "cxxflags", "-Wignored-cxx-flag",
@@ -265,13 +278,157 @@ public class NdkCxxPlatformTest {
             NdkCxxRuntime.GNUSTL,
             new AlwaysFoundExecutableFinder(),
             false /* strictToolchainPaths */);
-    assertThat(platform.getCxxPlatform().getCflags(), hasItems("-std=gnu11", "-O2", "-fa-flag"));
+
+    // Check that we can add new flags and that we can actually override things like
+    // warning/optimazation/etc.
+    ImmutableList<String> cppflags = platform.getCxxPlatform().getCppflags();
     assertThat(
-        platform.getCxxPlatform().getCxxflags(),
-        hasItems("-std=gnu++11", "-O2", "-fno-exceptions", "-fno-rtti", "-fc++flag"));
+        cppflags,
+        hasItems(
+            "-std=buck", "-O2", "-Og", "-DSOME_CFLAG", "-DSOME_CPPFLAG", "-DBUCK", "-Wno-buck"));
+    assertThat(cppflags, not(hasItems("-DSOME_CXXFLAG")));
+    // TODO(cjhopman): assertLastMatchingFlagIs(cppflags, f -> f.startsWith("-O"), "-Og");
+    // TODO(cjhopman): assertLastMatchingFlagIs(cppflags, f -> f.startsWith("-std="), "-std=buck");
+
+    ImmutableList<String> cflags = platform.getCxxPlatform().getCflags();
+    assertThat(cflags, hasItems("-Og", "-O2", "-std=buck", "-DSOME_CFLAG", "-DBUCK", "-Wno-buck"));
+    assertThat(cflags, not(hasItem("-DSOME_CPPFLAG")));
+    assertThat(cflags, not(hasItem("-DSOME_CXXFLAG")));
+
+    // TODO(cjhopman): assertLastMatchingFlagIs(cflags, f -> f.startsWith("-O"), "-Og");
+    // TODO(cjhopman): assertLastMatchingFlagIs(cflags, f -> f.startsWith("-W"), "-Wno-buck");
+    // TODO(cjhopman): assertLastMatchingFlagIs(cflags, f -> f.startsWith("-std="), "-std=buck");
+
+    ImmutableList<String> cxxppflags = platform.getCxxPlatform().getCxxppflags();
+    assertThat(cxxppflags, hasItems("-O2", "-DSOME_CXXFLAG", "-DBUCK", "-Og", "-Wno-buck"));
+    assertThat(cxxppflags, not(hasItem("-DSOME_CFLAG")));
+    // TODO(cjhopman): assertThat(cxxppflags, not(hasItem("-DSOME_CPPFLAG")));
+    // TODO(cjhopman): assertLastMatchingFlagIs(cxxppflags, f -> f.startsWith("-O"), "-Og");
+    // TODO(cjhopman): assertLastMatchingFlagIs(cxxppflags, f -> f.startsWith("-std="), "-std=buck++");
+
+    ImmutableList<String> cxxflags = platform.getCxxPlatform().getCxxflags();
     assertThat(
-        platform.getCxxPlatform().getCppflags(),
-        hasItems("-std=gnu11", "-O2", "-DSOME_FLAG", "-DSOME_OTHER_FLAG"));
+        cxxflags,
+        hasItems(
+            "-std=gnu++11",
+            "-O2",
+            "-DSOME_CXXFLAG",
+            "-DBUCK",
+            "-Og",
+            "-fno-exceptions",
+            "-fno-rtti",
+            "-Wno-buck"));
+    assertThat(cxxflags, not(hasItem("-DSOME_CFLAG")));
+    assertThat(cxxflags, not(hasItem("-DSOME_CPPFLAG")));
+    // TODO(cjhopman): assertLastMatchingFlagIs(cxxflags, f -> f.startsWith("-O"), "-Og");
+    // TODO(cjhopman): assertLastMatchingFlagIs(cxxflags, f -> f.startsWith("-std="), "-std=buck++");
+    // TODO(cjhopman): assertLastMatchingFlagIs(cxxflags, f -> f.equals("-frtti") || f.equals("-fno-rtti"), "-frtti");
+    // TODO(cjhopman): assertLastMatchingFlagIs(
+    //    cxxflags, f -> f.equals("-fexceptions") || f.equals("-fno-exceptions"), "-fexceptions");
+
+    // TODO(cjhopman): delete this, it's just to have a use of assertLastMatchingFlagIs
+    assertLastMatchingFlagIs(ImmutableList.of(""), f -> true, "");
+  }
+
+  private void assertLastMatchingFlagIs(
+      ImmutableList<String> flags, Function<String, Boolean> filter, String expected) {
+    assertThat(flags, hasItems(expected));
+    for (String flag : flags.reverse()) {
+      if (filter.apply(flag)) {
+        assertThat(flag, is(expected));
+        return;
+      }
+    }
+  }
+
+  // This test is mostly just so that changes are forced to update this string if they change the
+  // ndk platform flags so that such changes can actually be reviewed.
+  @Test
+  public void testExtraNdkFlagsLiterally() throws IOException, InterruptedException {
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path ndkRoot = tmp.newFolder("android-ndk-r10b");
+    NdkCxxPlatformTargetConfiguration targetConfiguration =
+        NdkCxxPlatforms.getTargetConfiguration(
+            NdkCxxPlatforms.TargetCpuType.X86,
+            NdkCxxPlatformCompiler.builder()
+                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setVersion("gcc-version")
+                .setGccVersion("clang-version")
+                .build(),
+            "target-app-platform");
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "ndk",
+                    ImmutableMap.of(
+                        "extra_cflags",
+                        "--start-extra-cflags-- -DSOME_CFLAG --end-extra-cflags--",
+                        "extra_cppflags",
+                        "--start-extra-cppflags-- -DSOME_CPPFLAG --end-extra-cppflags--",
+                        "extra_cxxflags",
+                        "--start-extra-cxxflags-- -DSOME_CXXFLAG --end-extra-cxxflags--"),
+                    "cxx",
+                    ImmutableMap.of(
+                        "cxxflags", "-Wignored-cxx-flag",
+                        "cflags", "-Wignored-c-flag",
+                        "cppflags", "-Wignored-cpp-flag")))
+            .build();
+    NdkCxxPlatform platform =
+        NdkCxxPlatforms.build(
+            new CxxBuckConfig(buckConfig),
+            new AndroidBuckConfig(buckConfig, Platform.detect()),
+            filesystem,
+            InternalFlavor.of("android-x86"),
+            Platform.detect(),
+            ndkRoot,
+            targetConfiguration,
+            NdkCxxRuntime.GNUSTL,
+            new AlwaysFoundExecutableFinder(),
+            false /* strictToolchainPaths */);
+
+    Joiner joiner = Joiner.on("\n");
+    CxxPlatform cxxPlatform = platform.getCxxPlatform();
+    DebugPathSanitizer sanitizer = cxxPlatform.getCompilerDebugPathSanitizer();
+    Path expectedFlags = TestDataHelper.getTestDataDirectory(this).resolve("ndkcxxplatforms.flags");
+    String expected = Files.toString(expectedFlags.toFile(), Charsets.UTF_8);
+
+    // This string is constructed to try to get intellij/phabricator to not detect moves across the
+    // boundaries of different flag types. We could split this into multiple files, but the tradeoff
+    // there is then that changes need to update all those files and reviewing the changes is across
+    // multiple files.
+    String actual =
+        String.format(
+            "---BEGIN CFLAGS-------\n"
+                + "%s\n"
+                + "---END CFLAGS---------\n"
+                + "----------------------\n"
+                + "======================\n"
+                + "----------------------\n"
+                + "---BEGIN CPPFLAGS-----\n"
+                + "%s\n"
+                + "---END CPPFLAGS-------\n"
+                + "----------------------\n"
+                + "======================\n"
+                + "----------------------\n"
+                + "---BEGIN CXXFLAGS-----\n"
+                + "%s\n"
+                + "---END CXXFLAGS-------\n"
+                + "----------------------\n"
+                + "======================\n"
+                + "----------------------\n"
+                + "---BEGIN CXXPPFLAGS---\n"
+                + "%s\n"
+                + "---END CXXPPFLAGS-----\n",
+            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCflags())),
+            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCppflags())),
+            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCxxflags())),
+            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCxxppflags())));
+    // Use assertEquals instead of assertThat because Intellij's handling of failures of
+    // assertEquals is more user-friendly than for assertThat.
+    assertEquals(expected, actual);
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path
