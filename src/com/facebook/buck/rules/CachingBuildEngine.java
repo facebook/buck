@@ -373,110 +373,96 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Preconditions.checkNotNull(cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
   }
 
-  private AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCaches(
+  private Optional<BuildResult> checkCaches(
       final BuildRule rule,
       final BuildEngineBuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
-      final BuildInfoRecorder buildInfoRecorder) {
-    return depResults -> {
-      for (BuildResult depResult : depResults) {
-        if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE
-            && depResult.getStatus() != BuildRuleStatus.SUCCESS) {
-          return Futures.immediateFuture(
-              Optional.of(
-                  BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure()))));
-        }
-      }
+      final BuildInfoRecorder buildInfoRecorder)
+      throws IOException {
+    // If we've already seen a failure, exit early.
+    if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE
+        && !context.isKeepGoing()
+        && firstFailure != null) {
+      return Optional.of(BuildResult.canceled(rule, firstFailure));
+    }
 
-      // If we've already seen a failure, exit early.
-      if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE
-          && !context.isKeepGoing()
-          && firstFailure != null) {
-        return Futures.immediateFuture(Optional.of(BuildResult.canceled(rule, firstFailure)));
-      }
+    // Handle input-based rule keys.
+    if (SupportsInputBasedRuleKey.isSupported(rule)) {
+      // Calculate input-based rule key.
+      Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey(rule, context.getEventBus());
+      if (inputRuleKey.isPresent()) {
 
-      // Handle input-based rule keys.
-      if (SupportsInputBasedRuleKey.isSupported(rule)) {
+        // Perform the cache fetch.
+        try (BuckEvent.Scope scope =
+            BuildRuleCacheEvent.startCacheCheckScope(
+                context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
+          // Input-based rule keys.
+          Optional<BuildResult> inputResult =
+              performInputBasedCacheFetch(
+                  rule, context, onDiskBuildInfo, buildInfoRecorder, inputRuleKey.get());
 
-        // Calculate input-based rule key.
-        Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey(rule, context.getEventBus());
-        if (inputRuleKey.isPresent()) {
-
-          // Perform the cache fetch.
-          try (BuckEvent.Scope scope =
-              BuildRuleCacheEvent.startCacheCheckScope(
-                  context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
-            // Input-based rule keys.
-            Optional<BuildResult> inputResult =
-                performInputBasedCacheFetch(
-                    rule, context, onDiskBuildInfo, buildInfoRecorder, inputRuleKey.get());
-
-            if (inputResult.isPresent()) {
-              return Futures.immediateFuture(inputResult);
-            }
+          if (inputResult.isPresent()) {
+            return inputResult;
           }
         }
       }
+    }
 
-      // Dep-file rule keys.
-      if (useDependencyFileRuleKey(rule)) {
+    // Dep-file rule keys.
+    if (useDependencyFileRuleKey(rule)) {
+      // Try to get the current dep-file rule key.
+      Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
+          calculateDepFileRuleKey(
+              rule,
+              context,
+              onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
+              /* allowMissingInputs */ true);
+      if (depFileRuleKeyAndInputs.isPresent()) {
+        RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
+        buildInfoRecorder.addBuildMetadata(
+            BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
 
-        // Try to get the current dep-file rule key.
-        Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
-            calculateDepFileRuleKey(
-                rule,
-                context,
-                onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
-                /* allowMissingInputs */ true);
-        if (depFileRuleKeyAndInputs.isPresent()) {
-          RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
-          buildInfoRecorder.addBuildMetadata(
-              BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
+        // Check the input-based rule key says we're already built.
+        Optional<RuleKey> lastDepFileRuleKey =
+            onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+        if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
+          return Optional.of(
+              BuildResult.success(
+                  rule,
+                  BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
+                  CacheResult.localKeyUnchangedHit()));
+        }
+      }
+    }
 
-          // Check the input-based rule key says we're already built.
-          Optional<RuleKey> lastDepFileRuleKey =
-              onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-          if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-            return Futures.immediateFuture(
-                Optional.of(
-                    BuildResult.success(
-                        rule,
-                        BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                        CacheResult.localKeyUnchangedHit())));
+    // Manifest caching
+    if (useManifestCaching(rule)) {
+      Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(rule, context.getEventBus());
+      if (manifestKey.isPresent()) {
+        buildInfoRecorder.addBuildMetadata(
+            BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
+        try (BuckEvent.Scope scope =
+            BuildRuleCacheEvent.startCacheCheckScope(
+                context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
+          Optional<BuildResult> manifestResult =
+              performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
+          if (manifestResult.isPresent()) {
+            return manifestResult;
           }
         }
       }
+    }
 
-      // Manifest caching
-      if (useManifestCaching(rule)) {
-        Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(rule, context.getEventBus());
-        if (manifestKey.isPresent()) {
-          buildInfoRecorder.addBuildMetadata(
-              BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-          try (BuckEvent.Scope scope =
-              BuildRuleCacheEvent.startCacheCheckScope(
-                  context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
-            Optional<BuildResult> manifestResult =
-                performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
-            if (manifestResult.isPresent()) {
-              return Futures.immediateFuture(manifestResult);
-            }
-          }
-        }
-      }
-
-      // Cache lookups failed, so if we're just trying to populate, we've failed.
-      if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
-        LOG.info("Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
-        return Futures.immediateFuture(
-            Optional.of(
-                BuildResult.canceled(
-                    rule,
-                    new HumanReadableException(
-                        "Skipping %s: in cache population mode local builds are disabled", rule))));
-      }
-      return Futures.immediateFuture(Optional.empty());
-    };
+    // Cache lookups failed, so if we're just trying to populate, we've failed.
+    if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+      LOG.info("Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
+      return Optional.of(
+          BuildResult.canceled(
+              rule,
+              new HumanReadableException(
+                  "Skipping %s: in cache population mode local builds are disabled", rule)));
+    }
+    return Optional.empty();
   }
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache(
@@ -555,15 +541,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     ListenableFuture<List<BuildResult>> getDepResults =
         getDepResults(rule, buildContext, executionContext, asyncCallbacks);
 
-    // 4. Return to the current rule and check caches to see if we can avoid building
-    // locally.
-    AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCachesCallback =
-        checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder);
-
-    ListenableFuture<Optional<BuildResult>> checkCachesResult =
+    ListenableFuture<Optional<BuildResult>> buildResult =
         Futures.transformAsync(
             getDepResults,
-            ruleAsyncFunction(rule, buildContext.getEventBus(), checkCachesCallback),
+            depResults -> handleDepsResults(rule, depResults),
+            MoreExecutors.directExecutor());
+
+    // 4. Return to the current rule and check caches to see if we can avoid building
+    // locally.
+    ListenableFuture<Optional<BuildResult>> checkCachesResult =
+        Futures.transformAsync(
+            buildResult,
+            ruleAsyncFunction(
+                rule,
+                buildContext.getEventBus(),
+                result -> {
+                  if (result.isPresent()) {
+                    return Futures.immediateFuture(result);
+                  }
+                  return Futures.immediateFuture(
+                      checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder));
+                }),
             serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
 
     // 5. Build the current rule locally, if we have to.
@@ -612,6 +610,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         BuildInfo.MetadataKey.DEP_FILE);
     return Optional.of(
         BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
+  }
+
+  private ListenableFuture<Optional<BuildResult>> handleDepsResults(
+      BuildRule rule, List<BuildResult> depResults) {
+    for (BuildResult depResult : depResults) {
+      if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE
+          && depResult.getStatus() != BuildRuleStatus.SUCCESS) {
+        return Futures.immediateFuture(
+            Optional.of(
+                BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure()))));
+      }
+    }
+    return Futures.immediateFuture(Optional.empty());
   }
 
   private boolean verifyRecordedPathHashes(
