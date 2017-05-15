@@ -26,7 +26,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.LineProcessorRunnable;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -34,8 +33,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -188,28 +189,24 @@ public class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutor.LaunchedProcess process = executor.launchProcess(params);
 
     // We buffer error messages in memory, as these are typically small.
-    ByteArrayOutputStream error = new ByteArrayOutputStream();
-
-    // Fire up managed threads to process the stdout and stderr lines.
+    String err;
     int exitCode;
-    try {
-      try (LineProcessorRunnable errorProcessor =
-          createErrorTransformerFactory(context)
-              .createTransformerThread(context, compiler.getErrorStream(process), error)) {
-        errorProcessor.start();
-        errorProcessor.waitFor();
-      } catch (Throwable thrown) {
-        executor.destroyLaunchedProcess(process);
-        throw thrown;
-      }
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(compiler.getErrorStream(process)))) {
+      CxxErrorTransformer cxxErrorTransformer =
+          new CxxErrorTransformer(
+              filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
+      err =
+          reader.lines().map(cxxErrorTransformer::transformLine).collect(Collectors.joining("\n"));
       exitCode = executor.waitForLaunchedProcess(process).getExitCode();
+    } catch (UncheckedIOException e) {
+      throw e.getCause();
     } finally {
       executor.destroyLaunchedProcess(process);
       executor.waitForLaunchedProcess(process);
     }
 
     // If we generated any error output, print that to the console.
-    String err = new String(error.toByteArray());
     if (!err.isEmpty()) {
       context
           .getBuckEventBus()
@@ -231,11 +228,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     } else {
       return ConsoleEvent.create(level, message);
     }
-  }
-
-  private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {
-    return new CxxErrorTransformerFactory(
-        filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
   }
 
   @Override

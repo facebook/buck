@@ -42,7 +42,7 @@ import org.junit.runners.Parameterized;
  * absolute path modes.
  */
 @RunWith(Parameterized.class)
-public class CxxErrorTransformerFactoryTest {
+public class CxxErrorTransformerTest {
 
   @Parameterized.Parameters(name = "{index}: {0}")
   public static Collection<Object[]> data() {
@@ -63,13 +63,13 @@ public class CxxErrorTransformerFactoryTest {
         new Object[][] {
           {
             "relative paths",
-            new CxxErrorTransformerFactory(filesystem, false, normalizer),
+            new CxxErrorTransformer(filesystem, false, normalizer),
             filesystem.relativize(replacement),
             original
           },
           {
             "absolute paths",
-            new CxxErrorTransformerFactory(filesystem, true, normalizer),
+            new CxxErrorTransformer(filesystem, true, normalizer),
             replacement.toAbsolutePath(),
             original
           }
@@ -80,7 +80,7 @@ public class CxxErrorTransformerFactoryTest {
   public String datasetName;
 
   @Parameterized.Parameter(value = 1)
-  public CxxErrorTransformerFactory transformer;
+  public CxxErrorTransformer transformer;
 
   @Parameterized.Parameter(value = 2)
   public Path expectedPath;

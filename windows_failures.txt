@@ -12,7 +12,7 @@
 !com.facebook.buck.cxx.CxxCompilationDatabaseTest
 !com.facebook.buck.cxx.CxxCompileStepIntegrationTest
 !com.facebook.buck.cxx.CxxDependencyFileIntegrationTest
-!com.facebook.buck.cxx.CxxErrorTransformerFactoryTest
+!com.facebook.buck.cxx.CxxErrorTransformerTest
 !com.facebook.buck.cxx.CxxGtestTestTest
 !com.facebook.buck.cxx.CxxLibraryDescriptionTest#createBuildRule
 !com.facebook.buck.cxx.CxxLibraryDescriptionTest#createBuildRule.*

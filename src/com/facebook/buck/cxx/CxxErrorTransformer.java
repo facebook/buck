@@ -18,15 +18,10 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.LineProcessorRunnable;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -38,7 +33,7 @@ import java.util.regex.Pattern;
  * <p>When preprocessing/compiling, the compiler may be run in a manner where the emitted paths are
  * inaccurate, this stream transformer rewrite error output to give sensible paths to the user.
  */
-class CxxErrorTransformerFactory {
+class CxxErrorTransformer {
 
   private final ProjectFilesystem filesystem;
   private final boolean shouldAbsolutize;
@@ -48,23 +43,11 @@ class CxxErrorTransformerFactory {
    * @param shouldAbsolutize whether to transform paths to absolute paths.
    * @param pathNormalizer Path replacements to rewrite symlinked C headers.
    */
-  public CxxErrorTransformerFactory(
+  public CxxErrorTransformer(
       ProjectFilesystem filesystem, boolean shouldAbsolutize, HeaderPathNormalizer pathNormalizer) {
     this.filesystem = filesystem;
     this.shouldAbsolutize = shouldAbsolutize;
     this.pathNormalizer = pathNormalizer;
-  }
-
-  /** Create a thread to process lines in the stream asynchronously. */
-  public LineProcessorRunnable createTransformerThread(
-      ExecutionContext context, InputStream inputStream, OutputStream outputStream) {
-    return new LineProcessorRunnable(
-        context.getExecutorService(ExecutorPool.CPU), inputStream, outputStream) {
-      @Override
-      public String process(String line) {
-        return transformLine(line);
-      }
-    };
   }
 
   private static final ImmutableList<Pattern> PATH_PATTERNS =
