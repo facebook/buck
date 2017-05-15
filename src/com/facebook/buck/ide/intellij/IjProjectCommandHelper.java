@@ -384,13 +384,11 @@ public class IjProjectCommandHelper {
                 cell,
                 enableParserProfiling,
                 executor,
-                Sets.union(
-                    projectGraph
-                        .getNodes()
-                        .stream()
-                        .map(TargetNode::getBuildTarget)
-                        .collect(MoreCollectors.toImmutableSet()),
-                    explicitTestTargets));
+                projectGraph
+                    .getNodes()
+                    .stream()
+                    .map(TargetNode::getBuildTarget)
+                    .collect(MoreCollectors.toImmutableSet()));
       }
     }
 
