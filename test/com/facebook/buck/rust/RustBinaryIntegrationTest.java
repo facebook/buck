@@ -107,10 +107,9 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
         Matchers.allOf(
+            Matchers.containsString("warning: constant item is never used: `foo`"),
             Matchers.containsString(
-                "warning: constant item is never used: `foo`, #[warn(dead_code)] on by default"),
-            Matchers.containsString(
-                "warning: constant `foo` should have an upper case name such as `FOO`,")));
+                "warning: constant `foo` should have an upper case name such as `FOO`")));
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy");
