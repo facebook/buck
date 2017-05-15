@@ -34,6 +34,7 @@ public class MessageTransport implements AutoCloseable {
       throws Exception {
     checkNotClose();
     String serializedMessage = serializer.serializeInvocation(message);
+    workerProcess.ensureLaunchAndHandshake();
     WorkerJobResult result = workerProcess.submitAndWaitForJob(serializedMessage);
     ReturnResultMessage resultMessage = serializer.deserializeResult(result.getStdout().orElse(""));
     return resultMessage;
