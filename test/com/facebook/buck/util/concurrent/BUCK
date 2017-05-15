@@ -8,7 +8,10 @@ java_library(
         ],
     ),
     visibility = ["//test/..."],
-    deps = ["//third-party/java/guava:guava"],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 standard_java_test(
