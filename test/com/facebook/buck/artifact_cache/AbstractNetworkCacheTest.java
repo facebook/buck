@@ -71,6 +71,7 @@ public class AbstractNetworkCacheTest {
         new AbstractNetworkCache(
             NetworkCacheArgs.builder()
                 .setCacheName("AbstractNetworkCacheTest")
+                .setCacheMode(ArtifactCacheMode.http)
                 .setRepository("some_repository")
                 .setScheduleType("some_schedule_type")
                 .setFetchClient(EasyMock.createMock(HttpService.class))

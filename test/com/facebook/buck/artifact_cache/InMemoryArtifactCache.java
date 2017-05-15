@@ -52,7 +52,8 @@ public class InMemoryArtifactCache implements ArtifactCache {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    return CacheResult.hit("in-memory", artifact.metadata, artifact.data.length);
+    return CacheResult.hit(
+        "in-memory", ArtifactCacheMode.dir, artifact.metadata, artifact.data.length);
   }
 
   public void store(ArtifactInfo info, byte[] data) {

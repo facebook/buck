@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
@@ -272,7 +273,7 @@ public class DistBuildSlaveEventBusListenerTest {
             started1,
             BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.SUCCESS,
-            CacheResult.hit("buckcache"),
+            CacheResult.hit("buckcache", ArtifactCacheMode.http),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE),
             Optional.empty(),
@@ -298,7 +299,7 @@ public class DistBuildSlaveEventBusListenerTest {
             started5,
             BuildRuleKeys.of(fakeRuleKey),
             BuildRuleStatus.FAIL,
-            CacheResult.error("buckcache", "connection error"),
+            CacheResult.error("buckcache", ArtifactCacheMode.http, "connection error"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

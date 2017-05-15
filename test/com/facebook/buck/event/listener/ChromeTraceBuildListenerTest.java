@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -218,7 +219,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
         ArtifactCacheTestUtils.newFetchFinishedEvent(
-            artifactCacheEventStarted, CacheResult.hit("http")));
+            artifactCacheEventStarted, CacheResult.hit("http", ArtifactCacheMode.http)));
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(

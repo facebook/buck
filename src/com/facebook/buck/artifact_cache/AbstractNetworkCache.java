@@ -39,6 +39,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   private static final Logger LOG = Logger.get(AbstractNetworkCache.class);
 
   protected final String name;
+  protected final ArtifactCacheMode mode;
   protected final String repository;
   protected final String scheduleType;
   protected final HttpService fetchClient;
@@ -54,6 +55,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   public AbstractNetworkCache(NetworkCacheArgs args) {
     this.name = args.getCacheName();
+    this.mode = args.getCacheMode();
     this.repository = args.getRepository();
     this.scheduleType = args.getScheduleType();
     this.fetchClient = args.getFetchClient();
@@ -93,7 +95,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
       reportFailure(e, "fetch(%s): %s", ruleKey, msg);
-      CacheResult cacheResult = CacheResult.error(name, msg);
+      CacheResult cacheResult = CacheResult.error(name, mode, msg);
       eventBuilder.getFetchBuilder().setFetchResult(cacheResult).setErrorMessage(msg);
       buckEventBus.post(eventBuilder.build());
       return cacheResult;
@@ -188,7 +190,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     return tmp;
   }
 
-  protected void reportFailure(Exception exception, String format, Object... args) {
+  private void reportFailure(Exception exception, String format, Object... args) {
     LOG.warn(exception, format, args);
     reportFailureToEvenBus(format, args);
   }

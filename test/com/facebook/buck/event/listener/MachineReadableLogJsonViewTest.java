@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ParsingEvent;
@@ -145,6 +146,7 @@ public class MachineReadableLogJsonViewTest {
             CacheResult.of(
                 CacheResultType.MISS,
                 Optional.of("my-secret-source"),
+                Optional.of(ArtifactCacheMode.dir),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
@@ -157,7 +159,8 @@ public class MachineReadableLogJsonViewTest {
     String message = WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\","
-            + "\"cacheSource\":\"my-secret-source\"},"
+            + "\"cacheSource\":\"my-secret-source\","
+            + "\"cacheMode\":\"dir\"},"
             + "\"buildRule\":{\"name\":\"//fake:rule\"},"
             + "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"},"
             + "\"inputRuleKey\":{\"hashCode\":\"bbbb\"}},"

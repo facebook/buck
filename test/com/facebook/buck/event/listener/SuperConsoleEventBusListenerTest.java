@@ -29,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
@@ -308,7 +309,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             dirArtifactCacheEventFactory.newFetchFinishedEvent(
-                dirFetchStarted, CacheResult.hit("dir")),
+                dirFetchStarted, CacheResult.hit("dir", ArtifactCacheMode.dir)),
             742L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

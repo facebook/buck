@@ -50,6 +50,8 @@ import java.util.Optional;
 public class DirArtifactCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(DirArtifactCache.class);
+
+  private static final ArtifactCacheMode CACHE_MODE = ArtifactCacheMode.dir;
   // Ratio of bytes stored to max size that expresses how many bytes need to be stored after we
   // attempt to delete old files.
   private static final float STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER = 0.5f;
@@ -107,12 +109,15 @@ public class DirArtifactCache implements ArtifactCache {
       // Now copy the artifact out.
       filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.empty()), output.get());
 
-      result = CacheResult.hit(name, metadata.build(), filesystem.getFileSize(output.get()));
+      result =
+          CacheResult.hit(name, CACHE_MODE, metadata.build(), filesystem.getFileSize(output.get()));
     } catch (NoSuchFileException e) {
       result = CacheResult.miss();
     } catch (IOException e) {
       LOG.warn(e, "Artifact fetch(%s, %s) error", ruleKey, output);
-      result = CacheResult.error(name, String.format("%s: %s", e.getClass(), e.getMessage()));
+      result =
+          CacheResult.error(
+              name, CACHE_MODE, String.format("%s: %s", e.getClass(), e.getMessage()));
     }
 
     LOG.verbose(

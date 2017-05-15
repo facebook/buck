@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -928,7 +929,7 @@ public class CachingBuildEngineTest {
           new NoopArtifactCache() {
             @Override
             public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-              return CacheResult.error("cache", "error");
+              return CacheResult.error("cache", ArtifactCacheMode.dir, "error");
             }
           };
 
@@ -3459,7 +3460,7 @@ public class CachingBuildEngineTest {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      return CacheResult.hit("dir").withMetadata(metadata);
+      return CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata);
     }
 
     @Override

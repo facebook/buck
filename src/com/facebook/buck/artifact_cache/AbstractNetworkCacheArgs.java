@@ -29,6 +29,8 @@ import org.immutables.value.Value;
 interface AbstractNetworkCacheArgs {
   String getCacheName();
 
+  ArtifactCacheMode getCacheMode();
+
   String getRepository();
 
   String getScheduleType();

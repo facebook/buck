@@ -47,7 +47,7 @@ public class HttpArtifactCacheEventTest {
     HttpArtifactCacheEvent.Finished finished =
         ArtifactCacheTestUtils.newFetchFinishedEvent(
             ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(TEST_RULE_KEY),
-            CacheResult.hit("super source"));
+            CacheResult.hit("super source", ArtifactCacheMode.dir));
     Assert.assertEquals(TEST_RULE_KEY, finished.getFetchData().getRequestedRuleKey());
   }
 }

@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
@@ -53,7 +54,7 @@ public class CacheCommandTest extends EasyMockSupport {
 
     ArtifactCache cache = createMock(ArtifactCache.class);
     expect(cache.fetch(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
-        .andReturn(CacheResult.hit("http"));
+        .andReturn(CacheResult.hit("http", ArtifactCacheMode.http));
 
     TestConsole console = new TestConsole();
 

@@ -106,7 +106,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 httpResponse.requestUrl(),
                 ruleKey.toString());
         LOG.error(message);
-        return CacheResult.error(name, message);
+        return CacheResult.error(name, mode, message);
       }
 
       try (ThriftArtifactCacheProtocol.Response response =
@@ -116,7 +116,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         BuckCacheResponse cacheResponse = response.getThriftData();
         if (!cacheResponse.isWasSuccessful()) {
           LOG.warn("Request was unsuccessful: %s", cacheResponse.getErrorMessage());
-          return CacheResult.error(name, cacheResponse.getErrorMessage());
+          return CacheResult.error(name, mode, cacheResponse.getErrorMessage());
         }
 
         BuckCacheFetchResponse fetchResponse = cacheResponse.getFetchResponse();
@@ -167,7 +167,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                     "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
                     fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
             LOG.error(msg);
-            return CacheResult.error(name, msg);
+            return CacheResult.error(name, mode, msg);
           }
         }
 
@@ -175,6 +175,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         projectFilesystem.move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
         return CacheResult.hit(
             name,
+            mode,
             ImmutableMap.copyOf(fetchResponse.getMetadata().getMetadata()),
             readResult.getBytesRead());
       }

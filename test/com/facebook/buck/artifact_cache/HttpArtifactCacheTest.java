@@ -130,6 +130,7 @@ public class HttpArtifactCacheTest {
     this.argsBuilder =
         NetworkCacheArgs.builder()
             .setCacheName("http")
+            .setCacheMode(ArtifactCacheMode.http)
             .setRepository("some_repository")
             .setScheduleType("some_schedule")
             .setFetchClient(withMakeRequest((a, b) -> null))

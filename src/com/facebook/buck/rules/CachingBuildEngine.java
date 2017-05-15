@@ -1336,7 +1336,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    CacheResult cacheResult = fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
+    CacheResult cacheResult = artifactCache.fetch(ruleKey, lazyZipPath);
 
     // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
     // it's metadata.
@@ -1423,16 +1423,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     return cacheResult;
-  }
-
-  private CacheResult fetchArtifactForBuildable(
-      final RuleKey ruleKey, final LazyPath lazyZipPath, final ArtifactCache artifactCache) {
-    try {
-      return artifactCache.fetch(ruleKey, lazyZipPath);
-    } catch (RuntimeException t) {
-      LOG.error(t, "Buck internal error when downloading from the cache, will build locally.");
-      return CacheResult.error("unknown", t.getMessage());
-    }
   }
 
   /**
@@ -1729,7 +1719,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         };
 
     CacheResult manifestResult =
-        fetchArtifactForBuildable(manifestKey.getRuleKey(), tempFile, context.getArtifactCache());
+        context.getArtifactCache().fetch(manifestKey.getRuleKey(), tempFile);
 
     if (!manifestResult.getType().isSuccess()) {
       return Optional.empty();

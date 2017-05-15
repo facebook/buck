@@ -173,14 +173,13 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       boolean distributedBuildModeEnabled) {
-    ImmutableSet<ArtifactCacheBuckConfig.ArtifactCacheMode> modes =
-        buckConfig.getArtifactCacheModes();
+    ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
     }
     ArtifactCacheEntries cacheEntries = buckConfig.getCacheEntries();
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
-    for (ArtifactCacheBuckConfig.ArtifactCacheMode mode : modes) {
+    for (ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
           initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
@@ -195,7 +194,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               httpWriteExecutorService,
               builder,
               distributedBuildModeEnabled,
-              HTTP_PROTOCOL);
+              HTTP_PROTOCOL,
+              mode);
           break;
 
         case thrift_over_http:
@@ -208,7 +208,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               httpWriteExecutorService,
               builder,
               distributedBuildModeEnabled,
-              THRIFT_PROTOCOL);
+              THRIFT_PROTOCOL,
+              mode);
           break;
       }
     }
@@ -295,7 +296,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ListeningExecutorService httpWriteExecutorService,
       ImmutableList.Builder<ArtifactCache> builder,
       boolean distributedBuildModeEnabled,
-      NetworkCacheFactory factory) {
+      NetworkCacheFactory factory,
+      ArtifactCacheMode cacheMode) {
     for (HttpCacheEntry cacheEntry : artifactCacheEntries.getHttpCacheEntries()) {
       if (!cacheEntry.isWifiUsableForDistributedCache(wifiSsid)) {
         LOG.warn("HTTP cache is disabled because WiFi is not usable.");
@@ -311,7 +313,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               httpWriteExecutorService,
               buckConfig,
               factory,
-              distributedBuildModeEnabled));
+              distributedBuildModeEnabled,
+              cacheMode));
     }
   }
 
@@ -352,7 +355,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ListeningExecutorService httpWriteExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
-      boolean distributedBuildModeEnabled) {
+      boolean distributedBuildModeEnabled,
+      ArtifactCacheMode cacheMode) {
 
     // Setup the default client to use.
     OkHttpClient.Builder storeClientBuilder = new OkHttpClient.Builder();
@@ -454,6 +458,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
             .setCacheName(cacheName)
+            .setCacheMode(cacheMode)
             .setRepository(config.getRepository())
             .setScheduleType(config.getScheduleType())
             .setFetchClient(fetchService)

@@ -423,12 +423,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         CACHE_SECTION_NAME, "_exp_propagation_force_control_group", false);
   }
 
-  public enum ArtifactCacheMode {
-    dir,
-    http,
-    thrift_over_http,
-  }
-
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractArtifactCacheEntries {

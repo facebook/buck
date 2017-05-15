@@ -74,7 +74,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
                   response.statusCode(), response.statusMessage());
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           eventBuilder.getFetchBuilder().setErrorMessage(msg);
-          return CacheResult.error(name, msg);
+          return CacheResult.error(name, mode, msg);
         }
 
         // Setup a temporary file, which sits next to the destination, to write to and
@@ -102,7 +102,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
           String msg = "incorrect key name";
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           eventBuilder.getFetchBuilder().setErrorMessage(msg);
-          return CacheResult.error(name, msg);
+          return CacheResult.error(name, mode, msg);
         }
 
         // Now form the checksum on the file we got and compare it to the checksum form the
@@ -112,14 +112,15 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           projectFilesystem.deleteFileAtPath(temp);
           eventBuilder.getFetchBuilder().setErrorMessage(msg);
-          return CacheResult.error(name, msg);
+          return CacheResult.error(name, mode, msg);
         }
 
         // Finally, move the temp file into it's final place.
         projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
 
         LOG.info("fetch(%s, %s): cache hit", response.requestUrl(), ruleKey);
-        return CacheResult.hit(name, fetchedData.getMetadata(), fetchedData.getResponseSizeBytes());
+        return CacheResult.hit(
+            name, mode, fetchedData.getMetadata(), fetchedData.getResponseSizeBytes());
       }
     }
   }

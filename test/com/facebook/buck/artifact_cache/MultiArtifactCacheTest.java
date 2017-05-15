@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -53,7 +54,7 @@ public class MultiArtifactCacheTest {
 
     @Override
     public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-      return CacheResult.error("cache", "error");
+      return CacheResult.error("cache", ArtifactCacheMode.http, "error");
     }
   }
 
@@ -193,7 +194,7 @@ public class MultiArtifactCacheTest {
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
-        return CacheResult.hit("cache");
+        return CacheResult.hit("cache", ArtifactCacheMode.http);
       } else {
         return CacheResult.miss();
       }
@@ -255,6 +256,7 @@ public class MultiArtifactCacheTest {
     ErroringArtifactCache inner = new ErroringArtifactCache();
     MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.of(inner));
     CacheResult result = cache.fetch(dummyRuleKey, dummyFile);
+    assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.http)));
     assertSame(result.getType(), CacheResultType.ERROR);
     cache.close();
   }
@@ -276,6 +278,7 @@ public class MultiArtifactCacheTest {
 
     CacheResult result = cache1.fetch(dummyRuleKey, output);
     assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));
+    assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.dir)));
     assertThat(result.getMetadata(), Matchers.equalTo(metadata));
 
     multiArtifactCache.close();

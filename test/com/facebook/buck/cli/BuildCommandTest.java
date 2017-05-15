@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 import static com.facebook.buck.rules.BuildRuleSuccessType.FETCHED_FROM_CACHE;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutionResult;
 import com.facebook.buck.command.BuildReport;
@@ -74,7 +75,10 @@ public class BuildCommandTest {
 
     BuildRule rule3 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule3"), resolver);
     ruleToResult.put(
-        rule3, Optional.of(BuildResult.success(rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir"))));
+        rule3,
+        Optional.of(
+            BuildResult.success(
+                rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir", ArtifactCacheMode.dir))));
     ruleResolver.addToIndex(rule3);
 
     BuildRule rule4 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule4"), resolver);

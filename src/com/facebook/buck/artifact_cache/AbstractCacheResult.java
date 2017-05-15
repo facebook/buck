@@ -35,6 +35,7 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   private static final CacheResult IGNORED_RESULT =
       CacheResult.of(
@@ -42,10 +43,12 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
           CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
+          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
@@ -60,6 +63,11 @@ abstract class AbstractCacheResult {
   @JsonView(JsonViews.MachineReadableLog.class)
   @JsonProperty("cacheSource")
   protected abstract Optional<String> cacheSource();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @JsonProperty("cacheMode")
+  protected abstract Optional<ArtifactCacheMode> cacheMode();
 
   @Value.Parameter
   @JsonProperty("cacheError")
@@ -103,28 +111,35 @@ abstract class AbstractCacheResult {
   }
 
   public static CacheResult hit(
-      String cacheSource, ImmutableMap<String, String> metadata, long artifactSize) {
+      String cacheSource,
+      ArtifactCacheMode cacheMode,
+      ImmutableMap<String, String> metadata,
+      long artifactSize) {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
+        Optional.of(cacheMode),
         Optional.empty(),
         Optional.of(metadata),
         Optional.of(artifactSize));
   }
 
-  public static CacheResult hit(String cacheSource) {
+  public static CacheResult hit(String cacheSource, ArtifactCacheMode cacheMode) {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
+        Optional.of(cacheMode),
         Optional.empty(),
         Optional.of(ImmutableMap.of()),
         Optional.empty());
   }
 
-  public static CacheResult error(String cacheSource, String cacheError) {
+  public static CacheResult error(
+      String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
     return CacheResult.of(
         CacheResultType.ERROR,
         Optional.of(cacheSource),
+        Optional.of(cacheMode),
         Optional.of(cacheError),
         Optional.empty(),
         Optional.empty());
@@ -155,7 +170,8 @@ abstract class AbstractCacheResult {
             rest.isEmpty()
                 ? Optional.empty()
                 : Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
-            type == CacheResultType.ERROR ? Optional.of("") : Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty());
       }
