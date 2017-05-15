@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public class WatchedFileHashCache extends DefaultFileHashCache {
 
@@ -143,6 +144,55 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   }
 
   @Override
+  public HashCode get(Path relativeFilePath) throws IOException {
+    long start = System.nanoTime();
+    HashCode sha1 = super.get(relativeFilePath.normalize());
+    newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    start = System.nanoTime();
+    HashCode newSha1 = getFromNewCache(relativeFilePath);
+    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    numberOfRetrievals++;
+    if (!sha1.equals(newSha1)) {
+      if (sha1Mismatches == 0) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Path: ").append(relativeFilePath.toString());
+        try {
+          sb.append("\nOld timestamp: ").append(loadingCache.get(relativeFilePath).getTimestamp());
+        } catch (ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+        sb.append("\nOld timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
+        sb.append("\nOld hash: ").append(sha1.toString());
+        sb.append("\nNew hash: ").append(newSha1.toString());
+        sb.append("\nOld hash rerun: ").append(super.get(relativeFilePath));
+        sb.append("\nNew hash rerun: ").append(getFromNewCache(relativeFilePath));
+        sb.append("\nHash recomputed: ").append(super.getHashCodeAndFileType(relativeFilePath));
+
+        loadingCache.invalidate(relativeFilePath);
+        newLoadingCache.remove(relativeFilePath);
+        sha1 = super.get(relativeFilePath);
+        newSha1 = getFromNewCache(relativeFilePath);
+        sb.append("\n*************");
+        try {
+          sb.append("\nOld timestamp: ").append(loadingCache.get(relativeFilePath).getTimestamp());
+        } catch (ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+        sb.append("\nOld timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
+        sb.append("\nOld hash: ").append(sha1.toString());
+        sb.append("\nNew hash: ").append(newSha1.toString());
+        sb.append("\nOld hash rerun: ").append(super.get(relativeFilePath));
+        sb.append("\nNew hash rerun: ").append(getFromNewCache(relativeFilePath));
+        sb.append("\nHash recomputed: ").append(super.getHashCodeAndFileType(relativeFilePath));
+        sha1MismatchInfo = sb.toString();
+        LOG.debug(sha1MismatchInfo);
+      }
+      sha1Mismatches += 1;
+    }
+    return sha1;
+  }
+
+  @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     long start = System.nanoTime();
     HashCode sha1 = super.get(archiveMemberPath);
@@ -153,14 +203,45 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     numberOfRetrievals++;
     if (!sha1.equals(newSha1)) {
       if (sha1Mismatches == 0) {
+        Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
         StringBuilder sb = new StringBuilder();
         sb.append("Path: ").append(archiveMemberPath.toString());
+        try {
+          sb.append("\nOld timestamp: ").append(loadingCache.get(relativeFilePath).getTimestamp());
+        } catch (ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+        sb.append("\nOld timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
         sb.append("\nOld hash: ").append(sha1.toString());
         sb.append("\nNew hash: ").append(newSha1.toString());
         sb.append("\nOld hash rerun: ").append(super.get(archiveMemberPath));
         sb.append("\nNew hash rerun: ").append(getFromNewCache(archiveMemberPath));
-        Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
-        sb.append("\nHash recomputed: ").append(super.getHashCodeAndFileType(relativeFilePath));
+        sb.append("\nHash recomputed: ")
+            .append(
+                super.getHashCodeAndFileType(relativeFilePath)
+                    .getContents()
+                    .get(archiveMemberPath.getMemberPath()));
+
+        loadingCache.invalidate(archiveMemberPath.getArchivePath());
+        newLoadingCache.remove(archiveMemberPath.getArchivePath());
+        sha1 = super.get(archiveMemberPath);
+        newSha1 = getFromNewCache(archiveMemberPath);
+        sb.append("\n*************");
+        try {
+          sb.append("\nOld timestamp: ").append(loadingCache.get(relativeFilePath).getTimestamp());
+        } catch (ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+        sb.append("\nOld timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
+        sb.append("\nOld hash: ").append(sha1.toString());
+        sb.append("\nNew hash: ").append(newSha1.toString());
+        sb.append("\nOld hash rerun: ").append(super.get(archiveMemberPath));
+        sb.append("\nNew hash rerun: ").append(getFromNewCache(archiveMemberPath));
+        sb.append("\nHash recomputed: ")
+            .append(
+                super.getHashCodeAndFileType(relativeFilePath)
+                    .getContents()
+                    .get(archiveMemberPath.getMemberPath()));
         sha1MismatchInfo = sb.toString();
         LOG.debug(sha1MismatchInfo);
       }
@@ -168,7 +249,11 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     }
     return sha1;
   }
-  /* *****************************************************************************/
+
+  private HashCode getFromNewCache(Path relativeFilePath) throws IOException {
+    Preconditions.checkArgument(!relativeFilePath.isAbsolute());
+    return newLoadingCache.get(relativeFilePath).getHashCode();
+  }
 
   private HashCode getFromNewCache(ArchiveMemberPath archiveMemberPath) throws IOException {
     Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
@@ -182,6 +267,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
     return memberHashCodeAndFileType.getHashCode();
   }
+  /* *****************************************************************************/
 
   @SuppressWarnings("unused")
   @Subscribe
