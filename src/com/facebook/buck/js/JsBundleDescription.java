@@ -16,8 +16,10 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.Aapt2Compile;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
@@ -122,7 +124,8 @@ public class JsBundleDescription
         params
             .getBuildTarget()
             .withAppendedFlavors(JsFlavors.FORCE_JS_BUNDLE)
-            .withoutFlavors(JsFlavors.ANDROID_RESOURCES);
+            .withoutFlavors(JsFlavors.ANDROID_RESOURCES)
+            .withoutFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR);
     resolver.requireRule(bundleTarget);
 
     final JsBundle jsBundle = resolver.getRuleWithType(bundleTarget, JsBundle.class);
@@ -157,6 +160,16 @@ public class JsBundleDescription
   private static BuildRule createAndroidResources(
       BuildRuleParams params, BuildRuleResolver resolver, JsBundle jsBundle, String rDotJavaPackage)
       throws NoSuchBuildTargetException {
+
+    if (params
+        .getBuildTarget()
+        .getFlavors()
+        .contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      return new Aapt2Compile(
+          params.copyReplacingDeclaredAndExtraDeps(
+              ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle)),
+          jsBundle.getSourcePathToResources());
+    }
 
     return new AndroidResource(
         params.copyReplacingDeclaredAndExtraDeps(
