@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.jvm.java.abi.source.api.StopCompilation;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
@@ -165,6 +166,8 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     } catch (RuntimeException e) {
       if (e.getCause() instanceof StopCompilation) {
         return true;
+      } else if (e.getCause() instanceof SourceCodeWillNotCompileException) {
+        return false;
       }
 
       throw e;

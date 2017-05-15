@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.Arrays;
@@ -352,7 +353,7 @@ class TreeBackedTypes implements Types {
         }
       case PACKAGE:
       case ERROR:
-        throw new UnsupportedOperationException("ErrorType NYI");
+        throw new SourceCodeWillNotCompileException();
       case BOOLEAN:
       case BYTE:
       case SHORT:
