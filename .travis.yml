@@ -58,5 +58,8 @@ cache:
 notifications:
     slack: buckbuild:TnJN80RxFaSAuCGswsnWLdoj
 
+notifications:
+    slack: buckbuild:TnJN80RxFaSAuCGswsnWLdoj
+
 script:
   - ./scripts/travisci_run.sh
