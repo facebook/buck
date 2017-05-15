@@ -318,41 +318,26 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return rulesList;
   }
 
-  private AsyncFunction<Optional<BuildResult>, BuildResult> buildLocally(
+  private BuildResult buildLocally(
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final RuleKeyFactories ruleKeyFactory,
       final BuildableContext buildableContext,
-      final CacheResult cacheResult) {
-    return result -> {
-
-      // If we already got a result checking the caches, then we don't
-      // build locally.
-      if (result.isPresent()) {
-        return Futures.immediateFuture(result.get());
-      }
-
-      // Otherwise, build the rule.  We re-submit via the service so that we schedule
-      // it with the custom weight assigned to this rule's steps.
-      return service.submit(
-          () -> {
-            if (!buildContext.isKeepGoing() && firstFailure != null) {
-              return BuildResult.canceled(rule, firstFailure);
-            }
-            try (BuildRuleEvent.Scope scope =
-                BuildRuleEvent.resumeSuspendScope(
-                    buildContext.getEventBus(),
-                    rule,
-                    buildRuleDurationTracker,
-                    ruleKeyFactory.getDefaultRuleKeyFactory())) {
-              executeCommandsNowThatDepsAreBuilt(
-                  rule, buildContext, executionContext, buildableContext);
-              return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
-            }
-          },
-          getRuleResourceAmounts(rule));
-    };
+      final CacheResult cacheResult)
+      throws StepFailedException, InterruptedException {
+    if (!buildContext.isKeepGoing() && firstFailure != null) {
+      return BuildResult.canceled(rule, firstFailure);
+    }
+    try (BuildRuleEvent.Scope scope =
+        BuildRuleEvent.resumeSuspendScope(
+            buildContext.getEventBus(),
+            rule,
+            buildRuleDurationTracker,
+            ruleKeyFactory.getDefaultRuleKeyFactory())) {
+      executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
+      return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
+    }
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -508,7 +493,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           ruleAsyncFunction(
               rule,
               buildContext.getEventBus(),
-              (result) -> {
+              result -> {
                 if (result.isPresent()) {
                   return Futures.immediateFuture(result.get());
                 }
@@ -567,8 +552,26 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // 5. Build the current rule locally, if we have to.
     return Futures.transformAsync(
         checkCachesResult,
-        buildLocally(
-            rule, buildContext, executionContext, ruleKeyFactories, buildableContext, cacheResult),
+        (result) -> {
+          // If we already got a result checking the caches, then we don't
+          // build locally.
+          if (result.isPresent()) {
+            return Futures.immediateFuture(result.get());
+          }
+
+          // Otherwise, build the rule.  We re-submit via the service so that we schedule
+          // it with the custom weight assigned to this rule's steps.
+          return service.<BuildResult>submit(
+              () ->
+                  buildLocally(
+                      rule,
+                      buildContext,
+                      executionContext,
+                      ruleKeyFactories,
+                      buildableContext,
+                      cacheResult),
+              getRuleResourceAmounts(rule));
+        },
         serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
   }
 
