@@ -538,6 +538,11 @@ public class AppleBundle extends AbstractBuildRule
             };
       }
 
+      addBinarySigningStepIfNeeded(
+        context.getSourcePathResolver(),
+        codeSignIdentitySupplier,
+        stepsBuilder);
+
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(Paths.get("Frameworks")),
@@ -746,6 +751,26 @@ public class AppleBundle extends AbstractBuildRule
     }
 
     return keys.build();
+  }
+
+  public void addBinarySigningStepIfNeeded(
+      SourcePathResolver resolver,
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    if (hasBinary) {
+      stepsBuilder.add(
+        new CodeSignStep(
+          getProjectFilesystem(),
+          resolver,
+          bundleBinaryPath,
+          Optional.empty(),
+          codeSignIdentitySupplier,
+          codesignAllocatePath,
+          dryRunCodeSigning ?
+            Optional.of(bundleBinaryPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :
+            Optional.empty())
+      );
+    }
   }
 
   public void addSwiftStdlibStepIfNeeded(
