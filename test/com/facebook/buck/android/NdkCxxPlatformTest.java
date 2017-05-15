@@ -257,7 +257,6 @@ public class NdkCxxPlatformTest {
                     "ndk",
                         ImmutableMap.of(
                             "extra_cflags", "-DSOME_CFLAG -DBUCK -std=buck -Og -Wno-buck",
-                            "extra_cppflags", "-DSOME_CPPFLAG",
                             "extra_cxxflags",
                                 "-DSOME_CXXFLAG -DBUCK -std=buck++ -Og -Wno-buck -frtti -fexceptions"),
                     "cxx",
@@ -283,9 +282,7 @@ public class NdkCxxPlatformTest {
     // warning/optimazation/etc.
     ImmutableList<String> cppflags = platform.getCxxPlatform().getCppflags();
     assertThat(
-        cppflags,
-        hasItems(
-            "-std=buck", "-O2", "-Og", "-DSOME_CFLAG", "-DSOME_CPPFLAG", "-DBUCK", "-Wno-buck"));
+        cppflags, hasItems("-std=buck", "-O2", "-Og", "-DSOME_CFLAG", "-DBUCK", "-Wno-buck"));
     assertThat(cppflags, not(hasItems("-DSOME_CXXFLAG")));
     // TODO(cjhopman): assertLastMatchingFlagIs(cppflags, f -> f.startsWith("-O"), "-Og");
     // TODO(cjhopman): assertLastMatchingFlagIs(cppflags, f -> f.startsWith("-std="), "-std=buck");
@@ -366,8 +363,6 @@ public class NdkCxxPlatformTest {
                     ImmutableMap.of(
                         "extra_cflags",
                         "--start-extra-cflags-- -DSOME_CFLAG --end-extra-cflags--",
-                        "extra_cppflags",
-                        "--start-extra-cppflags-- -DSOME_CPPFLAG --end-extra-cppflags--",
                         "extra_cxxflags",
                         "--start-extra-cxxflags-- -DSOME_CXXFLAG --end-extra-cxxflags--"),
                     "cxx",

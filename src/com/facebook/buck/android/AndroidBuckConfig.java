@@ -75,10 +75,6 @@ public class AndroidBuckConfig {
     return delegate.getListWithoutComments("ndk", "extra_cflags", ' ');
   }
 
-  public ImmutableList<String> getExtraNdkCppFlags() {
-    return delegate.getListWithoutComments("ndk", "extra_cppflags", ' ');
-  }
-
   public ImmutableList<String> getExtraNdkCxxFlags() {
     return delegate.getListWithoutComments("ndk", "extra_cxxflags", ' ');
   }

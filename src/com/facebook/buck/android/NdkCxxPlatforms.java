@@ -826,11 +826,8 @@ public class NdkCxxPlatforms {
   }
 
   /** Flags to be used when preprocessing C or C++ sources. */
-  private static ImmutableList<String> getCommonPreprocessorFlags(AndroidBuckConfig config) {
-    return ImmutableList.<String>builder()
-        .addAll(DEFAULT_COMMON_CPPFLAGS)
-        .addAll(config.getExtraNdkCppFlags())
-        .build();
+  private static ImmutableList<String> getCommonPreprocessorFlags() {
+    return ImmutableList.<String>builder().addAll(DEFAULT_COMMON_CPPFLAGS).build();
   }
 
   private static ImmutableList<String> getCommonIncludes(NdkCxxToolchainPaths toolchainPaths) {
@@ -869,7 +866,7 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(getCommonIncludes(toolchainPaths))
-        .addAll(getCommonPreprocessorFlags(config))
+        .addAll(getCommonPreprocessorFlags())
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
         .addAll(getCommonCFlags(config))
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
@@ -883,7 +880,7 @@ public class NdkCxxPlatforms {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(getCxxRuntimeIncludeFlags(targetConfiguration, toolchainPaths));
     flags.addAll(getCommonIncludes(toolchainPaths));
-    flags.addAll(getCommonPreprocessorFlags(config));
+    flags.addAll(getCommonPreprocessorFlags());
     flags.addAll(getCommonFlags(targetConfiguration, toolchainPaths));
     flags.addAll(getCommonCxxFlags(config));
     if (targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC) {

@@ -32,9 +32,6 @@
 -nostdinc
 -DNDEBUG
 -DANDROID
---start-extra-cppflags--
--DSOME_CPPFLAG
---end-extra-cppflags--
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/libexec/gcc/i686-linux-android/gcc-version
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/i686-linux-android/bin
 -Wall
@@ -92,9 +89,6 @@
 -nostdinc
 -DNDEBUG
 -DANDROID
---start-extra-cppflags--
--DSOME_CPPFLAG
---end-extra-cppflags--
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/libexec/gcc/i686-linux-android/gcc-version
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/i686-linux-android/bin
 -Wall
