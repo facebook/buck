@@ -112,7 +112,8 @@ public class TargetNodeTranslatorTest {
 
   @Test
   public void selectedVersions() {
-    TargetNode<VersionPropagatorBuilder.Arg, ?> node = new VersionPropagatorBuilder("//:a").build();
+    TargetNode<VersionPropagatorDescriptionArg, ?> node =
+        new VersionPropagatorBuilder("//:a").build();
     final ImmutableMap<BuildTarget, Version> selectedVersions =
         ImmutableMap.of(BuildTargetFactory.newInstance("//:b"), Version.of("1.0"));
     TargetNodeTranslator translator =
@@ -128,7 +129,7 @@ public class TargetNodeTranslatorTest {
             return Optional.of(selectedVersions);
           }
         };
-    Optional<TargetNode<VersionPropagatorBuilder.Arg, ?>> translated =
+    Optional<TargetNode<VersionPropagatorDescriptionArg, ?>> translated =
         translator.translateNode(node);
     assertTrue(translated.isPresent());
     assertThat(

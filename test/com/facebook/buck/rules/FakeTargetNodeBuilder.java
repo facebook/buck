@@ -18,10 +18,13 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
 public class FakeTargetNodeBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        FakeTargetNodeBuilder.Arg, FakeTargetNodeBuilder.FakeDescription, BuildRule> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        FakeTargetNodeArg.Builder, FakeTargetNodeArg, FakeTargetNodeBuilder.FakeDescription,
+        BuildRule> {
 
   private FakeTargetNodeBuilder(FakeDescription description, BuildTarget target) {
     super(description, target);
@@ -31,13 +34,15 @@ public class FakeTargetNodeBuilder
     return new FakeTargetNodeBuilder(new FakeDescription(rule), rule.getBuildTarget());
   }
 
-  public static TargetNode<Arg, FakeDescription> build(BuildRule rule) {
+  public static TargetNode<FakeTargetNodeArg, FakeDescription> build(BuildRule rule) {
     return newBuilder(rule).build();
   }
 
-  public static class Arg extends AbstractDescriptionArg {}
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractFakeTargetNodeArg extends CommonDescriptionArg {}
 
-  public static class FakeDescription implements Description<Arg> {
+  public static class FakeDescription implements Description<FakeTargetNodeArg> {
     private final BuildRule rule;
 
     public FakeDescription(BuildRule rule) {
@@ -45,8 +50,8 @@ public class FakeTargetNodeBuilder
     }
 
     @Override
-    public Class<Arg> getConstructorArgType() {
-      return Arg.class;
+    public Class<FakeTargetNodeArg> getConstructorArgType() {
+      return FakeTargetNodeArg.class;
     }
 
     @Override
@@ -55,7 +60,7 @@ public class FakeTargetNodeBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        Arg args)
+        FakeTargetNodeArg args)
         throws NoSuchBuildTargetException {
       return rule;
     }

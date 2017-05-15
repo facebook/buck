@@ -190,7 +190,7 @@ java_test(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],

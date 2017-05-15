@@ -32,6 +32,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 import org.junit.Test;
 
 public class TargetNodeTest {
@@ -52,7 +54,8 @@ public class TargetNodeTest {
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException {
 
-    TargetNode<Arg, ExampleDescription> targetNode = createTargetNode(TARGET_THREE);
+    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNode =
+        createTargetNode(TARGET_THREE);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -69,6 +72,8 @@ public class TargetNodeTest {
             .collect(MoreCollectors.toImmutableSet());
     ImmutableMap<String, Object> rawNode =
         ImmutableMap.of(
+            "name",
+            TARGET_THREE.getShortName(),
             "deps",
             depsStrings,
             "sourcePaths",
@@ -78,7 +83,7 @@ public class TargetNodeTest {
             "source",
             "AnotherClass.java");
 
-    TargetNode<Arg, ExampleDescription> targetNode =
+    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNode =
         createTargetNode(TARGET_THREE, depsTargets, rawNode);
 
     assertThat(
@@ -105,33 +110,40 @@ public class TargetNodeTest {
 
     ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
     BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne.getRootPath(), "//foo:bar");
-    TargetNode<Arg, ExampleDescription> targetNodeOne = createTargetNode(buildTargetOne);
+    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNodeOne =
+        createTargetNode(buildTargetOne);
 
     ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo.getRootPath(), "//foo:bar");
-    TargetNode<Arg, ExampleDescription> targetNodeTwo = createTargetNode(buildTargetTwo);
+    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNodeTwo =
+        createTargetNode(buildTargetTwo);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
 
     assertThat(isVisible, is(false));
   }
 
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<BuildTarget> deps;
-    public ImmutableSortedSet<SourcePath> sourcePaths;
-    public Optional<SourceWithFlags> appleSource;
-    public Optional<Path> source;
-    public Optional<String> string;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractExampleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getSourcePaths();
+
+    Optional<SourceWithFlags> getAppleSource();
+
+    Optional<Path> getSource();
+
+    Optional<String> getString();
 
     @Hint(isDep = false)
-    public Optional<BuildTarget> target;
+    Optional<BuildTarget> getTarget();
   }
 
-  public static class ExampleDescription implements Description<Arg> {
+  public static class ExampleDescription implements Description<ExampleDescriptionArg> {
 
     @Override
-    public Class<Arg> getConstructorArgType() {
-      return Arg.class;
+    public Class<ExampleDescriptionArg> getConstructorArgType() {
+      return ExampleDescriptionArg.class;
     }
 
     @Override
@@ -140,15 +152,17 @@ public class TargetNodeTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        Arg args) {
+        ExampleDescriptionArg args) {
       return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
   }
 
-  private static TargetNode<Arg, ExampleDescription> createTargetNode(BuildTarget buildTarget)
-      throws NoSuchBuildTargetException {
+  private static TargetNode<ExampleDescriptionArg, ExampleDescription> createTargetNode(
+      BuildTarget buildTarget) throws NoSuchBuildTargetException {
     ImmutableMap<String, Object> rawNode =
         ImmutableMap.of(
+            "name",
+            buildTarget.getShortName(),
             "deps",
             ImmutableList.of(),
             "string",
@@ -161,7 +175,7 @@ public class TargetNodeTest {
     return createTargetNode(buildTarget, ImmutableSet.of(), rawNode);
   }
 
-  private static TargetNode<Arg, ExampleDescription> createTargetNode(
+  private static TargetNode<ExampleDescriptionArg, ExampleDescription> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode)
@@ -183,7 +197,7 @@ public class TargetNodeTest {
             createCellRoots(filesystem));
   }
 
-  private static Arg createPopulatedConstructorArg(
+  private static ExampleDescriptionArg createPopulatedConstructorArg(
       BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory());
@@ -193,7 +207,7 @@ public class TargetNodeTest {
           createCellRoots(projectFilesystem),
           projectFilesystem,
           buildTarget,
-          Arg.class,
+          ExampleDescriptionArg.class,
           ImmutableSet.builder(),
           instance);
     } catch (ParamInfoException e) {

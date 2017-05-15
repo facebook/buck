@@ -18,12 +18,12 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.AbstractNodeBuilderWithMutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,11 +40,12 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
+import org.immutables.value.Value;
 
 public class FakeWorkerBuilder
-    extends AbstractNodeBuilderWithMutableArg<
-        FakeWorkerBuilder.FakeWorkerDescription.Arg, FakeWorkerBuilder.FakeWorkerDescription,
-        FakeWorkerBuilder.FakeWorkerTool> {
+    extends AbstractNodeBuilderWithImmutableArg<
+        FakeWorkerDescriptionArg.Builder, FakeWorkerDescriptionArg,
+        FakeWorkerBuilder.FakeWorkerDescription, FakeWorkerBuilder.FakeWorkerTool> {
 
   public FakeWorkerBuilder(BuildTarget target) {
     this(target, FakeWorkerTool::new);
@@ -119,7 +121,7 @@ public class FakeWorkerBuilder
     }
   }
 
-  public static class FakeWorkerDescription implements Description<FakeWorkerDescription.Arg> {
+  public static class FakeWorkerDescription implements Description<FakeWorkerDescriptionArg> {
     private final Function<BuildRuleParams, BuildRule> create;
 
     private FakeWorkerDescription(Function<BuildRuleParams, BuildRule> create) {
@@ -127,8 +129,8 @@ public class FakeWorkerBuilder
     }
 
     @Override
-    public Class<Arg> getConstructorArgType() {
-      return Arg.class;
+    public Class<FakeWorkerDescriptionArg> getConstructorArgType() {
+      return FakeWorkerDescriptionArg.class;
     }
 
     @Override
@@ -137,11 +139,13 @@ public class FakeWorkerBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        Arg args)
+        FakeWorkerDescriptionArg args)
         throws NoSuchBuildTargetException {
       return create.apply(params);
     }
 
-    public static class Arg extends AbstractDescriptionArg {}
+    @BuckStyleImmutable
+    @Value.Immutable
+    interface AbstractFakeWorkerDescriptionArg extends CommonDescriptionArg {}
   }
 }

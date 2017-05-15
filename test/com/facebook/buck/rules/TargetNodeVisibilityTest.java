@@ -29,9 +29,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
+import org.immutables.value.Value;
 import org.junit.Test;
 
 public class TargetNodeVisibilityTest {
@@ -193,11 +195,11 @@ public class TargetNodeVisibilityTest {
         rule.getBuildTarget(), target);
   }
 
-  public static class FakeRuleDescription implements Description<FakeRuleDescription.FakeArg> {
+  public static class FakeRuleDescription implements Description<FakeRuleDescriptionArg> {
 
     @Override
-    public Class<FakeArg> getConstructorArgType() {
-      return FakeArg.class;
+    public Class<FakeRuleDescriptionArg> getConstructorArgType() {
+      return FakeRuleDescriptionArg.class;
     }
 
     @Override
@@ -206,11 +208,13 @@ public class TargetNodeVisibilityTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        FakeArg args) {
+        FakeRuleDescriptionArg args) {
       return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
 
-    public static class FakeArg extends AbstractDescriptionArg {}
+    @BuckStyleImmutable
+    @Value.Immutable
+    interface AbstractFakeRuleDescriptionArg extends CommonDescriptionArg {}
   }
 
   private static TargetNode<?, ?> createTargetNode(
@@ -224,8 +228,9 @@ public class TargetNodeVisibilityTest {
       throws NoSuchBuildTargetException {
     VisibilityPatternParser parser = new VisibilityPatternParser();
     CellPathResolver cellNames = new FakeCellPathResolver(filesystem);
-    Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
-    FakeRuleDescription.FakeArg arg = new FakeRuleDescription.FakeArg();
+    FakeRuleDescription description = new FakeRuleDescription();
+    FakeRuleDescriptionArg arg =
+        FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();
     return new TargetNodeFactory(new DefaultTypeCoercerFactory())
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),

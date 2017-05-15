@@ -425,6 +425,7 @@ java_test(
         STANDARD_TEST_SRCS,
         excludes = APPLE_INTEGRATION_TEST_SRCS,
     ),
+    has_immutable_types = True,
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],

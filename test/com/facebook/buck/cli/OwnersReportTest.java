@@ -25,12 +25,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,10 +42,12 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
@@ -53,11 +55,11 @@ import org.kohsuke.args4j.CmdLineException;
 /** Reports targets that own a specified list of files. */
 public class OwnersReportTest {
 
-  public static class FakeRuleDescription implements Description<FakeRuleDescription.FakeArg> {
+  public static class FakeRuleDescription implements Description<FakeRuleDescriptionArg> {
 
     @Override
-    public Class<FakeArg> getConstructorArgType() {
-      return FakeArg.class;
+    public Class<FakeRuleDescriptionArg> getConstructorArgType() {
+      return FakeRuleDescriptionArg.class;
     }
 
     @Override
@@ -66,19 +68,24 @@ public class OwnersReportTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        FakeArg args) {
+        FakeRuleDescriptionArg args) {
       return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
 
-    public static class FakeArg extends AbstractDescriptionArg {
-      public ImmutableSet<Path> inputs;
+    @BuckStyleImmutable
+    @Value.Immutable
+    interface AbstractFakeRuleDescriptionArg extends CommonDescriptionArg {
+      ImmutableSet<Path> getInputs();
     }
   }
 
   private TargetNode<?, ?> createTargetNode(BuildTarget buildTarget, ImmutableSet<Path> inputs) {
-    Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
-    FakeRuleDescription.FakeArg arg = new FakeRuleDescription.FakeArg();
-    arg.inputs = inputs;
+    FakeRuleDescription description = new FakeRuleDescription();
+    FakeRuleDescriptionArg arg =
+        FakeRuleDescriptionArg.builder()
+            .setName(buildTarget.getShortName())
+            .setInputs(inputs)
+            .build();
     try {
       return new TargetNodeFactory(new DefaultTypeCoercerFactory())
           .create(
