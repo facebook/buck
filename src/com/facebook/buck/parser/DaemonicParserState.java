@@ -200,7 +200,6 @@ class DaemonicParserState {
       final ImmutableSet.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
           ImmutableSet.builder();
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
-      ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs = ImmutableMap.of();
       ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
       for (Map<String, Object> rawNode : rawNodes) {
         if (rawNode.containsKey(INCLUDES_META_RULE)) {
@@ -209,17 +208,6 @@ class DaemonicParserState {
             dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
           }
         } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
-          ImmutableMap.Builder<String, ImmutableMap<String, Optional<String>>> builder =
-              ImmutableMap.builder();
-          Map<String, Map<String, String>> configsMeta =
-              Preconditions.checkNotNull(
-                  (Map<String, Map<String, String>>) rawNode.get(CONFIGS_META_RULE));
-          for (Map.Entry<String, Map<String, String>> ent : configsMeta.entrySet()) {
-            builder.put(
-                ent.getKey(),
-                ImmutableMap.copyOf(Maps.transformValues(ent.getValue(), Optional::ofNullable)));
-          }
-          configs = builder.build();
         } else if (rawNode.containsKey(ENV_META_RULE)) {
           env =
               ImmutableMap.copyOf(
@@ -250,7 +238,7 @@ class DaemonicParserState {
 
       return getOrCreateCellState(cell)
           .putRawNodesIfNotPresentAndStripMetaEntries(
-              buildFile, withoutMetaIncludes, dependentsOfEveryNode.build(), configs, env);
+              buildFile, withoutMetaIncludes, dependentsOfEveryNode.build(), env);
     }
   }
 
@@ -531,8 +519,8 @@ class DaemonicParserState {
       // Keep track of any invalidations.
       boolean hasInvalidated = false;
 
-      // Invalidate based on config.
-      hasInvalidated |= state.invalidateIfBuckConfigHasChanged(cell, buildFile);
+      // Currently, if `.buckconfig` settings change, we restart the entire daemon, meaning checking
+      // for `.buckconfig`-based invalidations is redundant.
 
       // Invalidate based on env vars.
       Optional<MapDifference<String, String>> envDiff =

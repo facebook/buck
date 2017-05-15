@@ -55,7 +55,6 @@ public class DaemonicCellStateTest {
                 "name", target.getShortName(),
                 "buck.base_path", MorePaths.pathWithUnixSeparators(target.getBasePath()))),
         ImmutableSet.of(),
-        ImmutableMap.of(),
         ImmutableMap.of());
   }
 
@@ -122,7 +121,6 @@ public class DaemonicCellStateTest {
                 "buck.base_path", "path/to",
                 "name", "target")),
         ImmutableSet.of(),
-        ImmutableMap.of(),
         ImmutableMap.of());
     assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath));
     assertEquals(
