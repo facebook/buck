@@ -109,12 +109,18 @@ public interface ProcessExecutor {
 
   /** Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}. */
   public interface LaunchedProcess {
+    /** @return false if process is killed, or true if it is alive. */
     boolean isAlive();
 
+    /**
+     * Output stream that maps into stdin of the process. You'd write into process' stdin using it.
+     */
     OutputStream getOutputStream();
 
+    /** Input stream that maps into stdout of the process. You'd read process' stdout from it. */
     InputStream getInputStream();
 
+    /** Input stream that maps into stderr of the process. You'd read process' stderr from it. */
     InputStream getErrorStream();
   }
 
