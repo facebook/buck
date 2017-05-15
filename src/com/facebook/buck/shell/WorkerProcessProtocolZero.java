@@ -16,6 +16,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.BufferedReader;
@@ -38,6 +39,7 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   private final JsonReader processStdoutReader;
   private final Path stdErr;
   private final Runnable cleanUp;
+  private boolean isClosed = false;
 
   public WorkerProcessProtocolZero(
       JsonWriter processStdinWriter,
@@ -358,6 +360,11 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   */
   @Override
   public void close() throws IOException {
+    Preconditions.checkArgument(
+        !isClosed,
+        "%s (%d) has been already closed",
+        getClass().getSimpleName(),
+        System.identityHashCode(this));
     try {
       processStdinWriter.endArray();
       processStdinWriter.close();
@@ -365,6 +372,7 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       processStdoutReader.close();
     } finally {
       cleanUp.run();
+      isClosed = true;
     }
   }
 
