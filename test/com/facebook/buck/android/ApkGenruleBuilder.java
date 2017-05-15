@@ -17,10 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 
 public class ApkGenruleBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         ApkGenruleDescriptionArg.Builder, ApkGenruleDescriptionArg, ApkGenruleDescription,
         ApkGenrule> {
 

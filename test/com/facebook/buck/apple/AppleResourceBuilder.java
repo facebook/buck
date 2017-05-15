@@ -17,13 +17,13 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import java.util.Set;
 
 public class AppleResourceBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         AppleResourceDescriptionArg.Builder, AppleResourceDescriptionArg, AppleResourceDescription,
         BuildRule> {
 

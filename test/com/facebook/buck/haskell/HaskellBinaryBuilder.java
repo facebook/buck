@@ -20,14 +20,14 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class HaskellBinaryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         HaskellBinaryDescriptionArg.Builder, HaskellBinaryDescriptionArg, HaskellBinaryDescription,
         BuildRule> {
 

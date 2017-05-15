@@ -22,14 +22,14 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class HaskellLibraryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         HaskellLibraryDescriptionArg.Builder, HaskellLibraryDescriptionArg,
         HaskellLibraryDescription, HaskellLibrary> {
 

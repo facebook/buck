@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  * the actual parser as closely as possible.
  */
 public abstract class AbstractNodeBuilder<
-    TArg, TDescription extends Description<TArg>, TBuildRule extends BuildRule> {
+    TArgBuilder, TArg, TDescription extends Description<TArg>, TBuildRule extends BuildRule> {
   protected static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
@@ -47,6 +47,7 @@ public abstract class AbstractNodeBuilder<
   protected final TDescription description;
   protected final ProjectFilesystem filesystem;
   protected final BuildTarget target;
+  protected final TArgBuilder argBuilder;
   protected final CellPathResolver cellRoots;
   @Nullable private final HashCode rawHashCode;
   private Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = Optional.empty();
@@ -68,9 +69,26 @@ public abstract class AbstractNodeBuilder<
     this.description = description;
     this.filesystem = projectFilesystem;
     this.target = target;
+    this.argBuilder = makeArgBuilder(description);
     this.rawHashCode = hashCode;
 
     this.cellRoots = new FakeCellPathResolver(projectFilesystem);
+  }
+
+  @SuppressWarnings("unchecked")
+  private TArgBuilder makeArgBuilder(TDescription description) {
+    Class<? extends TArg> constructorArgType = description.getConstructorArgType();
+    TArgBuilder builder;
+    try {
+      builder = (TArgBuilder) constructorArgType.getMethod("builder").invoke(null);
+      // Set a default value for name from the target. The real coercer stack implicitly sets name,
+      // but we're not going through that stack so we emulate it instead.
+      // If setName is explicitly called, its value with override this one.
+      builder.getClass().getMethod("setName", String.class).invoke(builder, target.getShortName());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return builder;
   }
 
   public final TBuildRule build(BuildRuleResolver resolver) throws NoSuchBuildTargetException {
@@ -164,15 +182,29 @@ public abstract class AbstractNodeBuilder<
     return target;
   }
 
-  public AbstractNodeBuilder<TArg, TDescription, TBuildRule> setSelectedVersions(
+  public AbstractNodeBuilder<TArgBuilder, TArg, TDescription, TBuildRule> setSelectedVersions(
       ImmutableMap<BuildTarget, Version> selectedVersions) {
     this.selectedVersions = Optional.of(selectedVersions);
     return this;
   }
 
-  protected abstract Object getArgForPopulating();
+  protected TArgBuilder getArgForPopulating() {
+    return argBuilder;
+  }
 
-  protected abstract TArg getPopulatedArg();
+  @SuppressWarnings("unchecked")
+  protected TArg getPopulatedArg() {
+    try {
+      return (TArg) argBuilder.getClass().getMethod("build").invoke(argBuilder);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-  protected abstract ImmutableSortedSet<BuildTarget> getDepsFromArg(TArg arg);
+  protected final ImmutableSortedSet<BuildTarget> getDepsFromArg(TArg arg) {
+    if (!(arg instanceof HasDeclaredDeps)) {
+      return ImmutableSortedSet.of();
+    }
+    return ((HasDeclaredDeps) arg).getDeps();
+  }
 }

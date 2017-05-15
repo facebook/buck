@@ -17,14 +17,14 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class PrebuiltHaskellLibraryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         HaskellPrebuiltLibraryDescriptionArg.Builder, HaskellPrebuiltLibraryDescriptionArg,
         HaskellPrebuiltLibraryDescription, PrebuiltHaskellLibrary> {
 

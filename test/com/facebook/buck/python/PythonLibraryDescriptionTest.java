@@ -25,7 +25,6 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -181,7 +180,7 @@ public class PythonLibraryDescriptionTest {
                 ImmutableMap.of(
                     Version.of("1.0"), transitiveDepBuilder.getTarget(),
                     Version.of("2.0"), transitiveDepBuilder.getTarget()));
-    AbstractNodeBuilder<?, ?, ?> builder =
+    PythonLibraryBuilder builder =
         new PythonLibraryBuilder(target)
             .setVersionedSrcs(
                 VersionMatchedCollection.<SourceList>builder()
@@ -230,7 +229,7 @@ public class PythonLibraryDescriptionTest {
                 ImmutableMap.of(
                     Version.of("1.0"), transitiveDepBuilder.getTarget(),
                     Version.of("2.0"), transitiveDepBuilder.getTarget()));
-    AbstractNodeBuilder<?, ?, ?> builder =
+    PythonLibraryBuilder builder =
         new PythonLibraryBuilder(target)
             .setVersionedResources(
                 VersionMatchedCollection.<SourceList>builder()

@@ -23,11 +23,11 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import java.util.Optional;
 
 public class RobolectricTestBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         RobolectricTestDescriptionArg.Builder, RobolectricTestDescriptionArg,
         RobolectricTestDescription, RobolectricTest> {
 

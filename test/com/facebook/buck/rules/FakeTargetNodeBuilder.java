@@ -22,7 +22,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 public class FakeTargetNodeBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         FakeTargetNodeArg.Builder, FakeTargetNodeArg, FakeTargetNodeBuilder.FakeDescription,
         BuildRule> {
 

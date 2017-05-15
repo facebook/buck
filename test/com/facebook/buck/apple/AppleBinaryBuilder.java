@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class AppleBinaryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         AppleBinaryDescriptionArg.Builder, AppleBinaryDescriptionArg, AppleBinaryDescription,
         BuildRule> {
 

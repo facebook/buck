@@ -19,11 +19,11 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
 
 public class DBinaryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         DBinaryDescriptionArg.Builder, DBinaryDescriptionArg, DBinaryDescription, DBinary> {
 
   public DBinaryBuilder(

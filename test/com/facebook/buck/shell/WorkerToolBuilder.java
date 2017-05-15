@@ -19,12 +19,12 @@ package com.facebook.buck.shell;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class WorkerToolBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         WorkerToolDescriptionArg.Builder, WorkerToolDescriptionArg, WorkerToolDescription,
         DefaultWorkerTool> {
   private WorkerToolBuilder(BuildTarget target) {

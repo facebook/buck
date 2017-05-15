@@ -17,13 +17,13 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class RemoteFileBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         RemoteFileDescriptionArg.Builder, RemoteFileDescriptionArg, RemoteFileDescription,
         RemoteFile> {
   protected RemoteFileBuilder(Downloader downloader, BuildTarget target) {

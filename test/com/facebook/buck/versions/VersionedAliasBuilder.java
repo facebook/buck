@@ -18,7 +18,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +26,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 public class VersionedAliasBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         VersionedAliasDescriptionArg.Builder, VersionedAliasDescriptionArg,
         AbstractVersionedAliasDescription, BuildRule> {
 

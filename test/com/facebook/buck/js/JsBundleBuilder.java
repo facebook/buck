@@ -19,12 +19,12 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class JsBundleBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         JsBundleDescriptionArg.Builder, JsBundleDescriptionArg, JsBundleDescription, JsBundle> {
   private static final JsBundleDescription bundleDescription = new JsBundleDescription();
 

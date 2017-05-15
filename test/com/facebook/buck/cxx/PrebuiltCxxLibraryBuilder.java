@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         PrebuiltCxxLibraryDescriptionArg.Builder, PrebuiltCxxLibraryDescriptionArg,
         PrebuiltCxxLibraryDescription, BuildRule> {
 

@@ -20,7 +20,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class CxxLuaExtensionBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         CxxLuaExtensionDescriptionArg.Builder, CxxLuaExtensionDescriptionArg,
         CxxLuaExtensionDescription, CxxLuaExtension> {
 

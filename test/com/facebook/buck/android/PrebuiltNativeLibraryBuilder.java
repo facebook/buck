@@ -18,13 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         PrebuiltNativeLibraryDescriptionArg.Builder, PrebuiltNativeLibraryDescriptionArg,
         PrebuiltNativeLibraryDescription, PrebuiltNativeLibrary> {
 

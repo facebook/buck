@@ -17,13 +17,13 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class ExportFileBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         ExportFileDescriptionArg.Builder, ExportFileDescriptionArg, ExportFileDescription,
         ExportFile> {
   private ExportFileBuilder(BuildTarget target) {

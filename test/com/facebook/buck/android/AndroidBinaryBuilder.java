@@ -26,7 +26,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBinaryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         AndroidBinaryDescriptionArg.Builder, AndroidBinaryDescriptionArg, AndroidBinaryDescription,
         AndroidBinary> {
 

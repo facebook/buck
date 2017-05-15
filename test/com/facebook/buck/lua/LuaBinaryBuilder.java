@@ -24,12 +24,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class LuaBinaryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         LuaBinaryDescriptionArg.Builder, LuaBinaryDescriptionArg, LuaBinaryDescription, LuaBinary> {
 
   public LuaBinaryBuilder(LuaBinaryDescription description, BuildTarget target) {

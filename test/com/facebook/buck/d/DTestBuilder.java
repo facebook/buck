@@ -19,12 +19,12 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
 import java.util.Optional;
 
 public class DTestBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         DTestDescriptionArg.Builder, DTestDescriptionArg, DTestDescription, DTest> {
 
   public DTestBuilder(BuildTarget target, DBuckConfig dBuckConfig, CxxPlatform defaultCxxPlatform) {

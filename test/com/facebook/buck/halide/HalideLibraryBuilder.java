@@ -25,7 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.AbstractNodeBuilderWithImmutableArg;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -44,7 +44,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibraryBuilder
-    extends AbstractNodeBuilderWithImmutableArg<
+    extends AbstractNodeBuilder<
         HalideLibraryDescriptionArg.Builder, HalideLibraryDescriptionArg, HalideLibraryDescription,
         BuildRule> {
   public HalideLibraryBuilder(
