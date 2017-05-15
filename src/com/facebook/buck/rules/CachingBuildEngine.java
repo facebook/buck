@@ -479,7 +479,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       // 2. Rule key cache lookup.
       AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
-      ListenableFuture<Optional<BuildResult>> cacheCheckResult =
+      ListenableFuture<Optional<BuildResult>> buildResultFuture =
           cacheActivityService.submit(
               () -> {
                 CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
@@ -488,91 +488,63 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               },
               CACHE_CHECK_RESOURCE_AMOUNTS);
 
-      return Futures.transformAsync(
-          cacheCheckResult,
-          ruleAsyncFunction(
-              rule,
-              buildContext.getEventBus(),
+      // 3. Build deps.
+      buildResultFuture =
+          Futures.transformAsync(
+              buildResultFuture,
               result -> {
                 if (result.isPresent()) {
-                  return Futures.immediateFuture(result.get());
+                  return Futures.immediateFuture(result);
                 }
-                return handleRuleKeyCacheResult(
-                    rule,
-                    buildContext,
-                    executionContext,
-                    onDiskBuildInfo,
-                    buildInfoRecorder,
-                    buildableContext,
-                    asyncCallbacks,
-                    ruleKeyFactories,
-                    Preconditions.checkNotNull(rulekeyCacheResult.get()));
-              }),
+                return Futures.transformAsync(
+                    getDepResults(rule, buildContext, executionContext, asyncCallbacks),
+                    (depResults) -> handleDepsResults(rule, depResults),
+                    MoreExecutors.directExecutor());
+              },
+              serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+
+      // 4. Return to the current rule and check caches to see if we can avoid building
+      // locally.
+      buildResultFuture =
+          Futures.transformAsync(
+              buildResultFuture,
+              ruleAsyncFunction(
+                  rule,
+                  buildContext.getEventBus(),
+                  (result) -> {
+                    if (result.isPresent()) {
+                      return Futures.immediateFuture(result);
+                    }
+                    return Futures.immediateFuture(
+                        checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder));
+                  }),
+              serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
+
+      // 5. Build the current rule locally, if we have to.
+      return Futures.transformAsync(
+          buildResultFuture,
+          (result) -> {
+            // If we already got a result checking the caches, then we don't
+            // build locally.
+            if (result.isPresent()) {
+              return Futures.immediateFuture(result.get());
+            }
+
+            // Otherwise, build the rule.  We re-submit via the service so that we schedule
+            // it with the custom weight assigned to this rule's steps.
+            return service.<BuildResult>submit(
+                () ->
+                    buildLocally(
+                        rule,
+                        buildContext,
+                        executionContext,
+                        ruleKeyFactories,
+                        buildableContext,
+                        Preconditions.checkNotNull(rulekeyCacheResult.get())),
+                getRuleResourceAmounts(rule));
+          },
           serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
     }
-  }
-
-  private ListenableFuture<BuildResult> handleRuleKeyCacheResult(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      OnDiskBuildInfo onDiskBuildInfo,
-      BuildInfoRecorder buildInfoRecorder,
-      BuildableContext buildableContext,
-      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks,
-      RuleKeyFactories ruleKeyFactories,
-      CacheResult cacheResult) {
-    // 3. Build deps.
-    ListenableFuture<List<BuildResult>> getDepResults =
-        getDepResults(rule, buildContext, executionContext, asyncCallbacks);
-
-    ListenableFuture<Optional<BuildResult>> buildResult =
-        Futures.transformAsync(
-            getDepResults,
-            depResults -> handleDepsResults(rule, depResults),
-            MoreExecutors.directExecutor());
-
-    // 4. Return to the current rule and check caches to see if we can avoid building
-    // locally.
-    ListenableFuture<Optional<BuildResult>> checkCachesResult =
-        Futures.transformAsync(
-            buildResult,
-            ruleAsyncFunction(
-                rule,
-                buildContext.getEventBus(),
-                result -> {
-                  if (result.isPresent()) {
-                    return Futures.immediateFuture(result);
-                  }
-                  return Futures.immediateFuture(
-                      checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder));
-                }),
-            serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
-
-    // 5. Build the current rule locally, if we have to.
-    return Futures.transformAsync(
-        checkCachesResult,
-        (result) -> {
-          // If we already got a result checking the caches, then we don't
-          // build locally.
-          if (result.isPresent()) {
-            return Futures.immediateFuture(result.get());
-          }
-
-          // Otherwise, build the rule.  We re-submit via the service so that we schedule
-          // it with the custom weight assigned to this rule's steps.
-          return service.<BuildResult>submit(
-              () ->
-                  buildLocally(
-                      rule,
-                      buildContext,
-                      executionContext,
-                      ruleKeyFactories,
-                      buildableContext,
-                      cacheResult),
-              getRuleResourceAmounts(rule));
-        },
-        serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
   }
 
   private Optional<BuildResult> checkMatchingLocalKey(
