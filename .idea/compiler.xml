@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
+    <option name="BUILD_PROCESS_HEAP_SIZE" value="2048" />
     <excludeFromCompile>
       <directory url="file://$PROJECT_DIR$/buck-out/android" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/bin" includeSubdirectories="true" />
