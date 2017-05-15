@@ -48,12 +48,12 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
-import com.intellij.ui.tabs.JBTabs;
-import com.intellij.ui.tabs.TabInfo;
-import com.intellij.ui.tabs.impl.JBTabsImpl;
 import com.intellij.ui.treeStructure.Tree;
+
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
 import javax.swing.JComponent;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -62,7 +62,6 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
   private static final String OUTPUT_WINDOW_CONTENT_ID = "BuckOutputWindowContent";
   public static final String TOOL_WINDOW_ID = "Buck";
-  private static final String TABS_CONTENT_ID = "BuckWindowTabsContent";
   private static final String BUILD_OUTPUT_PANEL = "BuckBuildOutputPanel";
 
   public static void updateBuckToolWindowTitle(Project project) {
@@ -148,23 +147,21 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
     BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
 
-    JBTabs myTabs = new JBTabsImpl(project);
     // Debug Console
     if (state.showDebug) {
       Content consoleContent = createConsoleContent(runnerLayoutUi, project);
-      myTabs.addTab(new TabInfo(consoleContent.getComponent())).setText("Debug");
+      consoleContent.setCloseable(false);
+      consoleContent.setPinnable(false);
+      runnerLayoutUi.addContent(consoleContent, 0, PlaceInGrid.center, false);
     }
     // Build Tree Events
     Content treeViewContent =
         runnerLayoutUi.createContent(
-            BUILD_OUTPUT_PANEL, createBuildInfoPanel(project), "Build Output", null, null);
-    myTabs.addTab(new TabInfo(treeViewContent.getComponent()).setText("Build"));
+            BUILD_OUTPUT_PANEL, createBuildInfoPanel(project), "Build", null, null);
+    treeViewContent.setCloseable(false);
+    treeViewContent.setPinnable(false);
+    runnerLayoutUi.addContent(treeViewContent, 0, PlaceInGrid.center, false);
 
-    Content tabsContent =
-        runnerLayoutUi.createContent(
-            TABS_CONTENT_ID, myTabs.getComponent(), "Buck Tool Tabs", null, null);
-
-    runnerLayoutUi.addContent(tabsContent, 0, PlaceInGrid.center, false);
     runnerLayoutUi
         .getOptions()
         .setLeftToolbar(getLeftToolbarActions(project), ActionPlaces.UNKNOWN);
@@ -183,7 +180,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     ConsoleView consoleView = BuckUIManager.getInstance(project).getConsoleWindow(project);
     Content consoleWindowContent =
         layoutUi.createContent(
-            OUTPUT_WINDOW_CONTENT_ID, consoleView.getComponent(), "Output Logs", null, null);
+            OUTPUT_WINDOW_CONTENT_ID, consoleView.getComponent(), "Debug", null, null);
     consoleWindowContent.setCloseable(false);
     return consoleWindowContent;
   }
@@ -209,7 +206,12 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
   }
 
   private JComponent createBuildInfoPanel(Project project) {
-    Tree result = new Tree(BuckUIManager.getInstance(project).getTreeModel());
+    Tree result = new Tree(BuckUIManager.getInstance(project).getTreeModel()) {
+      @Override
+      public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 5;
+      }
+    };
     result.addMouseListener(
         new MouseListener() {
           @Override
