@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -30,8 +29,6 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractAaptOutputInfo {
   public abstract SourcePath getPathToRDotTxt();
-
-  public abstract Optional<SourcePath> getRDotJavaDir();
 
   public abstract SourcePath getPrimaryResourcesApkPath();
 

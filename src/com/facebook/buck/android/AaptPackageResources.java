@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -47,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -60,11 +58,7 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   @AddToRuleKey private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
-  @AddToRuleKey private final Optional<String> resourceUnionPackage;
-  private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
-  @AddToRuleKey private final boolean shouldBuildStringSourceMap;
   @AddToRuleKey private final boolean skipCrunchPngs;
-  @AddToRuleKey private final EnumSet<RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
 
@@ -95,11 +89,8 @@ public class AaptPackageResources extends AbstractBuildRule {
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      Optional<String> resourceUnionPackage,
-      boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
-      EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
     super(
         params.copyReplacingDeclaredAndExtraDeps(
@@ -114,12 +105,8 @@ public class AaptPackageResources extends AbstractBuildRule {
             Suppliers.ofInstance(ImmutableSortedSet.of())));
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
-    this.resourceDeps = resourceDeps;
-    this.resourceUnionPackage = resourceUnionPackage;
-    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
-    this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.manifestEntries = manifestEntries;
   }
 
@@ -189,10 +176,6 @@ public class AaptPackageResources extends AbstractBuildRule {
     // always exists.
     steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
 
-    if (hasRDotJava()) {
-      generateRDotJavaFiles(steps, buildableContext, context);
-    }
-
     // Record the filtered resources dirs, since when we initialize ourselves from disk, we'll
     // need to test whether this is empty or not without requiring the `ResourcesFilter` rule to
     // be available.
@@ -202,6 +185,7 @@ public class AaptPackageResources extends AbstractBuildRule {
             .transform(Object::toString)
             .toSortedList(Ordering.natural()));
 
+    buildableContext.recordArtifact(rDotTxtDir);
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
 
@@ -237,55 +221,6 @@ public class AaptPackageResources extends AbstractBuildRule {
     }
   }
 
-  /** True iff an app has resources with ids (after filtering (like for display density)). */
-  boolean hasRDotJava() {
-    return filteredResourcesProvider.hasResources();
-  }
-
-  private void generateRDotJavaFiles(
-      ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext,
-      BuildContext buildContext) {
-    // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
-    Path rDotJavaSrc = getRawPathToGeneratedRDotJavaSrcFiles();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaSrc));
-
-    Path rDotTxtDir = getPathToRDotTxtDir();
-    MergeAndroidResourcesStep mergeStep =
-        MergeAndroidResourcesStep.createStepForUberRDotJava(
-            getProjectFilesystem(),
-            buildContext.getSourcePathResolver(),
-            resourceDeps,
-            getPathToRDotTxtFile(),
-            rDotJavaSrc,
-            bannedDuplicateResourceTypes,
-            resourceUnionPackage);
-    steps.add(mergeStep);
-
-    if (shouldBuildStringSourceMap) {
-      // Make sure we have an output directory
-      Path outputDirPath = getPathForNativeStringInfoDirectory();
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirPath));
-
-      // Add the step that parses R.txt and all the strings.xml files, and
-      // produces a JSON with android resource id's and xml paths for each string resource.
-      GenStringSourceMapStep genNativeStringInfo =
-          new GenStringSourceMapStep(
-              getProjectFilesystem(),
-              rDotTxtDir,
-              filteredResourcesProvider.getResDirectories(),
-              outputDirPath);
-      steps.add(genNativeStringInfo);
-
-      // Cache the generated strings.json file, it will be stored inside outputDirPath
-      buildableContext.recordArtifact(outputDirPath);
-    }
-
-    // Ensure the generated R.txt and R.java files are also recorded.
-    buildableContext.recordArtifact(rDotTxtDir);
-    buildableContext.recordArtifact(rDotJavaSrc);
-  }
-
   /**
    * Buck does not require the manifest to be named AndroidManifest.xml, but commands such as aapt
    * do. For this reason, we symlink the path to {@link #manifest} to the path returned by this
@@ -307,33 +242,9 @@ public class AaptPackageResources extends AbstractBuildRule {
         getProjectFilesystem(), getBuildTarget(), RESOURCE_APK_PATH_FORMAT);
   }
 
-  /**
-   * This directory contains both the generated {@code R.java} files under a directory path that
-   * matches the corresponding package structure.
-   */
-  SourcePath getPathToRDotJavaDir() {
-    return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(), getRawPathToGeneratedRDotJavaSrcFiles());
-  }
-
-  private Path getRawPathToGeneratedRDotJavaSrcFiles() {
-    return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget(), getProjectFilesystem());
-  }
-
-  private Path getPathForNativeStringInfoDirectory() {
-    return BuildTargets.getScratchPath(
-        getProjectFilesystem(), getBuildTarget(), "__%s_string_source_map__");
-  }
-
   private Path getPathToGeneratedProguardConfigFile() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/proguard/proguard.txt");
-  }
-
-  @VisibleForTesting
-  static Path getPathToGeneratedRDotJavaSrcFiles(
-      BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargets.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
   }
 
   @VisibleForTesting
@@ -345,7 +256,6 @@ public class AaptPackageResources extends AbstractBuildRule {
     BuildTarget target = getBuildTarget();
     return AaptOutputInfo.builder()
         .setPathToRDotTxt(new ExplicitBuildTargetSourcePath(target, getPathToRDotTxtFile()))
-        .setRDotJavaDir(hasRDotJava() ? Optional.of(getPathToRDotJavaDir()) : Optional.empty())
         .setPrimaryResourcesApkPath(new ExplicitBuildTargetSourcePath(target, getResourceApkPath()))
         .setAndroidManifestXml(new ExplicitBuildTargetSourcePath(target, getAndroidManifestXml()))
         .setAaptGeneratedProguardConfigFile(

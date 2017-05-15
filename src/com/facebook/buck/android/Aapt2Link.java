@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.android.annotations.VisibleForTesting;
-import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -47,9 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -58,11 +55,8 @@ import javax.annotation.Nullable;
 /** Perform the "aapt2 link" step of building an Android app. */
 public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
-  @AddToRuleKey private final ImmutableList<HasAndroidResourceDeps> resourceRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
-  @AddToRuleKey private final Optional<String> resourceUnionPackage;
-  @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
 
   Aapt2Link(
       BuildRuleParams buildRuleParams,
@@ -70,9 +64,7 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableList<Aapt2Compile> compileRules,
       ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
-      ManifestEntries manifestEntries,
-      Optional<String> resourceUnionPackage,
-      EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes) {
+      ManifestEntries manifestEntries) {
     super(
         buildRuleParams.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(
@@ -82,12 +74,8 @@ public class Aapt2Link extends AbstractBuildRule {
                     .addAll(ruleFinder.filterBuildRuleInputs(manifest))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())));
-
     this.compileRules = compileRules;
-    this.resourceRules = resourceRules;
     this.manifest = manifest;
-    this.resourceUnionPackage = resourceUnionPackage;
-    this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.manifestEntries = manifestEntries;
   }
 
@@ -118,21 +106,10 @@ public class Aapt2Link extends AbstractBuildRule {
     steps.add(
         new MakeRDotTxtStep(getProjectFilesystem(), getInitialRDotJavaDir(), getRDotTxtPath()));
 
-    steps.add(
-        MergeAndroidResourcesStep.createStepForUberRDotJava(
-            getProjectFilesystem(),
-            context.getSourcePathResolver(),
-            resourceRules,
-            getRDotTxtPath(),
-            getFinalRDotJavaDir(),
-            bannedDuplicateResourceTypes,
-            resourceUnionPackage));
-
     buildableContext.recordArtifact(getFinalManifestPath());
     buildableContext.recordArtifact(getResourceApkPath());
     buildableContext.recordArtifact(getProguardConfigPath());
     buildableContext.recordArtifact(getRDotTxtPath());
-    buildableContext.recordArtifact(getFinalRDotJavaDir());
     // Don't really need this, but it's small and might help with debugging.
     buildableContext.recordArtifact(getInitialRDotJavaDir());
 
@@ -168,15 +145,9 @@ public class Aapt2Link extends AbstractBuildRule {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/initial-rdotjava");
   }
 
-  /** Directory containing R.java files produced our processing. */
-  private Path getFinalRDotJavaDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/rdotjava");
-  }
-
   public AaptOutputInfo getAaptOutputInfo() {
     return AaptOutputInfo.builder()
         .setPathToRDotTxt(new ExplicitBuildTargetSourcePath(getBuildTarget(), getRDotTxtPath()))
-        .setRDotJavaDir(new ExplicitBuildTargetSourcePath(getBuildTarget(), getFinalRDotJavaDir()))
         .setPrimaryResourcesApkPath(
             new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath()))
         .setAndroidManifestXml(
