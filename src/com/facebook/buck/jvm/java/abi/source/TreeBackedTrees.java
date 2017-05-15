@@ -118,7 +118,7 @@ class TreeBackedTrees extends Trees {
   @Nullable
   public TreePath getPath(Element e) {
     if (e instanceof TreeBackedElement) {
-      return ((TreeBackedElement) e).getTreePath();
+      return javacTrees.getPath(elements.getJavacElement(e));
     }
 
     TreePath result = javacTrees.getPath(e);

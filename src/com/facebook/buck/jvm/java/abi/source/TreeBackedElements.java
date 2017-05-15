@@ -18,6 +18,9 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.TypeParameterTree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.Trees;
 import java.io.Writer;
 import java.util.Arrays;
@@ -120,7 +123,7 @@ class TreeBackedElements implements Elements {
         new TreeBackedTypeElement(
             underlyingType,
             enterElement(underlyingType.getEnclosingElement()),
-            Preconditions.checkNotNull(javacTrees.getPath(underlyingType)),
+            Preconditions.checkNotNull(javacTrees.getTree(underlyingType)),
             Preconditions.checkNotNull(resolver));
 
     knownTypes.put(treeBackedType.getQualifiedName(), treeBackedType);
@@ -132,11 +135,36 @@ class TreeBackedElements implements Elements {
       TypeParameterElement underlyingTypeParameter) {
     TreeBackedParameterizable enclosingElement =
         (TreeBackedParameterizable) enterElement(underlyingTypeParameter.getEnclosingElement());
+
+    // Trees.getTree does not work for TypeParameterElements, so we must find it ourselves
+    TypeParameterTree tree =
+        findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
     return new TreeBackedTypeParameterElement(
-        underlyingTypeParameter,
-        Preconditions.checkNotNull(javacTrees.getPath(underlyingTypeParameter)),
-        enclosingElement,
-        Preconditions.checkNotNull(resolver));
+        underlyingTypeParameter, tree, enclosingElement, Preconditions.checkNotNull(resolver));
+  }
+
+  private TypeParameterTree findTypeParameterTree(
+      TreeBackedParameterizable element, Name simpleName) {
+    List<? extends TypeParameterTree> typeParameters = getTypeParameters(element);
+    for (TypeParameterTree typeParameter : typeParameters) {
+      if (typeParameter.getName().equals(simpleName)) {
+        return typeParameter;
+      }
+    }
+    throw new AssertionError();
+  }
+
+  private List<? extends TypeParameterTree> getTypeParameters(TreeBackedParameterizable element) {
+    if (element instanceof TreeBackedTypeElement) {
+      TreeBackedTypeElement typeElement = (TreeBackedTypeElement) element;
+      return typeElement.getTree().getTypeParameters();
+    }
+
+    TreeBackedExecutableElement executableElement = (TreeBackedExecutableElement) element;
+    // TreeBackedExecutables with a null tree occur only for compiler-generated methods such
+    // as default construvtors. Those never have type parameters, so we should never find
+    // ourselves here without a tree.
+    return Preconditions.checkNotNull(executableElement.getTree()).getTypeParameters();
   }
 
   private TreeBackedExecutableElement newTreeBackedExecutable(
@@ -144,15 +172,16 @@ class TreeBackedElements implements Elements {
     return new TreeBackedExecutableElement(
         underlyingExecutable,
         enterElement(underlyingExecutable.getEnclosingElement()),
-        javacTrees.getPath(underlyingExecutable),
+        javacTrees.getTree(underlyingExecutable),
         Preconditions.checkNotNull(resolver));
   }
 
   private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
+    TreeBackedElement enclosingElement = enterElement(underlyingVariable.getEnclosingElement());
     return new TreeBackedVariableElement(
         underlyingVariable,
-        enterElement(underlyingVariable.getEnclosingElement()),
-        javacTrees.getPath(underlyingVariable),
+        enclosingElement,
+        reallyGetTreeForVariable(enclosingElement, underlyingVariable),
         Preconditions.checkNotNull(resolver));
   }
 
@@ -325,5 +354,30 @@ class TreeBackedElements implements Elements {
   @Override
   public boolean isFunctionalInterface(TypeElement type) {
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * {@link Trees#getTree(Element)} cannot get a tree for a method parameter. This method is a
+   * workaround.
+   */
+  @Nullable
+  private VariableTree reallyGetTreeForVariable(
+      TreeBackedElement enclosing, VariableElement parameter) {
+    if (enclosing instanceof TreeBackedTypeElement) {
+      return (VariableTree) javacTrees.getTree(parameter);
+    }
+
+    TreeBackedExecutableElement method = (TreeBackedExecutableElement) enclosing;
+    MethodTree methodTree = method.getTree();
+    if (methodTree == null) {
+      return null;
+    }
+
+    for (VariableTree variableTree : methodTree.getParameters()) {
+      if (variableTree.getName().equals(parameter.getSimpleName())) {
+        return variableTree;
+      }
+    }
+    throw new AssertionError();
   }
 }

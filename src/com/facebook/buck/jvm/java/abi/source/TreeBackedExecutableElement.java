@@ -20,7 +20,6 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
-import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,12 +49,18 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   TreeBackedExecutableElement(
       ExecutableElement underlyingElement,
       TreeBackedElement enclosingElement,
-      @Nullable TreePath path,
+      @Nullable MethodTree tree,
       TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, path, resolver);
+    super(underlyingElement, enclosingElement, tree, resolver);
     this.underlyingElement = underlyingElement;
-    tree = path != null ? (MethodTree) path.getLeaf() : null;
+    this.tree = tree;
     enclosingElement.addEnclosedElement(this);
+  }
+
+  @Override
+  @Nullable
+  MethodTree getTree() {
+    return tree;
   }
 
   @Override
@@ -130,9 +135,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
       if (underlyingValue != null) {
         defaultValue =
             new TreeBackedAnnotationValue(
-                underlyingValue,
-                new TreePath(getTreePath(), Preconditions.checkNotNull(tree).getDefaultValue()),
-                getResolver());
+                underlyingValue, Preconditions.checkNotNull(tree).getDefaultValue(), getResolver());
       }
     }
     return defaultValue;

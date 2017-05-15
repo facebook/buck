@@ -17,11 +17,15 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import java.io.IOException;
+import java.util.stream.Collectors;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.VariableElement;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -52,5 +56,36 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
     VariableElement variable = findField("CONSTANT", elements.getTypeElement("Foo"));
 
     assertEquals(42, variable.getConstantValue());
+  }
+
+  @Test
+  public void testGetAnnotationFromField() throws IOException {
+    compile(Joiner.on('\n').join("public class Foo {", "  @Deprecated int field;", "}"));
+
+    VariableElement variable = findField("field", elements.getTypeElement("Foo"));
+    assertThat(
+        variable
+            .getAnnotationMirrors()
+            .stream()
+            .map(AnnotationMirror::toString)
+            .collect(Collectors.toList()),
+        Matchers.contains("@java.lang.Deprecated"));
+  }
+
+  @Test
+  public void testGetAnnotationFromParameter() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join("public class Foo {", "  public void foo(@Deprecated int parameter) { }", "}"));
+
+    VariableElement variable =
+        findParameter("parameter", findMethod("foo", elements.getTypeElement("Foo")));
+    assertThat(
+        variable
+            .getAnnotationMirrors()
+            .stream()
+            .map(AnnotationMirror::toString)
+            .collect(Collectors.toList()),
+        Matchers.contains("@java.lang.Deprecated"));
   }
 }

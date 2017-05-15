@@ -128,7 +128,7 @@ class InterfaceValidator {
                 }
 
                 private boolean isCompiledInCurrentRun(TypeElement typeElement) {
-                  return trees.getPath(typeElement) != null;
+                  return trees.getTree(typeElement) != null;
                 }
 
                 private boolean isOnBootClasspath(TypeElement typeElement) {

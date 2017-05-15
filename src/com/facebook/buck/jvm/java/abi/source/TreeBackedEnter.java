@@ -52,9 +52,14 @@ class TreeBackedEnter {
     }
   }
 
+  // TODO(jkeljo): Consider continuing to build TreePath objects as we go, so that we don't have to
+  // re-query the tree when creating the elements in `TreeBackedElements`.
   private class EnteringTreePathScanner extends TreePathScanner<Void, Void> {
     @Override
     public Void visitClass(ClassTree node, Void v) {
+      // We use a TreePathScanner to find the top-level type elements in a given compilation unit,
+      // then switch to Element scanning so that we can catch elements created by the compiler
+      // that don't have a tree, such as default constructors or the generated methods on enums.
       return elementScanner.scan(
           Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath())));
     }

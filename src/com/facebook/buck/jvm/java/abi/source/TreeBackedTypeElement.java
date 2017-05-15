@@ -20,7 +20,6 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ModifiersTree;
-import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +36,7 @@ import javax.lang.model.type.TypeMirror;
  */
 class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeElement {
   private final TypeElement underlyingElement;
-  @Nullable private final ClassTree tree;
+  private final ClassTree tree;
   @Nullable private StandaloneDeclaredType typeMirror;
   @Nullable private TypeMirror superclass;
   @Nullable private List<? extends TypeMirror> interfaces;
@@ -45,12 +44,17 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
   TreeBackedTypeElement(
       TypeElement underlyingElement,
       TreeBackedElement enclosingElement,
-      @Nullable TreePath path,
+      ClassTree tree,
       TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, path, resolver);
+    super(underlyingElement, enclosingElement, tree, resolver);
     this.underlyingElement = underlyingElement;
-    tree = path != null ? (ClassTree) path.getLeaf() : null;
+    this.tree = tree;
     enclosingElement.addEnclosedElement(this);
+  }
+
+  @Override
+  ClassTree getTree() {
+    return tree;
   }
 
   @Override

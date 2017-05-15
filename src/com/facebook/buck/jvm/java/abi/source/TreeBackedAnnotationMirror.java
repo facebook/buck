@@ -23,7 +23,6 @@ import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -38,7 +37,6 @@ import javax.lang.model.type.DeclaredType;
 
 class TreeBackedAnnotationMirror implements AnnotationMirror {
   private final AnnotationMirror underlyingAnnotationMirror;
-  private final TreePath path;
   private final AnnotationTree tree;
   private final TreeBackedElementResolver resolver;
 
@@ -47,13 +45,11 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
 
   TreeBackedAnnotationMirror(
       AnnotationMirror underlyingAnnotationMirror,
-      TreePath path,
+      AnnotationTree tree,
       TreeBackedElementResolver resolver) {
     this.underlyingAnnotationMirror = underlyingAnnotationMirror;
-    this.path = path;
+    this.tree = tree;
     this.resolver = resolver;
-
-    tree = (AnnotationTree) path.getLeaf();
   }
 
   @Override
@@ -69,17 +65,16 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
   public Map<ExecutableElement, TreeBackedAnnotationValue> getElementValues() {
     if (elementValues == null) {
       Map<ExecutableElement, TreeBackedAnnotationValue> result = new LinkedHashMap<>();
-      Map<String, TreePath> treePaths = new HashMap<>();
+      Map<String, Tree> trees = new HashMap<>();
 
       List<? extends ExpressionTree> arguments = tree.getArguments();
       for (ExpressionTree argument : arguments) {
-        TreePath valuePath = new TreePath(path, argument);
         if (argument.getKind() != Tree.Kind.ASSIGNMENT) {
-          treePaths.put("value", valuePath);
+          trees.put("value", argument);
         } else {
           AssignmentTree assignment = (AssignmentTree) argument;
           IdentifierTree nameTree = (IdentifierTree) assignment.getVariable();
-          treePaths.put(nameTree.getName().toString(), valuePath);
+          trees.put(nameTree.getName().toString(), argument);
         }
       }
 
@@ -87,12 +82,12 @@ class TreeBackedAnnotationMirror implements AnnotationMirror {
           underlyingAnnotationMirror.getElementValues().entrySet()) {
         ExecutableElement underlyingKeyElement = entry.getKey();
 
-        TreePath valuePath =
-            Preconditions.checkNotNull(treePaths.get(entry.getKey().getSimpleName().toString()));
+        Tree valueTree =
+            Preconditions.checkNotNull(trees.get(entry.getKey().getSimpleName().toString()));
 
         result.put(
             resolver.getCanonicalElement(underlyingKeyElement),
-            new TreeBackedAnnotationValue(entry.getValue(), valuePath, resolver));
+            new TreeBackedAnnotationValue(entry.getValue(), valueTree, resolver));
       }
 
       elementValues = Collections.unmodifiableMap(result);
