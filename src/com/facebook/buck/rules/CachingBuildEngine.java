@@ -501,55 +501,42 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             ruleKeyFactories.getDefaultRuleKeyFactory())) {
 
       // 1. Check if it's already built.
-      Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
-      final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-      if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
-        return Futures.immediateFuture(
-            BuildResult.success(
-                rule, BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
+      Optional<BuildResult> buildResult = checkMatchingLocalKey(rule, onDiskBuildInfo);
+      if (buildResult.isPresent()) {
+        return Futures.immediateFuture(buildResult.get());
       }
 
       // 2. Rule key cache lookup.
-      ListenableFuture<CacheResult> rulekeyCacheResult =
+      AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
+      ListenableFuture<Optional<BuildResult>> cacheCheckResult =
           cacheActivityService.submit(
               () -> {
-                CacheResult cacheResult =
-                    tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                        rule,
-                        defaultRuleKey,
-                        buildContext.getArtifactCache(),
-                        // TODO(simons): This should be a shared between all tests, not one per cell
-                        rule.getProjectFilesystem(),
-                        buildContext);
-                if (cacheResult.getType().isSuccess()) {
-                  fillInOriginFromCache(cacheResult, buildInfoRecorder);
-                  fillMissingBuildMetadataFromCache(
-                      cacheResult,
-                      buildInfoRecorder,
-                      BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
-                      BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-                      BuildInfo.MetadataKey.DEP_FILE);
-                }
-                return cacheResult;
+                CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
+                rulekeyCacheResult.set(cacheResult);
+                return getBuildResultForRuleKeyCacheResult(rule, cacheResult, buildInfoRecorder);
               },
               CACHE_CHECK_RESOURCE_AMOUNTS);
 
       return Futures.transformAsync(
-          rulekeyCacheResult,
+          cacheCheckResult,
           ruleAsyncFunction(
               rule,
               buildContext.getEventBus(),
-              (cacheResult) ->
-                  handleRuleKeyCacheResult(
-                      rule,
-                      buildContext,
-                      executionContext,
-                      onDiskBuildInfo,
-                      buildInfoRecorder,
-                      buildableContext,
-                      asyncCallbacks,
-                      ruleKeyFactories,
-                      cacheResult)),
+              (result) -> {
+                if (result.isPresent()) {
+                  return Futures.immediateFuture(result.get());
+                }
+                return handleRuleKeyCacheResult(
+                    rule,
+                    buildContext,
+                    executionContext,
+                    onDiskBuildInfo,
+                    buildInfoRecorder,
+                    buildableContext,
+                    asyncCallbacks,
+                    ruleKeyFactories,
+                    Preconditions.checkNotNull(rulekeyCacheResult.get()));
+              }),
           serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
     }
   }
@@ -564,11 +551,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks,
       RuleKeyFactories ruleKeyFactories,
       CacheResult cacheResult) {
-    if (cacheResult.getType().isSuccess()) {
-      return Futures.immediateFuture(
-          BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
-    }
-
     // 3. Build deps.
     ListenableFuture<List<BuildResult>> getDepResults =
         getDepResults(rule, buildContext, executionContext, asyncCallbacks);
@@ -590,6 +572,46 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         buildLocally(
             rule, buildContext, executionContext, ruleKeyFactories, buildableContext, cacheResult),
         serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+  }
+
+  private Optional<BuildResult> checkMatchingLocalKey(
+      BuildRule rule, OnDiskBuildInfo onDiskBuildInfo) {
+    Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
+    final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+    if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
+      return Optional.of(
+          BuildResult.success(
+              rule, BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
+    }
+    return Optional.empty();
+  }
+
+  private CacheResult performRuleKeyCacheCheck(BuildRule rule, BuildEngineBuildContext buildContext)
+      throws IOException {
+    final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+    return tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+        rule,
+        defaultRuleKey,
+        buildContext.getArtifactCache(),
+        // TODO(simons): This should be a shared between all tests, not one per cell
+        rule.getProjectFilesystem(),
+        buildContext);
+  }
+
+  private Optional<BuildResult> getBuildResultForRuleKeyCacheResult(
+      BuildRule rule, CacheResult cacheResult, BuildInfoRecorder buildInfoRecorder) {
+    if (!cacheResult.getType().isSuccess()) {
+      return Optional.empty();
+    }
+    fillInOriginFromCache(cacheResult, buildInfoRecorder);
+    fillMissingBuildMetadataFromCache(
+        cacheResult,
+        buildInfoRecorder,
+        BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
+        BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+        BuildInfo.MetadataKey.DEP_FILE);
+    return Optional.of(
+        BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
   }
 
   private boolean verifyRecordedPathHashes(
