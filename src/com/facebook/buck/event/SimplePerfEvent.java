@@ -631,7 +631,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
   }
 
-  private static class Finished extends AbstractChainablePerfEvent {
+  public static class Finished extends AbstractChainablePerfEvent {
 
     public Finished(StartedImpl started, ImmutableMap<String, Object> finishedInfo) {
       super(started.getEventKey(), started.getEventId(), Type.FINISHED, finishedInfo);

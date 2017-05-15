@@ -95,6 +95,7 @@ java_library(
     name = "javac-sink",
     srcs = [
         "JavacEventSink.java",
+        "JavacEventSinkScopedSimplePerfEvent.java",
     ],
     visibility = ["PUBLIC"],
     deps = [

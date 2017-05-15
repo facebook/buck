@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JarDumper;
+import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.model.BuildId;
@@ -2820,7 +2821,8 @@ public class StubJarTest {
               SourceVersion.RELEASE_8,
               testCompiler.getElements(),
               testCompiler.getFileManager(),
-              new DefaultBuckEventBus(new FakeClock(0), new BuildId()));
+              new JavacEventSinkToBuckEventBusBridge(
+                  new DefaultBuckEventBus(new FakeClock(0), new BuildId())));
 
       testCompiler.addPostEnterCallback(generator::generate);
 

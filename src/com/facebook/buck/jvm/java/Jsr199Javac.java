@@ -296,7 +296,7 @@ public abstract class Jsr199Javac implements Javac {
                     getTargetVersion(options),
                     javacTask.getElements(),
                     fileManager,
-                    context.getEventSink().getEventBus());
+                    context.getEventSink());
             stubGenerator.generate(topLevelTypes);
           });
     }
