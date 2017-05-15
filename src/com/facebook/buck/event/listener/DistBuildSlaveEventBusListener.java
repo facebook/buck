@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.timing.Clock;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
@@ -85,7 +84,6 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   protected final AtomicInteger httpArtifactUploadFailureCount = new AtomicInteger(0);
 
   private volatile @Nullable DistBuildService distBuildService;
-  private volatile @Nullable BuckEventBus eventBus;
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId, RunId runId, Clock clock, ScheduledExecutorService networkScheduler) {
@@ -109,10 +107,6 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   public void setDistBuildService(DistBuildService service) {
     this.distBuildService = service;
-  }
-
-  public void setEventBus(BuckEventBus eventBus) {
-    this.eventBus = eventBus;
   }
 
   @Override
@@ -185,11 +179,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     sendConsoleEventsToFrontend();
   }
 
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void distBuildFinished(BuildEvent.DistBuildFinished finished) {
-    Preconditions.checkNotNull(eventBus);
-    eventBus.post(new BuildSlaveFinishedEvent(createBuildSlaveStatus()));
+  public void publishBuildSlaveFinishedEvent(BuckEventBus eventBus, int exitCode) {
+    eventBus.post(new BuildSlaveFinishedEvent(createBuildSlaveStatus(), exitCode));
   }
 
   @Subscribe

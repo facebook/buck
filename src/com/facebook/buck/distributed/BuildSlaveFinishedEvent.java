@@ -20,12 +20,13 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 
 public class BuildSlaveFinishedEvent extends AbstractBuckEvent {
-
   private final BuildSlaveStatus status;
+  private final int exitCode;
 
-  public BuildSlaveFinishedEvent(BuildSlaveStatus status) {
+  public BuildSlaveFinishedEvent(BuildSlaveStatus status, int exitCode) {
     super(EventKey.unique());
     this.status = status;
+    this.exitCode = exitCode;
   }
 
   public BuildSlaveStatus getBuildSlaveStatus() {
@@ -40,5 +41,9 @@ public class BuildSlaveFinishedEvent extends AbstractBuckEvent {
   @Override
   public String getEventName() {
     return this.getClass().getName();
+  }
+
+  public int getExitCode() {
+    return exitCode;
   }
 }

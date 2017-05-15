@@ -97,7 +97,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       if (slaveEventListener != null) {
         slaveEventListener.setDistBuildService(service);
-        slaveEventListener.setEventBus(params.getBuckEventBus());
       }
 
       try {
@@ -126,6 +125,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   getStampedeIdOptional(),
                   getGlobalCacheDirOptional());
           int returnCode = distBuildExecutor.buildAndReturnExitCode();
+          if (slaveEventListener != null) {
+            slaveEventListener.publishBuildSlaveFinishedEvent(params.getBuckEventBus(), returnCode);
+          }
           if (returnCode == 0) {
             console.printSuccess(
                 String.format(
