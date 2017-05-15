@@ -148,13 +148,14 @@ installAndLaunch
 # Check for full install.
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 2
-test "$RESOURCE_APKS_INSTALLED" = 0
+# 1: exo-resources 2: exo-assets 3: exo-java-resources
+test "$RESOURCE_APKS_INSTALLED" = 3
 
 change_label 'Exo App New Label'
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
-test "$RESOURCE_APKS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 1
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
 edit_java '2b'
@@ -191,21 +192,21 @@ create_image 5
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
-test "$RESOURCE_APKS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 1
 
 # Change an asset and do an incremental build.
 edit_asset '6f'
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
-test "$RESOURCE_APKS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 1
 
 # Change a resource and do an incremental build.
 edit_resource '7g'
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
-test "$RESOURCE_APKS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 1
 
 # Change all resources and do an incremental build.
 create_image 8
@@ -214,7 +215,7 @@ edit_resource '8h'
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
-test "$RESOURCE_APKS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 2
 
 
 # Change everything and do a incremental build.
@@ -226,7 +227,7 @@ edit_resource '9i'
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 1
-test "$RESOURCE_APKS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 2
 
 # Change everything and do a no-exopackage incremental build.
 edit_java '10j'

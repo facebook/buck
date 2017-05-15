@@ -12,6 +12,7 @@ android_binary(
   exopackage_modes = [
     'native_library',
     'secondary_dex',
+    'resources',
   ],
   primary_dex_patterns = [
     '^exotest/AppShell^',
