@@ -188,6 +188,7 @@ public class AndroidBinaryGraphEnhancer {
             buildRuleParams,
             ruleResolver,
             originalBuildTarget,
+            ExopackageMode.enabledForResources(exopackageModes),
             manifest,
             aaptMode,
             resourcesFilter,

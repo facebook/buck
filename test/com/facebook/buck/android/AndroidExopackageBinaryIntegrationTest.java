@@ -132,7 +132,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
   }
 
   @Test
-  public void testAllExopackageHasNeitherSecondaryNorNativeLibraries() throws IOException {
+  public void testDexAndNativeExopackageHasNeitherSecondaryNorNativeLibraries() throws IOException {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
