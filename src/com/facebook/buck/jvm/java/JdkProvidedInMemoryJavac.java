@@ -28,10 +28,6 @@ import javax.tools.ToolProvider;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
 
-  JdkProvidedInMemoryJavac() {
-    // only here to limit this to package-level visibility
-  }
-
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("javac", "jsr199").setReflectively("javac.version", "in-memory");

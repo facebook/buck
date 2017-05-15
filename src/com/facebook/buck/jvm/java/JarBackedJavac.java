@@ -46,7 +46,7 @@ public class JarBackedJavac extends Jsr199Javac {
   private final String compilerClassName;
   private final ImmutableSortedSet<SourcePath> classpath;
 
-  JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
+  public JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
     this.compilerClassName = compilerClassName;
     this.classpath = ImmutableSortedSet.copyOf(classpath);
   }
