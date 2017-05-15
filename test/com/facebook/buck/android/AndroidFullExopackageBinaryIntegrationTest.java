@@ -92,26 +92,45 @@ public class AndroidFullExopackageBinaryIntegrationTest {
   }
 
   @Test
-  public void testEditingStringForcesRebuild() throws IOException {
+  public void testEditingStringGetsAbiHit() throws IOException {
     workspace.replaceFileContents("res/com/sample/base/res/values/strings.xml", "Hello", "Bye");
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(RESOURCES_EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(RESOURCES_EXOPACKAGE_TARGET);
   }
 
   @Test
-  public void testEditingColorForcesRebuild() throws IOException {
+  public void testEditingColorGetsAbiHit() throws IOException {
     workspace.replaceFileContents("res/com/sample/top/res/layout/top_layout.xml", "white", "black");
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(RESOURCES_EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingImageGetsAbiHit() throws IOException {
+    workspace.copyFile(
+        "res/com/sample/top/res/drawable/tiny_white.png",
+        "res/com/sample/top/res/drawable/tiny_something.png");
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(RESOURCES_EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingManifestReferencedStringForcesRebuild() throws IOException {
+    workspace.replaceFileContents(
+        "res/com/sample/base/res/values/strings.xml", "Sample App", "Exo App");
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(RESOURCES_EXOPACKAGE_TARGET);
   }
 
   @Test
-  public void testEditingImageForcesRebuild() throws IOException {
+  public void testEditingManifestReferencedImageForcesRebuild() throws IOException {
     workspace.copyFile(
         "res/com/sample/top/res/drawable/tiny_white.png",
-        "res/com/sample/top/res/drawable/tiny_something.png");
+        "res/com/sample/top/res/drawable/app_icon.png");
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(RESOURCES_EXOPACKAGE_TARGET);

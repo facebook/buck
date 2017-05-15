@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -25,12 +26,15 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -75,29 +79,20 @@ public class SplitResources extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(getOutputDirectory());
-    Path unalignedExoPath = getScratchDirectory().resolve("exo-resources.unaligned.zip");
     return ImmutableList.<Step>builder()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputDirectory()))
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchDirectory()))
-        .add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(pathToAaptResources),
-                primaryResourcesOutputPath))
-        .add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(pathToAaptResources),
-                unalignedExoPath))
-        .add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(pathToOriginalRDotTxt),
-                rDotTxtOutputPath))
+        .add(new SplitResourcesStep(context.getSourcePathResolver()))
         .add(
             new ZipalignStep(
-                getProjectFilesystem().getRootPath(), unalignedExoPath, exoResourcesOutputPath))
+                getProjectFilesystem().getRootPath(),
+                getUnalignedExoPath(),
+                exoResourcesOutputPath))
         .build();
+  }
+
+  private Path getUnalignedExoPath() {
+    return getScratchDirectory().resolve("exo-resources.unaligned.zip");
   }
 
   @Nullable
@@ -120,5 +115,38 @@ public class SplitResources extends AbstractBuildRule {
 
   public Path getScratchDirectory() {
     return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/");
+  }
+
+  private class SplitResourcesStep implements Step {
+    private Path absolutePathToAaptResources;
+    private Path absolutePathToOriginalRDotTxt;
+
+    public SplitResourcesStep(SourcePathResolver sourcePathResolver) {
+      absolutePathToAaptResources = sourcePathResolver.getAbsolutePath(pathToAaptResources);
+      absolutePathToOriginalRDotTxt = sourcePathResolver.getAbsolutePath(pathToOriginalRDotTxt);
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      ExoResourcesRewriter.rewrite(
+          absolutePathToAaptResources,
+          absolutePathToOriginalRDotTxt,
+          getProjectFilesystem().getPathForRelativePath(primaryResourcesOutputPath),
+          getProjectFilesystem().getPathForRelativePath(getUnalignedExoPath()),
+          getProjectFilesystem().getPathForRelativePath(rDotTxtOutputPath));
+      return StepExecutionResult.SUCCESS;
+    }
+
+    @Override
+    public String getShortName() {
+      return "splitting_exo_resources";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return String.format(
+          "split_exo_resources %s %s", absolutePathToAaptResources, absolutePathToOriginalRDotTxt);
+    }
   }
 }

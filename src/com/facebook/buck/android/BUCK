@@ -130,6 +130,7 @@ RULES_SRCS = [
     "RobolectricTest.java",
     "RobolectricTestDescription.java",
     "ScalaAndroidLibraryCompiler.java",
+    "SplitResources.java",
     "StripLinkable.java",
     "TrimUberRDotJava.java",
     "UnsortedAndroidResourceDeps.java",

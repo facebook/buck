@@ -228,6 +228,12 @@ class AndroidBinaryResourcesGraphEnhancer {
       SplitResources splitResources =
           createSplitResourcesRule(
               aaptOutputInfo.getPrimaryResourcesApkPath(), aaptOutputInfo.getPathToRDotTxt());
+
+      ruleResolver.addToIndex(mergeAssets);
+      enhancedDeps.add(mergeAssets);
+      ruleResolver.addToIndex(splitResources);
+      enhancedDeps.add(splitResources);
+
       pathToRDotTxt = splitResources.getPathToRDotTxt();
       resultBuilder.setPrimaryResourcesApkPath(splitResources.getPathToPrimaryResources());
       resultBuilder.addExoResources(splitResources.getPathToExoResources());
