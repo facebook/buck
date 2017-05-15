@@ -46,6 +46,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -359,7 +360,7 @@ public class PythonBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasTests, HasVersionUniverse {
     Optional<SourcePath> getMain();
 
     Optional<String> getMainModule();
@@ -386,7 +387,5 @@ public class PythonBinaryDescription
     ImmutableList<String> getLinkerFlags();
 
     Optional<String> getExtension();
-
-    Optional<String> getVersionUniverse();
   }
 }

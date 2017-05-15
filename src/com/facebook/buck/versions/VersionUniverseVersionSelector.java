@@ -47,14 +47,12 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     this.universes = universes;
   }
 
-  @SuppressWarnings("unchecked")
   private <A> Optional<String> getVersionUniverseName(TargetNode<A, ?> root) {
     A arg = root.getConstructorArg();
-    try {
-      return (Optional<String>) arg.getClass().getField("versionUniverse").get(arg);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      return Optional.empty();
+    if (arg instanceof HasVersionUniverse) {
+      return ((HasVersionUniverse) arg).getVersionUniverse();
     }
+    return Optional.empty();
   }
 
   @VisibleForTesting

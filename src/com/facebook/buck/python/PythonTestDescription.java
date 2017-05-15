@@ -45,6 +45,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
@@ -375,7 +376,8 @@ public class PythonTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPythonTestDescriptionArg extends PythonLibraryDescription.CoreArg {
+  interface AbstractPythonTestDescriptionArg
+      extends PythonLibraryDescription.CoreArg, HasVersionUniverse {
     Optional<String> getMainModule();
 
     ImmutableSet<String> getContacts();
@@ -399,7 +401,5 @@ public class PythonTestDescription
     ImmutableMap<String, String> getEnv();
 
     Optional<Long> getTestRuleTimeoutMs();
-
-    Optional<String> getVersionUniverse();
   }
 }

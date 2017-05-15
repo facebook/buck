@@ -36,6 +36,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
@@ -418,10 +419,8 @@ public class CxxBinaryDescription
     return true;
   }
 
-  public interface CommonArg extends LinkableCxxConstructorArg {
+  public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse {
     Optional<Query> getDepsQuery();
-
-    Optional<String> getVersionUniverse();
 
     Optional<Flavor> getDefaultPlatform();
   }
