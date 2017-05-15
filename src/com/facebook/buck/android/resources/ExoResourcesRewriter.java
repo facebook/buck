@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android.resources;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -26,12 +28,18 @@ import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -97,7 +105,18 @@ import java.util.zip.ZipFile;
 public class ExoResourcesRewriter {
   private ExoResourcesRewriter() {}
 
-  public static void rewrite(Path inputPath, Path primaryResources, Path exoResources)
+  public static void rewrite(
+      Path inputPath,
+      Path inputRDotTxt,
+      Path primaryResources,
+      Path exoResources,
+      Path outputRDotTxt)
+      throws IOException {
+    ReferenceMapper resMapping = rewriteResources(inputPath, primaryResources, exoResources);
+    rewriteRDotTxt(resMapping, inputRDotTxt, outputRDotTxt);
+  }
+
+  static ReferenceMapper rewriteResources(Path inputPath, Path primaryResources, Path exoResources)
       throws IOException {
     try (ApkZip apkZip = new ApkZip(inputPath)) {
       UsedResourcesFinder.ResourceClosure closure =
@@ -145,6 +164,31 @@ public class ExoResourcesRewriter {
               false);
         }
       }
+      return resMapping;
+    }
+  }
+
+  static void rewriteRDotTxt(ReferenceMapper refMapping, Path inputRDotTxt, Path outputRDotTxt) {
+    Map<String, String> cache = new HashMap<>();
+    Function<String, String> stringMapping =
+        (s) -> String.format("0x%x", refMapping.map(Integer.parseInt(s, 16)));
+    try {
+      List<String> lines = Files.readAllLines(inputRDotTxt, Charsets.UTF_8);
+      List<String> mappedLines = new ArrayList<>(lines.size());
+      Pattern p = Pattern.compile("0x(7f[0-9a-f]{6})");
+      for (String line : lines) {
+        Matcher m = p.matcher(line);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+          String replacement = cache.computeIfAbsent(m.group(1), stringMapping);
+          m.appendReplacement(sb, replacement);
+        }
+        m.appendTail(sb);
+        mappedLines.add(sb.toString());
+      }
+      MoreFiles.writeLinesToFile(mappedLines, outputRDotTxt);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 

@@ -18,16 +18,19 @@ package com.facebook.buck.android.resources;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.IntBuffer;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,7 +54,7 @@ public class ExoResourcesRewriterTest {
   public void testRewriteResources() throws IOException {
     Path primaryOutput = tmpFolder.getRoot().resolve("primary.apk");
     Path exoOutput = tmpFolder.getRoot().resolve("exo.apk");
-    ExoResourcesRewriter.rewrite(apkPath, primaryOutput, exoOutput);
+    ExoResourcesRewriter.rewriteResources(apkPath, primaryOutput, exoOutput);
 
     ZipInspector primaryApkInspector = new ZipInspector(primaryOutput);
     assertEquals(
@@ -94,5 +97,50 @@ public class ExoResourcesRewriterTest {
     expected = filesystem.readFileIfItExists(expectedPath).get();
 
     assertEquals(expected, content);
+  }
+
+  @Test
+  public void testRewriteRTxt() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Path inputRTxt = tmpFolder.getRoot().resolve("input.R.txt");
+    String rtxtContent =
+        "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0025\n"
+            + "int style Widget_AppCompat_Light_PopupMenu_Overflow 0x7f0b0023\n"
+            + "int[] styleable VariableTextLayoutView { 0x7f0100ac, 0x7f0100c9, 0x7f0100d0, "
+            + "0x7f0100d3, 0x7f0100d4, 0x7f0100d6, 0x7f0100d7, 0x7f0100d8, 0x7f0100d9 }\n"
+            + "int styleable VariableTextLayoutView_alignment 7\n";
+    String expectedOutput =
+        "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0001\n"
+            + "int style Widget_AppCompat_Light_PopupMenu_Overflow 0x7f0b0023\n"
+            + "int[] styleable VariableTextLayoutView { 0x7f010001, 0x7f0100c9, 0x7f0100d0, "
+            + "0x7f0100d3, 0x7f0100d4, 0x7f010002, 0x7f0100d7, 0x7f0100d8, 0x7f0100d9 }\n"
+            + "int styleable VariableTextLayoutView_alignment 7\n";
+    filesystem.writeContentsToPath(rtxtContent, inputRTxt);
+
+    Path outputRTxt = tmpFolder.getRoot().resolve("output.R.txt");
+    ExoResourcesRewriter.rewriteRDotTxt(
+        new ReferenceMapper() {
+          @Override
+          public int map(int id) {
+            switch (id) {
+              case 0x7f0b0025:
+                return 0x7f0b0001;
+              case 0x7f0100ac:
+                return 0x7f010001;
+              case 0x7f0100d6:
+                return 0x7f010002;
+            }
+            return id;
+          }
+
+          @Override
+          public void rewrite(int type, IntBuffer buf) {
+            throw new UnsupportedOperationException();
+          }
+        },
+        inputRTxt,
+        outputRTxt);
+
+    assertEquals(expectedOutput, filesystem.readFileIfItExists(outputRTxt).get());
   }
 }
