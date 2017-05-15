@@ -179,7 +179,7 @@ public class TracingTaskListener implements BuckJavacTaskListener {
       return null;
     }
 
-    return e.getSourceFile().toString();
+    return e.getSourceFile().toUri().toString();
   }
 
   @Nullable
