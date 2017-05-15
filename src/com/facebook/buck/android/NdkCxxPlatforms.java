@@ -547,13 +547,14 @@ public class NdkCxxPlatforms {
         .addAllAsflags(getAsflags(targetConfiguration, toolchainPaths))
         .setAspp(cpp)
         .setCc(cc)
-        .addAllCflags(getCflagsInternal(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCflags(getCCompilationFlags(targetConfiguration, toolchainPaths, androidConfig))
         .setCpp(cpp)
-        .addAllCppflags(getCppflags(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCppflags(getCPreprocessorFlags(targetConfiguration, toolchainPaths, androidConfig))
         .setCxx(cxx)
-        .addAllCxxflags(getCxxflagsInternal(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCxxflags(getCxxCompilationFlags(targetConfiguration, toolchainPaths, androidConfig))
         .setCxxpp(cxxpp)
-        .addAllCxxppflags(getCxxppflags(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCxxppflags(
+            getCxxPreprocessorFlags(targetConfiguration, toolchainPaths, androidConfig))
         .setLd(
             new DefaultLinkerProvider(
                 LinkerProvider.Type.GNU,
@@ -854,7 +855,15 @@ public class NdkCxxPlatforms {
         .build();
   }
 
-  private static ImmutableList<String> getCppflags(
+  // TODO(cjhopman): The way that c/cpp/cxx/cxxpp flags work is rather unintuitive. The
+  // documentation states that cflags/cxxflags are added to both preprocess and compile,
+  // cppflags/cxxppflags are added only to the preprocessor flags. At runtime, we typically do
+  // preprocess+compile, and in that case we're going to add both the preprocess and the compile
+  // flags to the command line. Still, BUCK expects that a CxxPlatform can do all of
+  // preprocess/compile/preprocess+compile. Many of the flags are duplicated across both preprocess
+  // and compile to support that (and then typically our users have to deal with ridiculously long
+  // command lines because we only ever do preprocess+compile).
+  private static ImmutableList<String> getCPreprocessorFlags(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       NdkCxxToolchainPaths toolchainPaths,
       AndroidBuckConfig config) {
@@ -867,7 +876,7 @@ public class NdkCxxPlatforms {
         .build();
   }
 
-  private static ImmutableList<String> getCxxppflags(
+  private static ImmutableList<String> getCxxPreprocessorFlags(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       NdkCxxToolchainPaths toolchainPaths,
       AndroidBuckConfig config) {
@@ -891,7 +900,7 @@ public class NdkCxxPlatforms {
         "-ffunction-sections", "-funwind-tables", "-fomit-frame-pointer", "-fno-strict-aliasing");
   }
 
-  private static ImmutableList<String> getCflagsInternal(
+  private static ImmutableList<String> getCCompilationFlags(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       NdkCxxToolchainPaths toolchainPaths,
       AndroidBuckConfig config) {
@@ -903,7 +912,7 @@ public class NdkCxxPlatforms {
         .build();
   }
 
-  private static ImmutableList<String> getCxxflagsInternal(
+  private static ImmutableList<String> getCxxCompilationFlags(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       NdkCxxToolchainPaths toolchainPaths,
       AndroidBuckConfig config) {
