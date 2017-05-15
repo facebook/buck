@@ -179,13 +179,7 @@ public class IjProjectCommandHelper {
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(
-              projectGraph,
-              graphRoots,
-              isWithTests(),
-              isWithDependenciesTests(),
-              passedInTargetsSet.isEmpty(),
-              executor);
+          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty(), executor);
     } catch (BuildFileParseException
         | TargetGraph.NoSuchNodeException
         | BuildTargetException
@@ -366,17 +360,15 @@ public class IjProjectCommandHelper {
   private TargetGraphAndTargets createTargetGraph(
       TargetGraph projectGraph,
       ImmutableSet<BuildTarget> graphRoots,
-      boolean isWithTests,
-      boolean isWithDependenciesTests,
       boolean needsFullRecursiveParse,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
 
+    boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
 
     if (isWithTests) {
-      explicitTestTargets =
-          getExplicitTestTargets(graphRoots, projectGraph, isWithDependenciesTests);
+      explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       if (!needsFullRecursiveParse) {
         projectGraph =
             parser.buildTargetGraph(
@@ -408,16 +400,13 @@ public class IjProjectCommandHelper {
   /**
    * @param buildTargets The set of targets for which we would like to find tests
    * @param projectGraph A TargetGraph containing all nodes and their tests.
-   * @param shouldIncludeDependenciesTests Should or not include tests that test dependencies
    * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
    */
-  private static ImmutableSet<BuildTarget> getExplicitTestTargets(
-      ImmutableSet<BuildTarget> buildTargets,
-      TargetGraph projectGraph,
-      boolean shouldIncludeDependenciesTests) {
+  private ImmutableSet<BuildTarget> getExplicitTestTargets(
+      ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
     Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
     Iterable<TargetNode<?, ?>> nodes;
-    if (shouldIncludeDependenciesTests) {
+    if (isWithDependenciesTests()) {
       nodes = projectGraph.getSubgraph(projectRoots).getNodes();
     } else {
       nodes = projectRoots;
