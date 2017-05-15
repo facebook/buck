@@ -23,6 +23,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
@@ -57,6 +58,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
@@ -82,17 +84,22 @@ import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 /**
@@ -345,6 +352,17 @@ public class AndroidBinary extends AbstractBuildRule
           enhancementResult.getComputeExopackageDepsAbi().isPresent(),
           "computeExopackageDepsAbi must be set if exopackage is true.");
     }
+
+    if (ExopackageMode.enabledForResources(exopackageModes)
+        && !(ExopackageMode.enabledForSecondaryDexes(exopackageModes)
+            && ExopackageMode.enabledForNativeLibraries(exopackageModes))) {
+      throw new HumanReadableException(
+          "Invalid exopackage_modes for android_binary %s. %s requires %s and %s",
+          getBuildTarget().getUnflavoredBuildTarget(),
+          ExopackageMode.RESOURCES,
+          ExopackageMode.NATIVE_LIBRARY,
+          ExopackageMode.SECONDARY_DEX);
+    }
   }
 
   public static Path getPrimaryDexPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
@@ -491,6 +509,7 @@ public class AndroidBinary extends AbstractBuildRule
       if ((!packageableCollection.getNativeLibAssetsDirectories().isEmpty())
           || (!packageableCollection.getNativeLinkablesAssets().isEmpty()
               && shouldPackageAssetLibraries)) {
+        Preconditions.checkState(!ExopackageMode.enabledForResources(exopackageModes));
         Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
         final Path libSubdirectory =
@@ -553,6 +572,18 @@ public class AndroidBinary extends AbstractBuildRule
               }
             });
 
+    ImmutableSet<Path> thirdPartyJars =
+        packageableCollection
+            .getPathsToThirdPartyJars()
+            .stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet());
+
+    if (ExopackageMode.enabledForResources(exopackageModes)) {
+      steps.add(createMergedThirdPartyJarsStep(thirdPartyJars));
+      buildableContext.recordArtifact(getMergedThirdPartyJarsPath());
+    }
+
     ApkBuilderStep apkBuilderCommand =
         new ApkBuilderStep(
             getProjectFilesystem(),
@@ -562,11 +593,7 @@ public class AndroidBinary extends AbstractBuildRule
             allAssetDirectories,
             nativeLibraryDirectoriesBuilder.build(),
             zipFiles.build(),
-            packageableCollection
-                .getPathsToThirdPartyJars()
-                .stream()
-                .map(resolver::getAbsolutePath)
-                .collect(MoreCollectors.toImmutableSet()),
+            thirdPartyJars,
             pathToKeystore,
             keystoreProperties,
             /* debugMode */ false,
@@ -620,6 +647,62 @@ public class AndroidBinary extends AbstractBuildRule
 
     buildableContext.recordArtifact(apkPath);
     return steps.build();
+  }
+
+  private Step createMergedThirdPartyJarsStep(ImmutableSet<Path> thirdPartyJars) {
+    return new AbstractExecutionStep("merging_third_party_jar_resources") {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        try (ResourcesZipBuilder builder =
+            new ResourcesZipBuilder(
+                getProjectFilesystem().resolve(getMergedThirdPartyJarsPath()))) {
+          for (Path jar : thirdPartyJars) {
+            try (ZipFile base = new ZipFile(jar.toFile())) {
+              for (ZipEntry inputEntry : Collections.list(base.entries())) {
+                if (inputEntry.isDirectory()) {
+                  continue;
+                }
+                String name = inputEntry.getName();
+                String ext = Files.getFileExtension(name);
+                String filename = Paths.get(name).getFileName().toString();
+                // Android's ApkBuilder filters out a lot of files from Java resources. Try to
+                // match its behavior.
+                // See https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
+                if (name.startsWith(".")
+                    || name.endsWith("~")
+                    || name.startsWith("META-INF")
+                    || "aidl".equalsIgnoreCase(ext)
+                    || "rs".equalsIgnoreCase(ext)
+                    || "rsh".equalsIgnoreCase(ext)
+                    || "d".equalsIgnoreCase(ext)
+                    || "java".equalsIgnoreCase(ext)
+                    || "scala".equalsIgnoreCase(ext)
+                    || "class".equalsIgnoreCase(ext)
+                    || "scc".equalsIgnoreCase(ext)
+                    || "swp".equalsIgnoreCase(ext)
+                    || "thumbs.db".equalsIgnoreCase(filename)
+                    || "picasa.ini".equalsIgnoreCase(filename)
+                    || "package.html".equalsIgnoreCase(filename)
+                    || "overview.html".equalsIgnoreCase(filename)) {
+                  continue;
+                }
+                try (InputStream inputStream = base.getInputStream(inputEntry)) {
+                  builder.addEntry(
+                      inputStream,
+                      inputEntry.getSize(),
+                      inputEntry.getCrc(),
+                      name,
+                      Deflater.NO_COMPRESSION,
+                      false);
+                }
+              }
+            }
+          }
+        }
+        return StepExecutionResult.SUCCESS;
+      }
+    };
   }
 
   private void getStepsForNativeAssets(
@@ -969,6 +1052,10 @@ public class AndroidBinary extends AbstractBuildRule
   public String getUnsignedApkPath() {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.apk")
         .toString();
+  }
+
+  private Path getMergedThirdPartyJarsPath() {
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.java.resources");
   }
 
   /** The APK at this path will be signed, but not zipaligned. */
@@ -1340,7 +1427,13 @@ public class AndroidBinary extends AbstractBuildRule
     if (ExopackageMode.enabledForResources(exopackageModes)) {
       Preconditions.checkState(!enhancementResult.getExoResources().isEmpty());
       builder.setResourcesInfo(
-          ExopackageInfo.ResourcesInfo.of(enhancementResult.getExoResources()));
+          ExopackageInfo.ResourcesInfo.of(
+              ImmutableList.<SourcePath>builder()
+                  .addAll(enhancementResult.getExoResources())
+                  .add(
+                      new ExplicitBuildTargetSourcePath(
+                          getBuildTarget(), getMergedThirdPartyJarsPath()))
+                  .build()));
       shouldInstall = true;
     } else {
       Preconditions.checkState(enhancementResult.getExoResources().isEmpty());
