@@ -271,10 +271,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     return (SourcePath path) -> true;
   }
 
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return preprocessor.getFlagsForColorDiagnostics();
-  }
-
   public HeaderVerification getHeaderVerification() {
     return headerVerification;
   }

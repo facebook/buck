@@ -88,10 +88,7 @@ public class CxxCompileStepIntegrationTest {
             relativeInput,
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
-                compilerCommandPrefix,
-                compilerArguments.build(),
-                ImmutableMap.of(),
-                Optional.empty()),
+                compilerCommandPrefix, compilerArguments.build(), ImmutableMap.of()),
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             scratchDir,
@@ -160,10 +157,7 @@ public class CxxCompileStepIntegrationTest {
             relativeInput,
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
-                compilerCommandPrefix,
-                compilerArguments.build(),
-                ImmutableMap.of(),
-                Optional.empty()),
+                compilerCommandPrefix, compilerArguments.build(), ImmutableMap.of()),
             HeaderPathNormalizer.empty(pathResolver),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             scratchDir,

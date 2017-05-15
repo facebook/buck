@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** Helper class for generating compiler invocations for a cxx compilation rule. */
 class CompilerDelegate implements RuleKeyAppendable {
@@ -88,10 +87,6 @@ class CompilerDelegate implements RuleKeyAppendable {
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
     return Ordering.natural().immutableSortedCopy(compiler.getInputs());
-  }
-
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return compiler.getFlagsForColorDiagnostics();
   }
 
   public boolean isArgFileSupported() {

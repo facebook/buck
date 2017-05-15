@@ -246,8 +246,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
                             compilerFlags, /* no pch */ Optional.empty()))
                     .build()
                     .getAllFlags()),
-            preprocessorDelegate.getEnvironment(),
-            preprocessorDelegate.getFlagsForColorDiagnostics()),
+            preprocessorDelegate.getEnvironment()),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
         scratchDir,

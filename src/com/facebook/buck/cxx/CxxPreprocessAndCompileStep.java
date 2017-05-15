@@ -140,7 +140,12 @@ public class CxxPreprocessAndCompileStep implements Step {
             ? inputType.getPrecompiledHeaderLanguage().get()
             : inputType.getLanguage();
     return ImmutableList.<String>builder()
-        .addAll(command.getArguments(allowColorsInDiagnostics))
+        .addAll(command.getArguments())
+        .addAll(
+            (allowColorsInDiagnostics
+                    ? compiler.getFlagsForColorDiagnostics()
+                    : Optional.<ImmutableList<String>>empty())
+                .orElseGet(ImmutableList::of))
         .addAll(compiler.languageArgs(inputLanguage))
         .addAll(sanitizer.getCompilationFlags())
         .add("-c")
@@ -211,7 +216,7 @@ public class CxxPreprocessAndCompileStep implements Step {
           .post(
               createConsoleEvent(
                   context,
-                  command.supportsColorsInDiagnostics(),
+                  compiler.getFlagsForColorDiagnostics().isPresent(),
                   exitCode == 0 ? Level.WARNING : Level.SEVERE,
                   err));
     }
@@ -307,40 +312,26 @@ public class CxxPreprocessAndCompileStep implements Step {
     private final ImmutableList<String> commandPrefix;
     private final ImmutableList<String> arguments;
     private final ImmutableMap<String, String> environment;
-    private final Optional<ImmutableList<String>> flagsForColorDiagnostics;
 
     public ToolCommand(
         ImmutableList<String> commandPrefix,
         ImmutableList<String> arguments,
-        ImmutableMap<String, String> environment,
-        Optional<ImmutableList<String>> flagsForColorDiagnostics) {
+        ImmutableMap<String, String> environment) {
       this.commandPrefix = commandPrefix;
       this.arguments = arguments;
       this.environment = environment;
-      this.flagsForColorDiagnostics = flagsForColorDiagnostics;
     }
 
     public ImmutableList<String> getCommandPrefix() {
       return commandPrefix;
     }
 
-    public ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
-      if (allowColorsInDiagnostics && flagsForColorDiagnostics.isPresent()) {
-        return ImmutableList.<String>builder()
-            .addAll(arguments)
-            .addAll(flagsForColorDiagnostics.get())
-            .build();
-      } else {
-        return arguments;
-      }
+    public ImmutableList<String> getArguments() {
+      return arguments;
     }
 
     public ImmutableMap<String, String> getEnvironment() {
       return environment;
-    }
-
-    public boolean supportsColorsInDiagnostics() {
-      return flagsForColorDiagnostics.isPresent();
     }
   }
 }

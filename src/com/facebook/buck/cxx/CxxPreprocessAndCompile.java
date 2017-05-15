@@ -200,10 +200,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         getRelativeInputPath(resolver),
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
-            compilerDelegate.getCommandPrefix(),
-            arguments,
-            compilerDelegate.getEnvironment(),
-            compilerDelegate.getFlagsForColorDiagnostics()),
+            compilerDelegate.getCommandPrefix(), arguments, compilerDelegate.getEnvironment()),
         headerPathNormalizer,
         sanitizer,
         scratchDir,
