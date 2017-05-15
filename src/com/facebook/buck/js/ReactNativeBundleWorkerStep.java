@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.WorkerJobParams;
+import com.facebook.buck.shell.WorkerProcessParams;
 import com.facebook.buck.shell.WorkerProcessPoolFactory;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.google.common.collect.ImmutableList;
@@ -43,13 +44,6 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
     super(
         Optional.of(
             WorkerJobParams.of(
-                filesystem.resolve(tmpDir),
-                jsPackagerCommand,
-                String.format(
-                    "--platform %s%s",
-                    platform.toString(),
-                    additionalPackagerFlags.isPresent() ? " " + additionalPackagerFlags.get() : ""),
-                ImmutableMap.of(),
                 String.format(
                     "--command %s %s --entry-file %s --platform %s --dev %s --bundle-output %s "
                         + "--assets-dest %s --sourcemap-output %s",
@@ -61,9 +55,19 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     outputFile.toString(),
                     resourcePath.toString(),
                     sourceMapFile.toString()),
-                1,
-                Optional.empty(),
-                Optional.empty())),
+                WorkerProcessParams.of(
+                    filesystem.resolve(tmpDir),
+                    jsPackagerCommand,
+                    String.format(
+                        "--platform %s%s",
+                        platform.toString(),
+                        additionalPackagerFlags.isPresent()
+                            ? " " + additionalPackagerFlags.get()
+                            : ""),
+                    ImmutableMap.of(),
+                    1,
+                    Optional.empty(),
+                    Optional.empty()))),
         Optional.empty(),
         Optional.empty(),
         new WorkerProcessPoolFactory(filesystem));

@@ -67,7 +67,7 @@ public class WorkerShellStep implements Step {
     try {
       // Use the process's startup command as the key.
       WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
-      pool = factory.getWorkerProcessPool(context, paramsToUse);
+      pool = factory.getWorkerProcessPool(context, paramsToUse.getWorkerProcessParams());
       process = pool.borrowWorkerProcess();
       WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
       pool.returnWorkerProcess(process);
@@ -168,7 +168,8 @@ public class WorkerShellStep implements Step {
         getExpandedJobArgs(context),
         FluentIterable.from(
                 factory.getCommand(
-                    context.getPlatform(), getWorkerJobParamsToUse(context.getPlatform())))
+                    context.getPlatform(),
+                    getWorkerJobParamsToUse(context.getPlatform()).getWorkerProcessParams()))
             .transform(Escaper.SHELL_ESCAPER)
             .join(Joiner.on(' ')));
   }

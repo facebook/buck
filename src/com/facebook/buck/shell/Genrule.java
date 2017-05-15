@@ -303,14 +303,15 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
         arg1 -> {
           WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
           return WorkerJobParams.of(
-              workerMacroArg.getTempDir(),
-              workerMacroArg.getStartupCommand(),
-              workerMacroArg.getStartupArgs(pathResolver),
-              workerMacroArg.getEnvironment(),
               workerMacroArg.getJobArgs(),
-              workerMacroArg.getMaxWorkers(),
-              workerMacroArg.getPersistentWorkerKey(),
-              Optional.of(workerMacroArg.getWorkerHash()));
+              WorkerProcessParams.of(
+                  workerMacroArg.getTempDir(),
+                  workerMacroArg.getStartupCommand(),
+                  workerMacroArg.getStartupArgs(pathResolver),
+                  workerMacroArg.getEnvironment(),
+                  workerMacroArg.getMaxWorkers(),
+                  workerMacroArg.getPersistentWorkerKey(),
+                  Optional.of(workerMacroArg.getWorkerHash())));
         });
   }
 
