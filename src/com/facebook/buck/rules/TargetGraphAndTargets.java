@@ -60,10 +60,9 @@ public class TargetGraphAndTargets {
 
     // Optionally get the roots of the test graph. This contains all the tests that cover the roots
     // of the main graph or their dependencies.
-    ImmutableSet<TargetNode<?, ?>> associatedTests = ImmutableSet.of();
+    Iterable<TargetNode<?, ?>> associatedTests = ImmutableSet.of();
     if (isWithTests) {
-      associatedTests =
-          ImmutableSet.copyOf(ImmutableSet.copyOf(projectGraph.getAll(explicitTests)));
+      associatedTests = projectGraph.getAll(explicitTests);
     }
 
     TargetGraph targetGraph =
