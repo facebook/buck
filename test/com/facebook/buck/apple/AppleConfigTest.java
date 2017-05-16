@@ -125,8 +125,12 @@ public class AppleConfigTest {
   public void resolveAppleToolchainDirectoriesWithSymlinks() throws IOException {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
     Path symlink = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery-symlink");
+    Path xcodeSymlink =
+        Paths.get("test/com/facebook/buck/apple/testdata/xcode-toolchain-discovery");
     Files.deleteIfExists(symlink);
+    Files.deleteIfExists(xcodeSymlink);
     Files.createSymbolicLink(symlink, root.toAbsolutePath());
+    Files.createSymbolicLink(xcodeSymlink, root.toAbsolutePath());
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -134,12 +138,20 @@ public class AppleConfigTest {
                 ImmutableMap.of(
                     "apple",
                     ImmutableMap.of(
-                        "xcode_developer_dir", root.toString(),
                         "extra_toolchain_paths", symlink.resolve("Toolchains").toString())))
             .build();
     AppleConfig config = buckConfig.getView(AppleConfig.class);
+
+    ProcessExecutorParams xcodeSelectParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+            .build();
+    FakeProcess fakeXcodeSelect = new FakeProcess(0, xcodeSymlink.toString(), "");
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(xcodeSelectParams, fakeXcodeSelect));
+
     Supplier<Optional<Path>> developerDirectories =
-        config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
+        config.getAppleDeveloperDirectorySupplier(processExecutor);
     ImmutableList<Path> extraToolchainPaths = config.getExtraToolchainPaths();
 
     ImmutableMap<String, AppleToolchain> expected =
@@ -164,6 +176,7 @@ public class AppleConfigTest {
           equalTo(expected));
     } finally {
       Files.deleteIfExists(symlink);
+      Files.deleteIfExists(xcodeSymlink);
     }
   }
 

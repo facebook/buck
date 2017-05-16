@@ -127,7 +127,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
                     delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string)))));
   }
 
-  private Path normalizePath(Path path) {
+  private static Path normalizePath(Path path) {
     try {
       return path.toRealPath();
     } catch (IOException e) {
@@ -185,7 +185,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
                   result.getMessageForUnexpectedResult("xcode-select --print-path"));
             }
 
-            return Optional.of(Paths.get(result.getStdout().get().trim()));
+            return Optional.of(normalizePath(Paths.get(result.getStdout().get().trim())));
           }
         });
   }
