@@ -332,7 +332,7 @@ public class RustCompileUtils {
             .withAppendedFlavors(
                 isCheck ? RustDescriptionEnhancer.RFCHECK : RustDescriptionEnhancer.RFBIN);
 
-    if (!rustBuckConfig.getUnflavoredBinaries()) {
+    if (isCheck || !rustBuckConfig.getUnflavoredBinaries()) {
       binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
     }
 
