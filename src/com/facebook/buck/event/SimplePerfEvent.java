@@ -540,7 +540,9 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     @Override
     public String getEventName() {
       return new StringBuilder("PerfEvent")
+          .append('.')
           .append(perfEventId.getValue())
+          .append('.')
           .append(perfEventType.getValue())
           .toString();
     }

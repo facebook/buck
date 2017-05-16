@@ -275,7 +275,7 @@ public class EventSerializationTest {
     assertJsonEquals(
         "{%s,"
             + "\"eventKey\":{\"value\":4242},\"eventId\":\"PerfId\",\"eventType\":\"STARTED\","
-            + "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEventPerfIdStarted\"}",
+            + "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEvent.PerfId.Started\"}",
         message);
   }
 
