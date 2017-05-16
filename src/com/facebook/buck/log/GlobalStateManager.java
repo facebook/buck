@@ -19,6 +19,7 @@ package com.facebook.buck.log;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.Lists;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -94,6 +95,7 @@ public class GlobalStateManager {
     // get closed before newWriter was created due to concurrency.
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
     putReferenceCountedWriter(commandId, newWriter);
+    createUserFriendlySymLink(info);
 
     // Setup the shared state.
     threadIdToCommandId.putIfAbsent(threadId, commandId);
@@ -144,6 +146,19 @@ public class GlobalStateManager {
         }
       }
     };
+  }
+
+  private void createUserFriendlySymLink(final InvocationInfo info) {
+    try {
+      String symlinkName = "last_" + info.getSubCommand();
+      Path symlinkPath = info.getBuckLogDir().resolve(symlinkName);
+      Files.deleteIfExists(symlinkPath);
+      if (Platform.detect() != Platform.WINDOWS) {
+        Files.createSymbolicLink(symlinkPath, info.getLogDirectoryPath().toAbsolutePath());
+      }
+    } catch (IOException e) {
+      LOG.info(e, "Failed to create a user friendly symlink to logs dir for the last command.");
+    }
   }
 
   private void removeReferenceCountedWriter(String commandId) {
