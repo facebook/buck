@@ -309,6 +309,19 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void ruleSuspended(BuildRuleEvent.Suspended suspended) {
+    // Because RuleKeyCalculationEvent.Finished is a subclass of BuildRuleEvent.Suspended, both
+    // events get issued. If we wrote the trace events in the order they come in on the event bus,
+    // we'd create an incorrect trace where the rule section ends before the rule_key_calc section
+    // it encloses. Instead, when we see a BuildRuleEvent.Suspended that is also a
+    // RuleKeyCalculationEvent.Finished, we let ruleKeyCalculationFinished log them both in the
+    // correct order. TODO(jkeljo): Fix this in a less hacky way.
+    if (suspended instanceof RuleKeyCalculationEvent.Finished) {
+      return;
+    }
+    writeRuleSuspended(suspended);
+  }
+
+  private void writeRuleSuspended(BuildRuleEvent.Suspended suspended) {
     BuildRule buildRule = suspended.getBuildRule();
     writeChromeTraceEvent(
         "buck",
@@ -717,6 +730,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   public void ruleKeyCalculationFinished(RuleKeyCalculationEvent.Finished finished) {
     writeChromeTraceEvent(
         "buck", finished.getCategory(), ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+    if (finished instanceof BuildRuleEvent.Suspended) {
+      writeRuleSuspended((BuildRuleEvent.Suspended) finished);
+    }
   }
 
   private void writeChromeTraceEvent(
