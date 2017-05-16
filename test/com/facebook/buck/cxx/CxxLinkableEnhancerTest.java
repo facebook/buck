@@ -173,7 +173,8 @@ public class CxxLinkableEnhancerTest {
                         new FakeSourcePath("simple.o"),
                         genrule1.getSourcePathToOutput(),
                         genrule2.getSourcePathToOutput()))
-                .build());
+                .build(),
+            Optional.empty());
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
@@ -216,7 +217,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
 
     // Verify that the archive rules dependencies are empty.
     assertEquals(cxxLink.getBuildDeps(), ImmutableSortedSet.<BuildRule>of());
@@ -267,7 +269,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getBuildDeps().contains(fakeBuildRule));
@@ -305,7 +308,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
     assertFalse(executable.getArgs().contains(StringArg.of("-shared")));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
@@ -328,7 +332,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
     assertTrue(Arg.stringify(shared.getArgs(), pathResolver).contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
@@ -351,7 +356,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
     ImmutableList<String> args = Arg.stringify(sharedWithSoname.getArgs(), pathResolver);
     assertTrue(args.contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(args, sonameArgs), -1);
@@ -401,7 +407,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
     ImmutableList<String> args = Arg.stringify(staticLink.getArgs(), pathResolver);
     assertTrue(args.contains(staticArg) || args.contains("-Wl," + staticArg));
     assertFalse(args.contains(sharedArg));
@@ -426,7 +433,8 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+            NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+            Optional.empty());
     args = Arg.stringify(sharedLink.getArgs(), pathResolver);
     assertFalse(args.contains(staticArg));
     assertFalse(args.contains("-Wl," + staticArg));
@@ -470,7 +478,8 @@ public class CxxLinkableEnhancerTest {
               Optional.empty(),
               Optional.empty(),
               ImmutableSet.of(),
-              NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build());
+              NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
+              Optional.empty());
       assertThat(Arg.stringify(lib.getArgs(), pathResolver), hasItem(ent.getValue()));
     }
   }
@@ -543,7 +552,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
-                .build());
+                .build(),
+            Optional.empty());
     assertThat(Arg.stringify(cxxLink.getArgs(), pathResolver), hasItem("-bundle"));
     assertThat(
         Arg.stringify(cxxLink.getArgs(), pathResolver),
@@ -579,7 +589,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
-                .build());
+                .build(),
+            Optional.empty());
     resolver.addToIndex(bundleLoaderRule);
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
@@ -604,7 +615,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(new FakeSourcePath("another.o")))
-                .build());
+                .build(),
+            Optional.empty());
 
     // Ensure the bundle depends on the bundle loader rule.
     assertThat(bundleRule.getBuildDeps(), hasItem(bundleLoaderRule));

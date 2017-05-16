@@ -442,7 +442,8 @@ public class PrebuiltCxxLibraryDescription
                     .getLd()
                     .resolve(ruleResolver)
                     .linkWhole(SourcePathArg.of(staticLibraryPath)))
-            .build());
+            .build(),
+        Optional.empty());
   }
 
   /**

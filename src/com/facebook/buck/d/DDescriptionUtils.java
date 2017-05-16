@@ -155,7 +155,8 @@ abstract class DDescriptionUtils {
             .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlags()))
             .addAllArgs(StringArg.from(linkerFlags))
             .addAllArgs(SourcePathArg.from(sourcePaths))
-            .build());
+            .build(),
+        Optional.empty());
   }
 
   public static BuildTarget getSymlinkTreeTarget(BuildTarget baseTarget) {

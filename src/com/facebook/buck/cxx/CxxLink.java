@@ -52,6 +52,7 @@ public class CxxLink extends AbstractBuildRule
   private final Path output;
 
   @AddToRuleKey private final ImmutableList<Arg> args;
+  @AddToRuleKey private final Optional<LinkOutputPostprocessor> postprocessor;
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;
   @AddToRuleKey private boolean thinLto;
@@ -61,6 +62,7 @@ public class CxxLink extends AbstractBuildRule
       Linker linker,
       Path output,
       ImmutableList<Arg> args,
+      Optional<LinkOutputPostprocessor> postprocessor,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
       boolean cacheable,
       boolean thinLto) {
@@ -68,6 +70,7 @@ public class CxxLink extends AbstractBuildRule
     this.linker = linker;
     this.output = output;
     this.args = args;
+    this.postprocessor = postprocessor;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.cacheable = cacheable;
     this.thinLto = thinLto;
@@ -116,6 +119,8 @@ public class CxxLink extends AbstractBuildRule
     for (BuildRule dep : getBuildDeps()) {
       cellRoots.add(dep.getProjectFilesystem().getRootPath());
     }
+
+    postprocessor.getClass();
 
     return new ImmutableList.Builder<Step>()
         .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))

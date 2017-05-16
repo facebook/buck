@@ -329,7 +329,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
-            inputBuilder.build()));
+            inputBuilder.build(),
+            Optional.empty()));
   }
 
   public Optional<BuildRule> createCompanionBuildRule(

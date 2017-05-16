@@ -420,7 +420,8 @@ public class CxxLibraryDescription
             .addAllArgs(SourcePathArg.from(objects.values()))
             .setFrameworks(frameworks)
             .setLibraries(libraries)
-            .build());
+            .build(),
+        Optional.empty());
   }
 
   @Override

@@ -240,7 +240,8 @@ public class CxxLuaExtensionDescription
                     cellRoots,
                     cxxPlatform,
                     args))
-            .build());
+            .build(),
+        Optional.empty());
   }
 
   @Override

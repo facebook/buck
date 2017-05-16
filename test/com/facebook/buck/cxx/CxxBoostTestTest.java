@@ -78,6 +78,7 @@ public class CxxBoostTestTest {
                 Paths.get("output"),
                 ImmutableList.of(),
                 Optional.empty(),
+                Optional.empty(),
                 /* cacheable */ true,
                 /* thinLto */ false),
             new CommandTool.Builder().addArg(StringArg.of("")).build(),

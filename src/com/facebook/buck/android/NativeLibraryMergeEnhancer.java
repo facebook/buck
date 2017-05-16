@@ -837,7 +837,8 @@ class NativeLibraryMergeEnhancer {
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableSet.of(),
-                getImmediateNativeLinkableInput(cxxPlatform));
+                getImmediateNativeLinkableInput(cxxPlatform),
+                Optional.empty());
         ruleResolver.addToIndex(rule);
       }
       return ImmutableMap.of(soname, rule.getSourcePathToOutput());

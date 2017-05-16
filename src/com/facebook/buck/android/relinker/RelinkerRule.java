@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -155,6 +156,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
                   linker,
                   getLibFilePath(),
                   args,
+                  Optional.empty(),
                   cxxBuckConfig.getLinkScheduleInfo(),
                   cxxBuckConfig.shouldCacheLinks(),
                   /* thinLto */ false)

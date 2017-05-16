@@ -92,6 +92,7 @@ public class CxxLinkTest {
                     DEFAULT_OUTPUT,
                     DEFAULT_ARGS,
                     Optional.empty(),
+                    Optional.empty(),
                     /* cacheable */ true,
                     /* thinLto */ false));
 
@@ -105,6 +106,7 @@ public class CxxLinkTest {
                     new GnuLinker(new HashedFileTool(Paths.get("different"))),
                     DEFAULT_OUTPUT,
                     DEFAULT_ARGS,
+                    Optional.empty(),
                     Optional.empty(),
                     /* cacheable */ true,
                     /* thinLto */ false));
@@ -121,6 +123,7 @@ public class CxxLinkTest {
                     Paths.get("different"),
                     DEFAULT_ARGS,
                     Optional.empty(),
+                    Optional.empty(),
                     /* cacheable */ true,
                     /* thinLto */ false));
     assertNotEquals(defaultRuleKey, outputChange);
@@ -135,6 +138,7 @@ public class CxxLinkTest {
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
                     ImmutableList.of(SourcePathArg.of(new FakeSourcePath("different"))),
+                    Optional.empty(),
                     Optional.empty(),
                     /* cacheable */ true,
                     /* thinLto */ false));
@@ -191,6 +195,7 @@ public class CxxLinkTest {
                 DEFAULT_OUTPUT,
                 args1,
                 Optional.empty(),
+                Optional.empty(),
                 /* cacheable */ true,
                 /* thinLto */ false));
 
@@ -207,6 +212,7 @@ public class CxxLinkTest {
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 args2,
+                Optional.empty(),
                 Optional.empty(),
                 /* cacheable */ true,
                 /* thinLto */ false));

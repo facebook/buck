@@ -306,7 +306,8 @@ public class CxxPythonExtensionDescription
                     deps))
             .setFrameworks(args.getFrameworks())
             .setLibraries(args.getLibraries())
-            .build());
+            .build(),
+        Optional.empty());
   }
 
   @Override

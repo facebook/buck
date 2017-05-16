@@ -71,7 +71,8 @@ public class CxxLinkableEnhancer {
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
       boolean thinLto,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      Optional<LinkOutputPostprocessor> postprocessor) {
 
     final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
 
@@ -123,6 +124,7 @@ public class CxxLinkableEnhancer {
         linker,
         output,
         allArgs,
+        postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),
         thinLto);
@@ -153,7 +155,8 @@ public class CxxLinkableEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      NativeLinkableInput immediateLinkableInput)
+      NativeLinkableInput immediateLinkableInput,
+      Optional<LinkOutputPostprocessor> postprocessor)
       throws NoSuchBuildTargetException {
 
     // Soname should only ever be set when linking a "shared" library.
@@ -231,7 +234,8 @@ public class CxxLinkableEnhancer {
         allArgs,
         depType,
         thinLto,
-        cxxRuntimeType);
+        cxxRuntimeType,
+        postprocessor);
   }
 
   private static void addSharedLibrariesLinkerArgs(
@@ -367,6 +371,7 @@ public class CxxLinkableEnhancer {
         linkArgs,
         Linker.LinkableDepType.SHARED,
         /* thinLto */ false,
+        Optional.empty(),
         Optional.empty());
   }
 }

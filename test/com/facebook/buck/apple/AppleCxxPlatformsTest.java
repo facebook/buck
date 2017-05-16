@@ -836,7 +836,8 @@ public class AppleCxxPlatformsTest {
               ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(SourcePathArg.from(new FakeSourcePath("input.o")))
-                  .build());
+                  .build(),
+              Optional.empty());
       ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();

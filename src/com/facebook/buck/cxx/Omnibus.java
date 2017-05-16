@@ -377,6 +377,7 @@ public class Omnibus {
                   argsBuilder.build(),
                   Linker.LinkableDepType.SHARED,
                   /* thinLto */ false,
+                  Optional.empty(),
                   Optional.empty());
           break;
         }

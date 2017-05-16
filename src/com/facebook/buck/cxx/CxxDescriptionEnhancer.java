@@ -1028,7 +1028,8 @@ public class CxxDescriptionEnhancer {
                   .setArgs(argsBuilder.build())
                   .setFrameworks(frameworks)
                   .setLibraries(libraries)
-                  .build());
+                  .build(),
+              Optional.empty());
       resolver.addToIndex(cxxLink);
     }
     return cxxLink;
