@@ -20,11 +20,15 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.LinkOutputPostprocessor;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
+import com.facebook.buck.cxx.elf.Elf;
+import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.elf.ElfSymbolTable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
@@ -33,18 +37,25 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -58,6 +69,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -103,8 +120,6 @@ class NativeLibraryMergeEnhancer {
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets)
       throws NoSuchBuildTargetException {
-
-    nativeLibraryMergeLocalizedSymbols.getClass();
 
     NativeLibraryMergeEnhancementResult.Builder builder =
         NativeLibraryMergeEnhancementResult.builder();
@@ -167,6 +182,7 @@ class NativeLibraryMergeEnhancer {
             ruleFinder,
             buildRuleParams,
             glueLinkable,
+            nativeLibraryMergeLocalizedSymbols.map(ImmutableSortedSet::copyOf),
             orderedConstituents);
 
     ImmutableMap.Builder<NativeLinkable, APKModule> linkableToModuleMapBuilder =
@@ -386,6 +402,7 @@ class NativeLibraryMergeEnhancer {
       SourcePathRuleFinder ruleFinder,
       BuildRuleParams buildRuleParams,
       Optional<NativeLinkable> glueLinkable,
+      Optional<ImmutableSortedSet<String>> symbolsToLocalize,
       Iterable<MergedNativeLibraryConstituents> orderedConstituents) {
     // Map from original linkables to the Linkables they have been merged into.
     final Map<NativeLinkable, MergedLibNativeLinkable> mergeResults = new HashMap<>();
@@ -409,7 +426,8 @@ class NativeLibraryMergeEnhancer {
               constituents,
               orderedDeps,
               orderedExportedDeps,
-              glueLinkable);
+              glueLinkable,
+              symbolsToLocalize);
 
       for (NativeLinkable lib : preMergeLibs) {
         // Track what was merged into this so later linkables can find us as a dependency.
@@ -516,6 +534,7 @@ class NativeLibraryMergeEnhancer {
     private final BuildRuleParams baseBuildRuleParams;
     private final MergedNativeLibraryConstituents constituents;
     private final Optional<NativeLinkable> glueLinkable;
+    private final Optional<ImmutableSortedSet<String>> symbolsToLocalize;
     private final Map<NativeLinkable, MergedLibNativeLinkable> mergedDepMap;
     private final BuildTarget buildTarget;
     private final boolean canUseOriginal;
@@ -530,7 +549,8 @@ class NativeLibraryMergeEnhancer {
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
         List<MergedLibNativeLinkable> orderedExportedDeps,
-        Optional<NativeLinkable> glueLinkable) {
+        Optional<NativeLinkable> glueLinkable,
+        Optional<ImmutableSortedSet<String>> symbolsToLocalize) {
       this.cxxBuckConfig = cxxBuckConfig;
       this.ruleResolver = ruleResolver;
       this.pathResolver = pathResolver;
@@ -538,6 +558,7 @@ class NativeLibraryMergeEnhancer {
       this.baseBuildRuleParams = baseBuildRuleParams;
       this.constituents = constituents;
       this.glueLinkable = glueLinkable;
+      this.symbolsToLocalize = symbolsToLocalize;
 
       Iterable<MergedLibNativeLinkable> allDeps =
           Iterables.concat(orderedDeps, orderedExportedDeps);
@@ -559,7 +580,12 @@ class NativeLibraryMergeEnhancer {
 
       buildTarget =
           constructBuildTarget(
-              baseBuildRuleParams, constituents, orderedDeps, orderedExportedDeps, glueLinkable);
+              baseBuildRuleParams,
+              constituents,
+              orderedDeps,
+              orderedExportedDeps,
+              glueLinkable,
+              symbolsToLocalize);
     }
 
     /**
@@ -607,7 +633,8 @@ class NativeLibraryMergeEnhancer {
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
         List<MergedLibNativeLinkable> orderedExportedDeps,
-        Optional<NativeLinkable> glueLinkable) {
+        Optional<NativeLinkable> glueLinkable,
+        Optional<ImmutableSortedSet<String>> symbolsToLocalize) {
       BuildTarget initialTarget;
       if (!constituents.isActuallyMerged()) {
         // This library isn't really merged.
@@ -657,6 +684,13 @@ class NativeLibraryMergeEnhancer {
       if (glueLinkable.isPresent()) {
         hasher.putString("__GLUE__^", Charsets.UTF_8);
         hasher.putString(glueLinkable.get().getBuildTarget().toString(), Charsets.UTF_8);
+        hasher.putChar('^');
+      }
+
+      // Symbols to localize can vary per-app, so include that in the hash as well.
+      if (symbolsToLocalize.isPresent()) {
+        hasher.putString("__LOCALIZE__^", Charsets.UTF_8);
+        hasher.putString(Joiner.on(',').join(symbolsToLocalize.get()), Charsets.UTF_8);
         hasher.putChar('^');
       }
 
@@ -841,10 +875,104 @@ class NativeLibraryMergeEnhancer {
                 Optional.empty(),
                 ImmutableSet.of(),
                 getImmediateNativeLinkableInput(cxxPlatform),
-                Optional.empty());
+                constituents.isActuallyMerged()
+                    ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
+                    : Optional.empty());
         ruleResolver.addToIndex(rule);
       }
       return ImmutableMap.of(soname, rule.getSourcePathToOutput());
+    }
+  }
+
+  private static class SymbolLocalizingPostprocessor implements LinkOutputPostprocessor {
+    private final ImmutableSortedSet<String> symbolsToLocalize;
+
+    SymbolLocalizingPostprocessor(ImmutableSortedSet<String> symbolsToLocalize) {
+      this.symbolsToLocalize = symbolsToLocalize;
+    }
+
+    @Override
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("postprocessor.type", "localize-dynamic-symbols");
+      sink.setReflectively("symbolsToLocalize", symbolsToLocalize);
+    }
+
+    @Override
+    public ImmutableList<Step> getSteps(BuildContext context, Path linkOutput, Path finalOutput) {
+      return ImmutableList.of(
+          new Step() {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              // Copy the output into place, then fix it in-place with mmap.
+              Files.copy(linkOutput, finalOutput);
+
+              try (FileChannel channel =
+                  FileChannel.open(
+                      finalOutput, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+                MappedByteBuffer buffer =
+                    channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
+                Elf elf = new Elf(buffer);
+                fixSection(elf, ".dynsym", ".dynstr");
+                fixSection(elf, ".symtab", ".strtab");
+              }
+              return StepExecutionResult.SUCCESS;
+            }
+
+            void fixSection(Elf elf, String sectionName, String stringSectionName)
+                throws IOException {
+              ElfSection section = elf.getMandatorySectionByName(linkOutput, sectionName);
+              ElfSection strings = elf.getMandatorySectionByName(linkOutput, stringSectionName);
+              ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
+
+              ImmutableList.Builder<ElfSymbolTable.Entry> fixedEntries = ImmutableList.builder();
+              RichStream.from(table.entries)
+                  .map(
+                      entry ->
+                          new ElfSymbolTable.Entry(
+                              entry.st_name,
+                              fixInfoField(strings, entry.st_name, entry.st_info),
+                              fixOtherField(strings, entry.st_name, entry.st_other),
+                              entry.st_shndx,
+                              entry.st_value,
+                              entry.st_size))
+                  .forEach(fixedEntries::add);
+              ElfSymbolTable fixedUpTable = new ElfSymbolTable(fixedEntries.build());
+              Preconditions.checkState(table.entries.size() == fixedUpTable.entries.size());
+              section.body.rewind();
+              fixedUpTable.write(elf.header.ei_class, section.body);
+            }
+
+            private ElfSymbolTable.Entry.Info fixInfoField(
+                ElfSection strings, long st_name, ElfSymbolTable.Entry.Info st_info) {
+              if (symbolsToLocalize.contains(strings.lookupString(st_name))) {
+                // Change binding to local.
+                return new ElfSymbolTable.Entry.Info(
+                    ElfSymbolTable.Entry.Info.Bind.STB_LOCAL, st_info.st_type);
+              }
+              return st_info;
+            }
+
+            private int fixOtherField(ElfSection strings, long st_name, int st_other) {
+              if (symbolsToLocalize.contains(strings.lookupString(st_name))) {
+                // Change visibility to hidden.
+                return (st_other & ~0x3) | 2;
+              }
+              return st_other;
+            }
+
+            @Override
+            public String getShortName() {
+              return "localize_dynamic_symbols";
+            }
+
+            @Override
+            public String getDescription(ExecutionContext context) {
+              return String.format(
+                  "localize_dynamic_symbols --symbols %s --in %s --out %s",
+                  symbolsToLocalize, linkOutput, finalOutput);
+            }
+          });
     }
   }
 }

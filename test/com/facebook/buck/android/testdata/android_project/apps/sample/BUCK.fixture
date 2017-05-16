@@ -635,6 +635,23 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_alternate_merge_glue_and_localized_symbols',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+    '//native/merge:A',
+  ],
+  native_library_merge_map = {
+    'lib1.so': ['.*/merge:[AB]'],
+    'lib2.so': ['.*/merge:[EF]'],
+  },
+  native_library_merge_glue = '//native/merge:glue_2',
+  native_library_merge_localized_symbols = ['glue_2'],
+)
+
+android_binary(
   name = 'app_with_invalid_native_lib_merge_glue',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',

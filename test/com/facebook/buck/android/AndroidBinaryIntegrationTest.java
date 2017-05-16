@@ -493,6 +493,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         workspace.buildMultipleAndReturnOutputs(
             "//apps/sample:app_with_merged_libs",
             "//apps/sample:app_with_alternate_merge_glue",
+            "//apps/sample:app_with_alternate_merge_glue_and_localized_symbols",
             "//apps/sample:app_with_merged_libs_modular");
 
     Path apkPath = paths.get("//apps/sample:app_with_merged_libs");
@@ -540,6 +541,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
     assertThat(info.symbols.global, Matchers.hasItem("glue_2"));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
+
+    Path localizePath =
+        paths.get("//apps/sample:app_with_alternate_merge_glue_and_localized_symbols");
+    info = syms.getSymbolsAndDtNeeded(localizePath, "lib/x86/lib2.so");
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
 
     Path modularPath = paths.get("//apps/sample:app_with_merged_libs_modular");
     ZipInspector modularZipInspector = new ZipInspector(modularPath);
