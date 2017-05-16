@@ -21,11 +21,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import org.stringtemplate.v4.ST;
 
 /**
@@ -37,19 +38,19 @@ public class StringTemplateStep implements Step {
   private final Path templatePath;
   private final ProjectFilesystem filesystem;
   private final Path outputPath;
-  private final Function<ST, ST> configure;
+  private final ImmutableMap<String, ?> values;
 
   public StringTemplateStep(
       Path templatePath,
       ProjectFilesystem filesystem,
       Path outputPath,
-      Function<ST, ST> configure) {
+      ImmutableMap<String, ?> values) {
     Preconditions.checkArgument(
         !outputPath.isAbsolute(), "Output must be specified as a relative path: %s", outputPath);
     this.templatePath = templatePath;
     this.filesystem = filesystem;
     this.outputPath = outputPath;
-    this.configure = configure;
+    this.values = values;
   }
 
   @Override
@@ -65,11 +66,12 @@ public class StringTemplateStep implements Step {
 
     ST st = new ST(template);
 
+    for (Map.Entry<String, ?> ent : values.entrySet()) {
+      st = st.add(ent.getKey(), ent.getValue());
+    }
+
     return new WriteFileStep(
-            filesystem,
-            Preconditions.checkNotNull(configure.apply(st).render()),
-            outputPath,
-            /* executable */ false)
+            filesystem, Preconditions.checkNotNull(st.render()), outputPath, /* executable */ false)
         .execute(context);
   }
 

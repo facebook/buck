@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 
 public class WriteStringTemplateRule extends AbstractBuildRule {
@@ -68,12 +67,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
             context.getSourcePathResolver().getAbsolutePath(template),
             getProjectFilesystem(),
             output,
-            st -> {
-              for (Map.Entry<String, String> ent : values.entrySet()) {
-                st = st.add(ent.getKey(), ent.getValue());
-              }
-              return st;
-            }));
+            values));
     if (executable) {
       steps.add(
           new AbstractExecutionStep("chmod +x") {

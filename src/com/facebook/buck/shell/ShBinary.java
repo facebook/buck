@@ -40,6 +40,7 @@ import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -83,6 +84,21 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
+    // Generate an .sh file that builds up an environment and invokes the user's script.
+    // This generated .sh file will be returned by getExecutableCommand().
+    // This script can be cached and used on machines other than the one where it was
+    // created. That means it can't contain any absolute filepaths. Expose the absolute
+    // filepath of the root of the project as $BUCK_REAL_ROOT, determined at runtime.
+    int levelsBelowRoot = output.getNameCount() - 1;
+    String pathBackToRoot = Joiner.on("/").join(Collections.nCopies(levelsBelowRoot, ".."));
+
+    ImmutableList<String> resourceStrings =
+        FluentIterable.from(resources)
+            .transform(context.getSourcePathResolver()::getRelativePath)
+            .transform(Object::toString)
+            .transform(Escaper.BASH_ESCAPER)
+            .toList();
+
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
         .add(
@@ -90,31 +106,14 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                 TEMPLATE,
                 getProjectFilesystem(),
                 output,
-                input -> {
-                  // Generate an .sh file that builds up an environment and invokes the user's script.
-                  // This generated .sh file will be returned by getExecutableCommand().
-                  // This script can be cached and used on machines other than the one where it was
-                  // created. That means it can't contain any absolute filepaths. Expose the absolute
-                  // filepath of the root of the project as $BUCK_REAL_ROOT, determined at runtime.
-                  int levelsBelowRoot = output.getNameCount() - 1;
-                  String pathBackToRoot =
-                      Joiner.on("/").join(Collections.nCopies(levelsBelowRoot, ".."));
-
-                  ImmutableList<String> resourceStrings =
-                      FluentIterable.from(resources)
-                          .transform(context.getSourcePathResolver()::getRelativePath)
-                          .transform(Object::toString)
-                          .transform(Escaper.BASH_ESCAPER)
-                          .toList();
-
-                  return input
-                      .add("path_back_to_root", pathBackToRoot)
-                      .add(
-                          "script_to_run",
-                          Escaper.escapeAsBashString(
-                              context.getSourcePathResolver().getRelativePath(main)))
-                      .add("resources", resourceStrings);
-                }))
+                ImmutableMap.of(
+                    "path_back_to_root",
+                    pathBackToRoot,
+                    "script_to_run",
+                    Escaper.escapeAsBashString(
+                        context.getSourcePathResolver().getRelativePath(main)),
+                    "resources",
+                    resourceStrings)))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
         .build();
   }
