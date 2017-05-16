@@ -539,4 +539,11 @@ public class CxxPreprocessAndCompileTest {
             .getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
+
+  @Test
+  public void testGetGcnoFile() throws Exception {
+    Path input = Paths.get("foo/bar.m.o");
+    Path output = CxxPreprocessAndCompile.getGcnoPath(input);
+    assertEquals(Paths.get("foo/bar.m.gcno"), output);
+  }
 }

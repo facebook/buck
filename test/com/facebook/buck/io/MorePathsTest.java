@@ -252,4 +252,10 @@ public class MorePathsTest {
     // should be the same!  Does not fully "normalize" path.
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }
+
+  @Test
+  public void getNameWithoutExtension() {
+    Path inputPath = Paths.get("subdir/subdir2/bar/x.file");
+    assertEquals("x", MorePaths.getNameWithoutExtension(inputPath));
+  }
 }

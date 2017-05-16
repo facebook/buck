@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -224,6 +225,14 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
+
+    for (String flag : compilerDelegate.getCompilerFlags().getAllFlags()) {
+      if (flag.equals("-ftest-coverage")) {
+        buildableContext.recordArtifact(getGcnoPath(output));
+        break;
+      }
+    }
+
     return new ImmutableList.Builder<Step>()
         .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchPath()))
@@ -233,6 +242,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
                 getScratchPath(),
                 compilerDelegate.isArgFileSupported()))
         .build();
+  }
+
+  @VisibleForTesting
+  static Path getGcnoPath(Path output) {
+    String basename = MorePaths.getNameWithoutExtension(output);
+    return output.getParent().resolve(basename + ".gcno");
   }
 
   private Path getScratchPath() {
