@@ -414,15 +414,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return false;
   }
 
-  boolean getDirCacheRunsPropagationExperiment() {
-    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "_exp_propagation", false);
-  }
-
-  boolean getDirCachePropagationExperimentRandomizedTrialForcedToBeControlGroup() {
-    return buckConfig.getBooleanValue(
-        CACHE_SECTION_NAME, "_exp_propagation_force_control_group", false);
-  }
-
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractArtifactCacheEntries {
