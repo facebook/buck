@@ -75,6 +75,7 @@ public class FileSystemMap<T> {
     //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
     //       a `null` value.
     @Nullable T value;
+    @Nullable Path key;
 
     Entry() {
       // We're creating an empty node here, so it is associated with no value.
@@ -91,6 +92,7 @@ public class FileSystemMap<T> {
   }
 
   @VisibleForTesting final Entry<T> root = new Entry<>();
+  @VisibleForTesting final Map<Path, T> map = new HashMap<>();
 
   private final ValueLoader<T> loader;
 
@@ -112,6 +114,8 @@ public class FileSystemMap<T> {
       Entry<T> entry = putEntry(path);
       try (AutoCloseableLock writeLock = lock.writeLock()) {
         entry.value = value;
+        entry.key = path;
+        map.put(path, value);
       }
       return entry.value;
     }
@@ -176,8 +180,9 @@ public class FileSystemMap<T> {
         // the root).
         path = path.subpath(0, stack.size() - 1);
         // If we reached the leaf, then remove the leaf and everything below it (if any).
-        stack.pop();
+        Entry<T> leaf = stack.pop();
         try (AutoCloseableLock writeLock = lock.writeLock()) {
+          removeSubtreeFromMap(leaf);
           stack.peek().subLevels.remove(path.getFileName());
           // Plus, check everything above in order to remove unused stumps.
           while (!stack.empty()) {
@@ -185,10 +190,17 @@ public class FileSystemMap<T> {
             // of the iteration (we went upper than the root node, which doesn't make sense).
             path = path.getParent();
             Entry<T> current = stack.pop();
+
+            // Remove only if it's a cached entry.
+            if (current.value != null && current.key != null) {
+              map.remove(current.key);
+            }
+
             if (current.size() == 0 && path != null && !stack.empty()) {
               stack.peek().subLevels.remove(path.getFileName());
             } else {
               current.value = null;
+              current.key = null;
             }
           }
         }
@@ -196,9 +208,20 @@ public class FileSystemMap<T> {
     }
   }
 
+  // DFS traversal to remove all child nodes from the given node.
+  // Must be called while owning a write lock.
+  private void removeSubtreeFromMap(Entry<T> leaf) {
+    if (leaf.value != null && leaf.key != null) {
+      map.remove(leaf.key);
+    }
+
+    leaf.subLevels.values().forEach(this::removeSubtreeFromMap);
+  }
+
   /** Empties the trie leaving only the root node available. */
   public void removeAll() {
     try (AutoCloseableLock writeLock = lock.writeLock()) {
+      map.clear();
       root.subLevels = new HashMap<>();
     }
   }
@@ -211,18 +234,24 @@ public class FileSystemMap<T> {
    */
   public T get(Path path) throws IOException {
     try (AutoCloseableLock updateLock = lock.updateLock()) {
-      Entry<T> entry = putEntry(path);
-      // Maybe here we receive a request for getting an intermediate node (a folder) whose
-      // value was never computed before (or has been removed).
-      if (entry.value == null) {
-        try (AutoCloseableLock writeLock = lock.writeLock()) {
-          // Check if while we obtained the lock some other thread modified the value we want.
-          if (entry.value == null) {
-            entry.value = loader.load(path);
-          }
-        }
+      T maybe = map.get(path);
+      if (maybe != null) {
+        return maybe;
       }
-      return entry.value;
+      try (AutoCloseableLock writeLock = lock.writeLock()) {
+        return map.computeIfAbsent(
+            path,
+            p -> {
+              Entry<T> entry = putEntry(path);
+              // Maybe here we receive a request for getting an intermediate node (a folder) whose
+              // value was never computed before (or has been removed).
+              if (entry.value == null) {
+                entry.value = loader.load(path);
+                entry.key = path;
+              }
+              return entry.value;
+            });
+      }
     }
   }
 }
