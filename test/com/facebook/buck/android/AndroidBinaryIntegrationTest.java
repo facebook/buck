@@ -494,8 +494,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
             "//apps/sample:app_with_merged_libs",
             "//apps/sample:app_with_alternate_merge_glue",
             "//apps/sample:app_with_merged_libs_modular");
-    Path apkPath = paths.get("//apps/sample:app_with_merged_libs");
 
+    Path apkPath = paths.get("//apps/sample:app_with_merged_libs");
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
