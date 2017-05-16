@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.elf;
 
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Preconditions;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,6 +78,17 @@ public class Elf {
       }
     }
     return Optional.empty();
+  }
+
+  public ElfSection getMandatorySectionByName(Object fileName, String sectionName)
+      throws IOException {
+    Optional<Pair<Integer, ElfSection>> result = getSectionByName(sectionName);
+    if (!result.isPresent()) {
+      throw new IOException(
+          String.format(
+              "Error parsing ELF file %s: no such section \"%s\"", fileName, sectionName));
+    }
+    return result.get().getSecond();
   }
 
   /** @return whether the data this buffer points to is most likely ELF. */
