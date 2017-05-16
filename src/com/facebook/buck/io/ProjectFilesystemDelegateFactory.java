@@ -63,12 +63,13 @@ public final class ProjectFilesystemDelegateFactory {
     }
 
     if (autoSparseConfig.enabled()) {
-      // We can't access BuckConfig because that class requires a
-      // ProjectFileSystem, which we are in the process of building
-      // Access the required info from the Config instead
+      // Grab a copy of the current environment; Mercurial sometimes cares (or more specifically,
+      // a remote connection command like ssh cares). We rather not pass in an environment via the
+      // ProjectFilesystem here because that'd make the ProjectFilesystem variant on the env, not
+      // a can of worms you want to go open just to make Mercurial happy.
+      ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
       HgCmdLineInterface hgCmdLine =
-          new HgCmdLineInterface(
-              new PrintStreamProcessExecutorFactory(), root, hgCmd, ImmutableMap.of());
+          new HgCmdLineInterface(new PrintStreamProcessExecutorFactory(), root, hgCmd, environment);
       AutoSparseState autoSparseState =
           AbstractAutoSparseFactory.getAutoSparseState(root, hgCmdLine, autoSparseConfig);
       if (autoSparseState != null) {
