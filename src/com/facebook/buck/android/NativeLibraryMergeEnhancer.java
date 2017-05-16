@@ -300,7 +300,7 @@ class NativeLibraryMergeEnhancer {
 
     for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
         linkableMembership.entrySet()) {
-      if (!entry.getValue().getSoname().isPresent()) {
+      if (!entry.getValue().isActuallyMerged()) {
         continue;
       }
       String mergedName = entry.getValue().getSoname().get();
@@ -463,17 +463,23 @@ class NativeLibraryMergeEnhancer {
 
     public abstract ImmutableSet<NativeLinkable> getLinkables();
 
+    /** @return true if this is a library defined in the merge config. */
+    public boolean isActuallyMerged() {
+      return getSoname().isPresent();
+    }
+
     @Value.Check
     protected void check() {
-      // Soname can only be absent for a constituency of a single un-merged lib.
-      if (!getSoname().isPresent()) {
-        Preconditions.checkArgument(getLinkables().size() == 1);
+      if (!isActuallyMerged()) {
+        Preconditions.checkArgument(
+            getLinkables().size() == 1,
+            "BUG: %s is not 'actually merged', but does not consist of a single linkable");
       }
     }
 
     @Override
     public String toString() {
-      if (getSoname().isPresent()) {
+      if (isActuallyMerged()) {
         return "merge:" + getSoname().get();
       }
       return "no-merge:" + getLinkables().iterator().next().getBuildTarget();
@@ -560,7 +566,7 @@ class NativeLibraryMergeEnhancer {
      */
     private static boolean computeCanUseOriginal(
         MergedNativeLibraryConstituents constituents, Iterable<MergedLibNativeLinkable> allDeps) {
-      if (constituents.getSoname().isPresent()) {
+      if (constituents.isActuallyMerged()) {
         return false;
       }
 
@@ -579,7 +585,7 @@ class NativeLibraryMergeEnhancer {
 
     // TODO(dreiss): Maybe cache this and other methods?  Would have to be per-platform.
     String getSoname(CxxPlatform platform) throws NoSuchBuildTargetException {
-      if (constituents.getSoname().isPresent()) {
+      if (constituents.isActuallyMerged()) {
         return constituents.getSoname().get();
       }
       ImmutableMap<String, SourcePath> shared =
@@ -600,8 +606,8 @@ class NativeLibraryMergeEnhancer {
         List<MergedLibNativeLinkable> orderedExportedDeps,
         Optional<NativeLinkable> glueLinkable) {
       BuildTarget initialTarget;
-      if (!constituents.getSoname().isPresent()) {
-        // No soname means this is library isn't really merged.
+      if (!constituents.isActuallyMerged()) {
+        // This library isn't really merged.
         // We use its constituent as the base target to ensure that
         // it is shared between all apps with the same merge structure.
         initialTarget = constituents.getLinkables().iterator().next().getBuildTarget();
@@ -749,7 +755,7 @@ class NativeLibraryMergeEnhancer {
       final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
-      if (glueLinkable.isPresent() && constituents.getSoname().isPresent()) {
+      if (glueLinkable.isPresent() && constituents.isActuallyMerged()) {
         usingGlue = ImmutableList.of(glueLinkable.get());
       }
 
