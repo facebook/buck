@@ -69,10 +69,13 @@ public class RustLibraryArg implements Arg, HasSourcePath {
   public void appendToCommandLine(
       ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
     Path path = resolver.getRelativePath(rlib);
+
+    // NOTE: each of these logical args must be put on the command line as a single parameter
+    // (otherwise dedup might just remove one piece of it)
     if (direct) {
-      builder.add("--extern", String.format("%s=%s", crate, path));
+      builder.add(String.format("--extern=%s=%s", crate, path));
     } else {
-      builder.add("-L", String.format("dependency=%s", path.getParent()));
+      builder.add(String.format("-Ldependency=%s", path.getParent()));
     }
   }
 

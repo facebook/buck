@@ -44,6 +44,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -55,7 +56,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
   @AddToRuleKey private final Linker linker;
 
   @AddToRuleKey private final ImmutableList<Arg> args;
-
+  @AddToRuleKey private final ImmutableList<Arg> depArgs;
   @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
 
   @AddToRuleKey private final SourcePath rootModule;
@@ -90,6 +91,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
       Tool compiler,
       Linker linker,
       ImmutableList<Arg> args,
+      ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath rootModule,
@@ -100,6 +102,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
     this.compiler = compiler;
     this.linker = linker;
     this.args = args;
+    this.depArgs = depArgs;
     this.linkerArgs = linkerArgs;
     this.rootModule = rootModule;
     this.srcs = srcs;
@@ -115,6 +118,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
       Tool compiler,
       Linker linker,
       ImmutableList<Arg> args,
+      ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
@@ -127,7 +131,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                         .addAll(compiler.getDeps(ruleFinder))
                         .addAll(linker.getDeps(ruleFinder))
                         .addAll(
-                            Stream.of(args, linkerArgs)
+                            Stream.of(args, depArgs, linkerArgs)
                                 .flatMap(
                                     a ->
                                         a.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()))
@@ -139,6 +143,7 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
         compiler,
         linker,
         args,
+        depArgs,
         linkerArgs,
         sources,
         rootModule,
@@ -210,15 +215,24 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                 ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
                 ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
+                // Accumulate Args into set to dedup them while retaining their order,
+                // since there are often many duplicates for things like library paths.
+                //
+                // NOTE: this means that all logical args should be a single string on the command
+                // line (ie "-Lfoo", not ["-L", "foo"])
+                ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
+
+                dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
+
                 Path src = scratchDir.resolve(resolver.getRelativePath(rootModule));
-                cmd.addAll(compiler.getCommandPrefix(resolver))
-                    .addAll(
-                        executionContext.getAnsi().isAnsiTerminal()
-                            ? ImmutableList.of("--color=always")
-                            : ImmutableList.of())
-                    .add(String.format("-Clinker=%s", linkerCmd.get(0)))
+                cmd.addAll(compiler.getCommandPrefix(resolver));
+                if (executionContext.getAnsi().isAnsiTerminal()) {
+                  cmd.add("--color=always");
+                }
+                cmd.add(String.format("-Clinker=%s", linkerCmd.get(0)))
                     .add(String.format("-Clink-arg=@%s", argFilePath))
                     .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
+                    .addAll(dedupArgs.build())
                     .add("-o", output.toString())
                     .add(src.toString());
 

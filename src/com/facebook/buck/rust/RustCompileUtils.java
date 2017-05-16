@@ -102,6 +102,7 @@ public class RustCompileUtils {
     linkerArgs.addAll(linkerInputs);
 
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
+    ImmutableList.Builder<Arg> depArgs = ImmutableList.builder();
 
     String relocModel;
     if (crateType.isPic()) {
@@ -142,7 +143,7 @@ public class RustCompileUtils {
         .map(
             rule ->
                 ((RustLinkable) rule).getLinkerArg(true, crateType.isCheck(), cxxPlatform, depType))
-        .forEach(args::add);
+        .forEach(depArgs::add);
 
     // Second pass - indirect deps
     new AbstractBreadthFirstTraversal<BuildRule>(
@@ -161,7 +162,7 @@ public class RustCompileUtils {
           Arg arg =
               ((RustLinkable) rule).getLinkerArg(false, crateType.isCheck(), cxxPlatform, depType);
 
-          args.add(arg);
+          depArgs.add(arg);
         }
         return deps;
       }
@@ -206,6 +207,7 @@ public class RustCompileUtils {
                 .getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType())
                 .resolve(resolver),
             args.build(),
+            depArgs.build(),
             linkerArgs.build(),
             CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
             CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),

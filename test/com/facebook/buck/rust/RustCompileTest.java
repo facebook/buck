@@ -226,7 +226,9 @@ public class RustCompileTest {
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
               .map(StringArg::of)
               .collect(MoreCollectors.toImmutableList()),
-          /* linkerFlags */ ImmutableList.of(),
+          /* depArgs */ ImmutableList.of(),
+          /* linkerFlags */
+          ImmutableList.of(),
           srcs,
           rootModule,
           true);
