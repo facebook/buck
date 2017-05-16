@@ -1260,6 +1260,16 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       return fromOurCache;
     }
 
+    RuleKey fromInternalCache = ruleKeyFactories.getDefaultRuleKeyFactory().getFromCache(rule);
+    if (fromInternalCache != null) {
+      ListenableFuture<RuleKey> future = Futures.immediateFuture(fromInternalCache);
+      // Record the rule key future.
+      ruleKeys.put(rule.getBuildTarget(), future);
+      // Because a rule key will be invalidated from the internal cache any time one of its
+      // dependents is invalidated, we know that all of our transitive deps are also in cache.
+      return future;
+    }
+
     // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
     // one, we need to wait for them to complete.
     ListenableFuture<List<RuleKey>> depKeys =

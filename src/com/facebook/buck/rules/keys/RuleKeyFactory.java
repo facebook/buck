@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import javax.annotation.Nullable;
 
 public interface RuleKeyFactory<RULE_KEY> {
 
@@ -29,4 +30,14 @@ public interface RuleKeyFactory<RULE_KEY> {
    * @return A rule key.
    */
   RULE_KEY build(BuildRule buildRule);
+
+  /**
+   * Returns a {@code RULE_KEY} from an internal cache, if possible. If a non-null value is
+   * returned, it is guaranteed to be he same as if {@link #build} were called instead.
+   */
+  @Nullable
+  @SuppressWarnings("unused")
+  default RULE_KEY getFromCache(BuildRule buildRule) {
+    return null;
+  }
 }

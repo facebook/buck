@@ -25,9 +25,14 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** Interface for caches for rule keys. */
 public interface RuleKeyCache<V> {
+
+  /** @return the rule key value for the given {@code rule}, or null if it is not cached.. */
+  @Nullable
+  V get(BuildRule rule);
 
   /**
    * @return the rule key value for the given {@code rule}, either serving it form cache or by

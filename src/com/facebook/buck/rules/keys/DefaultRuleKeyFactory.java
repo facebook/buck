@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** A {@link RuleKeyFactory} which adds some default settings to {@link RuleKey}s. */
 public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<RuleKey> {
@@ -88,6 +89,12 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   @VisibleForTesting
   public Builder<HashCode> newBuilderForTesting(BuildRule buildRule) {
     return newPopulatedBuilder(buildRule, RuleKeyBuilder.createDefaultHasher());
+  }
+
+  @Nullable
+  @Override
+  public RuleKey getFromCache(BuildRule buildRule) {
+    return ruleKeyCache.get(buildRule);
   }
 
   @Override

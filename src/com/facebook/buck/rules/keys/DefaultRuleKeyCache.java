@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * A {@link com.facebook.buck.rules.RuleKey} cache used by a {@link RuleKeyFactory}. Inputs and
@@ -136,6 +137,17 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
             new IdentityWrapper<>(node),
             key -> Suppliers.memoize(() -> calculateNode(node, create)))
         .get();
+  }
+
+  @Nullable
+  @Override
+  public V get(BuildRule rule) {
+    // Maybe put stats here?
+    Supplier<V> supplier = cache.get(new IdentityWrapper<Object>(rule));
+    if (supplier == null) {
+      return null;
+    }
+    return supplier.get();
   }
 
   @Override

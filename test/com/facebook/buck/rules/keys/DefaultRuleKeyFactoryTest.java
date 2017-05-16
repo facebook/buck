@@ -698,6 +698,16 @@ public class DefaultRuleKeyFactoryTest {
 
     private final Map<Object, RuleKeyResult<V>> results = new MapMaker().weakKeys().makeMap();
 
+    @Nullable
+    @Override
+    public V get(BuildRule rule) {
+      RuleKeyResult<V> result = results.get(rule);
+      if (result != null) {
+        return result.result;
+      }
+      return null;
+    }
+
     @Override
     public V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create) {
       RuleKeyResult<V> result = create.apply(rule);
