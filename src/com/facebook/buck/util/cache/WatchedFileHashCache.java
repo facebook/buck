@@ -58,15 +58,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     // Path event, remove the path from the cache as it has been changed, added or deleted.
     Path path = event.getPath().normalize();
     LOG.verbose("Invalidating %s", path);
-    // invalidate(path) will invalidate all the child paths of the given path and that all the
-    // parent paths will be invalidated and, if possible, removed too.
-    long start = System.nanoTime();
-    invalidateNew(path);
-    newCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    start = System.nanoTime();
-    invalidateOldCache(path);
-    oldCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    numberOfInvalidations++;
+    invalidate(path);
   }
 
   // TODO(rvitale): remove block below after the file hash cache experiment is over.
@@ -139,7 +131,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
             .keySet();
     LOG.verbose("Paths to invalidate: %s", pathsToInvalidate);
     for (Path pathToInvalidate : pathsToInvalidate) {
-      invalidate(pathToInvalidate);
+      invalidateOld(pathToInvalidate);
     }
   }
 
@@ -147,10 +139,10 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   public HashCode get(Path relativeFilePath) throws IOException {
     long start = System.nanoTime();
     HashCode sha1 = super.get(relativeFilePath.normalize());
-    newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     start = System.nanoTime();
     HashCode newSha1 = getFromNewCache(relativeFilePath);
-    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     if (!sha1.equals(newSha1)) {
       if (sha1Mismatches == 0) {
@@ -161,7 +153,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
         } catch (ExecutionException e) {
           throw new RuntimeException(e);
         }
-        sb.append("\nOld timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
+        sb.append("\nNew timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
         sb.append("\nOld hash: ").append(sha1.toString());
         sb.append("\nNew hash: ").append(newSha1.toString());
         sb.append("\nOld hash rerun: ").append(super.get(relativeFilePath));
@@ -178,7 +170,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
         } catch (ExecutionException e) {
           throw new RuntimeException(e);
         }
-        sb.append("\nOld timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
+        sb.append("\nNew timestamp: ").append(newLoadingCache.get(relativeFilePath).getTimestamp());
         sb.append("\nOld hash: ").append(sha1.toString());
         sb.append("\nNew hash: ").append(newSha1.toString());
         sb.append("\nOld hash rerun: ").append(super.get(relativeFilePath));
@@ -196,10 +188,10 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     long start = System.nanoTime();
     HashCode sha1 = super.get(archiveMemberPath);
-    newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     start = System.nanoTime();
     HashCode newSha1 = getFromNewCache(archiveMemberPath);
-    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     if (!sha1.equals(newSha1)) {
       if (sha1Mismatches == 0) {
@@ -267,6 +259,19 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
     return memberHashCodeAndFileType.getHashCode();
   }
+
+  @Override
+  public void invalidate(Path relativePath) {
+    // invalidate(path) will invalidate all the child paths of the given path and that all the
+    // parent paths will be invalidated and, if possible, removed too.
+    long start = System.nanoTime();
+    invalidateNew(relativePath);
+    newCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
+    start = System.nanoTime();
+    invalidateOldCache(relativePath);
+    oldCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
+    numberOfInvalidations++;
+  }
   /* *****************************************************************************/
 
   @SuppressWarnings("unused")
@@ -275,6 +280,5 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     // Non-path change event, likely an overflow due to many change events: invalidate everything.
     LOG.debug("Invalidating all");
     invalidateAll();
-    invalidateAllNew();
   }
 }
