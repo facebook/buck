@@ -119,8 +119,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
-  public Javac.CompilationMode getCompilationMode() {
-    return Javac.CompilationMode.FULL;
+  public JavacCompilationMode getCompilationMode() {
+    return JavacCompilationMode.FULL;
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {

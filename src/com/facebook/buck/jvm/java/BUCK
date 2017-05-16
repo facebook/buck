@@ -92,6 +92,15 @@ java_library(
 )
 
 java_library(
+    name = "javac-compilation-mode",
+    srcs = [
+        "JavacCompilationMode.java",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+java_library(
     name = "javac-sink",
     srcs = [
         "JavacEventSink.java",
@@ -196,6 +205,9 @@ java_immutables_library(
         "StandardJavaFileManagerFactory.java",
         "TracingProcessorWrapper.java",
         "ZipFileJarEntryContainer.java",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/jvm/java:javac-compilation-mode",
     ],
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly

@@ -51,7 +51,7 @@ public class JavacOptionsTest {
   public void compilationModeFullByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertThat(options.getCompilationMode(), is(Javac.CompilationMode.FULL));
+    assertThat(options.getCompilationMode(), is(JavacCompilationMode.FULL));
   }
 
   @Test

@@ -93,13 +93,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     switch (abiGenerationMode) {
       case CLASS:
       case SOURCE_WITH_DEPS:
-        builder.setCompilationMode(Javac.CompilationMode.FULL);
+        builder.setCompilationMode(JavacCompilationMode.FULL);
         break;
       case MIGRATING_TO_SOURCE:
-        builder.setCompilationMode(Javac.CompilationMode.FULL_CHECKING_REFERENCES);
+        builder.setCompilationMode(JavacCompilationMode.FULL_CHECKING_REFERENCES);
         break;
       case SOURCE:
-        builder.setCompilationMode(Javac.CompilationMode.FULL_ENFORCING_REFERENCES);
+        builder.setCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
         break;
     }
 

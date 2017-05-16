@@ -180,11 +180,12 @@ public class ExternalJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToArgsList,
       Optional<Path> workingDirectory,
-      CompilationMode compilationMode)
+      JavacCompilationMode compilationMode)
       throws InterruptedException {
 
     Preconditions.checkArgument(
-        compilationMode == CompilationMode.FULL, "Cannot compile ABI jars with external javac");
+        compilationMode == JavacCompilationMode.FULL,
+        "Cannot compile ABI jars with external javac");
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(
         pathToJavac.isLeft()

@@ -91,7 +91,7 @@ public class JavacDirectToJarStep implements Step {
 
   @Override
   public String getShortName() {
-    return buildTimeOptions.getCompilationMode() != Javac.CompilationMode.ABI
+    return buildTimeOptions.getCompilationMode() != JavacCompilationMode.ABI
         ? "javac_jar"
         : "calculate_abi_from_source";
   }

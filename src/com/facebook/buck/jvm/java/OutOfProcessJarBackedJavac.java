@@ -51,7 +51,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      CompilationMode compilationMode)
+      JavacCompilationMode compilationMode)
       throws InterruptedException {
 
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);

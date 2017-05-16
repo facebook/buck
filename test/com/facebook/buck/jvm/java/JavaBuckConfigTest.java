@@ -377,7 +377,7 @@ public class JavaBuckConfigTest {
   public void testCompileFullJarsByDefault() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(options.getCompilationMode(), Matchers.equalTo(Javac.CompilationMode.FULL));
+    assertThat(options.getCompilationMode(), Matchers.equalTo(JavacCompilationMode.FULL));
   }
 
   @Test
@@ -385,7 +385,7 @@ public class JavaBuckConfigTest {
     String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source_with_deps");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(options.getCompilationMode(), Matchers.equalTo(Javac.CompilationMode.FULL));
+    assertThat(options.getCompilationMode(), Matchers.equalTo(JavacCompilationMode.FULL));
   }
 
   @Test
@@ -396,7 +396,7 @@ public class JavaBuckConfigTest {
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
         options.getCompilationMode(),
-        Matchers.equalTo(Javac.CompilationMode.FULL_CHECKING_REFERENCES));
+        Matchers.equalTo(JavacCompilationMode.FULL_CHECKING_REFERENCES));
   }
 
   @Test
@@ -406,7 +406,7 @@ public class JavaBuckConfigTest {
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
         options.getCompilationMode(),
-        Matchers.equalTo(Javac.CompilationMode.FULL_ENFORCING_REFERENCES));
+        Matchers.equalTo(JavacCompilationMode.FULL_ENFORCING_REFERENCES));
   }
 
   private void assertOptionKeyAbsent(JavacOptions options, String key) {

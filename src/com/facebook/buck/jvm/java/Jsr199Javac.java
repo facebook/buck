@@ -121,7 +121,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      CompilationMode compilationMode) {
+      JavacCompilationMode compilationMode) {
     JavaCompiler compiler = createCompiler(context);
     CustomJarOutputStream jarOutputStream = null;
     StandardJavaFileManager fileManager = null;
@@ -174,7 +174,7 @@ public abstract class Jsr199Javac implements Javac {
             ZipOutputStreams.newJarOutputStream(
                 Preconditions.checkNotNull(directToJarPath),
                 ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
-        if (compilationMode == CompilationMode.ABI) {
+        if (compilationMode == JavacCompilationMode.ABI) {
           jarOutputStream.setEntryHashingEnabled(true);
         }
         return new JarBuilder(context.getProjectFilesystem())
@@ -238,7 +238,7 @@ public abstract class Jsr199Javac implements Javac {
       JavaCompiler compiler,
       StandardJavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits,
-      CompilationMode compilationMode) {
+      JavacCompilationMode compilationMode) {
     // write javaSourceFilePaths to classes file
     // for buck user to have a list of all .java files to be compiled
     // since we do not print them out to console in case of error
@@ -266,7 +266,7 @@ public abstract class Jsr199Javac implements Javac {
     PluginClassLoaderFactory loaderFactory = PluginLoader.newFactory(context.getClassLoaderCache());
     BuckJavacTaskProxy javacTask;
 
-    if (compilationMode != CompilationMode.ABI) {
+    if (compilationMode != JavacCompilationMode.ABI) {
       javacTask =
           BuckJavacTaskProxy.getTask(
               loaderFactory,
@@ -308,14 +308,15 @@ public abstract class Jsr199Javac implements Javac {
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     BuckJavacTaskListener taskListener = null;
     if (EnumSet.of(
-            CompilationMode.FULL_CHECKING_REFERENCES, CompilationMode.FULL_ENFORCING_REFERENCES)
+            JavacCompilationMode.FULL_CHECKING_REFERENCES,
+            JavacCompilationMode.FULL_ENFORCING_REFERENCES)
         .contains(compilationMode)) {
       taskListener =
           SourceBasedAbiStubber.newValidatingTaskListener(
               pluginLoader,
               javacTask,
               new FileManagerBootClasspathOracle(fileManager),
-              compilationMode == CompilationMode.FULL_ENFORCING_REFERENCES
+              compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
                   ? Diagnostic.Kind.ERROR
                   : Diagnostic.Kind.WARNING);
     }

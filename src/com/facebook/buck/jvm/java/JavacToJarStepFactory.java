@@ -58,7 +58,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   public void setCompileAbi() {
     javacOptions =
         javacOptions
-            .withCompilationMode(Javac.CompilationMode.ABI)
+            .withCompilationMode(JavacCompilationMode.ABI)
             .withAnnotationProcessingParams(
                 abiProcessorsOnly(javacOptions.getAnnotationProcessingParams()));
   }

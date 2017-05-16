@@ -72,7 +72,7 @@ public class FakeJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      CompilationMode compilationMode)
+      JavacCompilationMode compilationMode)
       throws InterruptedException {
     try {
       return context

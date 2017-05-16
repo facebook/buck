@@ -213,7 +213,7 @@ public class JavacStep implements Step {
 
   @Override
   public String getShortName() {
-    return javacOptions.getCompilationMode() != Javac.CompilationMode.ABI
+    return javacOptions.getCompilationMode() != JavacCompilationMode.ABI
         ? getJavac().getShortName()
         : "calculate_abi_from_source";
   }

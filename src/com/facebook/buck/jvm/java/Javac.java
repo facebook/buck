@@ -44,7 +44,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      CompilationMode compilationMode)
+      JavacCompilationMode compilationMode)
       throws InterruptedException;
 
   String getDescription(
@@ -68,25 +68,5 @@ public interface Javac extends RuleKeyAppendable, Tool {
     JAR,
     /** Run javac in-process, loading it from the JRE in which Buck is running. */
     JDK,
-  }
-
-  enum CompilationMode {
-    /** Normal compilation. Generates full jars. */
-    FULL,
-    /**
-     * Normal compilation with additional checking of type and constant references for compatibility
-     * with generating ABI jars from source without dependencies. This mode issues warnings when
-     * incompatibilities are detected and is thus intended for use during migration.
-     */
-    FULL_CHECKING_REFERENCES,
-    /**
-     * Normal compilation with additional checking of type and constant references for compatibility
-     * with generating ABI jars from source wtihout dependencies. This mode issues errors when
-     * incompatibilities are detected; it is the backstop that ensures the build will fail if an
-     * incorrect ABI jar is generated.
-     */
-    FULL_ENFORCING_REFERENCES,
-    /** Compile ABIs only. Generates an ABI jar. */
-    ABI,
   }
 }

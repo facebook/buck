@@ -147,23 +147,23 @@ public class JvmLibraryArgInterpreterTest {
   public void sourceAbiGenerationCanBeDisabledPerTarget() {
     JvmLibraryArg arg =
         ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(false).build();
-    defaults = defaults.withCompilationMode(Javac.CompilationMode.FULL_ENFORCING_REFERENCES);
+    defaults = defaults.withCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
 
     JavacOptions options = createJavacOptions(arg);
 
-    assertEquals(options.getCompilationMode(), Javac.CompilationMode.FULL);
+    assertEquals(options.getCompilationMode(), JavacCompilationMode.FULL);
   }
 
   @Test
   public void sourceAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
-    assertEquals(defaults.getCompilationMode(), Javac.CompilationMode.FULL);
+    assertEquals(defaults.getCompilationMode(), JavacCompilationMode.FULL);
 
     JvmLibraryArg arg =
         ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(true).build();
 
     JavacOptions options = createJavacOptions(arg);
 
-    assertEquals(options.getCompilationMode(), Javac.CompilationMode.FULL);
+    assertEquals(options.getCompilationMode(), JavacCompilationMode.FULL);
   }
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
