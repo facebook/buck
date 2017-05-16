@@ -30,6 +30,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -66,8 +67,7 @@ public class ShTestTest extends EasyMockSupport {
                 .setExtraDeps(ImmutableSortedSet.of(extraDep))
                 .build(),
             ruleFinder,
-            new FakeSourcePath("run_test.sh"),
-            /* args */ ImmutableList.of(),
+            /* args */ ImmutableList.of(SourcePathArg.of(new FakeSourcePath("run_test.sh"))),
             /* env */ ImmutableMap.of(),
             /* resources */ ImmutableSortedSet.of(),
             Optional.empty(),

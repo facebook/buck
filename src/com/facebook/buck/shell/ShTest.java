@@ -63,7 +63,6 @@ public class ShTest extends NoopBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey private final SourcePath test;
   @AddToRuleKey private final ImmutableList<Arg> args;
   @AddToRuleKey private final ImmutableMap<String, Arg> env;
 
@@ -79,7 +78,6 @@ public class ShTest extends NoopBuildRule
   protected ShTest(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      SourcePath test,
       ImmutableList<Arg> args,
       ImmutableMap<String, Arg> env,
       ImmutableSortedSet<? extends SourcePath> resources,
@@ -89,7 +87,6 @@ public class ShTest extends NoopBuildRule
       ImmutableSet<String> contacts) {
     super(params);
     this.ruleFinder = ruleFinder;
-    this.test = test;
     this.args = args;
     this.env = env;
     this.resources = resources;
@@ -121,7 +118,6 @@ public class ShTest extends NoopBuildRule
             // Return a single command that runs an .sh file with no arguments.
             new RunShTestAndRecordResultStep(
                 getProjectFilesystem(),
-                pathResolver.getAbsolutePath(test),
                 Arg.stringify(args, pathResolver),
                 Arg.stringify(env, pathResolver),
                 testRuleTimeoutMs,
@@ -181,7 +177,6 @@ public class ShTest extends NoopBuildRule
   public Tool getExecutableCommand() {
     CommandTool.Builder builder =
         new CommandTool.Builder()
-            .addArg(SourcePathArg.of(test))
             .addDeps(ruleFinder.filterBuildRuleInputs(resources));
 
     for (Arg arg : args) {
@@ -201,7 +196,6 @@ public class ShTest extends NoopBuildRule
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("custom")
-        .addCommand(pathResolver.getAbsolutePath(test).toString())
         .addAllCommand(Arg.stringify(args, pathResolver))
         .setEnv(Arg.stringify(env, pathResolver))
         .addAllLabels(getLabels())
