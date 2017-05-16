@@ -77,6 +77,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
+            Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph);
 
@@ -150,6 +151,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
+            Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph);
 

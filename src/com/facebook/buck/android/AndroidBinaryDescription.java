@@ -275,6 +275,7 @@ public class AndroidBinaryDescription
               Optional.of(args.getNativeLibraryMergeMap()),
               args.getNativeLibraryMergeGlue(),
               args.getNativeLibraryMergeCodeGenerator(),
+              args.getNativeLibraryMergeLocalizedSymbols(),
               args.getNativeLibraryProguardConfigGenerator(),
               args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
               dxExecutorService,
@@ -665,6 +666,8 @@ public class AndroidBinaryDescription
     Optional<BuildTarget> getNativeLibraryMergeGlue();
 
     Optional<BuildTarget> getNativeLibraryMergeCodeGenerator();
+
+    Optional<ImmutableSortedSet<String>> getNativeLibraryMergeLocalizedSymbols();
 
     Optional<BuildTarget> getNativeLibraryProguardConfigGenerator();
 

@@ -99,9 +99,12 @@ class NativeLibraryMergeEnhancer {
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
+      Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets)
       throws NoSuchBuildTargetException {
+
+    nativeLibraryMergeLocalizedSymbols.getClass();
 
     NativeLibraryMergeEnhancementResult.Builder builder =
         NativeLibraryMergeEnhancementResult.builder();

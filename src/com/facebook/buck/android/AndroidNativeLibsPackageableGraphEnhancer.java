@@ -65,6 +65,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final CxxBuckConfig cxxBuckConfig;
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
+  private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
   private final RelinkerMode relinkerMode;
   private final APKModuleGraph apkModuleGraph;
 
@@ -82,10 +83,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       CxxBuckConfig cxxBuckConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
+      Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
       APKModuleGraph apkModuleGraph) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
     this.pathResolver = new SourcePathResolver(ruleFinder);
     this.buildRuleParams = originalParams;
     this.ruleResolver = ruleResolver;
@@ -153,6 +156,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativePlatforms,
               nativeLibraryMergeMap.get(),
               nativeLibraryMergeGlue,
+              nativeLibraryMergeLocalizedSymbols,
               nativeLinkables,
               nativeLinkablesAssets);
       nativeLinkables = enhancement.getMergedLinkables();

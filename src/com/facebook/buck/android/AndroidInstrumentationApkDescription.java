@@ -163,6 +163,7 @@ public class AndroidInstrumentationApkDescription
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
+            Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             dxExecutorService,
             apkUnderTest.getManifestEntries(),

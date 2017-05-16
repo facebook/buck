@@ -243,6 +243,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             cxxBuckConfig,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
+            Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
