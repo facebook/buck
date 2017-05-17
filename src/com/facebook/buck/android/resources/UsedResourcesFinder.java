@@ -115,14 +115,12 @@ public class UsedResourcesFinder {
       if (pkg == ResTablePackage.APP_PACKAGE_ID) {
         int type = (id >> 16) & 0xFF;
         int k = id & 0xFFFF;
-        if (!processedIds.containsKey(type)) {
-          processedIds.put(type, Sets.newTreeSet());
-          idsToProcess.put(type, Sets.newTreeSet());
-        }
-        Set<Integer> processedIdsForType = Preconditions.checkNotNull(processedIds.get(type));
+        Set<Integer> processedIdsForType =
+            Preconditions.checkNotNull(processedIds.computeIfAbsent(type, v -> Sets.newTreeSet()));
         if (!processedIdsForType.contains(k)) {
           processedIdsForType.add(k);
-          Preconditions.checkNotNull(idsToProcess.get(type)).add(k);
+          Preconditions.checkNotNull(idsToProcess.computeIfAbsent(type, v -> Sets.newTreeSet()))
+              .add(k);
         }
       }
     }

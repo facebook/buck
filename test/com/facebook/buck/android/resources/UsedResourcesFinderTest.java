@@ -106,6 +106,26 @@ public class UsedResourcesFinderTest {
   }
 
   @Test
+  public void testXmlRootById() throws IOException {
+    try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
+      // Includes a string id so that we process string ids both before and after processing the
+      // xml.
+      UsedResourcesFinder.ResourceClosure closure =
+          UsedResourcesFinder.computeClosure(
+              new SimpleApkContentProvider(apkZip),
+              ImmutableList.of(),
+              ImmutableList.of(0x7f030000, 0x7f040000));
+
+      assertEquals(
+          ImmutableSet.of("res/drawable-nodpi-v4/exo_icon.png", "res/xml/meta_xml.xml"),
+          closure.files);
+      assertEquals(
+          ImmutableMap.of(2, ImmutableSet.of(1), 3, ImmutableSet.of(0), 4, ImmutableSet.of(0, 1)),
+          closure.idsByType);
+    }
+  }
+
+  @Test
   public void testPrimaryApkClosure() throws IOException {
     try (ZipFile apkZip = new ZipFile(apkPath.toFile())) {
       UsedResourcesFinder.ResourceClosure closure =
