@@ -356,80 +356,106 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final BuildInfoRecorder buildInfoRecorder)
       throws IOException {
     // Handle input-based rule keys.
+    Optional<BuildResult> buildResult = Optional.empty();
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      // Calculate input-based rule key.
-      Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey(rule, context.getEventBus());
-      if (inputRuleKey.isPresent()) {
-
-        // Perform the cache fetch.
-        try (BuckEvent.Scope scope =
-            BuildRuleCacheEvent.startCacheCheckScope(
-                context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
-          // Input-based rule keys.
-          Optional<BuildResult> inputResult =
-              performInputBasedCacheFetch(
-                  rule, context, onDiskBuildInfo, buildInfoRecorder, inputRuleKey.get());
-
-          if (inputResult.isPresent()) {
-            return inputResult;
-          }
-        }
-      }
+      buildResult = checkInputBasedCaches(rule, context, onDiskBuildInfo, buildInfoRecorder);
     }
+
+    if (buildResult.isPresent()) return buildResult;
 
     // Dep-file rule keys.
     if (useDependencyFileRuleKey(rule)) {
-      // Try to get the current dep-file rule key.
-      Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
-          calculateDepFileRuleKey(
-              rule,
-              context,
-              onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
-              /* allowMissingInputs */ true);
-      if (depFileRuleKeyAndInputs.isPresent()) {
-        RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
-        buildInfoRecorder.addBuildMetadata(
-            BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
-
-        // Check the input-based rule key says we're already built.
-        Optional<RuleKey> lastDepFileRuleKey =
-            onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-        if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-          return Optional.of(
-              BuildResult.success(
-                  rule,
-                  BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                  CacheResult.localKeyUnchangedHit()));
-        }
-      }
+      buildResult = checkMatchingDepfile(rule, context, onDiskBuildInfo, buildInfoRecorder);
     }
+
+    if (buildResult.isPresent()) return buildResult;
 
     // Manifest caching
     if (useManifestCaching(rule)) {
-      Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(rule, context.getEventBus());
-      if (manifestKey.isPresent()) {
-        buildInfoRecorder.addBuildMetadata(
-            BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-        try (BuckEvent.Scope scope =
-            BuildRuleCacheEvent.startCacheCheckScope(
-                context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
-          Optional<BuildResult> manifestResult =
-              performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
-          if (manifestResult.isPresent()) {
-            return manifestResult;
-          }
-        }
-      }
+      buildResult = checkManifestBasedCaches(rule, context, buildInfoRecorder);
     }
+
+    if (buildResult.isPresent()) return buildResult;
 
     // Cache lookups failed, so if we're just trying to populate, we've failed.
     if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       LOG.info("Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
-      return Optional.of(
-          BuildResult.canceled(
-              rule,
-              new HumanReadableException(
-                  "Skipping %s: in cache population mode local builds are disabled", rule)));
+      buildResult =
+          Optional.of(
+              BuildResult.canceled(
+                  rule,
+                  new HumanReadableException(
+                      "Skipping %s: in cache population mode local builds are disabled", rule)));
+    }
+    return buildResult;
+  }
+
+  private Optional<BuildResult> checkManifestBasedCaches(
+      BuildRule rule, BuildEngineBuildContext context, BuildInfoRecorder buildInfoRecorder)
+      throws IOException {
+    Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(rule, context.getEventBus());
+    if (manifestKey.isPresent()) {
+      buildInfoRecorder.addBuildMetadata(
+          BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
+      try (BuckEvent.Scope scope =
+          BuildRuleCacheEvent.startCacheCheckScope(
+              context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
+        return performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<BuildResult> checkMatchingDepfile(
+      BuildRule rule,
+      BuildEngineBuildContext context,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder)
+      throws IOException {
+    // Try to get the current dep-file rule key.
+    Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
+        calculateDepFileRuleKey(
+            rule,
+            context,
+            onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
+            /* allowMissingInputs */ true);
+    if (depFileRuleKeyAndInputs.isPresent()) {
+      RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
+      buildInfoRecorder.addBuildMetadata(
+          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
+
+      // Check the input-based rule key says we're already built.
+      Optional<RuleKey> lastDepFileRuleKey =
+          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+      if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
+        return Optional.of(
+            BuildResult.success(
+                rule,
+                BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
+                CacheResult.localKeyUnchangedHit()));
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<BuildResult> checkInputBasedCaches(
+      BuildRule rule,
+      BuildEngineBuildContext context,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder)
+      throws IOException {
+    // Calculate input-based rule key.
+    Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey(rule, context.getEventBus());
+    if (inputRuleKey.isPresent()) {
+
+      // Perform the cache fetch.
+      try (BuckEvent.Scope scope =
+          BuildRuleCacheEvent.startCacheCheckScope(
+              context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
+        // Input-based rule keys.
+        return performInputBasedCacheFetch(
+            rule, context, onDiskBuildInfo, buildInfoRecorder, inputRuleKey.get());
+      }
     }
     return Optional.empty();
   }
@@ -448,14 +474,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       return Futures.immediateFuture(BuildResult.canceled(rule, firstFailure));
     }
 
+    // 1. Check if it's already built.
     try (BuildRuleEvent.Scope scope =
         BuildRuleEvent.resumeSuspendScope(
             buildContext.getEventBus(),
             rule,
             buildRuleDurationTracker,
             ruleKeyFactories.getDefaultRuleKeyFactory())) {
-
-      // 1. Check if it's already built.
       Optional<BuildResult> buildResult = checkMatchingLocalKey(rule, onDiskBuildInfo);
       if (buildResult.isPresent()) {
         return Futures.immediateFuture(buildResult.get());
