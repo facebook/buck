@@ -54,7 +54,7 @@ class StubJarClassEntry extends StubJarEntry {
     }
     input.visitClass(path, firstLevelFiltering);
 
-    if (!isAnonymousOrLocalClass(stub)) {
+    if (!isAnonymousOrLocalOrSyntheticClass(stub)) {
       return new StubJarClassEntry(path, stub, referenceTracker.getReferencedClassNames());
     }
 
@@ -82,7 +82,11 @@ class StubJarClassEntry extends StubJarEntry {
     return new ByteArrayInputStream(writer.toByteArray());
   }
 
-  private static boolean isAnonymousOrLocalClass(ClassNode node) {
+  private static boolean isAnonymousOrLocalOrSyntheticClass(ClassNode node) {
+    if ((node.access & Opcodes.ACC_SYNTHETIC) == Opcodes.ACC_SYNTHETIC) {
+      return true;
+    }
+
     InnerClassNode innerClass = getInnerClassMetadata(node);
     if (innerClass == null) {
       return false;
