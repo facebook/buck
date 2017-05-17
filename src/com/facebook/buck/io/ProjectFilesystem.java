@@ -967,7 +967,8 @@ public class ProjectFilesystem {
   @Override
   public String toString() {
     return String.format(
-        "%s (projectRoot=%s, blackListedPaths=%s", super.toString(), projectRoot, blackListedPaths);
+        "%s (projectRoot=%s, hash(blackListedPaths)=%s)",
+        super.toString(), projectRoot, blackListedPaths.hashCode());
   }
 
   @Override
