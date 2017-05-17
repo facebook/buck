@@ -77,6 +77,7 @@ import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.BufferedInputStream;
@@ -95,6 +96,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -322,22 +324,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
-      final RuleKeyFactories ruleKeyFactory,
       final BuildableContext buildableContext,
       final CacheResult cacheResult)
       throws StepFailedException, InterruptedException {
-    if (!buildContext.isKeepGoing() && firstFailure != null) {
-      return BuildResult.canceled(rule, firstFailure);
-    }
-    try (BuildRuleEvent.Scope scope =
-        BuildRuleEvent.resumeSuspendScope(
-            buildContext.getEventBus(),
-            rule,
-            buildRuleDurationTracker,
-            ruleKeyFactory.getDefaultRuleKeyFactory())) {
-      executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
-      return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
-    }
+    executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
+    return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -364,13 +355,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final OnDiskBuildInfo onDiskBuildInfo,
       final BuildInfoRecorder buildInfoRecorder)
       throws IOException {
-    // If we've already seen a failure, exit early.
-    if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE
-        && !context.isKeepGoing()
-        && firstFailure != null) {
-      return Optional.of(BuildResult.canceled(rule, firstFailure));
-    }
-
     // Handle input-based rule keys.
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
       // Calculate input-based rule key.
@@ -476,75 +460,68 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       if (buildResult.isPresent()) {
         return Futures.immediateFuture(buildResult.get());
       }
+    }
 
-      // 2. Rule key cache lookup.
-      AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
-      ListenableFuture<Optional<BuildResult>> buildResultFuture =
-          cacheActivityService.submit(
-              () -> {
-                CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
-                rulekeyCacheResult.set(cacheResult);
-                return getBuildResultForRuleKeyCacheResult(rule, cacheResult, buildInfoRecorder);
-              },
-              CACHE_CHECK_RESOURCE_AMOUNTS);
+    // 2. Rule key cache lookup.
+    AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
+    ListenableFuture<Optional<BuildResult>> buildResultFuture =
+        Futures.immediateFuture(Optional.empty());
 
-      // 3. Build deps.
-      buildResultFuture =
-          Futures.transformAsync(
-              buildResultFuture,
-              result -> {
-                if (result.isPresent()) {
-                  return Futures.immediateFuture(result);
-                }
-                return Futures.transformAsync(
+    // 2. Rule key cache lookup.
+    buildResultFuture =
+        transformBuildResultIfNotPresent(
+            rule,
+            buildContext,
+            buildResultFuture,
+            () -> {
+              CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
+              rulekeyCacheResult.set(cacheResult);
+              return getBuildResultForRuleKeyCacheResult(rule, cacheResult, buildInfoRecorder);
+            },
+            cacheActivityService.withDefaultAmounts(CACHE_CHECK_RESOURCE_AMOUNTS));
+
+    // 3. Build deps.
+    buildResultFuture =
+        transformBuildResultAsyncIfNotPresent(
+            rule,
+            buildContext,
+            buildResultFuture,
+            () ->
+                Futures.transformAsync(
                     getDepResults(rule, buildContext, executionContext, asyncCallbacks),
                     (depResults) -> handleDepsResults(rule, depResults),
-                    MoreExecutors.directExecutor());
-              },
-              serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+                    serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
 
-      // 4. Return to the current rule and check caches to see if we can avoid building
-      // locally.
-      buildResultFuture =
-          Futures.transformAsync(
-              buildResultFuture,
-              ruleAsyncFunction(
-                  rule,
-                  buildContext.getEventBus(),
-                  (result) -> {
-                    if (result.isPresent()) {
-                      return Futures.immediateFuture(result);
-                    }
-                    return Futures.immediateFuture(
-                        checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder));
-                  }),
-              serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
+    // 4. Return to the current rule and check caches to see if we can avoid building
+    // locally.
+    buildResultFuture =
+        transformBuildResultIfNotPresent(
+            rule,
+            buildContext,
+            buildResultFuture,
+            () -> checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
+            serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
 
-      // 5. Build the current rule locally, if we have to.
-      return Futures.transformAsync(
-          buildResultFuture,
-          (result) -> {
-            // If we already got a result checking the caches, then we don't
-            // build locally.
-            if (result.isPresent()) {
-              return Futures.immediateFuture(result.get());
-            }
-
-            // Otherwise, build the rule.  We re-submit via the service so that we schedule
-            // it with the custom weight assigned to this rule's steps.
-            return service.<BuildResult>submit(
-                () ->
+    // 5. Build the current rule locally, if we have to.
+    buildResultFuture =
+        transformBuildResultIfNotPresent(
+            rule,
+            buildContext,
+            buildResultFuture,
+            () ->
+                Optional.of(
                     buildLocally(
                         rule,
                         buildContext,
                         executionContext,
-                        ruleKeyFactories,
                         buildableContext,
-                        Preconditions.checkNotNull(rulekeyCacheResult.get())),
-                getRuleResourceAmounts(rule));
-          },
-          serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
-    }
+                        Preconditions.checkNotNull(rulekeyCacheResult.get()))),
+            // This needs to adjust the default amounts even in the non-resource-aware scheduling
+            // case so that RuleScheduleInfo works correctly.
+            service.withDefaultAmounts(getRuleResourceAmounts(rule)));
+
+    // Unwrap the result.
+    return Futures.transform(buildResultFuture, Optional::get);
   }
 
   private Optional<BuildResult> checkMatchingLocalKey(
@@ -1929,5 +1906,61 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         return delegate.apply(input);
       }
     };
+  }
+
+  private boolean shouldKeepGoing(BuildEngineBuildContext buildContext) {
+    return firstFailure == null
+        || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE
+        || buildContext.isKeepGoing();
+  }
+
+  private ListenableFuture<Optional<BuildResult>> transformBuildResultIfNotPresent(
+      BuildRule rule,
+      BuildEngineBuildContext context,
+      ListenableFuture<Optional<BuildResult>> future,
+      Callable<Optional<BuildResult>> function,
+      ListeningExecutorService executor) {
+    return transformBuildResultAsyncIfNotPresent(
+        rule,
+        context,
+        future,
+        () ->
+            executor.submit(
+                () -> {
+                  if (!shouldKeepGoing(context)) {
+                    Preconditions.checkNotNull(firstFailure);
+                    return Optional.of(BuildResult.canceled(rule, firstFailure));
+                  }
+                  try (BuildRuleEvent.Scope scope =
+                      BuildRuleEvent.resumeSuspendScope(
+                          context.getEventBus(),
+                          rule,
+                          buildRuleDurationTracker,
+                          ruleKeyFactories.getDefaultRuleKeyFactory())) {
+                    return function.call();
+                  }
+                }));
+  }
+
+  private ListenableFuture<Optional<BuildResult>> transformBuildResultAsyncIfNotPresent(
+      BuildRule rule,
+      BuildEngineBuildContext context,
+      ListenableFuture<Optional<BuildResult>> future,
+      Callable<ListenableFuture<Optional<BuildResult>>> function) {
+    // Immediately (i.e. without posting a task), returns the current result if it's already present
+    // or a cancelled result if we've already seen a failure.
+    return Futures.transformAsync(
+        future,
+        (result) -> {
+          if (result.isPresent()) {
+            return Futures.immediateFuture(result);
+          }
+          if (!shouldKeepGoing(context)) {
+            Preconditions.checkNotNull(firstFailure);
+            return Futures.immediateFuture(Optional.of(BuildResult.canceled(rule, firstFailure)));
+          }
+          return function.call();
+        },
+        MoreExecutors.directExecutor());
   }
 }
