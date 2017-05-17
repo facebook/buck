@@ -1305,9 +1305,12 @@ public final class Main {
       ) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
-            .add(new JavaUtilsLoggingBuildListener())
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
+
+    if (buckConfig.getBooleanValue("log", "jul_build_log", false)) {
+      eventListenersBuilder.add(new JavaUtilsLoggingBuildListener());
+    }
 
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
     if (chromeTraceConfig.isChromeTraceCreationEnabled()) {

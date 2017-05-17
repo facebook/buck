@@ -226,6 +226,10 @@ public class ProjectWorkspace {
     if (!Files.exists(getPath(".buckconfig.local"))) {
       manageLocalConfigs = true;
 
+      // Enable the JUL build log.  This log is very verbose but rarely useful,
+      // so it's disabled by default.
+      addBuckConfigLocalOption("log", "jul_build_log", "true");
+
       // Disable the directory cache by default.  Tests that want to enable it can call
       // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
       // exist, however (we assume the test knows what it is doing at that point).
