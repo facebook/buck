@@ -349,47 +349,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Preconditions.checkNotNull(cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
   }
 
-  private Optional<BuildResult> checkCaches(
-      final BuildRule rule,
-      final BuildEngineBuildContext context,
-      final OnDiskBuildInfo onDiskBuildInfo,
-      final BuildInfoRecorder buildInfoRecorder)
-      throws IOException {
-    // Handle input-based rule keys.
-    Optional<BuildResult> buildResult = Optional.empty();
-    if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      buildResult = checkInputBasedCaches(rule, context, onDiskBuildInfo, buildInfoRecorder);
-    }
-
-    if (buildResult.isPresent()) return buildResult;
-
-    // Dep-file rule keys.
-    if (useDependencyFileRuleKey(rule)) {
-      buildResult = checkMatchingDepfile(rule, context, onDiskBuildInfo, buildInfoRecorder);
-    }
-
-    if (buildResult.isPresent()) return buildResult;
-
-    // Manifest caching
-    if (useManifestCaching(rule)) {
-      buildResult = checkManifestBasedCaches(rule, context, buildInfoRecorder);
-    }
-
-    if (buildResult.isPresent()) return buildResult;
-
-    // Cache lookups failed, so if we're just trying to populate, we've failed.
-    if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
-      LOG.info("Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
-      buildResult =
-          Optional.of(
-              BuildResult.canceled(
-                  rule,
-                  new HumanReadableException(
-                      "Skipping %s: in cache population mode local builds are disabled", rule)));
-    }
-    return buildResult;
-  }
-
   private Optional<BuildResult> checkManifestBasedCaches(
       BuildRule rule, BuildEngineBuildContext context, BuildInfoRecorder buildInfoRecorder)
       throws IOException {
@@ -487,7 +446,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       }
     }
 
-    // 2. Rule key cache lookup.
     AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
     ListenableFuture<Optional<BuildResult>> buildResultFuture =
         Futures.immediateFuture(Optional.empty());
@@ -518,16 +476,60 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
 
     // 4. Return to the current rule and check caches to see if we can avoid building
-    // locally.
-    buildResultFuture =
-        transformBuildResultIfNotPresent(
-            rule,
-            buildContext,
-            buildResultFuture,
-            () -> checkCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
-            serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
+    // locally. Start with input-based.
+    if (SupportsInputBasedRuleKey.isSupported(rule)) {
+      buildResultFuture =
+          transformBuildResultIfNotPresent(
+              rule,
+              buildContext,
+              buildResultFuture,
+              () -> checkInputBasedCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
+              cacheActivityService.withDefaultAmounts(CACHE_CHECK_RESOURCE_AMOUNTS));
+    }
 
-    // 5. Build the current rule locally, if we have to.
+    // 5. Then check if the depfile matches.
+    if (useDependencyFileRuleKey(rule)) {
+      buildResultFuture =
+          transformBuildResultIfNotPresent(
+              rule,
+              buildContext,
+              buildResultFuture,
+              () -> checkMatchingDepfile(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
+              serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
+    }
+
+    // 6. Check for a manifest-based cache hit.
+    if (useManifestCaching(rule)) {
+      buildResultFuture =
+          transformBuildResultIfNotPresent(
+              rule,
+              buildContext,
+              buildResultFuture,
+              () -> checkManifestBasedCaches(rule, buildContext, buildInfoRecorder),
+              serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
+    }
+
+    // 7. Fail if populating the cache and cache lookups failed.
+    if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+      buildResultFuture =
+          transformBuildResultIfNotPresent(
+              rule,
+              buildContext,
+              buildResultFuture,
+              () -> {
+                LOG.info(
+                    "Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
+                return Optional.of(
+                    BuildResult.canceled(
+                        rule,
+                        new HumanReadableException(
+                            "Skipping %s: in cache population mode local builds are disabled",
+                            rule)));
+              },
+              MoreExecutors.newDirectExecutorService());
+    }
+
+    // 8. Build the current rule locally, if we have to.
     buildResultFuture =
         transformBuildResultIfNotPresent(
             rule,
