@@ -367,29 +367,20 @@ public class IjProjectCommandHelper {
     boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
 
+    if (needsFullRecursiveParse) {
+      return TargetGraphAndTargets.create(
+          graphRoots, projectGraph, isWithTests, explicitTestTargets);
+    }
+
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
-      if (!needsFullRecursiveParse) {
-        projectGraph =
-            parser.buildTargetGraph(
-                buckEventBus,
-                cell,
-                enableParserProfiling,
-                executor,
-                Sets.union(graphRoots, explicitTestTargets));
-      } else {
-        projectGraph =
-            parser.buildTargetGraph(
-                buckEventBus,
-                cell,
-                enableParserProfiling,
-                executor,
-                projectGraph
-                    .getNodes()
-                    .stream()
-                    .map(TargetNode::getBuildTarget)
-                    .collect(MoreCollectors.toImmutableSet()));
-      }
+      projectGraph =
+          parser.buildTargetGraph(
+              buckEventBus,
+              cell,
+              enableParserProfiling,
+              executor,
+              Sets.union(graphRoots, explicitTestTargets));
     }
 
     return TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
