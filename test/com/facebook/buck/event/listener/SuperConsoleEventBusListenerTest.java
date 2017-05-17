@@ -910,10 +910,10 @@ public class SuperConsoleEventBusListenerTest {
     slave2.setRulesStartedCount(0);
     slave2.setRulesFinishedCount(20);
     slave2.setRulesSuccessCount(19);
-    slave2.setHttpArtifactUploadScheduledCount(3);
-    slave2.setHttpArtifactUploadStartedCount(1);
-    slave2.setHttpArtifactUploadSuccessCount(1);
-    slave2.setHttpArtifactUploadFailureCount(1);
+    slave2.setHttpArtifactUploadsScheduledCount(3);
+    slave2.setHttpArtifactUploadsOngoingCount(1);
+    slave2.setHttpArtifactUploadsSuccessCount(1);
+    slave2.setHttpArtifactUploadsFailureCount(1);
     cacheRateStatsForSlave2.setUpdatedRulesCount(20);
     cacheRateStatsForSlave2.setCacheHitsCount(19);
     cacheRateStatsForSlave2.setCacheMissesCount(0);

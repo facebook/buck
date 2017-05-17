@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.distributed.BuildSlaveFinishedEvent;
+import com.facebook.buck.distributed.BuildSlaveFinishedStatus;
+import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
@@ -39,12 +39,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -77,11 +75,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   protected final AtomicInteger buildRulesSuccessCount = new AtomicInteger(0);
   protected final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
 
-  protected final AtomicLong httpArtifactTotalBytesUploaded = new AtomicLong(0);
-  protected final AtomicInteger httpArtifactUploadScheduledCount = new AtomicInteger(0);
-  protected final AtomicInteger httpArtifactUploadStartedCount = new AtomicInteger(0);
-  protected final AtomicInteger httpArtifactUploadSuccessCount = new AtomicInteger(0);
-  protected final AtomicInteger httpArtifactUploadFailureCount = new AtomicInteger(0);
+  protected final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
   private volatile @Nullable DistBuildService distBuildService;
 
@@ -131,13 +125,32 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     status.setRulesFailureCount(buildRulesFailureCount.get());
 
     status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
-    status.setHttpArtifactTotalBytesUploaded(httpArtifactTotalBytesUploaded.get());
-    status.setHttpArtifactUploadScheduledCount(httpArtifactUploadScheduledCount.get());
-    status.setHttpArtifactUploadStartedCount(httpArtifactUploadStartedCount.get());
-    status.setHttpArtifactUploadSuccessCount(httpArtifactUploadSuccessCount.get());
-    status.setHttpArtifactUploadFailureCount(httpArtifactUploadFailureCount.get());
+    status.setHttpArtifactTotalBytesUploaded(
+        httpCacheUploadStats.getHttpArtifactTotalBytesUploaded());
+    status.setHttpArtifactUploadsScheduledCount(
+        httpCacheUploadStats.getHttpArtifactTotalUploadsScheduledCount());
+    status.setHttpArtifactUploadsOngoingCount(
+        httpCacheUploadStats.getHttpArtifactUploadsOngoingCount());
+    status.setHttpArtifactUploadsSuccessCount(
+        httpCacheUploadStats.getHttpArtifactUploadsSuccessCount());
+    status.setHttpArtifactUploadsFailureCount(
+        httpCacheUploadStats.getHttpArtifactUploadsFailureCount());
 
     return status;
+  }
+
+  private BuildSlaveFinishedStatus createBuildSlaveFinishedStatus(int exitCode) {
+    return BuildSlaveFinishedStatus.builder()
+        .setStampedeId(stampedeId)
+        .setRunId(runId)
+        .setTotalRulesCount(ruleCount)
+        .setRulesStartedCount(buildRulesStartedCount.get())
+        .setRulesFinishedCount(buildRulesFinishedCount.get())
+        .setRulesSuccessCount(buildRulesSuccessCount.get())
+        .setRulesFailureCount(buildRulesFailureCount.get())
+        .setCacheRateStats(cacheRateStatsKeeper.getSerializableStats())
+        .setExitCode(exitCode)
+        .build();
   }
 
   private void sendStatusToFrontend() {
@@ -180,7 +193,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   }
 
   public void publishBuildSlaveFinishedEvent(BuckEventBus eventBus, int exitCode) {
-    eventBus.post(new BuildSlaveFinishedEvent(createBuildSlaveStatus(), exitCode));
+    eventBus.post(new BuildSlaveFinishedStatusEvent(createBuildSlaveFinishedStatus(exitCode)));
   }
 
   @Subscribe
@@ -245,37 +258,16 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   @Subscribe
   public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
-    if (event.getOperation() != ArtifactCacheEvent.Operation.STORE) {
-      return;
-    }
-
-    httpArtifactUploadScheduledCount.incrementAndGet();
+    httpCacheUploadStats.processHttpArtifactCacheScheduledEvent(event);
   }
 
   @Subscribe
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
-    if (event.getOperation() != ArtifactCacheEvent.Operation.STORE) {
-      return;
-    }
-
-    httpArtifactUploadStartedCount.incrementAndGet();
+    httpCacheUploadStats.processHttpArtifactCacheStartedEvent(event);
   }
 
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
-    if (event.getOperation() != ArtifactCacheEvent.Operation.STORE) {
-      return;
-    }
-
-    httpArtifactUploadStartedCount.decrementAndGet();
-    if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
-      httpArtifactUploadSuccessCount.incrementAndGet();
-      Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
-      if (artifactSizeBytes.isPresent()) {
-        httpArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
-      }
-    } else {
-      httpArtifactUploadFailureCount.incrementAndGet();
-    }
+    httpCacheUploadStats.processHttpArtifactCacheFinishedEvent(event);
   }
 }

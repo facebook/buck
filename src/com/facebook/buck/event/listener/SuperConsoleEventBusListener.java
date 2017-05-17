@@ -458,7 +458,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             new ImmutableList.Builder<>();
 
         for (BuildSlaveStatus slaveStatus : distBuildStatus.get().getSlaveStatuses()) {
-          totalUploadErrorsCount += slaveStatus.getHttpArtifactUploadFailureCount();
+          totalUploadErrorsCount += slaveStatus.getHttpArtifactUploadsFailureCount();
 
           if (slaveStatus.isSetCacheRateStats()) {
             slaveCacheStats.add(

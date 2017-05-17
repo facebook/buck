@@ -94,16 +94,16 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
         }
       }
 
-      if (status.getHttpArtifactUploadScheduledCount() > 0) {
+      if (status.getHttpArtifactUploadsScheduledCount() > 0) {
         columns.add(
             String.format(
                 "%d/%d UPLOADED",
-                status.getHttpArtifactUploadSuccessCount(),
-                status.getHttpArtifactUploadScheduledCount()));
+                status.getHttpArtifactUploadsSuccessCount(),
+                status.getHttpArtifactUploadsScheduledCount()));
 
-        if (status.getHttpArtifactUploadFailureCount() > 0) {
+        if (status.getHttpArtifactUploadsFailureCount() > 0) {
           columns.add(
-              String.format("%d UPLOAD ERRORS", status.getHttpArtifactUploadFailureCount()));
+              String.format("%d UPLOAD ERRORS", status.getHttpArtifactUploadsFailureCount()));
         }
       }
 

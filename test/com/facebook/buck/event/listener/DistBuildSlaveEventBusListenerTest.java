@@ -111,10 +111,10 @@ public class DistBuildSlaveEventBusListenerTest {
     status.setRulesFailureCount(0);
 
     status.setHttpArtifactTotalBytesUploaded(0);
-    status.setHttpArtifactUploadScheduledCount(0);
-    status.setHttpArtifactUploadStartedCount(0);
-    status.setHttpArtifactUploadSuccessCount(0);
-    status.setHttpArtifactUploadFailureCount(0);
+    status.setHttpArtifactUploadsScheduledCount(0);
+    status.setHttpArtifactUploadsOngoingCount(0);
+    status.setHttpArtifactUploadsSuccessCount(0);
+    status.setHttpArtifactUploadsFailureCount(0);
 
     CacheRateStats cacheRateStats = new CacheRateStats();
     status.setCacheRateStats(cacheRateStats);
@@ -342,10 +342,10 @@ public class DistBuildSlaveEventBusListenerTest {
     final long kSizeBytesMultiplier = 1234567890000L;
     BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
     expectedStatus.setHttpArtifactTotalBytesUploaded((1 + 2) * kSizeBytesMultiplier);
-    expectedStatus.setHttpArtifactUploadScheduledCount(6);
-    expectedStatus.setHttpArtifactUploadStartedCount(2);
-    expectedStatus.setHttpArtifactUploadSuccessCount(3);
-    expectedStatus.setHttpArtifactUploadFailureCount(1);
+    expectedStatus.setHttpArtifactUploadsScheduledCount(6);
+    expectedStatus.setHttpArtifactUploadsOngoingCount(2);
+    expectedStatus.setHttpArtifactUploadsSuccessCount(3);
+    expectedStatus.setHttpArtifactUploadsFailureCount(1);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();

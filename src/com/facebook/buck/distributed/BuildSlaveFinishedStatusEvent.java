@@ -15,22 +15,15 @@
  */
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 
-public class BuildSlaveFinishedEvent extends AbstractBuckEvent {
-  private final BuildSlaveStatus status;
-  private final int exitCode;
+public class BuildSlaveFinishedStatusEvent extends AbstractBuckEvent {
+  private final BuildSlaveFinishedStatus buildSlaveFinishedStatus;
 
-  public BuildSlaveFinishedEvent(BuildSlaveStatus status, int exitCode) {
+  public BuildSlaveFinishedStatusEvent(BuildSlaveFinishedStatus buildSlaveFinishedStatus) {
     super(EventKey.unique());
-    this.status = status;
-    this.exitCode = exitCode;
-  }
-
-  public BuildSlaveStatus getBuildSlaveStatus() {
-    return status;
+    this.buildSlaveFinishedStatus = buildSlaveFinishedStatus;
   }
 
   @Override
@@ -43,7 +36,7 @@ public class BuildSlaveFinishedEvent extends AbstractBuckEvent {
     return this.getClass().getName();
   }
 
-  public int getExitCode() {
-    return exitCode;
+  public BuildSlaveFinishedStatus getBuildSlaveFinishedStatus() {
+    return buildSlaveFinishedStatus;
   }
 }
