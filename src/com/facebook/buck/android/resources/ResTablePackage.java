@@ -131,13 +131,15 @@ public class ResTablePackage extends ResChunk {
     StringPool types = StringPool.get(slice(buf, typeStringOffset));
     StringPool keys = StringPool.get(slice(buf, keyStringOffset));
 
-    Preconditions.checkState(lastPublicType == types.getStringCount());
-    Preconditions.checkState(lastPublicKey == keys.getStringCount());
+    // TODO(cjhopman): aapt1 generates a lastPublicType/lastPublicKey at the end of types/keys. aapt2
+    // generates them as 0. Does this value matter?
+    Preconditions.checkState(lastPublicType == types.getStringCount() || lastPublicType == 0);
+    Preconditions.checkState(lastPublicKey == keys.getStringCount() || lastPublicKey == 0);
     Preconditions.checkState(keyStringOffset == HEADER_SIZE + types.getChunkSize());
 
     ImmutableList.Builder<ResTableTypeSpec> typeSpecs = ImmutableList.builder();
     buf.position(keyStringOffset + keys.getChunkSize());
-    for (int i = 0; i < types.getStringCount(); i++) {
+    while (buf.position() < chunkSize) {
       ByteBuffer specBuf = slice(buf, buf.position());
       ResTableTypeSpec spec = ResTableTypeSpec.get(specBuf);
       typeSpecs.add(spec);
