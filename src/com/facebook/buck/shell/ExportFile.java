@@ -97,7 +97,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final ExportFileDescription.Mode mode;
   @AddToRuleKey private final SourcePath src;
 
-  ExportFile(
+  public ExportFile(
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,

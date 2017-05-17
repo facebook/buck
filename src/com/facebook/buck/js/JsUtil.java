@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
@@ -104,9 +105,14 @@ public class JsUtil {
 
   static BuildRuleParams withWorkerDependencyOnly(
       BuildRuleParams params, BuildRuleResolver resolver, BuildTarget worker) {
+    BuildRule workerRule = resolver.getRule(worker);
+    return copyParamsWithDependencies(params, workerRule);
+  }
+
+  static BuildRuleParams copyParamsWithDependencies(BuildRuleParams params, BuildRule... rules) {
     return params.copyReplacingDeclaredAndExtraDeps(
         Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.of(resolver.getRule(worker))));
+        Suppliers.ofInstance(ImmutableSortedSet.copyOf(rules)));
   }
 
   static SourcePath relativeToOutputRoot(

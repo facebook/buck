@@ -38,9 +38,12 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.shell.ExportFile;
+import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -61,7 +64,10 @@ public class JsBundleDescription
 
   private static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(
-          JsFlavors.PLATFORM_DOMAIN, JsFlavors.OPTIMIZATION_DOMAIN, JsFlavors.RAM_BUNDLE_DOMAIN);
+          JsFlavors.PLATFORM_DOMAIN,
+          JsFlavors.OPTIMIZATION_DOMAIN,
+          JsFlavors.RAM_BUNDLE_DOMAIN,
+          JsFlavors.SOURCE_MAP_DOMAIN);
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
@@ -88,6 +94,23 @@ public class JsBundleDescription
       throws NoSuchBuildTargetException {
 
     final ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+
+    // Source maps are exposed individually using a special flavor
+    if (flavors.contains(JsFlavors.SOURCE_MAP)) {
+      BuildTarget bundleTarget = params.getBuildTarget().withoutFlavors(JsFlavors.SOURCE_MAP);
+      resolver.requireRule(bundleTarget);
+      JsBundleOutputs bundleOutputs = resolver.getRuleWithType(bundleTarget, JsBundleOutputs.class);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
+      return new ExportFile(
+          JsUtil.copyParamsWithDependencies(params),
+          ruleFinder,
+          new SourcePathResolver(ruleFinder),
+          bundleOutputs.getBundleName() + ".map",
+          ExportFileDescription.Mode.REFERENCE,
+          bundleOutputs.getSourcePathToSourceMap());
+    }
+
     // For Android, we bundle JS output as assets, and images etc. as resources.
     // To facilitate this, we return a build rule that in turn depends on a `JsBundle` and
     // an `AndroidResource`. The `AndroidResource` rule also depends on the `JsBundle`

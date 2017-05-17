@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
@@ -119,6 +120,18 @@ public class JsBundleDescriptionTest {
     final Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};
     BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
     assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
+  }
+
+  @Test
+  public void testSourceMapExport() throws NoSuchBuildTargetException {
+    BuildRule map =
+        scenario.resolver.requireRule(
+            bundleTarget.withFlavors(JsFlavors.IOS, JsFlavors.SOURCE_MAP));
+    JsBundleOutputs bundle =
+        scenario.resolver.getRuleWithType(
+            bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
+
+    assertEquals(map.getSourcePathToOutput(), bundle.getSourcePathToSourceMap());
   }
 
   @Test
