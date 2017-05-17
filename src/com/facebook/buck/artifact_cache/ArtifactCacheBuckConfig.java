@@ -194,7 +194,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return ImmutableList.of("dir");
   }
 
-  ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
+  public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
     return getArtifactCacheModesRaw()
         .stream()
         .map(

@@ -17,7 +17,22 @@
 package com.facebook.buck.artifact_cache;
 
 public enum ArtifactCacheMode {
-  dir,
-  http,
-  thrift_over_http,
+  dir(CacheType.local),
+  http(CacheType.remote),
+  thrift_over_http(CacheType.remote);
+
+  private final CacheType mode;
+
+  ArtifactCacheMode(CacheType mode) {
+    this.mode = mode;
+  }
+
+  public String getCacheType() {
+    return mode.name();
+  }
+
+  public enum CacheType {
+    local,
+    remote,
+  }
 }

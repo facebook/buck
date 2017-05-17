@@ -410,11 +410,10 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             "Unknown HttpLoadBalancer type: " + config.getLoadBalancingType());
     }
 
-    String cacheName = "http";
     return factory.newInstance(
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
-            .setCacheName(cacheName)
+            .setCacheName(cacheMode.name())
             .setCacheMode(cacheMode)
             .setRepository(config.getRepository())
             .setScheduleType(config.getScheduleType())
