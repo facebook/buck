@@ -32,3 +32,17 @@ java_library(
     ':c',
   ],
 )
+
+java_library(
+  name = 'f',
+  deps = [
+    '//cycles/dir:g',
+  ],
+)
+
+java_library(
+  name = 'h',
+  deps = [
+    '//cycles/dir:i',
+  ],
+)

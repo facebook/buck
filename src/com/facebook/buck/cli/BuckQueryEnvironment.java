@@ -19,7 +19,9 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
+import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -45,7 +47,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -59,9 +60,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -295,24 +294,24 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       Set<QueryTarget> targets, int maxDepth, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
-    Set<BuildTarget> newBuildTargets = new HashSet<>();
-    for (QueryTarget target : targets) {
-      if (target instanceof QueryBuildTarget) {
-        BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
-        if (!targetsToNodes.containsKey(buildTarget)) {
-          newBuildTargets.add(buildTarget);
-        }
-      }
-    }
+    ImmutableSet<BuildTarget> newBuildTargets =
+        targets
+            .stream()
+            .filter(target -> target instanceof QueryBuildTarget)
+            .map(target -> ((QueryBuildTarget) target).getBuildTarget())
+            .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))
+            .collect(MoreCollectors.toImmutableSet());
 
-    ConcurrentHashMap<BuildTarget, ListenableFuture<TargetNode<?, ?>>> jobsCache =
-        new ConcurrentHashMap<>();
+    // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
+    // two.
+
+    ConcurrentHashMap<BuildTarget, ListenableFuture<Void>> jobsCache = new ConcurrentHashMap<>();
 
     try {
-      List<ListenableFuture<TargetNode<?, ?>>> depsFuture = new ArrayList<>();
+      List<ListenableFuture<Void>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : newBuildTargets) {
-        depsFuture.add(
-            buildTransitiveClosureRecursiveWorker(buildTarget, ImmutableSet.of(), jobsCache));
+        discoverNewTargetsConcurrently(buildTarget, jobsCache)
+            .ifPresent(dep -> depsFuture.add(dep));
       }
       Futures.allAsList(depsFuture).get();
     } catch (ExecutionException e) {
@@ -326,58 +325,102 @@ public class BuckQueryEnvironment implements QueryEnvironment {
           e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
 
-    if (!newBuildTargets.isEmpty()) {
-      for (BuildTarget buildTarget : targetsToNodes.keySet()) {
-        if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
-          buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
+    GraphTraversable<BuildTarget> traversable =
+        target -> {
+          TargetNode<?, ?> node =
+              Preconditions.checkNotNull(
+                  targetsToNodes.get(target),
+                  "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
+                  target);
+
+          // If a node has been added to the graph it means it and all of its children have been
+          // visited by an acyclic traversal and added to the graph. From this it follows that there
+          // are no outgoing edges from the graph (as it had been "fully" explored before) back out
+          // to the set of nodes we're currently exploring. Based on that:
+          //  - we can't have a cycle involving the "old" nodes,
+          //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
+          // making this node safe to skip.
+          if (graph.getNodes().contains(node)) {
+            return ImmutableSet.<BuildTarget>of().iterator();
+          }
+          return node.getParseDeps().iterator();
+        };
+
+    AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
+        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+    try {
+      for (BuildTarget buildTarget : targetNodeTraversal.traverse(newBuildTargets)) {
+        TargetNode<?, ?> node =
+            Preconditions.checkNotNull(
+                targetsToNodes.get(buildTarget), "Couldn't find TargetNode for %s", buildTarget);
+        graph.addNode(node);
+        for (BuildTarget dep : node.getParseDeps()) {
+          graph.addEdge(
+              node,
+              Preconditions.checkNotNull(
+                  targetsToNodes.get(dep), "Couldn't find TargetNode for %s", dep));
         }
+      }
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new QueryException(e, e.getMessage());
+    }
+
+    for (BuildTarget buildTarget : jobsCache.keySet()) {
+      if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
+        buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
       }
     }
   }
 
-  private ListenableFuture<TargetNode<?, ?>> buildTransitiveClosureRecursiveWorker(
-      BuildTarget buildTarget,
-      Set<BuildTarget> parents,
-      ConcurrentHashMap<BuildTarget, ListenableFuture<TargetNode<?, ?>>> jobsCache)
+  private Optional<ListenableFuture<Void>> discoverNewTargetsConcurrently(
+      BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Void>> jobsCache)
       throws InterruptedException, QueryException, BuildFileParseException, BuildTargetException {
-    if (parents.contains(buildTarget)) {
-      // Note: if we ever make this method not parse the full transitive closure of dependencies
-      // (say, when we finally get around to respecting the 'maxDepth' argument) this check will
-      // probably become insufficient to detect all cycles.
-      throw createCycleHumanReadableException(buildTarget, parents);
-    }
-    ListenableFuture<TargetNode<?, ?>> job = jobsCache.get(buildTarget);
+    ListenableFuture<Void> job = jobsCache.get(buildTarget);
     if (job != null) {
-      return job;
+      return Optional.empty();
     }
-    SettableFuture<TargetNode<?, ?>> newJob = SettableFuture.create();
+    SettableFuture<Void> newJob = SettableFuture.create();
     if (jobsCache.putIfAbsent(buildTarget, newJob) != null) {
-      return Preconditions.checkNotNull(jobsCache.get(buildTarget));
+      return Optional.empty();
     }
 
-    final ImmutableSet<BuildTarget> parentsAndMe =
-        ImmutableSet.<BuildTarget>builder().addAll(parents).add(buildTarget).build();
-    ListenableFuture<TargetNode<?, ?>> future =
+    ListenableFuture<Void> future =
         Futures.transformAsync(
             parserState.getTargetNodeJob(buildTarget),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
-              List<ListenableFuture<TargetNode<?, ?>>> depsFuture = new ArrayList<>();
+              List<ListenableFuture<Void>> depsFuture = new ArrayList<>();
               final Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
-                depsFuture.add(
-                    Futures.transform(
-                        buildTransitiveClosureRecursiveWorker(parseDep, parentsAndMe, jobsCache),
-                        depNode -> {
-                          graph.addEdge(targetNode, depNode);
-                          return depNode;
-                        }));
+                discoverNewTargetsConcurrently(parseDep, jobsCache)
+                    .ifPresent(
+                        depWork ->
+                            depsFuture.add(
+                                attachParentNodeToErrorMessage(buildTarget, parseDep, depWork)));
               }
-              return Futures.transform(
-                  Futures.allAsList(depsFuture), Functions.constant(targetNode));
+              return Futures.transform(Futures.allAsList(depsFuture), Functions.constant(null));
             });
     newJob.setFuture(future);
-    return newJob;
+    return Optional.of(newJob);
+  }
+
+  private static ListenableFuture<Void> attachParentNodeToErrorMessage(
+      BuildTarget buildTarget, BuildTarget parseDep, ListenableFuture<Void> depWork) {
+    return Futures.catchingAsync(
+        depWork,
+        Exception.class,
+        exceptionInput -> {
+          if (exceptionInput instanceof BuildTargetException
+              || exceptionInput instanceof BuildFileParseException) {
+            throw new HumanReadableException(
+                exceptionInput,
+                "Couldn't get dependency '%s' of target '%s':\n%s",
+                parseDep,
+                buildTarget,
+                exceptionInput.getMessage());
+          }
+          throw exceptionInput;
+        });
   }
 
   @Override
@@ -450,29 +493,5 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public Iterable<QueryFunction> getFunctions() {
     return DEFAULT_QUERY_FUNCTIONS;
-  }
-
-  private static HumanReadableException createCycleHumanReadableException(
-      BuildTarget cycleInducingTarget, Set<BuildTarget> parents) {
-
-    Deque<BuildTarget> cycle = new ArrayDeque<>();
-    cycle.add(cycleInducingTarget);
-    boolean foundCycle = false;
-    for (BuildTarget target : ImmutableList.copyOf(parents).reverse()) {
-      if (foundCycle) {
-        break;
-      }
-      cycle.addFirst(target);
-      if (target.equals(cycleInducingTarget)) {
-        foundCycle = true;
-      }
-    }
-    Preconditions.checkState(
-        foundCycle,
-        "Start of cycle %s should appear in traversal history %s.",
-        cycleInducingTarget,
-        parents);
-
-    return new HumanReadableException("Cycle found: %s", Joiner.on(" -> ").join(cycle));
   }
 }

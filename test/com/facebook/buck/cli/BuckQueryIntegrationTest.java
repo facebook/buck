@@ -104,5 +104,15 @@ public class BuckQueryIntegrationTest {
           e.getHumanReadableErrorMessage(),
           Matchers.containsString("//cycles:c -> //cycles:d -> //cycles:c"));
     }
+
+    try {
+      workspace.runBuckCommand("query", "deps(set(//cycles:f //cycles/dir:g))");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.containsString(
+              "//cycles:f -> //cycles/dir:g -> //cycles:h -> " + "//cycles/dir:i -> //cycles:f"));
+    }
   }
 }
