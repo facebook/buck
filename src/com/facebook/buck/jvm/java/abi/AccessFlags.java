@@ -17,25 +17,28 @@
 package com.facebook.buck.jvm.java.abi;
 
 import java.util.Set;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
+import javax.lang.model.util.Elements;
 import org.objectweb.asm.Opcodes;
 
 /** Computes the access flags (see JVMS8 4.1, 4.5, 4.6) for {@link Element}s. */
 public final class AccessFlags {
-  private AccessFlags() {}
+  private final Elements elements;
+
+  public AccessFlags(Elements elements) {
+    this.elements = elements;
+  }
 
   /**
    * Gets the class access flags (see JVMS8 4.1) for the given type element, augmented by the
    * special ASM pseudo-access flag for @Deprecated types.
    */
-  public static int getAccessFlags(TypeElement typeElement) {
+  public int getAccessFlags(TypeElement typeElement) {
     int result = getCommonAccessFlags(typeElement);
 
     switch (typeElement.getKind()) {
@@ -73,7 +76,7 @@ public final class AccessFlags {
    * Gets the method access flags (see JVMS8 4.6) for the given executable element, augmented by the
    * special ASM pseudo-access flag for @Deprecated methods.
    */
-  public static int getAccessFlags(ExecutableElement executableElement) {
+  public int getAccessFlags(ExecutableElement executableElement) {
     int result = getCommonAccessFlags(executableElement);
 
     if (executableElement.isVarArgs()) {
@@ -87,7 +90,7 @@ public final class AccessFlags {
    * Gets the field access flags (see JVMS8 4.5) for the given variable element, augmented by the
    * special ASM pseudo-access flag for @Deprecated fields.
    */
-  public static int getAccessFlags(VariableElement variableElement) {
+  public int getAccessFlags(VariableElement variableElement) {
     int result = getCommonAccessFlags(variableElement);
 
     if (variableElement.getKind() == ElementKind.ENUM_CONSTANT) {
@@ -101,30 +104,14 @@ public final class AccessFlags {
    * Gets the access flags (see JVMS8 4.1, 4.5, 4.6) for the given element, from among those that
    * are common to all kinds of elements.
    */
-  private static int getCommonAccessFlags(Element element) {
+  private int getCommonAccessFlags(Element element) {
     int result = modifiersToAccessFlags(element.getModifiers());
 
-    if (isDeprecated(element)) {
+    if (elements.isDeprecated(element)) {
       result = result | Opcodes.ACC_DEPRECATED;
     }
 
     return result;
-  }
-
-  private static boolean isDeprecated(Element element) {
-    for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-      DeclaredType annotationType = annotationMirror.getAnnotationType();
-      TypeElement annotationTypeElement = (TypeElement) annotationType.asElement();
-
-      // Note: We can't use Types.isSameType against a type obtained from
-      // Elements.getTypeElement().asType() here because it appears that getTypeElement actually
-      // returns a different element for some fundamental classes than is actually used for
-      // compilation.
-      if (annotationTypeElement.getQualifiedName().contentEquals("java.lang.Deprecated")) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

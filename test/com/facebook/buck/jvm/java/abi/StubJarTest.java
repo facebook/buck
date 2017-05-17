@@ -137,6 +137,25 @@ public class StubJarTest {
   }
 
   @Test
+  public void testDeprecatedViaDocComment() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java", "package com.example.buck;", "/** @deprecated */", "public class A { }")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// DEPRECATED",
+            "// access flags 0x20021",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void classWithTwoMethods() throws IOException {
     tester
         .setSourceFile(

@@ -52,6 +52,7 @@ class ClassVisitorDriverFromElement {
   private final SignatureFactory signatureFactory;
   private final SourceVersion targetVersion;
   private final Elements elements;
+  private final AccessFlags accessFlagsUtils;
 
   /**
    * @param targetVersion the class file version to target, expressed as the corresponding Java
@@ -62,6 +63,7 @@ class ClassVisitorDriverFromElement {
     this.elements = elements;
     descriptorFactory = new DescriptorFactory(elements);
     signatureFactory = new SignatureFactory(descriptorFactory);
+    accessFlagsUtils = new AccessFlags(elements);
   }
 
   public void driveVisitor(TypeElement fullClass, ClassVisitor visitor) throws IOException {
@@ -117,7 +119,7 @@ class ClassVisitorDriverFromElement {
             Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
       }
       // Static never makes it into the file for classes
-      int accessFlags = AccessFlags.getAccessFlags(e) & ~Opcodes.ACC_STATIC;
+      int accessFlags = accessFlagsUtils.getAccessFlags(e) & ~Opcodes.ACC_STATIC;
       if (e.getNestingKind() != NestingKind.TOP_LEVEL) {
         if (e.getModifiers().contains(Modifier.PROTECTED)) {
           // It looks like inner classes with protected visibility get marked as public, and then
@@ -168,7 +170,7 @@ class ClassVisitorDriverFromElement {
 
       MethodVisitor methodVisitor =
           visitor.visitMethod(
-              AccessFlags.getAccessFlags(e),
+              accessFlagsUtils.getAccessFlags(e),
               e.getSimpleName().toString(),
               descriptorFactory.getDescriptor(e),
               signatureFactory.getSignature(e),
@@ -219,7 +221,7 @@ class ClassVisitorDriverFromElement {
 
       FieldVisitor fieldVisitor =
           classVisitor.visitField(
-              AccessFlags.getAccessFlags(e),
+              accessFlagsUtils.getAccessFlags(e),
               e.getSimpleName().toString(),
               descriptorFactory.getDescriptor(e),
               signatureFactory.getSignature(e),
@@ -411,7 +413,7 @@ class ClassVisitorDriverFromElement {
           descriptorFactory.getInternalName(element),
           descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
           element.getSimpleName().toString(),
-          AccessFlags.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+          accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
     }
 
     for (TypeElement element : Lists.reverse(memberClasses)) {
@@ -420,7 +422,7 @@ class ClassVisitorDriverFromElement {
           descriptorFactory.getInternalName(element),
           descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
           element.getSimpleName().toString(),
-          AccessFlags.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+          accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
     }
 
     referencesToInners
@@ -432,7 +434,7 @@ class ClassVisitorDriverFromElement {
                   descriptorFactory.getInternalName(element),
                   descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
                   element.getSimpleName().toString(),
-                  AccessFlags.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+                  accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
             });
   }
 }
