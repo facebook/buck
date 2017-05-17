@@ -1952,11 +1952,15 @@ public class SuperConsoleEventBusListenerTest {
 
     // file added scenario
     eventBus.post(WatchmanStatusEvent.fileCreation("and you know you're going to fall"));
-    assertEquals(createParsingMessage(EMOJI_SNAIL, "File added"), listener.getParsingStatus());
+    assertEquals(
+        createParsingMessage(EMOJI_SNAIL, "File added: and you know you're going to fall"),
+        listener.getParsingStatus());
 
     // file removed scenario
     eventBus.post(WatchmanStatusEvent.fileDeletion("Tell 'em a hookah-smoking"));
-    assertEquals(createParsingMessage(EMOJI_SNAIL, "File removed"), listener.getParsingStatus());
+    assertEquals(
+        createParsingMessage(EMOJI_SNAIL, "File removed: Tell 'em a hookah-smoking"),
+        listener.getParsingStatus());
 
     // symlink invalidation scenario
     eventBus.post(ParsingEvent.symlinkInvalidation("caterpillar has given you the call"));

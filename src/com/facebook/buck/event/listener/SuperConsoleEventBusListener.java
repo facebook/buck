@@ -802,15 +802,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  @SuppressWarnings("unused")
   public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File added");
+    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File added: " + event.getFilename());
   }
 
   @Subscribe
-  @SuppressWarnings("unused")
   public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed");
+    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed: " + event.getFilename());
   }
 
   @Subscribe
