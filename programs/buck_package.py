@@ -59,8 +59,13 @@ class BuckPackage(BuckTool):
 
     def _get_resource_subdir(self):
         def try_subdir(lock_file_dir):
-            if not os.path.exists(lock_file_dir):
+            try:
                 os.makedirs(lock_file_dir)
+            except OSError as ex:
+                # Multiple threads may try to create this at the same time, so just swallow the
+                # error if is about the directory already existing.
+                if ex.errno != errno.EEXIST:
+                    raise
             lock_file_path = os.path.join(lock_file_dir, file_locks.BUCK_LOCK_FILE_NAME)
             lock_file = open(lock_file_path, 'a+')
             if file_locks.acquire_shared_lock(lock_file):
