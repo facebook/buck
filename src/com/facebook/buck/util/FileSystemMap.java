@@ -15,15 +15,15 @@
  */
 package com.facebook.buck.util;
 
-import com.facebook.buck.util.concurrent.AutoCloseableLock;
-import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -74,29 +74,48 @@ public class FileSystemMap<T> {
     //       get() or put() on its path: in this case, its value will be computed and stored.
     //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
     //       a `null` value.
-    @Nullable T value;
-    @Nullable Path key;
+    private @Nullable T value;
+    private final Path key;
 
-    Entry() {
+    Entry(Path path) {
       // We're creating an empty node here, so it is associated with no value.
+      this.key = path;
       this.value = null;
     }
 
-    Entry(@Nullable T value) {
+    public Path getKey() {
+      return key;
+    }
+
+    Entry(Path path, @Nullable T value) {
+      this.key = path;
       this.value = value;
     }
 
-    int size() {
+    synchronized void set(@Nullable T value) {
+      this.value = value;
+    }
+
+    synchronized @Nullable T getWithoutLoading() {
+      return this.value;
+    }
+
+    synchronized T load(ValueLoader<T> loader) {
+      if (this.value == null) {
+        this.value = loader.load(this.key);
+      }
+      return this.value;
+    }
+
+    synchronized int size() {
       return subLevels.size();
     }
   }
 
-  @VisibleForTesting final Entry<T> root = new Entry<>();
-  @VisibleForTesting final Map<Path, T> map = new HashMap<>();
+  @VisibleForTesting final Entry<T> root = new Entry<>(Paths.get(""));
+  @VisibleForTesting final ConcurrentHashMap<Path, Entry<T>> map = new ConcurrentHashMap<>();
 
   private final ValueLoader<T> loader;
-
-  private final AutoCloseableReadWriteUpdateLock lock = new AutoCloseableReadWriteUpdateLock();
 
   public FileSystemMap(ValueLoader<T> loader) {
     this.loader = loader;
@@ -109,38 +128,33 @@ public class FileSystemMap<T> {
    * @param value The value to associate to the given path.
    * @return The entry just created.
    */
-  public T put(Path path, T value) {
-    try (AutoCloseableLock updateLock = lock.updateLock()) {
-      Entry<T> entry = putEntry(path);
-      try (AutoCloseableLock writeLock = lock.writeLock()) {
-        entry.value = value;
-        entry.key = path;
-        map.put(path, value);
+  public void put(Path path, T value) {
+    Entry<T> maybe = map.get(path);
+    if (maybe == null) {
+      synchronized (root) {
+        maybe = map.computeIfAbsent(path, this::putEntry);
       }
-      return entry.value;
     }
+    maybe.set(value);
   }
 
   // Creates the intermediate (and/or the leaf node) if needed and returns the leaf associated
   // with the given path.
-  // Must be called while owning an updatable lock.
   private Entry<T> putEntry(Path path) {
-    Entry<T> parent = root;
-    for (Path p : path) {
-      // Create the intermediate node only if it's missing.
-      if (!parent.subLevels.containsKey(p)) {
-        try (AutoCloseableLock writeLock = lock.writeLock()) {
-          if (!parent.subLevels.containsKey(p)) {
-            Entry<T> newEntry = new Entry<>();
-            parent.subLevels.put(p, newEntry);
-          }
+    synchronized (root) {
+      Entry<T> parent = root;
+      for (Path p : path) {
+        // Create the intermediate node only if it's missing.
+        if (!parent.subLevels.containsKey(p)) {
+          Entry<T> newEntry = new Entry<>(path);
+          parent.subLevels.put(p, newEntry);
         }
+        parent = parent.subLevels.get(p);
+        // parent should never be null.
+        Preconditions.checkNotNull(parent);
       }
-      parent = parent.subLevels.get(p);
-      // parent should never be null.
-      Preconditions.checkNotNull(parent);
+      return parent;
     }
-    return parent;
   }
 
   /**
@@ -154,7 +168,7 @@ public class FileSystemMap<T> {
    * @param path The path specifying the branch to remove.
    */
   public void remove(Path path) {
-    try (AutoCloseableLock updateLock = lock.updateLock()) {
+    synchronized (root) {
       Stack<Entry<T>> stack = new Stack<>();
       stack.push(root);
       Entry<T> entry = root;
@@ -179,29 +193,26 @@ public class FileSystemMap<T> {
         // Let's take the actual (sub)path we're removing, by using the size of the stack (ignoring
         // the root).
         path = path.subpath(0, stack.size() - 1);
-        // If we reached the leaf, then remove the leaf and everything below it (if any).
         Entry<T> leaf = stack.pop();
-        try (AutoCloseableLock writeLock = lock.writeLock()) {
-          removeSubtreeFromMap(leaf);
-          stack.peek().subLevels.remove(path.getFileName());
-          // Plus, check everything above in order to remove unused stumps.
-          while (!stack.empty()) {
-            // This will never throw NPE because if it does, then the stack was empty at the beginning
-            // of the iteration (we went upper than the root node, which doesn't make sense).
-            path = path.getParent();
-            Entry<T> current = stack.pop();
+        // If we reached the leaf, then remove the leaf and everything below it (if any).
+        removeSubtreeFromMap(leaf);
+        stack.peek().subLevels.remove(path.getFileName());
+        // Plus, check everything above in order to remove unused stumps.
+        while (!stack.empty()) {
+          // This will never throw NPE because if it does, then the stack was empty at the beginning
+          // of the iteration (we went upper than the root node, which doesn't make sense).
+          path = path.getParent();
+          Entry<T> current = stack.pop();
 
-            // Remove only if it's a cached entry.
-            if (current.value != null && current.key != null) {
-              map.remove(current.key);
-            }
+          // Remove only if it's a cached entry.
+          if (current.value != null) {
+            map.remove(current.key);
+          }
 
-            if (current.size() == 0 && path != null && !stack.empty()) {
-              stack.peek().subLevels.remove(path.getFileName());
-            } else {
-              current.value = null;
-              current.key = null;
-            }
+          if (current.size() == 0 && path != null && !stack.empty()) {
+            stack.peek().subLevels.remove(path.getFileName());
+          } else {
+            current.set(null);
           }
         }
       }
@@ -220,7 +231,7 @@ public class FileSystemMap<T> {
 
   /** Empties the trie leaving only the root node available. */
   public void removeAll() {
-    try (AutoCloseableLock writeLock = lock.writeLock()) {
+    synchronized (root) {
       map.clear();
       root.subLevels = new HashMap<>();
     }
@@ -233,25 +244,17 @@ public class FileSystemMap<T> {
    * @return The value associated with the path.
    */
   public T get(Path path) throws IOException {
-    try (AutoCloseableLock updateLock = lock.updateLock()) {
-      T maybe = map.get(path);
-      if (maybe != null) {
-        return maybe;
-      }
-      try (AutoCloseableLock writeLock = lock.writeLock()) {
-        return map.computeIfAbsent(
-            path,
-            p -> {
-              Entry<T> entry = putEntry(path);
-              // Maybe here we receive a request for getting an intermediate node (a folder) whose
-              // value was never computed before (or has been removed).
-              if (entry.value == null) {
-                entry.value = loader.load(path);
-                entry.key = path;
-              }
-              return entry.value;
-            });
+    Entry<T> maybe = map.get(path);
+    if (maybe == null) {
+      synchronized (root) {
+        maybe = map.computeIfAbsent(path, this::putEntry);
       }
     }
+    if (maybe.value == null) {
+      // Maybe here we receive a request for getting an intermediate node (a folder) whose
+      // value was never computed before (or has been removed).
+      maybe.load(loader);
+    }
+    return maybe.value;
   }
 }
