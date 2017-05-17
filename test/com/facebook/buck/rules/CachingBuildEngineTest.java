@@ -37,6 +37,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -51,6 +52,8 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -86,6 +89,7 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
@@ -130,6 +134,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -301,7 +306,8 @@ public class CachingBuildEngineTest {
               ImmutableSet.of(dep),
               buildSteps,
               /* postBuildSteps */ ImmutableList.of(),
-              pathToOutputFile);
+              pathToOutputFile,
+              ImmutableList.of());
       verifyAll();
       resetAll();
 
@@ -437,7 +443,8 @@ public class CachingBuildEngineTest {
               /* deps */ ImmutableSet.of(),
               ImmutableList.of(step),
               /* postBuildSteps */ ImmutableList.of(),
-              /* pathToOutputFile */ null);
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
 
       // Simulate successfully fetching the output file from the ArtifactCache.
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
@@ -521,7 +528,8 @@ public class CachingBuildEngineTest {
               /* deps */ ImmutableSet.of(),
               /* buildSteps */ ImmutableList.of(),
               /* postBuildSteps */ ImmutableList.of(buildStep),
-              /* pathToOutputFile */ null);
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
 
       // Simulate successfully fetching the output file from the ArtifactCache.
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
@@ -821,7 +829,8 @@ public class CachingBuildEngineTest {
               /* deps */ ImmutableSet.of(),
               /* buildSteps */ ImmutableList.of(failingStep),
               /* postBuildSteps */ ImmutableList.of(),
-              /* pathToOutputFile */ null);
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
       resolver.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
@@ -846,6 +855,69 @@ public class CachingBuildEngineTest {
     }
 
     @Test
+    public void pendingWorkIsCancelledOnFailures() throws Exception {
+      final String description = "failing step";
+      AtomicInteger failedSteps = new AtomicInteger(0);
+      Step failingStep =
+          new AbstractExecutionStep(description) {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              System.out.println("Failing");
+              failedSteps.incrementAndGet();
+              return StepExecutionResult.ERROR;
+            }
+          };
+      ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+      for (int i = 0; i < 20; i++) {
+        BuildRule failingDep =
+            createRule(
+                filesystem,
+                resolver,
+                pathResolver,
+                /* deps */ ImmutableSet.of(),
+                /* buildSteps */ ImmutableList.of(failingStep),
+                /* postBuildSteps */ ImmutableList.of(),
+                /* pathToOutputFile */ null,
+                ImmutableList.of(InternalFlavor.of("failing-" + i)));
+        resolver.addToIndex(failingDep);
+        depsBuilder.add(failingDep);
+      }
+
+      FakeBuildRule withFailingDeps =
+          new FakeBuildRule(
+              BuildTargetFactory.newInstance("//:with_failing_deps"),
+              pathResolver,
+              depsBuilder.build());
+
+      // Use a CommandThreadManager to closely match the real-world CachingBuildEngine experience.
+      // Limit it to 1 thread so that we don't start multiple deps at the same time.
+      try (CommandThreadManager threadManager =
+          new CommandThreadManager(
+              "cachingBuildEngingTest",
+              new ConcurrencyLimit(
+                  1,
+                  ResourceAllocationFairness.FAIR,
+                  1,
+                  ResourceAmounts.of(100, 100, 100, 100),
+                  ResourceAmounts.of(0, 0, 0, 0)))) {
+        CachingBuildEngine cachingBuildEngine =
+            cachingBuildEngineFactory().setExecutorService(threadManager.getExecutor()).build();
+        BuildResult result =
+            cachingBuildEngine
+                .build(buildContext, TestExecutionContext.newInstance(), withFailingDeps)
+                .getResult()
+                .get();
+
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getFailure(), instanceOf(StepFailedException.class));
+        assertThat(failedSteps.get(), equalTo(1));
+        assertThat(
+            ((StepFailedException) result.getFailure()).getStep().getShortName(),
+            equalTo(description));
+      }
+    }
+
+    @Test
     public void failedRuntimeDepsAreNotPropagatedWithKeepGoing() throws Exception {
       buildContext = this.buildContext.withKeepGoing(true);
       final String description = "failing step";
@@ -864,7 +936,8 @@ public class CachingBuildEngineTest {
               /* deps */ ImmutableSet.of(),
               /* buildSteps */ ImmutableList.of(failingStep),
               /* postBuildSteps */ ImmutableList.of(),
-              /* pathToOutputFile */ null);
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
       resolver.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
@@ -902,7 +975,8 @@ public class CachingBuildEngineTest {
               /* deps */ ImmutableSet.of(),
               /* buildSteps */ ImmutableList.of(),
               /* postBuildSteps */ ImmutableList.of(failingStep),
-              /* pathToOutputFile */ null);
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
       BuildInfoRecorder recorder = createBuildInfoRecorder(ruleToTest.getBuildTarget());
 
       recorder.addBuildMetadata(
@@ -3323,12 +3397,13 @@ public class CachingBuildEngineTest {
       ImmutableSet<BuildRule> deps,
       List<Step> buildSteps,
       ImmutableList<Step> postBuildSteps,
-      @Nullable String pathToOutputFile) {
+      @Nullable String pathToOutputFile,
+      ImmutableList<Flavor> flavors) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(BUILD_TARGET)
+        new FakeBuildRuleParamsBuilder(BUILD_TARGET.withFlavors(flavors))
             .setProjectFilesystem(filesystem)
             .setDeclaredDeps(sortedDeps)
             .build();

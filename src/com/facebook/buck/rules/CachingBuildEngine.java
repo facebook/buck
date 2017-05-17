@@ -647,6 +647,20 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildableContext,
             asyncCallbacks);
 
+    // Check immediately (without posting a new task) for a failure so that we can short-circuit
+    // pending work. Use .catchingAsync() instead of .catching() so that we can propagate unchecked
+    // exceptions.
+    buildResult =
+        Futures.catchingAsync(
+            buildResult,
+            Throwable.class,
+            throwable -> {
+              Preconditions.checkNotNull(throwable);
+              firstFailure = throwable;
+              Throwables.throwIfInstanceOf(throwable, Exception.class);
+              throw new RuntimeException(throwable);
+            });
+
     // If we're performing a deep build, guarantee that all dependencies will *always* get
     // materialized locally by chaining up to our result future.
     if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
