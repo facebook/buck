@@ -20,6 +20,8 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -28,10 +30,12 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
   private ImmutableList<String> extraArguments = ImmutableList.of();
 
   ScalaLibraryBuilder(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellRoots,
       ScalaBuckConfig scalaBuckConfig) {
-    super(params, buildRuleResolver);
+    super(targetGraph, params, buildRuleResolver, cellRoots);
     this.scalaBuckConfig = scalaBuckConfig;
   }
 

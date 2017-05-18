@@ -82,7 +82,12 @@ public class GroovyTestDescription implements Description<GroovyTestDescriptionA
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new DefaultGroovyLibraryBuilder(
-                testsLibraryParams, resolver, javacOptions, groovyBuckConfig)
+                targetGraph,
+                testsLibraryParams,
+                resolver,
+                cellRoots,
+                javacOptions,
+                groovyBuckConfig)
             .setArgs(args)
             .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
 

@@ -243,7 +243,9 @@ public class AndroidBinaryDescription
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
               params,
+              targetGraph,
               resolver,
+              cellRoots,
               args.getAaptMode(),
               compressionMode,
               resourceFilter,

@@ -33,9 +33,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -56,14 +58,23 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
 
   public static Builder builder(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
       AndroidLibraryDescription.CoreArg args,
       AndroidLibraryCompilerFactory compilerFactory) {
     return new Builder(
-        params, buildRuleResolver, javaBuckConfig, javacOptions, args, compilerFactory);
+        targetGraph,
+        params,
+        buildRuleResolver,
+        cellRoots,
+        javaBuckConfig,
+        javacOptions,
+        args,
+        compilerFactory);
   }
 
   @VisibleForTesting
@@ -131,13 +142,15 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     private Optional<SourcePath> androidManifest = Optional.empty();
 
     protected Builder(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
+        CellPathResolver cellRoots,
         JavaBuckConfig javaBuckConfig,
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
         AndroidLibraryCompilerFactory compilerFactory) {
-      super(params, buildRuleResolver, javaBuckConfig);
+      super(targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
       this.args = args;
       this.compilerFactory = compilerFactory;
       setJavacOptions(javacOptions);

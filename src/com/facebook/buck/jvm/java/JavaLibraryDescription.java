@@ -165,7 +165,7 @@ public class JavaLibraryDescription
     JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        DefaultJavaLibrary.builder(params, resolver, javaBuckConfig)
+        DefaultJavaLibrary.builder(targetGraph, params, resolver, cellRoots, javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())

@@ -102,7 +102,8 @@ public class KotlinLibraryDescription
     }
 
     DefaultKotlinLibraryBuilder defaultKotlinLibraryBuilder =
-        new DefaultKotlinLibraryBuilder(params, resolver, kotlinBuckConfig).setArgs(args);
+        new DefaultKotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
+            .setArgs(args);
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.

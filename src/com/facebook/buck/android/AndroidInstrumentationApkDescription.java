@@ -128,7 +128,9 @@ public class AndroidInstrumentationApkDescription
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             params,
+            targetGraph,
             resolver,
+            cellRoots,
             AndroidBinary.AaptMode.AAPT1,
             ResourceCompressionMode.DISABLED,
             FilterResourcesStep.ResourceFilter.EMPTY_FILTER,

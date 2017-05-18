@@ -81,7 +81,8 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        new DefaultKotlinLibraryBuilder(testsLibraryParams, resolver, kotlinBuckConfig)
+        new DefaultKotlinLibraryBuilder(
+                targetGraph, testsLibraryParams, resolver, cellRoots, kotlinBuckConfig)
             .setArgs(args)
             .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName());
 

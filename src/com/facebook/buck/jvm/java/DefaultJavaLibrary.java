@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
@@ -42,6 +43,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -144,8 +146,13 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final CompileToJarStepFactory compileStepFactory;
 
   public static DefaultJavaLibraryBuilder builder(
-      BuildRuleParams params, BuildRuleResolver buildRuleResolver, JavaBuckConfig javaBuckConfig) {
-    return new DefaultJavaLibraryBuilder(params, buildRuleResolver, javaBuckConfig);
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellRoots,
+      JavaBuckConfig javaBuckConfig) {
+    return new DefaultJavaLibraryBuilder(
+        targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
   }
 
   @Override

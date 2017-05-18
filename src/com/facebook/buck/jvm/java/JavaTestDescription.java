@@ -102,7 +102,8 @@ public class JavaTestDescription
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        DefaultJavaLibrary.builder(testsLibraryParams, resolver, javaBuckConfig)
+        DefaultJavaLibrary.builder(
+                targetGraph, testsLibraryParams, resolver, cellRoots, javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())

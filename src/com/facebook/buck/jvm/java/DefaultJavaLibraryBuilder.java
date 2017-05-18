@@ -25,9 +25,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -46,8 +48,10 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibraryBuilder {
   private final BuildRuleParams params;
   @Nullable private final JavaBuckConfig javaBuckConfig;
+  protected final TargetGraph targetGraph;
   protected final BuildRuleResolver buildRuleResolver;
   protected final SourcePathResolver sourcePathResolver;
+  protected final CellPathResolver cellRoots;
   protected final SourcePathRuleFinder ruleFinder;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
@@ -68,9 +72,15 @@ public class DefaultJavaLibraryBuilder {
   @Nullable private JavaLibraryDescription.CoreArg args = null;
 
   protected DefaultJavaLibraryBuilder(
-      BuildRuleParams params, BuildRuleResolver buildRuleResolver, JavaBuckConfig javaBuckConfig) {
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellRoots,
+      JavaBuckConfig javaBuckConfig) {
+    this.targetGraph = targetGraph;
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
+    this.cellRoots = cellRoots;
     this.javaBuckConfig = javaBuckConfig;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
@@ -78,9 +88,15 @@ public class DefaultJavaLibraryBuilder {
     setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
   }
 
-  protected DefaultJavaLibraryBuilder(BuildRuleParams params, BuildRuleResolver buildRuleResolver) {
+  protected DefaultJavaLibraryBuilder(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellRoots) {
+    this.targetGraph = targetGraph;
     this.params = params;
     this.buildRuleResolver = buildRuleResolver;
+    this.cellRoots = cellRoots;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = new SourcePathResolver(ruleFinder);

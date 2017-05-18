@@ -66,7 +66,8 @@ public class ScalaLibraryDescription
       ScalaLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     ScalaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(rawParams, resolver, scalaBuckConfig).setArgs(args);
+        new ScalaLibraryBuilder(targetGraph, rawParams, resolver, cellRoots, scalaBuckConfig)
+            .setArgs(args);
 
     return HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())
         ? scalaLibraryBuilder.buildAbi()

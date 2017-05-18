@@ -94,7 +94,8 @@ public class ScalaTestDescription
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     ScalaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(javaLibraryParams, resolver, config).setArgs(args);
+        new ScalaLibraryBuilder(targetGraph, javaLibraryParams, resolver, cellRoots, config)
+            .setArgs(args);
 
     if (HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())) {
       return scalaLibraryBuilder.buildAbi();

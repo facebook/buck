@@ -60,7 +60,8 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
     DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder =
-        new DefaultGroovyLibraryBuilder(params, resolver, javacOptions, groovyBuckConfig)
+        new DefaultGroovyLibraryBuilder(
+                targetGraph, params, resolver, cellRoots, javacOptions, groovyBuckConfig)
             .setArgs(args);
 
     return HasJavaAbi.isAbiTarget(params.getBuildTarget())

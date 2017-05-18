@@ -187,7 +187,14 @@ public class AndroidLibraryDescription
       }
 
       return AndroidLibrary.builder(
-              androidLibraryParams, resolver, javaBuckConfig, javacOptions, args, compilerFactory)
+              targetGraph,
+              androidLibraryParams,
+              resolver,
+              cellRoots,
+              javaBuckConfig,
+              javacOptions,
+              args,
+              compilerFactory)
           .setArgs(args)
           .setJavacOptions(javacOptions)
           .setProvidedDeps(providedDepsTargetsBuilder.build())

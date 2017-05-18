@@ -146,7 +146,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder(testsLibraryParams, resolver, javaBuckConfig)
+            DefaultJavaLibrary.builder(
+                    targetGraph, testsLibraryParams, resolver, cellRoots, javaBuckConfig)
                 .setArgs(args)
                 .setJavacOptions(javacOptions)
                 .setJavacOptionsAmender(new BootClasspathAppender())
