@@ -153,17 +153,6 @@ public class IjProjectCommandHelper {
       return 1;
     }
 
-    if (projectView != null) {
-      return ProjectView.run(
-          console.getStdErr(),
-          dryRun,
-          projectView,
-          projectGraph,
-          passedInTargetsSet,
-          getActionGraph(projectGraph),
-          buckConfig.getConfig());
-    }
-
     ImmutableSet<BuildTarget> graphRoots;
     if (passedInTargetsSet.isEmpty()) {
       graphRoots =
@@ -186,6 +175,21 @@ public class IjProjectCommandHelper {
         | HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
+    }
+
+    if (projectView != null) {
+      if (isWithTests()) {
+        projectGraph = targetGraphAndTargets.getTargetGraph();
+      }
+      return ProjectView.run(
+          console.getStdErr(),
+          dryRun,
+          isWithTests(),
+          projectView,
+          projectGraph,
+          passedInTargetsSet,
+          getActionGraph(projectGraph),
+          buckConfig.getConfig());
     }
 
     if (dryRun) {

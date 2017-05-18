@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -75,12 +76,14 @@ public class ProjectView {
   public static int run(
       DirtyPrintStreamDecorator stderr,
       boolean dryRun,
+      boolean withTests,
       String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
       ActionGraphAndResolver actionGraph,
       Config config) {
-    return new ProjectView(stderr, dryRun, viewPath, targetGraph, buildTargets, actionGraph, config)
+    return new ProjectView(
+            stderr, dryRun, withTests, viewPath, targetGraph, buildTargets, actionGraph, config)
         .run();
   }
 
@@ -100,17 +103,23 @@ public class ProjectView {
   private final DirtyPrintStreamDecorator stdErr;
   private final String viewPath;
   private final boolean dryRun;
+  private final boolean withTests;
   private final TargetGraph targetGraph;
   private final ImmutableSet<BuildTarget> buildTargets;
   private final Config config;
 
   private final ActionGraphAndResolver actionGraph;
 
+  private final Set<BuildTarget> testTargets = new HashSet<>();
+  /** {@code Sets.union(buildTargets, allTargets)} */
+  private final Set<BuildTarget> allTargets = new HashSet<>();
+
   private final String repository = new File("").getAbsolutePath();
 
   private ProjectView(
       DirtyPrintStreamDecorator stdErr,
       boolean dryRun,
+      boolean withTests,
       String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
@@ -119,6 +128,7 @@ public class ProjectView {
     this.stdErr = stdErr;
     this.viewPath = viewPath;
     this.dryRun = dryRun;
+    this.withTests = withTests;
 
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
@@ -132,6 +142,8 @@ public class ProjectView {
       stderr("\nView directory %s is under the repo directory %s\n", viewPath, repository);
       return 1;
     }
+
+    getTestTargets();
 
     List<String> inputs = getPrunedInputs();
 
@@ -161,6 +173,24 @@ public class ProjectView {
     return view.startsWith(repo);
   }
 
+  // region getTestTargets
+
+  private void getTestTargets() {
+    if (withTests) {
+      AbstractBreadthFirstTraversal.<TargetNode<?, ?>>traverse(
+          targetGraph.getAll(buildTargets),
+          node -> {
+            testTargets.addAll(TargetNodes.getTestTargetsForNode(node));
+            return targetGraph.getAll(node.getBuildDeps());
+          });
+    }
+
+    allTargets.addAll(buildTargets);
+    allTargets.addAll(testTargets);
+  }
+
+  // endregion getTestTargets
+
   // region getPrunedInputs()
 
   private List<String> getPrunedInputs() {
@@ -171,12 +201,9 @@ public class ProjectView {
 
     Set<String> inputs = new HashSet<>();
 
-    AbstractBreadthFirstTraversal.<TargetNode<?, ?>>traverse(
-        targetGraph.getAll(buildTargets),
-        node -> {
-          node.getInputs().forEach(input -> inputs.add(input.toString()));
-          return targetGraph.getAll(node.getBuildDeps());
-        });
+    for (TargetNode<?, ?> node : targetGraph.getNodes()) {
+      node.getInputs().forEach(input -> inputs.add(input.toString()));
+    }
 
     return inputs
         .stream()
@@ -891,7 +918,7 @@ public class ProjectView {
     Pattern name = Pattern.compile("%name%");
 
     AbstractBreadthFirstTraversal.<TargetNode<?, ?>>traverse(
-        targetGraph.getAll(buildTargets),
+        targetGraph.getAll(allTargets),
         node -> {
           ProjectFilesystem filesystem = node.getFilesystem();
           Set<BuildTarget> buildDeps = node.getBuildDeps();
