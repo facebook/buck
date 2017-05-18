@@ -74,6 +74,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -905,7 +906,7 @@ class NativeLibraryMergeEnhancer {
             public StepExecutionResult execute(ExecutionContext context)
                 throws IOException, InterruptedException {
               // Copy the output into place, then fix it in-place with mmap.
-              Files.copy(linkOutput, finalOutput);
+              Files.copy(linkOutput, finalOutput, StandardCopyOption.REPLACE_EXISTING);
 
               try (FileChannel channel =
                   FileChannel.open(
