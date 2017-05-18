@@ -20,7 +20,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
@@ -91,25 +90,7 @@ public class FakeProcess extends Process {
 
   @Override
   public OutputStream getOutputStream() {
-    return new OutputStream() {
-      @Override
-      public void write(int b) throws IOException {
-        outputStream.write(b);
-        outputMirror.write(b);
-      }
-
-      @Override
-      public void flush() throws IOException {
-        outputStream.flush();
-        outputMirror.flush();
-      }
-
-      @Override
-      public void close() throws IOException {
-        outputStream.close();
-        outputMirror.close();
-      }
-    };
+    return new TeeOutputStream(outputStream, outputMirror);
   }
 
   @Override
