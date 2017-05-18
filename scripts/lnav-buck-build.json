@@ -1,0 +1,29 @@
+{
+  "buck_build" : {
+    "title": "Buck build log",
+    "url": "https://github.com/facebook/buck/blob/master/src/com/facebook/buck/log/LogFormatter.java",
+    "regex": {
+      "standard" : {
+        "pattern" : "^\\[(?<timestamp>\\d{4}-\\d{2}-\\d{2}[ _]\\d{2}:\\d{2}:\\d{2}\\.\\d{3})\\]\\[(?<level>[a-z]+)[ _]*\\]\\[command:(?<uuid>null|[-0-9A-Fa-f]+)\\]\\[tid:(?<tid>\\d+)\\]\\[(?<logger>[\\w.$]+)\\] (?<body>.*)$"
+      }
+    },
+    "level" : {
+      "error"   : "^error",
+      "warning" : "^warn",
+      "info"    : "^info",
+      "debug"   : "^debug",
+      "trace"   : "^vrbos"
+    },
+    "value" : {
+      "logger" : { "kind" : "string", "identifier" : true },
+      "tid"    : { "kind" : "string", "identifier" : true },
+      "level"  : { "kind" : "string", "identifier" : false }
+    },
+    "sample" : [
+      {
+        "level": "debug",
+        "line": "[2017-04-18 12:45:07.005][debug][command:null][tid:16][com.facebook.buck.cli.Main] Starting up (build date 2017-04-14 09:58:57 -0700, rev 2e3336abaa0b04e4400bd5592f1a7d53b5c1ff1a), args: [build, fb4a]"
+      }
+    ]
+  }
+}
