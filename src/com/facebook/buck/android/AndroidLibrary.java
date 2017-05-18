@@ -38,10 +38,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -166,6 +169,21 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       super.setArgs(args);
       AndroidLibraryDescription.CoreArg androidArgs = (AndroidLibraryDescription.CoreArg) args;
       language = androidArgs.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
+
+      if (androidArgs.getProvidedDepsQuery().isPresent()) {
+        setProvidedDeps(
+            RichStream.from(args.getProvidedDeps())
+                .concat(
+                    QueryUtils.resolveDepQuery(
+                            initialParams.getBuildTarget(),
+                            androidArgs.getProvidedDepsQuery().get(),
+                            buildRuleResolver,
+                            cellRoots,
+                            targetGraph,
+                            args.getProvidedDeps())
+                        .map(BuildRule::getBuildTarget))
+                .toImmutableSortedSet(Ordering.natural()));
+      }
       return setManifestFile(androidArgs.getManifest());
     }
 

@@ -172,20 +172,6 @@ public class AndroidLibraryDescription
           params.copyReplacingDeclaredAndExtraDeps(
               Suppliers.ofInstance(declaredDeps), params.getExtraDeps());
 
-      ImmutableSortedSet.Builder<BuildTarget> providedDepsTargetsBuilder =
-          ImmutableSortedSet.<BuildTarget>naturalOrder().addAll(args.getProvidedDeps());
-      if (args.getProvidedDepsQuery().isPresent()) {
-        QueryUtils.resolveDepQuery(
-                params.getBuildTarget(),
-                args.getProvidedDepsQuery().get(),
-                resolver,
-                cellRoots,
-                targetGraph,
-                args.getProvidedDeps())
-            .map(BuildRule::getBuildTarget)
-            .forEach(providedDepsTargetsBuilder::add);
-      }
-
       return AndroidLibrary.builder(
               targetGraph,
               androidLibraryParams,
@@ -197,7 +183,6 @@ public class AndroidLibraryDescription
               compilerFactory)
           .setArgs(args)
           .setJavacOptions(javacOptions)
-          .setProvidedDeps(providedDepsTargetsBuilder.build())
           .setTests(args.getTests())
           .build();
     }
