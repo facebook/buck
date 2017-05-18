@@ -94,6 +94,7 @@ public class NdkCxxPlatforms {
           Platform.MACOS, Host.DARWIN_X86_64,
           Platform.WINDOWS, Host.WINDOWS_X86_64);
 
+  // TODO(cjhopman): Does the preprocessor need the -std= flags? Right now we don't send them.
   /** Defaults for c and c++ flags */
   public static final ImmutableList<String> DEFAULT_COMMON_CFLAGS =
       ImmutableList.of(
@@ -104,6 +105,7 @@ public class NdkCxxPlatforms {
       ImmutableList.of(
           // Default to the C++11 standard.
           "-std=gnu++11", "-fno-exceptions", "-fno-rtti");
+
   public static final ImmutableList<String> DEFAULT_COMMON_CPPFLAGS =
       ImmutableList.of(
           // Disable searching for headers provided by the system.  This limits headers to just
@@ -112,6 +114,14 @@ public class NdkCxxPlatforms {
           // Default macro definitions applied to all builds.
           "-DNDEBUG",
           "-DANDROID");
+
+  public static final ImmutableList<String> DEFAULT_COMMON_CXXPPFLAGS = DEFAULT_COMMON_CPPFLAGS;
+
+  /** Flags used when compiling either C or C++ sources. */
+  public static final ImmutableList<String> DEFAULT_COMMON_COMPILER_FLAGS =
+      ImmutableList.of(
+          // Default compiler flags provided by the NDK build makefiles.
+          "-ffunction-sections", "-funwind-tables", "-fomit-frame-pointer", "-fno-strict-aliasing");
 
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() {}
@@ -809,27 +819,6 @@ public class NdkCxxPlatforms {
     return flags.build();
   }
 
-  /** Flags to be used when either preprocessing or compiling C sources. */
-  private static ImmutableList<String> getCommonCFlags(AndroidBuckConfig config) {
-    return ImmutableList.<String>builder()
-        .addAll(DEFAULT_COMMON_CFLAGS)
-        .addAll(config.getExtraNdkCFlags())
-        .build();
-  }
-
-  /** Flags to be used when either preprocessing or compiling C++ sources. */
-  private static ImmutableList<String> getCommonCxxFlags(AndroidBuckConfig config) {
-    return ImmutableList.<String>builder()
-        .addAll(DEFAULT_COMMON_CXXFLAGS)
-        .addAll(config.getExtraNdkCxxFlags())
-        .build();
-  }
-
-  /** Flags to be used when preprocessing C or C++ sources. */
-  private static ImmutableList<String> getCommonPreprocessorFlags() {
-    return ImmutableList.<String>builder().addAll(DEFAULT_COMMON_CPPFLAGS).build();
-  }
-
   private static ImmutableList<String> getCommonIncludes(NdkCxxToolchainPaths toolchainPaths) {
     return ImmutableList.of(
         "-isystem",
@@ -866,10 +855,11 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(getCommonIncludes(toolchainPaths))
-        .addAll(getCommonPreprocessorFlags())
+        .addAll(DEFAULT_COMMON_CPPFLAGS)
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
-        .addAll(getCommonCFlags(config))
+        .addAll(DEFAULT_COMMON_CFLAGS)
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
+        .addAll(config.getExtraNdkCFlags())
         .build();
   }
 
@@ -880,21 +870,15 @@ public class NdkCxxPlatforms {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(getCxxRuntimeIncludeFlags(targetConfiguration, toolchainPaths));
     flags.addAll(getCommonIncludes(toolchainPaths));
-    flags.addAll(getCommonPreprocessorFlags());
+    flags.addAll(DEFAULT_COMMON_CXXPPFLAGS);
     flags.addAll(getCommonFlags(targetConfiguration, toolchainPaths));
-    flags.addAll(getCommonCxxFlags(config));
+    flags.addAll(DEFAULT_COMMON_CXXFLAGS);
     if (targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC) {
       flags.add("-Wno-literal-suffix");
     }
     flags.addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()));
+    flags.addAll(config.getExtraNdkCxxFlags());
     return flags.build();
-  }
-
-  /** Flags used when compiling either C or C++ sources. */
-  private static ImmutableList<String> getCommonNdkCxxPlatformCompilerFlags() {
-    return ImmutableList.of(
-        // Default compiler flags provided by the NDK build makefiles.
-        "-ffunction-sections", "-funwind-tables", "-fomit-frame-pointer", "-fno-strict-aliasing");
   }
 
   private static ImmutableList<String> getCCompilationFlags(
@@ -903,9 +887,10 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
-        .addAll(getCommonCFlags(config))
+        .addAll(DEFAULT_COMMON_CFLAGS)
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
-        .addAll(getCommonNdkCxxPlatformCompilerFlags())
+        .addAll(DEFAULT_COMMON_COMPILER_FLAGS)
+        .addAll(config.getExtraNdkCFlags())
         .build();
   }
 
@@ -915,9 +900,10 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.getCompilerFlags(targetConfiguration.getCompiler().getType()))
-        .addAll(getCommonCxxFlags(config))
+        .addAll(DEFAULT_COMMON_CXXFLAGS)
         .addAll(getCommonFlags(targetConfiguration, toolchainPaths))
-        .addAll(getCommonNdkCxxPlatformCompilerFlags())
+        .addAll(DEFAULT_COMMON_COMPILER_FLAGS)
+        .addAll(config.getExtraNdkCxxFlags())
         .build();
   }
 

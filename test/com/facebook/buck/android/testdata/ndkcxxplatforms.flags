@@ -3,9 +3,6 @@
 -finline-limit=300
 -O2
 -std=gnu11
---start-extra-cflags--
--DSOME_CFLAG
---end-extra-cflags--
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/libexec/gcc/i686-linux-android/gcc-version
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/i686-linux-android/bin
 -Wall
@@ -16,6 +13,9 @@
 -funwind-tables
 -fomit-frame-pointer
 -fno-strict-aliasing
+--start-extra-cflags--
+-DSOME_CFLAG
+--end-extra-cflags--
 ---END CFLAGS---------
 ----------------------
 ======================
@@ -39,12 +39,12 @@
 -fstack-protector
 -g3
 -std=gnu11
---start-extra-cflags--
--DSOME_CFLAG
---end-extra-cflags--
 -funswitch-loops
 -finline-limit=300
 -O2
+--start-extra-cflags--
+-DSOME_CFLAG
+--end-extra-cflags--
 ---END CPPFLAGS-------
 ----------------------
 ======================
@@ -56,9 +56,6 @@
 -std=gnu++11
 -fno-exceptions
 -fno-rtti
---start-extra-cxxflags--
--DSOME_CXXFLAG
---end-extra-cxxflags--
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/libexec/gcc/i686-linux-android/gcc-version
 -B@ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/i686-linux-android/bin
 -Wall
@@ -69,6 +66,9 @@
 -funwind-tables
 -fomit-frame-pointer
 -fno-strict-aliasing
+--start-extra-cxxflags--
+-DSOME_CXXFLAG
+--end-extra-cxxflags--
 ---END CXXFLAGS-------
 ----------------------
 ======================
@@ -98,11 +98,11 @@
 -std=gnu++11
 -fno-exceptions
 -fno-rtti
---start-extra-cxxflags--
--DSOME_CXXFLAG
---end-extra-cxxflags--
 -Wno-literal-suffix
 -funswitch-loops
 -finline-limit=300
 -O2
+--start-extra-cxxflags--
+-DSOME_CXXFLAG
+--end-extra-cxxflags--
 ---END CXXPPFLAGS-----
