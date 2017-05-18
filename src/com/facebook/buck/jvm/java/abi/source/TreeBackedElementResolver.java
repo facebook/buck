@@ -64,7 +64,6 @@ class TreeBackedElementResolver {
             .map(type -> (TypeVariable) type)
             .collect(Collectors.toList()),
         element.getParameters().stream().map(VariableElement::asType).collect(Collectors.toList()),
-        element.getReceiverType(),
         element.getThrownTypes(),
         element.getAnnotationMirrors());
   }

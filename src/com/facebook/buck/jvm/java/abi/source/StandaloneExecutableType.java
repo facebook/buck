@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,21 +35,18 @@ class StandaloneExecutableType extends StandaloneTypeMirror implements Executabl
   private final TypeMirror returnType;
   private final List<? extends TypeVariable> typeVariables;
   private final List<? extends TypeMirror> parameterTypes;
-  private final TypeMirror receiverType;
   private final List<? extends TypeMirror> thrownTypes;
 
   public StandaloneExecutableType(
       TypeMirror returnType,
       List<? extends TypeVariable> typeVariables,
       List<? extends TypeMirror> parameterTypes,
-      TypeMirror receiverType,
       List<? extends TypeMirror> thrownTypes,
       List<? extends AnnotationMirror> annotations) {
     super(TypeKind.EXECUTABLE, annotations);
     this.returnType = returnType;
     this.typeVariables = Collections.unmodifiableList(new ArrayList<>(typeVariables));
     this.parameterTypes = Collections.unmodifiableList(new ArrayList<>(parameterTypes));
-    this.receiverType = receiverType;
     this.thrownTypes = Collections.unmodifiableList(new ArrayList<>(thrownTypes));
   }
 
@@ -68,8 +66,10 @@ class StandaloneExecutableType extends StandaloneTypeMirror implements Executabl
   }
 
   @Override
+  @Nullable
   public TypeMirror getReceiverType() {
-    return receiverType;
+    // TODO(jkeljo): Either implement this adaptively or wait until we eliminate javac 7 support
+    return null;
   }
 
   @Override

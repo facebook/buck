@@ -133,7 +133,9 @@ public class TypeScanner8<R, P> extends AbstractTypeVisitor8<R, P> {
   @Override
   @Nullable
   public R visitExecutable(ExecutableType t, P p) {
-    scan(t.getReceiverType(), p);
+    // TODO(jkeljo): Either make this adaptive or just wait until we drop javac 7 support to
+    // uncomment:
+    //scan(t.getReceiverType(), p);
     scan(t.getTypeVariables(), p);
     scan(t.getReturnType(), p);
     scan(t.getParameterTypes(), p);
