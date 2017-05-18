@@ -30,12 +30,14 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -49,6 +51,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.immutables.value.Value;
 
 public class ShTestDescription
@@ -84,7 +88,10 @@ public class ShTestDescription
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
-        args.getArgs().stream().map(toArg::apply).collect(MoreCollectors.toImmutableList());
+        Stream.concat(
+            Optionals.toStream(args.getTest()).map(SourcePathArg::of),
+            args.getArgs().stream().map(toArg::apply))
+            .collect(MoreCollectors.toImmutableList());
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg));
     return new ShTest(
@@ -94,7 +101,6 @@ public class ShTestDescription
                     .append(testEnv.values())
                     .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
         ruleFinder,
-        args.getTest(),
         testArgs,
         testEnv,
         FluentIterable.from(args.getResources())
@@ -128,7 +134,7 @@ public class ShTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractShTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
-    SourcePath getTest();
+    Optional<SourcePath> getTest();
 
     ImmutableList<String> getArgs();
 
