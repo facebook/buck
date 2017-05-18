@@ -65,7 +65,7 @@ public class ShTestDescriptionTest {
     assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getArgs(), pathResolver),
-        Matchers.contains(pathResolver.getAbsolutePath(dep.getSourcePathToOutput()).toString()));
+        Matchers.hasItem(pathResolver.getAbsolutePath(dep.getSourcePathToOutput()).toString()));
   }
 
   @Test

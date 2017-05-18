@@ -37,8 +37,7 @@ import java.util.function.Consumer;
 public class RunShTestAndRecordResultStep implements Step {
 
   private final ProjectFilesystem filesystem;
-  private final Path pathToShellScript;
-  private final ImmutableList<String> args;
+  private final ImmutableList<String> command;
   private final ImmutableMap<String, String> env;
   private final Path pathToTestResultFile;
   private final Optional<Long> testRuleTimeoutMs;
@@ -46,15 +45,13 @@ public class RunShTestAndRecordResultStep implements Step {
 
   public RunShTestAndRecordResultStep(
       ProjectFilesystem filesystem,
-      Path pathToShellScript,
-      ImmutableList<String> args,
+      ImmutableList<String> command,
       ImmutableMap<String, String> env,
       Optional<Long> testRuleTimeoutMs,
       String testCaseName,
       Path pathToTestResultFile) {
     this.filesystem = filesystem;
-    this.pathToShellScript = pathToShellScript;
-    this.args = args;
+    this.command = command;
     this.env = env;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testCaseName = testCaseName;
@@ -63,12 +60,12 @@ public class RunShTestAndRecordResultStep implements Step {
 
   @Override
   public String getShortName() {
-    return pathToShellScript.toString();
+    return command.get(0);
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return pathToShellScript.toString();
+    return command.get(0);
   }
 
   @Override
@@ -94,15 +91,12 @@ public class RunShTestAndRecordResultStep implements Step {
 
             @Override
             public String getShortName() {
-              return pathToShellScript.toString();
+              return command.get(0);
             }
 
             @Override
             protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-              return ImmutableList.<String>builder()
-                  .add(pathToShellScript.toString())
-                  .addAll(args)
-                  .build();
+              return command;
             }
 
             @Override
