@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
-  private final BuildRuleParams params;
+  protected final BuildRuleParams initialParams;
   @Nullable private final JavaBuckConfig javaBuckConfig;
   protected final TargetGraph targetGraph;
   protected final BuildRuleResolver buildRuleResolver;
@@ -73,12 +73,12 @@ public class DefaultJavaLibraryBuilder {
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
-      BuildRuleParams params,
+      BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig) {
     this.targetGraph = targetGraph;
-    this.params = params;
+    this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
     this.javaBuckConfig = javaBuckConfig;
@@ -90,11 +90,11 @@ public class DefaultJavaLibraryBuilder {
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
-      BuildRuleParams params,
+      BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots) {
     this.targetGraph = targetGraph;
-    this.params = params;
+    this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
 
@@ -134,7 +134,7 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setResources(ImmutableSortedSet<SourcePath> resources) {
     this.resources =
         ResourceValidator.validateResources(
-            sourcePathResolver, params.getProjectFilesystem(), resources);
+            sourcePathResolver, initialParams.getProjectFilesystem(), resources);
     return this;
   }
 
@@ -256,7 +256,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected BuildRule buildAbi() throws NoSuchBuildTargetException {
 
-      BuildTarget buildTarget = params.getBuildTarget();
+      BuildTarget buildTarget = initialParams.getBuildTarget();
       if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
         return buildAbiFromClasses();
       } else if (HasJavaAbi.isSourceAbiTarget(buildTarget)) {
@@ -268,7 +268,7 @@ public class DefaultJavaLibraryBuilder {
         buildRuleResolver.addToIndex(sourceAbi);
 
         return new CompareAbis(
-            params.copyReplacingDeclaredAndExtraDeps(
+            initialParams.copyReplacingDeclaredAndExtraDeps(
                 () -> ImmutableSortedSet.of(classAbi, sourceAbi), ImmutableSortedSet::of),
             sourcePathResolver,
             classAbi.getSourcePathToOutput(),
@@ -282,7 +282,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected BuildTarget getAbiJar() {
       if (abiJar == null) {
-        BuildTarget libraryTarget = params.getBuildTarget();
+        BuildTarget libraryTarget = initialParams.getBuildTarget();
         if (shouldBuildAbiFromSource()) {
           JavaBuckConfig.SourceAbiVerificationMode sourceAbiVerificationMode =
               javaBuckConfig.getSourceAbiVerificationMode();
@@ -321,7 +321,7 @@ public class DefaultJavaLibraryBuilder {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
           Preconditions.checkNotNull(javacOptions)
               .getAnnotationProcessingParams()
-              .getAnnotationProcessors(params.getProjectFilesystem(), sourcePathResolver);
+              .getAnnotationProcessors(initialParams.getProjectFilesystem(), sourcePathResolver);
 
       for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
         if (!annotationProcessor.getDoesNotAffectAbi()
@@ -335,7 +335,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialParams.getBuildTarget());
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
       JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
       return new CalculateAbiFromSource(
@@ -351,14 +351,14 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialParams.getBuildTarget());
       BuildTarget abiTarget = HasJavaAbi.getClassAbiJar(libraryTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
 
       return CalculateAbiFromClasses.of(
           abiTarget,
           ruleFinder,
-          params,
+          initialParams,
           Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()),
           javaBuckConfig != null
               && javaBuckConfig.getSourceAbiVerificationMode()
@@ -378,7 +378,7 @@ public class DefaultJavaLibraryBuilder {
         finalFullJarDeclaredDeps =
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
-                    params.getDeclaredDeps().get(),
+                    initialParams.getDeclaredDeps().get(),
                     getCompileStepFactory().getDeclaredDeps(ruleFinder)));
       }
 
@@ -446,14 +446,15 @@ public class DefaultJavaLibraryBuilder {
         // don't want to end up with both full & ABI rules
         extraDepsBuilder.addAll(
             Sets.difference(
-                params.getExtraDeps().get(), Sets.union(fullJarProvidedDeps, fullJarExportedDeps)));
+                initialParams.getExtraDeps().get(),
+                Sets.union(fullJarProvidedDeps, fullJarExportedDeps)));
       } else {
         declaredDepsBuilder.addAll(getFinalFullJarDeclaredDeps());
         extraDepsBuilder
-            .addAll(params.getExtraDeps().get())
+            .addAll(initialParams.getExtraDeps().get())
             .addAll(
                 Sets.difference(
-                    getCompileTimeClasspathUnfilteredFullDeps(), params.getBuildDeps()));
+                    getCompileTimeClasspathUnfilteredFullDeps(), initialParams.getBuildDeps()));
       }
       ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
 
@@ -472,7 +473,7 @@ public class DefaultJavaLibraryBuilder {
               .addAll(getCompileStepFactory().getExtraDeps(ruleFinder))
               .build();
 
-      return params.copyReplacingDeclaredAndExtraDeps(() -> declaredDeps, () -> extraDeps);
+      return initialParams.copyReplacingDeclaredAndExtraDeps(() -> declaredDeps, () -> extraDeps);
     }
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
