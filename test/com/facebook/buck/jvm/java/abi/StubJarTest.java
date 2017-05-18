@@ -2911,6 +2911,15 @@ public class StubJarTest {
       expectedStubDirectory.add("com/example/buck/");
     }
 
+    private void resetActuals() {
+      actualStubDirectory.clear();
+      actualFullDirectory.clear();
+      actualFullAbis.clear();
+      actualStubs.clear();
+      stubJarPath = null;
+      fullJarPath = null;
+    }
+
     public Tester setSourceFile(String fileName, String... lines) {
       sourceFileName = fileName;
       sourceFileContents = Joiner.on('\n').join(lines);
@@ -3008,12 +3017,14 @@ public class StubJarTest {
     public Tester addStubJarToClasspath() throws IOException {
       classpath =
           ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(stubJarPath).build();
+      resetActuals();
       return this;
     }
 
     public Tester addFullJarToClasspath() throws IOException {
       classpath =
           ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(fullJarPath).build();
+      resetActuals();
       return this;
     }
 
