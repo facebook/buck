@@ -1712,6 +1712,12 @@ public class ProjectGeneratorTest {
         .setOut("libGenruleLib.a")
         .build();
 
+    BuildTarget exportFileTarget = BuildTarget.builder(rootPath, "//foo", "libExported.a").build();
+    TargetNode<?, ?> exportFileNode = ExportFileBuilder
+        .newExportFileBuilder(exportFileTarget)
+        .setSrc(new FakeSourcePath("libExported.a"))
+        .build();
+
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -1722,15 +1728,12 @@ public class ProjectGeneratorTest {
         .setLinkerFlags(
             ImmutableList.of(
                 StringWithMacrosUtils.format("-force_load"),
-                StringWithMacrosUtils.format("%s", LocationMacro.of(genruleTarget))))
+                StringWithMacrosUtils.format("%s", LocationMacro.of(genruleTarget)),
+                StringWithMacrosUtils.format("%s", LocationMacro.of(exportFileTarget))))
         .build();
 
-    Path generatedLibraryPath = getAbsoluteOutputForNode(
-        genruleNode,
-        ImmutableSet.of(genruleNode, node));
-
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(node, genruleNode), ImmutableSet.of());
+        ImmutableSet.of(node, genruleNode, exportFileNode), ImmutableSet.of());
 
     projectGenerator.createXcodeProjects();
 
@@ -1738,10 +1741,16 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
 
-    assertThat(projectGenerator.getRequiredBuildTargets(), equalTo(ImmutableSet.of(genruleTarget)));
+    assertThat(projectGenerator.getRequiredBuildTargets(),
+        equalTo(ImmutableSet.of(genruleTarget, exportFileTarget)));
+
+    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(genruleNode, node, exportFileNode);
+    String generatedLibraryPath = getAbsoluteOutputForNode(genruleNode, nodes).toString();
+    String exportedLibraryPath = getAbsoluteOutputForNode(exportFileNode, nodes).toString();
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -force_load " + generatedLibraryPath.toString(),
+    assertEquals(
+        String.format("$(inherited) -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
         settings.get("OTHER_LDFLAGS"));
   }
 
