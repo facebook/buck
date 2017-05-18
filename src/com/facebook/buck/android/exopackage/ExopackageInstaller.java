@@ -477,7 +477,7 @@ public class ExopackageInstaller {
               Path destination = dataRoot.resolve(devicePath);
               Path source = projectFilesystem.resolve(hostPath);
               try (SimplePerfEvent.Scope ignored2 =
-                  SimplePerfEvent.scope(eventBus, "install_file")) {
+                  SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
                 device.installFile(destination, source);
               } catch (Exception e) {
                 throw new RuntimeException(e);
