@@ -178,11 +178,11 @@ public class JarBuilder {
       manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass);
     }
 
-    jar.writeManifest();
+    Preconditions.checkNotNull(jar).writeManifest();
   }
 
   private boolean mainClassPresent() {
-    String mainClassPath = classNameToPath(mainClass);
+    String mainClassPath = classNameToPath(Preconditions.checkNotNull(mainClass));
 
     return alreadyAddedEntries.contains(mainClassPath);
   }
@@ -234,14 +234,14 @@ public class JarBuilder {
       return;
     }
 
-    jar.putNextEntry(entry);
+    Preconditions.checkNotNull(jar).putNextEntry(entry);
     try (InputStream entryInputStream = entrySupplier.getInputStreamSupplier().get()) {
       if (entryInputStream != null) {
         // Null stream means a directory
-        ByteStreams.copy(entryInputStream, jar);
+        ByteStreams.copy(entryInputStream, Preconditions.checkNotNull(jar));
       }
     }
-    jar.closeEntry();
+    Preconditions.checkNotNull(jar).closeEntry();
   }
 
   private void mkdirs(String name) throws IOException {
