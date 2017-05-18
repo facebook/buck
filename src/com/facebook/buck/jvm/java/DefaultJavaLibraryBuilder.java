@@ -507,9 +507,11 @@ public class DefaultJavaLibraryBuilder {
 
     protected CompileToJarStepFactory buildCompileStepFactory() {
       return new JavacToJarStepFactory(
-          JavacFactory.create(ruleFinder, Preconditions.checkNotNull(javaBuckConfig), args),
-          Preconditions.checkNotNull(javacOptions),
-          javacOptionsAmender);
+          getJavac(), Preconditions.checkNotNull(javacOptions), javacOptionsAmender);
     }
+  }
+
+  protected Javac getJavac() {
+    return JavacFactory.create(ruleFinder, Preconditions.checkNotNull(javaBuckConfig), args);
   }
 }
