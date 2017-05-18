@@ -2890,8 +2890,9 @@ public class StubJarTest {
   }
 
   private final class Tester {
-    private final List<String> expectedDirectory = new ArrayList<>();
-    private final List<String> actualDirectory = new ArrayList<>();
+    private final List<String> expectedStubDirectory = new ArrayList<>();
+    private final List<String> actualStubDirectory = new ArrayList<>();
+    private final List<String> actualFullDirectory = new ArrayList<>();
     private final Map<String, List<String>> expectedFullAbis = new HashMap<>();
     private final Map<String, List<String>> actualFullAbis = new HashMap<>();
     private final Map<String, List<String>> expectedStubs = new HashMap<>();
@@ -2904,10 +2905,10 @@ public class StubJarTest {
     private Path fullJarPath;
 
     public Tester() {
-      expectedDirectory.add("META-INF/");
-      expectedDirectory.add("com/");
-      expectedDirectory.add("com/example/");
-      expectedDirectory.add("com/example/buck/");
+      expectedStubDirectory.add("META-INF/");
+      expectedStubDirectory.add("com/");
+      expectedStubDirectory.add("com/example/");
+      expectedStubDirectory.add("com/example/buck/");
     }
 
     public Tester setSourceFile(String fileName, String... lines) {
@@ -2924,7 +2925,7 @@ public class StubJarTest {
 
     public Tester addExpectedStub(String classBinaryName, String... stubLines) {
       String filePath = classBinaryName + ".class";
-      expectedDirectory.add(filePath);
+      expectedStubDirectory.add(filePath);
       expectedStubs.put(filePath, Arrays.asList(stubLines));
       return this;
     }
@@ -2944,7 +2945,7 @@ public class StubJarTest {
         compileFullJar();
         dumpFullJarAbi();
 
-        for (String entryName : expectedDirectory) {
+        for (String entryName : expectedStubDirectory) {
           if (!expectedFullAbis.containsKey(entryName)) {
             // You don't have to put expectations for all full ABIs, only those that you feel really
             // need to be a certain way for the test to be valid.
@@ -2964,9 +2965,9 @@ public class StubJarTest {
     public Tester checkStubJar() throws IOException {
       dumpStubJar();
 
-      assertEquals("File list is not correct.", expectedDirectory, actualDirectory);
+      assertEquals("File list is not correct.", expectedStubDirectory, actualStubDirectory);
 
-      for (String entryName : expectedDirectory) {
+      for (String entryName : expectedStubDirectory) {
         if (entryName.endsWith("/")) {
           continue;
         }
@@ -3084,7 +3085,7 @@ public class StubJarTest {
         result.append(sourceLine.replace("\"", "\\\""));
       }
       result.append("\")\n");
-      for (String fileName : actualDirectory) {
+      for (String fileName : actualFullDirectory) {
         if (fileName.endsWith("/") || fileName.equals(JarFile.MANIFEST_NAME)) {
           continue;
         }
@@ -3103,18 +3104,20 @@ public class StubJarTest {
           result.append("\")\n");
         }
 
-        result.append("        .addExpectedStub(\n");
-        result.append(indent);
-        result.append('"');
-        result.append(fileName.substring(0, fileName.length() - ".class".length()));
-
-        for (String stubLine : actualStubs.get(fileName)) {
-          result.append("\",\n");
+        if (actualStubs.containsKey(fileName)) {
+          result.append("        .addExpectedStub(\n");
           result.append(indent);
           result.append('"');
-          result.append(stubLine.replace("\"", "\\\""));
+          result.append(fileName.substring(0, fileName.length() - ".class".length()));
+
+          for (String stubLine : actualStubs.get(fileName)) {
+            result.append("\",\n");
+            result.append(indent);
+            result.append('"');
+            result.append(stubLine.replace("\"", "\\\""));
+          }
+          result.append("\")\n");
         }
-        result.append("\")\n");
       }
       result.append("        .createAndCheckStubJar();\n");
 
@@ -3130,7 +3133,7 @@ public class StubJarTest {
           if (JarFile.MANIFEST_NAME.equals(name)) {
             continue;
           }
-          actualDirectory.add(name);
+          actualStubDirectory.add(name);
           actualStubs.put(
               name, new JarDumper().dumpEntry(file, entry).collect(Collectors.toList()));
         }
@@ -3145,6 +3148,7 @@ public class StubJarTest {
           if (JarFile.MANIFEST_NAME.equals(name)) {
             continue;
           }
+          actualFullDirectory.add(name);
           actualFullAbis.put(
               name,
               new JarDumper()
