@@ -21,6 +21,7 @@ import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
-public abstract class WorkerProcessPool {
+public abstract class WorkerProcessPool implements Closeable {
   private static final Logger LOG = Logger.get(WorkerProcessPool.class);
 
   private final int capacity;
@@ -106,6 +107,7 @@ public abstract class WorkerProcessPool {
     workerProcess.close();
   }
 
+  @Override
   public void close() {
     ImmutableSet<WorkerProcess> processesToClose;
     synchronized (createdWorkers) {
