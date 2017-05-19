@@ -135,7 +135,8 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     Path binaryJarWithoutBlacklist = workspace.buildAndReturnOutput("//:bin-no-blacklist");
 
     ImmutableSet<String> commonEntries =
-        ImmutableSet.of("META-INF/MANIFEST.MF", "com/", "com/example/", "com/example/B.class");
+        ImmutableSet.of(
+            "META-INF/", "META-INF/MANIFEST.MF", "com/", "com/example/", "com/example/B.class");
     ImmutableSet<String> blacklistedEntries =
         ImmutableSet.of(
             "com/example/A.class", "com/example/A$C.class", "com/example/Alligator.class");

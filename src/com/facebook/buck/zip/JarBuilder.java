@@ -151,7 +151,8 @@ public class JarBuilder {
   }
 
   private void writeManifest() throws IOException {
-    DeterministicManifest manifest = jar.getManifest();
+    mkdirs("META-INF/");
+    DeterministicManifest manifest = Preconditions.checkNotNull(jar).getManifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     if (shouldMergeManifests) {
@@ -218,6 +219,8 @@ public class JarBuilder {
       return;
     }
 
+    mkdirs(getParentDir(entryName));
+
     // We're in the process of merging a bunch of different jar files. These typically contain
     // just ".class" files and the manifest, but they can also include things like license files
     // from third party libraries and config files. We should include those license files within
@@ -239,6 +242,32 @@ public class JarBuilder {
       }
     }
     jar.closeEntry();
+  }
+
+  private void mkdirs(String name) throws IOException {
+    if (name.isEmpty()) {
+      return;
+    }
+
+    Preconditions.checkArgument(name.endsWith("/"));
+    if (alreadyAddedEntries.contains(name)) {
+      return;
+    }
+
+    String parent = getParentDir(name);
+    mkdirs(parent);
+
+    Preconditions.checkNotNull(jar).putNextEntry(new CustomZipEntry(name));
+    Preconditions.checkNotNull(jar).closeEntry();
+    alreadyAddedEntries.add(name);
+  }
+
+  private String getParentDir(String name) {
+    int length = name.lastIndexOf('/') + 1;
+    if (length == name.length()) {
+      length = name.lastIndexOf('/', length - 2) + 1;
+    }
+    return name.substring(0, length);
   }
 
   private boolean shouldEntryBeRemovedFromJar(JarEntrySupplier supplier) throws IOException {

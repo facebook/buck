@@ -77,7 +77,13 @@ public class CalculateAbiFromSourceIntegrationTest {
       assertThat(
           abiJar.stream().map(JarEntry::getName).collect(Collectors.toSet()),
           Matchers.containsInAnyOrder(
-              "META-INF/MANIFEST.MF", "com/example/buck/Lib.class", "com/example/buck/Test.class"));
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "com/",
+              "com/example/",
+              "com/example/buck/",
+              "com/example/buck/Lib.class",
+              "com/example/buck/Test.class"));
 
       // And the manifest has one too
       Manifest manifest = abiJar.getManifest();

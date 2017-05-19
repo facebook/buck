@@ -87,8 +87,8 @@ public class JavaInMemoryFileManagerTest {
 
     TestJar jar = writeToJar();
     List<String> entries = jar.getEntriesContent();
-    assertEquals(2, entries.size());
-    assertEquals("Hello World!", entries.get(1));
+    assertEquals(3, entries.size());
+    assertEquals("Hello World!", entries.get(2));
   }
 
   @Test
@@ -116,11 +116,18 @@ public class JavaInMemoryFileManagerTest {
     TestJar jar = writeToJar();
     assertThat(
         jar.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.contains(JarFile.MANIFEST_NAME, "A.class", "B$D.class", "B.class", "B/C.class"));
+        Matchers.contains(
+            "META-INF/",
+            JarFile.MANIFEST_NAME,
+            "A.class",
+            "B$D.class",
+            "B.class",
+            "B/",
+            "B/C.class"));
   }
 
   @Test
-  public void testIntermediateDirectoriesAreNotCreated() throws Exception {
+  public void testIntermediateDirectoriesAreCreated() throws Exception {
     JavaFileObject fileObject =
         inMemoryFileManager.getJavaFileForOutput(
             StandardLocation.CLASS_OUTPUT,
@@ -134,7 +141,13 @@ public class JavaInMemoryFileManagerTest {
     List<String> zipEntries =
         jar.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList());
     assertThat(
-        zipEntries, Matchers.contains(JarFile.MANIFEST_NAME, "jvm/java/JavaFileParser.class"));
+        zipEntries,
+        Matchers.contains(
+            "META-INF/",
+            JarFile.MANIFEST_NAME,
+            "jvm/",
+            "jvm/java/",
+            "jvm/java/JavaFileParser.class"));
   }
 
   @Test
@@ -162,7 +175,10 @@ public class JavaInMemoryFileManagerTest {
     assertThat(
         zipEntries,
         Matchers.contains(
+            "META-INF/",
             JarFile.MANIFEST_NAME,
+            "jvm/",
+            "jvm/java/",
             "jvm/java/JavaFileParser.class",
             "jvm/java/JavaInMemoryFileManager.class"));
   }
@@ -276,7 +292,7 @@ public class JavaInMemoryFileManagerTest {
     TestJar jar = writeToJar();
     assertThat(
         jar.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.contains(JarFile.MANIFEST_NAME));
+        Matchers.contains("META-INF/", JarFile.MANIFEST_NAME));
   }
 
   @Test
@@ -287,7 +303,7 @@ public class JavaInMemoryFileManagerTest {
     TestJar jar = writeToJar();
     assertThat(
         jar.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.contains(JarFile.MANIFEST_NAME));
+        Matchers.contains("META-INF/", JarFile.MANIFEST_NAME));
   }
 
   @Test
@@ -304,7 +320,7 @@ public class JavaInMemoryFileManagerTest {
     TestJar jar = writeToJar();
     assertThat(
         jar.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.contains(JarFile.MANIFEST_NAME));
+        Matchers.contains("META-INF/", JarFile.MANIFEST_NAME));
   }
 
   private TestJar writeToJar() throws IOException {

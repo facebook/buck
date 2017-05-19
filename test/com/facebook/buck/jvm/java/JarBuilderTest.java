@@ -64,9 +64,50 @@ public class JarBuilderTest {
     try (JarFile jarFile = new JarFile(tempFile)) {
       assertEquals(
           ImmutableList.of(
-              "META-INF/MANIFEST.MF", "A", "B", "Bar", "Bird", "C", "Cat", "D", "Dog", "Foo"),
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "A",
+              "B",
+              "Bar",
+              "Bird",
+              "C",
+              "Cat",
+              "D",
+              "Dog",
+              "Foo"),
           jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
     }
+  }
+
+  @Test
+  public void testMakesDirectoriesForEntries() throws IOException {
+    File tempFile = temporaryFolder.newFile();
+    JarBuilder jarBuilder = new JarBuilder();
+    addEntry(jarBuilder, "foo/1.txt", "1");
+    addEntry(jarBuilder, "foo/2.txt", "2");
+    addEntry(jarBuilder, "foo/bar/3.txt", "3");
+    jarBuilder.createJarFile(tempFile.toPath());
+
+    try (JarFile jarFile = new JarFile(tempFile)) {
+      assertEquals(
+          ImmutableList.of(
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "foo/",
+              "foo/1.txt",
+              "foo/2.txt",
+              "foo/bar/",
+              "foo/bar/3.txt"),
+          jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
+    }
+  }
+
+  private void addEntry(JarBuilder builder, String name, String contents) {
+    builder.addEntry(
+        new JarEntrySupplier(
+            new CustomZipEntry(name),
+            "owner",
+            () -> new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8))));
   }
 
   private static class TestJarEntryContainer implements JarEntryContainer {

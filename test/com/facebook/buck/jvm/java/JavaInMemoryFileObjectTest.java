@@ -60,9 +60,9 @@ public class JavaInMemoryFileObjectTest {
     out.close();
 
     TestJar jar = writeToJar(inMemoryFileObject);
-    assertEquals(2, jar.getZipEntries().size());
-    assertEquals(2, jar.getEntriesContent().size());
-    assertEquals("content", jar.getEntriesContent().get(1));
+    assertEquals(7, jar.getZipEntries().size());
+    assertEquals(7, jar.getEntriesContent().size());
+    assertEquals("content", jar.getEntriesContent().get(6));
   }
 
   @Test
@@ -86,10 +86,10 @@ public class JavaInMemoryFileObjectTest {
     file2Out.close();
 
     TestJar jar = writeToJar(file1, file2);
-    assertEquals(3, jar.getZipEntries().size());
-    assertEquals(3, jar.getEntriesContent().size());
-    assertEquals("file1Content", jar.getEntriesContent().get(1));
-    assertEquals("file2Content", jar.getEntriesContent().get(2));
+    assertEquals(8, jar.getZipEntries().size());
+    assertEquals(8, jar.getEntriesContent().size());
+    assertEquals("file1Content", jar.getEntriesContent().get(6));
+    assertEquals("file2Content", jar.getEntriesContent().get(7));
   }
 
   @Test
