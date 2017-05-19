@@ -21,6 +21,9 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -72,10 +75,17 @@ public class TestExecutionContext {
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setClassLoaderCache(testClassLoaderCache)
         .setExecutors(executors)
+        .setProcessExecutor(new FakeProcessExecutor())
         .setCellPathResolver(FAKE_CELL_PATH_RESOLVER);
   }
 
   public static ExecutionContext newInstance() {
     return newBuilder().build();
+  }
+
+  public static ExecutionContext newInstanceWithRealProcessExecutor() {
+    TestConsole console = new TestConsole();
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+    return newBuilder().setConsole(console).setProcessExecutor(processExecutor).build();
   }
 }

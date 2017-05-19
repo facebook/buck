@@ -54,6 +54,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -121,6 +122,7 @@ public class Build implements Closeable {
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions,
       Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
+      ProcessExecutor processExecutor,
       Map<ExecutorPool, ListeningExecutorService> executors) {
     this.actionGraph = actionGraph;
     this.ruleResolver = ruleResolver;
@@ -146,6 +148,7 @@ public class Build implements Closeable {
             .setTargetDeviceOptions(targetDeviceOptions)
             .setExecutors(executors)
             .setCellPathResolver(rootCell.getCellPathResolver())
+            .setProcessExecutor(processExecutor)
             .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;

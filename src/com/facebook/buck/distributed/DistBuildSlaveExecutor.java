@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -336,6 +337,7 @@ public class DistBuildSlaveExecutor {
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
+                  new DefaultProcessExecutor(args.getConsole()),
                   args.getExecutors())) {
 
         return build.executeAndPrintFailuresToEventBus(

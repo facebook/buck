@@ -40,6 +40,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -158,6 +159,7 @@ final class JavaBuildGraphProcessor {
                 .setJavaPackageFinder(params.getJavaPackageFinder())
                 .setPlatform(params.getPlatform())
                 .setCellPathResolver(params.getCell().getCellPathResolver())
+                .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
                 .build();
 
         SourcePathResolver pathResolver =

@@ -81,6 +81,7 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
@@ -335,6 +336,7 @@ public class BuildCommand extends AbstractCommand {
         adbOptions,
         targetDeviceOptions,
         persistentWorkerPools,
+        new DefaultProcessExecutor(console),
         executors);
   }
 

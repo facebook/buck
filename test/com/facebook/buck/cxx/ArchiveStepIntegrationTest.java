@@ -88,7 +88,7 @@ public class ArchiveStepIntegrationTest {
         new FileScrubberStep(filesystem, output, platform.getAr().getScrubbers());
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
@@ -136,7 +136,7 @@ public class ArchiveStepIntegrationTest {
             archiver);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
@@ -181,7 +181,7 @@ public class ArchiveStepIntegrationTest {
             archiver);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
@@ -237,7 +237,7 @@ public class ArchiveStepIntegrationTest {
             archiver);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);

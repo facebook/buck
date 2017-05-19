@@ -84,7 +84,7 @@ public class ElfExtractSectionsStepTest {
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             tmp.getRoot().getFileSystem().getPath("libfoo.extracted.so"),
             ImmutableSet.of(".dynamic"));
-    step.execute(TestExecutionContext.newInstance());
+    step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
 
     // Verify that the program table section is empty.
     try (FileChannel channel =

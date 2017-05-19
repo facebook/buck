@@ -34,6 +34,7 @@ import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
@@ -273,6 +274,7 @@ public abstract class AbstractCommand implements Command {
         .setJavaPackageFinder(params.getJavaPackageFinder())
         .setExecutors(params.getExecutors())
         .setCellPathResolver(params.getCell().getCellPathResolver())
+        .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
         .build();
   }
 

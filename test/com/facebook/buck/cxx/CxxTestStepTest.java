@@ -63,7 +63,7 @@ public class CxxTestStepTest {
   public void setUp() throws IOException {
     exitCode = tmpDir.newFile("exitCode").toPath();
     output = tmpDir.newFile("output").toPath();
-    context = TestExecutionContext.newInstance();
+    context = TestExecutionContext.newInstanceWithRealProcessExecutor();
     filesystem = new FakeProjectFilesystem();
   }
 

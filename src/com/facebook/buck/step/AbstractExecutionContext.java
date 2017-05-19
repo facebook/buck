@@ -28,7 +28,6 @@ import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -89,6 +88,9 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract CellPathResolver getCellPathResolver();
+
+  @Value.Parameter
+  abstract ProcessExecutor getProcessExecutor();
 
   /**
    * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to
@@ -151,11 +153,6 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {
     return new ClassLoaderCache();
-  }
-
-  @Value.Default
-  public ProcessExecutor getProcessExecutor() {
-    return new DefaultProcessExecutor(getConsole());
   }
 
   @Value.Derived
