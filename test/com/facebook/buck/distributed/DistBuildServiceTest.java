@@ -78,12 +78,14 @@ public class DistBuildServiceTest {
   private FrontendService frontendService;
   private DistBuildService distBuildService;
   private ListeningExecutorService executor;
+  private DistBuildClientStatsTracker distBuildClientStatsTracker;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     frontendService = EasyMock.createStrictMock(FrontendService.class);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     distBuildService = new DistBuildService(frontendService);
+    distBuildClientStatsTracker = new DistBuildClientStatsTracker();
   }
 
   @After
@@ -117,7 +119,7 @@ public class DistBuildServiceTest {
     buildJobState.setTargetGraph(graph);
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId("check-id");
-    distBuildService.uploadTargetGraph(buildJobState, stampedeId);
+    distBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStatsTracker);
 
     Assert.assertTrue(request.getValue().isSetType());
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.STORE_BUILD_GRAPH);
@@ -175,7 +177,9 @@ public class DistBuildServiceTest {
     fileHashes.get(1).setCellIndex(1);
     fileHashes.get(1).setEntries(new ArrayList<BuildJobStateFileHashEntry>());
     fileHashes.get(1).getEntries().add(files[2]);
-    distBuildService.uploadMissingFilesAsync(fileHashes, executor).get();
+    distBuildService
+        .uploadMissingFilesAsync(fileHashes, distBuildClientStatsTracker, executor)
+        .get();
 
     Assert.assertEquals(containsRequest.getValue().getType(), FrontendRequestType.CAS_CONTAINS);
     Assert.assertTrue(containsRequest.getValue().isSetCasContainsRequest());

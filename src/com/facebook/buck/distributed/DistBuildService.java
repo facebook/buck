@@ -121,9 +121,13 @@ public class DistBuildService implements Closeable {
     return response.getMultiGetBuildSlaveLogDirResponse();
   }
 
-  public void uploadTargetGraph(final BuildJobState buildJobStateArg, final StampedeId stampedeId)
+  public void uploadTargetGraph(
+      final BuildJobState buildJobStateArg,
+      final StampedeId stampedeId,
+      final DistBuildClientStatsTracker distBuildClientStats)
       throws IOException {
     // TODO(shivanker): We shouldn't be doing this. Fix after we stop reading all files into memory.
+    distBuildClientStats.startUploadTargetGraphTimer();
     final BuildJobState buildJobState = buildJobStateArg.deepCopy();
     // Get rid of file contents from buildJobState
     for (BuildJobStateFileHashes cell : buildJobState.getFileHashes()) {
@@ -144,11 +148,15 @@ public class DistBuildService implements Closeable {
     request.setType(FrontendRequestType.STORE_BUILD_GRAPH);
     request.setStoreBuildGraphRequest(storeBuildGraphRequest);
     makeRequestChecked(request);
+    distBuildClientStats.stopUploadTargetGraphTimer();
     // No response expected.
   }
 
   public ListenableFuture<Void> uploadMissingFilesAsync(
-      final List<BuildJobStateFileHashes> fileHashes, ListeningExecutorService executorService) {
+      final List<BuildJobStateFileHashes> fileHashes,
+      final DistBuildClientStatsTracker distBuildClientStats,
+      final ListeningExecutorService executorService) {
+    distBuildClientStats.startUploadMissingFilesTimer();
     List<FileInfo> requiredFiles = new ArrayList<>();
     for (BuildJobStateFileHashes filesystem : fileHashes) {
       if (!filesystem.isSetEntries()) {
@@ -175,10 +183,13 @@ public class DistBuildService implements Closeable {
       }
     }
 
+    distBuildClientStats.setMissingFilesUploadedCount(requiredFiles.size());
+
     return executorService.submit(
         () -> {
           try {
             uploadMissingFilesFromList(requiredFiles);
+            distBuildClientStats.stopUploadMissingFilesTimer();
             return null;
           } catch (IOException e) {
             throw new RuntimeException("Failed to upload missing source files.", e);
@@ -332,7 +343,10 @@ public class DistBuildService implements Closeable {
     return frontendRequest;
   }
 
-  public void setBuckVersion(StampedeId id, BuckVersion buckVersion) throws IOException {
+  public void setBuckVersion(
+      StampedeId id, BuckVersion buckVersion, DistBuildClientStatsTracker distBuildClientStats)
+      throws IOException {
+    distBuildClientStats.startSetBuckVersionTimer();
     SetBuckVersionRequest setBuckVersionRequest = new SetBuckVersionRequest();
     setBuckVersionRequest.setStampedeId(id);
     setBuckVersionRequest.setBuckVersion(buckVersion);
@@ -340,6 +354,7 @@ public class DistBuildService implements Closeable {
     request.setType(FrontendRequestType.SET_BUCK_VERSION);
     request.setSetBuckVersionRequest(setBuckVersionRequest);
     makeRequestChecked(request);
+    distBuildClientStats.stopSetBuckVersionTimer();
   }
 
   public void setBuckDotFiles(StampedeId id, List<PathInfo> dotFiles) throws IOException {
@@ -356,8 +371,10 @@ public class DistBuildService implements Closeable {
       final StampedeId id,
       final ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
+      DistBuildClientStatsTracker distBuildClientStats,
       ListeningExecutorService executorService)
       throws IOException {
+    distBuildClientStats.startUploadBuckDotFilesTimer();
     ListenableFuture<Pair<List<FileInfo>, List<PathInfo>>> filesFuture =
         executorService.submit(
             () -> {
@@ -408,8 +425,14 @@ public class DistBuildService implements Closeable {
             },
             executorService);
 
-    return Futures.transform(
-        Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)), input -> null);
+    ListenableFuture<Void> resultFuture =
+        Futures.transform(
+            Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)), input -> null);
+
+    resultFuture.addListener(
+        () -> distBuildClientStats.stopUploadBuckDotFilesTimer(), executorService);
+
+    return resultFuture;
   }
 
   public void uploadBuildSlaveConsoleEvents(

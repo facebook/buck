@@ -68,6 +68,7 @@ public class DistBuildClientExecutor {
   private final DistBuildLogStateTracker distBuildLogStateTracker;
   private final BuildJobState buildJobState;
   private final BuckVersion buckVersion;
+  private final DistBuildClientStatsTracker distBuildClientStats;
   private final ScheduledExecutorService scheduler;
   private final int statusPollIntervalMillis;
   private final Map<RunId, Integer> nextEventIdBySlaveRunId = new HashMap<>();
@@ -87,12 +88,14 @@ public class DistBuildClientExecutor {
       DistBuildService distBuildService,
       DistBuildLogStateTracker distBuildLogStateTracker,
       BuckVersion buckVersion,
+      DistBuildClientStatsTracker distBuildClientStats,
       ScheduledExecutorService scheduler,
       int statusPollIntervalMillis) {
     this.buildJobState = buildJobState;
     this.distBuildService = distBuildService;
     this.distBuildLogStateTracker = distBuildLogStateTracker;
     this.buckVersion = buckVersion;
+    this.distBuildClientStats = distBuildClientStats;
     this.scheduler = scheduler;
     this.statusPollIntervalMillis = statusPollIntervalMillis;
   }
@@ -102,12 +105,14 @@ public class DistBuildClientExecutor {
       DistBuildService distBuildService,
       DistBuildLogStateTracker distBuildLogStateTracker,
       BuckVersion buckVersion,
+      DistBuildClientStatsTracker distBuildClientStats,
       ScheduledExecutorService scheduler) {
     this(
         buildJobState,
         distBuildService,
         distBuildLogStateTracker,
         buckVersion,
+        distBuildClientStats,
         scheduler,
         DEFAULT_STATUS_POLL_INTERVAL_MILLIS);
   }
@@ -120,23 +125,30 @@ public class DistBuildClientExecutor {
       BuildMode buildMode,
       int numberOfMinions)
       throws IOException, InterruptedException {
+
+    distBuildClientStats.startCreateBuildTimer();
     BuildJob job = distBuildService.createBuild(buildMode, numberOfMinions);
+    distBuildClientStats.stopCreateBuildTimer();
+
     final StampedeId stampedeId = job.getStampedeId();
+    distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());
     logDebugInfo(job);
     postDistBuildStatusEvent(eventBus, job, ImmutableList.of(), "UPLOADING DATA");
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
+
     LOG.info("Uploading local changes.");
     asyncJobs.add(
-        distBuildService.uploadMissingFilesAsync(buildJobState.fileHashes, networkExecutorService));
+        distBuildService.uploadMissingFilesAsync(
+            buildJobState.fileHashes, distBuildClientStats, networkExecutorService));
 
     LOG.info("Uploading target graph.");
     asyncJobs.add(
         networkExecutorService.submit(
             () -> {
               try {
-                distBuildService.uploadTargetGraph(buildJobState, stampedeId);
+                distBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStats);
               } catch (IOException e) {
                 throw new RuntimeException("Failed to upload target graph with exception.", e);
               }
@@ -145,7 +157,11 @@ public class DistBuildClientExecutor {
     LOG.info("Uploading buck dot-files.");
     asyncJobs.add(
         distBuildService.uploadBuckDotFilesAsync(
-            stampedeId, projectFilesystem, fileHashCache, networkExecutorService));
+            stampedeId,
+            projectFilesystem,
+            fileHashCache,
+            distBuildClientStats,
+            networkExecutorService));
 
     try {
       Futures.allAsList(asyncJobs).get();
@@ -155,9 +171,10 @@ public class DistBuildClientExecutor {
     }
     postDistBuildStatusEvent(eventBus, job, ImmutableList.of(), "STARTING REMOTE BUILD");
 
-    distBuildService.setBuckVersion(stampedeId, buckVersion);
+    distBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStats);
     LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());
 
+    distBuildClientStats.startPerformDistributedBuildTimer();
     job = distBuildService.startBuild(stampedeId);
     LOG.info("Started job. Build status: " + job.getStatus().toString());
     logDebugInfo(job);
@@ -255,6 +272,8 @@ public class DistBuildClientExecutor {
       } else {
         throw new HumanReadableException(e, "Failed to fetch build information from server.");
       }
+    } finally {
+      distBuildClientStats.stopPerformDistributedBuildTimer();
     }
 
     postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
@@ -453,6 +472,8 @@ public class DistBuildClientExecutor {
       return;
     }
 
+    distBuildClientStats.startMaterializeSlaveLogsTimer();
+
     try {
       MultiGetBuildSlaveLogDirResponse logDirsResponse =
           distBuildService.fetchBuildSlaveLogDir(job.stampedeId, runIds);
@@ -462,6 +483,7 @@ public class DistBuildClientExecutor {
     } catch (IOException ex) {
       LOG.error(ex, "Error fetching slave log directories from frontend.");
     }
+    distBuildClientStats.stopMaterializeSlaveLogsTimer();
   }
 
   public static final class JobCompletedException extends RuntimeException {

@@ -84,6 +84,7 @@ public class DistBuildClientExecutorTest {
   private FakeFileHashCache fakeFileHashCache;
   private BuckEventBus mockEventBus;
   private StampedeId stampedeId;
+  private DistBuildClientStatsTracker distBuildClientStatsTracker;
 
   @Before
   public void setUp() {
@@ -93,9 +94,16 @@ public class DistBuildClientExecutorTest {
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
     buildJobState = createMinimalFakeBuildJobState();
+    distBuildClientStatsTracker = new DistBuildClientStatsTracker();
     distBuildClientExecutor =
         new DistBuildClientExecutor(
-            buildJobState, mockDistBuildService, mockLogStateTracker, buckVersion, scheduler, 1);
+            buildJobState,
+            mockDistBuildService,
+            mockLogStateTracker,
+            buckVersion,
+            distBuildClientStatsTracker,
+            scheduler,
+            1);
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     fakeProjectFilesystem = new FakeProjectFilesystem();
@@ -373,15 +381,21 @@ public class DistBuildClientExecutorTest {
     job.setStampedeId(stampedeId);
 
     expect(mockDistBuildService.createBuild(BuildMode.REMOTE_BUILD, 1)).andReturn(job);
-    expect(mockDistBuildService.uploadMissingFilesAsync(buildJobState.fileHashes, directExecutor))
+    expect(
+            mockDistBuildService.uploadMissingFilesAsync(
+                buildJobState.fileHashes, distBuildClientStatsTracker, directExecutor))
         .andReturn(Futures.immediateFuture(null));
     expect(
             mockDistBuildService.uploadBuckDotFilesAsync(
-                stampedeId, fakeProjectFilesystem, fakeFileHashCache, directExecutor))
+                stampedeId,
+                fakeProjectFilesystem,
+                fakeFileHashCache,
+                distBuildClientStatsTracker,
+                directExecutor))
         .andReturn(Futures.immediateFuture(null));
-    mockDistBuildService.uploadTargetGraph(buildJobState, stampedeId);
+    mockDistBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStatsTracker);
     expectLastCall().once();
-    mockDistBuildService.setBuckVersion(stampedeId, buckVersion);
+    mockDistBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStatsTracker);
     expectLastCall().once();
 
     // There's no point checking the DistBuildStatusEvent, since we don't know what 'stage' the
