@@ -1924,6 +1924,12 @@ public class ProjectGenerator {
         case BUNDLE:
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PLUGINS));
+        case XPC:
+          return Optional.of(
+              CopyFilePhaseDestinationSpec.builder()
+                  .setDestination(PBXCopyFilesBuildPhase.Destination.XPC)
+                  .setPath("$(CONTENTS_FOLDER_PATH)/XPCServices")
+                  .build());
           //$CASES-OMITTED$
         default:
           return Optional.of(
