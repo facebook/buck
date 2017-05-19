@@ -127,32 +127,27 @@ public class JarBuilder {
     try (CustomJarOutputStream jar =
         ZipOutputStreams.newJarOutputStream(outputFile, APPEND_TO_ZIP)) {
       jar.setEntryHashingEnabled(shouldHashEntries);
-      return appendToJarFile(outputFile, jar);
+      this.outputFile = outputFile;
+      this.jar = jar;
+
+      // Write the manifest first.
+      writeManifest();
+
+      // Sort entries across all suppliers
+      List<JarEntrySupplier> sortedEntries = new ArrayList<>();
+      for (JarEntryContainer sourceContainer : sourceContainers) {
+        sourceContainer.stream().forEach(sortedEntries::add);
+      }
+      sortedEntries.sort(Comparator.comparing(supplier -> supplier.getEntry().getName()));
+
+      addEntriesToJar(sortedEntries);
+
+      if (mainClass != null && !mainClassPresent()) {
+        throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
+      }
+
+      return 0;
     }
-  }
-
-  public int appendToJarFile(Path outputFile, CustomJarOutputStream jar) throws IOException {
-    Preconditions.checkArgument(outputFile.isAbsolute());
-    this.outputFile = outputFile;
-    this.jar = jar;
-
-    // Write the manifest first.
-    writeManifest();
-
-    // Sort entries across all suppliers
-    List<JarEntrySupplier> sortedEntries = new ArrayList<>();
-    for (JarEntryContainer sourceContainer : sourceContainers) {
-      sourceContainer.stream().forEach(sortedEntries::add);
-    }
-    sortedEntries.sort(Comparator.comparing(supplier -> supplier.getEntry().getName()));
-
-    addEntriesToJar(sortedEntries);
-
-    if (mainClass != null && !mainClassPresent()) {
-      throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
-    }
-
-    return 0;
   }
 
   private void writeManifest() throws IOException {

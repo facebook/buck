@@ -19,8 +19,9 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.testutil.TestCustomJarOutputStream;
+import com.facebook.buck.testutil.TestJar;
 import com.facebook.buck.zip.JarBuilder;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ import org.junit.rules.TemporaryFolder;
 /** Tests {@link JavaInMemoryFileObject} */
 public class JavaInMemoryFileObjectTest {
 
-  @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
   public void testJavaFileName() throws Exception {
@@ -58,10 +59,10 @@ public class JavaInMemoryFileObjectTest {
     out.write("content".getBytes());
     out.close();
 
-    TestCustomJarOutputStream outputStream = writeToJar(inMemoryFileObject);
-    assertEquals(2, outputStream.getZipEntries().size());
-    assertEquals(2, outputStream.getEntriesContent().size());
-    assertEquals("content", outputStream.getEntriesContent().get(1));
+    TestJar jar = writeToJar(inMemoryFileObject);
+    assertEquals(2, jar.getZipEntries().size());
+    assertEquals(2, jar.getEntriesContent().size());
+    assertEquals("content", jar.getEntriesContent().get(1));
   }
 
   @Test
@@ -84,11 +85,11 @@ public class JavaInMemoryFileObjectTest {
     file2Out.write("file2Content".getBytes());
     file2Out.close();
 
-    TestCustomJarOutputStream outputStream = writeToJar(file1, file2);
-    assertEquals(3, outputStream.getZipEntries().size());
-    assertEquals(3, outputStream.getEntriesContent().size());
-    assertEquals("file1Content", outputStream.getEntriesContent().get(1));
-    assertEquals("file2Content", outputStream.getEntriesContent().get(2));
+    TestJar jar = writeToJar(file1, file2);
+    assertEquals(3, jar.getZipEntries().size());
+    assertEquals(3, jar.getEntriesContent().size());
+    assertEquals("file1Content", jar.getEntriesContent().get(1));
+    assertEquals("file2Content", jar.getEntriesContent().get(2));
   }
 
   @Test
@@ -145,14 +146,13 @@ public class JavaInMemoryFileObjectTest {
     }
   }
 
-  public TestCustomJarOutputStream writeToJar(JavaInMemoryFileObject... entries)
-      throws IOException {
-    TestCustomJarOutputStream os = new TestCustomJarOutputStream();
+  public TestJar writeToJar(JavaInMemoryFileObject... entries) throws IOException {
+    File jarFile = temp.newFile();
     JarBuilder jarBuilder = new JarBuilder();
     for (JavaInMemoryFileObject entry : entries) {
       entry.writeToJar(jarBuilder, "owner");
     }
-    jarBuilder.appendToJarFile(temporaryFolder.newFile().toPath(), os);
-    return os;
+    jarBuilder.createJarFile(jarFile.toPath());
+    return new TestJar(jarFile);
   }
 }

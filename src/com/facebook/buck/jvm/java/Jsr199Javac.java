@@ -36,7 +36,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.JarBuilder;
-import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -171,13 +170,6 @@ public abstract class Jsr199Javac implements Javac {
           return result;
         }
 
-        jarOutputStream =
-            ZipOutputStreams.newJarOutputStream(
-                Preconditions.checkNotNull(directToJarPath),
-                ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
-        if (compilationMode == JavacCompilationMode.ABI) {
-          jarOutputStream.setEntryHashingEnabled(true);
-        }
         JarBuilder jarBuilder = new JarBuilder();
         Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
         return jarBuilder
@@ -193,14 +185,9 @@ public abstract class Jsr199Javac implements Javac {
             .setManifestFile(
                 context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
             .setShouldMergeManifests(true)
+            .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
             .setEntryPatternBlacklist(ImmutableSet.of())
-            .appendToJarFile(
-                context
-                    .getProjectFilesystem()
-                    .resolve(
-                        context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath()),
-                Preconditions.checkNotNull(jarOutputStream));
-
+            .createJarFile(Preconditions.checkNotNull(directToJarPath));
       } finally {
         close(compilationUnits);
       }
