@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,8 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 
-/** A simple {@link CustomZipOutputStream} for testing purposes. */
-public class TestCustomZipOutputStream extends CustomZipOutputStream {
+/** A simple {@link CustomJarOutputStream} for testing purposes. */
+public class TestCustomJarOutputStream extends CustomJarOutputStream {
   private static class Impl implements CustomZipOutputStream.Impl {
     private ZipEntry currentEntry;
     private ByteArrayOutputStream currentEntryContent = new ByteArrayOutputStream();
@@ -54,11 +55,11 @@ public class TestCustomZipOutputStream extends CustomZipOutputStream {
 
   private final Impl impl;
 
-  public TestCustomZipOutputStream() {
+  public TestCustomJarOutputStream() {
     this(new Impl());
   }
 
-  private TestCustomZipOutputStream(Impl impl) {
+  private TestCustomJarOutputStream(Impl impl) {
     super(impl);
     this.impl = impl;
   }

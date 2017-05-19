@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.testutil.TestCustomZipOutputStream;
+import com.facebook.buck.testutil.TestCustomJarOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +68,7 @@ public class JavaInMemoryFileObjectTest {
     out.write("content".getBytes());
     out.close();
 
-    TestCustomZipOutputStream outputStream = writeToJar(inMemoryFileObject);
+    TestCustomJarOutputStream outputStream = writeToJar(inMemoryFileObject);
     assertEquals(1, outputStream.getZipEntries().size());
     assertEquals(1, outputStream.getEntriesContent().size());
     assertEquals("content", outputStream.getEntriesContent().get(0));
@@ -100,7 +100,7 @@ public class JavaInMemoryFileObjectTest {
     file2Out.write("file2Content".getBytes());
     file2Out.close();
 
-    TestCustomZipOutputStream outputStream = writeToJar(file1, file2);
+    TestCustomJarOutputStream outputStream = writeToJar(file1, file2);
     assertEquals(2, outputStream.getZipEntries().size());
     assertEquals(2, outputStream.getEntriesContent().size());
     assertEquals("file1Content", outputStream.getEntriesContent().get(0));
@@ -164,9 +164,9 @@ public class JavaInMemoryFileObjectTest {
     }
   }
 
-  public TestCustomZipOutputStream writeToJar(JavaInMemoryFileObject... entries)
+  public TestCustomJarOutputStream writeToJar(JavaInMemoryFileObject... entries)
       throws IOException {
-    TestCustomZipOutputStream os = new TestCustomZipOutputStream();
+    TestCustomJarOutputStream os = new TestCustomJarOutputStream();
     for (JavaInMemoryFileObject entry : entries) {
       entry.writeToJar(os);
     }
