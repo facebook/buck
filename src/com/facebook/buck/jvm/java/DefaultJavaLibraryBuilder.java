@@ -375,14 +375,17 @@ public class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
       if (finalFullJarDeclaredDeps == null) {
-        finalFullJarDeclaredDeps =
-            ImmutableSortedSet.copyOf(
-                Iterables.concat(
-                    initialParams.getDeclaredDeps().get(),
-                    getCompileStepFactory().getDeclaredDeps(ruleFinder)));
+        finalFullJarDeclaredDeps = buildFinalFullJarDeclaredDeps();
       }
 
       return finalFullJarDeclaredDeps;
+    }
+
+    protected ImmutableSortedSet<BuildRule> buildFinalFullJarDeclaredDeps() {
+      return ImmutableSortedSet.copyOf(
+          Iterables.concat(
+              initialParams.getDeclaredDeps().get(),
+              getCompileStepFactory().getDeclaredDeps(ruleFinder)));
     }
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths()

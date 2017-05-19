@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
-import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
@@ -40,20 +39,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.rules.query.QueryUtils;
-import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -120,72 +109,25 @@ public class AndroidLibraryDescription
 
     JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
-    final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier =
-        args.getDepsQuery().isPresent()
-            ? Suppliers.memoize(
-                () ->
-                    QueryUtils.resolveDepQuery(
-                            params.getBuildTarget(),
-                            args.getDepsQuery().get(),
-                            resolver,
-                            cellRoots,
-                            targetGraph,
-                            args.getDeps())
-                        .collect(MoreCollectors.toImmutableList()))
-            : ImmutableList::of;
-
-    final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier =
-        Suppliers.memoize(
-            () ->
-                resolver
-                    .getAllRulesStream(args.getExportedDeps())
-                    .collect(MoreCollectors.toImmutableList()));
-
-    AndroidLibraryGraphEnhancer graphEnhancer =
-        new AndroidLibraryGraphEnhancer(
-            params.getBuildTarget(),
-            params.copyReplacingExtraDeps(
-                () ->
-                    ImmutableSortedSet.copyOf(
-                        Iterables.concat(queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
-            JavacFactory.create(ruleFinder, javaBuckConfig, args),
-            javacOptions,
-            DependencyMode.FIRST_ORDER,
-            /* forceFinalResourceIds */ false,
-            args.getResourceUnionPackage(),
-            args.getFinalRName(),
-            false);
-    Optional<DummyRDotJava> dummyRDotJava =
-        graphEnhancer.getBuildableForAndroidResources(
-            resolver, /* createBuildableIfEmpty */ hasDummyRDotJavaFlavor);
+    AndroidLibrary.Builder defaultJavaLibraryBuilder =
+        (AndroidLibrary.Builder)
+            AndroidLibrary.builder(
+                    targetGraph,
+                    params,
+                    resolver,
+                    cellRoots,
+                    javaBuckConfig,
+                    javacOptions,
+                    args,
+                    compilerFactory)
+                .setArgs(args)
+                .setJavacOptions(javacOptions)
+                .setTests(args.getTests());
 
     if (hasDummyRDotJavaFlavor) {
-      return dummyRDotJava.get();
-    } else {
-      ImmutableSortedSet<BuildRule> declaredDeps =
-          RichStream.fromSupplierOfIterable(params.getDeclaredDeps())
-              .concat(RichStream.from(dummyRDotJava))
-              .concat(RichStream.fromSupplierOfIterable(queriedDepsSupplier))
-              .toImmutableSortedSet(Ordering.natural());
-
-      BuildRuleParams androidLibraryParams =
-          params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(declaredDeps), params.getExtraDeps());
-
-      return AndroidLibrary.builder(
-              targetGraph,
-              androidLibraryParams,
-              resolver,
-              cellRoots,
-              javaBuckConfig,
-              javacOptions,
-              args,
-              compilerFactory)
-          .setArgs(args)
-          .setJavacOptions(javacOptions)
-          .setTests(args.getTests())
-          .build();
+      return defaultJavaLibraryBuilder.buildDummyRDotJava();
     }
+    return defaultJavaLibraryBuilder.build();
   }
 
   @Override
