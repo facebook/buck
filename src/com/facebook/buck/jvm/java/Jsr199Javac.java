@@ -177,7 +177,7 @@ public abstract class Jsr199Javac implements Javac {
         if (compilationMode == JavacCompilationMode.ABI) {
           jarOutputStream.setEntryHashingEnabled(true);
         }
-        return new JarBuilder(context.getProjectFilesystem())
+        return new JarBuilder()
             .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
             .setEntriesToJar(
                 context

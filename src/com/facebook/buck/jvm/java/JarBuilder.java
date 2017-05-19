@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.CustomJarOutputStream;
@@ -62,8 +61,6 @@ public class JarBuilder {
     void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) throws IOException;
   }
 
-  private final ProjectFilesystem filesystem;
-
   private Observer observer = Observer.IGNORING;
   @Nullable private Path outputFile;
   @Nullable private CustomJarOutputStream jar;
@@ -74,10 +71,6 @@ public class JarBuilder {
   private Iterable<Pattern> blacklist = new ArrayList<>();
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
-
-  public JarBuilder(ProjectFilesystem filesystem) {
-    this.filesystem = filesystem;
-  }
 
   public JarBuilder setObserver(Observer observer) {
     this.observer = observer;
@@ -114,7 +107,8 @@ public class JarBuilder {
     return this;
   }
 
-  public JarBuilder setManifestFile(Path manifestFile) {
+  public JarBuilder setManifestFile(@Nullable Path manifestFile) {
+    Preconditions.checkArgument(manifestFile == null || manifestFile.isAbsolute());
     this.manifestFile = manifestFile;
     return this;
   }
@@ -178,8 +172,7 @@ public class JarBuilder {
     // Even if not merging manifests, we should include the one the user gave us. We do this last
     // so that values from the user overwrite values from merged manifests.
     if (manifestFile != null) {
-      Path path = filesystem.getPathForRelativePath(manifestFile);
-      try (InputStream stream = Files.newInputStream(path)) {
+      try (InputStream stream = Files.newInputStream(manifestFile)) {
         Manifest readManifest = new Manifest(stream);
         merge(manifest, readManifest);
       }

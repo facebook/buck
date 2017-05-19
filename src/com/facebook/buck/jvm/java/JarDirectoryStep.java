@@ -152,11 +152,11 @@ public class JarDirectoryStep implements Step {
     JavacEventSinkToBuckEventBusBridge eventSink =
         new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
     return StepExecutionResult.of(
-        new JarBuilder(filesystem)
+        new JarBuilder()
             .setObserver(new LoggingJarBuilderObserver(eventSink))
             .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
             .setMainClass(Optional.ofNullable(mainClass).orElse(null))
-            .setManifestFile(Optional.ofNullable(manifestFile).orElse(null))
+            .setManifestFile(manifestFile != null ? filesystem.resolve(manifestFile) : null)
             .setShouldMergeManifests(mergeManifests)
             .setShouldHashEntries(hashEntries)
             .setEntryPatternBlacklist(blacklist)
