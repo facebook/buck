@@ -585,6 +585,7 @@ java_test(
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",

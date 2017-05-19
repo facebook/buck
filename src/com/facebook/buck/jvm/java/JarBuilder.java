@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -145,9 +146,14 @@ public class JarBuilder {
     // Write the manifest first.
     writeManifest();
 
+    // Sort entries across all suppliers
+    List<JarEntrySupplier> sortedEntries = new ArrayList<>();
     for (JarEntryContainer sourceContainer : sourceContainers) {
-      addEntriesToJar(sourceContainer);
+      sourceContainer.stream().forEach(sortedEntries::add);
     }
+    sortedEntries.sort(Comparator.comparing(supplier -> supplier.getEntry().getName()));
+
+    addEntriesToJar(sortedEntries);
 
     if (mainClass != null && !mainClassPresent()) {
       throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
@@ -204,8 +210,7 @@ public class JarBuilder {
     return entry;
   }
 
-  private void addEntriesToJar(JarEntryContainer container) throws IOException {
-    Iterable<JarEntrySupplier> entries = container.stream()::iterator;
+  private void addEntriesToJar(Iterable<JarEntrySupplier> entries) throws IOException {
     for (JarEntrySupplier entrySupplier : entries) {
       addEntryToJar(entrySupplier);
     }
