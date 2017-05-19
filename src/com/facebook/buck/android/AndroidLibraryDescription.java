@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -36,11 +35,9 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -92,23 +89,9 @@ public class AndroidLibraryDescription
       return new JavaSourceJar(params, args.getSrcs(), args.getMavenCoords());
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      Preconditions.checkArgument(!hasDummyRDotJavaFlavor);
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
-      BuildRule libraryRule = resolver.requireRule(libraryTarget);
-      return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
-          ruleFinder,
-          params,
-          Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()));
-    }
-
     JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
-
     AndroidLibrary.Builder defaultJavaLibraryBuilder =
         (AndroidLibrary.Builder)
             AndroidLibrary.builder(
@@ -126,6 +109,8 @@ public class AndroidLibraryDescription
 
     if (hasDummyRDotJavaFlavor) {
       return defaultJavaLibraryBuilder.buildDummyRDotJava();
+    } else if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+      return defaultJavaLibraryBuilder.buildAbi();
     }
     return defaultJavaLibraryBuilder.build();
   }
