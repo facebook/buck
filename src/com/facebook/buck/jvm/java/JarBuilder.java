@@ -25,7 +25,6 @@ import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,8 +82,6 @@ public class JarBuilder {
   }
 
   public JarBuilder setEntriesToJar(Iterable<Path> entriesToJar) {
-    sourceContainers.clear();
-
     RichStream.from(entriesToJar)
         .peek(path -> Preconditions.checkArgument(path.isAbsolute()))
         .map(JarEntryContainer::of)
@@ -93,13 +90,13 @@ public class JarBuilder {
     return this;
   }
 
-  public JarBuilder addEntryContainer(JarEntryContainer container) {
-    sourceContainers.add(container);
+  public JarBuilder addEntry(JarEntrySupplier supplier) {
+    sourceContainers.add(new SingletonJarEntryContainer(supplier));
     return this;
   }
 
-  public JarBuilder setAlreadyAddedEntries(ImmutableSet<String> alreadyAddedEntries) {
-    alreadyAddedEntries.forEach(this.alreadyAddedEntries::add);
+  public JarBuilder addEntryContainer(JarEntryContainer container) {
+    sourceContainers.add(container);
     return this;
   }
 
@@ -295,5 +292,34 @@ public class JarBuilder {
 
   private boolean isDuplicateAllowed(String name) {
     return !name.endsWith(".class") && !name.endsWith("/");
+  }
+
+  private static class SingletonJarEntryContainer implements JarEntryContainer {
+    private final JarEntrySupplier supplier;
+
+    @Nullable private Manifest manifest;
+
+    private SingletonJarEntryContainer(JarEntrySupplier supplier) {
+      this.supplier = supplier;
+    }
+
+    @Nullable
+    @Override
+    public Manifest getManifest() throws IOException {
+      if (manifest == null && supplier.getEntry().getName().equals(JarFile.MANIFEST_NAME)) {
+        try (InputStream manifestStream = supplier.getInputStreamSupplier().get()) {
+          manifest = new Manifest(manifestStream);
+        }
+      }
+      return manifest;
+    }
+
+    @Override
+    public Stream<JarEntrySupplier> stream() throws IOException {
+      return Stream.of(supplier);
+    }
+
+    @Override
+    public void close() {}
   }
 }

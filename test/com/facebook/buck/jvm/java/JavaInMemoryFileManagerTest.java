@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import javax.tools.DiagnosticCollector;
@@ -38,10 +39,14 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Tests {@link JavaInMemoryFileManager} */
 public class JavaInMemoryFileManagerTest {
+
+  @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   private JavaInMemoryFileManager inMemoryFileManager;
 
@@ -80,8 +85,8 @@ public class JavaInMemoryFileManagerTest {
 
     TestCustomJarOutputStream outputStream = writeToJar();
     List<String> entries = outputStream.getEntriesContent();
-    assertEquals(1, entries.size());
-    assertEquals("Hello World!", entries.get(0));
+    assertEquals(2, entries.size());
+    assertEquals("Hello World!", entries.get(1));
   }
 
   @Test
@@ -109,7 +114,7 @@ public class JavaInMemoryFileManagerTest {
     TestCustomJarOutputStream outputStream = writeToJar();
     assertThat(
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.contains("A.class", "B$D.class", "B.class", "B/C.class"));
+        Matchers.contains(JarFile.MANIFEST_NAME, "A.class", "B$D.class", "B.class", "B/C.class"));
   }
 
   @Test
@@ -126,7 +131,8 @@ public class JavaInMemoryFileManagerTest {
     TestCustomJarOutputStream outputStream = writeToJar();
     List<String> zipEntries =
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList());
-    assertThat(zipEntries, Matchers.contains("jvm/java/JavaFileParser.class"));
+    assertThat(
+        zipEntries, Matchers.contains(JarFile.MANIFEST_NAME, "jvm/java/JavaFileParser.class"));
   }
 
   @Test
@@ -154,7 +160,9 @@ public class JavaInMemoryFileManagerTest {
     assertThat(
         zipEntries,
         Matchers.contains(
-            "jvm/java/JavaFileParser.class", "jvm/java/JavaInMemoryFileManager.class"));
+            JarFile.MANIFEST_NAME,
+            "jvm/java/JavaFileParser.class",
+            "jvm/java/JavaInMemoryFileManager.class"));
   }
 
   @Test
@@ -266,7 +274,7 @@ public class JavaInMemoryFileManagerTest {
     TestCustomJarOutputStream outputStream = writeToJar();
     assertThat(
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.empty());
+        Matchers.contains(JarFile.MANIFEST_NAME));
   }
 
   @Test
@@ -277,7 +285,7 @@ public class JavaInMemoryFileManagerTest {
     TestCustomJarOutputStream outputStream = writeToJar();
     assertThat(
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.empty());
+        Matchers.contains(JarFile.MANIFEST_NAME));
   }
 
   @Test
@@ -294,12 +302,14 @@ public class JavaInMemoryFileManagerTest {
     TestCustomJarOutputStream outputStream = writeToJar();
     assertThat(
         outputStream.getZipEntries().stream().map(ZipEntry::getName).collect(Collectors.toList()),
-        Matchers.empty());
+        Matchers.contains(JarFile.MANIFEST_NAME));
   }
 
   private TestCustomJarOutputStream writeToJar() throws IOException {
     TestCustomJarOutputStream os = new TestCustomJarOutputStream();
-    inMemoryFileManager.writeToJar(os);
+    JarBuilder jarBuilder = new JarBuilder();
+    inMemoryFileManager.writeToJar(jarBuilder);
+    jarBuilder.appendToJarFile(temporaryFolder.newFile().toPath(), os);
     return os;
   }
 }

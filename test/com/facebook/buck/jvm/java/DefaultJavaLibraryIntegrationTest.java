@@ -749,6 +749,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.getPath(BuildTargets.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
+    assertThat(zip.getNextEntry().getName(), is("META-INF/MANIFEST.MF"));
     assertThat(zip.getNextEntry().getName(), is("A.class"));
     assertThat(zip.getNextEntry().getName(), is("B.class"));
     zip.close();

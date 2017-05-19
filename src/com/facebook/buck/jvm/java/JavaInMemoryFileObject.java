@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.CustomZipEntry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -28,8 +28,6 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
-import java.util.concurrent.Semaphore;
-import java.util.zip.ZipEntry;
 import javax.tools.SimpleJavaFileObject;
 
 /**
@@ -45,12 +43,10 @@ public class JavaInMemoryFileObject extends JarFileObject {
 
   private boolean isOpened = false;
   private boolean isWritten = false;
-  private final Semaphore jarFileSemaphore;
   private final ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
 
-  public JavaInMemoryFileObject(URI uri, String pathInJar, Kind kind, Semaphore jarFileSemaphore) {
+  public JavaInMemoryFileObject(URI uri, String pathInJar, Kind kind) {
     super(uri, pathInJar, kind);
-    this.jarFileSemaphore = jarFileSemaphore;
   }
 
   @Override
@@ -100,19 +96,12 @@ public class JavaInMemoryFileObject extends JarFileObject {
   }
 
   @Override
-  public void writeToJar(CustomZipOutputStream jarOutputStream) throws IOException {
+  public void writeToJar(JarBuilder jarBuilder, String owner) {
     if (!isWritten) {
       // Nothing was written to this file, so it doesn't really exist.
       return;
     }
-    jarFileSemaphore.acquireUninterruptibly();
-    try {
-      final ZipEntry entry = JavaInMemoryFileManager.createEntry(getName());
-      jarOutputStream.putNextEntry(entry);
-      jarOutputStream.write(bos.toByteArray());
-      jarOutputStream.closeEntry();
-    } finally {
-      jarFileSemaphore.release();
-    }
+    jarBuilder.addEntry(
+        new JarEntrySupplier(new CustomZipEntry(getName()), owner, this::openInputStream));
   }
 }

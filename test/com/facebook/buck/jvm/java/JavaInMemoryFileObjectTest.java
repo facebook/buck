@@ -25,30 +25,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.concurrent.Semaphore;
 import javax.tools.JavaFileObject;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Tests {@link JavaInMemoryFileObject} */
 public class JavaInMemoryFileObjectTest {
 
-  private Semaphore semaphore;
-
-  @Before
-  public void setUp() {
-    semaphore = new Semaphore(1);
-  }
+  @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Test
   public void testJavaFileName() throws Exception {
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     JavaInMemoryFileObject inMemoryFileObject =
         new JavaInMemoryFileObject(
-            URI.create("file://tmp/" + relativePath),
-            relativePath,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            URI.create("file://tmp/" + relativePath), relativePath, JavaFileObject.Kind.CLASS);
 
     final String expectedName = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     assertEquals(expectedName, inMemoryFileObject.getName());
@@ -59,19 +51,16 @@ public class JavaInMemoryFileObjectTest {
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     JavaInMemoryFileObject inMemoryFileObject =
         new JavaInMemoryFileObject(
-            URI.create("file://tmp/" + relativePath),
-            relativePath,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            URI.create("file://tmp/" + relativePath), relativePath, JavaFileObject.Kind.CLASS);
 
     OutputStream out = inMemoryFileObject.openOutputStream();
     out.write("content".getBytes());
     out.close();
 
     TestCustomJarOutputStream outputStream = writeToJar(inMemoryFileObject);
-    assertEquals(1, outputStream.getZipEntries().size());
-    assertEquals(1, outputStream.getEntriesContent().size());
-    assertEquals("content", outputStream.getEntriesContent().get(0));
+    assertEquals(2, outputStream.getZipEntries().size());
+    assertEquals(2, outputStream.getEntriesContent().size());
+    assertEquals("content", outputStream.getEntriesContent().get(1));
   }
 
   @Test
@@ -79,18 +68,12 @@ public class JavaInMemoryFileObjectTest {
     String relativePath = "com/facebook/buck/java/JavaFileParser.class";
     JavaInMemoryFileObject file1 =
         new JavaInMemoryFileObject(
-            URI.create("file://tmp/" + relativePath),
-            relativePath,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            URI.create("file://tmp/" + relativePath), relativePath, JavaFileObject.Kind.CLASS);
 
     String relativePath2 = "com/facebook/buck/java/JavaLibrary.class";
     JavaInMemoryFileObject file2 =
         new JavaInMemoryFileObject(
-            URI.create("file://tmp/" + relativePath2),
-            relativePath2,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            URI.create("file://tmp/" + relativePath2), relativePath2, JavaFileObject.Kind.CLASS);
 
     OutputStream file1Out = file1.openOutputStream();
     file1Out.write("file1Content".getBytes());
@@ -101,10 +84,10 @@ public class JavaInMemoryFileObjectTest {
     file2Out.close();
 
     TestCustomJarOutputStream outputStream = writeToJar(file1, file2);
-    assertEquals(2, outputStream.getZipEntries().size());
-    assertEquals(2, outputStream.getEntriesContent().size());
-    assertEquals("file1Content", outputStream.getEntriesContent().get(0));
-    assertEquals("file2Content", outputStream.getEntriesContent().get(1));
+    assertEquals(3, outputStream.getZipEntries().size());
+    assertEquals(3, outputStream.getEntriesContent().size());
+    assertEquals("file1Content", outputStream.getEntriesContent().get(1));
+    assertEquals("file2Content", outputStream.getEntriesContent().get(2));
   }
 
   @Test
@@ -115,8 +98,7 @@ public class JavaInMemoryFileObjectTest {
         new JavaInMemoryFileObject(
             URI.create("jar:file://" + jarPath + "!/" + relativePath),
             relativePath,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            JavaFileObject.Kind.CLASS);
 
     final String expectedName =
         "jar:file:///tmp/test.jar!/com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
@@ -133,8 +115,7 @@ public class JavaInMemoryFileObjectTest {
         new JavaInMemoryFileObject(
             URI.create("jar:file://" + jarPath + "!/" + relativePath),
             relativePath,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            JavaFileObject.Kind.CLASS);
 
     try (InputStream stream = inMemoryFileObject.openInputStream()) {
       stream.read();
@@ -149,8 +130,7 @@ public class JavaInMemoryFileObjectTest {
         new JavaInMemoryFileObject(
             URI.create("jar:file://" + jarPath + "!/" + relativePath),
             relativePath,
-            JavaFileObject.Kind.CLASS,
-            semaphore);
+            JavaFileObject.Kind.CLASS);
 
     try (OutputStream stream = inMemoryFileObject.openOutputStream()) {
       stream.write("Hello World!".getBytes());
@@ -167,9 +147,11 @@ public class JavaInMemoryFileObjectTest {
   public TestCustomJarOutputStream writeToJar(JavaInMemoryFileObject... entries)
       throws IOException {
     TestCustomJarOutputStream os = new TestCustomJarOutputStream();
+    JarBuilder jarBuilder = new JarBuilder();
     for (JavaInMemoryFileObject entry : entries) {
-      entry.writeToJar(os);
+      entry.writeToJar(jarBuilder, "owner");
     }
+    jarBuilder.appendToJarFile(temporaryFolder.newFile().toPath(), os);
     return os;
   }
 }
