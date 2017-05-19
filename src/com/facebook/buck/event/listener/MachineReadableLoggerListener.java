@@ -18,6 +18,8 @@ package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_COMPLETE;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_UPDATE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_UPLOAD_TO_CACHE_STATS;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
@@ -151,7 +153,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public synchronized void timePerfStatsEvent(PerfTimesEventListener.PerfTimesEvent event) {
-    writeToLog("PertTimesStats", event);
+    writeToLog(
+        event instanceof PerfTimesEventListener.PerfTimesEvent.Complete
+            ? PREFIX_PERFTIMES_COMPLETE
+            : PREFIX_PERFTIMES_UPDATE,
+        event);
   }
 
   @Subscribe
