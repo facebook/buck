@@ -159,7 +159,7 @@ public class UnzipAar extends AbstractBuildRule
 
                 new JarBuilder(filesystem)
                     .setObserver(new LoggingJarBuilderObserver(eventSink))
-                    .setEntriesToJar(entriesToJar)
+                    .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
                     .setMainClass(Optional.<String>empty().orElse(null))
                     .setManifestFile(Optional.<Path>empty().orElse(null))
                     .setShouldMergeManifests(true)

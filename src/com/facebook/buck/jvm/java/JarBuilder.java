@@ -20,13 +20,13 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +41,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class JarBuilder {
@@ -83,12 +84,15 @@ public class JarBuilder {
     return this;
   }
 
-  public JarBuilder setEntriesToJar(ImmutableSortedSet<Path> entriesToJar) {
+  public JarBuilder setEntriesToJar(Stream<Path> entriesToJar) {
+    return setEntriesToJar(entriesToJar::iterator);
+  }
+
+  public JarBuilder setEntriesToJar(Iterable<Path> entriesToJar) {
     sourceContainers.clear();
 
-    entriesToJar
-        .stream()
-        .map(filesystem::getPathForRelativePath)
+    RichStream.from(entriesToJar)
+        .peek(path -> Preconditions.checkArgument(path.isAbsolute()))
         .map(JarEntryContainer::of)
         .forEach(sourceContainers::add);
 

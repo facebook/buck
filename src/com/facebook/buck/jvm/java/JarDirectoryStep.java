@@ -154,7 +154,7 @@ public class JarDirectoryStep implements Step {
     return StepExecutionResult.of(
         new JarBuilder(filesystem)
             .setObserver(new LoggingJarBuilderObserver(eventSink))
-            .setEntriesToJar(entriesToJar)
+            .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
             .setMainClass(Optional.ofNullable(mainClass).orElse(null))
             .setManifestFile(Optional.ofNullable(manifestFile).orElse(null))
             .setShouldMergeManifests(mergeManifests)

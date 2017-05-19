@@ -179,7 +179,13 @@ public abstract class Jsr199Javac implements Javac {
         }
         return new JarBuilder(context.getProjectFilesystem())
             .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
-            .setEntriesToJar(context.getDirectToJarOutputSettings().get().getEntriesToJar())
+            .setEntriesToJar(
+                context
+                    .getDirectToJarOutputSettings()
+                    .get()
+                    .getEntriesToJar()
+                    .stream()
+                    .map(context.getProjectFilesystem()::resolve))
             .setAlreadyAddedEntries(
                 Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarOutputStream))
             .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
