@@ -67,39 +67,41 @@ public class WorkerProcessTest {
     Optional<String> stdout = Optional.of("my stdout");
     Optional<String> stderr = Optional.of("my stderr");
 
-    WorkerProcess process =
-        new WorkerProcess(new FakeProcessExecutor(), createDummyParams(), filesystem, tmpPath);
-    process.setProtocol(
-        new FakeWorkerProcessProtocol() {
-          @Override
-          public int receiveCommandResponse(int messageID) throws IOException {
-            // simulate the external tool and write the stdout and stderr files
-            filesystem.writeContentsToPath(stdout.get(), stdoutPath);
-            filesystem.writeContentsToPath(stderr.get(), stderrPath);
-            return super.receiveCommandResponse(messageID);
-          }
-        });
+    try (WorkerProcess process =
+        new WorkerProcess(new FakeProcessExecutor(), createDummyParams(), filesystem, tmpPath)) {
+      process.setProtocol(
+          new FakeWorkerProcessProtocol() {
+            @Override
+            public int receiveCommandResponse(int messageID) throws IOException {
+              // simulate the external tool and write the stdout and stderr files
+              filesystem.writeContentsToPath(stdout.get(), stdoutPath);
+              filesystem.writeContentsToPath(stderr.get(), stderrPath);
+              return super.receiveCommandResponse(messageID);
+            }
+          });
 
-    WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
-    assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));
-    assertThat(filesystem.readFileIfItExists(argsPath).get(), Matchers.equalTo(jobArgs));
+      WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
+      assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));
+      assertThat(filesystem.readFileIfItExists(argsPath).get(), Matchers.equalTo(jobArgs));
+    }
   }
 
   @Test
   public void testClose() throws IOException {
     FakeWorkerProcessProtocol protocol = new FakeWorkerProcessProtocol();
 
-    WorkerProcess process =
+    try (WorkerProcess process =
         new WorkerProcess(
             new FakeProcessExecutor(),
             createDummyParams(),
             new FakeProjectFilesystem(),
-            Paths.get("tmp").toAbsolutePath().normalize());
-    process.setProtocol(protocol);
+            Paths.get("tmp").toAbsolutePath().normalize())) {
+      process.setProtocol(protocol);
 
-    assertFalse(protocol.isClosed());
-    process.close();
-    assertTrue(protocol.isClosed());
+      assertFalse(protocol.isClosed());
+      process.close();
+      assertTrue(protocol.isClosed());
+    }
   }
 
   @Test(timeout = 20 * 1000)
@@ -115,7 +117,7 @@ public class WorkerProcessTest {
     } else {
       script = "./script.py";
     }
-    WorkerProcess workerProcess =
+    try (WorkerProcess workerProcess =
         new WorkerProcess(
             new DefaultProcessExecutor(console),
             ProcessExecutorParams.builder()
@@ -123,8 +125,7 @@ public class WorkerProcessTest {
                 .setDirectory(workspace.getDestPath())
                 .build(),
             projectFilesystem,
-            temporaryPaths.newFolder());
-    try {
+            temporaryPaths.newFolder())) {
       workerProcess.ensureLaunchAndHandshake();
       fail("Handshake should have failed");
     } catch (HumanReadableException e) {
