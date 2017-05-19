@@ -62,8 +62,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   private final DebugPathSanitizer sanitizer;
   private final Optional<SymlinkTree> sandboxTree;
 
-  @VisibleForTesting
-  public CxxPreprocessAndCompile(
+  private CxxPreprocessAndCompile(
       BuildRuleParams params,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
@@ -87,10 +86,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     this.inputType = inputType;
     this.precompiledHeaderRule = precompiledHeaderRule;
     this.sanitizer = sanitizer;
-    performChecks(params);
-  }
-
-  private void performChecks(BuildRuleParams params) {
     Preconditions.checkArgument(
         !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR)
             || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
