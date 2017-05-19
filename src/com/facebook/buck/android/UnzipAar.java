@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JarBuilder;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
 import com.facebook.buck.model.BuildTarget;
@@ -40,6 +39,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

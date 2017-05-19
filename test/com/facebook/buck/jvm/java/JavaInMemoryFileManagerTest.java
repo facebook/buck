@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestCustomJarOutputStream;
+import com.facebook.buck.zip.JarBuilder;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.OutputStream;

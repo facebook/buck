@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

@@ -19,6 +19,9 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.zip.CustomZipEntry;
+import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.zip.JarEntryContainer;
+import com.facebook.buck.zip.JarEntrySupplier;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.File;

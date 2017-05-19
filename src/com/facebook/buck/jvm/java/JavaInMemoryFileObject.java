@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.zip.CustomZipEntry;
+import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.zip.JarEntrySupplier;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;

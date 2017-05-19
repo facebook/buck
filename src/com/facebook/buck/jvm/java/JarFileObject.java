@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.zip.JarBuilder;
 import java.net.URI;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;

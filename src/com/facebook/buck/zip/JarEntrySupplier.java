@@ -14,10 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.zip;
 
 import com.facebook.buck.util.function.ThrowingSupplier;
-import com.facebook.buck.zip.CustomZipEntry;
 import java.io.IOException;
 import java.io.InputStream;
 

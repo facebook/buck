@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.zip.JarBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

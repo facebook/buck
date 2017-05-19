@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.zip;
 
 import com.google.common.base.Preconditions;
 import java.io.IOException;

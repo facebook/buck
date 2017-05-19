@@ -14,16 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.zip;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.zip.CustomJarOutputStream;
-import com.facebook.buck.zip.CustomZipEntry;
-import com.facebook.buck.zip.DeterministicManifest;
-import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
