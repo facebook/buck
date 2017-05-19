@@ -139,7 +139,7 @@ public class MultiarchFileTest {
 
     assertThat(multiarchRule, instanceOf(MultiarchFile.class));
 
-    ImmutableList<Step> steps =
+    ImmutableList<? extends Step> steps =
         multiarchRule.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
 

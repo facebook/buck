@@ -147,7 +147,7 @@ public class PythonTestDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     PythonTest test = builder.build(resolver, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
-    ImmutableList<Step> buildSteps =
+    ImmutableList<? extends Step> buildSteps =
         binary.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     PexStep pexStep = RichStream.from(buildSteps).filter(PexStep.class).toImmutableList().get(0);

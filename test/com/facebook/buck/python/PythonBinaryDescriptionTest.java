@@ -237,7 +237,7 @@ public class PythonBinaryDescriptionTest {
             .setMainModule("main")
             .setBuildArgs(buildArgs)
             .build(resolver);
-    ImmutableList<Step> buildSteps =
+    ImmutableList<? extends Step> buildSteps =
         binary.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
     PexStep pexStep = FluentIterable.from(buildSteps).filter(PexStep.class).get(0);

@@ -1481,7 +1481,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
     // Get and run all of the commands.
-    List<Step> steps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+    List<? extends Step> steps =
+        rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
 
     Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : steps) {

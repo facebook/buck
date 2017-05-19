@@ -63,7 +63,8 @@ public interface BuildRule extends Comparable<BuildRule> {
   @Override
   String toString();
 
-  ImmutableList<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
+  ImmutableList<? extends Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext);
 
   @Nullable
   SourcePath getSourcePathToOutput();
