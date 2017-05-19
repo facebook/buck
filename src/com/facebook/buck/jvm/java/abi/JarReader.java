@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +32,7 @@ class JarReader implements LibraryReader {
   private final Path jarPath;
   @Nullable FileSystem fileSystem;
   @Nullable private DirectoryReader inner;
+  private boolean closed = false;
 
   JarReader(Path jarPath) {
     this.jarPath = jarPath;
@@ -57,10 +59,14 @@ class JarReader implements LibraryReader {
       fileSystem.close();
       fileSystem = null;
       inner = null;
+      closed = true;
     }
   }
 
   private DirectoryReader getInner() throws IOException {
+    // Actually had a file descriptor leak because something was reopening this after it was closed,
+    // so let's make sure we crash and detect it if it happens again.
+    Preconditions.checkState(!closed);
     if (inner == null) {
       fileSystem = FileSystems.newFileSystem(jarPath, null);
       inner = new DirectoryReader(Iterables.getOnlyElement(fileSystem.getRootDirectories()));

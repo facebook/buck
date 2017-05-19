@@ -55,35 +55,38 @@ public class StubJar {
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
-    try (StubJarWriter writer = new FilesystemStubJarWriter(filesystem, path)) {
-      writeTo(writer);
+    // The order of these declarations is important -- FilesystemStubJarWriter actually uses
+    // the LibraryReader in its close method, and try-with-resources closes the items in the
+    // opposite order of their creation.
+    try (LibraryReader input = libraryReaderSupplier.get();
+        StubJarWriter writer = new FilesystemStubJarWriter(filesystem, path)) {
+      writeTo(input, writer);
     }
   }
 
   public void writeTo(JavaFileManager fileManager) throws IOException {
-    try (StubJarWriter writer = new JavaFileManagerStubJarWriter(fileManager)) {
-      writeTo(writer);
+    try (LibraryReader input = libraryReaderSupplier.get();
+        StubJarWriter writer = new JavaFileManagerStubJarWriter(fileManager)) {
+      writeTo(input, writer);
     }
   }
 
-  private void writeTo(StubJarWriter writer) throws IOException {
-    try (LibraryReader input = libraryReaderSupplier.get()) {
-      List<Path> paths =
-          input
-              .getRelativePaths()
-              .stream()
-              .sorted(Comparator.comparing(MorePaths::pathWithUnixSeparators))
-              .collect(Collectors.toList());
+  private void writeTo(LibraryReader input, StubJarWriter writer) throws IOException {
+    List<Path> paths =
+        input
+            .getRelativePaths()
+            .stream()
+            .sorted(Comparator.comparing(MorePaths::pathWithUnixSeparators))
+            .collect(Collectors.toList());
 
-      for (Path path : paths) {
-        StubJarEntry entry = StubJarEntry.of(input, path);
-        if (entry == null) {
-          continue;
-        } else if (entry instanceof StubJarClassEntry) {
-          ((StubJarClassEntry) entry).setSourceAbiCompatible(sourceAbiCompatible);
-        }
-        entry.write(writer);
+    for (Path path : paths) {
+      StubJarEntry entry = StubJarEntry.of(input, path);
+      if (entry == null) {
+        continue;
+      } else if (entry instanceof StubJarClassEntry) {
+        ((StubJarClassEntry) entry).setSourceAbiCompatible(sourceAbiCompatible);
       }
+      entry.write(writer);
     }
   }
 }
