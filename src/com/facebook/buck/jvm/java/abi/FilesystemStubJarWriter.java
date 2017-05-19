@@ -18,20 +18,19 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.zip.CustomJarOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.util.function.ThrowingSupplier;
+import com.facebook.buck.zip.CustomZipEntry;
+import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.zip.JarEntrySupplier;
 import com.google.common.base.Preconditions;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.function.Consumer;
-import java.util.jar.Attributes;
-import org.objectweb.asm.ClassWriter;
 
 /** A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}. */
 class FilesystemStubJarWriter implements StubJarWriter {
-  private final CustomJarOutputStream jar;
+  private final Path outputPath;
+  private final JarBuilder jarBuilder;
   private boolean closed = false;
 
   public FilesystemStubJarWriter(ProjectFilesystem filesystem, Path outputPath) throws IOException {
@@ -42,29 +41,25 @@ class FilesystemStubJarWriter implements StubJarWriter {
       filesystem.createParentDirs(outputPath);
     }
 
-    jar = ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(outputPath));
-    jar.setEntryHashingEnabled(true);
-    jar.getManifest().getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+    this.outputPath = filesystem.resolve(outputPath);
+    jarBuilder = new JarBuilder().setShouldHashEntries(true);
   }
 
   @Override
-  public void writeResource(Path relativePath, InputStream resourceContents) throws IOException {
-    jar.writeEntry(MorePaths.pathWithUnixSeparators(relativePath), resourceContents);
-  }
-
-  @Override
-  public void writeClass(Path relativePath, Consumer<ClassWriter> stubber) throws IOException {
-    ClassWriter writer = new ClassWriter(0);
-    stubber.accept(writer);
-    try (InputStream contents = new ByteArrayInputStream(writer.toByteArray())) {
-      jar.writeEntry(MorePaths.pathWithUnixSeparators(relativePath), contents);
-    }
+  public void writeEntry(
+      Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier)
+      throws IOException {
+    jarBuilder.addEntry(
+        new JarEntrySupplier(
+            new CustomZipEntry(MorePaths.pathWithUnixSeparators(relativePath)),
+            outputPath.toString(),
+            streamSupplier));
   }
 
   @Override
   public void close() throws IOException {
     if (!closed) {
-      jar.close();
+      jarBuilder.createJarFile(outputPath);
     }
     closed = true;
   }

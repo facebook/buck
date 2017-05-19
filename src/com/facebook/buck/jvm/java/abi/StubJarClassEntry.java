@@ -16,9 +16,10 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -57,13 +58,19 @@ class StubJarClassEntry extends StubJarEntry {
 
   @Override
   public void write(StubJarWriter writer) throws IOException {
-    Function<ClassWriter, ? extends ClassVisitor> getFinalVisitor =
-        sourceAbiCompatible ? SourceAbiCompatibleVisitor::new : Function.identity();
+    writer.writeEntry(path, this::openInputStream);
+  }
 
-    writer.writeClass(
-        path,
-        classWriter ->
-            stub.accept(new AbiFilteringClassVisitor(getFinalVisitor.apply(classWriter))));
+  private InputStream openInputStream() throws IOException {
+    ClassWriter writer = new ClassWriter(0);
+    ClassVisitor visitor = writer;
+    if (sourceAbiCompatible) {
+      visitor = new SourceAbiCompatibleVisitor(visitor);
+    }
+    visitor = new AbiFilteringClassVisitor(visitor);
+    stub.accept(visitor);
+
+    return new ByteArrayInputStream(writer.toByteArray());
   }
 
   private static boolean isAnonymousOrLocalClass(ClassNode node) {

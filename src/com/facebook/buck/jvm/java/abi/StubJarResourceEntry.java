@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 
 class StubJarResourceEntry extends StubJarEntry {
@@ -35,8 +34,6 @@ class StubJarResourceEntry extends StubJarEntry {
 
   @Override
   public void write(StubJarWriter writer) throws IOException {
-    try (InputStream resourceContents = input.openResourceFile(path)) {
-      writer.writeResource(path, resourceContents);
-    }
+    writer.writeEntry(path, () -> input.openResourceFile(path));
   }
 }

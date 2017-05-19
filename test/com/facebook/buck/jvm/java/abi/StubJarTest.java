@@ -2903,6 +2903,13 @@ public class StubJarTest {
     private Path stubJarPath;
     private Path fullJarPath;
 
+    public Tester() {
+      expectedDirectory.add("META-INF/");
+      expectedDirectory.add("com/");
+      expectedDirectory.add("com/example/");
+      expectedDirectory.add("com/example/buck/");
+    }
+
     public Tester setSourceFile(String fileName, String... lines) {
       sourceFileName = fileName;
       sourceFileContents = Joiner.on('\n').join(lines);
@@ -2960,6 +2967,9 @@ public class StubJarTest {
       assertEquals("File list is not correct.", expectedDirectory, actualDirectory);
 
       for (String entryName : expectedDirectory) {
+        if (entryName.endsWith("/")) {
+          continue;
+        }
         assertEquals(
             "Stub for " + entryName + " is not correct",
             Joiner.on('\n').join(expectedStubs.get(entryName)),
@@ -3075,6 +3085,9 @@ public class StubJarTest {
       }
       result.append("\")\n");
       for (String fileName : actualDirectory) {
+        if (fileName.endsWith("/") || fileName.equals(JarFile.MANIFEST_NAME)) {
+          continue;
+        }
         if (includeFullAbi) {
           result.append("        .addExpectedFullAbi(\n");
           result.append(indent);

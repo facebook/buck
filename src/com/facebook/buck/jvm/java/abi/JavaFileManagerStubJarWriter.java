@@ -17,17 +17,16 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.function.Consumer;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import org.objectweb.asm.ClassWriter;
 
 public class JavaFileManagerStubJarWriter implements StubJarWriter {
   private final JavaFileManager fileManager;
@@ -37,21 +36,17 @@ public class JavaFileManagerStubJarWriter implements StubJarWriter {
   }
 
   @Override
-  public void writeResource(Path relativePath, InputStream resourceContents) throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void writeClass(Path relativePath, Consumer<ClassWriter> stubber) throws IOException {
+  public void writeEntry(
+      Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier)
+      throws IOException {
     String relativePathString = MorePaths.pathWithUnixSeparators(relativePath);
+    Preconditions.checkArgument(relativePathString.endsWith(".class"));
     String className =
         relativePathString
             .replace('/', '.')
             .substring(0, relativePathString.length() - 6); // Strip .class off the end
 
-    ClassWriter writer = new ClassWriter(0);
-    stubber.accept(writer);
-    try (InputStream inputStream = new ByteArrayInputStream(writer.toByteArray());
+    try (InputStream inputStream = streamSupplier.throwingGet();
         OutputStream outputStream =
             fileManager
                 .getJavaFileForOutput(

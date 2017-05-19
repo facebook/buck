@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -109,6 +110,9 @@ public class StubJarIntegrationTest {
       while (entries.hasMoreElements()) {
         JarEntry entry = entries.nextElement();
         if (JarFile.MANIFEST_NAME.equals(entry.getName())) {
+          continue;
+        } else if (entry.getName().endsWith("/")) {
+          assertNull(manifest.getAttributes(entry.getName()));
           continue;
         }
 
