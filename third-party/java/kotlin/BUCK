@@ -14,12 +14,12 @@ java_library(
 
 prebuilt_jar(
     name = "kotlin-runtime",
-    binary_jar = "kotlin-runtime-1.0.6.jar",
+    binary_jar = "kotlin-runtime-1.1.2-2.jar",
 )
 
 prebuilt_jar(
     name = "kotlin-stdlib",
-    binary_jar = "kotlin-stdlib-1.0.6.jar",
+    binary_jar = "kotlin-stdlib-1.1.2-2.jar",
     licenses = [
         "LICENSE",
     ],
