@@ -18,18 +18,15 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSet;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 public class KotlinBuckConfig {
@@ -44,12 +41,20 @@ public class KotlinBuckConfig {
     this.delegate = delegate;
   }
 
-  /**
-   * Get the Tool instance for the Kotlin compiler.
-   *
-   * @return the Kotlin compiler Tool
-   */
-  public Supplier<Tool> getKotlinCompiler() {
+  public Kotlinc getKotlinc() {
+    if (isExternalCompilation()) {
+      return new ExternalKotlinc(getPathToCompilerBinary());
+    } else {
+      ImmutableSet<Path> classpathEntries = ImmutableSet.of(
+          getPathToStdlibJar(),
+          getPathToCompilerJar());
+
+      return new JarBackedReflectedKotlinc(classpathEntries);
+    }
+  }
+
+
+  Path getPathToCompilerBinary() {
     Path compilerPath = getKotlinHome().resolve("kotlinc");
     if (!Files.isExecutable(compilerPath)) {
       compilerPath = getKotlinHome().resolve(Paths.get("bin", "kotlinc"));
@@ -58,8 +63,7 @@ public class KotlinBuckConfig {
       }
     }
 
-    Path compiler = new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
-    return Suppliers.ofInstance(new HashedFileTool(compiler));
+    return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }
 
   /**
@@ -67,58 +71,113 @@ public class KotlinBuckConfig {
    *
    * @return the Kotlin runtime jar path
    */
-  public Either<SourcePath, Path> getPathToRuntimeJar() {
-    Optional<String> value = delegate.getValue(SECTION, "runtime_jar");
-
-    if (value.isPresent()) {
-      boolean isAbsolute = Paths.get(value.get()).isAbsolute();
-      if (isAbsolute) {
-        return Either.ofRight(delegate.getPath(SECTION, "runtime_jar", false).get().normalize());
-      } else {
-        return Either.ofLeft(delegate.getSourcePath(SECTION, "runtime_jar").get());
-      }
+  Path getPathToStdlibJar() {
+    Path stdlib = getKotlinHome().resolve("kotlin-stdlib.jar");
+    if (Files.isRegularFile(stdlib)) {
+      return stdlib.normalize();
     }
 
-    Path runtime = getKotlinHome().resolve("kotlin-runtime.jar");
-    if (Files.isRegularFile(runtime)) {
-      return Either.ofRight(runtime.toAbsolutePath().normalize());
+    stdlib = getKotlinHome().resolve(Paths.get("lib", "kotlin-stdlib.jar"));
+    if (Files.isRegularFile(stdlib)) {
+      return stdlib.normalize();
     }
 
-    runtime = getKotlinHome().resolve(Paths.get("lib", "kotlin-runtime.jar"));
-    if (Files.isRegularFile(runtime)) {
-      return Either.ofRight(runtime.toAbsolutePath().normalize());
+    stdlib = getKotlinHome().resolve(Paths.get("libexec","lib", "kotlin-stdlib.jar"));
+    if (Files.isRegularFile(stdlib)) {
+      return stdlib.normalize();
     }
 
-    throw new HumanReadableException("Could not resolve kotlin runtime JAR location.");
+    // Support for Kotlin < 1.1 ... kotlin-stdlib used to be kotlin-runtime.
+    stdlib = getKotlinHome().resolve("kotlin-runtime.jar");
+    if (Files.isRegularFile(stdlib)) {
+      return stdlib.normalize();
+    }
+
+    stdlib = getKotlinHome().resolve(Paths.get("lib", "kotlin-runtime.jar"));
+    if (Files.isRegularFile(stdlib)) {
+      return stdlib.normalize();
+    }
+
+    stdlib = getKotlinHome().resolve(Paths.get("libexec","lib", "kotlin-runtime.jar"));
+    if (Files.isRegularFile(stdlib)) {
+      return stdlib.normalize();
+    }
+
+    throw new HumanReadableException("Could not resolve kotlin stdlib JAR location (kotlin home:"
+        + getKotlinHome() + ").");
   }
 
+  /**
+   * Get the path to the Kotlin compiler jar.
+   * @return the Kotlin compiler jar path
+   */
+  Path getPathToCompilerJar() {
+    Path compiler = getKotlinHome().resolve("kotlin-compiler.jar");
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    compiler = getKotlinHome().resolve(Paths.get("lib", "kotlin-compiler.jar"));
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    compiler = getKotlinHome().resolve(Paths.get("libexec","lib", "kotlin-compiler.jar"));
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    throw new HumanReadableException("Could not resolve kotlin compiler JAR location (kotlin home:"
+        + getKotlinHome() + ").");
+  }
+
+  /**
+   * Determine whether external Kotlin compilation is being forced.  The default is
+   * internal (in-process) execution, but this can be overridden in .buckconfig by
+   * setting the "external" property to "true".
+   *
+   * @return true is external compilation is requested, false otherwise
+   */
+  private boolean isExternalCompilation() {
+    Optional<Boolean> value = delegate.getBoolean(SECTION, "external");
+    return value.orElse(false);
+  }
+
+
+  /**
+   * Find the Kotlin home (installation) directory by searching in this order: <br>
+   *  <ul>
+   *    <li>If the "kotlin_home" directory is specified in .buckconfig then use it.</li>
+   *    <li>Check the environment for a KOTLIN_HOME variable, if defined then use it.</li>
+   *    <li>Resolve "kotlinc" with an ExecutableFinder, and if found then deduce the
+   *        kotlin home directory from it.</li>
+   *  </ul>
+   *
+   * @return the Kotlin home path
+   */
   private Path getKotlinHome() {
     if (kotlinHome != null) {
       return kotlinHome;
     }
 
     try {
-      // Check the buck configuration for a specified kotlin compliler
-      Optional<String> value = delegate.getValue(SECTION, "compiler");
-      boolean isAbsolute = (value.isPresent() && Paths.get(value.get()).isAbsolute());
-      Optional<Path> compilerPath = delegate.getPath(SECTION, "compiler", !isAbsolute);
-      if (compilerPath.isPresent()) {
-        if (Files.isExecutable(compilerPath.get())) {
-          kotlinHome = compilerPath.get().toRealPath().getParent().normalize();
-          if (kotlinHome != null && kotlinHome.endsWith(Paths.get("bin"))) {
-            kotlinHome = kotlinHome.getParent().normalize();
-          }
-          return kotlinHome;
+      // Check the buck configuration for a specified kotlin home
+      Optional<String> value = delegate.getValue(SECTION, "kotlin_home");
+
+      if (value.isPresent()) {
+        boolean isAbsolute = Paths.get(value.get()).isAbsolute();
+        Optional<Path> homePath = delegate.getPath(SECTION, "kotlin_home", !isAbsolute);
+        if (homePath.isPresent() && Files.isDirectory(homePath.get())) {
+          return homePath.get().toRealPath().normalize();
         } else {
           throw new HumanReadableException(
-              "Could not deduce kotlin home directory from path " + compilerPath.toString());
+              "Kotlin home directory (" + homePath + ") specified in .buckconfig was not found.");
         }
       } else {
         // If the KOTLIN_HOME environment variable is specified we trust it
         String home = delegate.getEnvironment().get("KOTLIN_HOME");
         if (home != null) {
-          kotlinHome = Paths.get(home).normalize();
-          return kotlinHome;
+          return Paths.get(home).normalize();
         } else {
           // Lastly, we try to resolve from the system PATH
           Optional<Path> compiler =

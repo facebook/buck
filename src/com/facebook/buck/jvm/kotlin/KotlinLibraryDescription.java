@@ -38,8 +38,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
+
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 public class KotlinLibraryDescription
     implements Description<KotlinLibraryDescriptionArg>, Flavored {
@@ -101,8 +103,8 @@ public class KotlinLibraryDescription
       }
     }
 
-    DefaultKotlinLibraryBuilder defaultKotlinLibraryBuilder =
-        new DefaultKotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
+    KotlinLibraryBuilder defaultKotlinLibraryBuilder =
+        new KotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
             .setArgs(args);
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
@@ -116,6 +118,7 @@ public class KotlinLibraryDescription
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;
     } else {
+      resolver.addToIndex(defaultKotlinLibrary);
       return MavenUberJar.create(
           defaultKotlinLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),

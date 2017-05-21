@@ -48,7 +48,7 @@ import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.jvm.kotlin.KotlinLibraryBuilder;
+import com.facebook.buck.jvm.kotlin.FauxKotlinLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -375,7 +375,7 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     TargetNode<?, ?> kotlinLib =
-        KotlinLibraryBuilder.createBuilder(
+        FauxKotlinLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//kotlin/com/example/base:base"))
             .addSrc(Paths.get("kotlin/com/example/base/File.kt"))
             .build();
