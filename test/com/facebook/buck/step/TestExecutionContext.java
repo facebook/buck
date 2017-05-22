@@ -19,6 +19,8 @@ package com.facebook.buck.step;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -28,32 +30,11 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 
 public class TestExecutionContext {
-
-  private static final CellPathResolver FAKE_CELL_PATH_RESOLVER =
-      new CellPathResolver() {
-        @Override
-        public Path getCellPath(Optional<String> cellName) {
-          return Paths.get("");
-        }
-
-        @Override
-        public ImmutableMap<String, Path> getCellPaths() {
-          return ImmutableMap.of();
-        }
-
-        @Override
-        public Optional<String> getCanonicalCellName(Path cellPath) {
-          return Optional.empty();
-        }
-      };
 
   private TestExecutionContext() {
     // Utility class.
@@ -67,6 +48,10 @@ public class TestExecutionContext {
     Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
     executors.put(
         ExecutorPool.CPU, MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()));
+
+    CellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(new FakeProjectFilesystem().getRootPath(), ImmutableMap.of());
+
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setBuckEventBus(BuckEventBusFactory.newInstance())
@@ -76,7 +61,7 @@ public class TestExecutionContext {
         .setClassLoaderCache(testClassLoaderCache)
         .setExecutors(executors)
         .setProcessExecutor(new FakeProcessExecutor())
-        .setCellPathResolver(FAKE_CELL_PATH_RESOLVER);
+        .setCellPathResolver(cellPathResolver);
   }
 
   public static ExecutionContext newInstance() {
