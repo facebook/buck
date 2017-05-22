@@ -72,7 +72,7 @@ public abstract class AbstractNodeBuilder<
     this.argBuilder = makeArgBuilder(description);
     this.rawHashCode = hashCode;
 
-    this.cellRoots = new FakeCellPathResolver(projectFilesystem);
+    this.cellRoots = TestCellPathResolver.get(projectFilesystem);
   }
 
   @SuppressWarnings("unchecked")

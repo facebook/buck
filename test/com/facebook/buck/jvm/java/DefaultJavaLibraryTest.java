@@ -48,7 +48,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -57,6 +56,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -1108,7 +1108,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 TargetGraph.EMPTY,
                 buildRuleParams,
                 ruleResolver,
-                new FakeCellPathResolver(projectFilesystem),
+                TestCellPathResolver.get(projectFilesystem),
                 testJavaBuckConfig)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
@@ -1421,7 +1421,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   TargetGraph.EMPTY,
                   buildRuleParams,
                   ruleResolver,
-                  new FakeCellPathResolver(projectFilesystem),
+                  TestCellPathResolver.get(projectFilesystem),
                   testJavaBuckConfig)
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))

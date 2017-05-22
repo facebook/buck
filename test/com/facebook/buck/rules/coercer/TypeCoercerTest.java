@@ -31,10 +31,10 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +60,7 @@ import org.junit.rules.ExpectedException;
 public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = new FakeCellPathResolver(filesystem);
+  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

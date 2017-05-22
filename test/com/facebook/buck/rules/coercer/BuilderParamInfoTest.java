@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +63,7 @@ public class BuilderParamInfoTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     getParamInfo()
         .set(
-            new FakeCellPathResolver(filesystem),
+            TestCellPathResolver.get(filesystem),
             filesystem,
             Paths.get("/doesnotexist"),
             builder,

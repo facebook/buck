@@ -23,9 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -50,7 +51,7 @@ public class SourcePathTypeCoercerTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
-    cellRoots = new FakeCellPathResolver(projectFilesystem);
+    cellRoots = TestCellPathResolver.get(projectFilesystem);
   }
 
   @Before
@@ -102,7 +103,9 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException, IOException {
     Path helloRoot = Paths.get("/opt/src/hello");
-    cellRoots = new FakeCellPathResolver(projectFilesystem, ImmutableMap.of("hello", helloRoot));
+    cellRoots =
+        new DefaultCellPathResolver(
+            projectFilesystem.getRootPath(), ImmutableMap.of("hello", helloRoot));
 
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(

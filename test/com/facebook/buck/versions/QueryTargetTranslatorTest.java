@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -35,7 +35,7 @@ import org.junit.Test;
 public class QueryTargetTranslatorTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
-      new FakeCellPathResolver(new FakeProjectFilesystem());
+      TestCellPathResolver.get(new FakeProjectFilesystem());
   private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
       BuildTargetPatternParser.fullyQualified();
 

@@ -83,6 +83,6 @@ public class TestCellBuilder {
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {
     ProjectFilesystem toUse = filesystem == null ? new FakeProjectFilesystem() : filesystem;
-    return new FakeCellPathResolver(toUse);
+    return TestCellPathResolver.get(toUse);
   }
 }

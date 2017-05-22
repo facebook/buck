@@ -31,10 +31,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,7 +71,7 @@ public class ApplePackageDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
-        new FakeCellPathResolver(params.getProjectFilesystem()),
+        TestCellPathResolver.get(params.getProjectFilesystem()),
         arg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
@@ -122,7 +122,7 @@ public class ApplePackageDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
-        new FakeCellPathResolver(params.getProjectFilesystem()),
+        TestCellPathResolver.get(params.getProjectFilesystem()),
         arg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());

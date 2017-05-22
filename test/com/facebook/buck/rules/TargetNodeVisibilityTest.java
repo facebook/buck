@@ -227,7 +227,7 @@ public class TargetNodeVisibilityTest {
       BuildTarget buildTarget, ImmutableList<String> visibilities, ImmutableList<String> withinView)
       throws NoSuchBuildTargetException {
     VisibilityPatternParser parser = new VisibilityPatternParser();
-    CellPathResolver cellNames = new FakeCellPathResolver(filesystem);
+    CellPathResolver cellNames = TestCellPathResolver.get(filesystem);
     FakeRuleDescription description = new FakeRuleDescription();
     FakeRuleDescriptionArg arg =
         FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();

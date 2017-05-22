@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,7 +33,7 @@ public class UriTypeCoercerTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path pathFromRoot = Paths.get("third-party/java");
-  private CellPathResolver cellRoots = new FakeCellPathResolver(filesystem);
+  private CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   @Test
   public void canCoerceAValidHttpURI() throws CoerceFailedException, URISyntaxException {

@@ -47,13 +47,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -128,7 +128,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             targetGraph,
             ruleResolver,
-            new FakeCellPathResolver(filesystem),
+            TestCellPathResolver.get(filesystem),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
@@ -280,7 +280,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             TargetGraph.EMPTY,
             ruleResolver,
-            new FakeCellPathResolver(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
@@ -427,7 +427,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             targetGraph,
             ruleResolver,
-            new FakeCellPathResolver(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
@@ -489,7 +489,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             TargetGraph.EMPTY,
             ruleResolver,
-            new FakeCellPathResolver(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
@@ -581,7 +581,7 @@ public class AndroidBinaryGraphEnhancerTest {
             originalParams,
             TargetGraph.EMPTY,
             ruleResolver,
-            new FakeCellPathResolver(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
