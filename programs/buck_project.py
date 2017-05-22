@@ -25,6 +25,7 @@ def write_contents_to_file(path, contents):
         with open(path, 'w') as output_file:
             output_file.write(str(contents))
 
+
 def makedirs(path):
     try:
         os.makedirs(path)
@@ -36,6 +37,7 @@ def makedirs(path):
         # Python 3.
         if e.errno != errno.EEXIST and os.path.isdir(path):
             raise
+
 
 class BuckProject:
 
