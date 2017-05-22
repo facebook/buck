@@ -1,4 +1,5 @@
 from __future__ import print_function
+import errno
 import os
 import tempfile
 import textwrap
@@ -25,17 +26,28 @@ def write_contents_to_file(path, contents):
             output_file.write(str(contents))
 
 
+def makedirs(path):
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        # Potentially the case that multiple processes are running in parallel
+        # (e.g. a series of linters running buck query without buckd), so we
+        # should just swallow the error.
+        # This is mostly equivalent to os.makedirs(path, exist_ok=True) in
+        # Python 3.
+        if e.errno != errno.EEXIST and os.path.isdir(path):
+            raise
+
+
 class BuckProject:
 
     def __init__(self, root):
         self.root = root
         self._buck_out = os.path.join(root, "buck-out")
         buck_out_tmp = os.path.join(self._buck_out, "tmp")
-        if not os.path.exists(buck_out_tmp):
-            os.makedirs(buck_out_tmp)
+        makedirs(buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
-        if not os.path.exists(self._buck_out_log):
-            os.makedirs(self._buck_out_log)
+        makedirs(self._buck_out_log)
         self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=buck_out_tmp)
 
         # Only created if buckd is used.
@@ -94,8 +106,7 @@ class BuckProject:
         if self.buckd_tmp_dir is not None:
             return self.buckd_tmp_dir
         tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
-        if not os.path.exists(tmp_dir_parent):
-            os.makedirs(tmp_dir_parent)
+        makedirs(tmp_dir_parent)
         self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.",
                                               dir=tmp_dir_parent)
         return self.buckd_tmp_dir
