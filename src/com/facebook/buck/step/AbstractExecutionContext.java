@@ -35,7 +35,6 @@ import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -194,12 +193,6 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Lazy
   public AndroidPlatformTarget getAndroidPlatformTarget() {
     return getAndroidPlatformTargetSupplier().get();
-  }
-
-  public ListeningExecutorService getExecutorService(ExecutorPool p) {
-    ListeningExecutorService executorService = getExecutors().get(p);
-    Preconditions.checkNotNull(executorService);
-    return executorService;
   }
 
   public String getPathToAdbExecutable() {
