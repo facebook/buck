@@ -59,7 +59,6 @@ public class JarBuilder {
 
   private Observer observer = Observer.IGNORING;
   @Nullable private Path outputFile;
-  @Nullable private CustomJarOutputStream jar;
   @Nullable private String mainClass;
   @Nullable private Path manifestFile;
   private boolean shouldMergeManifests;
@@ -128,10 +127,9 @@ public class JarBuilder {
         ZipOutputStreams.newJarOutputStream(outputFile, APPEND_TO_ZIP)) {
       jar.setEntryHashingEnabled(shouldHashEntries);
       this.outputFile = outputFile;
-      this.jar = jar;
 
       // Write the manifest first.
-      writeManifest();
+      writeManifest(jar);
 
       // Sort entries across all suppliers
       List<JarEntrySupplier> sortedEntries = new ArrayList<>();
@@ -140,9 +138,9 @@ public class JarBuilder {
       }
       sortedEntries.sort(Comparator.comparing(supplier -> supplier.getEntry().getName()));
 
-      addEntriesToJar(sortedEntries);
+      addEntriesToJar(sortedEntries, jar);
 
-      if (mainClass != null && !mainClassPresent()) {
+      if (mainClass != null && !classPresent(mainClass)) {
         throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
       }
 
@@ -150,9 +148,9 @@ public class JarBuilder {
     }
   }
 
-  private void writeManifest() throws IOException {
-    mkdirs("META-INF/");
-    DeterministicManifest manifest = Preconditions.checkNotNull(jar).getManifest();
+  private void writeManifest(CustomJarOutputStream jar) throws IOException {
+    mkdirs("META-INF/", jar);
+    DeterministicManifest manifest = jar.getManifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     if (shouldMergeManifests) {
@@ -178,13 +176,13 @@ public class JarBuilder {
       manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass);
     }
 
-    Preconditions.checkNotNull(jar).writeManifest();
+    jar.writeManifest();
   }
 
-  private boolean mainClassPresent() {
-    String mainClassPath = classNameToPath(Preconditions.checkNotNull(mainClass));
+  private boolean classPresent(String className) {
+    String classPath = classNameToPath(className);
 
-    return alreadyAddedEntries.contains(mainClassPath);
+    return alreadyAddedEntries.contains(classPath);
   }
 
   private String classNameToPath(String className) {
@@ -199,13 +197,15 @@ public class JarBuilder {
     return entry;
   }
 
-  private void addEntriesToJar(Iterable<JarEntrySupplier> entries) throws IOException {
+  private void addEntriesToJar(Iterable<JarEntrySupplier> entries, CustomJarOutputStream jar)
+      throws IOException {
     for (JarEntrySupplier entrySupplier : entries) {
-      addEntryToJar(entrySupplier);
+      addEntryToJar(entrySupplier, jar);
     }
   }
 
-  private void addEntryToJar(JarEntrySupplier entrySupplier) throws IOException {
+  private void addEntryToJar(JarEntrySupplier entrySupplier, CustomJarOutputStream jar)
+      throws IOException {
     CustomZipEntry entry = entrySupplier.getEntry();
     String entryName = entry.getName();
 
@@ -219,7 +219,7 @@ public class JarBuilder {
       return;
     }
 
-    mkdirs(getParentDir(entryName));
+    mkdirs(getParentDir(entryName), jar);
 
     // We're in the process of merging a bunch of different jar files. These typically contain
     // just ".class" files and the manifest, but they can also include things like license files
@@ -234,17 +234,17 @@ public class JarBuilder {
       return;
     }
 
-    Preconditions.checkNotNull(jar).putNextEntry(entry);
+    jar.putNextEntry(entry);
     try (InputStream entryInputStream = entrySupplier.getInputStreamSupplier().get()) {
       if (entryInputStream != null) {
         // Null stream means a directory
-        ByteStreams.copy(entryInputStream, Preconditions.checkNotNull(jar));
+        ByteStreams.copy(entryInputStream, jar);
       }
     }
-    Preconditions.checkNotNull(jar).closeEntry();
+    jar.closeEntry();
   }
 
-  private void mkdirs(String name) throws IOException {
+  private void mkdirs(String name, CustomJarOutputStream jar) throws IOException {
     if (name.isEmpty()) {
       return;
     }
@@ -255,10 +255,10 @@ public class JarBuilder {
     }
 
     String parent = getParentDir(name);
-    mkdirs(parent);
+    mkdirs(parent, jar);
 
-    Preconditions.checkNotNull(jar).putNextEntry(new CustomZipEntry(name));
-    Preconditions.checkNotNull(jar).closeEntry();
+    jar.putNextEntry(new CustomZipEntry(name));
+    jar.closeEntry();
     alreadyAddedEntries.add(name);
   }
 
