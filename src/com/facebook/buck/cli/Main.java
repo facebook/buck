@@ -1154,7 +1154,7 @@ public final class Main {
         } else {
           androidPlatformTargetId = AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET;
           eventBus.post(
-              ConsoleEvent.warning(
+              ConsoleEvent.fine(
                   "No Android platform target specified. Using default: %s",
                   androidPlatformTargetId));
         }
