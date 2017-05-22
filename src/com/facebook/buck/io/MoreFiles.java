@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -48,6 +49,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class MoreFiles {
 
@@ -195,7 +197,16 @@ public final class MoreFiles {
                 // the trash dir but not the trash dir itself)
                 if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)
                     && dir.equals(path))) {
-                  Files.delete(dir);
+                  try {
+                    Files.delete(dir);
+                  } catch (DirectoryNotEmptyException notEmpty) {
+                    throw new IOException(
+                        String.format(
+                            "Could not delete non-empty directory %s. Contents:\n%s",
+                            dir,
+                            Files.list(dir).map(Path::toString).collect(Collectors.joining("\n"))),
+                        notEmpty);
+                  }
                 }
                 return FileVisitResult.CONTINUE;
               } else {
