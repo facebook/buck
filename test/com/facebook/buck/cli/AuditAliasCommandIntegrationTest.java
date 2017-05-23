@@ -41,6 +41,11 @@ public class AuditAliasCommandIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
     workspace.setUp();
+
+    // Make sure override does not appear in list twice.
+    workspace.addBuckConfigLocalOption("alias", "foo", "//:bar_example");
+    // Make sure output is union of .buckconfig and .buckconfig.local.
+    workspace.addBuckConfigLocalOption("alias", "bar_ex", "//:bar_example");
   }
 
   @Test
