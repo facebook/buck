@@ -55,7 +55,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   public void addToCollector(AndroidPackageableCollector collector) {}
 
   @Override
-  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
     return ImmutableList.of();
   }
 

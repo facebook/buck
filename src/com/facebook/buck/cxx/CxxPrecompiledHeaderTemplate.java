@@ -123,7 +123,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRule
   }
 
   @Override
-  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
     return RichStream.from(getBuildDeps()).filter(CxxPreprocessorDep.class).toImmutableList();
   }
 

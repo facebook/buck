@@ -182,8 +182,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(
-          CxxPlatform cxxPlatform) {
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }

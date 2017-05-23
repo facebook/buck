@@ -29,7 +29,7 @@ public interface CxxPreprocessorDep {
 
   BuildTarget getBuildTarget();
 
-  Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform);
+  Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform);
 
   CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;

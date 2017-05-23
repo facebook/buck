@@ -238,7 +238,7 @@ class SwiftLibrary extends NoopBuildRule
   }
 
   @Override
-  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
     return getBuildDeps()
         .stream()
         .filter(CxxPreprocessorDep.class::isInstance)
