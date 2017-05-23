@@ -99,10 +99,10 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
@@ -115,9 +115,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
-import com.facebook.buck.rules.macros.LocationMacro;
-import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
@@ -856,12 +854,23 @@ public class ProjectGenerator {
 
   private ImmutableList<String> convertStringWithMacros(
       TargetNode<?, ?> node, Iterable<StringWithMacros> flags) {
+
+    LocationMacroExpander locationExpander =
+        new LocationMacroExpander() {
+          @Override
+          public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+            requiredBuildTargetsBuilder.add(rule.getBuildTarget());
+            return super.expand(resolver, rule);
+          }
+        };
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
-    ImmutableList<? extends AbstractMacroExpander<? extends Macro>> expanders =
-        ImmutableList.of(new AsIsLocationMacroExpander());
     for (StringWithMacros flag : flags) {
       StringWithMacrosArg.of(
-              flag, expanders, node.getBuildTarget(), node.getCellNames(), defaultBuildRuleResolver)
+              flag,
+              ImmutableList.of(locationExpander),
+              node.getBuildTarget(),
+              node.getCellNames(),
+              buildRuleResolverForNode.apply(node))
           .appendToCommandLine(result, defaultPathResolver);
     }
     return result.build();
@@ -2701,31 +2710,5 @@ public class ProjectGenerator {
 
   private Path getPathToMergedHeaderMap() {
     return getPathToHeaderMapsRoot().resolve("pub-hmap");
-  }
-
-  /** An expander for the location macro which leaves it as-is. */
-  private static class AsIsLocationMacroExpander extends AbstractMacroExpander<LocationMacro> {
-
-    @Override
-    public Class<LocationMacro> getInputClass() {
-      return LocationMacro.class;
-    }
-
-    @Override
-    protected LocationMacro parse(
-        BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-        throws MacroException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String expandFrom(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        LocationMacro input)
-        throws MacroException {
-      return String.format("$(location %s)", input.getTarget());
-    }
   }
 }
