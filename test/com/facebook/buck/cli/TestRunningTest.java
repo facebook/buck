@@ -38,6 +38,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
@@ -506,7 +507,7 @@ public class TestRunningTest {
             service,
             fakeBuildEngine,
             stepRunner,
-            new SourcePathResolver(ruleFinder),
+            FakeBuildContext.withSourcePathResolver(new SourcePathResolver(ruleFinder)),
             ruleFinder);
 
     assertThat(ret, equalTo(0));
@@ -693,7 +694,7 @@ public class TestRunningTest {
             service,
             fakeBuildEngine,
             stepRunner,
-            new SourcePathResolver(ruleFinder),
+            FakeBuildContext.withSourcePathResolver(new SourcePathResolver(ruleFinder)),
             ruleFinder);
 
     assertThat(ret, equalTo(0));
@@ -810,7 +811,7 @@ public class TestRunningTest {
             service,
             fakeBuildEngine,
             stepRunner,
-            resolver,
+            FakeBuildContext.withSourcePathResolver(resolver),
             ruleFinder);
 
     assertThat(ret, equalTo(TestRunning.TEST_FAILURES_EXIT_CODE));

@@ -267,13 +267,13 @@ public class JavaTest extends AbstractBuildRuleWithResolver
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
 
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
     // empty list of commands.
-    Set<String> testClassNames = getClassNamesForSources(pathResolver);
+    Set<String> testClassNames = getClassNamesForSources(buildContext.getSourcePathResolver());
     LOG.debug("Testing these classes: %s", testClassNames.toString());
     if (testClassNames.isEmpty()) {
       return ImmutableList.of();
@@ -288,7 +288,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
         junitsBuilder.add(
             getJUnitStep(
                 executionContext,
-                pathResolver,
+                buildContext.getSourcePathResolver(),
                 options,
                 Optional.of(pathToTestOutput),
                 Optional.of(pathToTestLogs),
@@ -300,7 +300,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
           ImmutableList.of(
               getJUnitStep(
                   executionContext,
-                  pathResolver,
+                  buildContext.getSourcePathResolver(),
                   options,
                   Optional.of(pathToTestOutput),
                   Optional.of(pathToTestLogs),
@@ -615,17 +615,15 @@ public class JavaTest extends AbstractBuildRuleWithResolver
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
-      TestRunningOptions options,
-      SourcePathResolver pathResolver) {
+      ExecutionContext executionContext, TestRunningOptions options, BuildContext buildContext) {
     JUnitStep jUnitStep =
         getJUnitStep(
             executionContext,
-            pathResolver,
+            buildContext.getSourcePathResolver(),
             options,
             Optional.empty(),
             Optional.empty(),
-            getClassNamesForSources(pathResolver));
+            getClassNamesForSources(buildContext.getSourcePathResolver()));
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("junit")

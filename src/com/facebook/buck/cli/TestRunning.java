@@ -32,6 +32,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
@@ -123,7 +124,7 @@ public class TestRunning {
       ListeningExecutorService service,
       BuildEngine buildEngine,
       final StepRunner stepRunner,
-      SourcePathResolver sourcePathResolver,
+      BuildContext buildContext,
       SourcePathRuleFinder ruleFinder)
       throws IOException, ExecutionException, InterruptedException {
 
@@ -269,7 +270,7 @@ public class TestRunning {
       ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
       Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
       List<Step> testSteps =
-          test.runTests(executionContext, options, sourcePathResolver, testReportingCallback);
+          test.runTests(executionContext, options, buildContext, testReportingCallback);
       if (!testSteps.isEmpty()) {
         stepsBuilder.addAll(testSteps);
       }
@@ -408,7 +409,7 @@ public class TestRunning {
                 defaultJavaPackageFinder,
                 javaBuckConfig.getDefaultJavaOptions().getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),
-                sourcePathResolver,
+                buildContext.getSourcePathResolver(),
                 ruleFinder,
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormat(),

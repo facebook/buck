@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
@@ -104,7 +104,7 @@ public class GoTest extends NoopBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     Optional<Long> processTimeoutMs =
         testRuleTimeoutMs.isPresent()
@@ -112,7 +112,8 @@ public class GoTest extends NoopBuildRule
             : Optional.empty();
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testMain.getExecutableCommand().getCommandPrefix(pathResolver));
+    args.addAll(
+        testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()));
     args.add("-test.v");
     if (testRuleTimeoutMs.isPresent()) {
       args.add("-test.timeout", testRuleTimeoutMs.get() + "ms");
@@ -132,15 +133,18 @@ public class GoTest extends NoopBuildRule
                                 Maps.immutableEntry(
                                     getProjectFilesystem()
                                         .getPath(
-                                            pathResolver.getSourcePathName(
-                                                getBuildTarget(), input)),
-                                    pathResolver.getAbsolutePath(input))))))
+                                            buildContext
+                                                .getSourcePathResolver()
+                                                .getSourcePathName(getBuildTarget(), input)),
+                                    buildContext.getSourcePathResolver().getAbsolutePath(input))))))
         .add(
             new GoTestStep(
                 getProjectFilesystem(),
                 getPathToTestWorkingDirectory(),
                 args.build(),
-                testMain.getExecutableCommand().getEnvironment(pathResolver),
+                testMain
+                    .getExecutableCommand()
+                    .getEnvironment(buildContext.getSourcePathResolver()),
                 getPathToTestExitCode(),
                 processTimeoutMs,
                 getPathToTestResults()))
@@ -281,12 +285,14 @@ public class GoTest extends NoopBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("go")
-        .putAllEnv(testMain.getExecutableCommand().getEnvironment(pathResolver))
-        .addAllCommand(testMain.getExecutableCommand().getCommandPrefix(pathResolver))
+        .putAllEnv(
+            testMain.getExecutableCommand().getEnvironment(buildContext.getSourcePathResolver()))
+        .addAllCommand(
+            testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

@@ -184,14 +184,14 @@ public class DTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
         .add(
             new DTestStep(
                 getProjectFilesystem(),
-                getShellCommand(pathResolver),
+                getShellCommand(buildContext.getSourcePathResolver()),
                 getPathToTestExitCode(),
                 testRuleTimeoutMs,
                 getPathToTestOutput()))
@@ -212,11 +212,11 @@ public class DTest extends AbstractBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("dunit")
-        .setCommand(getShellCommand(pathResolver))
+        .setCommand(getShellCommand(buildContext.getSourcePathResolver()))
         .setLabels(getLabels())
         .setContacts(getContacts())
         .build();

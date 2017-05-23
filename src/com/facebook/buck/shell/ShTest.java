@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
@@ -109,7 +109,7 @@ public class ShTest extends NoopBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
@@ -117,8 +117,8 @@ public class ShTest extends NoopBuildRule
             // Return a single command that runs an .sh file with no arguments.
             new RunShTestAndRecordResultStep(
                 getProjectFilesystem(),
-                Arg.stringify(args, pathResolver),
-                Arg.stringify(env, pathResolver),
+                Arg.stringify(args, buildContext.getSourcePathResolver()),
+                Arg.stringify(env, buildContext.getSourcePathResolver()),
                 testRuleTimeoutMs,
                 getBuildTarget().getFullyQualifiedName(),
                 getPathToTestOutputResult()))
@@ -190,12 +190,12 @@ public class ShTest extends NoopBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("custom")
-        .addAllCommand(Arg.stringify(args, pathResolver))
-        .setEnv(Arg.stringify(env, pathResolver))
+        .addAllCommand(Arg.stringify(args, buildContext.getSourcePathResolver()))
+        .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

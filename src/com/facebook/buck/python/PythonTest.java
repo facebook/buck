@@ -129,7 +129,7 @@ public class PythonTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
@@ -137,8 +137,10 @@ public class PythonTest extends AbstractBuildRule
             new PythonRunTestsStep(
                 getProjectFilesystem().getRootPath(),
                 getBuildTarget().getFullyQualifiedName(),
-                binary.getExecutableCommand().getCommandPrefix(pathResolver),
-                getMergedEnv(pathResolver),
+                binary
+                    .getExecutableCommand()
+                    .getCommandPrefix(buildContext.getSourcePathResolver()),
+                getMergedEnv(buildContext.getSourcePathResolver()),
                 options.getTestSelectorList(),
                 testRuleTimeoutMs,
                 getProjectFilesystem().resolve(getPathToTestOutputResult())))
@@ -230,13 +232,14 @@ public class PythonTest extends AbstractBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
-        .addAllCommand(binary.getExecutableCommand().getCommandPrefix(pathResolver))
-        .putAllEnv(getMergedEnv(pathResolver))
+        .addAllCommand(
+            binary.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+        .putAllEnv(getMergedEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();

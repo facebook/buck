@@ -115,7 +115,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
 
@@ -128,10 +128,12 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
     steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTestOutput));
-    steps.add(new ApkInstallStep(pathResolver, apk));
+    steps.add(new ApkInstallStep(buildContext.getSourcePathResolver(), apk));
     if (apk instanceof AndroidInstrumentationApk) {
       steps.add(
-          new ApkInstallStep(pathResolver, ((AndroidInstrumentationApk) apk).getApkUnderTest()));
+          new ApkInstallStep(
+              buildContext.getSourcePathResolver(),
+              ((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
 
     AdbHelper adb = AdbHelper.get(executionContext, true);
@@ -144,7 +146,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
     steps.add(
         getInstrumentationStep(
-            pathResolver,
+            buildContext.getSourcePathResolver(),
             executionContext.getPathToAdbExecutable(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
@@ -292,21 +294,29 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     Optional<Path> apkUnderTestPath = Optional.empty();
     if (apk instanceof AndroidInstrumentationApk) {
       apkUnderTestPath =
           Optional.of(
-              pathResolver.getAbsolutePath(
-                  ((AndroidInstrumentationApk) apk).getApkUnderTest().getApkInfo().getApkPath()));
+              buildContext
+                  .getSourcePathResolver()
+                  .getAbsolutePath(
+                      ((AndroidInstrumentationApk) apk)
+                          .getApkUnderTest()
+                          .getApkInfo()
+                          .getApkPath()));
     }
     InstrumentationStep step =
         getInstrumentationStep(
-            pathResolver,
+            buildContext.getSourcePathResolver(),
             executionContext.getPathToAdbExecutable(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of(pathResolver.getAbsolutePath(apk.getApkInfo().getApkPath())),
+            Optional.of(
+                buildContext
+                    .getSourcePathResolver()
+                    .getAbsolutePath(apk.getApkInfo().getApkPath())),
             Optional.empty(),
             apkUnderTestPath);
 

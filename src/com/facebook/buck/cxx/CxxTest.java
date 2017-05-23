@@ -132,7 +132,7 @@ public abstract class CxxTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
         .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
@@ -141,10 +141,12 @@ public abstract class CxxTest extends AbstractBuildRule
             new CxxTestStep(
                 getProjectFilesystem(),
                 ImmutableList.<String>builder()
-                    .addAll(getShellCommand(pathResolver, getPathToTestResults()))
+                    .addAll(
+                        getShellCommand(
+                            buildContext.getSourcePathResolver(), getPathToTestResults()))
                     .addAll(args.get())
                     .build(),
-                getEnv(pathResolver),
+                getEnv(buildContext.getSourcePathResolver()),
                 getPathToTestExitCode(),
                 getPathToTestOutput(),
                 testRuleTimeoutMs))

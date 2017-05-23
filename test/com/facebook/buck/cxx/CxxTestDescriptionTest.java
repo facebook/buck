@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -162,7 +163,7 @@ public class CxxTestDescriptionTest {
         cxxTest.runTests(
             TestExecutionContext.newInstance(),
             options,
-            pathResolver,
+            FakeBuildContext.withSourcePathResolver(pathResolver),
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(
@@ -200,7 +201,7 @@ public class CxxTestDescriptionTest {
         cxxTest.runTests(
             TestExecutionContext.newInstance(),
             testOptions,
-            pathResolver,
+            FakeBuildContext.withSourcePathResolver(pathResolver),
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(

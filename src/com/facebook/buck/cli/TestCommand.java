@@ -26,6 +26,7 @@ import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -270,6 +271,7 @@ public class TestCommand extends BuildCommand {
       CommandRunnerParams params,
       BuildEngine buildEngine,
       Build build,
+      BuildContext buildContext,
       Iterable<TestRule> testRules)
       throws InterruptedException, IOException {
 
@@ -298,7 +300,7 @@ public class TestCommand extends BuildCommand {
           testPool.getExecutor(),
           buildEngine,
           new DefaultStepRunner(),
-          new SourcePathResolver(ruleFinder),
+          buildContext,
           ruleFinder);
     } catch (ExecutionException e) {
       params
@@ -313,7 +315,7 @@ public class TestCommand extends BuildCommand {
       Build build,
       Iterable<String> command,
       Iterable<TestRule> testRules,
-      SourcePathResolver pathResolver)
+      BuildContext buildContext)
       throws InterruptedException, IOException {
     TestRunningOptions options = getTestRunningOptions(params);
 
@@ -331,7 +333,7 @@ public class TestCommand extends BuildCommand {
         return 1;
       }
       ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
-      specs.add(rule.getExternalTestRunnerSpec(build.getExecutionContext(), options, pathResolver));
+      specs.add(rule.getExternalTestRunnerSpec(build.getExecutionContext(), options, buildContext));
     }
 
     // Serialize the specs to a file to pass into the test runner.
@@ -571,17 +573,24 @@ public class TestCommand extends BuildCommand {
                     testRules);
           }
 
+          BuildContext buildContext =
+              BuildContext.builder()
+                  .setSourcePathResolver(
+                      new SourcePathResolver(
+                          new SourcePathRuleFinder(actionGraphAndResolver.getResolver())))
+                  .setJavaPackageFinder(params.getJavaPackageFinder())
+                  .setEventBus(params.getBuckEventBus())
+                  .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                  .build();
+
           // Once all of the rules are built, then run the tests.
           Optional<ImmutableList<String>> externalTestRunner =
               params.getBuckConfig().getExternalTestRunner();
           if (externalTestRunner.isPresent()) {
-            SourcePathResolver pathResolver =
-                new SourcePathResolver(
-                    new SourcePathRuleFinder(actionGraphAndResolver.getResolver()));
             return runTestsExternal(
-                params, build, externalTestRunner.get(), testRules, pathResolver);
+                params, build, externalTestRunner.get(), testRules, buildContext);
           }
-          return runTestsInternal(params, cachingBuildEngine, build, testRules);
+          return runTestsInternal(params, cachingBuildEngine, build, buildContext, testRules);
         }
       }
     }

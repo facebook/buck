@@ -81,13 +81,13 @@ public interface TestRule extends BuildRule {
    *
    * @param executionContext Provides context for creating {@link Step}s.
    * @param options The runtime testing options.
-   * @param pathResolver A SourcePathResolver from the build.
+   * @param buildContext A SourcePathResolver from the build.
    * @return the commands required to run the tests
    */
   ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback);
 
   Callable<TestResults> interpretTestResults(

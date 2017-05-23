@@ -90,7 +90,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return testSteps;
   }

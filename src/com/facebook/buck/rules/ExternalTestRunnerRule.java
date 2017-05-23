@@ -24,5 +24,5 @@ public interface ExternalTestRunnerRule extends TestRule {
   ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver);
+      BuildContext buildContext);
 }

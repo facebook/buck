@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
@@ -237,17 +238,20 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("boost")
-        .addAllCommand(getExecutableCommand().getCommandPrefix(pathResolver))
+        .addAllCommand(
+            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllCommand(getArgs().get())
-        .putAllEnv(getEnv(pathResolver))
+        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .addAllAdditionalCoverageTargets(
-            pathResolver.getAllAbsolutePaths(getAdditionalCoverageTargets()))
+            buildContext
+                .getSourcePathResolver()
+                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
         .build();
   }
 }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -24,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.SourcePath;
@@ -120,7 +120,7 @@ public class CxxTestTest {
         cxxTest.runTests(
             executionContext,
             options,
-            createMock(SourcePathResolver.class),
+            FakeBuildContext.NOOP_CONTEXT,
             FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep =

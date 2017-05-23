@@ -359,12 +359,16 @@ public class AppleTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     if (isUiTest()) {
       return ImmutableList.of();
     } else {
-      return getTestCommand(executionContext, options, pathResolver, testReportingCallback)
+      return getTestCommand(
+              executionContext,
+              options,
+              buildContext.getSourcePathResolver(),
+              testReportingCallback)
           .getFirst();
     }
   }
@@ -458,9 +462,12 @@ public class AppleTest extends AbstractBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return getTestCommand(
-            executionContext, testRunningOptions, pathResolver, NOOP_REPORTING_CALLBACK)
+            executionContext,
+            testRunningOptions,
+            buildContext.getSourcePathResolver(),
+            NOOP_REPORTING_CALLBACK)
         .getSecond();
   }
 

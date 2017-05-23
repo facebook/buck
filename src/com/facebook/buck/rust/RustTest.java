@@ -96,7 +96,7 @@ public class RustTest extends AbstractBuildRule
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     return new ImmutableList.Builder<Step>()
@@ -106,7 +106,8 @@ public class RustTest extends AbstractBuildRule
                 "rust test",
                 getProjectFilesystem(),
                 Optional.of(workingDirectory),
-                getTestCommand(pathResolver, "--logfile", testOutputFile.toString()),
+                getTestCommand(
+                    buildContext.getSourcePathResolver(), "--logfile", testOutputFile.toString()),
                 Optional.empty(), // TODO(stash): environment
                 workingDirectory.resolve("exitcode"),
                 Optional.empty(),
@@ -159,11 +160,11 @@ public class RustTest extends AbstractBuildRule
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("rust")
-        .addAllCommand(getTestCommand(pathResolver))
+        .addAllCommand(getTestCommand(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
