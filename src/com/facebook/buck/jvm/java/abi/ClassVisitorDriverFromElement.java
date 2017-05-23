@@ -368,6 +368,7 @@ class ClassVisitorDriverFromElement {
                 TypeElement element = (TypeElement) t.asElement();
                 if (element.getNestingKind() == NestingKind.MEMBER) {
                   referencesToInners.add(element);
+                  element.getEnclosingElement().asType().accept(this, null);
                 }
 
                 return super.visitDeclared(t, aVoid);
