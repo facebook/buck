@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -211,7 +210,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
-        library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC),
+        library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.equalTo(
             CxxPreprocessorInput.builder()
                 .addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, path))

@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -60,8 +59,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     return CxxPreprocessorInput.EMPTY;
   }

@@ -141,8 +141,7 @@ public class CxxLibrary extends NoopBuildRule
         .toImmutableList();
   }
 
-  @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
+  private CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
       throws NoSuchBuildTargetException {
     return ruleResolver
@@ -154,6 +153,12 @@ public class CxxLibrary extends NoopBuildRule
                     headerVisibility.getFlavor()),
             CxxPreprocessorInput.class)
         .orElseThrow(IllegalStateException::new);
+  }
+
+  @Override
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
+    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
   }
 
   @Override

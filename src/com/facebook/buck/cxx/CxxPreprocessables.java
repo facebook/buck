@@ -252,8 +252,7 @@ public class CxxPreprocessables {
                   throws NoSuchBuildTargetException {
                 Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
                 builder.put(
-                    preprocessorDep.getBuildTarget(),
-                    preprocessorDep.getCxxPreprocessorInput(key, HeaderVisibility.PUBLIC));
+                    preprocessorDep.getBuildTarget(), preprocessorDep.getCxxPreprocessorInput(key));
                 for (CxxPreprocessorDep dep : preprocessorDep.getCxxPreprocessorDeps(key)) {
                   builder.putAll(dep.getTransitiveCxxPreprocessorInput(key));
                 }

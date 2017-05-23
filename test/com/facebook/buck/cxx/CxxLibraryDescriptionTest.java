@@ -209,8 +209,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
 
     // Verify public preprocessor input.
-    CxxPreprocessorInput publicInput =
-        rule.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput publicInput = rule.getCxxPreprocessorInput(cxxPlatform);
     assertThat(
         publicInput.getFrameworks(),
         containsInAnyOrder(
@@ -233,8 +232,7 @@ public class CxxLibraryDescriptionTest {
         equalTo(getHeaderMaps(filesystem, target, resolver, cxxPlatform, HeaderVisibility.PUBLIC)));
 
     // Verify private preprocessor input.
-    CxxPreprocessorInput privateInput =
-        rule.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
+    CxxPreprocessorInput privateInput = rule.getPrivateCxxPreprocessorInput(cxxPlatform);
     assertThat(
         privateInput.getFrameworks(),
         containsInAnyOrder(
@@ -481,8 +479,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
 
     // Verify the C/C++ preprocessor input is setup correctly.
-    CxxPreprocessorInput publicInput =
-        rule.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput publicInput = rule.getCxxPreprocessorInput(cxxPlatform);
     assertThat(
         publicInput.getFrameworks(),
         containsInAnyOrder(
@@ -1188,8 +1185,7 @@ public class CxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
-    CxxPreprocessorInput input =
-        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput input = rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(getHeaderNames(input.getIncludes()), empty());
     assertThat(ImmutableSortedSet.copyOf(input.getDeps(resolver, ruleFinder)), empty());
   }

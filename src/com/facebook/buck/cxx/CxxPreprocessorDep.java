@@ -31,8 +31,12 @@ public interface CxxPreprocessorDep {
 
   Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform);
 
-  CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
+  /**
+   * Returns the preprocessor input that represents this rule's public (exported) declarations. This
+   * includes any exported preprocessor flags, headers, etc.
+   */
+  CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
 
   /**
    * Returns all transitive preprocessor inputs for this library. This includes public headers (and

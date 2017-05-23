@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkTarget;
@@ -187,7 +186,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             cxxPlatform, FluentIterable.from(deps).filter(BuildRule.class)));
     for (CxxPreprocessorDep dep :
         Iterables.filter(deps, Predicates.not(BuildRule.class::isInstance))) {
-      inputs.add(dep.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+      inputs.add(dep.getCxxPreprocessorInput(cxxPlatform));
     }
     return inputs.build();
   }

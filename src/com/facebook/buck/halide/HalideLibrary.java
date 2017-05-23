@@ -79,28 +79,20 @@ public class HalideLibrary extends NoopBuildRule implements CxxPreprocessorDep, 
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.EMPTY;
     }
-    switch (headerVisibility) {
-      case PUBLIC:
-        return CxxPreprocessables.getCxxPreprocessorInput(
-            params,
-            ruleResolver,
-            /* hasHeaderSymlinkTree */ true,
-            cxxPlatform,
-            headerVisibility,
-            CxxPreprocessables.IncludeType.SYSTEM,
-            ImmutableMultimap.of(),
-            ImmutableList.of());
-      case PRIVATE:
-        return CxxPreprocessorInput.EMPTY;
-    }
-
-    throw new RuntimeException("Invalid header visibility: " + headerVisibility);
+    return CxxPreprocessables.getCxxPreprocessorInput(
+        params,
+        ruleResolver,
+        /* hasHeaderSymlinkTree */ true,
+        cxxPlatform,
+        HeaderVisibility.PUBLIC,
+        CxxPreprocessables.IncludeType.SYSTEM,
+        ImmutableMultimap.of(),
+        ImmutableList.of());
   }
 
   @Override

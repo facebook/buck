@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -244,8 +243,7 @@ class SwiftLibrary extends NoopBuildRule
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.EMPTY;
@@ -263,8 +261,7 @@ class SwiftLibrary extends NoopBuildRule
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
-      return ImmutableMap.of(
-          getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+      return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform));
     } else {
       return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
     }

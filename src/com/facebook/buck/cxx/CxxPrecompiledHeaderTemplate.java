@@ -128,8 +128,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRule
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     return CxxPreprocessorInput.EMPTY;
   }

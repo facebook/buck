@@ -103,8 +103,7 @@ public class CxxLibraryTest {
                     .build())
             .build();
     assertEquals(
-        expectedPublicCxxPreprocessorInput,
-        cxxLibrary.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+        expectedPublicCxxPreprocessorInput, cxxLibrary.getCxxPreprocessorInput(cxxPlatform));
 
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
@@ -119,7 +118,7 @@ public class CxxLibraryTest {
             .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
-        cxxLibrary.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE));
+        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.

@@ -67,8 +67,7 @@ public class CxxPreprocessablesTest {
     }
 
     @Override
-    public CxxPreprocessorInput getCxxPreprocessorInput(
-        CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
+    public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
       return input;
     }
 
@@ -76,7 +75,7 @@ public class CxxPreprocessablesTest {
     public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
-      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform));
       for (BuildRule dep : getBuildDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(cxxPlatform));

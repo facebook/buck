@@ -52,8 +52,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setExportedPreprocessorFlags(ImmutableList.of("-flag"))
                 .build(resolver);
     assertThat(
-        lib.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
-            .getPreprocessorFlags(),
+        lib.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM).getPreprocessorFlags(),
         Matchers.equalTo(
             CxxFlags.getLanguageFlags(
                 ImmutableList.of("-flag"),
@@ -74,8 +73,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setIncludeDirs(ImmutableList.of(includes))
                 .build(resolver);
     assertThat(
-        lib.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
-            .getIncludes(),
+        lib.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM).getIncludes(),
         Matchers.equalTo(
             ImmutableList.<CxxHeaders>of(
                 CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includes))));

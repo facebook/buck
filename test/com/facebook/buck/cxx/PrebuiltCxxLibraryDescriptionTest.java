@@ -452,7 +452,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM);
     assertThat(getHeaderNames(input.getIncludes()), Matchers.hasItem(filesystem.getPath("foo.h")));
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, ruleFinder)),
@@ -483,7 +483,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM);
     assertThat(getHeaderNames(input.getIncludes()), Matchers.hasItem(filesystem.getPath("foo.h")));
     assertThat(
         getHeaderNames(input.getIncludes()),
@@ -541,7 +541,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
     // Verify the preprocessable input is as expected.
-    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM);
     assertThat(
         getHeaderNames(input.getIncludes()),
         Matchers.contains(filesystem.getPath("hello", "foo.h")));
@@ -681,8 +681,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
-            .getIncludes(),
+        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM).getIncludes(),
         Matchers.contains(
             CxxHeadersDir.of(
                 CxxPreprocessables.IncludeType.SYSTEM,
@@ -702,8 +701,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
-    CxxPreprocessorInput input =
-        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
+    CxxPreprocessorInput input = rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(getHeaderNames(input.getIncludes()), empty());
     assertThat(ImmutableList.copyOf(input.getDeps(resolver, ruleFinder)), empty());
   }

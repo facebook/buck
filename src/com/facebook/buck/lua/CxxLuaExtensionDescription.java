@@ -136,10 +136,7 @@ public class CxxLuaExtensionDescription
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         ImmutableList.<CxxPreprocessorInput>builder()
-            .add(
-                luaConfig
-                    .getLuaCxxLibrary(ruleResolver)
-                    .getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC))
+            .add(luaConfig.getLuaCxxLibrary(ruleResolver).getCxxPreprocessorInput(cxxPlatform))
             .addAll(
                 CxxDescriptionEnhancer.collectCxxPreprocessorInput(
                     params,

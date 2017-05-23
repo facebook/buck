@@ -28,7 +28,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -93,8 +92,7 @@ public class HalideLibraryDescriptionTest {
         HalideCompile.headerOutputPath(
             flavoredLibTarget, lib.getProjectFilesystem(), Optional.empty());
     CxxSymlinkTreeHeaders publicHeaders =
-        (CxxSymlinkTreeHeaders)
-            lib.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).getIncludes().get(0);
+        (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(cxxPlatform).getIncludes().get(0);
     assertThat(
         publicHeaders.getIncludeType(), Matchers.equalTo(CxxPreprocessables.IncludeType.SYSTEM));
     assertThat(

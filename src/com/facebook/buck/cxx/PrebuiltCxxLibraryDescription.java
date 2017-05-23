@@ -741,52 +741,41 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(
-          final CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
-        switch (headerVisibility) {
-          case PUBLIC:
-            if (hasHeaders(cxxPlatform)) {
-              CxxPreprocessables.addHeaderSymlinkTree(
-                  builder,
-                  getBuildTarget(),
-                  ruleResolver,
-                  cxxPlatform,
-                  headerVisibility,
-                  CxxPreprocessables.IncludeType.SYSTEM);
-            }
-            builder.putAllPreprocessorFlags(
-                Preconditions.checkNotNull(getExportedPreprocessorFlags(cxxPlatform)));
-            builder.addAllFrameworks(args.getFrameworks());
-            final Iterable<SourcePath> includePaths =
-                args.getIncludeDirs()
-                    .stream()
-                    .map(
-                        input ->
-                            PrebuiltCxxLibraryDescription.getApplicableSourcePath(
-                                params.getBuildTarget(),
-                                cellRoots,
-                                params.getProjectFilesystem(),
-                                ruleResolver,
-                                cxxPlatform,
-                                versionSubdir,
-                                input,
-                                Optional.empty()))
-                    .collect(MoreCollectors.toImmutableList());
-            for (SourcePath includePath : includePaths) {
-              builder.addIncludes(
-                  CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includePath));
-            }
-            return builder.build();
-          case PRIVATE:
-            return builder.build();
+        if (hasHeaders(cxxPlatform)) {
+          CxxPreprocessables.addHeaderSymlinkTree(
+              builder,
+              getBuildTarget(),
+              ruleResolver,
+              cxxPlatform,
+              HeaderVisibility.PUBLIC,
+              CxxPreprocessables.IncludeType.SYSTEM);
         }
-
-        // We explicitly don't put this in a default statement because we
-        // want the compiler to warn if someone modifies the HeaderVisibility enum.
-        throw new RuntimeException("Invalid header visibility: " + headerVisibility);
+        builder.putAllPreprocessorFlags(
+            Preconditions.checkNotNull(getExportedPreprocessorFlags(cxxPlatform)));
+        builder.addAllFrameworks(args.getFrameworks());
+        final Iterable<SourcePath> includePaths =
+            args.getIncludeDirs()
+                .stream()
+                .map(
+                    input ->
+                        PrebuiltCxxLibraryDescription.getApplicableSourcePath(
+                            params.getBuildTarget(),
+                            cellRoots,
+                            params.getProjectFilesystem(),
+                            ruleResolver,
+                            cxxPlatform,
+                            versionSubdir,
+                            input,
+                            Optional.empty()))
+                .collect(MoreCollectors.toImmutableList());
+        for (SourcePath includePath : includePaths) {
+          builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includePath));
+        }
+        return builder.build();
       }
 
       @Override

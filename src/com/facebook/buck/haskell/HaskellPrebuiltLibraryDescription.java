@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -139,8 +138,7 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         for (SourcePath headerDir : args.getCxxHeaderDirs()) {

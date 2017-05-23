@@ -188,31 +188,19 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-
-        switch (headerVisibility) {
-          case PUBLIC:
-            builder.putAllPreprocessorFlags(
-                CxxFlags.getLanguageFlags(
-                    args.getExportedPreprocessorFlags(),
-                    PatternMatchedCollection.of(),
-                    ImmutableMap.of(),
-                    cxxPlatform));
-            for (SourcePath includeDir : args.getIncludeDirs()) {
-              builder.addIncludes(
-                  CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
-            }
-            return builder.build();
-          case PRIVATE:
-            return builder.build();
+        builder.putAllPreprocessorFlags(
+            CxxFlags.getLanguageFlags(
+                args.getExportedPreprocessorFlags(),
+                PatternMatchedCollection.of(),
+                ImmutableMap.of(),
+                cxxPlatform));
+        for (SourcePath includeDir : args.getIncludeDirs()) {
+          builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
         }
-
-        // We explicitly don't put this in a default statement because we
-        // want the compiler to warn if someone modifies the HeaderVisibility enum.
-        throw new RuntimeException("Invalid header visibility: " + headerVisibility);
+        return builder.build();
       }
 
       @Override
