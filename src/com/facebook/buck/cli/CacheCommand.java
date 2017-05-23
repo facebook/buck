@@ -94,8 +94,6 @@ public class CacheCommand extends AbstractCommand {
       Files.createDirectories(outputPath.get());
     }
 
-    ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
-
     List<RuleKey> ruleKeys = new ArrayList<>();
     for (String hash : arguments) {
       ruleKeys.add(new RuleKey(hash));
@@ -106,8 +104,9 @@ public class CacheCommand extends AbstractCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (CommandThreadManager pool =
-        new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
+    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
+        CommandThreadManager pool =
+            new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getExecutor();
 
       fakeOutParseEvents(params.getBuckEventBus());

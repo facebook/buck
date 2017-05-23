@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
@@ -55,6 +56,8 @@ public class CacheCommandTest extends EasyMockSupport {
     ArtifactCache cache = createMock(ArtifactCache.class);
     expect(cache.fetch(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
         .andReturn(CacheResult.hit("http", ArtifactCacheMode.http));
+    cache.close();
+    expectLastCall();
 
     TestConsole console = new TestConsole();
 
@@ -80,6 +83,8 @@ public class CacheCommandTest extends EasyMockSupport {
     ArtifactCache cache = createMock(ArtifactCache.class);
     expect(cache.fetch(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
         .andReturn(CacheResult.miss());
+    cache.close();
+    expectLastCall();
 
     TestConsole console = new TestConsole();
     console.printErrorText("Failed to retrieve an artifact with id " + ruleKeyHash + ".");
