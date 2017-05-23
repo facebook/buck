@@ -520,7 +520,7 @@ public class CxxDescriptionEnhancer {
               "Adding private includes of tested rule %s to testing rule %s",
               rule.getBuildTarget(), params.getBuildTarget());
           cxxPreprocessorInputFromTestedRulesBuilder.add(
-              testable.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE));
+              testable.getPrivateCxxPreprocessorInput(cxxPlatform));
 
           // Add any dependent headers
           cxxPreprocessorInputFromTestedRulesBuilder.addAll(

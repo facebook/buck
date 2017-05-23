@@ -159,6 +159,12 @@ public class CxxLibrary extends NoopBuildRule
   }
 
   @Override
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
+    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
+  }
+
+  @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(

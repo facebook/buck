@@ -26,14 +26,10 @@ public interface NativeTestable {
   boolean isTestedBy(BuildTarget testTarget);
 
   /**
-   * Return the {@link CxxPreprocessorInput} to expose symbols of this rule.
-   *
-   * <p>Note: This is duplicated from CxxPreprocessorDep.
-   *
-   * <p>We need the same information to expose the headers of a target under test to its tests, but
-   * any rule that implements CxxPreprocessorDep gets automatically invoked by
-   * CxxDescriptionEnhancer to get preprocessor information, which is not what we want.
+   * Return the {@link CxxPreprocessorInput} to expose private headers of this rule. This is used to
+   * propagate private headers to the test testing this object. For convenience, tests can see
+   * private headers visible in the rule being tested.
    */
-  CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
+  CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
 }

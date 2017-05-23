@@ -132,15 +132,14 @@ public class CxxBinary extends AbstractBuildRule
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
         params.withBuildTarget(platformlessTarget),
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,
-        headerVisibility,
+        HeaderVisibility.PRIVATE,
         CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.of(),
         frameworks);

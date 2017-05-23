@@ -99,18 +99,22 @@ public final class FakeCxxLibrary extends NoopBuildRule
                     .build())
             .build();
       case PRIVATE:
-        return CxxPreprocessorInput.builder()
-            .addIncludes(
-                CxxSymlinkTreeHeaders.builder()
-                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
-                    .putNameToPathMap(
-                        Paths.get("header.h"),
-                        new DefaultBuildTargetSourcePath(privateHeaderTarget))
-                    .build())
-            .build();
+        return getPrivateCxxPreprocessorInput(cxxPlatform);
     }
     throw new RuntimeException("Invalid header visibility value: " + headerVisibility);
+  }
+
+  @Override
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+    return CxxPreprocessorInput.builder()
+        .addIncludes(
+            CxxSymlinkTreeHeaders.builder()
+                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
+                .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                .putNameToPathMap(
+                    Paths.get("header.h"), new DefaultBuildTargetSourcePath(privateHeaderTarget))
+                .build())
+        .build();
   }
 
   @Override
