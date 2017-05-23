@@ -135,6 +135,13 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   }
 
   private boolean shouldIncludeInnerClass(int access, String name, @Nullable String outerName) {
+    if (referencedClassNames == null || referencedClassNames.contains(name)) {
+      // Either it's the first pass, and we're not filtering inner classes yet,
+      // or it's the second one, and this inner class is part of the ABI and should
+      // therefore be included
+      return true;
+    }
+
     String currentClassName = Preconditions.checkNotNull(this.name);
     if (name.equals(currentClassName)) {
       // Must always include the entry for our own class, since that's what makes it an inner class.
@@ -145,13 +152,6 @@ class AbiFilteringClassVisitor extends ClassVisitor {
     if (isAnonymousOrLocalClass) {
       // Anonymous and local classes are never part of the ABI.
       return false;
-    }
-
-    if (referencedClassNames == null || referencedClassNames.contains(name)) {
-      // Either it's the first pass, and we're not filtering inner classes yet,
-      // or it's the second one, and this inner class is part of the ABI and should
-      // therefore be included
-      return true;
     }
 
     if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {

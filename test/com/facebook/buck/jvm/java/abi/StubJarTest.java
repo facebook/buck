@@ -2531,6 +2531,34 @@ public class StubJarTest {
   }
 
   @Test
+  public void ignoresInnerClassesOfAnonymousClasses() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public Runnable r = new Runnable() {",
+            "    class Inner { }",
+            "    public void run() { }",
+            "  };",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public Ljava/lang/Runnable; r",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void ignoresLocalClasses() throws IOException {
     tester
         .setSourceFile(

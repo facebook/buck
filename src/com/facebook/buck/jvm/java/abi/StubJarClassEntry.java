@@ -88,17 +88,26 @@ class StubJarClassEntry extends StubJarEntry {
     }
 
     InnerClassNode innerClass = getInnerClassMetadata(node);
-    if (innerClass == null) {
-      return false;
+    while (innerClass != null) {
+      if (innerClass.outerName == null) {
+        return true;
+      }
+      innerClass = getInnerClassMetadata(node, innerClass.outerName);
     }
 
-    return innerClass.outerName == null;
+    return false;
   }
 
   @Nullable
   private static InnerClassNode getInnerClassMetadata(ClassNode node) {
+    String name = node.name;
+    return getInnerClassMetadata(node, name);
+  }
+
+  @Nullable
+  private static InnerClassNode getInnerClassMetadata(ClassNode node, String className) {
     for (InnerClassNode innerClass : node.innerClasses) {
-      if (innerClass.name.equals(node.name)) {
+      if (innerClass.name.equals(className)) {
         return innerClass;
       }
     }
