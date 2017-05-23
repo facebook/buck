@@ -17,15 +17,16 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Optional;
 import javax.tools.StandardJavaFileManager;
 
 public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
@@ -47,18 +48,24 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
   }
 
   @Override
-  public void writeFile(ProjectFilesystem filesystem) {
+  public void writeFile(ProjectFilesystem filesystem, CellPathResolver cellPathResolver) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
+    ImmutableSet.Builder<Path> cellRootsBuilder = ImmutableSet.builder();
+    cellRootsBuilder.addAll(cellPathResolver.getCellPaths().values());
+    cellRootsBuilder.add(filesystem.getRootPath());
     try {
       ObjectMappers.WRITER.writeValue(
-          filesystem.resolve(relativePath).toFile(), relativizeMap(classUsageMap, filesystem));
+          filesystem.resolve(relativePath).toFile(),
+          relativizeMap(classUsageMap, filesystem, cellRootsBuilder.build()));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");
     }
   }
 
   private static ImmutableSetMultimap<Path, Path> relativizeMap(
-      ImmutableSetMultimap<Path, Path> classUsageMap, ProjectFilesystem filesystem) {
+      ImmutableSetMultimap<Path, Path> classUsageMap,
+      ProjectFilesystem filesystem,
+      ImmutableSet<Path> cellRoots) {
     final ImmutableSetMultimap.Builder<Path, Path> builder = ImmutableSetMultimap.builder();
 
     // Ensure deterministic ordering.
@@ -67,18 +74,16 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
 
     for (Map.Entry<Path, Collection<Path>> jarClassesEntry : classUsageMap.asMap().entrySet()) {
       Path jarAbsolutePath = jarClassesEntry.getKey();
-      Optional<Path> jarRelativePath = filesystem.getPathRelativeToProjectRoot(jarAbsolutePath);
 
-      // Don't include jars that are outside of the filesystem
-      if (!jarRelativePath.isPresent()) {
+      // Don't include jars that are outside of the project
+      if (cellRoots.stream().noneMatch(jarAbsolutePath::startsWith)) {
         // Paths outside the project would make these class usage files problematic for caching.
         // Fortunately, such paths are also not interesting for the main use cases that these files
         // address, namely understanding the dependencies one java rule has on others. Jar files
         // outside the project are coming from a build tool (e.g. JDK or Android SDK).
         continue;
       }
-
-      builder.putAll(jarRelativePath.get(), jarClassesEntry.getValue());
+      builder.putAll(filesystem.relativize(jarAbsolutePath), jarClassesEntry.getValue());
     }
 
     return builder.build();

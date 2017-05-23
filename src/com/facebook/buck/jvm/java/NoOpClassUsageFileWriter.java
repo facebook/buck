@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.CellPathResolver;
 import javax.tools.StandardJavaFileManager;
 
 public class NoOpClassUsageFileWriter implements ClassUsageFileWriter {
@@ -34,5 +35,5 @@ public class NoOpClassUsageFileWriter implements ClassUsageFileWriter {
   }
 
   @Override
-  public void writeFile(ProjectFilesystem filesystem) {}
+  public void writeFile(ProjectFilesystem filesystem, CellPathResolver cellPathResolver) {}
 }

@@ -357,7 +357,9 @@ public abstract class Jsr199Javac implements Javac {
         DiagnosticCleaner.clean(diagnostics.getDiagnostics());
 
     if (isSuccess) {
-      context.getUsedClassesFileWriter().writeFile(context.getProjectFilesystem());
+      context
+          .getUsedClassesFileWriter()
+          .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
