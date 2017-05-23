@@ -52,6 +52,7 @@ import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -3533,6 +3534,8 @@ public class ProjectGeneratorTest {
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertPBXTargetHasDependency(
+        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     // Check starts with as the remainder depends on the bundle style at build time.
@@ -3573,6 +3576,8 @@ public class ProjectGeneratorTest {
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
     assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertPBXTargetHasDependency(
+        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     // Check starts with as the remainder depends on the bundle style at build time.
@@ -4617,5 +4622,18 @@ public class ProjectGeneratorTest {
     assertHasConfigurations(target, config);
     return ProjectGeneratorTestUtils.getBuildSettings(
         projectFilesystem, buildTarget, target, config);
+  }
+
+  private void assertPBXTargetHasDependency(
+      PBXProject project,
+      PBXTarget pbxTarget,
+      String dependencyTargetName) {
+
+    assertEquals(pbxTarget.getDependencies().size(), 1);
+    PBXContainerItemProxy dependencyProxy = pbxTarget.getDependencies().get(0).getTargetProxy();
+
+    PBXTarget dependency = assertTargetExistsAndReturnTarget(project, dependencyTargetName);
+    assertEquals(dependencyProxy.getRemoteGlobalIDString(), dependency.getGlobalID());
+    assertEquals(dependencyProxy.getContainerPortal(), project);
   }
 }

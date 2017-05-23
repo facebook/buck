@@ -27,8 +27,8 @@ import java.util.Set;
 public class GidGenerator {
   private final Set<String> generatedAndReservedIds;
 
-  public GidGenerator(Set<String> reservedIds) {
-    generatedAndReservedIds = Sets.newHashSet(reservedIds);
+  public GidGenerator() {
+    generatedAndReservedIds = Sets.newHashSet();
   }
 
   /**

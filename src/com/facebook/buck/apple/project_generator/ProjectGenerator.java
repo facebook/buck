@@ -54,6 +54,7 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -62,6 +63,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
@@ -267,7 +269,7 @@ public class ProjectGenerator {
    */
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
-  private final Map<String, String> gidsToTargetNames;
+  private final GidGenerator gidGenerator;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -339,11 +341,12 @@ public class ProjectGenerator {
                 });
 
     targetConfigNamesBuilder = ImmutableSet.builder();
-    gidsToTargetNames = new HashMap<>();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.focusModules = focusModules;
+
+    gidGenerator = new GidGenerator();
   }
 
   @VisibleForTesting
@@ -999,6 +1002,7 @@ public class ProjectGenerator {
         if (bundleLoaderNode.isPresent()) {
           BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
           extraSettingsBuilder.put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
+          addPBXTargetDependency(target, testTarget);
         } else {
           throw new HumanReadableException(
               "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
@@ -1062,6 +1066,8 @@ public class ProjectGenerator {
             .put(bundleLoaderOutputPathDeepSetting, bundleLoaderOutputPathDeepValue)
             .put("BUNDLE_LOADER", bundleLoaderOutputPathValue)
             .put("TEST_HOST", "$(BUNDLE_LOADER)");
+
+        addPBXTargetDependency(target, bundleLoader.getBuildTarget());
       }
       if (infoPlistOptional.isPresent()) {
         Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
@@ -1274,6 +1280,31 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private void addPBXTargetDependency(PBXNativeTarget pbxTarget, BuildTarget dependency) {
+    // Xcode appears to only support target dependencies if both targets are within the same project.
+    // If the desired target dependency is not in the same project, then just ignore it.
+    if (!isBuiltByCurrentProject(dependency)) {
+      return;
+    }
+
+    targetNodeToProjectTarget
+        .getUnchecked(targetGraph.get(dependency))
+        .ifPresent(dependencyPBXTarget -> {
+          if (project.getGlobalID() == null) {
+            project.setGlobalID(project.generateGid(gidGenerator));
+          }
+          if (dependencyPBXTarget.getGlobalID() == null) {
+            dependencyPBXTarget.setGlobalID(dependencyPBXTarget.generateGid(gidGenerator));
+          }
+          PBXContainerItemProxy dependencyProxy = new PBXContainerItemProxy(
+              project,
+              dependencyPBXTarget.getGlobalID(),
+              PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
+
+          pbxTarget.getDependencies().add(new PBXTargetDependency(dependencyProxy));
+        });
   }
 
   private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
@@ -2018,9 +2049,7 @@ public class ProjectGenerator {
 
   /** Create the project bundle structure and write {@code project.pbxproj}. */
   private void writeProjectFile(PBXProject project) throws IOException {
-    XcodeprojSerializer serializer =
-        new XcodeprojSerializer(
-            new GidGenerator(ImmutableSet.copyOf(gidsToTargetNames.keySet())), project);
+    XcodeprojSerializer serializer = new XcodeprojSerializer(gidGenerator, project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
     projectFilesystem.mkdirs(xcodeprojDir);
