@@ -27,6 +27,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,12 +35,16 @@ public class AuditAliasCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  private ProjectWorkspace workspace;
+
+  @Before
+  public void setUp() throws InterruptedException, IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
+    workspace.setUp();
+  }
+
   @Test
   public void testBuckAliasList() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
-    workspace.setUp();
-
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list");
     result.assertSuccess();
 
@@ -58,10 +63,6 @@ public class AuditAliasCommandIntegrationTest {
 
   @Test
   public void testBuckAliasListMap() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
-    workspace.setUp();
-
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list-map");
     result.assertSuccess();
 
