@@ -41,7 +41,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
       case SCALA:
         return new ScalaAndroidLibraryCompiler(scalaConfig);
       case KOTLIN:
-        return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
+        return new KotlinAndroidLibraryCompiler(kotlinBuckConfig, javaConfig);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }

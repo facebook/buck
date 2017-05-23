@@ -18,9 +18,12 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
@@ -45,12 +48,17 @@ public class KotlinLibraryDescription
     implements Description<KotlinLibraryDescriptionArg>, Flavored {
 
   private final KotlinBuckConfig kotlinBuckConfig;
+  private final JavaBuckConfig javaBuckConfig;
+  private final JavacOptions defaultOptions;
 
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
-  public KotlinLibraryDescription(KotlinBuckConfig kotlinBuckConfig) {
+  public KotlinLibraryDescription(KotlinBuckConfig kotlinBuckConfig, JavaBuckConfig javaBuckConfig,
+      JavacOptions defaultOptions) {
     this.kotlinBuckConfig = kotlinBuckConfig;
+    this.javaBuckConfig = javaBuckConfig;
+    this.defaultOptions = defaultOptions;
   }
 
   @Override
@@ -100,9 +108,12 @@ public class KotlinLibraryDescription
             args.getMavenPomTemplate());
       }
     }
+    JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
 
     KotlinLibraryBuilder defaultKotlinLibraryBuilder =
-        new KotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
+        new KotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig,
+            javaBuckConfig)
+            .setJavacOptions(javacOptions)
             .setArgs(args);
 
     // We know that the flavour we're being asked to create is valid, since the check is done when

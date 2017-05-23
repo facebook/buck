@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -62,5 +63,12 @@ public class KotlinLibraryIntegrationTest {
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();
+  }
+
+  @Test @Ignore("https://github.com/facebook/buck/issues/1371")
+  public void shouldCompileMixedJavaAndKotlinSources() throws Exception {
+    ProjectWorkspace.ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//com/example/mixed:example");
+    buildResult.assertSuccess("Build should have succeeded.");
   }
 }

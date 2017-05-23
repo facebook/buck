@@ -20,9 +20,11 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -64,16 +66,19 @@ public class KotlinTestDescription
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
   private final KotlinBuckConfig kotlinBuckConfig;
+  private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public KotlinTestDescription(
       KotlinBuckConfig kotlinBuckConfig,
+      JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateOptions,
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.kotlinBuckConfig = kotlinBuckConfig;
+    this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
@@ -95,11 +100,16 @@ public class KotlinTestDescription
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(templateJavacOptions, params, resolver, args);
+
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new KotlinLibraryBuilder(
-                targetGraph, testsLibraryParams, resolver, cellRoots, kotlinBuckConfig)
+            targetGraph, testsLibraryParams, resolver, cellRoots, kotlinBuckConfig,
+            javaBuckConfig)
             .setArgs(args)
-            .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName());
+            .setJavacOptions(javacOptions)
+            .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName());
 
     if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
       return defaultJavaLibraryBuilder.buildAbi();
