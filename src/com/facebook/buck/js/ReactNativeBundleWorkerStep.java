@@ -66,7 +66,6 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                             : ""),
                     ImmutableMap.of(),
                     1,
-                    Optional.empty(),
                     Optional.empty()))),
         Optional.empty(),
         Optional.empty(),

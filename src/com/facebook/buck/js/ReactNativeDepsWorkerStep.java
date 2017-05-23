@@ -53,7 +53,6 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                             : ""),
                     ImmutableMap.of(),
                     1,
-                    Optional.empty(),
                     Optional.empty()))),
         Optional.empty(),
         Optional.empty(),

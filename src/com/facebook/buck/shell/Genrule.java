@@ -310,8 +310,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
                   workerMacroArg.getStartupArgs(pathResolver),
                   workerMacroArg.getEnvironment(),
                   workerMacroArg.getMaxWorkers(),
-                  workerMacroArg.getPersistentWorkerKey(),
-                  Optional.of(workerMacroArg.getWorkerHash())));
+                  workerMacroArg.getPersistentWorkerKey().isPresent()
+                      ? Optional.of(
+                          WorkerProcessIdentity.of(
+                              workerMacroArg.getPersistentWorkerKey().get(),
+                              workerMacroArg.getWorkerHash()))
+                      : Optional.empty()));
         });
   }
 

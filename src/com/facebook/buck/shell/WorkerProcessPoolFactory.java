@@ -60,11 +60,11 @@ public class WorkerProcessPoolFactory {
     ConcurrentMap<String, WorkerProcessPool> processPoolMap;
     final String key;
     final HashCode workerHash;
-    if (paramsToUse.getPersistentWorkerKey().isPresent()
+    if (paramsToUse.getWorkerProcessIdentity().isPresent()
         && context.getPersistentWorkerPools().isPresent()) {
       processPoolMap = context.getPersistentWorkerPools().get();
-      key = paramsToUse.getPersistentWorkerKey().get();
-      workerHash = paramsToUse.getWorkerHash().get();
+      key = paramsToUse.getWorkerProcessIdentity().get().getPersistentWorkerKey();
+      workerHash = paramsToUse.getWorkerProcessIdentity().get().getWorkerHash();
     } else {
       processPoolMap = context.getWorkerProcessPools();
       key = Joiner.on(' ').join(getCommand(context.getPlatform(), paramsToUse));

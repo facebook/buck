@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -27,7 +26,11 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractWorkerProcessParams {
-  /** Temp folder location. */
+  /**
+   * Temp folder location. This will be used to store .args, .out and .err files. Additionally, this
+   * will be set into TMP environment variable which worker process tool can use to store other
+   * temporary files, or locate .args, .out and .err files and perform output into them.
+   */
   Path getTempDir();
 
   /**
@@ -51,21 +54,11 @@ interface AbstractWorkerProcessParams {
   int getMaxWorkers();
 
   /**
-   * If this value is set and if the current invocation allows to have persisted worker pools (buck
-   * is running as daemon), it will be used to obtain the instance of the persisted worker process
-   * pool. If this value is absent, then key will be automatically computed based on the startup
+   * Identifies the instance of the persisted worker process pool. Defines when worker process pool
+   * should be invalidated.
+   *
+   * <p>If this value is absent, then key will be automatically computed based on the startup
    * command and startup arguments.
-   *
-   * <p>
-   *
-   * <p>Note: If you set this value then you must set worker hash value below as well.
    */
-  Optional<String> getPersistentWorkerKey();
-
-  /**
-   * Hash to identify the specific worker pool and kind of a mechanism for invalidating existing
-   * pools. If this value for the given persistent worker key changes, old pool will be destroyed
-   * and the new pool will be recreated.
-   */
-  Optional<HashCode> getWorkerHash();
+  Optional<WorkerProcessIdentity> getWorkerProcessIdentity();
 }

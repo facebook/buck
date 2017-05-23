@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.WorkerJobParams;
+import com.facebook.buck.shell.WorkerProcessIdentity;
 import com.facebook.buck.shell.WorkerProcessParams;
 import com.facebook.buck.shell.WorkerProcessPoolFactory;
 import com.facebook.buck.shell.WorkerShellStep;
@@ -62,9 +63,11 @@ public class JsUtil {
                 tool.getEnvironment(sourcePathResolver),
                 worker.getMaxWorkers(),
                 worker.isPersistent()
-                    ? Optional.of(buildTarget.getCellPath().toString() + buildTarget.toString())
-                    : Optional.empty(),
-                Optional.of(worker.getInstanceKey())));
+                    ? Optional.of(
+                        WorkerProcessIdentity.of(
+                            buildTarget.getCellPath().toString() + buildTarget.toString(),
+                            worker.getInstanceKey()))
+                    : Optional.empty()));
     return new WorkerShellStep(
         Optional.of(params),
         Optional.empty(),

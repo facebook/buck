@@ -115,8 +115,9 @@ public class WorkerShellStepTest {
             startupArgs,
             startupEnv,
             maxWorkers,
-            Optional.ofNullable(persistentWorkerKey),
-            Optional.ofNullable(workerHash)));
+            persistentWorkerKey == null || workerHash == null
+                ? Optional.empty()
+                : Optional.of(WorkerProcessIdentity.of(persistentWorkerKey, workerHash))));
   }
 
   private ExecutionContext createExecutionContextWith(int exitCode, String stdout, String stderr)
