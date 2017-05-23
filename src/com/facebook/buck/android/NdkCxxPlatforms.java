@@ -594,7 +594,7 @@ public class NdkCxxPlatforms {
                         version,
                         cxxRuntime,
                         executableFinder))))
-        .addAllLdflags(getLdFlags(targetConfiguration))
+        .addAllLdflags(getLdFlags(targetConfiguration, androidConfig))
         .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
         .setSymbolNameTool(
             new PosixNmSymbolNameTool(getGccTool(toolchainPaths, "nm", version, executableFinder)))
@@ -789,10 +789,11 @@ public class NdkCxxPlatforms {
   }
 
   private static ImmutableList<String> getLdFlags(
-      NdkCxxPlatformTargetConfiguration targetConfiguration) {
+      NdkCxxPlatformTargetConfiguration targetConfiguration, AndroidBuckConfig config) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.getLinkerFlags(targetConfiguration.getCompiler().getType()))
         .addAll(DEFAULT_COMMON_LDFLAGS)
+        .addAll(config.getExtraNdkLdFlags())
         .build();
   }
 

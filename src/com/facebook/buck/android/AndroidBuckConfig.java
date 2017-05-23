@@ -79,6 +79,10 @@ public class AndroidBuckConfig {
     return delegate.getListWithoutComments("ndk", "extra_cxxflags", ' ');
   }
 
+  public ImmutableList<String> getExtraNdkLdFlags() {
+    return delegate.getListWithoutComments("ndk", "extra_ldflags", ' ');
+  }
+
   /**
    * Returns the path to the platform specific aapt executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.
