@@ -38,18 +38,18 @@ public class PBXContainerItemProxy extends PBXContainerItem {
     }
   }
 
-  private final PBXFileReference containerPortal;
+  private final PBXObject containerPortal;
   private final String remoteGlobalIDString;
   private final ProxyType proxyType;
 
   public PBXContainerItemProxy(
-      PBXFileReference containerPortal, String remoteGlobalIDString, ProxyType proxyType) {
+      PBXObject containerPortal, String remoteGlobalIDString, ProxyType proxyType) {
     this.containerPortal = containerPortal;
     this.remoteGlobalIDString = remoteGlobalIDString;
     this.proxyType = proxyType;
   }
 
-  public PBXFileReference getContainerPortal() {
+  public PBXObject getContainerPortal() {
     return containerPortal;
   }
 
@@ -75,7 +75,7 @@ public class PBXContainerItemProxy extends PBXContainerItem {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    s.addField("containerPortal", containerPortal);
+    s.addField("containerPortal", containerPortal.getGlobalID());
     s.addField("remoteGlobalIDString", remoteGlobalIDString);
     s.addField("proxyType", proxyType.getIntValue());
   }
