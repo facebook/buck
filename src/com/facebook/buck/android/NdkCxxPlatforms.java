@@ -123,6 +123,24 @@ public class NdkCxxPlatforms {
           // Default compiler flags provided by the NDK build makefiles.
           "-ffunction-sections", "-funwind-tables", "-fomit-frame-pointer", "-fno-strict-aliasing");
 
+  /** Default linker flags added by the NDK. */
+  public static final ImmutableList<String> DEFAULT_COMMON_LDFLAGS =
+      ImmutableList.of(
+          // Add a deterministic build ID to Android builds.
+          // We use it to find symbols from arbitrary binaries.
+          "-Wl,--build-id",
+          // Enforce the NX (no execute) security feature
+          "-Wl,-z,noexecstack",
+          // Strip unused code
+          "-Wl,--gc-sections",
+          // Refuse to produce dynamic objects with undefined symbols
+          "-Wl,-z,defs",
+          // Forbid dangerous copy "relocations"
+          "-Wl,-z,nocopyreloc",
+          // We always pass the runtime library on the command line, so setting this flag
+          // means the resulting link will only use it if it was actually needed it.
+          "-Wl,--as-needed");
+
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() {}
 
@@ -576,23 +594,7 @@ public class NdkCxxPlatforms {
                         version,
                         cxxRuntime,
                         executableFinder))))
-        .addAllLdflags(targetConfiguration.getLinkerFlags(compilerType))
-        // Default linker flags added by the NDK
-        .addLdflags(
-            // Add a deterministic build ID to Android builds.
-            // We use it to find symbols from arbitrary binaries.
-            "-Wl,--build-id",
-            // Enforce the NX (no execute) security feature
-            "-Wl,-z,noexecstack",
-            // Strip unused code
-            "-Wl,--gc-sections",
-            // Refuse to produce dynamic objects with undefined symbols
-            "-Wl,-z,defs",
-            // Forbid dangerous copy "relocations"
-            "-Wl,-z,nocopyreloc",
-            // We always pass the runtime library on the command line, so setting this flag
-            // means the resulting link will only use it if it was actually needed it.
-            "-Wl,--as-needed")
+        .addAllLdflags(getLdFlags(targetConfiguration))
         .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
         .setSymbolNameTool(
             new PosixNmSymbolNameTool(getGccTool(toolchainPaths, "nm", version, executableFinder)))
@@ -784,6 +786,14 @@ public class NdkCxxPlatforms {
             .setVersion(version)
             .setExtraArgs(flags.build())
             .build());
+  }
+
+  private static ImmutableList<String> getLdFlags(
+      NdkCxxPlatformTargetConfiguration targetConfiguration) {
+    return ImmutableList.<String>builder()
+        .addAll(targetConfiguration.getLinkerFlags(targetConfiguration.getCompiler().getType()))
+        .addAll(DEFAULT_COMMON_LDFLAGS)
+        .build();
   }
 
   /** Flags to be used when either preprocessing or compiling C or C++ sources. */
