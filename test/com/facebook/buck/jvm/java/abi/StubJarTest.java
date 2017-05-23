@@ -2036,6 +2036,122 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsReferencesToStaticInnerClassesOfOtherTypes() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  class Inner {",
+            "    B.C.D field1;",
+            "  }",
+            "}",
+            "class B {",
+            "  public static class C {",
+            "    public static class D { }",
+            "  }",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A$Inner",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/A$Inner {",
+            "",
+            // An innerclass entry is present for B$C and B$C$D even though they're not inner classes
+            // of A, so that the compiler and runtime know how to interpret the name B$C or B$C$D.
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x0",
+            "  Lcom/example/buck/B$C$D; field1",
+            "",
+            "  // access flags 0x1010",
+            "  final synthetic Lcom/example/buck/A; this$0",
+            "",
+            "  // access flags 0x0",
+            "  <init>(Lcom/example/buck/A;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$Inner",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/A$Inner {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            // Inenrclass entries for references to other classes are sorted. Otherwise the order
+            // in class-based ABIs could be influenced by references inside method bodies.
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "",
+            "  // access flags 0x0",
+            "  Lcom/example/buck/B$C$D; field1",
+            "",
+            "  // access flags 0x0",
+            "  <init>(Lcom/example/buck/A;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B$C$D",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/B$C$D {",
+            "",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B$C",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/B$C {",
+            "",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/B {",
+            "",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void stubsReferencesToInnerEnumsOfOtherTypes() throws IOException {
     tester
         .setSourceFile(

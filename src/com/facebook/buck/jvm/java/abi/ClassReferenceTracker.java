@@ -40,6 +40,7 @@ import org.objectweb.asm.tree.InnerClassNode;
  */
 class ClassReferenceTracker extends ClassVisitor {
   private Set<String> referencedClassNames = new HashSet<>();
+  @Nullable private String className;
 
   private final Map<String, InnerClassNode> innerClasses = new HashMap<>();
 
@@ -57,6 +58,10 @@ class ClassReferenceTracker extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
+    if (name.equals(className) && outerName != null) {
+      // If this class is an inner class, its outer class is considered referenced automatically
+      addReferencedClassName(outerName);
+    }
     innerClasses.put(name, new InnerClassNode(name, outerName, innerName, access));
     super.visitInnerClass(name, outerName, innerName, access);
   }
@@ -69,6 +74,7 @@ class ClassReferenceTracker extends ClassVisitor {
       String signature,
       String superName,
       String[] interfaces) {
+    className = name;
     if (superName != null) {
       addReferencedClassName(superName);
     }
