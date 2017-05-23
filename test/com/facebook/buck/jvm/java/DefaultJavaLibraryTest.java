@@ -31,14 +31,12 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -160,7 +158,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             + File.pathSeparator
             + "usb.jar"
             + File.pathSeparator;
-    BuildContext context = createBuildContext(libraryRule, bootclasspath);
+    BuildContext context = createBuildContext(bootclasspath);
 
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
@@ -653,7 +651,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
-    BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -677,7 +675,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
-    BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -702,7 +700,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
-    BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -1276,23 +1274,18 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   // test.
-  private BuildContext createBuildContext(BuildRule javaLibrary, @Nullable String bootclasspath) {
+  private BuildContext createBuildContext(@Nullable String bootclasspath) {
     AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
     ImmutableList<Path> bootclasspathEntries =
         (bootclasspath == null)
             ? ImmutableList.of(Paths.get("I am not used"))
             : ImmutableList.of(Paths.get(bootclasspath));
-    expect(platformTarget.getBootclasspathEntries()).andReturn(bootclasspathEntries).anyTimes();
+    expect(platformTarget.getBootclasspathEntries()).andStubReturn(bootclasspathEntries);
     replay(platformTarget);
 
-    // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
-    return BuildContext.builder()
-        .setActionGraph(new ActionGraph(ImmutableList.of(javaLibrary)))
-        .setSourcePathResolver(new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)))
-        .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(platformTarget))
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .build();
+    return FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)))
+        .withAndroidPlatformTargetSupplier(Suppliers.ofInstance(platformTarget));
   }
 
   private abstract static class AnnotationProcessorTarget {
@@ -1380,7 +1373,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         throws InterruptedException, IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);
-      BuildContext buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
+      BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
 
