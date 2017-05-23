@@ -3348,6 +3348,23 @@ public class StubJarTest {
   }
 
   @Test
+  public void shouldIncludePackageInfoClass() throws IOException {
+    notYetImplementedForSource();
+    tester
+        .setSourceFile("package-info.java", "@Deprecated", "package com.example.buck;")
+        .addExpectedStub(
+            "com/example/buck/package-info",
+            "// class version 52.0 (52)",
+            "// access flags 0x1600",
+            "abstract synthetic interface com/example/buck/package-info {",
+            "",
+            "",
+            "  @Ljava/lang/Deprecated;()",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void shouldNotIncludeSyntheticMethods() throws IOException {
     tester
         .setSourceFile(

@@ -54,7 +54,9 @@ class StubJarClassEntry extends StubJarEntry {
     }
     input.visitClass(path, firstLevelFiltering);
 
-    if (!isAnonymousOrLocalOrSyntheticClass(stub)) {
+    // The synthetic package-info class is how package annotations are recorded; that one is
+    // actually used by the compiler
+    if (!isAnonymousOrLocalOrSyntheticClass(stub) || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(path, stub, referenceTracker.getReferencedClassNames());
     }
 
