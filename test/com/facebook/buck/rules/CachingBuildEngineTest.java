@@ -48,7 +48,6 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -466,16 +465,9 @@ public class CachingBuildEngineTest {
       expect(artifactCache.fetch(eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
       BuildEngineBuildContext buildContext =
           BuildEngineBuildContext.builder()
-              .setBuildContext(
-                  BuildContext.builder()
-                      .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
-                      .setSourcePathResolver(pathResolver)
-                      .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-                      .setEventBus(buckEventBus)
-                      .build())
+              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
               .setClock(new DefaultClock())
               .setBuildId(new BuildId())
               .setArtifactCache(artifactCache)
@@ -490,8 +482,12 @@ public class CachingBuildEngineTest {
           cachingBuildEngine
               .build(buildContext, TestExecutionContext.newInstance(), buildRule)
               .getResult();
-      buckEventBus.post(
-          CommandEvent.finished(CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
+      buildContext
+          .getBuildContext()
+          .getEventBus()
+          .post(
+              CommandEvent.finished(
+                  CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
 
       BuildResult result = buildResult.get();
       verifyAll();
@@ -509,8 +505,6 @@ public class CachingBuildEngineTest {
     @Test
     public void testArtifactFetchedFromCacheStillRunsPostBuildSteps()
         throws InterruptedException, ExecutionException, IOException {
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-
       // Add a post build step so we can verify that it's steps are executed.
       Step buildStep = createMock(Step.class);
       expect(buildStep.getDescription(anyObject(ExecutionContext.class)))
@@ -553,13 +547,7 @@ public class CachingBuildEngineTest {
 
       BuildEngineBuildContext buildContext =
           BuildEngineBuildContext.builder()
-              .setBuildContext(
-                  BuildContext.builder()
-                      .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
-                      .setSourcePathResolver(pathResolver)
-                      .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-                      .setEventBus(buckEventBus)
-                      .build())
+              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
               .setClock(new DefaultClock())
               .setBuildId(new BuildId())
               .setArtifactCache(artifactCache)
@@ -572,8 +560,12 @@ public class CachingBuildEngineTest {
           cachingBuildEngine
               .build(buildContext, TestExecutionContext.newInstance(), buildRule)
               .getResult();
-      buckEventBus.post(
-          CommandEvent.finished(CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
+      buildContext
+          .getBuildContext()
+          .getEventBus()
+          .post(
+              CommandEvent.finished(
+                  CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
 
       BuildResult result = buildResult.get();
       verifyAll();

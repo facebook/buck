@@ -24,14 +24,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -73,11 +72,6 @@ public class JavaSourceJarTest {
 
   @Test
   public void shouldOnlyIncludePathBasedSources() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     SourcePath fileBased = new FakeSourcePath("some/path/File.java");
     SourcePath ruleBased =
         new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//cheese:cake"));
@@ -96,12 +90,12 @@ public class JavaSourceJarTest {
             Optional.empty());
 
     BuildContext buildContext =
-        BuildContext.builder()
-            .setActionGraph(new ActionGraph(ImmutableList.of()))
-            .setSourcePathResolver(pathResolver)
-            .setJavaPackageFinder(finderStub)
-            .setEventBus(BuckEventBusFactory.newInstance())
-            .build();
+        FakeBuildContext.withSourcePathResolver(
+                new SourcePathResolver(
+                    new SourcePathRuleFinder(
+                        new BuildRuleResolver(
+                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))))
+            .withJavaPackageFinder(finderStub);
     ImmutableList<Step> steps = rule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     // There should be a CopyStep per file being copied. Count 'em.
