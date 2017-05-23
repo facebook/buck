@@ -160,7 +160,9 @@ public class BuildLogHelper {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
               throws IOException {
-            return FileVisitResult.CONTINUE;
+            return Files.isSymbolicLink(dir)
+                ? FileVisitResult.SKIP_SUBTREE
+                : FileVisitResult.CONTINUE;
           }
 
           @Override
