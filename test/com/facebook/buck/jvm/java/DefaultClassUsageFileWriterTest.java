@@ -21,7 +21,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.util.Escaper;
@@ -47,7 +48,7 @@ public class DefaultClassUsageFileWriterTest {
   @Test
   public void fileReadOrderDoesntAffectClassesUsedOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    CellPathResolver cellPathResolver = new FakeCellPathResolver(filesystem);
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     Path testJarPath = filesystem.getPathForRelativePath("test.jar");
     Path testTwoJarPath = filesystem.getPathForRelativePath("test2.jar");
 
@@ -96,7 +97,8 @@ public class DefaultClassUsageFileWriterTest {
     ProjectFilesystem externalFs = FakeProjectFilesystem.createRealTempFilesystem();
 
     CellPathResolver cellPathResolver =
-        new FakeCellPathResolver(ImmutableMap.of("AwayCell", awayFs.getRootPath()));
+        new DefaultCellPathResolver(
+            homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath()));
     Path testJarPath = homeFs.getPathForRelativePath("home.jar");
     Path testTwoJarPath = awayFs.getPathForRelativePath("away.jar");
     Path externalJarPath = externalFs.getPathForRelativePath("external.jar");
