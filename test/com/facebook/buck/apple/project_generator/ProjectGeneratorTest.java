@@ -97,15 +97,12 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.ExportFileBuilder;
@@ -1702,45 +1699,6 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
-  }
-
-  @Test
-  public void testAppleLibraryLinkerFlagsWithLocationMacrosAreExpanded() throws IOException {
-    BuildTarget genruleTarget = BuildTarget.builder(rootPath, "//foo", "genrulelib").build();
-    TargetNode<?, ?> genruleNode =
-        GenruleBuilder.newGenruleBuilder(genruleTarget)
-            .setCmd("touch $OUT")
-            .setOut("libGenruleLib.a")
-            .build();
-
-    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
-    TargetNode<?, ?> node =
-        AppleLibraryBuilder.createBuilder(buildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setLinkerFlags(
-                ImmutableList.of(
-                    StringWithMacrosUtils.format("-force_load"),
-                    StringWithMacrosUtils.format("%s", LocationMacro.of(genruleTarget))))
-            .build();
-
-    Path generatedLibraryPath =
-        getAbsoluteOutputForNode(genruleNode, ImmutableSet.of(genruleNode, node));
-
-    ProjectGenerator projectGenerator =
-        createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(node, genruleNode), ImmutableSet.of());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
-
-    assertThat(projectGenerator.getRequiredBuildTargets(), equalTo(ImmutableSet.of(genruleTarget)));
-
-    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) -force_load " + generatedLibraryPath.toString(),
-        settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -4675,15 +4633,5 @@ public class ProjectGeneratorTest {
     PBXTarget dependency = assertTargetExistsAndReturnTarget(project, dependencyTargetName);
     assertEquals(dependencyProxy.getRemoteGlobalIDString(), dependency.getGlobalID());
     assertEquals(dependencyProxy.getContainerPortal(), project);
-  }
-
-  private Path getAbsoluteOutputForNode(
-      TargetNode<?, ?> node, ImmutableSet<TargetNode<?, ?>> nodes) {
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    BuildRuleResolver ruleResolver = getBuildRuleResolverNodeFunction(targetGraph).apply(node);
-    SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
-    return sourcePathResolver.getAbsolutePath(nodeOutput);
   }
 }
