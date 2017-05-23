@@ -176,7 +176,7 @@ class ClassVisitorDriverFromElement {
               signatureFactory.getSignature(e),
               exceptions);
 
-      visitParameters(e.getParameters(), methodVisitor);
+      visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
       visitDefaultValue(e, methodVisitor);
       visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
       methodVisitor.visitEnd();
@@ -185,7 +185,13 @@ class ClassVisitorDriverFromElement {
     }
 
     private void visitParameters(
-        List<? extends VariableElement> parameters, MethodVisitor methodVisitor) {
+        List<? extends VariableElement> parameters,
+        MethodVisitor methodVisitor,
+        boolean isInnerClassConstructor) {
+      if (isInnerClassConstructor) {
+        // ASM uses a fake annotation to indicate synthetic parameters
+        methodVisitor.visitParameterAnnotation(0, "Ljava/lang/Synthetic;", false);
+      }
       for (int i = 0; i < parameters.size(); i++) {
         VariableElement parameter = parameters.get(i);
         for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
@@ -195,7 +201,7 @@ class ClassVisitorDriverFromElement {
           visitAnnotationValues(
               annotationMirror,
               methodVisitor.visitParameterAnnotation(
-                  i,
+                  isInnerClassConstructor ? i + 1 : i,
                   descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
                   MoreElements.isRuntimeRetention(annotationMirror)));
         }

@@ -2558,6 +2558,54 @@ public class StubJarTest {
   }
 
   @Test
+  public void preservesAnnotationsOnInnerClassConstructorParameters() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public class Inner {",
+            "    public Inner(@Anno String param) { }",
+            "  }",
+            "}",
+            "@interface Anno {}")
+        .addExpectedStub(
+            "com/example/buck/A$Inner",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A$Inner {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>(Lcom/example/buck/A;Ljava/lang/String;)V",
+            "    @Ljava/lang/Synthetic;() // invisible, parameter 0",
+            "    @Lcom/example/buck/Anno;() // invisible, parameter 1",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/Anno",
+            "// class version 52.0 (52)",
+            "// access flags 0x2600",
+            "abstract @interface com/example/buck/Anno implements java/lang/annotation/Annotation  {",
+            "",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void preservesThrowsClausesOnInnerClassConstructors() throws IOException {
     tester
         .setSourceFile(
