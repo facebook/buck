@@ -29,7 +29,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
@@ -89,7 +88,6 @@ public class Build implements Closeable {
 
   private static final Logger LOG = Logger.get(Build.class);
 
-  private final ActionGraph actionGraph;
   private final BuildRuleResolver ruleResolver;
   private final Cell rootCell;
   private final ExecutionContext executionContext;
@@ -99,7 +97,6 @@ public class Build implements Closeable {
   private final Clock clock;
 
   public Build(
-      ActionGraph actionGraph,
       BuildRuleResolver ruleResolver,
       Cell rootCell,
       Optional<TargetDevice> targetDevice,
@@ -124,7 +121,6 @@ public class Build implements Closeable {
       Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
       ProcessExecutor processExecutor,
       Map<ExecutorPool, ListeningExecutorService> executors) {
-    this.actionGraph = actionGraph;
     this.ruleResolver = ruleResolver;
     this.rootCell = rootCell;
     this.executionContext =
@@ -212,7 +208,6 @@ public class Build implements Closeable {
         BuildEngineBuildContext.builder()
             .setBuildContext(
                 BuildContext.builder()
-                    .setActionGraph(actionGraph)
                     .setSourcePathResolver(
                         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)))
                     .setJavaPackageFinder(javaPackageFinder)

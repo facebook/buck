@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -168,8 +167,6 @@ final class JavaBuildGraphProcessor {
             BuildEngineBuildContext.builder()
                 .setBuildContext(
                     BuildContext.builder()
-                        // Note we do not create a real action graph because we do not need one.
-                        .setActionGraph(new ActionGraph(ImmutableList.of()))
                         .setSourcePathResolver(pathResolver)
                         .setJavaPackageFinder(executionContext.getJavaPackageFinder())
                         .setEventBus(eventBus)

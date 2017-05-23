@@ -32,7 +32,6 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setActionGraph(createMock(ActionGraph.class));
     builder.setSourcePathResolver(createMock(SourcePathResolver.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());

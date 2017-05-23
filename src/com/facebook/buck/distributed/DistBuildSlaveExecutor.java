@@ -309,7 +309,6 @@ public class DistBuildSlaveExecutor {
                       new DefaultRuleKeyCache<>()));
           Build build =
               new Build(
-                  Preconditions.checkNotNull(actionGraphAndResolver).getActionGraph(),
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
                   args.getRootCell(),
                   Optional.empty(),

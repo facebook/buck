@@ -48,7 +48,6 @@ import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
@@ -296,7 +295,6 @@ public class BuildCommand extends AbstractCommand {
 
   Build createBuild(
       BuckConfig buckConfig,
-      ActionGraph graph,
       BuildRuleResolver ruleResolver,
       Cell rootCell,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
@@ -316,7 +314,6 @@ public class BuildCommand extends AbstractCommand {
       console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
     }
     return new Build(
-        graph,
         ruleResolver,
         rootCell,
         targetDevice,
@@ -882,7 +879,6 @@ public class BuildCommand extends AbstractCommand {
         Build build =
             createBuild(
                 rootCellBuckConfig,
-                actionGraphAndResolver.getActionGraph(),
                 actionGraphAndResolver.getResolver(),
                 params.getCell(),
                 params.getAndroidPlatformTargetSupplier(),

@@ -20,7 +20,6 @@ import static org.easymock.EasyMock.createMock;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.google.common.collect.ImmutableList;
 
 /** Facilitates creating a fake {@link BuildContext} for unit tests. */
 public class FakeBuildContext {
@@ -34,7 +33,6 @@ public class FakeBuildContext {
 
   public static BuildContext withSourcePathResolver(SourcePathResolver pathResolver) {
     return BuildContext.builder()
-        .setActionGraph(new ActionGraph(ImmutableList.of()))
         .setSourcePathResolver(pathResolver)
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setEventBus(BuckEventBusFactory.newInstance())

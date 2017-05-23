@@ -27,8 +27,6 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractBuildContext {
 
-  public abstract ActionGraph getActionGraph();
-
   public abstract SourcePathResolver getSourcePathResolver();
 
   public abstract JavaPackageFinder getJavaPackageFinder();
