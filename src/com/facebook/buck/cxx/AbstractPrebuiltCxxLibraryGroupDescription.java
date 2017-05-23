@@ -165,9 +165,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new CustomPrebuiltCxxLibrary(params) {
 
-      private final LoadingCache<
-              CxxPreprocessables.CxxPreprocessorInputCacheKey,
-              ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
               CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
@@ -219,10 +217,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-          throws NoSuchBuildTargetException {
-        return transitiveCxxPreprocessorInputCache.getUnchecked(
-            ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+          CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 
       @Override

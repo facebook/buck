@@ -613,9 +613,7 @@ public class PrebuiltCxxLibraryDescription
       private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput>
           nativeLinkableCache = new HashMap<>();
 
-      private final LoadingCache<
-              CxxPreprocessables.CxxPreprocessorInputCacheKey,
-              ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
               CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
@@ -793,10 +791,8 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-          throws NoSuchBuildTargetException {
-        return transitiveCxxPreprocessorInputCache.getUnchecked(
-            ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+          CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 
       @Override

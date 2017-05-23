@@ -68,8 +68,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     return ImmutableMap.of();
   }
 

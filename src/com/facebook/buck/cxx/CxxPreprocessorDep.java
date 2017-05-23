@@ -34,6 +34,10 @@ public interface CxxPreprocessorDep {
   CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
 
+  /**
+   * Returns all transitive preprocessor inputs for this library. This includes public headers (and
+   * exported preprocessor flags) of all exported dependencies.
+   */
   ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException;
 }

@@ -81,9 +81,7 @@ public class CxxLibrary extends NoopBuildRule
   private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();
 
-  private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       transitiveCxxPreprocessorInputCache =
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
@@ -166,9 +164,8 @@ public class CxxLibrary extends NoopBuildRule
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      CxxPlatform cxxPlatform) {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   @Override

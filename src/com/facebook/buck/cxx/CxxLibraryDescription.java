@@ -268,7 +268,7 @@ public class CxxLibraryDescription
     Optional<BuildRule> rawRule = ruleResolver.getRuleOptional(rawTarget);
     if (rawRule.isPresent()) {
       CxxLibrary rule = (CxxLibrary) rawRule.get();
-      return rule.getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).values();
+      return rule.getTransitiveCxxPreprocessorInput(cxxPlatform).values();
     }
 
     Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
@@ -286,9 +286,7 @@ public class CxxLibraryDescription
             .orElseThrow(IllegalStateException::new));
     for (BuildRule rule : deps) {
       if (rule instanceof CxxPreprocessorDep) {
-        input.putAll(
-            ((CxxPreprocessorDep) rule)
-                .getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+        input.putAll(((CxxPreprocessorDep) rule).getTransitiveCxxPreprocessorInput(cxxPlatform));
       }
     }
     return ImmutableList.copyOf(input.values());

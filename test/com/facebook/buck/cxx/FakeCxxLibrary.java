@@ -50,9 +50,7 @@ public final class FakeCxxLibrary extends NoopBuildRule
   private final String sharedLibrarySoname;
   private final ImmutableSortedSet<BuildTarget> tests;
 
-  private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       transitiveCxxPreprocessorInputCache =
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
@@ -119,10 +117,8 @@ public final class FakeCxxLibrary extends NoopBuildRule
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-      throws NoSuchBuildTargetException {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   @Override

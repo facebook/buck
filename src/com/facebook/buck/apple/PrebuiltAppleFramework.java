@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -80,9 +79,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
   private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();
 
-  private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       transitiveCxxPreprocessorInputCache =
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
@@ -174,10 +171,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-      throws NoSuchBuildTargetException {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   @Override

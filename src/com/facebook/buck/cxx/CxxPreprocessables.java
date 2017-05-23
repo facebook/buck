@@ -35,7 +35,6 @@ import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -45,7 +44,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import org.immutables.value.Value;
 
 public class CxxPreprocessables {
 
@@ -151,7 +149,7 @@ public class CxxPreprocessables {
       public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
           return ImmutableSet.of();
         }
         return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
@@ -244,48 +242,23 @@ public class CxxPreprocessables {
         .build();
   }
 
-  public static LoadingCache<
-          CxxPreprocessorInputCacheKey, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+  public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       getTransitiveCxxPreprocessorInputCache(final CxxPreprocessorDep preprocessorDep) {
     return CacheBuilder.newBuilder()
         .build(
-            new CacheLoader<
-                CxxPreprocessorInputCacheKey, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
+            new CacheLoader<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
               @Override
-              public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
-                  @Nonnull CxxPreprocessorInputCacheKey key) throws Exception {
+              public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(@Nonnull CxxPlatform key)
+                  throws NoSuchBuildTargetException {
                 Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
                 builder.put(
                     preprocessorDep.getBuildTarget(),
-                    preprocessorDep.getCxxPreprocessorInput(
-                        key.getPlatform(), key.getVisibility()));
-                for (CxxPreprocessorDep dep :
-                    preprocessorDep.getCxxPreprocessorDeps(key.getPlatform())) {
-                  builder.putAll(
-                      dep.getTransitiveCxxPreprocessorInput(
-                          key.getPlatform(), key.getVisibility()));
+                    preprocessorDep.getCxxPreprocessorInput(key, HeaderVisibility.PUBLIC));
+                for (CxxPreprocessorDep dep : preprocessorDep.getCxxPreprocessorDeps(key)) {
+                  builder.putAll(dep.getTransitiveCxxPreprocessorInput(key));
                 }
                 return ImmutableMap.copyOf(builder);
               }
             });
-  }
-
-  @Value.Immutable
-  public abstract static class CxxPreprocessorInputCacheKey
-      implements Comparable<CxxPreprocessorInputCacheKey> {
-
-    @Value.Parameter
-    public abstract CxxPlatform getPlatform();
-
-    @Value.Parameter
-    public abstract HeaderVisibility getVisibility();
-
-    @Override
-    public int compareTo(@Nonnull CxxPreprocessorInputCacheKey o) {
-      return ComparisonChain.start()
-          .compare(getPlatform().getFlavor(), o.getPlatform().getFlavor())
-          .compare(getVisibility(), o.getVisibility())
-          .result();
-    }
   }
 }

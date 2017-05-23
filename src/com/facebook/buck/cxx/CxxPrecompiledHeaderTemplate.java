@@ -134,25 +134,21 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRule
     return CxxPreprocessorInput.EMPTY;
   }
 
-  private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       transitiveCxxPreprocessorInputCache =
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-      throws NoSuchBuildTargetException {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(CxxPlatform cxxPlatform) {
     ImmutableList.Builder<CxxPreprocessorInput> builder = ImmutableList.builder();
     try {
       for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
-          getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).entrySet()) {
+          getTransitiveCxxPreprocessorInput(cxxPlatform).entrySet()) {
         builder.add(entry.getValue());
       }
     } catch (NoSuchBuildTargetException e) {
