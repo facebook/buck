@@ -61,6 +61,7 @@ public class AndroidLibraryGraphEnhancer {
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat) {
+    Preconditions.checkState(!HasJavaAbi.isAbiTarget(buildTarget));
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
     this.javac = javac;
@@ -82,7 +83,6 @@ public class AndroidLibraryGraphEnhancer {
 
   public Optional<DummyRDotJava> getBuildableForAndroidResources(
       BuildRuleResolver ruleResolver, boolean createBuildableIfEmptyDeps) {
-    Preconditions.checkState(!HasJavaAbi.isAbiTarget(dummyRDotJavaBuildTarget));
     Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(dummyRDotJavaBuildTarget);
     if (previouslyCreated.isPresent()) {
       return previouslyCreated.map(input -> (DummyRDotJava) input);

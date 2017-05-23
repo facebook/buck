@@ -23,6 +23,7 @@ import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -250,17 +251,24 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
         if (graphEnhancer == null) {
+          BuildTarget buildTarget = initialParams.getBuildTarget();
+          if (HasJavaAbi.isAbiTarget(buildTarget)) {
+            buildTarget = HasJavaAbi.getLibraryTarget(buildTarget);
+          }
+
           final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = buildQueriedDepsSupplier();
           final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier =
               buildExportedDepsSupplier();
           graphEnhancer =
               new AndroidLibraryGraphEnhancer(
-                  initialParams.getBuildTarget(),
-                  initialParams.copyReplacingExtraDeps(
-                      () ->
-                          ImmutableSortedSet.copyOf(
-                              Iterables.concat(
-                                  queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
+                  buildTarget,
+                  initialParams
+                      .withBuildTarget(buildTarget)
+                      .copyReplacingExtraDeps(
+                          () ->
+                              ImmutableSortedSet.copyOf(
+                                  Iterables.concat(
+                                      queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
                   getJavac(),
                   javacOptions,
                   DependencyMode.FIRST_ORDER,
