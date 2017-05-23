@@ -53,13 +53,46 @@ import java.util.Set;
  * </pre>
  */
 class BinaryOperatorExpression extends QueryExpression {
+  enum Operator {
+    INTERSECT("^"),
+    UNION("+"),
+    EXCEPT("-");
 
-  private final TokenKind operator; // ::= INTERSECT/CARET | UNION/PLUS | EXCEPT/MINUS
+    private final String prettyName;
+
+    Operator(String prettyName) {
+      this.prettyName = prettyName;
+    }
+
+    @Override
+    public String toString() {
+      return prettyName;
+    }
+
+    private static Operator from(TokenKind operator) {
+      switch (operator) {
+        case INTERSECT:
+        case CARET:
+          return INTERSECT;
+        case UNION:
+        case PLUS:
+          return UNION;
+        case EXCEPT:
+        case MINUS:
+          return EXCEPT;
+          //$CASES-OMITTED$
+        default:
+          throw new IllegalArgumentException("operator=" + operator);
+      }
+    }
+  }
+
+  private final Operator operator; // ::= INTERSECT/CARET | UNION/PLUS | EXCEPT/MINUS
   private final ImmutableList<QueryExpression> operands;
 
   BinaryOperatorExpression(TokenKind operator, List<QueryExpression> operands) {
     Preconditions.checkState(operands.size() > 1);
-    this.operator = operator;
+    this.operator = Operator.from(operator);
     this.operands = ImmutableList.copyOf(operands);
   }
 
@@ -72,18 +105,14 @@ class BinaryOperatorExpression extends QueryExpression {
       Set<QueryTarget> rhsValue = operands.get(i).eval(env, executor);
       switch (operator) {
         case INTERSECT:
-        case CARET:
           lhsValue.retainAll(rhsValue);
           break;
         case UNION:
-        case PLUS:
           lhsValue.addAll(rhsValue);
           break;
         case EXCEPT:
-        case MINUS:
           lhsValue.removeAll(rhsValue);
           break;
-          //$CASES-OMITTED$
         default:
           throw new IllegalStateException("operator=" + operator);
       }
@@ -106,7 +135,7 @@ class BinaryOperatorExpression extends QueryExpression {
     }
     result.append(operands.get(0));
     for (int i = 1; i < operands.size(); i++) {
-      result.append(" " + operator.getPrettyName() + " " + operands.get(i) + ")");
+      result.append(" " + operator + " " + operands.get(i) + ")");
     }
     return result.toString();
   }
