@@ -30,63 +30,55 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.query.QueryEnvironment.Argument;
-import com.facebook.buck.query.QueryEnvironment.ArgumentType;
-import com.facebook.buck.query.QueryEnvironment.QueryFunction;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
+import org.immutables.value.Value;
 
-/** A query expression for user-defined query functions. */
-public class FunctionExpression extends QueryExpression {
-  QueryFunction function;
-  ImmutableList<Argument> args;
-
-  public FunctionExpression(QueryFunction function, ImmutableList<Argument> args) {
-    this.function = function;
-    this.args = args;
-  }
+/**
+ * A set(word, ..., word) expression, which computes the union of zero or more target patterns
+ * separated by whitespace. This is intended to support the use-case in which a set of labels
+ * written to a file by a previous query expression can be modified externally, then used as input
+ * to another query, like so:
+ *
+ * <pre>
+ * % buck query 'allpaths(foo, bar)' | grep ... | sed ... | awk ... >file
+ * % buck query "kind(qux_library, set($(<file)))"
+ * </pre>
+ *
+ * <p>The grammar currently restricts the operands of set() to being zero or more words (target
+ * patterns), with no intervening punctuation. In principle this could be extended to arbitrary
+ * expressions without grammatical ambiguity, but this seems excessively general for now.
+ *
+ * <pre>expr ::= SET '(' WORD * ')'</pre>
+ */
+@Value.Immutable(prehash = true)
+@BuckStyleTuple
+abstract class AbstractSetExpression extends QueryExpression {
+  abstract ImmutableList<TargetLiteral> getWords();
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
-    return function.eval(env, args, executor);
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
+    for (TargetLiteral expr : getWords()) {
+      result.addAll(expr.eval(env, executor));
+    }
+    return result.build();
   }
 
   @Override
   public void collectTargetPatterns(Collection<String> literals) {
-    for (Argument arg : args) {
-      if (arg.getType() == ArgumentType.EXPRESSION) {
-        arg.getExpression().collectTargetPatterns(literals);
-      }
+    for (TargetLiteral expr : getWords()) {
+      expr.collectTargetPatterns(literals);
     }
   }
 
   @Override
   public String toString() {
-    return function.getName()
-        + "("
-        + Joiner.on(", ").join(Iterables.transform(args, Object::toString))
-        + ")";
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    return (other instanceof FunctionExpression) && equalTo((FunctionExpression) other);
-  }
-
-  private boolean equalTo(FunctionExpression other) {
-    return function.getClass().equals(other.function.getClass()) && args.equals(other.args);
-  }
-
-  @Override
-  public int hashCode() {
-    int h = 31;
-    h = h * 17 + function.hashCode();
-    h = h * 17 + args.hashCode();
-    return h;
+    return "set(" + Joiner.on(' ').join(getWords()) + ")";
   }
 }

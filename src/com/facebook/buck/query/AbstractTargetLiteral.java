@@ -30,52 +30,47 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
+import org.immutables.value.Value;
 
 /**
  * A literal set of targets. (The syntax of the string "pattern" determines which.)
  *
  * <pre>expr ::= WORD</pre>
  */
-public final class TargetLiteral extends QueryExpression {
+@Value.Immutable(prehash = true)
+@BuckStyleTuple
+abstract class AbstractTargetLiteral extends QueryExpression {
+  abstract String getPattern();
 
-  private final String pattern;
-
-  public TargetLiteral(String pattern) {
-    this.pattern = Preconditions.checkNotNull(pattern);
+  @Value.Check
+  protected void check() {
+    Preconditions.checkNotNull(getPattern());
   }
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
-    return env.getTargetsMatchingPattern(pattern, executor);
+    return env.getTargetsMatchingPattern(getPattern(), executor);
   }
 
   @Override
   public void collectTargetPatterns(Collection<String> literals) {
-    literals.add(pattern);
+    literals.add(getPattern());
   }
 
   @Override
   public String toString() {
+    String pattern = getPattern();
     // Keep predicate consistent with Lexer.scanWord!
     boolean needsQuoting =
         Lexer.isReservedWord(pattern)
             || pattern.isEmpty()
             || "$-*".indexOf(pattern.charAt(0)) != -1;
     return needsQuoting ? ("\"" + pattern + "\"") : pattern;
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    return (other instanceof TargetLiteral) && pattern.equals(((TargetLiteral) other).pattern);
-  }
-
-  @Override
-  public int hashCode() {
-    return pattern.hashCode();
   }
 }

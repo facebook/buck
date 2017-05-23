@@ -43,7 +43,7 @@ public class DepsFunctionTest {
   private static final DepsFunction DEPS_FUNCTION = new DepsFunction();
   private static final QueryEnvironment.Argument FIRST_ORDER_DEPS =
       QueryEnvironment.Argument.of(
-          new FunctionExpression(new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
+          FunctionExpression.of(new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
   private static final QueryEnvironment.Argument DEPTH = QueryEnvironment.Argument.of(10);
 
   @Test
@@ -61,7 +61,7 @@ public class DepsFunctionTest {
             queryEnvironment,
             ImmutableList.of(
                 QueryEnvironment.Argument.of(
-                    new TargetLiteral(a.getBuildTarget().getFullyQualifiedName())),
+                    TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
                 DEPTH,
                 FIRST_ORDER_DEPS),
             EXECUTOR),
@@ -88,10 +88,10 @@ public class DepsFunctionTest {
             queryEnvironment,
             ImmutableList.of(
                 QueryEnvironment.Argument.of(
-                    new TargetLiteral(a.getBuildTarget().getFullyQualifiedName())),
+                    TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
                 DEPTH,
                 QueryEnvironment.Argument.of(
-                    new FunctionExpression(
+                    FunctionExpression.of(
                         new FilterFunction(),
                         ImmutableList.of(
                             QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS)))),

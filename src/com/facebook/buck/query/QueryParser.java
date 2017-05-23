@@ -197,7 +197,7 @@ final class QueryParser {
       TokenKind operator = token.kind;
       consume(operator);
       if (operator != lastOperator) {
-        lhs = new BinaryOperatorExpression(lastOperator, operands);
+        lhs = BinaryOperatorExpression.of(lastOperator, operands);
         operands.clear();
         operands.add(lhs);
         lastOperator = operator;
@@ -205,7 +205,7 @@ final class QueryParser {
       QueryExpression rhs = parsePrimary();
       operands.add(rhs);
     }
-    return new BinaryOperatorExpression(lastOperator, operands);
+    return BinaryOperatorExpression.of(lastOperator, operands);
   }
 
   /**
@@ -266,9 +266,9 @@ final class QueryParser {
             }
 
             consume(TokenKind.RPAREN);
-            return new FunctionExpression(function, argsBuilder.build());
+            return FunctionExpression.of(function, argsBuilder.build());
           } else {
-            return new TargetLiteral(Preconditions.checkNotNull(word));
+            return TargetLiteral.of(Preconditions.checkNotNull(word));
           }
         }
       case LPAREN:
@@ -284,11 +284,10 @@ final class QueryParser {
           consume(TokenKind.LPAREN);
           ImmutableList.Builder<TargetLiteral> wordsBuilder = ImmutableList.builder();
           while (token.kind == TokenKind.WORD) {
-            wordsBuilder.add(
-                new TargetLiteral(Preconditions.checkNotNull(consume(TokenKind.WORD))));
+            wordsBuilder.add(TargetLiteral.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
           }
           consume(TokenKind.RPAREN);
-          return new SetExpression(wordsBuilder.build());
+          return SetExpression.of(wordsBuilder.build());
         }
         //$CASES-OMITTED$
       default:

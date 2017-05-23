@@ -31,6 +31,7 @@ package com.facebook.buck.query;
 
 import static com.facebook.buck.query.Lexer.TokenKind;
 
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +40,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.immutables.value.Value;
 
 /**
  * A binary algebraic set operation.
@@ -52,7 +54,9 @@ import java.util.Set;
  *        | expr ('-' expr)+
  * </pre>
  */
-class BinaryOperatorExpression extends QueryExpression {
+@Value.Immutable(prehash = true)
+@BuckStyleTuple
+abstract class AbstractBinaryOperatorExpression extends QueryExpression {
   enum Operator {
     INTERSECT("^"),
     UNION("+"),
@@ -87,23 +91,28 @@ class BinaryOperatorExpression extends QueryExpression {
     }
   }
 
-  private final Operator operator; // ::= INTERSECT/CARET | UNION/PLUS | EXCEPT/MINUS
-  private final ImmutableList<QueryExpression> operands;
+  abstract Operator getOperator();
 
-  BinaryOperatorExpression(TokenKind operator, List<QueryExpression> operands) {
-    Preconditions.checkState(operands.size() > 1);
-    this.operator = Operator.from(operator);
-    this.operands = ImmutableList.copyOf(operands);
+  abstract ImmutableList<QueryExpression> getOperands();
+
+  protected static BinaryOperatorExpression of(TokenKind operator, List<QueryExpression> operands) {
+    return BinaryOperatorExpression.of(Operator.from(operator), operands);
+  }
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkState(getOperands().size() > 1);
   }
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
+    ImmutableList<QueryExpression> operands = getOperands();
     Set<QueryTarget> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env, executor));
 
     for (int i = 1; i < operands.size(); i++) {
       Set<QueryTarget> rhsValue = operands.get(i).eval(env, executor);
-      switch (operator) {
+      switch (getOperator()) {
         case INTERSECT:
           lhsValue.retainAll(rhsValue);
           break;
@@ -114,7 +123,7 @@ class BinaryOperatorExpression extends QueryExpression {
           lhsValue.removeAll(rhsValue);
           break;
         default:
-          throw new IllegalStateException("operator=" + operator);
+          throw new IllegalStateException("operator=" + getOperator());
       }
     }
     return ImmutableSet.copyOf(lhsValue);
@@ -122,20 +131,21 @@ class BinaryOperatorExpression extends QueryExpression {
 
   @Override
   public void collectTargetPatterns(Collection<String> literals) {
-    for (QueryExpression subExpression : operands) {
+    for (QueryExpression subExpression : getOperands()) {
       subExpression.collectTargetPatterns(literals);
     }
   }
 
   @Override
   public String toString() {
+    ImmutableList<QueryExpression> operands = getOperands();
     StringBuilder result = new StringBuilder();
     for (int i = 1; i < operands.size(); i++) {
       result.append("(");
     }
     result.append(operands.get(0));
     for (int i = 1; i < operands.size(); i++) {
-      result.append(" " + operator + " " + operands.get(i) + ")");
+      result.append(" " + getOperator() + " " + operands.get(i) + ")");
     }
     return result.toString();
   }
