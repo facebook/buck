@@ -276,6 +276,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.hit("buckcache", ArtifactCacheMode.http),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE),
+            false,
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
@@ -288,6 +289,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.miss(),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            false,
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
@@ -302,6 +304,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.error("buckcache", ArtifactCacheMode.http, "connection error"),
             Optional.empty(),
             Optional.empty(),
+            false,
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
@@ -313,6 +316,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.miss(), // This value will be ignored, since the rule was canceled.
             Optional.empty(),
             Optional.empty(),
+            false,
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
@@ -327,6 +331,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.ignored(),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            false,
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));

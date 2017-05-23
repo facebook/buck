@@ -152,6 +152,7 @@ public class MachineReadableLogJsonViewTest {
                 Optional.empty()),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            false,
             Optional.of(HashCode.fromString("abcd42")),
             Optional.empty(),
             Optional.empty());

@@ -363,6 +363,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -419,6 +420,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -623,6 +625,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -676,6 +679,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -693,6 +697,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -764,6 +769,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -781,6 +787,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -798,6 +805,7 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  false,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));

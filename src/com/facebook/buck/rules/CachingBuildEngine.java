@@ -1015,6 +1015,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 Optional<Long> outputSize = Optional.empty();
                 Optional<HashCode> outputHash = Optional.empty();
                 Optional<BuildRuleSuccessType> successType = Optional.empty();
+                boolean shouldUploadToCache = false;
 
                 BuildRuleEvent.Resumed resumedEvent =
                     BuildRuleEvent.resumed(
@@ -1053,10 +1054,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                                 e, "Error getting output size for %s.", rule));
                   }
 
-                  // If this rule is cacheable...
-                  if (outputSize.isPresent()
-                      && shouldUploadToCache(buildContext, rule, success, outputSize.get())) {
+                  // Determine if this is rule is cacheable.
+                  shouldUploadToCache =
+                      outputSize.isPresent()
+                          && shouldUploadToCache(buildContext, rule, success, outputSize.get());
 
+                  if (shouldUploadToCache) {
                     // Upload it to the cache.
                     uploadToCache(success);
 
@@ -1088,6 +1091,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                             .getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
                             .map(BuildId::new),
                         successType,
+                        shouldUploadToCache,
                         outputHash,
                         outputSize,
                         getBuildRuleDiagnosticData(rule, executionContext, failureOrBuiltLocally));

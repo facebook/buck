@@ -182,6 +182,7 @@ public class EventSerializationTest {
             CacheResult.miss(),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            false,
             Optional.empty(),
             Optional.empty(),
             Optional.empty());

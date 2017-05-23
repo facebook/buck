@@ -83,6 +83,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       CacheResult cacheResult,
       Optional<BuildId> origin,
       Optional<BuildRuleSuccessType> successType,
+      boolean willTryUploadToCache,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize,
       Optional<BuildRuleDiagnosticData> diagnosticData) {
@@ -93,6 +94,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         cacheResult,
         origin,
         successType,
+        willTryUploadToCache,
         outputHash,
         outputSize,
         diagnosticData);
@@ -199,6 +201,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final CacheResult cacheResult;
     private final Optional<BuildId> origin;
     private final Optional<BuildRuleSuccessType> successType;
+    private final boolean willTryUploadToCache;
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
@@ -211,6 +214,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         CacheResult cacheResult,
         Optional<BuildId> origin,
         Optional<BuildRuleSuccessType> successType,
+        boolean willTryUploadToCache,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize,
         Optional<BuildRuleDiagnosticData> diagnosticData) {
@@ -219,6 +223,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.cacheResult = cacheResult;
       this.origin = origin;
       this.successType = successType;
+      this.willTryUploadToCache = willTryUploadToCache;
       this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
       this.outputSize = outputSize;
@@ -243,6 +248,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<BuildRuleSuccessType> getSuccessType() {
       return successType;
+    }
+
+    @JsonIgnore
+    public boolean isWillTryUploadToCache() {
+      return willTryUploadToCache;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)

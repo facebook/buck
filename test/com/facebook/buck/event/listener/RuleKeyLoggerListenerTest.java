@@ -117,7 +117,7 @@ public class RuleKeyLoggerListenerTest {
     BuildRuleEvent.Started started =
         TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));
     return BuildRuleEvent.finished(
-        started, keys, null, null, Optional.empty(), null, null, null, Optional.empty());
+        started, keys, null, null, Optional.empty(), null, false, null, null, Optional.empty());
   }
 
   private HttpArtifactCacheEvent.Finished createArtifactCacheEvent(CacheResultType type) {
