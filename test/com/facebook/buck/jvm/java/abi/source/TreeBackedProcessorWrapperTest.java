@@ -152,7 +152,7 @@ public class TreeBackedProcessorWrapperTest {
       BiFunction<Set<? extends TypeElement>, RoundEnvironment, Boolean> processMethod)
       throws IOException {
     testCompiler.useFrontendOnlyJavacTask();
-    testCompiler.addSourceFileLines(
+    testCompiler.addSourceFileContents(
         "Foo.java",
         "package com.example.buck;",
         "@FooAnno",

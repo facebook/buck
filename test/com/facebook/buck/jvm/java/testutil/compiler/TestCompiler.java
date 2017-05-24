@@ -88,7 +88,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   private boolean allowCompilationErrors = false;
   private Set<String> classpath = new LinkedHashSet<>();
 
-  public void addClasspathFileContents(String fileName, String contents) throws IOException {
+  public void addClasspathFileContents(String fileName, String... lines) throws IOException {
     if (javacTask != null) {
       throw new AssertionError("Can't add contents after creating the task");
     }
@@ -101,7 +101,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
         throw new AssertionError(throwable);
       }
     }
-    classpathCompiler.addSourceFileContents(fileName, contents);
+    classpathCompiler.addSourceFileContents(fileName, lines);
     classpath.add(classpathCompiler.getOutputDir());
   }
 
@@ -109,11 +109,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     paths.stream().map(Path::toString).forEach(classpath::add);
   }
 
-  public void addSourceFileContents(String fileName, String contents) throws IOException {
-    addSourceFileLines(fileName, contents);
-  }
-
-  public void addSourceFileLines(String fileName, String... lines) throws IOException {
+  public void addSourceFileContents(String fileName, String... lines) throws IOException {
     if (javacTask != null) {
       throw new AssertionError("Can't add contents after creating the task");
     }

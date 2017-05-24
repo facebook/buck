@@ -43,7 +43,7 @@ public class AnnotationValueScanner8Test {
 
   @Test
   public void testScansNestedArrays() throws IOException {
-    compiler.addSourceFileLines(
+    compiler.addSourceFileContents(
         "Anno.java",
         "public @interface Anno {",
         "  String[][] doubleStringArray() default { { \"a\", \"b\" }, { \"c\", \"d\" } };",

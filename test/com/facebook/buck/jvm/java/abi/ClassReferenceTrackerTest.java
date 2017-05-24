@@ -275,7 +275,7 @@ public class ClassReferenceTrackerTest {
   }
 
   private SortedSet<String> getReferencedClassNames(String... sourceLines) throws IOException {
-    testCompiler.addSourceFileLines("Foo.java", sourceLines);
+    testCompiler.addSourceFileContents("Foo.java", sourceLines);
     testCompiler.compile();
 
     Classes classes = testCompiler.getClasses();

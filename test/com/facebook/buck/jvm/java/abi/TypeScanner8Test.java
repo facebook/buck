@@ -157,7 +157,7 @@ public class TypeScanner8Test {
     }
 
     public Tester scanType(String type) throws IOException {
-      compiler.addSourceFileLines(
+      compiler.addSourceFileContents(
           "Foo.java",
           "import java.util.*;",
           String.format("public class Foo%s {", formatTypeParameters()),
