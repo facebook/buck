@@ -83,6 +83,7 @@ public class InnerClassesTable {
             addTypeReferences(e.getAnnotationMirrors());
             e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
             addTypeReferences(e.getReturnType());
+            addTypeReferences(e.getDefaultValue());
             // Parameters will be visited in the call to super, below
             e.getThrownTypes().forEach(this::addTypeReferences);
             return super.visitExecutable(e, aVoid);
@@ -134,7 +135,10 @@ public class InnerClassesTable {
             annotationMirror.getElementValues().values().forEach(this::addTypeReferences);
           }
 
-          private void addTypeReferences(AnnotationValue annotationValue) {
+          private void addTypeReferences(@Nullable AnnotationValue annotationValue) {
+            if (annotationValue == null) {
+              return;
+            }
             new AnnotationValueScanner8<Void, Void>() {
               @Override
               public Void visitType(TypeMirror t, Void aVoid) {

@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
@@ -333,7 +332,6 @@ public class InnerClassesTableTest {
   }
 
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void findsInnerClassReferencesInMethodDefaultValue() throws IOException {
     tester
         .setSourceFile(
