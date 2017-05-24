@@ -244,6 +244,14 @@ class ClassReferenceTracker extends ClassVisitor {
     }
 
     @Override
+    public void visit(String name, Object value) {
+      if (value instanceof Type) {
+        visitDescriptor(((Type) value).getDescriptor());
+      }
+      super.visit(name, value);
+    }
+
+    @Override
     public void visitEnum(String name, String desc, String value) {
       visitDescriptor(desc);
       super.visitEnum(name, desc, value);

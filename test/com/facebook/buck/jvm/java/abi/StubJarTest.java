@@ -2320,6 +2320,74 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsReferencesToInnerClassesOfOtherTypesInAnnotationValues() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "@Anno(B.Inner.class)",
+            "public class A {",
+            "}",
+            "@interface Anno {",
+            "  Class<?> value();",
+            "}",
+            "class B {",
+            "  class Inner { }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lcom/example/buck/Anno;(value=com.example.buck.B$Inner.class) // invisible",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/Anno",
+            "// class version 52.0 (52)",
+            "// access flags 0x2600",
+            "abstract @interface com/example/buck/Anno implements java/lang/annotation/Annotation  {",
+            "",
+            "",
+            "  // access flags 0x401",
+            "  // signature ()Ljava/lang/Class<*>;",
+            "  // declaration: java.lang.Class<?> value()",
+            "  public abstract value()Ljava/lang/Class;",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B$Inner",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/B$Inner {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
+            "",
+            "  // access flags 0x0",
+            "  <init>(Lcom/example/buck/B;)V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "class com/example/buck/B {",
+            "",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void doesNotStubReferencesToInnerClassesFromInsideMethods() throws IOException {
     tester
         .setSourceFile(
