@@ -447,21 +447,26 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
-    ListenableFuture<Optional<BuildResult>> buildResultFuture =
-        Futures.immediateFuture(Optional.empty());
+    ListenableFuture<Optional<BuildResult>> buildResultFuture;
 
     // 2. Rule key cache lookup.
     buildResultFuture =
-        transformBuildResultIfNotPresent(
-            rule,
-            buildContext,
-            buildResultFuture,
-            () -> {
-              CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
-              rulekeyCacheResult.set(cacheResult);
-              return getBuildResultForRuleKeyCacheResult(rule, cacheResult, buildInfoRecorder);
-            },
-            cacheActivityService.withDefaultAmounts(CACHE_CHECK_RESOURCE_AMOUNTS));
+        // TODO(cjhopman): This should follow the same, simple pattern as everything else. With a
+        // large ui.thread_line_limit, SuperConsole tries to redraw more lines than are available.
+        // These cache threads make it more likely to hit that problem when SuperConsole is aware
+        // of them.
+        cacheActivityService
+            .withDefaultAmounts(CACHE_CHECK_RESOURCE_AMOUNTS)
+            .submit(
+                () -> {
+                  if (!shouldKeepGoing(buildContext)) {
+                    Preconditions.checkNotNull(firstFailure);
+                    return Optional.of(BuildResult.canceled(rule, firstFailure));
+                  }
+                  CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
+                  rulekeyCacheResult.set(cacheResult);
+                  return getBuildResultForRuleKeyCacheResult(rule, cacheResult, buildInfoRecorder);
+                });
 
     // 3. Build deps.
     buildResultFuture =
