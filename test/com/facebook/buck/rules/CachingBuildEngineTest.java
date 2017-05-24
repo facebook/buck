@@ -3229,38 +3229,6 @@ public class CachingBuildEngineTest {
       assertThat(event.getOrigin(), equalTo(Optional.of(buildId1)));
     }
 
-    @Test
-    public void outputHashNotCalculatedWhenCacheNotWritable() throws Exception {
-
-      // Create a noop simple rule.
-      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      Path output = filesystem.getPath("output/path");
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build();
-      BuildRule rule = new WriteFile(params, "something else", output, /* executable */ false);
-
-      // Run the build and extract the event.
-      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
-      BuildResult result =
-          cachingBuildEngine
-              .build(
-                  buildContext.withArtifactCache(new NoopArtifactCache()),
-                  TestExecutionContext.newInstance(),
-                  rule)
-              .getResult()
-              .get();
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
-      BuildRuleEvent.Finished event =
-          RichStream.from(listener.getEvents())
-              .filter(BuildRuleEvent.Finished.class)
-              .filter(e -> e.getBuildRule().equals(rule))
-              .findAny()
-              .orElseThrow(AssertionError::new);
-
-      // Verify we found the correct build id.
-      assertThat(event.getOutputHash(), equalTo(Optional.empty()));
-    }
-
     /** Verify that the begin and end events in build rule event pairs occur on the same thread. */
     private void assertRelatedBuildRuleEventsOnSameThread(Iterable<BuildRuleEvent> events) {
       Map<Long, List<BuildRuleEvent>> grouped = new HashMap<>();

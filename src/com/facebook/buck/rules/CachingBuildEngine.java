@@ -1042,29 +1042,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   successType = Optional.of(success);
 
                   // Try get the output size.
-                  try {
-                    if (success.shouldUploadResultingArtifact()) {
+                  if (success == BuildRuleSuccessType.BUILT_LOCALLY
+                      || success.shouldUploadResultingArtifact()) {
+                    try {
                       outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    } catch (IOException e) {
+                      buildContext
+                          .getEventBus()
+                          .post(
+                              ThrowableConsoleEvent.create(
+                                  e, "Error getting output size for %s.", rule));
                     }
-                  } catch (IOException e) {
-                    buildContext
-                        .getEventBus()
-                        .post(
-                            ThrowableConsoleEvent.create(
-                                e, "Error getting output size for %s.", rule));
                   }
 
-                  // Determine if this is rule is cacheable.
-                  shouldUploadToCache =
-                      outputSize.isPresent()
-                          && shouldUploadToCache(buildContext, rule, success, outputSize.get());
-
-                  if (shouldUploadToCache) {
-                    // Upload it to the cache.
-                    uploadToCache(success);
-
-                    // Compute it's output hash for logging/tracing purposes, as this artifact will
-                    // be consumed by other builds.
+                  // Compute it's output hash for logging/tracing purposes, as this artifact will
+                  // be consumed by other builds.
+                  if (outputSize.isPresent() && shouldHashOutputs(success, outputSize.get())) {
                     try {
                       outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
                     } catch (IOException e) {
@@ -1074,6 +1067,16 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                               ThrowableConsoleEvent.create(
                                   e, "Error getting output hash for %s.", rule));
                     }
+                  }
+
+                  // Determine if this is rule is cacheable.
+                  shouldUploadToCache =
+                      outputSize.isPresent()
+                          && shouldUploadToCache(buildContext, rule, success, outputSize.get());
+
+                  // Upload it to the cache.
+                  if (shouldUploadToCache) {
+                    uploadToCache(success);
                   }
                 }
 
@@ -1585,6 +1588,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // If the rule's outputs are bigger than the preset size limit, don't cache it.
+    if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /** @return whether we should hash the outputs of the given rule. */
+  private boolean shouldHashOutputs(BuildRuleSuccessType successType, long outputSize) {
+
+    // If the success type would never cache the item, avoid calculating the hash.
+    if (!successType.shouldUploadResultingArtifact()) {
+      return false;
+    }
+
+    // If the rule's outputs are bigger than the preset size limit, don't hash it.
     if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
       return false;
     }
