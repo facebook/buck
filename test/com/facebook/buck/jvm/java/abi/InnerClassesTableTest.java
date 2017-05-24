@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import org.junit.Rule;
 import org.junit.Test;
@@ -221,6 +221,18 @@ public class InnerClassesTableTest {
             "  List<? super TopLevel.StaticMember> field;",
             "}")
         .expectInnerClassesTable("com.example.buck.A", "com/example/buck/TopLevel$StaticMember");
+  }
+  // endregion
+
+  // Tests that inner class references are found in package declarations.
+  // region PackageTests
+  @Test
+  public void findsInnerClassReferencesInPackageAnnotations() throws IOException {
+    tester
+        .setSourceFile(
+            "package-info.java", "@TopLevel.MemberAnnotation", "package com.example.buck;")
+        .expectInnerClassesTable(
+            "com.example.buck.package-info", "com/example/buck/TopLevel$MemberAnnotation");
   }
   // endregion
 
@@ -550,7 +562,7 @@ public class InnerClassesTableTest {
           "    }",
           "  }",
           "  public interface MemberInterface2 { }",
-          "  @Target({ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_PARAMETER})",
+          "  @Target({ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_PARAMETER})",
           "  public @interface MemberAnnotation { }",
           "  public class MemberException extends Exception { }",
           "}");
@@ -559,14 +571,17 @@ public class InnerClassesTableTest {
       assertEquals(Collections.emptyList(), compiler.getDiagnosticMessages());
 
       Elements elements = compiler.getElements();
-      TypeElement typeElement = elements.getTypeElement(className);
+      Element topElement =
+          className.endsWith("package-info")
+              ? elements.getPackageElement(className.replace(".package-info", ""))
+              : elements.getTypeElement(className);
 
       DescriptorFactory descriptorFactory = new DescriptorFactory(elements);
       AccessFlags accessFlags = new AccessFlags(elements);
       InnerClassesTable innerClassesTable = new InnerClassesTable(descriptorFactory, accessFlags);
 
       ClassNode classNode = new ClassNode(Opcodes.ASM5);
-      innerClassesTable.reportInnerClassReferences(typeElement, classNode);
+      innerClassesTable.reportInnerClassReferences(topElement, classNode);
 
       assertEquals(
           Arrays.asList(innerClassesEntries),
