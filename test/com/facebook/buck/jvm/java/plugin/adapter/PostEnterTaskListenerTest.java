@@ -89,6 +89,16 @@ public class PostEnterTaskListenerTest {
   }
 
   @Test
+  public void testCallbackIssuedForPackageIfPackageInfoFilePresent() throws IOException {
+    compiler.addSourceFileContents("package-info.java", "package com.example.buck;");
+    compiler.setProcessors(ImmutableList.of());
+    addCallback("callback");
+    compiler.compile();
+
+    assertThat(callbacksIssued, Matchers.contains("callback: buck"));
+  }
+
+  @Test
   public void testCallbackIssuedAfterEnterWithAPs() throws IOException {
     // We add an unrelated source file here to make the compiler do something
     compiler.addSourceFileContents("Bar.java", "class Bar { }");

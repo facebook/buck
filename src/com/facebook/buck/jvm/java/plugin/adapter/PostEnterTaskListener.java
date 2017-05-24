@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
@@ -27,6 +28,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.tools.JavaFileObject;
 
 /** A {@link TaskListener} that runs some code after the final enter phase. */
 public class PostEnterTaskListener implements TaskListener {
@@ -73,6 +76,14 @@ public class PostEnterTaskListener implements TaskListener {
         new TreePathScanner<Void, Void>() {
           @Override
           public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
+            if (e.getSourceFile().isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
+              Elements elements = task.getElements();
+              Element packageElement =
+                  Preconditions.checkNotNull(
+                      elements.getPackageElement(node.getPackageName().toString()));
+              topLevelElements.add(packageElement);
+            }
+
             return super.scan(node.getTypeDecls(), null);
           }
 
