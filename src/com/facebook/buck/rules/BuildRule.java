@@ -44,6 +44,7 @@ public interface BuildRule extends Comparable<BuildRule> {
   }
 
   @JsonProperty("type")
+  @JsonView(JsonViews.MachineReadableLog.class)
   String getType();
 
   BuildableProperties getProperties();

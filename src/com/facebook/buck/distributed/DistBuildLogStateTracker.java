@@ -25,7 +25,6 @@ import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Charsets;
@@ -33,7 +32,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DistBuildLogStateTracker implements Closeable {
+public class DistBuildLogStateTracker {
   private static final Logger LOG = Logger.get(DistBuildLogStateTracker.class);
   private static final List<LogStreamType> SUPPORTED_STREAM_TYPES =
       ImmutableList.of(LogStreamType.STDOUT, LogStreamType.STDERR);
@@ -55,6 +53,7 @@ public class DistBuildLogStateTracker implements Closeable {
   private final ProjectFilesystem filesystem;
   private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = new HashMap<>();
   private Set<String> createdLogDirRootsByRunId = Sets.newHashSet();
+  private List<RunId> runIdsWithLogDirs = new ArrayList<>();
 
   public DistBuildLogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {
     this.logDirectoryPath = logDirectoryPath;
@@ -117,8 +116,9 @@ public class DistBuildLogStateTracker implements Closeable {
     }
   }
 
-  @Override
-  public void close() throws IOException {}
+  public List<RunId> getRunIdsWithLogDirs() {
+    return runIdsWithLogDirs;
+  }
 
   /*
    *******************************
@@ -241,30 +241,27 @@ public class DistBuildLogStateTracker implements Closeable {
    *******************************
    */
 
-  private Path getLogDirForRunId(String runId) {
-    Path runIdLogDir =
-        filesystem
-            .resolve(logDirectoryPath)
-            .resolve(String.format(BuckConstant.DIST_BUILD_SLAVE_LOG_DIR_NAME_TEMPLATE, runId));
-
+  private void createLogDir(String runId, Path logDir) {
     if (!createdLogDirRootsByRunId.contains(runId)) {
       try {
-        filesystem.mkdirs(runIdLogDir);
+        filesystem.mkdirs(logDir);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
       createdLogDirRootsByRunId.add(runId);
     }
-
-    return runIdLogDir;
   }
 
   private Path getStreamLogFilePath(String runId, String streamType) {
-    return getLogDirForRunId(runId).resolve(String.format("%s.log", streamType));
+    Path filePath = DistBuildUtil.getStreamLogFilePath(runId, streamType, logDirectoryPath);
+    createLogDir(runId, filePath.getParent());
+    return filePath;
   }
 
-  private Path getBuckOutUnzipPath(String runId) {
-    return getLogDirForRunId(runId).resolve("buck-out");
+  private Path getRemoteBuckLogPath(String runId) {
+    Path remoteBuckLogPath = DistBuildUtil.getRemoteBuckLogPath(runId, logDirectoryPath);
+    createLogDir(runId, remoteBuckLogPath.getParent());
+    return remoteBuckLogPath;
   }
 
   /*
@@ -296,20 +293,23 @@ public class DistBuildLogStateTracker implements Closeable {
   private void writeLogDirToDisk(LogDir logDir) throws IOException {
     if (logDir.data.array().length == 0) {
       LOG.warn(
-          "Skipping materialiation of buck-out dir for runId [%s]" + " as content length was zero",
+          "Skipping materialiation of remote buck-out log dir for runId [%s]"
+              + " as content length was zero",
           logDir.runId);
       return;
     }
 
-    Path buckOutUnzipPath = getBuckOutUnzipPath(logDir.runId.id);
+    Path buckLogUnzipPath = getRemoteBuckLogPath(logDir.runId.id);
 
-    try (NamedTemporaryFile zipFile = new NamedTemporaryFile("runBuckOut", "zip")) {
+    try (NamedTemporaryFile zipFile = new NamedTemporaryFile("remoteBuckLog", "zip")) {
       Files.write(zipFile.get(), logDir.data.array());
       Unzip.extractZipFile(
           zipFile.get(),
           filesystem,
-          buckOutUnzipPath,
+          buckLogUnzipPath,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+      runIdsWithLogDirs.add(logDir.runId);
     }
   }
 

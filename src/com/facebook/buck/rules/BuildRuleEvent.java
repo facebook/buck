@@ -51,6 +51,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     return rule;
   }
 
+  @JsonView(JsonViews.MachineReadableLog.class)
   public ClockDuration getDuration() {
     Preconditions.checkState(isConfigured(), "Event was not configured yet.");
     return Preconditions.checkNotNull(duration);

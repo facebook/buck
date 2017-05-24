@@ -30,12 +30,14 @@ import com.facebook.buck.distributed.DistBuildClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildFileHashes;
 import com.facebook.buck.distributed.DistBuildLogStateTracker;
+import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -636,10 +638,10 @@ public class BuildCommand extends AbstractCommand {
     BuckVersion buckVersion = getBuckVersion();
     Preconditions.checkArgument(params.getInvocationInfo().isPresent());
 
-    try (DistBuildService service = DistBuildFactory.newDistBuildService(params);
-        DistBuildLogStateTracker distBuildLogStateTracker =
-            DistBuildFactory.newDistBuildLogStateTracker(
-                params.getInvocationInfo().get().getLogDirectoryPath(), filesystem)) {
+    DistBuildLogStateTracker distBuildLogStateTracker =
+        DistBuildFactory.newDistBuildLogStateTracker(
+            params.getInvocationInfo().get().getLogDirectoryPath(), filesystem);
+    try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       DistBuildClientExecutor build =
           new DistBuildClientExecutor(
               jobState,
@@ -689,6 +691,24 @@ public class BuildCommand extends AbstractCommand {
       distBuildClientStats.stopPerformLocalBuildTimer();
       distBuildClientStats.setLocalBuildExitCode(localBuildExitCode);
       distBuildClientStats.setPerformedLocalBuild(true);
+
+      DistBuildPostBuildAnalysis postBuildAnalysis =
+          new DistBuildPostBuildAnalysis(
+              params.getInvocationInfo().get().getBuildId(),
+              distBuildResult.stampedeId,
+              filesystem.resolve(params.getInvocationInfo().get().getLogDirectoryPath()),
+              distBuildLogStateTracker.getRunIdsWithLogDirs(),
+              DistBuildCommand.class.getSimpleName().toLowerCase());
+
+      Path analysisSummaryFile =
+          postBuildAnalysis.dumpResultsToLogFile(postBuildAnalysis.runAnalysis());
+      Path relativePathToSummaryFile = filesystem.getRootPath().relativize(analysisSummaryFile);
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.warning(
+                  "Details of distributed build analysis: %s",
+                  relativePathToSummaryFile.toString()));
 
       exitCode = localBuildExitCode;
     }

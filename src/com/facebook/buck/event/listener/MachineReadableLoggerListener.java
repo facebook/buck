@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_FINISHED;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_COMPLETE;
@@ -113,7 +114,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public void buildRuleEventFinished(BuildRuleEvent.Finished event) {
-    writeToLog("BuildRuleEvent.Finished", event);
+    writeToLog(PREFIX_BUILD_RULE_FINISHED, event);
   }
 
   @Subscribe

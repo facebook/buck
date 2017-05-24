@@ -48,8 +48,8 @@ public class DistBuildLogStateTrackerTest {
 
   private static final String LOG_DIR = "logs";
 
-  private static final String RUN_ONE_BUCK_OUT_DIR = "dist-build-slave-runIdOne/buck-out";
-  private static final String RUN_TWO_BUCK_OUT_DIR = "dist-build-slave-runIdTwo/buck-out";
+  private static final String RUN_ONE_BUCK_OUT_DIR = "dist-build-slave-runIdOne/buck-out-log";
+  private static final String RUN_TWO_BUCK_OUT_DIR = "dist-build-slave-runIdTwo/buck-out-log";
 
   private static final String RUN_ONE_ID = "runIdOne";
   private static final String RUN_TWO_ID = "runIdTwo";

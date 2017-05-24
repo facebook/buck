@@ -131,10 +131,18 @@ public class MachineReadableLogJsonViewTest {
   }
 
   @Test
-  public void testBuildRuleEvent() throws IOException {
+  public void testBuildRuleEvent() throws IOException, InterruptedException {
     BuildRule rule = new FakeBuildRule("//fake:rule");
+    long durationMillis = 5;
+    long durationNanos = 5 * 1000 * 1000;
+
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
-    started.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    started.configure(
+        timestamp - durationMillis,
+        nanoTime - durationNanos,
+        threadUserNanoTime - durationNanos,
+        threadId,
+        buildId);
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
             started,
@@ -162,7 +170,8 @@ public class MachineReadableLogJsonViewTest {
         "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\","
             + "\"cacheSource\":\"my-secret-source\","
             + "\"cacheMode\":\"dir\"},"
-            + "\"buildRule\":{\"name\":\"//fake:rule\"},"
+            + String.format("\"duration\":{\"wallMillisDuration\":%d},", durationMillis)
+            + "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"},"
             + "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"},"
             + "\"inputRuleKey\":{\"hashCode\":\"bbbb\"}},"
             + "\"outputHash\":\"abcd42\"},",

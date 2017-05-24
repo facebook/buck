@@ -16,6 +16,9 @@
 
 package com.facebook.buck.timing;
 
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonView;
+
 /** Represents a difference between two time points obtained by {@link Clock}. */
 public class ClockDuration {
 
@@ -36,6 +39,7 @@ public class ClockDuration {
     this.threadUserNanoDuration = threadUserNanoDuration;
   }
 
+  @JsonView(JsonViews.MachineReadableLog.class)
   public long getWallMillisDuration() {
     return wallMillisDuration;
   }
