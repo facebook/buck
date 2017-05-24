@@ -105,7 +105,6 @@ public class CxxLibraryDescription
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   public enum MetadataType implements FlavorConvertible {
-    COMPILATION_DATABASE_DEPS(InternalFlavor.of("compilation-database-deps")),
     CXX_HEADERS(InternalFlavor.of("header-symlink-tree")),
     CXX_PREPROCESSOR_INPUT(InternalFlavor.of("cxx-preprocessor-input")),
     ;
@@ -1035,13 +1034,6 @@ public class CxxLibraryDescription
 
           CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
           return Optional.of(cxxPreprocessorInput).map(metadataClass::cast);
-        }
-
-      case COMPILATION_DATABASE_DEPS:
-        {
-          return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
-                  buildTarget, cxxPlatforms, resolver, args)
-              .map(metadataClass::cast);
         }
     }
 
