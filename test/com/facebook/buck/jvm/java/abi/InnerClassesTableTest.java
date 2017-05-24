@@ -113,7 +113,6 @@ public class InnerClassesTableTest {
   // Edge case tests that don't belong anywhere else.
   //region EdgeCasesTests
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void doesNotListInnersOfInnersIfNotReferenced() throws IOException {
     tester
         .setSourceFile(
@@ -132,7 +131,6 @@ public class InnerClassesTableTest {
   }
 
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void listsInnersOfInnersIfReferenced() throws IOException {
     tester
         .setSourceFile(

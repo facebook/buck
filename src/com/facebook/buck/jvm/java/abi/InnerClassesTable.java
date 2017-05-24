@@ -66,6 +66,7 @@ public class InnerClassesTable {
           public Void visitType(TypeElement e, Void aVoid) {
             if (e != typeElement && !memberClasses.contains(e)) {
               memberClasses.add(e);
+              return null;
             }
 
             addTypeReferences(e.getAnnotationMirrors());
@@ -169,7 +170,6 @@ public class InnerClassesTable {
     }
 
     for (TypeElement element : Lists.reverse(memberClasses)) {
-      elementScanner.scan(element);
       if (reported.add(element)) {
         visitor.visitInnerClass(
             descriptorFactory.getInternalName(element),
