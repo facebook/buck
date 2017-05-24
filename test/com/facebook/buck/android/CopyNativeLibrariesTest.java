@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -41,16 +43,23 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 
 public class CopyNativeLibrariesTest {
 
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    this.filesystem = new FakeProjectFilesystem();
+  }
+
   @Test
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
-    final Path source = Paths.get("/path/to/source").toAbsolutePath();
-    final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
+    Path source = filesystem.getPath("path", "to", "source");
+    Path destination = filesystem.getPath("path", "to", "destination");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of() /* cpuFilters */,
         source,
@@ -62,8 +71,8 @@ public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommand() {
-    final Path source = Paths.get("/path/to/source").toAbsolutePath();
-    final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
+    Path source = filesystem.getPath("path", "to", "source");
+    Path destination = filesystem.getPath("path", "to", "destination");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
         source,
@@ -72,7 +81,7 @@ public class CopyNativeLibrariesTest {
             String.format(
                 "[ -d %s ] && mkdir -p %s && cp -R %s%s* %s",
                 source.resolve("armeabi-v7a"),
-                destination.resolve("armeabi-v7a"),
+                filesystem.resolve(destination.resolve("armeabi-v7a")),
                 source.resolve("armeabi-v7a"),
                 File.separator,
                 destination.resolve("armeabi-v7a")),
@@ -81,8 +90,8 @@ public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
-    final Path source = Paths.get("/path/to/source").toAbsolutePath();
-    final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
+    Path source = filesystem.getPath("path", "to", "source");
+    Path destination = filesystem.getPath("path", "to", "destination");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARM, NdkCxxPlatforms.TargetCpuType.X86),
         source,
@@ -91,14 +100,14 @@ public class CopyNativeLibrariesTest {
             String.format(
                 "[ -d %s ] && mkdir -p %s && cp -R %s%s* %s",
                 source.resolve("armeabi"),
-                destination.resolve("armeabi"),
+                filesystem.resolve(destination.resolve("armeabi")),
                 source.resolve("armeabi"),
                 File.separator,
                 destination.resolve("armeabi")),
             String.format(
                 "[ -d %s ] && mkdir -p %s && cp -R %s%s* %s",
                 source.resolve("x86"),
-                destination.resolve("x86"),
+                filesystem.resolve(destination.resolve("x86")),
                 source.resolve("x86"),
                 File.separator,
                 destination.resolve("x86")),
@@ -142,11 +151,14 @@ public class CopyNativeLibrariesTest {
     // Invoke copyNativeLibrary to populate the steps.
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     CopyNativeLibraries.copyNativeLibrary(
-        new FakeProjectFilesystem(), sourceDir, destinationDir, cpuFilters, stepsBuilder);
+        filesystem, sourceDir, destinationDir, cpuFilters, stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     assertEquals(steps.size(), expectedCommandDescriptions.size());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setCellPathResolver(TestCellPathResolver.get(filesystem))
+            .build();
 
     for (int i = 0; i < steps.size(); ++i) {
       String description = steps.get(i).getDescription(context);

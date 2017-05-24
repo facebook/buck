@@ -32,6 +32,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -134,7 +135,10 @@ public class TrimUberRDotJavaTest {
 
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildableContext buildableContext = new FakeBuildableContext();
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setCellPathResolver(TestCellPathResolver.get(filesystem))
+            .build();
     ImmutableList<Step> steps = trimUberRDotJava.getBuildSteps(buildContext, buildableContext);
     for (Step step : steps) {
       step.execute(executionContext);
