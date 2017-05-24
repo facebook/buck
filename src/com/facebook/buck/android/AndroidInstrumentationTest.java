@@ -335,7 +335,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     builder.add(apk.getBuildTarget());
 
     if (apk instanceof ApkGenrule) {
-      builder.add(((ApkGenrule) apk).getInstallableApk().getBuildTarget());
+      builder.add(ApkGenruleDescription.getUnderlyingApk(apk).getBuildTarget());
     }
 
     return builder.build();

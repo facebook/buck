@@ -104,7 +104,8 @@ public class AndroidInstrumentationApkDescription
           installableApk.getFullyQualifiedName(),
           installableApk.getType());
     }
-    AndroidBinary apkUnderTest = getUnderlyingApk((HasInstallableApk) installableApk);
+    AndroidBinary apkUnderTest =
+        ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
 
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
         new ImmutableSortedSet.Builder<>(Ordering.<JavaLibrary>natural())
@@ -188,18 +189,6 @@ public class AndroidInstrumentationApkDescription
         rulesToExcludeFromDex,
         enhancementResult,
         dxExecutorService);
-  }
-
-  private static AndroidBinary getUnderlyingApk(HasInstallableApk installable) {
-    if (installable instanceof AndroidBinary) {
-      return (AndroidBinary) installable;
-    } else if (installable instanceof ApkGenrule) {
-      return getUnderlyingApk(((ApkGenrule) installable).getInstallableApk());
-    } else {
-      throw new IllegalStateException(
-          installable.getBuildTarget().getFullyQualifiedName()
-              + " must be backed by either an android_binary() or an apk_genrule()");
-    }
   }
 
   @BuckStyleImmutable

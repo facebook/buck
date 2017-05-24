@@ -85,4 +85,16 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       return Optional.of("apk");
     }
   }
+
+  static AndroidBinary getUnderlyingApk(HasInstallableApk installable) {
+    if (installable instanceof AndroidBinary) {
+      return (AndroidBinary) installable;
+    } else if (installable instanceof ApkGenrule) {
+      return getUnderlyingApk(((ApkGenrule) installable).getInstallableApk());
+    } else {
+      throw new IllegalStateException(
+          installable.getBuildTarget().getFullyQualifiedName()
+              + " must be backed by either an android_binary() or an apk_genrule()");
+    }
+  }
 }
