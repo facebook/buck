@@ -138,11 +138,11 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   @Override
   public HashCode get(Path relativeFilePath) throws IOException {
     long start = System.nanoTime();
-    HashCode sha1 = super.get(relativeFilePath.normalize());
-    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
-    start = System.nanoTime();
     HashCode newSha1 = getFromNewCache(relativeFilePath);
     newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    start = System.nanoTime();
+    HashCode sha1 = super.get(relativeFilePath.normalize());
+    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     if (!sha1.equals(newSha1)) {
       if (sha1Mismatches == 0) {
@@ -187,11 +187,11 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     long start = System.nanoTime();
-    HashCode sha1 = super.get(archiveMemberPath);
-    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
-    start = System.nanoTime();
     HashCode newSha1 = getFromNewCache(archiveMemberPath);
     newCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
+    start = System.nanoTime();
+    HashCode sha1 = super.get(archiveMemberPath);
+    oldCacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     if (!sha1.equals(newSha1)) {
       if (sha1Mismatches == 0) {
