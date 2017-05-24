@@ -19,7 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -49,8 +49,8 @@ public class TestExecutionContext {
     executors.put(
         ExecutorPool.CPU, MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()));
 
-    CellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(new FakeProjectFilesystem().getRootPath(), ImmutableMap.of());
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
 
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
@@ -61,7 +61,8 @@ public class TestExecutionContext {
         .setClassLoaderCache(testClassLoaderCache)
         .setExecutors(executors)
         .setProcessExecutor(new FakeProcessExecutor())
-        .setCellPathResolver(cellPathResolver);
+        .setCellPathResolver(cellPathResolver)
+        .setBuildCellRootPath(filesystem.getRootPath());
   }
 
   public static ExecutionContext newInstance() {

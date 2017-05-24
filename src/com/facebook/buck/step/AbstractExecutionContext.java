@@ -41,6 +41,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,6 +88,10 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract CellPathResolver getCellPathResolver();
+
+  /** See {@link com.facebook.buck.rules.BuildContext#getBuildCellRootPath}. */
+  @Value.Parameter
+  abstract Path getBuildCellRootPath();
 
   @Value.Parameter
   abstract ProcessExecutor getProcessExecutor();

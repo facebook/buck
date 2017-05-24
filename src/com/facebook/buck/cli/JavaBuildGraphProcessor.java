@@ -158,6 +158,7 @@ final class JavaBuildGraphProcessor {
                 .setJavaPackageFinder(params.getJavaPackageFinder())
                 .setPlatform(params.getPlatform())
                 .setCellPathResolver(params.getCell().getCellPathResolver())
+                .setBuildCellRootPath(params.getCell().getRoot())
                 .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
                 .build();
 

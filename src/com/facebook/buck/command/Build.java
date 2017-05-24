@@ -144,6 +144,7 @@ public class Build implements Closeable {
             .setTargetDeviceOptions(targetDeviceOptions)
             .setExecutors(executors)
             .setCellPathResolver(rootCell.getCellPathResolver())
+            .setBuildCellRootPath(rootCell.getRoot())
             .setProcessExecutor(processExecutor)
             .build();
     this.artifactCache = artifactCache;
