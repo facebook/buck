@@ -41,7 +41,6 @@ public class InnerClassesTableTest {
   // Tests that the table is ordered properly in various cases.
   // region OrderingTests
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void listsOuterClassesInOrder() throws IOException {
     tester
         .setSourceFile(
@@ -63,7 +62,6 @@ public class InnerClassesTableTest {
   }
 
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void listsInnerClassesInReverseOrder() throws IOException {
     tester
         .setSourceFile(
@@ -84,7 +82,6 @@ public class InnerClassesTableTest {
   }
 
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void listsOuterThenInnerThenReferences() throws IOException {
     tester
         .setSourceFile(

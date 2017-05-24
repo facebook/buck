@@ -68,7 +68,6 @@ public class InnerClassesTable {
               memberClasses.add(e);
             }
 
-            addTypeReferences(e.asType());
             addTypeReferences(e.getAnnotationMirrors());
             e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
             addTypeReferences(e.getSuperclass());
@@ -80,9 +79,11 @@ public class InnerClassesTable {
 
           @Override
           public Void visitExecutable(ExecutableElement e, Void aVoid) {
-            addTypeReferences(e.asType());
             addTypeReferences(e.getAnnotationMirrors());
             e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
+            addTypeReferences(e.getReturnType());
+            // Parameters will be visited in the call to super, below
+            e.getThrownTypes().forEach(this::addTypeReferences);
             return super.visitExecutable(e, aVoid);
           }
 
@@ -156,25 +157,31 @@ public class InnerClassesTable {
         };
     elementScanner.scan(typeElement);
 
+    Set<TypeElement> reported = new HashSet<>();
     for (TypeElement element : Lists.reverse(enclosingClasses)) {
-      visitor.visitInnerClass(
-          descriptorFactory.getInternalName(element),
-          descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
-          element.getSimpleName().toString(),
-          accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+      if (reported.add(element)) {
+        visitor.visitInnerClass(
+            descriptorFactory.getInternalName(element),
+            descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
+            element.getSimpleName().toString(),
+            accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+      }
     }
 
     for (TypeElement element : Lists.reverse(memberClasses)) {
       elementScanner.scan(element);
-      visitor.visitInnerClass(
-          descriptorFactory.getInternalName(element),
-          descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
-          element.getSimpleName().toString(),
-          accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+      if (reported.add(element)) {
+        visitor.visitInnerClass(
+            descriptorFactory.getInternalName(element),
+            descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
+            element.getSimpleName().toString(),
+            accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+      }
     }
 
     referencesToInners
         .stream()
+        .filter(reported::add)
         .sorted(Comparator.comparing(e -> e.getQualifiedName().toString()))
         .forEach(
             element -> {
