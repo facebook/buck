@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
+import java.nio.file.Paths;
 import org.junit.Test;
 
 public class BuildContextTest {
@@ -35,6 +36,7 @@ public class BuildContextTest {
     builder.setSourcePathResolver(createMock(SourcePathResolver.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
+    builder.setBuildCellRootPath(Paths.get("."));
 
     BuildContext context = builder.build();
     Supplier<AndroidPlatformTarget> supplier = context.getAndroidPlatformTargetSupplier();

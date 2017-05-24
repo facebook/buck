@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -28,6 +29,9 @@ import org.immutables.value.Value;
 abstract class AbstractBuildContext {
 
   public abstract SourcePathResolver getSourcePathResolver();
+
+  /** @return the absolute path of the cell in which the build was invoked. */
+  public abstract Path getBuildCellRootPath();
 
   public abstract JavaPackageFinder getJavaPackageFinder();
 

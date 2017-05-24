@@ -578,6 +578,7 @@ public class TestCommand extends BuildCommand {
                   .setSourcePathResolver(
                       new SourcePathResolver(
                           new SourcePathRuleFinder(actionGraphAndResolver.getResolver())))
+                  .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())
                   .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())

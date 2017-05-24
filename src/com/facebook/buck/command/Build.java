@@ -210,6 +210,7 @@ public class Build implements Closeable {
                 BuildContext.builder()
                     .setSourcePathResolver(
                         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)))
+                    .setBuildCellRootPath(rootCell.getRoot())
                     .setJavaPackageFinder(javaPackageFinder)
                     .setEventBus(executionContext.getBuckEventBus())
                     .setAndroidPlatformTargetSupplier(
