@@ -34,28 +34,28 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.objectweb.asm.ClassVisitor;
 
-/** A {@link LibraryReader} that reads from a list of {@link TypeElement}s and their inner types. */
-class TypeElementsReader implements LibraryReader {
+/** A {@link LibraryReader} that reads from a list of {@link Element}s and their inner types. */
+class ElementsReader implements LibraryReader {
   private final SourceVersion targetVersion;
   private final Elements elements;
-  private final Supplier<Map<Path, TypeElement>> allTypes;
+  private final Supplier<Map<Path, Element>> allElements;
 
-  TypeElementsReader(
-      SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
+  ElementsReader(
+      SourceVersion targetVersion, Elements elements, Iterable<Element> topLevelElements) {
     this.targetVersion = targetVersion;
     this.elements = elements;
-    this.allTypes =
+    this.allElements =
         Suppliers.memoize(
             () -> {
-              Map<Path, TypeElement> types = new LinkedHashMap<>();
-              topLevelTypes.forEach(type -> addTypeElements(type, types));
-              return types;
+              Map<Path, Element> allElements = new LinkedHashMap<>();
+              topLevelElements.forEach(element -> addAllElements(element, allElements));
+              return allElements;
             });
   }
 
   @Override
   public List<Path> getRelativePaths() throws IOException {
-    return new ArrayList<>(allTypes.get().keySet());
+    return new ArrayList<>(allElements.get().keySet());
   }
 
   @Override
@@ -65,8 +65,8 @@ class TypeElementsReader implements LibraryReader {
 
   @Override
   public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
-    TypeElement typeElement = Preconditions.checkNotNull(allTypes.get().get(relativePath));
-    new ClassVisitorDriverFromElement(targetVersion, elements).driveVisitor(typeElement, cv);
+    Element element = Preconditions.checkNotNull(allElements.get().get(relativePath));
+    new ClassVisitorDriverFromElement(targetVersion, elements).driveVisitor(element, cv);
   }
 
   @Override
@@ -74,15 +74,15 @@ class TypeElementsReader implements LibraryReader {
     // Nothing
   }
 
-  private void addTypeElements(Element rootElement, Map<Path, TypeElement> typeElements) {
+  private void addAllElements(Element rootElement, Map<Path, Element> elements) {
     if (!rootElement.getKind().isClass() && !rootElement.getKind().isInterface()) {
       return;
     }
 
     TypeElement typeElement = (TypeElement) rootElement;
-    typeElements.put(getRelativePath(typeElement), typeElement);
+    elements.put(getRelativePath(typeElement), typeElement);
     for (Element enclosed : typeElement.getEnclosedElements()) {
-      addTypeElements(enclosed, typeElements);
+      addAllElements(enclosed, elements);
     }
   }
 

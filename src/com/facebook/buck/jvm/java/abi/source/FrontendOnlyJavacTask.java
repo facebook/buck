@@ -175,8 +175,8 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   }
 
   @Override
-  protected void onPostEnter(Set<TypeElement> topLevelTypes) {
-    super.onPostEnter(topLevelTypes);
+  protected void onPostEnter(Set<Element> topLevelElements) {
+    super.onPostEnter(topLevelElements);
 
     if (stopCompilationAfterEnter) {
       throw new StopCompilation();

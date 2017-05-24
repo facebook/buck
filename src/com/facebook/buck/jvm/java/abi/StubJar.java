@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
 
@@ -42,8 +42,8 @@ public class StubJar {
    *     source version
    */
   public StubJar(
-      SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
-    libraryReaderSupplier = () -> LibraryReader.of(targetVersion, elements, topLevelTypes);
+      SourceVersion targetVersion, Elements elements, Iterable<Element> topLevelElements) {
+    libraryReaderSupplier = () -> LibraryReader.of(targetVersion, elements, topLevelElements);
   }
 
   /**

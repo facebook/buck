@@ -74,7 +74,7 @@ public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
 
   void removeTaskListener(BuckJavacTaskListener taskListener);
 
-  void addPostEnterCallback(Consumer<Set<TypeElement>> callback);
+  void addPostEnterCallback(Consumer<Set<Element>> callback);
 
   Elements getElements();
 

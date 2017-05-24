@@ -25,18 +25,19 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 /** A {@link TaskListener} that runs some code after the final enter phase. */
 public class PostEnterTaskListener implements TaskListener {
   private final BuckJavacTask task;
-  private final Consumer<Set<TypeElement>> callback;
-  private final Set<TypeElement> topLevelTypes = new LinkedHashSet<TypeElement>();
+  private final Consumer<Set<Element>> callback;
+  private final Set<Element> topLevelElements = new LinkedHashSet<Element>();
 
   private boolean annotationProcessing = false;
   private int pendingEnterCalls = 0;
 
-  public PostEnterTaskListener(BuckJavacTask task, Consumer<Set<TypeElement>> callback) {
+  public PostEnterTaskListener(BuckJavacTask task, Consumer<Set<Element>> callback) {
     this.task = task;
     this.callback = callback;
   }
@@ -50,7 +51,7 @@ public class PostEnterTaskListener implements TaskListener {
         break;
       case ENTER:
         if (pendingEnterCalls == 0) {
-          topLevelTypes.clear();
+          topLevelElements.clear();
         }
         pendingEnterCalls += 1;
         break;
@@ -78,7 +79,7 @@ public class PostEnterTaskListener implements TaskListener {
           @Override
           public Void visitClass(ClassTree node, Void aVoid) {
             TypeElement typeElement = (TypeElement) task.getTrees().getElement(getCurrentPath());
-            topLevelTypes.add(typeElement);
+            topLevelElements.add(typeElement);
             return null;
           }
         }.scan(compilationUnit, null);
@@ -89,8 +90,8 @@ public class PostEnterTaskListener implements TaskListener {
     }
 
     if (e.getKind() == TaskEvent.Kind.ENTER && !annotationProcessing && pendingEnterCalls == 0) {
-      Set<TypeElement> unmodifiableTopLevelTypes = Collections.unmodifiableSet(topLevelTypes);
-      callback.accept(unmodifiableTopLevelTypes);
+      Set<Element> unmodifiableTopLevelElements = Collections.unmodifiableSet(topLevelElements);
+      callback.accept(unmodifiableTopLevelElements);
     }
   }
 }

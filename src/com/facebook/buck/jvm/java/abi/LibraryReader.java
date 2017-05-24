@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import org.objectweb.asm.ClassVisitor;
 
@@ -37,8 +37,8 @@ interface LibraryReader extends AutoCloseable {
   }
 
   static LibraryReader of(
-      SourceVersion targetVersion, Elements elements, Iterable<TypeElement> topLevelTypes) {
-    return new TypeElementsReader(targetVersion, elements, topLevelTypes);
+      SourceVersion targetVersion, Elements elements, Iterable<Element> topLevelElements) {
+    return new ElementsReader(targetVersion, elements, topLevelElements);
   }
 
   List<Path> getRelativePaths() throws IOException;

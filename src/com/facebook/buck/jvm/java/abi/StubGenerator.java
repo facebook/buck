@@ -22,7 +22,7 @@ import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
 
@@ -43,10 +43,10 @@ public class StubGenerator {
     this.eventSink = eventSink;
   }
 
-  public void generate(Set<TypeElement> topLevelTypes) {
+  public void generate(Set<Element> topLevelElements) {
     try (JavacEventSinkScopedSimplePerfEvent ignored =
         new JavacEventSinkScopedSimplePerfEvent(eventSink, "generate_stubs")) {
-      new StubJar(version, elements, topLevelTypes).writeTo(fileManager);
+      new StubJar(version, elements, topLevelElements).writeTo(fileManager);
     } catch (IOException e) {
       throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
     }

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 /**
@@ -43,7 +44,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
   private final Map<BuckJavacPlugin, String[]> pluginsAndArgs = new LinkedHashMap<>();
   private final MultiplexingTaskListener taskListeners = new MultiplexingTaskListener();
   private final PostEnterTaskListener postEnterTaskListener;
-  private final List<Consumer<Set<TypeElement>>> postEnterCallbacks = new ArrayList<>();
+  private final List<Consumer<Set<Element>>> postEnterCallbacks = new ArrayList<>();
 
   private boolean pluginsInstalled = false;
 
@@ -122,7 +123,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
     pluginsAndArgs.put(plugin, args);
   }
 
-  public void addPostEnterCallback(Consumer<Set<TypeElement>> callback) {
+  public void addPostEnterCallback(Consumer<Set<Element>> callback) {
     postEnterCallbacks.add(callback);
   }
 
@@ -146,8 +147,8 @@ public class BuckJavacTask extends JavacTaskWrapper {
     postEnterTaskListener.finished(e);
   }
 
-  protected void onPostEnter(Set<TypeElement> topLevelTypes) {
-    postEnterCallbacks.forEach(callback -> callback.accept(topLevelTypes));
+  protected void onPostEnter(Set<Element> topLevelElements) {
+    postEnterCallbacks.forEach(callback -> callback.accept(topLevelElements));
   }
 
   private void installPlugins() {

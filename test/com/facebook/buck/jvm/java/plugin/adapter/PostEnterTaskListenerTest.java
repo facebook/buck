@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -124,14 +125,14 @@ public class PostEnterTaskListenerTest {
 
   private void addCallback(String name) {
     compiler.addPostEnterCallback(
-        topLevelTypes ->
+        topLevelElements ->
             callbacksIssued.add(
                 String.format(
                     "%s: %s",
                     name,
-                    topLevelTypes
+                    topLevelElements
                         .stream()
-                        .map(TypeElement::getSimpleName)
+                        .map(Element::getSimpleName)
                         .collect(Collectors.joining(", ")))));
   }
 }

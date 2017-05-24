@@ -66,8 +66,8 @@ class ClassVisitorDriverFromElement {
     accessFlagsUtils = new AccessFlags(elements);
   }
 
-  public void driveVisitor(TypeElement fullClass, ClassVisitor visitor) throws IOException {
-    fullClass.accept(new ElementVisitorAdapter(), visitor);
+  public void driveVisitor(Element fullElement, ClassVisitor visitor) throws IOException {
+    fullElement.accept(new ElementVisitorAdapter(), visitor);
     visitor.visitEnd();
   }
 

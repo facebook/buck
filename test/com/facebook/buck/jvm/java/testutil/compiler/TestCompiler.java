@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Processor;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -147,7 +148,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     getJavacTask().setTaskListener(taskListener);
   }
 
-  public void addPostEnterCallback(Consumer<Set<TypeElement>> callback) {
+  public void addPostEnterCallback(Consumer<Set<Element>> callback) {
     getJavacTask().addPostEnterCallback(callback);
   }
 

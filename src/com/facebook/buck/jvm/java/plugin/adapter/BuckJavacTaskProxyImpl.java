@@ -111,7 +111,7 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   }
 
   @Override
-  public void addPostEnterCallback(Consumer<Set<TypeElement>> callback) {
+  public void addPostEnterCallback(Consumer<Set<Element>> callback) {
     javacTask.addPostEnterCallback(callback);
   }
 
