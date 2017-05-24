@@ -1,0 +1,8 @@
+android_resource(
+    name = "android_res",
+    visibility = [
+        "PUBLIC",
+    ],
+    res = subdir_glob([('res', '**')]),
+    package = 'com.facebook.projectviewtestapp',
+)
