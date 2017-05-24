@@ -246,7 +246,6 @@ public class InnerClassesTableTest {
   }
 
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void findsInnerClassReferencesInClassTypeParameterAnnotations() throws IOException {
     tester
         .setSourceFile(
@@ -356,7 +355,6 @@ public class InnerClassesTableTest {
   }
 
   @Test
-  @Ignore("Broken; will fix bug in following commit")
   public void findsInnerClassReferencesInMethodTypeParameterAnnotations() throws IOException {
     tester
         .setSourceFile(

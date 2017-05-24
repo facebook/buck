@@ -25,9 +25,10 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -62,22 +63,41 @@ public class InnerClassesTable {
     ElementScanner8<Void, Void> elementScanner =
         new ElementScanner8<Void, Void>() {
           @Override
-          public Void scan(Element e, Void aVoid) {
-            addTypeReferences(e.asType());
-            addTypeReferences(e.getAnnotationMirrors());
-            return super.scan(e, aVoid);
-          }
-
-          @Override
           public Void visitType(TypeElement e, Void aVoid) {
             if (e != typeElement && !memberClasses.contains(e)) {
               memberClasses.add(e);
             }
 
+            addTypeReferences(e.asType());
+            addTypeReferences(e.getAnnotationMirrors());
+            e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
             addTypeReferences(e.getSuperclass());
             e.getInterfaces().forEach(this::addTypeReferences);
+            // Members will be visited in the call to super, below
 
             return super.visitType(e, aVoid);
+          }
+
+          @Override
+          public Void visitExecutable(ExecutableElement e, Void aVoid) {
+            addTypeReferences(e.asType());
+            addTypeReferences(e.getAnnotationMirrors());
+            e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
+            return super.visitExecutable(e, aVoid);
+          }
+
+          @Override
+          public Void visitVariable(VariableElement e, Void aVoid) {
+            addTypeReferences(e.getAnnotationMirrors());
+            addTypeReferences(e.asType());
+            return super.visitVariable(e, aVoid);
+          }
+
+          @Override
+          public Void visitTypeParameter(TypeParameterElement e, Void aVoid) {
+            addTypeReferences(e.getAnnotationMirrors());
+            addTypeReferences(e.asType());
+            return super.visitTypeParameter(e, aVoid);
           }
 
           private void addTypeReferences(TypeMirror type) {
