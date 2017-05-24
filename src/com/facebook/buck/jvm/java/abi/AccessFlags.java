@@ -21,6 +21,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
@@ -32,6 +33,29 @@ public final class AccessFlags {
 
   public AccessFlags(Elements elements) {
     this.elements = elements;
+  }
+
+  /**
+   * Gets the class access flags (see JVMS8 4.1) for the given type element as they should appear in
+   * the ClassNode of a class file. Inner-class specific flags are not allowed in that node,
+   * presumably for compatibility reasons.
+   */
+  public int getAccessFlagsForClassNode(TypeElement e) {
+    // Static never makes it into the file for classes
+    int accessFlags = getAccessFlags(e) & ~Opcodes.ACC_STATIC;
+    if (e.getNestingKind() != NestingKind.TOP_LEVEL) {
+      if (e.getModifiers().contains(Modifier.PROTECTED)) {
+        // It looks like inner classes with protected visibility get marked as public, and then
+        // their InnerClasses attributes override that more specifically
+        accessFlags = (accessFlags & ~Opcodes.ACC_PROTECTED) | Opcodes.ACC_PUBLIC;
+      } else if (e.getModifiers().contains(Modifier.PRIVATE)) {
+        // It looks like inner classes with private visibility get marked as package, and then
+        // their InnerClasses attributes override that more specifically
+        accessFlags = (accessFlags & ~Opcodes.ACC_PRIVATE);
+      }
+    }
+
+    return accessFlags;
   }
 
   /**
