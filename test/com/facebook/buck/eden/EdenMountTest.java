@@ -21,31 +21,29 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
-import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import java.io.IOException;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Optional;
 import org.junit.Test;
 
 public class EdenMountTest {
   @Test
-  public void getSha1DelegatesToThriftClient() throws EdenError, TException {
-    List<MountInfo> mountInfos =
-        ImmutableList.of(new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""));
+  public void getSha1DelegatesToThriftClient() throws EdenError, IOException, TException {
     EdenService.Client thriftClient = createMock(EdenService.Client.class);
-    expect(thriftClient.listMounts()).andReturn(mountInfos);
 
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path entry = fs.getPath("LICENSE");
@@ -58,9 +56,12 @@ public class EdenMountTest {
 
     EdenClient client = new EdenClient(thriftClient);
     Path pathToBuck = fs.getPath("/home/mbolin/src/buck");
-    EdenMount mount = client.getMountFor(pathToBuck);
-    assertNotNull("Should find mount for path.", mount);
-    assertEquals(Sha1HashCode.fromHashCode(hash), mount.getSha1(entry));
+    Files.createDirectories(pathToBuck.resolve(".eden"));
+    Files.createSymbolicLink(pathToBuck.resolve(".eden").resolve("root"), pathToBuck);
+
+    Optional<EdenMount> mount = client.getMountFor(pathToBuck);
+    assertTrue("Should find mount for path.", mount.isPresent());
+    assertEquals(Sha1HashCode.fromHashCode(hash), mount.get().getSha1(entry));
     verify(thriftClient);
   }
 

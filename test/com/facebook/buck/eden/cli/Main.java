@@ -16,9 +16,13 @@
 
 package com.facebook.buck.eden.cli;
 
+import com.facebook.buck.eden.EdenClient;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -43,8 +47,17 @@ public final class Main {
       return 1;
     }
 
+    // The default path for the Eden socket is ~/local/.eden/socket. Ultimately, it will be
+    // possible to query for this via `eden config --get`.
+    Path socketFile = Paths.get(System.getProperty("user.home"), "local/.eden/socket");
+    Optional<EdenClient> client = EdenClient.newInstanceFromSocket(socketFile);
+    if (!client.isPresent()) {
+      System.err.println("Could not connect to Eden.");
+      return 1;
+    }
+
     try {
-      return argsObject.run();
+      return argsObject.run(client.get());
     } catch (EdenError | IOException | TException e) {
       e.printStackTrace();
       return 1;
