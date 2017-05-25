@@ -160,7 +160,9 @@ public class DistBuildFileHashesTest {
     EasyMock.expect(mockCache.getFilesystem())
         .andReturn(materializeProjectFilesystem)
         .atLeastOnce();
-    EasyMock.expect(mockCache.get(EasyMock.<Path>notNull())).andReturn(HashCode.fromInt(42)).once();
+    EasyMock.expect(mockCache.get(EasyMock.<Path>notNull()))
+        .andReturn(f.writtenHashCode)
+        .atLeastOnce();
     EasyMock.replay(mockCache);
     MaterializerProjectFileHashCache materializer =
         new MaterializerProjectFileHashCache(
@@ -170,6 +172,36 @@ public class DistBuildFileHashesTest {
     assertThat(
         materializeProjectFilesystem.readFileIfItExists(f.javaSrcPath),
         Matchers.equalTo(Optional.of(f.writtenContents)));
+  }
+
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  @Test
+  public void materializerThrowsOnCorruption() throws Exception {
+    SingleFileFixture f = new SingleFileFixture(tempDir);
+
+    List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
+
+    ProjectFilesystem materializeProjectFilesystem =
+        new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
+
+    ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
+    EasyMock.expect(mockCache.getFilesystem())
+        .andReturn(materializeProjectFilesystem)
+        .atLeastOnce();
+    EasyMock.expect(mockCache.get(EasyMock.<Path>notNull()))
+        .andReturn(HashCode.fromInt(42))
+        .atLeastOnce();
+    EasyMock.replay(mockCache);
+    MaterializerProjectFileHashCache materializer =
+        new MaterializerProjectFileHashCache(
+            mockCache, fileHashes.get(0), new InlineContentsProvider());
+
+    try {
+      materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));
+      Assert.fail("Materialization should have thrown because of mismatching hash.");
+    } catch (RuntimeException e) {
+      // expected.
+    }
   }
 
   @Test

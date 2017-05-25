@@ -17,11 +17,14 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.facebook.buck.log.Logger;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class MultiSourceContentsProvider implements FileContentsProvider {
+  private static final Logger LOG = Logger.get(MultiSourceContentsProvider.class);
+
   private final FileContentsProvider serverProvider;
   private final Optional<LocalFsContentsProvider> localFsProvider;
   private final InlineContentsProvider inlineProvider;
@@ -49,11 +52,13 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
       throws IOException {
 
     if (inlineProvider.materializeFileContents(entry, targetAbsPath)) {
+      LOG.info("Materialized source file using Inline Data: [%s]", targetAbsPath);
       return true;
     }
 
     if (localFsProvider.isPresent()
         && localFsProvider.get().materializeFileContents(entry, targetAbsPath)) {
+      LOG.info("Materialized source file using Local Source File Cache: [%s]", targetAbsPath);
       return true;
     }
 
@@ -62,6 +67,7 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
         localFsProvider.get().writeFileAndGetInputStream(entry, targetAbsPath);
       }
 
+      LOG.info("Materialized source file from CAS Server: [%s]", targetAbsPath);
       return true;
     }
 

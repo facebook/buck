@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Preconditions;
@@ -78,6 +79,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         get(relPath);
       } else if (fileHashEntry.isSetRootSymLink()) {
         materializeSymlink(fileHashEntry, symlinkedPaths);
+        integrityCheck(getFilesystem().getPathRelativeToProjectRoot(absPath).get());
         symlinkedPaths.add(absPath);
       } else if (!fileHashEntry.isDirectory) {
         // Touch file
@@ -96,11 +98,12 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       return;
     }
 
-    LOG.info("Materializing: [%s]", relPath.toString());
+    LOG.info("Materializing path: [%s]", relPath.toString());
 
     Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
     BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
     if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
+      integrityCheck(relPath);
       materializedPaths.add(relPath);
       return;
     }
@@ -109,12 +112,11 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       if (!symlinkedPaths.contains(relPath)) {
         materializeSymlink(fileHashEntry, materializedPaths);
       }
-      symlinkIntegrityCheck(fileHashEntry);
+      integrityCheck(relPath);
       materializedPaths.add(relPath);
       return;
     }
 
-    // TODO(alisdair,ruibm,shivanker): materialize directories
     if (fileHashEntry.isIsDirectory()) {
       materializeDirectory(relPath, fileHashEntry, remainingRelPaths);
       materializedPaths.add(relPath);
@@ -128,10 +130,11 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     // threaded fetches.
     Preconditions.checkState(
         provider.materializeFileContents(fileHashEntry, absPath),
-        "[Stampede] Missing source file [%s] for FileHashEntry=[%s]",
+        "Failed to materialize source file [%s] for FileHashEntry=[%s]",
         absPath,
         fileHashEntry);
     absPath.toFile().setExecutable(fileHashEntry.isExecutable);
+    integrityCheck(relPath);
     synchronized (this) {
       // Double check this path hasn't been materialized,
       // as previous check wasn't inside sync block.
@@ -156,19 +159,6 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       Path absPath = projectFilesystem.resolve(Paths.get(unixPath.getPath()));
       Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
       remainingPaths.add(relPath);
-    }
-  }
-
-  private void symlinkIntegrityCheck(BuildJobStateFileHashEntry fileHashEntry) throws IOException {
-    Path symlinkAbsPath = projectFilesystem.resolve(fileHashEntry.getPath().getPath());
-    HashCode expectedHash = HashCode.fromString(fileHashEntry.getHashCode());
-    Path symlinkRelPath = projectFilesystem.getPathRelativeToProjectRoot(symlinkAbsPath).get();
-    HashCode actualHash = delegate.get(symlinkRelPath);
-    if (!expectedHash.equals(actualHash)) {
-      throw new RuntimeException(
-          String.format(
-              "Symlink [%s] had hashcode [%s] during scheduling, but [%s] during build.",
-              symlinkAbsPath, expectedHash, actualHash));
     }
   }
 
@@ -206,6 +196,32 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     }
   }
 
+  /**
+   * Verification of FileHashes is important because we anyways use the remote file hashes to
+   * compute the RuleKeys (see {@link DistBuildCachingEngineDelegate}). We don't want to upload
+   * corrupt cache artifacts in case we end up materializing corrupt source files.
+   */
+  private void integrityCheck(Path relPath) throws IOException {
+    Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
+    BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
+    if (fileHashEntry == null || !fileHashEntry.isSetHashCode()) {
+      return;
+    }
+
+    HashCode computedHash =
+        Preconditions.checkNotNull(
+            delegate.get(relPath),
+            "File materialization failed. Delegate FileHashCache returned null HashCode for [%s].",
+            relPath);
+    if (!computedHash.toString().equals(fileHashEntry.getHashCode())) {
+      throw new HumanReadableException(
+          "SHA1 of materialized file (at [%s]) does not match the SHA1 sent by buck client.\n"
+              + "Computed SHA1: %s\n"
+              + "Expected SHA1: %s",
+          relPath, computedHash.toString(), fileHashEntry.getHashCode());
+    }
+  }
+
   @Override
   public HashCode get(Path relPath) throws IOException {
     Queue<Path> remainingPaths = new LinkedList<>();
@@ -214,6 +230,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       materializeIfNeeded(remainingPaths.remove(), remainingPaths);
     }
 
+    integrityCheck(relPath);
     return delegate.get(relPath);
   }
 
@@ -225,6 +242,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
     materializeIfNeeded(archiveMemberRelPath.getArchivePath(), new LinkedList<>());
+    integrityCheck(archiveMemberRelPath.getArchivePath());
     return delegate.get(archiveMemberRelPath);
   }
 
