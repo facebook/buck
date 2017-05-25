@@ -16,7 +16,10 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.sun.source.tree.ModifiersTree;
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.CompilationUnitTree;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,12 +38,20 @@ import javax.lang.model.element.TypeElement;
 class TreeBackedPackageElement extends TreeBackedElement implements PackageElement {
   private final PackageElement javacPackage;
   private final StandalonePackageType typeMirror;
+  @Nullable private CompilationUnitTree tree;
   private boolean resolved = false;
 
   public TreeBackedPackageElement(PackageElement javacPackage, TreeBackedElementResolver resolver) {
     super(javacPackage, null, null, resolver);
     this.javacPackage = javacPackage;
     typeMirror = resolver.createType(this);
+  }
+
+  /* package */ void setTree(CompilationUnitTree tree) {
+    if (this.tree != null) {
+      throw new IllegalStateException();
+    }
+    this.tree = tree;
   }
 
   @Override
@@ -96,8 +107,12 @@ class TreeBackedPackageElement extends TreeBackedElement implements PackageEleme
   }
 
   @Override
-  protected ModifiersTree getModifiersTree() {
-    throw new UnsupportedOperationException();
+  protected List<? extends AnnotationTree> getAnnotationTrees() {
+    if (tree == null) {
+      return Collections.emptyList();
+    }
+
+    return tree.getPackageAnnotations();
   }
 
   @Override

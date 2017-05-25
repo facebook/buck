@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.AnnotationTree;
-import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -126,17 +125,8 @@ abstract class TreeBackedElement implements Element {
     return annotationMirrors;
   }
 
-  private List<? extends AnnotationTree> getAnnotationTrees() {
-    ModifiersTree modifiersTree = getModifiersTree();
-    if (modifiersTree == null) {
-      return Collections.emptyList();
-    }
-
-    return modifiersTree.getAnnotations();
-  }
-
   @Nullable
-  protected abstract ModifiersTree getModifiersTree();
+  protected abstract List<? extends AnnotationTree> getAnnotationTrees();
 
   @Override
   @Nullable

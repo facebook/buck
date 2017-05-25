@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.ModifiersTree;
+import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import java.util.Collections;
@@ -58,9 +58,8 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   }
 
   @Override
-  @Nullable
-  protected ModifiersTree getModifiersTree() {
-    return null;
+  protected List<? extends AnnotationTree> getAnnotationTrees() {
+    throw new UnsupportedOperationException();
   }
 
   @Override

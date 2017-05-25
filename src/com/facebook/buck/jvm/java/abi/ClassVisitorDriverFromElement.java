@@ -27,6 +27,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -98,6 +99,25 @@ class ClassVisitorDriverFromElement {
 
   private class ElementVisitorAdapter extends ElementScanner8<Void, ClassVisitor> {
     boolean classVisitorStarted = false;
+
+    @Override
+    public Void visitPackage(PackageElement e, ClassVisitor classVisitor) {
+      classVisitor.visit(
+          sourceVersionToClassFileVersion(targetVersion),
+          Opcodes.ACC_SYNTHETIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_INTERFACE,
+          e.getQualifiedName().toString().replace('.', '/') + "/package-info",
+          null,
+          "java/lang/Object",
+          new String[0]);
+
+      visitAnnotations(e.getAnnotationMirrors(), classVisitor::visitAnnotation);
+
+      innerClassesTable.reportInnerClassReferences(e, classVisitor);
+
+      classVisitor.visitEnd();
+
+      return null;
+    }
 
     // TODO(jkeljo): Type annotations
 

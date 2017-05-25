@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.objectweb.asm.ClassVisitor;
@@ -75,6 +77,15 @@ class ElementsReader implements LibraryReader {
   }
 
   private void addAllElements(Element rootElement, Map<Path, Element> elements) {
+    if (rootElement.getKind() == ElementKind.PACKAGE) {
+      PackageElement packageElement = (PackageElement) rootElement;
+      if (!packageElement.getAnnotationMirrors().isEmpty()) {
+        elements.put(
+            getRelativePathToClass(packageElement.getQualifiedName().toString() + ".package-info"),
+            packageElement);
+      }
+    }
+
     if (!rootElement.getKind().isClass() && !rootElement.getKind().isInterface()) {
       return;
     }
@@ -86,10 +97,12 @@ class ElementsReader implements LibraryReader {
     }
   }
 
-  private Path getRelativePath(TypeElement typeElement) {
+  private Path getRelativePathToClass(CharSequence classBinaryName) {
     return Paths.get(
-        String.format(
-            "%s.class",
-            elements.getBinaryName(typeElement).toString().replace('.', File.separatorChar)));
+        String.format("%s.class", classBinaryName.toString().replace('.', File.separatorChar)));
+  }
+
+  private Path getRelativePath(TypeElement typeElement) {
+    return getRelativePathToClass(elements.getBinaryName(typeElement));
   }
 }

@@ -3416,8 +3416,7 @@ public class StubJarTest {
   }
 
   @Test
-  public void shouldIncludePackageInfoClass() throws IOException {
-    notYetImplementedForSource();
+  public void shouldIncludePackageInfoClassIfAnnotated() throws IOException {
     tester
         .setSourceFile("package-info.java", "@Deprecated", "package com.example.buck;")
         .addExpectedStub(
@@ -3428,6 +3427,38 @@ public class StubJarTest {
             "",
             "",
             "  @Ljava/lang/Deprecated;()",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void shouldNotIncludePackageInfoClassIfNotAnnotated() throws IOException {
+    tester.setSourceFile("package-info.java", "package com.example.buck;").createAndCheckStubJar();
+  }
+
+  @Test
+  public void shouldIncludeInnerClassReferencesInPackageInfoClass() throws IOException {
+    notYetImplementedForMissingClasspath();
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public @interface Anno { }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile("package-info.java", "@A.Anno", "package com.example.buck;")
+        .addExpectedStub(
+            "com/example/buck/package-info",
+            "// class version 52.0 (52)",
+            "// access flags 0x1600",
+            "abstract synthetic interface com/example/buck/package-info {",
+            "",
+            "",
+            "  @Lcom/example/buck/A$Anno;() // invisible",
+            "  // access flags 0x2609",
+            "  public static abstract INNERCLASS com/example/buck/A$Anno com/example/buck/A Anno",
             "}")
         .createAndCheckStubJar();
   }
@@ -3712,9 +3743,6 @@ public class StubJarTest {
 
     public Tester() {
       expectedStubDirectory.add("META-INF/");
-      expectedStubDirectory.add("com/");
-      expectedStubDirectory.add("com/example/");
-      expectedStubDirectory.add("com/example/buck/");
     }
 
     private void resetActuals() {
@@ -3740,6 +3768,12 @@ public class StubJarTest {
 
     public Tester addExpectedStub(String classBinaryName, String... stubLines) {
       String filePath = classBinaryName + ".class";
+      if (expectedStubDirectory.size() == 1) {
+        expectedStubDirectory.add("com/");
+        expectedStubDirectory.add("com/example/");
+        expectedStubDirectory.add("com/example/buck/");
+      }
+
       expectedStubDirectory.add(filePath);
       expectedStubs.put(filePath, Arrays.asList(stubLines));
       return this;
