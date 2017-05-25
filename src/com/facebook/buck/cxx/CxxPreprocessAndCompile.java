@@ -23,6 +23,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -287,8 +288,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
-      throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // If present, include all inputs coming from the preprocessor tool.
@@ -316,7 +317,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
     if (precompiledHeaderRule.isPresent()) {
       CxxPrecompiledHeader pch = precompiledHeaderRule.get();
-      inputs.addAll(pch.getInputsAfterBuildingLocally(context));
+      inputs.addAll(pch.getInputsAfterBuildingLocally(context, cellPathResolver));
     }
 
     // Add the input.

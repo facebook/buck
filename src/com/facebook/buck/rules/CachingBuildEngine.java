@@ -761,7 +761,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             // Query the rule for the actual inputs it used.
             ImmutableList<SourcePath> inputs =
                 ((SupportsDependencyFileRuleKey) rule)
-                    .getInputsAfterBuildingLocally(buildContext.getBuildContext());
+                    .getInputsAfterBuildingLocally(
+                        buildContext.getBuildContext(), executionContext.getCellPathResolver());
 
             // Record the inputs into our metadata for next time.
             // TODO(#9117006): We don't support a way to serlialize `SourcePath`s to the cache,

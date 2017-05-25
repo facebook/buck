@@ -1751,7 +1751,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
 
@@ -1840,7 +1841,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
 
@@ -1914,7 +1916,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
 
@@ -1989,7 +1992,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of();
             }
 
@@ -2085,7 +2089,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of();
             }
 
@@ -2173,7 +2178,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of();
             }
 
@@ -2296,7 +2302,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(path);
             }
 
@@ -2394,7 +2401,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
 
@@ -2508,7 +2516,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(new PathSourcePath(filesystem, input));
             }
 
@@ -2612,7 +2621,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(input);
             }
 
@@ -2752,7 +2762,8 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+            public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+                BuildContext context, CellPathResolver cellPathResolver) {
               return ImmutableList.of(input);
             }
 
@@ -2859,8 +2870,8 @@ public class CachingBuildEngineTest {
       }
 
       @Override
-      public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
-          throws IOException {
+      public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+          BuildContext context, CellPathResolver cellPathResolver) throws IOException {
         return ImmutableList.of();
       }
 

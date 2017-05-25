@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -34,11 +35,11 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * path will only be present if actually used and that's the core idea of dep-file keys.
    *
    * <p>I.e. this predicate should return true only for source paths that *may* be returned from
-   * {@link #getInputsAfterBuildingLocally(BuildContext)}. This information is used by the rule key
-   * builder to infer that inputs *not* in this list should be included unconditionally in the rule
-   * key. Inputs that *are* in this list should be included in the rule key if and only if they are
-   * actually being used for the rule. I.e. if they are present in the dep-file listed by {@link
-   * #getInputsAfterBuildingLocally(BuildContext)}.
+   * {@link #getInputsAfterBuildingLocally(BuildContext, CellPathResolver)}. This information is
+   * used by the rule key builder to infer that inputs *not* in this list should be included
+   * unconditionally in the rule key. Inputs that *are* in this list should be included in the rule
+   * key if and only if they are actually being used for the rule. I.e. if they are present in the
+   * dep-file listed by {@link #getInputsAfterBuildingLocally(BuildContext, CellPathResolver)}.
    */
   Predicate<SourcePath> getCoveredByDepFilePredicate();
 
@@ -62,5 +63,6 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * Returns a list of source paths that were actually used for the rule. This list comes from the
    * dep-file produced by compiler.
    */
-  ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) throws IOException;
+  ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) throws IOException;
 }

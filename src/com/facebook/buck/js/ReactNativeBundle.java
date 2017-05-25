@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -213,8 +214,8 @@ public class ReactNativeBundle extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context)
-      throws IOException {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // Use the generated depfile to determinate which sources ended up being used.

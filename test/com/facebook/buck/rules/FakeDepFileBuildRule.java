@@ -98,7 +98,8 @@ public class FakeDepFileBuildRule extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(BuildContext context) {
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) {
     return actualInputPaths;
   }
 
