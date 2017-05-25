@@ -443,13 +443,15 @@ def diffInternal(
 
 
 def diffAndReturnSeen(starting_refs, left_info, right_info, verbose,
-                      format_tuple, check_paths, seen_keys):
+                      format_tuple, check_paths, seen_keys, excludes):
     queue = collections.deque(starting_refs)
     result = []
     visited_keys = []
     while len(queue) > 0:
         p = queue.popleft()
         label, ref_pair = p
+        if label in excludes:
+            continue
         (left_key, right_key) = ref_pair
         visited_keys.append(ref_pair)
         report, changed_key_pairs_with_labels = diffInternal(
@@ -482,7 +484,7 @@ def diff(name, left_info, right_info, verbose, format_tuple=None,
         raise KeyError('Right log does not contain ' + name)
     result, _ = diffAndReturnSeen([(name, (left_key, right_key))], left_info,
                                   right_info, verbose, format_tuple,
-                                  check_paths, set())
+                                  check_paths, set(), set())
     if not result and left_key != right_key:
         result.append("I don't know why RuleKeys for {} do not match.".format(
             name))
@@ -490,7 +492,7 @@ def diff(name, left_info, right_info, verbose, format_tuple=None,
 
 
 def diffAll(left_info, right_info, verbose, format_tuple=None,
-            check_paths=False):
+            check_paths=False, excludes=set()):
     # Ghetto ordered set implementation.
     seen_left_names = collections.OrderedDict(
         [(k, True) for k in left_info.getAllNames()])
@@ -519,8 +521,8 @@ def diffAll(left_info, right_info, verbose, format_tuple=None,
         all_seen_before = len(all_seen)
         single_result, visited_keys = diffAndReturnSeen(
                 [(name, (left_key, right_key))], left_info, right_info,
-                verbose, format_tuple, check_paths, all_seen)
-        if not single_result and left_key != right_key:
+                verbose, format_tuple, check_paths, all_seen, excludes)
+        if name not in excludes and not single_result and left_key != right_key:
             single_result.append(
                 "I don't know why RuleKeys for {} do not match.".format(name))
         all_results.extend(single_result)
