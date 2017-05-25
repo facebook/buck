@@ -74,6 +74,7 @@ public class CompareAbis extends AbstractBuildRule
 
     Path classAbiPath = sourcePathResolver.getAbsolutePath(classAbi);
     Path sourceAbiPath = sourcePathResolver.getAbsolutePath(sourceAbi);
+    buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
         MkdirStep.of(filesystem, outputPath.getParent()),
         DiffAbisStep.of(classAbiPath, sourceAbiPath, verificationMode),
