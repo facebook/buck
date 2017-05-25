@@ -41,7 +41,7 @@ public class RocksDBIntegrationTest {
 
     workspace
         .runBuckCommand(
-            "build", "--config", "build.metadata_storage=rocksdb", "//:rocksdb_downgrade")
+            "build", "--config", "build.metadata_storage=sqlite", "//:rocksdb_downgrade")
         .assertSuccess();
 
     workspace

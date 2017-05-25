@@ -1960,8 +1960,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   public enum MetadataStorage {
     FILESYSTEM,
     SQLITE,
-    MAPDB,
-    ROCKSDB,
   }
 
   // Wrap an async function in rule resume/suspend events.

@@ -40,10 +40,6 @@ public class BuildInfoStoreManager implements AutoCloseable {
         path -> {
           try {
             switch (getMetadataStorage(filesystem, metadataStorage)) {
-              case ROCKSDB:
-                return new RocksDBBuildInfoStore(filesystem);
-              case MAPDB:
-                return new MapDBBuildInfoStore(filesystem);
               case SQLITE:
                 return new SQLiteBuildInfoStore(filesystem);
               case FILESYSTEM:

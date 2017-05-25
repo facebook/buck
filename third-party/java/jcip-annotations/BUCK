@@ -1,7 +1,0 @@
-prebuilt_jar(
-    name = "jcip-annotations",
-    binary_jar = "jcip-annotations-1.0.jar",
-    visibility = [
-        "PUBLIC",
-    ],
-)

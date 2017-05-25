@@ -371,10 +371,8 @@ java_immutables_library(
         "IndividualTestEvent.java",
         "InitializableFromDisk.java",
         "Manifest.java",
-        "MapDBBuildInfoStore.java",
         "NoopBuildRule.java",
         "OverrideScheduleRule.java",
-        "RocksDBBuildInfoStore.java",
         "RuleDepsCache.java",
         "SQLiteBuildInfoStore.java",
         "SymlinkTree.java",
@@ -431,8 +429,6 @@ java_immutables_library(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/mapdb:mapdb",
-        "//third-party/java/rocksdbjni:rocksdbjni",
         "//third-party/java/sqlite:sqlite",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
@@ -511,44 +507,6 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",
-    ],
-)
-
-java_library(
-    name = "rocksdb-metadata-dumper",
-    srcs = [
-        "RocksDBMetadataDumper.java",
-    ],
-    deps = [
-        "//third-party/java/guava:guava",
-        "//third-party/java/rocksdbjni:rocksdbjni",
-    ],
-)
-
-java_binary(
-    name = "dump-rocksdb-metadata",
-    main_class = "com.facebook.buck.rules.RocksDBMetadataDumper",
-    deps = [
-        ":rocksdb-metadata-dumper",
-    ],
-)
-
-java_library(
-    name = "mapdb-command-line",
-    srcs = [
-        "MapDBCommandLine.java",
-    ],
-    deps = [
-        "//third-party/java/args4j:args4j",
-        "//third-party/java/mapdb:mapdb",
-    ],
-)
-
-java_binary(
-    name = "mapdb",
-    main_class = "com.facebook.buck.rules.MapDBCommandLine",
-    deps = [
-        ":mapdb-command-line",
     ],
 )
 
