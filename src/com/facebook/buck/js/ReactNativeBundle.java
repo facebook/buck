@@ -37,9 +37,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -71,7 +71,7 @@ public class ReactNativeBundle extends AbstractBuildRule
 
   @AddToRuleKey private final String bundleName;
 
-  @AddToRuleKey private final Optional<String> packagerFlags;
+  @AddToRuleKey private final ImmutableList<String> packagerFlags;
 
   private final Path jsOutputDir;
   private final Path resource;
@@ -86,7 +86,7 @@ public class ReactNativeBundle extends AbstractBuildRule
       boolean isDevMode,
       boolean exposeSourceMap,
       String bundleName,
-      Optional<String> packagerFlags,
+      ImmutableList<String> packagerFlags,
       Tool jsPackager,
       ReactNativePlatform platform) {
     super(ruleParams);

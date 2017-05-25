@@ -20,6 +20,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
 import org.immutables.value.Value;
 
 /**

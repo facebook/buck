@@ -28,12 +28,14 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
-import java.nio.file.Paths;
+
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Paths;
 
 public class WorkerToolRuleIntegrationTest {
 
