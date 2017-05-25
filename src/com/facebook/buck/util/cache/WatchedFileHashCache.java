@@ -58,15 +58,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     // Path event, remove the path from the cache as it has been changed, added or deleted.
     Path path = event.getPath().normalize();
     LOG.verbose("Invalidating %s", path);
-    // This can't call invalidate() below because we need to call invalidateOldCache() as
-    // opposed to invalidateOld().
-    long start = System.nanoTime();
-    invalidateNew(path);
-    newCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    start = System.nanoTime();
-    invalidateOldCache(path);
-    oldCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    numberOfInvalidations++;
+    invalidate(path);
   }
 
   // TODO(rvitale): remove block below after the file hash cache experiment is over.
@@ -276,7 +268,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
     invalidateNew(relativePath);
     newCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
     start = System.nanoTime();
-    invalidateOld(relativePath);
+    invalidateOldCache(relativePath);
     oldCacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
     numberOfInvalidations++;
   }
