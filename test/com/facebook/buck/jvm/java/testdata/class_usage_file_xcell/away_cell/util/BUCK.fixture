@@ -1,0 +1,10 @@
+java_library(
+  name = 'util',
+  visibility = [
+    'PUBLIC'
+  ],
+  srcs = [
+    'MoreUtil.java',
+    'Util.java',
+  ],
+)

@@ -121,16 +121,22 @@ public class DefaultClassUsageFileWriterTest {
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.
-    Path expectedAwayCellPath = homeFs.relativize(testTwoJarPath);
-    String expectedAwayCellPathEscaped =
+    Path expectedAwayCellPath =
+        homeFs
+            .getRootPath()
+            .getRoot()
+            .resolve("AwayCell")
+            .resolve(awayFs.relativize(testTwoJarPath));
+    Escaper.Quoter quoter =
         Platform.detect() == Platform.WINDOWS
-            ? Escaper.Quoter.DOUBLE_WINDOWS_JAVAC.quote(expectedAwayCellPath.toString())
-            : Escaper.Quoter.DOUBLE.quote(expectedAwayCellPath.toString());
+            ? Escaper.Quoter.DOUBLE_WINDOWS_JAVAC
+            : Escaper.Quoter.DOUBLE;
+    final String escapedExpectedAwayCellPath = quoter.quote(expectedAwayCellPath.toString());
     assertThat(
         new String(Files.readAllBytes(outputOne)),
         new JsonMatcher(
             String.format(
                 "{" + "\"home.jar\": [\"HomeCellClass\"], %s: [ \"AwayCellClass\" ]" + "}",
-                expectedAwayCellPathEscaped)));
+                escapedExpectedAwayCellPath)));
   }
 }

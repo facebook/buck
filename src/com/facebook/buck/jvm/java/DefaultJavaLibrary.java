@@ -475,6 +475,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
         getProjectFilesystem(),
+        cellPathResolver,
         getProjectFilesystem()
             .getPathForRelativePath(Preconditions.checkNotNull(depFileRelativePath)),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver()));
