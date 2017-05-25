@@ -1,8 +1,9 @@
 <component name="libraryTable">
   <library name="kotlin">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/kotlin/kotlin-runtime-1.0.6.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/kotlin/kotlin-stdlib-1.0.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/kotlin/kotlin-runtime-1.1.2-2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/kotlin/kotlin-stdlib-1.1.2-2.jar!/" />
+      <root url="jar://If i change this here can I squash this without merging?!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
