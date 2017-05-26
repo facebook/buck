@@ -30,12 +30,15 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.TypePath;
 
 /** Tool to get stats about dalvik classes. */
 public class DalvikStatsTool {
@@ -61,6 +64,9 @@ public class DalvikStatsTool {
               Type.getType(Class.class),
               Type.getType("[" + Type.INT_TYPE.getDescriptor()))
           .getDescriptor();
+  // The MULTINEWARRAY call has (e.g.) Integer.TYPE as an argument.
+  private static final String PRIMITIVE_TYPE_FIELD_NAME = "TYPE";
+  private static final String MULTIARRAY_ARG_TYPE = Type.getType(Class.class).getDescriptor();
 
   /** Stats about a java class. */
   public static class Stats {
@@ -144,10 +150,35 @@ public class DalvikStatsTool {
         statsVisitor.fieldReferenceBuilder.build());
   }
 
+  @Nullable
+  private static String getBoxingType(final Type type) {
+    switch (type.getSort()) {
+      case Type.BOOLEAN:
+        return "java/lang/Boolean";
+      case Type.BYTE:
+        return "java/lang/Byte";
+      case Type.SHORT:
+        return "java/lang/Short";
+      case Type.CHAR:
+        return "java/lang/Character";
+      case Type.INT:
+        return "java/lang/Integer";
+      case Type.LONG:
+        return "java/lang/Long";
+      case Type.FLOAT:
+        return "java/lang/Float";
+      case Type.DOUBLE:
+        return "java/lang/Double";
+    }
+    return null;
+  }
+
   private static class StatsClassVisitor extends ClassVisitor {
 
     private final ImmutableMap<Pattern, Integer> penalties;
     private final MethodVisitor methodVisitor = new StatsMethodVisitor();
+    private final FieldVisitor fieldVisitor = new StatsFieldVisitor();
+    private final AnnotationVisitor annotationVisitor = new StatsAnnotationVisitor();
     private int footprint;
     private boolean isInterface;
     private ImmutableSet.Builder<DalvikMemberReference> methodReferenceBuilder;
@@ -197,7 +228,6 @@ public class DalvikStatsTool {
     }
 
     @Override
-    @Nullable
     public FieldVisitor visitField(
         int access, String name, String desc, String signature, Object value) {
       // For non-static fields, Field objects are 16 bytes.
@@ -208,7 +238,7 @@ public class DalvikStatsTool {
       Preconditions.checkNotNull(className, "Must not call visitField before visit");
       fieldReferenceBuilder.add(DalvikMemberReference.of(className, name, desc));
 
-      return null;
+      return fieldVisitor;
     }
 
     @Override
@@ -240,6 +270,17 @@ public class DalvikStatsTool {
       }
     }
 
+    @Override
+    public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+      return annotationVisitor;
+    }
+
+    @Override
+    public AnnotationVisitor visitTypeAnnotation(
+        int typeRef, TypePath typePath, String desc, boolean visible) {
+      return annotationVisitor;
+    }
+
     private class StatsMethodVisitor extends MethodVisitor {
       public StatsMethodVisitor() {
         super(Opcodes.ASM5);
@@ -263,6 +304,96 @@ public class DalvikStatsTool {
         // Array.newInstance(Class clazz, int...dims);
         methodReferenceBuilder.add(
             DalvikMemberReference.of(MULTIARRAY_OWNER, MULTIARRAY_NAME, MULTIARRAY_DESC));
+        String boxingType = getBoxingType(Type.getType(desc).getElementType());
+        if (boxingType != null) {
+          fieldReferenceBuilder.add(
+              DalvikMemberReference.of(boxingType, PRIMITIVE_TYPE_FIELD_NAME, MULTIARRAY_ARG_TYPE));
+        }
+      }
+
+      @Override
+      public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitAnnotationDefault() {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitTypeAnnotation(
+          int typeRef, TypePath typePath, String desc, boolean visible) {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitParameterAnnotation(
+          int parameter, String desc, boolean visible) {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitInsnAnnotation(
+          int typeRef, TypePath typePath, String desc, boolean visible) {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitTryCatchAnnotation(
+          int typeRef, TypePath typePath, String desc, boolean visible) {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitLocalVariableAnnotation(
+          int typeRef,
+          TypePath typePath,
+          Label[] start,
+          Label[] end,
+          int[] index,
+          String desc,
+          boolean visible) {
+        return annotationVisitor;
+      }
+    }
+
+    private class StatsFieldVisitor extends FieldVisitor {
+      public StatsFieldVisitor() {
+        super(Opcodes.ASM5);
+      }
+
+      @Override
+      public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        return annotationVisitor;
+      }
+
+      @Override
+      public AnnotationVisitor visitTypeAnnotation(
+          int typeRef, TypePath typePath, String desc, boolean visible) {
+        return annotationVisitor;
+      }
+    }
+
+    private class StatsAnnotationVisitor extends AnnotationVisitor {
+      public StatsAnnotationVisitor() {
+        super(Opcodes.ASM5);
+      }
+
+      @Override
+      public AnnotationVisitor visitAnnotation(String name, String desc) {
+        return this;
+      }
+
+      @Override
+      public AnnotationVisitor visitArray(String name) {
+        return this;
+      }
+
+      @Override
+      public void visitEnum(String name, String desc, String value) {
+        String ownerName = Type.getType(desc).getInternalName();
+        fieldReferenceBuilder.add(DalvikMemberReference.of(ownerName, value, desc));
       }
     }
   }

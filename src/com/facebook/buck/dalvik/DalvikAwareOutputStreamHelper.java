@@ -35,9 +35,7 @@ import java.util.zip.ZipOutputStream;
 public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
   private static final int MAX_METHOD_REFERENCES = 64 * 1024;
-  // Making this 60k for now instead of 64 because the analyzer doesn't find all field references.
-  // This only comes into play in rare cases, so it's not hi-pri to fix.
-  private static final int MAX_FIELD_REFERENCES = 60 * 1024;
+  private static final int MAX_FIELD_REFERENCES = 64 * 1024;
 
   private final ZipOutputStream outStream;
   private final Set<String> entryNames = Sets.newHashSet();
