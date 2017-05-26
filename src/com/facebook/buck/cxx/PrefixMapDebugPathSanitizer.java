@@ -99,6 +99,9 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   ImmutableList<String> getCompilationFlags() {
+    if (cxxType == CxxToolProvider.Type.WINDOWS) {
+      return ImmutableList.of();
+    }
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     // Two -fdebug-prefix-map flags will be applied in the reverse order, so reverse allPaths.
     Iterable<Map.Entry<Path, Path>> iter = ImmutableList.copyOf(allPaths.entrySet()).reverse();

@@ -139,7 +139,7 @@ public class DefaultCxxPlatforms {
                 Paths.get("."),
                 ImmutableBiMap.of(),
                 filesystem.getRootPath().toAbsolutePath(),
-                CxxToolProvider.Type.GCC,
+                CxxToolProvider.Type.WINDOWS,
                 filesystem);
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
