@@ -241,14 +241,14 @@ public class DalvikStatsTool {
     }
 
     private class StatsMethodVisitor extends MethodVisitor {
+      public StatsMethodVisitor() {
+        super(Opcodes.ASM5);
+      }
+
       @Override
       public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         super.visitFieldInsn(opcode, owner, name, desc);
         fieldReferenceBuilder.add(DalvikMemberReference.of(owner, name, desc));
-      }
-
-      public StatsMethodVisitor() {
-        super(Opcodes.ASM5);
       }
 
       @Override
