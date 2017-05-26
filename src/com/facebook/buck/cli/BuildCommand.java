@@ -41,6 +41,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -649,7 +650,9 @@ public class BuildCommand extends AbstractCommand {
               distBuildLogStateTracker,
               buckVersion,
               distBuildClientStats,
-              Executors.newScheduledThreadPool(1));
+              Executors.newScheduledThreadPool(
+                  1,
+                  new CommandThreadFactory(DistBuildClientExecutor.class.getName() + "Scheduler")));
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       distBuildResult =
           build.executeAndPrintFailuresToEventBus(
