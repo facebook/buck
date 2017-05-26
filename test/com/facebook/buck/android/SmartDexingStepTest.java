@@ -221,7 +221,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
                     filesystem.resolve("classes.dex.jar"),
                     filesystem.resolve("foo.dex.jar"),
                     filesystem.resolve("bar.dex.jar") + ")"),
-            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta"),
+            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
+            "zip-scrub " + filesystem.resolve("classes.dex.jar")),
         steps.build(),
         createMockedExecutionContext());
     verifyAll();

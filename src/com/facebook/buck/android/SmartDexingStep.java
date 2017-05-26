@@ -30,6 +30,7 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -461,6 +462,7 @@ public class SmartDexingStep implements Step {
                 filesystem,
                 outputPath,
                 outputPath.resolveSibling(outputPath.getFileName() + ".meta")));
+        steps.add(ZipScrubberStep.of(filesystem.resolve(outputPath)));
       }
     } else {
       throw new IllegalArgumentException(
