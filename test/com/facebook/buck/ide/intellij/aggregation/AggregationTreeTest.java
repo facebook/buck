@@ -19,6 +19,7 @@ package com.facebook.buck.ide.intellij.aggregation;
 import static com.facebook.buck.ide.intellij.aggregation.AggregationTreeNodeTest.createModule;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.ide.intellij.IjTestProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
@@ -42,7 +43,9 @@ public class AggregationTreeTest {
   @Before
   public void setUp() {
     aggregationTree =
-        new AggregationTree(createModule(Paths.get(""), IjModuleType.UNKNOWN_MODULE, ""));
+        new AggregationTree(
+            IjTestProjectConfig.create(),
+            createModule(Paths.get(""), IjModuleType.UNKNOWN_MODULE, ""));
   }
 
   @Test

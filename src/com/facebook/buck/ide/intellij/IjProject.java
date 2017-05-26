@@ -103,7 +103,8 @@ public class IjProject {
             IjProjectTemplateDataPreparer.createPackageLookupPathSet(moduleGraph),
             javaPackageFinder);
     IjProjectTemplateDataPreparer templateDataPreparer =
-        new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem);
+        new IjProjectTemplateDataPreparer(
+            parsingJavaPackageFinder, moduleGraph, projectFilesystem, projectConfig);
     IjProjectWriter writer =
         new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem);
 

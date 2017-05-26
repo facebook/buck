@@ -1837,6 +1837,19 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'aggregate_android_resource_modules' /}
+  {param example_value: 'true' /}
+  {param description}
+    Forces <code>buck project</code> to aggregate modules with Android resources. This aggregation
+    is performed only if aggregation mode is not <code>none</code>.
+    <p/>
+    <b>Note:</b> using this type of aggregation disables Android layout editor provided by Android
+    plugin. The layout files can still be edited using the XML editor.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}

@@ -18,6 +18,7 @@ package com.facebook.buck.ide.intellij.lang.android;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
+import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
@@ -92,5 +93,12 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
   @Override
   public IjModuleType detectModuleType(TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
     return IjModuleType.ANDROID_RESOURCES_MODULE;
+  }
+
+  @Override
+  public void applyDuringAggregation(
+      AggregationContext context, TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
+    super.applyDuringAggregation(context, targetNode);
+    context.addAggregationKey("package", targetNode.getConstructorArg().getPackage());
   }
 }

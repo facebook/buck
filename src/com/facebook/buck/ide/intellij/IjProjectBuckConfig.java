@@ -105,6 +105,9 @@ public class IjProjectBuckConfig {
         .setIgnoredTargetLabels(
             buckConfig.getListWithoutComments(
                 INTELLIJ_BUCK_CONFIG_SECTION, "ignored_target_labels"))
+        .setAggregatingAndroidResourceModulesEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "aggregate_android_resource_modules", false))
         .build();
   }
 

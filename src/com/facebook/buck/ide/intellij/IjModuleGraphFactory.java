@@ -56,6 +56,7 @@ public final class IjModuleGraphFactory {
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
       ProjectFilesystem projectFilesystem,
+      IjProjectConfig projectConfig,
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
       AggregationModuleFactory aggregationModuleFactory,
@@ -86,7 +87,7 @@ public final class IjModuleGraphFactory {
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =
-        createAggregationTree(aggregationModuleFactory, baseTargetPathMultimap);
+        createAggregationTree(projectConfig, aggregationModuleFactory, baseTargetPathMultimap);
 
     aggregationTree.aggregateModules(minimumPathDepth);
 
@@ -112,6 +113,7 @@ public final class IjModuleGraphFactory {
   }
 
   private static AggregationTree createAggregationTree(
+      IjProjectConfig projectConfig,
       AggregationModuleFactory aggregationModuleFactory,
       ImmutableListMultimap<Path, TargetNode<?, ?>> targetNodesByBasePath) {
     Map<Path, AggregationModule> pathToAggregationModuleMap =
@@ -135,7 +137,7 @@ public final class IjModuleGraphFactory {
           aggregationModuleFactory.createAggregationModule(rootPath, ImmutableSet.of());
     }
 
-    AggregationTree aggregationTree = new AggregationTree(rootAggregationModule);
+    AggregationTree aggregationTree = new AggregationTree(projectConfig, rootAggregationModule);
 
     pathToAggregationModuleMap
         .entrySet()
@@ -167,6 +169,7 @@ public final class IjModuleGraphFactory {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
             projectFilesystem,
+            projectConfig,
             targetGraph,
             moduleFactory,
             aggregationModuleFactory,

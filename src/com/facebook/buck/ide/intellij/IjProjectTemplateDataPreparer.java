@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.DependencyType;
@@ -23,6 +24,7 @@ import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
@@ -69,22 +71,25 @@ public class IjProjectTemplateDataPreparer {
 
   private static final String EMPTY_STRING = "";
 
-  private JavaPackageFinder javaPackageFinder;
-  private IjModuleGraph moduleGraph;
-  private ProjectFilesystem projectFilesystem;
-  private IjSourceRootSimplifier sourceRootSimplifier;
-  private ImmutableSet<Path> referencedFolderPaths;
-  private ImmutableSet<Path> filesystemTraversalBoundaryPaths;
-  private ImmutableSet<IjModule> modulesToBeWritten;
-  private ImmutableSet<IjLibrary> librariesToBeWritten;
+  private final JavaPackageFinder javaPackageFinder;
+  private final IjModuleGraph moduleGraph;
+  private final ProjectFilesystem projectFilesystem;
+  private final IjProjectConfig projectConfig;
+  private final IjSourceRootSimplifier sourceRootSimplifier;
+  private final ImmutableSet<Path> referencedFolderPaths;
+  private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
+  private final ImmutableSet<IjModule> modulesToBeWritten;
+  private final ImmutableSet<IjLibrary> librariesToBeWritten;
 
   public IjProjectTemplateDataPreparer(
       JavaPackageFinder javaPackageFinder,
       IjModuleGraph moduleGraph,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      IjProjectConfig projectConfig) {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
+    this.projectConfig = projectConfig;
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.librariesToBeWritten = moduleGraph.getLibraries();
@@ -328,6 +333,10 @@ public class IjProjectTemplateDataPreparer {
 
     androidProperties.put("is_android_library_project", androidFacet.isAndroidLibrary());
     androidProperties.put("autogenerate_sources", androidFacet.autogenerateSources());
+    androidProperties.put(
+        "disallow_user_configuration",
+        projectConfig.isAggregatingAndroidResourceModulesEnabled()
+            && projectConfig.getAggregationMode() != AggregationMode.NONE);
 
     Path basePath = module.getModuleBasePath();
 
@@ -418,15 +427,15 @@ public class IjProjectTemplateDataPreparer {
     if (resourcePaths.isEmpty()) {
       androidProperties.put(RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER, EMPTY_STRING);
     } else {
-      Set<Path> relativeResourcePaths = new HashSet<>(resourcePaths.size());
+      Set<String> relativeResourcePaths = new HashSet<>(resourcePaths.size());
       Path moduleBase = module.getModuleBasePath();
       for (Path resourcePath : resourcePaths) {
-        relativeResourcePaths.add(moduleBase.relativize(resourcePath));
+        relativeResourcePaths.add(
+            IjProjectPaths.toModuleDirRelativeString(resourcePath, moduleBase));
       }
 
       androidProperties.put(
-          RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER,
-          "/" + Joiner.on(";/").join(relativeResourcePaths));
+          RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER, Joiner.on(";").join(relativeResourcePaths));
     }
   }
 

@@ -61,8 +61,8 @@ public enum IjModuleType {
     }
 
     @Override
-    public boolean canBeAggregated() {
-      return false;
+    public boolean canBeAggregated(IjProjectConfig projectConfig) {
+      return projectConfig.isAggregatingAndroidResourceModulesEnabled();
     }
   },
 
@@ -127,7 +127,8 @@ public enum IjModuleType {
 
   public abstract String getSdkType(IjProjectConfig projectConfig);
 
-  public boolean canBeAggregated() {
+  @SuppressWarnings("unused")
+  public boolean canBeAggregated(IjProjectConfig projectConfig) {
     return true;
   }
 

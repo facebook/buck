@@ -7,6 +7,9 @@
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+%if(androidFacet.disallow_user_configuration)%
+        <option name="ALLOW_USER_CONFIGURATION" value="false" />
+%endif%
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="%androidFacet.module_gen_path%" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%androidFacet.module_gen_path%" />
 %if(androidFacet.android_manifest)%

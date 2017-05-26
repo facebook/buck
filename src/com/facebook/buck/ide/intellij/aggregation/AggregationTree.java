@@ -19,6 +19,7 @@ package com.facebook.buck.ide.intellij.aggregation;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
+import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
@@ -50,9 +51,11 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
 
   private static final Logger LOG = Logger.get(AggregationTree.class);
 
+  private final IjProjectConfig projectConfig;
   private final AggregationTreeNode rootNode;
 
-  public AggregationTree(AggregationModule module) {
+  public AggregationTree(IjProjectConfig projectConfig, AggregationModule module) {
+    this.projectConfig = projectConfig;
     this.rootNode = new AggregationTreeNode(module);
   }
 
@@ -126,7 +129,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
                 return;
               }
               if (IjModuleType.UNKNOWN_MODULE.equals(module.getModuleType())
-                  || !module.getModuleType().canBeAggregated()) {
+                  || !module.getModuleType().canBeAggregated(projectConfig)) {
                 return;
               }
               String aggregationTag = module.getAggregationTag();
@@ -153,7 +156,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
 
     AggregationModule nodeModule = parentNode.getModule();
 
-    if (nodeModule != null && !nodeModule.getModuleType().canBeAggregated()) {
+    if (nodeModule != null && !nodeModule.getModuleType().canBeAggregated(projectConfig)) {
       return;
     }
 
