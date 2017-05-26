@@ -390,7 +390,6 @@ public class AppleTestDescription
               resolver,
               cellRoots,
               args,
-              args::withExportedDeps,
               // For now, instead of building all deps as dylibs and fixing up their install_names,
               // we'll just link them statically.
               Optional.of(Linker.LinkableDepType.STATIC),

@@ -69,7 +69,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class AppleLibraryDescription
@@ -203,7 +202,6 @@ public class AppleLibraryDescription
           resolver,
           cellRoots,
           args,
-          args::withExportedDeps,
           args.getLinkStyle(),
           Optional.empty(),
           ImmutableSet.of(),
@@ -268,7 +266,6 @@ public class AppleLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       A args,
-      Function<ImmutableSortedSet<BuildTarget>, A> copyArgsWithNewExportedDeps,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
@@ -289,7 +286,6 @@ public class AppleLibraryDescription
             cellRoots,
             targetGraph,
             args,
-            copyArgsWithNewExportedDeps,
             linkableDepType,
             bundleLoader,
             blacklist,
@@ -342,7 +338,6 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       TargetGraph targetGraph,
       A args,
-      Function<ImmutableSortedSet<BuildTarget>, A> copyArgsWithNewExportedDeps,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
@@ -361,7 +356,6 @@ public class AppleLibraryDescription
                 cellRoots,
                 targetGraph,
                 args,
-                copyArgsWithNewExportedDeps,
                 linkableDepType,
                 bundleLoader,
                 blacklist,
@@ -383,7 +377,6 @@ public class AppleLibraryDescription
           cellRoots,
           targetGraph,
           args,
-          copyArgsWithNewExportedDeps,
           linkableDepType,
           bundleLoader,
           blacklist,
@@ -399,13 +392,16 @@ public class AppleLibraryDescription
           CellPathResolver cellRoots,
           TargetGraph targetGraph,
           A args,
-          Function<ImmutableSortedSet<BuildTarget>, A> copyArgsWithNewExportedDeps,
           Optional<Linker.LinkableDepType> linkableDepType,
           Optional<SourcePath> bundleLoader,
           ImmutableSet<BuildTarget> blacklist,
           SourcePathResolver pathResolver,
           ImmutableSortedSet<BuildTarget> extraCxxDeps)
           throws NoSuchBuildTargetException {
+
+    CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        pathResolver, delegateArg, args, params.getBuildTarget());
 
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.createCompanionBuildRule(targetGraph, params, resolver, cellRoots, args);
@@ -415,24 +411,10 @@ public class AppleLibraryDescription
       if (isSwiftTarget(params.getBuildTarget())) {
         return swiftCompanionBuildRule.get();
       } else {
-        args =
-            copyArgsWithNewExportedDeps.apply(
-                ImmutableSortedSet.<BuildTarget>naturalOrder()
-                    .addAll(args.getExportedDeps())
-                    .add(swiftCompanionBuildRule.get().getBuildTarget())
-                    .build());
+        delegateArg.addExportedDeps(swiftCompanionBuildRule.get().getBuildTarget());
         params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
-        extraCxxDeps =
-            ImmutableSortedSet.<BuildTarget>naturalOrder()
-                .addAll(extraCxxDeps)
-                .add(swiftCompanionBuildRule.get().getBuildTarget())
-                .build();
       }
     }
-
-    CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
-    AppleDescriptions.populateCxxLibraryDescriptionArg(
-        pathResolver, delegateArg, args, params.getBuildTarget());
 
     // remove some flavors from cxx rule that don't affect the rule output
     BuildTarget unstrippedTarget =
