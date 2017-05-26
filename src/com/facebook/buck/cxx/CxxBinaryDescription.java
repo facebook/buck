@@ -201,41 +201,8 @@ public class CxxBinaryDescription
           resolver);
     }
 
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get())) {
-      return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
-      return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
-      return CxxInferEnhancer.requireAllTransitiveCaptureBuildRules(
-          params,
-          resolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ONLY.get())) {
-      return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
+    if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)) {
+      return CxxInferEnhancer.requireInferRule(
           params,
           resolver,
           cxxBuckConfig,
@@ -349,9 +316,9 @@ public class CxxBinaryDescription
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
                 CxxCompilationDatabase.COMPILATION_DATABASE,
                 CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
-                CxxInferEnhancer.InferFlavors.INFER.get(),
-                CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get(),
-                CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get(),
+                CxxInferEnhancer.InferFlavors.INFER.getFlavor(),
+                CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor(),
+                CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor(),
                 StripStyle.ALL_SYMBOLS.getFlavor(),
                 StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
                 StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),

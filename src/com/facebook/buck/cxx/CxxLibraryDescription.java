@@ -161,9 +161,9 @@ public class CxxLibraryDescription
     return cxxPlatforms.containsAnyOf(flavors)
         || flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
-        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get())
-        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())
-        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())
+        || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
+        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor())
+        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
         || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
         || LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors);
   }
@@ -704,47 +704,9 @@ public class CxxLibraryDescription
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           platform.isPresent() ? params : params.withAppendedFlavor(defaultCxxPlatform.getFlavor()),
           resolver);
-    } else if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxInferEnhancer.InferFlavors.INFER.get())) {
-      return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          cxxBuckConfig,
-          platform.orElse(defaultCxxPlatform),
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    } else if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
-      return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          cxxBuckConfig,
-          platform.orElse(defaultCxxPlatform),
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    } else if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
-      return CxxInferEnhancer.requireAllTransitiveCaptureBuildRules(
-          params,
-          resolver,
-          cxxBuckConfig,
-          platform.orElse(defaultCxxPlatform),
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
-    } else if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ONLY.get())) {
-      return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
+    } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(
+        params.getBuildTarget().getFlavors())) {
+      return CxxInferEnhancer.requireInferRule(
           params,
           resolver,
           cxxBuckConfig,

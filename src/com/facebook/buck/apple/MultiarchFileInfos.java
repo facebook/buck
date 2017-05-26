@@ -156,7 +156,7 @@ public class MultiarchFileInfos {
 
   private static final ImmutableSet<Flavor> FORBIDDEN_BUILD_ACTIONS =
       ImmutableSet.<Flavor>builder()
-          .addAll(CxxInferEnhancer.InferFlavors.getAll())
+          .addAll(CxxInferEnhancer.INFER_FLAVOR_DOMAIN.getFlavors())
           .add(CxxCompilationDatabase.COMPILATION_DATABASE)
           .build();
 }

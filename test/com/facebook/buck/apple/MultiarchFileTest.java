@@ -185,7 +185,7 @@ public class MultiarchFileTest {
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors =
         ImmutableList.<Flavor>builder()
-            .addAll(CxxInferEnhancer.InferFlavors.getAll())
+            .addAll(CxxInferEnhancer.INFER_FLAVOR_DOMAIN.getFlavors())
             .add(CxxCompilationDatabase.COMPILATION_DATABASE)
             .build();
 

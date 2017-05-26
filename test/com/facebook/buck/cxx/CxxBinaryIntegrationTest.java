@@ -98,7 +98,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .getFullyQualifiedName();
 
     /*
@@ -134,11 +134,11 @@ public class CxxBinaryIntegrationTest {
 
     // this is flavored, and denotes the analysis step (generates a local report)
     BuildTarget inferAnalysisTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     // this is the flavored version of the top level target (the one give in input to buck)
     BuildTarget inferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -175,7 +175,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     final String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .getFullyQualifiedName();
 
     /*
@@ -212,10 +212,10 @@ public class CxxBinaryIntegrationTest {
         cxxSourceRuleFactory.createInferCaptureBuildTarget(sourceName);
 
     BuildTarget topInferAnalysisTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     BuildTarget topInferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     BuildTarget depOneBuildTarget =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:dep_one");
@@ -229,7 +229,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget depOneInferAnalysisTarget =
         depOneCaptureBuildTarget.withFlavors(
-            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     BuildTarget depTwoBuildTarget =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:dep_two");
@@ -242,7 +242,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget depTwoInferAnalysisTarget =
         depTwoCaptureBuildTarget.withFlavors(
-            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     ImmutableSet<String> locallyBuiltTargets =
         ImmutableSet.of(
@@ -299,7 +299,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .getFullyQualifiedName();
 
     /*
@@ -327,11 +327,11 @@ public class CxxBinaryIntegrationTest {
             inputBuildTarget, cxxPlatform.getFlavor());
     // this is flavored, and denotes the analysis step (generates a local report)
     BuildTarget inferAnalysisTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     // this is flavored and corresponds to the top level target (the one give in input to buck)
     BuildTarget inferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -402,7 +402,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .getFullyQualifiedName();
 
     /*
@@ -433,11 +433,11 @@ public class CxxBinaryIntegrationTest {
 
     // this is flavored, and denotes the analysis step (generates a local report)
     BuildTarget topInferAnalysisTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     // this is flavored and corresponds to the top level target (the one give in input to buck)
     BuildTarget topInferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     BuildTarget topAggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -470,7 +470,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget depOneInferAnalysisTarget =
         depOneCaptureBuildTarget.withFlavors(
-            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     BuildTarget depOneAggregatedDepsTarget =
         depOneSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -501,7 +501,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget depTwoInferAnalysisTarget =
         depTwoCaptureBuildTarget.withFlavors(
-            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
+            cxxPlatform.getFlavor(), CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor());
 
     BuildTarget depTwoAggregatedDepsTarget =
         depTwoSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -593,7 +593,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
@@ -724,7 +724,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//:cxxbinary")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // run from primary workspace
     ProjectWorkspace.ProcessResult result =
@@ -753,7 +753,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
     String buildTargetName = inputBuildTarget.getFullyQualifiedName();
 
     /*
@@ -874,7 +874,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
     String buildTargetName = inputBuildTarget.getFullyQualifiedName();
 
     /*
@@ -962,7 +962,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
             .getFullyQualifiedName();
 
     /*
@@ -1040,7 +1040,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//foo:binary_with_unused_header");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
             .getFullyQualifiedName();
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
@@ -1093,7 +1093,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
     // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
@@ -1172,7 +1172,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .getFullyQualifiedName();
 
     // Build the given target and check that it succeeds.
@@ -1226,7 +1226,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
         inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .getFullyQualifiedName();
 
     // Build the given target and check that it succeeds.
@@ -1278,7 +1278,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     /*
      * Build the given target and check that it succeeds.
@@ -1327,7 +1327,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     /*
      * Build the given target and check that it succeeds.
@@ -1354,7 +1354,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     //Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
@@ -1362,7 +1362,8 @@ public class CxxBinaryIntegrationTest {
     String specsPathList =
         BuildTargets.getGenPath(
                 filesystem,
-                inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()),
+                inputBuildTarget.withFlavors(
+                    CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor()),
                 "infer-analysis-%s/specs_path_list.txt")
             .toString();
     String out = workspace.getFileContents(specsPathList);

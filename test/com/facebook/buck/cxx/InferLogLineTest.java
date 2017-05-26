@@ -42,7 +42,7 @@ public class InferLogLineTest {
             .setUnflavoredBuildTarget(
                 UnflavoredBuildTarget.of(
                     Paths.get("/User/user/src"), Optional.empty(), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
     InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("buck-out/a/b/c/"));
@@ -56,7 +56,7 @@ public class InferLogLineTest {
             .setUnflavoredBuildTarget(
                 UnflavoredBuildTarget.of(
                     Paths.get("/User/user/src"), Optional.of("cellname"), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
     String expectedOutput = "cellname//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
@@ -74,7 +74,7 @@ public class InferLogLineTest {
             .setUnflavoredBuildTarget(
                 UnflavoredBuildTarget.of(
                     Paths.get("/User/user/src"), Optional.empty(), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
     String expectedOutput = "//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";

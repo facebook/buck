@@ -19,6 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -38,14 +40,18 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/** Handles infer flavors for {@link CxxLibrary} and {@link CxxBinary}. */
 public final class CxxInferEnhancer {
 
   private CxxInferEnhancer() {}
 
-  public enum InferFlavors {
+  /** Flavor adorning the individual inter capture rules. */
+  static final InternalFlavor INFER_CAPTURE_FLAVOR = InternalFlavor.of("infer-capture");
+
+  /** Flavors affixed to a library or binary rule to run infer. */
+  public enum InferFlavors implements FlavorConvertible {
     INFER(InternalFlavor.of("infer")),
     INFER_ANALYZE(InternalFlavor.of("infer-analyze")),
-    INFER_CAPTURE(InternalFlavor.of("infer-capture")),
     INFER_CAPTURE_ALL(InternalFlavor.of("infer-capture-all")),
     INFER_CAPTURE_ONLY(InternalFlavor.of("infer-capture-only"));
 
@@ -55,22 +61,15 @@ public final class CxxInferEnhancer {
       this.flavor = flavor;
     }
 
-    public InternalFlavor get() {
+    @Override
+    public InternalFlavor getFlavor() {
       return flavor;
-    }
-
-    public static ImmutableSet<InternalFlavor> getAll() {
-      ImmutableSet.Builder<InternalFlavor> builder = ImmutableSet.builder();
-      for (InferFlavors f : values()) {
-        builder.add(f.get());
-      }
-      return builder.build();
     }
 
     private static BuildRuleParams paramsWithoutAnyInferFlavor(BuildRuleParams params) {
       BuildRuleParams result = params;
       for (InferFlavors f : values()) {
-        result = result.withoutFlavor(f.get());
+        result = result.withoutFlavor(f.getFlavor());
       }
       return result;
     }
@@ -78,31 +77,54 @@ public final class CxxInferEnhancer {
     private static void checkNoInferFlavors(ImmutableSet<Flavor> flavors) {
       for (InferFlavors f : InferFlavors.values()) {
         Preconditions.checkArgument(
-            !flavors.contains(f.get()), "Unexpected infer-related flavor found: %s", f.toString());
+            !flavors.contains(f.getFlavor()),
+            "Unexpected infer-related flavor found: %s",
+            f.toString());
       }
     }
   }
 
-  public static ImmutableMap<String, CxxSource> collectSources(
-      BuildTarget buildTarget,
-      BuildRuleResolver ruleResolver,
-      CxxPlatform cxxPlatform,
-      CxxConstructorArg args) {
-    InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    return CxxDescriptionEnhancer.parseCxxSources(
-        buildTarget, ruleResolver, ruleFinder, pathResolver, cxxPlatform, args);
-  }
+  public static FlavorDomain<InferFlavors> INFER_FLAVOR_DOMAIN =
+      FlavorDomain.from("Infer flavors", InferFlavors.class);
 
-  public static BuildRule requireAllTransitiveCaptureBuildRules(
+  public static BuildRule requireInferRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      CxxConstructorArg args,
       InferBuckConfig inferBuckConfig,
-      CxxInferSourceFilter sourceFilter,
-      CxxConstructorArg args)
+      CxxInferSourceFilter sourceFilter)
+      throws NoSuchBuildTargetException {
+    Optional<InferFlavors> inferFlavor = INFER_FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    Preconditions.checkArgument(
+        inferFlavor.isPresent(), "Expected BuildRuleParams to contain infer flavor.");
+    switch (inferFlavor.get()) {
+      case INFER:
+        return requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
+            params, ruleResolver, cxxBuckConfig, cxxPlatform, args, inferBuckConfig, sourceFilter);
+      case INFER_ANALYZE:
+        return requireInferAnalyzeBuildRuleForCxxDescriptionArg(
+            params, ruleResolver, cxxBuckConfig, cxxPlatform, args, inferBuckConfig, sourceFilter);
+      case INFER_CAPTURE_ALL:
+        return requireAllTransitiveCaptureBuildRules(
+            params, ruleResolver, cxxBuckConfig, cxxPlatform, args, inferBuckConfig, sourceFilter);
+      case INFER_CAPTURE_ONLY:
+        return requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
+            params, ruleResolver, cxxBuckConfig, cxxPlatform, args, inferBuckConfig, sourceFilter);
+    }
+    throw new IllegalStateException(
+        "All InferFlavor cases should be handled, got: " + inferFlavor.get());
+  }
+
+  private static BuildRule requireAllTransitiveCaptureBuildRules(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      CxxConstructorArg args,
+      InferBuckConfig inferBuckConfig,
+      CxxInferSourceFilter sourceFilter)
       throws NoSuchBuildTargetException {
 
     CxxInferCaptureRulesAggregator aggregator =
@@ -120,7 +142,7 @@ public final class CxxInferEnhancer {
             captureRules));
   }
 
-  public static CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
+  private static CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxBuckConfig cxxBuckConfig,
@@ -133,7 +155,7 @@ public final class CxxInferEnhancer {
     BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
 
     BuildRuleParams paramsWithInferFlavor =
-        cleanParams.withAppendedFlavor(InferFlavors.INFER.get());
+        cleanParams.withAppendedFlavor(InferFlavors.INFER.getFlavor());
 
     Optional<CxxInferComputeReport> existingRule =
         resolver.getRuleOptionalWithType(
@@ -146,6 +168,85 @@ public final class CxxInferEnhancer {
         requireInferAnalyzeBuildRuleForCxxDescriptionArg(
             cleanParams, resolver, cxxBuckConfig, cxxPlatform, args, inferConfig, sourceFilter);
     return createInferReportRule(paramsWithInferFlavor, resolver, analysisRule);
+  }
+
+  private static CxxInferAnalyze requireInferAnalyzeBuildRuleForCxxDescriptionArg(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      CxxConstructorArg args,
+      InferBuckConfig inferConfig,
+      CxxInferSourceFilter sourceFilter)
+      throws NoSuchBuildTargetException {
+
+    Flavor inferAnalyze = InferFlavors.INFER_ANALYZE.getFlavor();
+
+    BuildRuleParams paramsWithInferAnalyzeFlavor =
+        InferFlavors.paramsWithoutAnyInferFlavor(params).withAppendedFlavor(inferAnalyze);
+
+    Optional<CxxInferAnalyze> existingRule =
+        resolver.getRuleOptionalWithType(
+            paramsWithInferAnalyzeFlavor.getBuildTarget(), CxxInferAnalyze.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> cxxInferCaptureAndAnalyzeRules =
+        requireTransitiveCaptureAndAggregatingRules(
+            params,
+            resolver,
+            cxxBuckConfig,
+            cxxPlatform,
+            args,
+            inferConfig,
+            sourceFilter,
+            inferAnalyze,
+            CxxInferAnalyze.class);
+
+    return createInferAnalyzeRule(
+        paramsWithInferAnalyzeFlavor, resolver, inferConfig, cxxInferCaptureAndAnalyzeRules);
+  }
+
+  private static CxxInferCaptureRulesAggregator
+      requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
+          BuildRuleParams params,
+          BuildRuleResolver resolver,
+          CxxBuckConfig cxxBuckConfig,
+          CxxPlatform cxxPlatform,
+          CxxConstructorArg args,
+          InferBuckConfig inferConfig,
+          CxxInferSourceFilter sourceFilter)
+          throws NoSuchBuildTargetException {
+
+    Flavor inferCaptureOnly = InferFlavors.INFER_CAPTURE_ONLY.getFlavor();
+
+    BuildRuleParams paramsWithInferCaptureOnlyFlavor =
+        InferFlavors.paramsWithoutAnyInferFlavor(params).withAppendedFlavor(inferCaptureOnly);
+
+    Optional<CxxInferCaptureRulesAggregator> existingRule =
+        resolver.getRuleOptionalWithType(
+            paramsWithInferCaptureOnlyFlavor.getBuildTarget(),
+            CxxInferCaptureRulesAggregator.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
+        cxxInferCaptureAndAnalyzeRules =
+            requireTransitiveCaptureAndAggregatingRules(
+                params,
+                resolver,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                inferConfig,
+                sourceFilter,
+                inferCaptureOnly,
+                CxxInferCaptureRulesAggregator.class);
+
+    return createInferCaptureAggregatorRule(
+        paramsWithInferCaptureOnlyFlavor, resolver, cxxInferCaptureAndAnalyzeRules);
   }
 
   private static <T extends BuildRule>
@@ -186,83 +287,16 @@ public final class CxxInferEnhancer {
     return new CxxInferCaptureAndAggregatingRules<>(captureRules, transitiveDepsLibraryRules);
   }
 
-  public static CxxInferAnalyze requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxBuckConfig cxxBuckConfig,
+  private static ImmutableMap<String, CxxSource> collectSources(
+      BuildTarget buildTarget,
+      BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
-      CxxConstructorArg args,
-      InferBuckConfig inferConfig,
-      CxxInferSourceFilter sourceFilter)
-      throws NoSuchBuildTargetException {
-
-    Flavor inferAnalyze = InferFlavors.INFER_ANALYZE.get();
-
-    BuildRuleParams paramsWithInferAnalyzeFlavor =
-        InferFlavors.paramsWithoutAnyInferFlavor(params).withAppendedFlavor(inferAnalyze);
-
-    Optional<CxxInferAnalyze> existingRule =
-        resolver.getRuleOptionalWithType(
-            paramsWithInferAnalyzeFlavor.getBuildTarget(), CxxInferAnalyze.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
-    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> cxxInferCaptureAndAnalyzeRules =
-        requireTransitiveCaptureAndAggregatingRules(
-            params,
-            resolver,
-            cxxBuckConfig,
-            cxxPlatform,
-            args,
-            inferConfig,
-            sourceFilter,
-            inferAnalyze,
-            CxxInferAnalyze.class);
-
-    return createInferAnalyzeRule(
-        paramsWithInferAnalyzeFlavor, resolver, inferConfig, cxxInferCaptureAndAnalyzeRules);
-  }
-
-  public static CxxInferCaptureRulesAggregator
-      requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
-          BuildRuleParams params,
-          BuildRuleResolver resolver,
-          CxxBuckConfig cxxBuckConfig,
-          CxxPlatform cxxPlatform,
-          CxxConstructorArg args,
-          InferBuckConfig inferConfig,
-          CxxInferSourceFilter sourceFilter)
-          throws NoSuchBuildTargetException {
-
-    Flavor inferCaptureOnly = InferFlavors.INFER_CAPTURE_ONLY.get();
-
-    BuildRuleParams paramsWithInferCaptureOnlyFlavor =
-        InferFlavors.paramsWithoutAnyInferFlavor(params).withAppendedFlavor(inferCaptureOnly);
-
-    Optional<CxxInferCaptureRulesAggregator> existingRule =
-        resolver.getRuleOptionalWithType(
-            paramsWithInferCaptureOnlyFlavor.getBuildTarget(),
-            CxxInferCaptureRulesAggregator.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
-    CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
-        cxxInferCaptureAndAnalyzeRules =
-            requireTransitiveCaptureAndAggregatingRules(
-                params,
-                resolver,
-                cxxBuckConfig,
-                cxxPlatform,
-                args,
-                inferConfig,
-                sourceFilter,
-                inferCaptureOnly,
-                CxxInferCaptureRulesAggregator.class);
-
-    return createInferCaptureAggregatorRule(
-        paramsWithInferCaptureOnlyFlavor, resolver, cxxInferCaptureAndAnalyzeRules);
+      CxxConstructorArg args) {
+    InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    return CxxDescriptionEnhancer.parseCxxSources(
+        buildTarget, ruleResolver, ruleFinder, pathResolver, cxxPlatform, args);
   }
 
   private static <T extends BuildRule> ImmutableSet<T> requireTransitiveDependentLibraries(

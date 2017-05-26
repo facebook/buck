@@ -1351,7 +1351,7 @@ public class CxxLibraryDescriptionTest {
             ruleBuilder
                 .getTarget()
                 .withFlavors(
-                    CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get(),
+                    CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor(),
                     CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
     assertThat(
         RichStream.from(rule.getBuildDeps())

@@ -253,8 +253,7 @@ abstract class AbstractCxxSourceRuleFactory {
         .addFlavors(
             InternalFlavor.of(
                 String.format(
-                    "%s-%s",
-                    CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get().toString(), outputName)))
+                    "%s-%s", CxxInferEnhancer.INFER_CAPTURE_FLAVOR.toString(), outputName)))
         .build();
   }
 

@@ -121,7 +121,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             .setUnflavoredBuildTarget(
                 UnflavoredBuildTarget.of(
                     filesystem.getRootPath(), Optional.empty(), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
     BuildRuleParams testBuildRuleParams =
@@ -164,7 +164,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             .setUnflavoredBuildTarget(
                 UnflavoredBuildTarget.of(
                     filesystem.getRootPath(), Optional.of(cellName), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
     BuildRuleParams testBuildRuleParams =
@@ -208,7 +208,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     Optional.of("cell1"),
                     "//target/in_cell_one",
                     "short1"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
     BuildRuleParams buildRuleParams1 =
         new FakeBuildRuleParamsBuilder(buildTarget1).setProjectFilesystem(filesystem1).build();
@@ -223,7 +223,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     Optional.of("cell2"),
                     "//target/in_cell_two",
                     "short2"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get())
+            .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
             .build();
     BuildRuleParams buildRuleParams2 =
         new FakeBuildRuleParamsBuilder(buildTarget2).setProjectFilesystem(filesystem2).build();
@@ -277,7 +277,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     Optional.empty(),
                     "//target/in_default_cell",
                     "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
     BuildRuleParams buildRuleParams1 =
         new FakeBuildRuleParamsBuilder(buildTarget1).setProjectFilesystem(filesystem1).build();
@@ -292,7 +292,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     Optional.of("cell2"),
                     "//target/in_cell_two",
                     "short2"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get())
+            .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
             .build();
     BuildRuleParams buildRuleParams2 =
         new FakeBuildRuleParamsBuilder(buildTarget2).setProjectFilesystem(filesystem2).build();
