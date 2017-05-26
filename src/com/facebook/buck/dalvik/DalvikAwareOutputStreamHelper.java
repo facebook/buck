@@ -45,8 +45,8 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private final Writer reportFileWriter;
   private final DalvikStatsCache dalvikStatsCache;
 
-  private final Set<DalvikStatsTool.MethodReference> currentMethodReferences = Sets.newHashSet();
-  private final Set<DalvikStatsTool.FieldReference> currentFieldReferences = Sets.newHashSet();
+  private final Set<DalvikMemberReference> currentMethodReferences = Sets.newHashSet();
+  private final Set<DalvikMemberReference> currentFieldReferences = Sets.newHashSet();
   private long currentLinearAllocSize;
 
   DalvikAwareOutputStreamHelper(

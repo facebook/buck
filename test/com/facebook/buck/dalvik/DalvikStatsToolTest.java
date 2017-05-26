@@ -251,7 +251,7 @@ public class DalvikStatsToolTest {
     return Joiner.on("\n").join(args);
   }
 
-  private static void assertReferences(Set<?> references, String... methods) {
+  private static void assertReferences(Set<DalvikMemberReference> references, String... methods) {
     Set<String> actual = Sets.newHashSet(Iterables.transform(references, Object::toString));
     Set<String> expected = Sets.newHashSet(methods);
 

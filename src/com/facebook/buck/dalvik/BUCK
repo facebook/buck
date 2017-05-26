@@ -1,6 +1,7 @@
-java_library(
+java_immutables_library(
     name = "dalvik_stats_tool",
     srcs = [
+        "AbstractDalvikMemberReference.java",
         "DalvikStatsTool.java",
     ],
     tests = [
