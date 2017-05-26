@@ -88,6 +88,8 @@ public class DalvikStatsTool {
 
   /** CLI wrapper to run against every class in a set of JARs. */
   public static void main(String[] args) throws IOException {
+    ImmutableSet.Builder<DalvikMemberReference> allFields = ImmutableSet.builder();
+
     for (String fname : args) {
       try (ZipFile inJar = new ZipFile(fname)) {
         for (ZipEntry entry : Collections.list(inJar.entries())) {
@@ -95,11 +97,20 @@ public class DalvikStatsTool {
             continue;
           }
           InputStream rawClass = inJar.getInputStream(entry);
-          int footprint = getEstimate(rawClass).estimatedLinearAllocSize;
-          System.out.println(footprint + "\t" + entry.getName().replace(".class", ""));
+          Stats stats = getEstimate(rawClass);
+          System.out.println(
+              stats.estimatedLinearAllocSize + "\t" + entry.getName().replace(".class", ""));
+          allFields.addAll(stats.fieldReferences);
         }
       }
     }
+
+    // Uncomment to debug fields.
+    //    System.out.println();
+    //
+    //    for (DalvikMemberReference field : allFields.build()) {
+    //      System.out.println(field);
+    //    }
   }
 
   /**
