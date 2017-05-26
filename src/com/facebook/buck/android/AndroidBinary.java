@@ -93,7 +93,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -1020,6 +1022,7 @@ public class AndroidBinary extends AbstractBuildRule
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
           public StepExecutionResult execute(ExecutionContext context) {
+            Map<String, Path> classesToSources = new HashMap<>();
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
                   AccumulateClassNamesStep.calculateClassHashes(
@@ -1028,6 +1031,16 @@ public class AndroidBinary extends AbstractBuildRule
                 return StepExecutionResult.ERROR;
               }
               builder.putAll(hashes.get());
+
+              for (String className : hashes.get().keySet()) {
+                if (classesToSources.containsKey(className)) {
+                  throw new IllegalArgumentException(
+                      String.format(
+                          "Duplicate class: %s was found in both %s and %s.",
+                          className, classesToSources.get(className), path));
+                }
+                classesToSources.put(className, path);
+              }
             }
             return StepExecutionResult.SUCCESS;
           }
