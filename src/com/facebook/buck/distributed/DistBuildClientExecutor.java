@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
+import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
@@ -48,10 +49,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -72,6 +75,7 @@ public class DistBuildClientExecutor {
   private final ScheduledExecutorService scheduler;
   private final int statusPollIntervalMillis;
   private final Map<RunId, Integer> nextEventIdBySlaveRunId = new HashMap<>();
+  private final Set<String> seenSlaveRunIds = new HashSet<>();
 
   public static class ExecutionResult {
     public final StampedeId stampedeId;
@@ -205,6 +209,15 @@ public class DistBuildClientExecutor {
       postDistBuildStatusEvent(eventBus, job, ImmutableList.of());
       checkTerminateScheduledUpdates(job, Optional.empty());
       return job;
+    }
+
+    for (Map.Entry<String, BuildSlaveInfo> slave : job.getSlaveInfoByRunId().entrySet()) {
+      if (!seenSlaveRunIds.contains(slave.getKey())) {
+        seenSlaveRunIds.add(slave.getKey());
+        LOG.info(
+            "New slave server attached to build. (RunId: [%s], Hostname: [%s])",
+            slave.getKey(), slave.getValue().getHostname());
+      }
     }
 
     ListenableFuture<?> slaveEventsFuture =
