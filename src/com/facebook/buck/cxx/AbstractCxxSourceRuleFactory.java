@@ -752,12 +752,11 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
-      ImmutableMap<String, CxxSource> sources,
-      InferBuckConfig inferConfig,
-      CxxInferSourceFilter sourceFilter) {
+      ImmutableMap<String, CxxSource> sources, InferBuckConfig inferConfig) {
 
     ImmutableSet.Builder<CxxInferCapture> objects = ImmutableSet.builder();
 
+    CxxInferSourceFilter sourceFilter = new CxxInferSourceFilter(inferConfig);
     for (Map.Entry<String, CxxSource> entry : sources.entrySet()) {
       String name = entry.getKey();
       CxxSource source = entry.getValue();

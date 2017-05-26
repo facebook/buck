@@ -712,8 +712,7 @@ public class CxxLibraryDescription
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
+          inferBuckConfig);
     } else if (type.isPresent() && !platform.isPresent()) {
       BuildRuleParams untypedParams = getUntypedParams(params);
       switch (type.get().getValue()) {
