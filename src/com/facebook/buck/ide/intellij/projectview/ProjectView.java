@@ -1017,13 +1017,6 @@ public class ProjectView {
       }
     }
 
-    // Make any directories that don't already exist
-    for (Path path : directoriesToMake) {
-      if (!existingDirectories.contains(path)) {
-        immediateMkdir(path);
-      }
-    }
-
     // Delete any symlinks that should no longer exist; remove existing links from Map
     existingSymlinks.forEach(
         (filePath, linkPath) -> {
@@ -1137,6 +1130,11 @@ public class ProjectView {
 
   /** Parameter order is compatible with Ruby library code, for porting transparency */
   private void createSymbolicLink(Path oldPath, Path newPath) {
+    Path directory = newPath.getParent();
+    if (directory != null && Files.notExists(directory)) {
+      immediateMkdir(directory);
+    }
+
     try {
       Files.createSymbolicLink(newPath, oldPath);
     } catch (IOException e) {
