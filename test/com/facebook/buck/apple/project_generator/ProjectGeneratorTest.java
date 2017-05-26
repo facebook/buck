@@ -4130,9 +4130,20 @@ public class ProjectGeneratorTest {
     ImmutableSet<TargetNode<?, ?>> nodes =
         ImmutableSet.of(frameworkBinaryNode, frameworkNode, resourceNode, binaryNode, bundleNode);
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
-            nodes, ImmutableSet.of(), getBuildRuleResolverWithRulesForNodeFunction(targetGraph));
+            nodes,
+            ImmutableSet.of(),
+            input -> {
+              try {
+                resolver.requireRule(input.getBuildTarget());
+              } catch (NoSuchBuildTargetException e) {
+                throw new RuntimeException(e);
+              }
+              return resolver;
+            });
     projectGenerator.createXcodeProjects();
     PBXTarget target =
         assertTargetExistsAndReturnTarget(
@@ -4418,18 +4429,6 @@ public class ProjectGeneratorTest {
         };
     bottomUpTraversal.traverse();
     return input -> resolver;
-  }
-
-  private Function<TargetNode<?, ?>, BuildRuleResolver>
-      getBuildRuleResolverWithRulesForNodeFunction(final TargetGraph targetGraph)
-          throws NoSuchBuildTargetException {
-    final BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    for (TargetNode<?, ?> node : targetGraph.getNodes()) {
-      ruleResolver.requireRule(node.getBuildTarget());
-      ruleResolver.requireRule(node.getBuildTarget().withFlavors());
-    }
-    return input -> ruleResolver;
   }
 
   private ImmutableSet<TargetNode<?, ?>> setupSimpleLibraryWithResources(

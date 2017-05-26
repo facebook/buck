@@ -37,7 +37,7 @@ public class TargetGraphFactory {
       BuildTarget unflavoredTarget =
           BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
       if (node.getBuildTarget().isFlavored() && !builder.containsKey(unflavoredTarget)) {
-        builder.put(unflavoredTarget, node);
+        builder.put(unflavoredTarget, node.withFlavors(ImmutableSet.of()));
       }
     }
     ImmutableMap<BuildTarget, TargetNode<?, ?>> map = ImmutableMap.copyOf(builder);
