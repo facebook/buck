@@ -232,14 +232,17 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 
+  public static final Iterable<QueryFunction> QUERY_FUNCTIONS =
+      ImmutableList.of(
+          new AttrFilterFunction(),
+          new ClasspathFunction(),
+          new DepsFunction(),
+          new DepsFunction.FirstOrderDepsFunction(),
+          new KindFunction(),
+          new FilterFunction());
+
   @Override
   public Iterable<QueryFunction> getFunctions() {
-    return ImmutableSet.of(
-        new AttrFilterFunction(),
-        new ClasspathFunction(),
-        new DepsFunction(),
-        new DepsFunction.FirstOrderDepsFunction(),
-        new KindFunction(),
-        new FilterFunction());
+    return QUERY_FUNCTIONS;
   }
 }
