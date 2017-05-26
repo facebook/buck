@@ -56,6 +56,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
+  private final boolean isCacheable;
 
   ApkGenrule(
       BuildRuleParams params,
@@ -65,7 +66,8 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> type,
-      SourcePath apk) {
+      SourcePath apk,
+      boolean isCacheable) {
     super(
         params,
         srcs,
@@ -80,6 +82,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
     BuildRule rule = ruleFinder.getRuleOrThrow(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
+    this.isCacheable = isCacheable;
   }
 
   @Override
@@ -97,6 +100,11 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
         .from(hasInstallableApk.getApkInfo())
         .setApkPath(getSourcePathToOutput())
         .build();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return isCacheable;
   }
 
   @Override

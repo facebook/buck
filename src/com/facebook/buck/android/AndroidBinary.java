@@ -247,6 +247,7 @@ public class AndroidBinary extends AbstractBuildRule
   @AddToRuleKey private SourcePath aaptGeneratedProguardConfigFile;
   @AddToRuleKey private Optional<String> dxMaxHeapSize;
   @AddToRuleKey private ImmutableList<SourcePath> proguardConfigs;
+  private final boolean isCacheable;
 
   @AddToRuleKey
   @Nullable
@@ -286,7 +287,8 @@ public class AndroidBinary extends AbstractBuildRule
       boolean compressAssetLibraries,
       ManifestEntries manifestEntries,
       JavaRuntimeLauncher javaRuntimeLauncher,
-      Optional<String> dxMaxHeapSize) {
+      Optional<String> dxMaxHeapSize,
+      boolean isCacheable) {
     super(params);
     this.ruleFinder = ruleFinder;
     this.proguardJarOverride = proguardJarOverride;
@@ -332,6 +334,7 @@ public class AndroidBinary extends AbstractBuildRule
         enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile();
     this.dxMaxHeapSize = dxMaxHeapSize;
     this.proguardConfigs = enhancementResult.getProguardConfigs();
+    this.isCacheable = isCacheable;
 
     if (exopackageModes.isEmpty()) {
       this.abiPath = null;
@@ -445,6 +448,11 @@ public class AndroidBinary extends AbstractBuildRule
         .setManifestPath(getManifestPath())
         .setExopackageInfo(getExopackageInfo())
         .build();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return isCacheable;
   }
 
   @Override

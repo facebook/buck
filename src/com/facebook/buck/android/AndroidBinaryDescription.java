@@ -368,7 +368,8 @@ public class AndroidBinaryDescription
           args.isCompressAssetLibraries(),
           args.getManifestEntries(),
           javaOptions.getJavaRuntimeLauncher(),
-          dxConfig.getDxMaxHeapSize());
+          dxConfig.getDxMaxHeapSize(),
+          args.getIsCacheable());
     }
   }
 
@@ -594,6 +595,11 @@ public class AndroidBinaryDescription
     }
 
     List<String> getResourceFilter();
+
+    @Value.Default
+    default boolean getIsCacheable() {
+      return true;
+    }
 
     // Do not inspect this, getAllowedDuplicateResourcesTypes, or getBannedDuplicateResourceTypes directly, use
     // getEffectiveBannedDuplicateResourceTypes.
