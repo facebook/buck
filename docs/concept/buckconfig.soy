@@ -1818,13 +1818,14 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
-  {param name: 'generated_srcs_map' /}
-  {param example_value: '//path/to/target1 => __%name%_target1__, \n                       //path/to/target2 => __%name%_target2__' /}
+  {param name: 'generated_sources_label_map' /}
+  {param example_value: 'generated_code_1 => __%name%_target1__, \n                       generated_code2 => __%name%_target2__' /}
   {param description}
     Allows adding folders with generated source code to IntelliJ project. These folders are added
-    only if a module depends on a key target. In the example below, if
-    module <code>//app/target</code> depends on <code>//path/to/target1</code>
-    folder <code>buck-out/gen/app/lib/__lib_target1__</code> will be added to IntelliJ project.
+    when a target has a label specified in this option. In the example below, if
+    target <code>//app/target</code> has
+    label <code>generated_code1</code> folder <code>buck-out/gen/app/lib/__lib_target1__</code> will
+    be added to IntelliJ project.
   {/param}
 {/call}
 

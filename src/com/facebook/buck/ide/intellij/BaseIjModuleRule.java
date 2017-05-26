@@ -39,11 +39,9 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implements IjModuleRule<T> {
 
@@ -173,34 +171,9 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   private ImmutableSet<Path> findConfiguredGeneratedSourcePaths(TargetNode<T, ?> targetNode) {
     ImmutableSet.Builder<Path> generatedSourcePaths = ImmutableSet.builder();
 
-    generatedSourcePaths.addAll(findConfiguredGeneratedSourcePathsUsingDeps(targetNode));
     generatedSourcePaths.addAll(findConfiguredGeneratedSourcePathsUsingLabels(targetNode));
 
     return generatedSourcePaths.build();
-  }
-
-  private Set<Path> findConfiguredGeneratedSourcePathsUsingDeps(TargetNode<T, ?> targetNode) {
-    ImmutableMap<String, String> depToGeneratedSourcesMap =
-        projectConfig.getDepToGeneratedSourcesMap();
-    BuildTarget buildTarget = targetNode.getBuildTarget();
-
-    Set<Path> generatedSourcePaths = new HashSet<>();
-
-    for (BuildTarget dependencyTarget : targetNode.getBuildDeps()) {
-      String buildTargetName = dependencyTarget.toString();
-      String generatedSourceWithPattern = depToGeneratedSourcesMap.get(buildTargetName);
-      if (generatedSourceWithPattern != null) {
-        String generatedSource =
-            generatedSourceWithPattern.replaceAll(
-                "%name%", buildTarget.getShortNameAndFlavorPostfix());
-        Path generatedSourcePath =
-            BuildTargets.getGenPath(projectFilesystem, buildTarget, generatedSource);
-
-        generatedSourcePaths.add(generatedSourcePath);
-      }
-    }
-
-    return generatedSourcePaths;
   }
 
   private ImmutableSet<Path> findConfiguredGeneratedSourcePathsUsingLabels(

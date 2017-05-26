@@ -59,8 +59,6 @@ abstract class AbstractIjProjectConfig {
 
   public abstract List<String> getExcludedResourcePaths();
 
-  public abstract ImmutableMap<String, String> getDepToGeneratedSourcesMap();
-
   public abstract ImmutableMap<String, String> getLabelToGeneratedSourcesMap();
 
   public abstract Optional<Path> getAndroidManifest();

@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/modules/labels/modules_labels.iml" filepath="$PROJECT_DIR$/modules/labels/modules_labels.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/modules/labels_and_deps/modules_labels_and_deps.iml" filepath="$PROJECT_DIR$/modules/labels_and_deps/modules_labels_and_deps.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/modules/tip/modules_tip.iml" filepath="$PROJECT_DIR$/modules/tip/modules_tip.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
     </modules>
   </component>
