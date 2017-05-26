@@ -98,6 +98,9 @@ TOKEN_TYPE_REGEX = re.compile(r'([a-zA-Z]+)\(')
 TOKEN_VALUE_REGEX = re.compile(r'[a-zA-Z]+\((.*)\)')
 CONTAINER_LENGTH_REGEX = re.compile(r'container\(.*,len=(\d+)\)')
 
+TARGET_NAME_TOKEN_PATTERN = r'key\(\.name\)'
+TARGET_NAME_FIELD_PATTERN = r'\.name'
+RULEKEY_TYPE_FIELD_PATTERN = r'\.key_type'
 
 def token_type(token):
     match = TOKEN_TYPE_REGEX.match(token)
@@ -334,7 +337,7 @@ def find_keys(keys, criteria):
             field_found = field_name is None
             for token in tokens:
                 if field_name is not None and token_type(token) == 'key':
-                    field_found = token_value(token) == field_name
+                    field_found = re.search(field_name, token_value(token)) is not None
                 if field_found and re.search(pattern, token) is not None:
                     break
             else:
@@ -350,7 +353,7 @@ def extract_target(struct):
     """
     Extracts the target name from a structured rulekey
     """
-    for s in find_children(struct, '.name', 1):
+    for s in find_children(struct, TARGET_NAME_TOKEN_PATTERN, 1):
         if len(s) == 1 and token_type(s[0].token) == 'string':
             return token_value(s[0].token)[1:-1]  # strip quotes
     return None
@@ -381,7 +384,10 @@ def find_keys_for_target(keys_left, keys_right, target):
     print('Searching for the specified build target...')
     print(target)
     target_pattern = '"' + target + '"'
-    criteria = [(target_pattern, '.name'), (r'DEFAULT', '.key_type')]
+    criteria = [
+        (target_pattern, TARGET_NAME_FIELD_PATTERN),
+        (r'DEFAULT', RULEKEY_TYPE_FIELD_PATTERN),
+    ]
     rulekeys_left = find_keys(keys_left, criteria)
     rulekeys_right = find_keys(keys_right, criteria)
     if not check_rulekeys_count(rulekeys_left, 'left', target):
@@ -406,39 +412,45 @@ def diff_keys_recursively(
     reported_keys = set()
     reported_differences = set()
 
+    def print_path():
+        for (rk1, rk2) in keys_path_stack:
+            if rk1 in reported_keys and rk2 in reported_keys:
+                continue
+            reported_keys.add(rk1)
+            reported_keys.add(rk2)
+            target = 'unknown'
+            if rk1 in keys_left:
+                target = extract_target(reconstruct_rulekey(keys_left[rk1]))
+            elif rk2 in keys_right:
+                target = extract_target(reconstruct_rulekey(keys_right[rk2]))
+            print('%s vs %s (%s) ...' % (rk1, rk2, target))
+
     def rec(rulekey1, rulekey2):
         if rulekey1 in processed_keys and rulekey2 in processed_keys:
             return
-        if rulekey1 not in keys_left or rulekey2 not in keys_right:
-            # no more rulekey diagnostics data, probably due to a cache hit so not built locally
-            return
-
         processed_keys.add(rulekey1)
         processed_keys.add(rulekey2)
         keys_path_stack.append((rulekey1, rulekey2))
-
-        struct1 = reconstruct_rulekey(keys_left[rulekey1])
-        struct2 = reconstruct_rulekey(keys_right[rulekey2])
-        for (v1, s1, v2, s2) in diff_rulekeys_to_list(struct1, struct2):
-            t1 = get_token(s1)
-            t2 = get_token(s2)
-            if len(reported_differences) >= max_differences_to_report:
-                print('stopped after reporting %d differences' % len(reported_differences))
-                break
-            if get_type(s1) == 'ruleKey' and get_type(s2) == 'ruleKey':
-                # value looks like 'sha1=8960bfa79841fa1482f7883f28ea54c78a5ed26a', strip 'sha1='
-                rec(token_value(t1)[5:], token_value(t2)[5:])
-            elif not report_only_unique_causes or (t1, t2) not in reported_differences:
-                reported_differences.add((t1, t2))
-                for (rk1, rk2) in keys_path_stack:
-                    if rk1 in reported_keys and rk2 in reported_keys:
-                        continue
-                    reported_keys.add(rk1)
-                    reported_keys.add(rk2)
-                    target = extract_target(reconstruct_rulekey(keys_left[rk1]))
-                    print('%s vs %s (%s) ...' % (rk1, rk2, target))
-                print('  L: ' + v1)
-                print('  R: ' + v2)
+        if rulekey1 in keys_left and rulekey2 in keys_right:
+            struct1 = reconstruct_rulekey(keys_left[rulekey1])
+            struct2 = reconstruct_rulekey(keys_right[rulekey2])
+            for (v1, s1, v2, s2) in diff_rulekeys_to_list(struct1, struct2):
+                t1 = get_token(s1)
+                t2 = get_token(s2)
+                if len(reported_differences) >= max_differences_to_report:
+                    print('stopped after reporting %d differences' % len(reported_differences))
+                    break
+                if get_type(s1) == 'ruleKey' and get_type(s2) == 'ruleKey':
+                    # value looks like 'sha1=8960bfa79841fa1482f7...', strip 'sha1='
+                    rec(token_value(t1)[5:], token_value(t2)[5:])
+                elif not report_only_unique_causes or (t1, t2) not in reported_differences:
+                    reported_differences.add((t1, t2))
+                    print_path()
+                    print('  L:', v1)
+                    print('  R:', v2)
+        else:
+            # no more rulekey diagnostics data, probably due to a cache hit so not built locally
+            pass
         keys_path_stack.pop()
 
     rec(keys_tuple_to_diff[0], keys_tuple_to_diff[1])
