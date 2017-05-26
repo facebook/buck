@@ -25,8 +25,9 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -75,10 +76,14 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("type", getIncludeType());
-    for (Path path : ImmutableSortedSet.copyOf(getNameToPathMap().keySet())) {
-      SourcePath source = getNameToPathMap().get(path);
-      sink.setReflectively("include(" + path.toString() + ")", source);
-    }
+    getNameToPathMap()
+        .entrySet()
+        .stream()
+        .sorted(Comparator.comparing(Map.Entry::getKey))
+        .forEachOrdered(
+            entry ->
+                sink.setReflectively(
+                    "include(" + entry.getKey().toString() + ")", entry.getValue()));
   }
 
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */
