@@ -139,8 +139,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -3541,6 +3543,150 @@ public class ProjectGeneratorTest {
     // Check starts with as the remainder depends on the bundle style at build time.
     assertTrue(settings.get("BUNDLE_LOADER").startsWith("$BUILT_PRODUCTS_DIR/./HostApp.app/"));
     assertEquals("$(BUNDLE_LOADER)", settings.get("TEST_HOST"));
+  }
+
+  @Test
+  public void applicationTestOnlyLinksLibrariesNotLinkedByTheHostApp() throws IOException {
+    // libs
+    BuildTarget hostOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "HostOnly").build();
+    TargetNode<?, ?> hostOnlyLibNode = AppleLibraryBuilder
+        .createBuilder(hostOnlyLibTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("HostOnly.m"))))
+        .build();
+
+    BuildTarget sharedLibTarget = BuildTarget.builder(rootPath, "//libs", "Shared").build();
+    TargetNode<?, ?> sharedLibNode = AppleLibraryBuilder
+        .createBuilder(sharedLibTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Shared.m"))))
+        .build();
+
+    BuildTarget testOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "TestOnly").build();
+    TargetNode<?, ?> testOnlyLibNode = AppleLibraryBuilder
+        .createBuilder(testOnlyLibTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("TestOnly.m"))))
+        .build();
+
+    // host app
+    BuildTarget hostAppBinaryTarget =
+        BuildTarget.builder(rootPath, "//foo", "HostAppBinary").build();
+    TargetNode<?, ?> hostAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(hostOnlyLibTarget, sharedLibTarget))
+            .build();
+
+    BuildTarget hostAppTarget = BuildTarget.builder(rootPath, "//foo", "HostApp").build();
+    TargetNode<?, ?> hostAppNode =
+        AppleBundleBuilder.createBuilder(hostAppTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    // app test
+    BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "AppTest").build();
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setTestHostApp(Optional.of(hostAppTarget))
+            .setDeps(ImmutableSortedSet.of(sharedLibTarget, testOnlyLibTarget))
+            .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(ImmutableSet.of(
+        hostOnlyLibNode, sharedLibNode, testOnlyLibNode, hostAppBinaryNode, hostAppNode, testNode
+    ), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    Function<PBXTarget, Set<String>> getLinkedLibsForTarget = pbxTarget -> pbxTarget
+        .getBuildPhases().get(0).getFiles().stream()
+        .map(PBXBuildFile::getFileRef)
+        .map(PBXReference::getName)
+        .collect(Collectors.toSet());
+
+    PBXTarget hostPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
+    assertEquals(hostPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(getLinkedLibsForTarget.apply(hostPBXTarget),
+        ImmutableSet.of("libHostOnly.a", "libShared.a"));
+
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertEquals(testPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(getLinkedLibsForTarget.apply(testPBXTarget), ImmutableSet.of("libTestOnly.a"));
+  }
+
+  @Test
+  public void uiTestLinksAllLibrariesItDependsOn() throws IOException {
+    // libs
+    BuildTarget hostOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "HostOnly").build();
+    TargetNode<?, ?> hostOnlyLibNode = AppleLibraryBuilder
+        .createBuilder(hostOnlyLibTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("HostOnly.m"))))
+        .build();
+
+    BuildTarget sharedLibTarget = BuildTarget.builder(rootPath, "//libs", "Shared").build();
+    TargetNode<?, ?> sharedLibNode = AppleLibraryBuilder
+        .createBuilder(sharedLibTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Shared.m"))))
+        .build();
+
+    BuildTarget testOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "TestOnly").build();
+    TargetNode<?, ?> testOnlyLibNode = AppleLibraryBuilder
+        .createBuilder(testOnlyLibTarget)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("TestOnly.m"))))
+        .build();
+
+    // host app
+    BuildTarget hostAppBinaryTarget =
+        BuildTarget.builder(rootPath, "//foo", "HostAppBinary").build();
+    TargetNode<?, ?> hostAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(hostOnlyLibTarget, sharedLibTarget))
+            .build();
+
+    BuildTarget hostAppTarget = BuildTarget.builder(rootPath, "//foo", "HostApp").build();
+    TargetNode<?, ?> hostAppNode =
+        AppleBundleBuilder.createBuilder(hostAppTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    // app test
+    BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "AppTest").build();
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .isUiTest(true)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setTestHostApp(Optional.of(hostAppTarget))
+            .setDeps(ImmutableSortedSet.of(sharedLibTarget, testOnlyLibTarget))
+            .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(ImmutableSet.of(
+        hostOnlyLibNode, sharedLibNode, testOnlyLibNode, hostAppBinaryNode, hostAppNode, testNode
+    ), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    Function<PBXTarget, Set<String>> getLinkedLibsForTarget = pbxTarget -> pbxTarget
+        .getBuildPhases().get(0).getFiles().stream()
+        .map(PBXBuildFile::getFileRef)
+        .map(PBXReference::getName)
+        .collect(Collectors.toSet());
+
+    PBXTarget hostPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
+    assertEquals(hostPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(getLinkedLibsForTarget.apply(hostPBXTarget),
+        ImmutableSet.of("libHostOnly.a", "libShared.a"));
+
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertEquals(testPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(getLinkedLibsForTarget.apply(testPBXTarget),
+        ImmutableSet.of("libTestOnly.a", "libShared.a"));
   }
 
   @Test

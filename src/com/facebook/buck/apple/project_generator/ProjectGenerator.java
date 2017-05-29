@@ -144,6 +144,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -952,7 +953,19 @@ public class ProjectGenerator {
         frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(targetNode));
         mutator.setFrameworks(frameworksBuilder.build());
 
-        mutator.setArchives(collectRecursiveLibraryDependencies(targetNode));
+        ImmutableSet<PBXFileReference> targetNodeDeps =
+            collectRecursiveLibraryDependencies(targetNode);
+        ImmutableSet<PBXFileReference> excludedDeps = targetNode
+            .castArg(AppleTestDescriptionArg.class)
+            .flatMap(testNode -> {
+              // only application tests share a runtime with their host application and need to
+              // avoid linking dependencies already linked by the host.
+              // we know this is an application test if it is not a UI test and has a bundle loader.
+              return testNode.getConstructorArg().getIsUiTest() ? Optional.empty() : bundleLoaderNode;
+            })
+            .map(this::collectRecursiveLibraryDependencies)
+            .orElse(ImmutableSet.of());
+        mutator.setArchives(Sets.difference(targetNodeDeps, excludedDeps));
       }
 
       // TODO(Task #3772930): Go through all dependencies of the rule
