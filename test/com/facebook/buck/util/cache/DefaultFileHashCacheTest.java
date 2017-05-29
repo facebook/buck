@@ -236,7 +236,7 @@ public class DefaultFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path input = filesystem.getPath("input");
     DefaultFileHashCache cache = new DefaultFileHashCache(filesystem, Optional.empty());
-    expectedException.expect(RuntimeException.class);
+    expectedException.expect(NoSuchFileException.class);
     cache.getSize(input);
   }
 

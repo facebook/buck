@@ -19,7 +19,6 @@ package com.facebook.buck.util.cache;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.FileSystemMap;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -50,44 +49,15 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Path> buckOutPath;
 
-  @VisibleForTesting final FileSystemMap<HashCodeAndFileType> newLoadingCache;
-
-  @VisibleForTesting final FileSystemMap<Long> newSizeCache;
-
-  // TODO(rvitale): remove block below after the file hash cache experiment is over.
-  /* *****************************************************************************/
   @VisibleForTesting final LoadingCache<Path, HashCodeAndFileType> loadingCache;
 
   @VisibleForTesting final LoadingCache<Path, Long> sizeCache;
-  /* *****************************************************************************/
 
   @VisibleForTesting
   DefaultFileHashCache(ProjectFilesystem projectFilesystem, Optional<Path> buckOutPath) {
     this.projectFilesystem = projectFilesystem;
     this.buckOutPath = buckOutPath;
 
-    this.newLoadingCache =
-        new FileSystemMap<>(
-            path -> {
-              try {
-                return getHashCodeAndFileType(path);
-              } catch (IOException e) {
-                throw new RuntimeException(e.getCause());
-              }
-            });
-
-    this.newSizeCache =
-        new FileSystemMap<>(
-            path -> {
-              try {
-                return getPathSize(path);
-              } catch (IOException e) {
-                throw new RuntimeException(e.getCause());
-              }
-            });
-
-    // TODO(rvitale): remove block below after the file hash cache experiment is over.
-    /* *****************************************************************************/
     this.loadingCache =
         CacheBuilder.newBuilder()
             .build(
@@ -107,7 +77,6 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
                     return getPathSize(path);
                   }
                 });
-    /* *****************************************************************************/
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
@@ -201,30 +170,19 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return willGet(archiveMemberPath.getArchivePath());
   }
 
-  // TODO(rvitale): remove block below after the file hash cache experiment is over.
-  /* *****************************************************************************/
   private void invalidateImmediate(Path path) {
     loadingCache.invalidate(path);
     sizeCache.invalidate(path);
   }
 
   @Override
-  public void invalidate(Path relativePath) {
-    invalidateOld(relativePath);
-    invalidateNew(relativePath);
-  }
-
-  @Override
   public void invalidateAll() {
     loadingCache.invalidateAll();
     sizeCache.invalidateAll();
-    invalidateAllNew();
   }
-  /* *****************************************************************************/
 
-  // TODO(rvitale): rename functions below after the file hash cache experiment is over.
-  /* *****************************************************************************/
-  public void invalidateOld(Path relativePath) {
+  @Override
+  public void invalidate(Path relativePath) {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
     HashCodeAndFileType cached = loadingCache.getIfPresent(relativePath);
@@ -236,34 +194,18 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  public void invalidateNew(Path relativePath) {
-    Preconditions.checkArgument(!relativePath.isAbsolute());
-    checkNotIgnored(relativePath);
-    newLoadingCache.remove(relativePath);
-    newSizeCache.remove(relativePath);
-  }
-
-  public void invalidateAllNew() {
-    newLoadingCache.removeAll();
-    newSizeCache.removeAll();
-  }
-  /* *****************************************************************************/
-
   /** @return The {@link com.google.common.hash.HashCode} of the contents of path. */
   @Override
   public HashCode get(Path relativePath) throws IOException {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
     HashCode sha1;
-    // TODO(rvitale): remove block below after the file hash cache experiment is over.
-    /* *****************************************************************************/
     try {
       sha1 = loadingCache.get(relativePath.normalize()).getHashCode();
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new RuntimeException(e.getCause());
     }
-    /* *****************************************************************************/
 
     return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", relativePath);
   }
@@ -272,16 +214,12 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public long getSize(Path relativePath) throws IOException {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
-    newSizeCache.get(relativePath.normalize());
-    // TODO(rvitale): remove block below after the file hash cache experiment is over.
-    /* *****************************************************************************/
     try {
       return sizeCache.get(relativePath.normalize());
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new RuntimeException(e.getCause());
     }
-    /* *****************************************************************************/
   }
 
   @Override
@@ -290,8 +228,6 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     checkNotIgnored(archiveMemberPath.getArchivePath());
 
     Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
-    // TODO(rvitale): remove try-catch and un-indent after file hash cache experiment is over.
-    /* *****************************************************************************/
     try {
       HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
       Path memberPath = archiveMemberPath.getMemberPath();
@@ -306,7 +242,6 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new RuntimeException(e.getCause());
     }
-    /* *****************************************************************************/
   }
 
   @Override
@@ -342,7 +277,6 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     }
 
     loadingCache.put(relativePath, value);
-    newLoadingCache.put(relativePath, value);
   }
 
   @Override
