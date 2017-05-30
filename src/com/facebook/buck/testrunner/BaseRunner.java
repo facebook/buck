@@ -152,9 +152,11 @@ public abstract class BaseRunner {
       testSelectorSuffix += ".dry_run";
     }
     OutputStream output;
+    FileOutputStream fileOutputStream = null;
     if (outputDirectory != null) {
       File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
-      output = new BufferedOutputStream(new FileOutputStream(outputFile));
+      fileOutputStream = new FileOutputStream(outputFile);
+      output = new BufferedOutputStream(fileOutputStream);
     } else {
       output = System.out;
     }
@@ -163,6 +165,9 @@ public abstract class BaseRunner {
     trans.transform(source, streamResult);
     if (outputDirectory != null) {
       output.close();
+      if (fileOutputStream != null) {
+        fileOutputStream.close();
+      }
     }
   }
 
