@@ -144,14 +144,9 @@ public class CxxLibrary extends NoopBuildRule
   private CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
       throws NoSuchBuildTargetException {
-    return ruleResolver
-        .requireMetadata(
-            getBuildTarget()
-                .withAppendedFlavors(
-                    CxxLibraryDescription.MetadataType.CXX_PREPROCESSOR_INPUT.getFlavor(),
-                    cxxPlatform.getFlavor(),
-                    headerVisibility.getFlavor()),
-            CxxPreprocessorInput.class)
+    // Handle via metadata query.
+    return CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
+            ruleResolver, getBuildTarget(), cxxPlatform, headerVisibility)
         .orElseThrow(IllegalStateException::new);
   }
 

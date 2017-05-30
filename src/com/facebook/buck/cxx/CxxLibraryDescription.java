@@ -273,15 +273,8 @@ public class CxxLibraryDescription
     Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
     input.put(
         params.getBuildTarget(),
-        ruleResolver
-            .requireMetadata(
-                params
-                    .getBuildTarget()
-                    .withAppendedFlavors(
-                        MetadataType.CXX_PREPROCESSOR_INPUT.getFlavor(),
-                        cxxPlatform.getFlavor(),
-                        HeaderVisibility.PUBLIC.getFlavor()),
-                CxxPreprocessorInput.class)
+        queryMetadataCxxPreprocessorInput(
+                ruleResolver, params.getBuildTarget(), cxxPlatform, HeaderVisibility.PUBLIC)
             .orElseThrow(IllegalStateException::new));
     for (BuildRule rule : deps) {
       if (rule instanceof CxxPreprocessorDep) {
@@ -897,6 +890,38 @@ public class CxxLibraryDescription
     return defaultCxxPlatform;
   }
 
+  /**
+   * Convenience function to query the {@link CxxHeaders} metadata of a target.
+   *
+   * <p>Use this function instead of constructing the BuildTarget manually.
+   */
+  public static Optional<CxxHeaders> queryMetadataCxxHeaders(
+      BuildRuleResolver resolver, BuildTarget baseTarget, CxxPreprocessables.HeaderMode mode)
+      throws NoSuchBuildTargetException {
+    return resolver.requireMetadata(
+        baseTarget.withAppendedFlavors(MetadataType.CXX_HEADERS.getFlavor(), mode.getFlavor()),
+        CxxHeaders.class);
+  }
+
+  /**
+   * Convenience function to query the {@link CxxPreprocessorInput} metadata of a target.
+   *
+   * <p>Use this function instead of constructing the BuildTarget manually.
+   */
+  public static Optional<CxxPreprocessorInput> queryMetadataCxxPreprocessorInput(
+      BuildRuleResolver resolver,
+      BuildTarget baseTarget,
+      CxxPlatform platform,
+      HeaderVisibility visibility)
+      throws NoSuchBuildTargetException {
+    return resolver.requireMetadata(
+        baseTarget.withAppendedFlavors(
+            MetadataType.CXX_PREPROCESSOR_INPUT.getFlavor(),
+            platform.getFlavor(),
+            visibility.getFlavor()),
+        CxxPreprocessorInput.class);
+  }
+
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
@@ -966,18 +991,15 @@ public class CxxLibraryDescription
           if (visibility.getValue() == HeaderVisibility.PUBLIC) {
 
             // Add platform-agnostic headers.
-            boolean shouldCreatePublicHeaderSymlinks =
-                args.getXcodePublicHeadersSymlinks()
-                    .orElse(platform.getValue().getPublicHeadersSymlinksEnabled());
-            CxxPreprocessables.HeaderMode mode =
-                CxxDescriptionEnhancer.getHeaderModeForPlatform(
-                    resolver, platform.getValue(), shouldCreatePublicHeaderSymlinks);
-            Optional<CxxHeaders> exportedHeaders =
-                resolver.requireMetadata(
-                    baseTarget.withAppendedFlavors(
-                        MetadataType.CXX_HEADERS.getFlavor(), mode.getFlavor()),
-                    CxxHeaders.class);
-            exportedHeaders.ifPresent(cxxPreprocessorInputBuilder::addIncludes);
+            queryMetadataCxxHeaders(
+                    resolver,
+                    baseTarget,
+                    CxxDescriptionEnhancer.getHeaderModeForPlatform(
+                        resolver,
+                        platform.getValue(),
+                        args.getXcodePublicHeadersSymlinks()
+                            .orElse(platform.getValue().getPublicHeadersSymlinksEnabled())))
+                .ifPresent(cxxPreprocessorInputBuilder::addIncludes);
 
             // Add platform-specific headers.
             if (!args.getExportedPlatformHeaders()
