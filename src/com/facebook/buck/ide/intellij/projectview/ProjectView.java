@@ -386,7 +386,7 @@ public class ProjectView {
       roots.add(bestRoot);
 
       index += 1;
-      String prefix = bestRoot.endsWith("/") ? bestRoot : bestRoot + '/';
+      String prefix = guaranteeEndsWithFileSeparator(bestRoot);
       while (index < size && paths.get(index).startsWith(prefix)) {
         index += 1;
       }
@@ -836,9 +836,25 @@ public class ProjectView {
     return sourceFolders.stream().sorted().collect(Collectors.toList());
   }
 
-  private static Set<String> getExcludedFolders(Set<String> sourceFolders, Set<String> roots) {
+  private Set<String> getExcludedFolders(Set<String> sourceFolders, Set<String> roots) {
     Set<String> rootFolders = allFoldersUnder(roots);
+
+    // Remove any folder that's explicitly a source folder
     rootFolders.removeAll(sourceFolders);
+
+    // Remove any folder that's the parent of a source folder. (IntelliJ can handle a sourceFolder
+    // under an excludeFolder; Android Studio can not.) This is a quadratic operation, but in
+    // practice only adds a couple of seconds on a large project
+    rootFolders =
+        rootFolders
+            .stream()
+            .filter(
+                root -> {
+                  String probe = guaranteeEndsWithFileSeparator(root);
+                  return !sourceFolders.stream().anyMatch(source -> source.startsWith(probe));
+                })
+            .collect(Collectors.toSet());
+
     return rootFolders;
   }
 
@@ -1173,6 +1189,10 @@ public class ProjectView {
           return !(name.equals(".") || name.equals(".."));
         }
       };
+
+  private static String guaranteeEndsWithFileSeparator(String name) {
+    return name.endsWith(File.separator) ? name : name + File.separator;
+  }
 
   // endregion symlinks, mkdir, and other file utilities
 
