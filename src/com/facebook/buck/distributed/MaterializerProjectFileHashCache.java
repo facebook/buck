@@ -26,13 +26,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +41,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
   private static final Logger LOG = Logger.get(MaterializerProjectFileHashCache.class);
 
-  private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashesByAbsPath;
+  private final ImmutableMap<Path, BuildJobStateFileHashEntry> remoteFileHashesByAbsPath;
   private final Set<Path> symlinkedPaths;
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
@@ -103,8 +103,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
     BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
     if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
-      integrityCheck(relPath);
-      materializedPaths.add(relPath);
+      recordMaterializedPath(relPath);
       return;
     }
 
@@ -112,8 +111,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       if (!symlinkedPaths.contains(relPath)) {
         materializeSymlink(fileHashEntry, materializedPaths);
       }
-      integrityCheck(relPath);
-      materializedPaths.add(relPath);
+      recordMaterializedPath(relPath);
       return;
     }
 
@@ -123,26 +121,31 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       return;
     }
 
+    materializeFile(relPath, fileHashEntry);
+  }
+
+  private void materializeFile(Path relPath, BuildJobStateFileHashEntry fileHashEntry)
+      throws IOException {
+    Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
     projectFilesystem.createParentDirs(projectFilesystem.resolve(relPath));
 
-    // Download contents outside of sync block, so that fetches happen in parallel.
-    // For a few cases we might get duplicate fetches, but this is much better than single
-    // threaded fetches.
-    Preconditions.checkState(
-        provider.materializeFileContents(fileHashEntry, absPath),
-        "Failed to materialize source file [%s] for FileHashEntry=[%s]",
-        absPath,
-        fileHashEntry);
-    absPath.toFile().setExecutable(fileHashEntry.isExecutable);
-    integrityCheck(relPath);
-    synchronized (this) {
-      // Double check this path hasn't been materialized,
-      // as previous check wasn't inside sync block.
+    // We should materialize files using multiple threads, but we need to maintain synchronization
+    // on at least a per-file basis. Trying to materialize a file again might make the file seem
+    // unavailable for a small window when we're writing it again.
+    synchronized (fileHashEntry) {
+      // Check if someone materialized the file while we were waiting for synchronization.
       if (materializedPaths.contains(relPath)) {
         return;
       }
 
-      materializedPaths.add(relPath);
+      Preconditions.checkState(
+          provider.materializeFileContents(fileHashEntry, absPath),
+          "Failed to materialize source file [%s] for FileHashEntry=[%s].",
+          absPath,
+          fileHashEntry);
+
+      absPath.toFile().setExecutable(fileHashEntry.isExecutable);
+      recordMaterializedPath(relPath);
     }
   }
 
@@ -222,6 +225,11 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     }
   }
 
+  private void recordMaterializedPath(Path relPath) throws IOException {
+    integrityCheck(relPath);
+    materializedPaths.add(relPath);
+  }
+
   @Override
   public HashCode get(Path relPath) throws IOException {
     Queue<Path> remainingPaths = new LinkedList<>();
@@ -230,7 +238,6 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       materializeIfNeeded(remainingPaths.remove(), remainingPaths);
     }
 
-    integrityCheck(relPath);
     return delegate.get(relPath);
   }
 
@@ -242,7 +249,6 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
     materializeIfNeeded(archiveMemberRelPath.getArchivePath(), new LinkedList<>());
-    integrityCheck(archiveMemberRelPath.getArchivePath());
     return delegate.get(archiveMemberRelPath);
   }
 
