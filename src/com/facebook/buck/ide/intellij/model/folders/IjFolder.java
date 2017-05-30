@@ -27,13 +27,11 @@ public abstract class IjFolder implements Comparable<IjFolder> {
   private final Path path;
   private final ImmutableSortedSet<Path> inputs;
   private final boolean wantsPackagePrefix;
-  private final int inputsHash;
 
   IjFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     this.path = path;
     this.wantsPackagePrefix = wantsPackagePrefix;
     this.inputs = (inputs == null) ? EMPTY_INPUTS : inputs;
-    this.inputsHash = inputs.hashCode();
   }
 
   IjFolder(Path path, boolean wantsPackagePrefix) {
@@ -124,7 +122,9 @@ public abstract class IjFolder implements Comparable<IjFolder> {
 
   @Override
   public int hashCode() {
-    return (getPath().hashCode() << 31) | (getWantsPackagePrefix() ? 0x8000 : 0) | inputsHash;
+    return (getPath().hashCode() << 31)
+        | (getWantsPackagePrefix() ? 0x8000 : 0)
+        | inputs.hashCode();
   }
 
   @Override

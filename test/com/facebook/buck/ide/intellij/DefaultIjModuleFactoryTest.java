@@ -62,6 +62,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -415,7 +416,7 @@ public class DefaultIjModuleFactoryTest {
     assertEquals(Paths.get(""), folder.getPath());
   }
 
-  private ImmutableSet<Path> getFolderPaths(ImmutableSet<IjFolder> folders) {
+  private ImmutableSet<Path> getFolderPaths(ImmutableCollection<IjFolder> folders) {
     return folders.stream().map(IjFolder::getPath).collect(MoreCollectors.toImmutableSet());
   }
 

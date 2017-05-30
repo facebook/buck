@@ -27,6 +27,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -187,7 +188,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder acTest = buildTestFolder("a/c");
     IjFolder adaTest = buildTestFolder("a/d/a");
 
-    ImmutableSet<IjFolder> mergedFolders =
+    ImmutableCollection<IjFolder> mergedFolders =
         simplifier.simplify(
             0, ImmutableSet.of(aaaSource, aaaaSource, aabSource, abSource, acTest, adaTest));
 
@@ -203,7 +204,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder abSource = buildSourceFolder("a/b");
     IjFolder acTest = buildTestFolder("a/c");
 
-    ImmutableSet<IjFolder> mergedFolders =
+    ImmutableCollection<IjFolder> mergedFolders =
         simplifier.simplify(0, ImmutableSet.of(aaSource, abSource, acTest));
 
     IjFolder aSource = buildSourceFolder("a");
@@ -219,7 +220,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder adTest = buildTestFolder("a/d");
     IjFolder aeTest = buildTestFolder("a/e");
 
-    ImmutableSet<IjFolder> mergedFolders =
+    ImmutableCollection<IjFolder> mergedFolders =
         simplifier.simplify(0, ImmutableSet.of(aaSource, abSource, acTest, adTest, aeTest));
 
     IjFolder aTest = buildTestFolder("a");
@@ -237,7 +238,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder acTest = buildTestFolder("a/c");
     IjFolder adaTest = buildTestFolder("a/d/a");
 
-    ImmutableSet<IjFolder> mergedFolders =
+    ImmutableCollection<IjFolder> mergedFolders =
         simplifier.simplify(
             0,
             ImmutableSet.of(aSource, aaaSource, aaaaSource, aabSource, abSource, acTest, adaTest));

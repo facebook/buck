@@ -23,6 +23,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -51,7 +52,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract Path getModuleBasePath();
 
   /** @return paths to various directories the module is responsible for. */
-  public abstract ImmutableSet<IjFolder> getFolders();
+  public abstract ImmutableList<IjFolder> getFolders();
 
   /**
    * @return map of {@link BuildTarget}s the module depends on and information on whether it's a
@@ -65,7 +66,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract ImmutableSet<Path> getExtraClassPathDependencies();
 
   /** @return Folders which contain the generated source code. */
-  public abstract ImmutableSet<IjFolder> getGeneratedSourceCodeFolders();
+  public abstract ImmutableList<IjFolder> getGeneratedSourceCodeFolders();
 
   public abstract Optional<String> getLanguageLevel();
 

@@ -27,6 +27,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -42,7 +44,7 @@ public class ModuleBuildContext {
 
   private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
   private ImmutableSet.Builder<Path> extraClassPathDependenciesBuilder;
-  private ImmutableSet.Builder<IjFolder> generatedSourceCodeFoldersBuilder;
+  private Map<Path, IjFolder> generatedSourceCodeFoldersMap = new HashMap<>();
   private Map<Path, IjFolder> sourceFoldersMergeMap;
   // See comment in getDependencies for these two member variables.
   private Map<BuildTarget, DependencyType> dependencyTypeMap;
@@ -55,7 +57,6 @@ public class ModuleBuildContext {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
     this.androidFacetBuilder = Optional.empty();
     this.extraClassPathDependenciesBuilder = new ImmutableSet.Builder<>();
-    this.generatedSourceCodeFoldersBuilder = ImmutableSet.builder();
     this.sourceFoldersMergeMap = new HashMap<>();
     this.dependencyTypeMap = new HashMap<>();
     this.dependencyOriginMap = HashMultimap.create();
@@ -83,8 +84,8 @@ public class ModuleBuildContext {
     return androidFacetBuilder.map(IjModuleAndroidFacet.Builder::build);
   }
 
-  public ImmutableSet<IjFolder> getSourceFolders() {
-    return ImmutableSet.copyOf(sourceFoldersMergeMap.values());
+  public ImmutableCollection<IjFolder> getSourceFolders() {
+    return ImmutableList.copyOf(sourceFoldersMergeMap.values());
   }
 
   public void addExtraClassPathDependency(Path path) {
@@ -96,11 +97,12 @@ public class ModuleBuildContext {
   }
 
   public void addGeneratedSourceCodeFolder(IjFolder generatedFolder) {
-    generatedSourceCodeFoldersBuilder.add(generatedFolder);
+    Preconditions.checkState(
+        generatedSourceCodeFoldersMap.put(generatedFolder.getPath(), generatedFolder) == null);
   }
 
-  public ImmutableSet<IjFolder> getGeneratedSourceCodeFolders() {
-    return generatedSourceCodeFoldersBuilder.build();
+  public ImmutableCollection<IjFolder> getGeneratedSourceCodeFolders() {
+    return ImmutableList.copyOf(generatedSourceCodeFoldersMap.values());
   }
 
   public IjModuleType getModuleType() {

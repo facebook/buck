@@ -38,6 +38,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -181,23 +183,24 @@ public class IjProjectTemplateDataPreparer {
   private ContentRoot createContentRoot(
       final IjModule module,
       Path contentRootPath,
-      ImmutableSet<IjFolder> folders,
+      ImmutableCollection<IjFolder> folders,
       final Path moduleLocationBasePath) {
     String url = IjProjectPaths.toModuleDirRelativeString(contentRootPath, moduleLocationBasePath);
-    ImmutableSet<IjFolder> simplifiedFolders =
+    ImmutableCollection<IjFolder> simplifiedFolders =
         sourceRootSimplifier.simplify(contentRootPath.getNameCount(), folders);
     IjFolderToIjSourceFolderTransform transformToFolder =
         new IjFolderToIjSourceFolderTransform(module);
-    ImmutableSortedSet<IjSourceFolder> sourceFolders =
+    ImmutableList<IjSourceFolder> sourceFolders =
         simplifiedFolders
             .stream()
             .map(transformToFolder::apply)
-            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+            .sorted()
+            .collect(MoreCollectors.toImmutableList());
     return ContentRoot.builder().setUrl(url).setFolders(sourceFolders).build();
   }
 
-  public ImmutableSet<IjFolder> createExcludes(final IjModule module) throws IOException {
-    final ImmutableSet.Builder<IjFolder> excludesBuilder = ImmutableSet.builder();
+  public ImmutableCollection<IjFolder> createExcludes(final IjModule module) throws IOException {
+    final ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
     final Path moduleBasePath = module.getModuleBasePath();
     projectFilesystem.walkRelativeFileTree(
         moduleBasePath,
@@ -261,9 +264,10 @@ public class IjProjectTemplateDataPreparer {
     Path moduleLocation = module.getModuleImlFilePath();
     final Path moduleLocationBasePath =
         (moduleLocation.getParent() == null) ? Paths.get("") : moduleLocation.getParent();
-    ImmutableSet<IjFolder> sourcesAndExcludes =
+    ImmutableList<IjFolder> sourcesAndExcludes =
         Stream.concat(module.getFolders().stream(), createExcludes(module).stream())
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .sorted()
+            .collect(MoreCollectors.toImmutableList());
     return createContentRoot(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
   }
 
