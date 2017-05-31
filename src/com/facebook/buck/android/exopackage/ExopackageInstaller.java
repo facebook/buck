@@ -40,12 +40,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
@@ -230,18 +230,31 @@ public class ExopackageInstaller {
         }
       }
 
-      // TODO(cjhopman): We should clear out the directories on the device for types we don't
-      // install.
-      if (exopackageInfo.getDexInfo().isPresent()) {
-        installSecondaryDexFiles();
-      }
+      if (exopackageEnabled()) {
+        ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
+        ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
+        device.mkDirP(dataRoot.toString());
+        ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
 
-      if (exopackageInfo.getNativeLibsInfo().isPresent()) {
-        installNativeLibraryFiles();
-      }
+        if (exopackageInfo.getDexInfo().isPresent()) {
+          wantedPaths.addAll(installSecondaryDexFiles(presentFiles));
+          metadata.put(
+              SECONDARY_DEX_DIR.resolve("metadata.txt"), getSecondaryDexMetadataContents());
+        }
 
-      if (exopackageInfo.getResourcesInfo().isPresent()) {
-        installResourcesFiles();
+        if (exopackageInfo.getNativeLibsInfo().isPresent()) {
+          wantedPaths.addAll(installNativeLibraryFiles(presentFiles, metadata));
+        }
+
+        if (exopackageInfo.getResourcesInfo().isPresent()) {
+          ImmutableMap<String, Path> filesByHash = getResourceFilesByHash();
+          wantedPaths.addAll(installResourcesFiles(presentFiles, filesByHash));
+          metadata.put(
+              RESOURCES_DIR.resolve("metadata.txt"), getResourceMetadataContents(filesByHash));
+        }
+
+        deleteUnwantedFiles(presentFiles, wantedPaths.build());
+        installMetadata(metadata.build());
       }
 
       // TODO(dreiss): Make this work on Gingerbread.
@@ -252,24 +265,19 @@ public class ExopackageInstaller {
       return true;
     }
 
-    private void installSecondaryDexFiles() throws Exception {
+    private boolean exopackageEnabled() {
+      return exopackageInfo.getDexInfo().isPresent()
+          || exopackageInfo.getNativeLibsInfo().isPresent()
+          || exopackageInfo.getResourcesInfo().isPresent();
+    }
+
+    private Iterable<Path> installSecondaryDexFiles(ImmutableSortedSet<Path> presentFiles)
+        throws Exception {
       final ImmutableMap<String, Path> filesByHash = getRequiredDexFiles();
       ImmutableMap<Path, Path> wantedFilesToInstall =
           applyFilenameFormat(filesByHash, SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
-      device.mkDirP(dataRoot.resolve(SECONDARY_DEX_DIR).toString());
-      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
       installMissingFiles(presentFiles, wantedFilesToInstall, "secondary_dex");
-
-      // filesToDelete will contain the old metadata, so delete first.
-      ImmutableSortedSet<Path> filesInDexDir =
-          ImmutableSortedSet.copyOf(
-              Sets.filter(presentFiles, p -> p.startsWith(SECONDARY_DEX_DIR)));
-      deleteUnwantedFiles(filesInDexDir, wantedFilesToInstall.keySet());
-      String metadataContents = getSecondaryDexMetadataContents();
-
-      ImmutableMap<Path, String> metadataToInstall =
-          ImmutableMap.of(SECONDARY_DEX_DIR.resolve("metadata.txt"), metadataContents);
-      installMetadata(metadataToInstall);
+      return wantedFilesToInstall.keySet();
     }
 
     private String getSecondaryDexMetadataContents() throws IOException {
@@ -288,39 +296,31 @@ public class ExopackageInstaller {
               "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
     }
 
-    private void installResourcesFiles() throws Exception {
-      ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
-
-      ImmutableMap<String, Path> filesByHash =
-          info.getResourcesPaths()
-              .stream()
-              .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
-              .collect(
-                  MoreCollectors.toImmutableMap(
-                      p -> {
-                        try {
-                          return projectFilesystem.computeSha1(p).getHash();
-                        } catch (IOException e) {
-                          throw new RuntimeException(e);
-                        }
-                      },
-                      i -> i));
-      device.mkDirP(dataRoot.resolve(RESOURCES_DIR).toString());
+    private Iterable<Path> installResourcesFiles(
+        ImmutableSortedSet<Path> presentFiles, ImmutableMap<String, Path> filesByHash)
+        throws Exception {
       ImmutableMap<Path, Path> wantedFilesToInstall =
           applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");
-      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
-
       installMissingFiles(presentFiles, wantedFilesToInstall, "resources");
+      return wantedFilesToInstall.keySet();
+    }
 
-      // filesToDelete will contain the old metadata, so delete first.
-      ImmutableSortedSet<Path> filesInResourceDir =
-          ImmutableSortedSet.copyOf(Sets.filter(presentFiles, p -> p.startsWith(RESOURCES_DIR)));
-      deleteUnwantedFiles(filesInResourceDir, wantedFilesToInstall.keySet());
+    private ImmutableMap<String, Path> getResourceFilesByHash() {
+      ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
 
-      String metadataContents = getResourceMetadataContents(filesByHash);
-      ImmutableMap<Path, String> metadataToInstall =
-          ImmutableMap.of(RESOURCES_DIR.resolve("metadata.txt"), metadataContents);
-      installMetadata(metadataToInstall);
+      return info.getResourcesPaths()
+          .stream()
+          .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
+          .collect(
+              MoreCollectors.toImmutableMap(
+                  p -> {
+                    try {
+                      return projectFilesystem.computeSha1(p).getHash();
+                    } catch (IOException e) {
+                      throw new RuntimeException(e);
+                    }
+                  },
+                  i -> i));
     }
 
     private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {
@@ -328,39 +328,30 @@ public class ExopackageInstaller {
           .join(RichStream.from(filesByHash.keySet()).map(h -> "resources " + h).toOnceIterable());
     }
 
-    private void installNativeLibraryFiles() throws Exception {
+    private Iterable<Path> installNativeLibraryFiles(
+        ImmutableSortedSet<Path> presentFiles, ImmutableMap.Builder<Path, String> metadataBuilder)
+        throws Exception {
       ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
       ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
+      ImmutableList.Builder<Path> wantedPaths = ImmutableList.builder();
       for (String abi : device.getDeviceAbis()) {
-        ImmutableMap<String, Path> libraries =
+        ImmutableMap<String, Path> filesByHash =
             getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
-        installNativeLibrariesForAbi(abi, libraries);
-        providedLibraries.addAll(libraries.keySet());
+        if (filesByHash.isEmpty()) {
+          continue;
+        }
+        Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
+        ImmutableMap<Path, Path> wantedFilesToInstall =
+            applyFilenameFormat(filesByHash, abiDir, "native-%s.so");
+        installMissingFiles(presentFiles, wantedFilesToInstall, "native_library");
+        wantedPaths.addAll(wantedFilesToInstall.keySet());
+
+        metadataBuilder.put(
+            abiDir.resolve("metadata.txt"), getNativeLibraryMetadataContents(filesByHash));
+
+        providedLibraries.addAll(filesByHash.keySet());
       }
-    }
-
-    private void installNativeLibrariesForAbi(String abi, ImmutableMap<String, Path> filesByHash)
-        throws Exception {
-      if (filesByHash.isEmpty()) {
-        return;
-      }
-      Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
-      ImmutableMap<Path, Path> wantedFilesToInstall =
-          applyFilenameFormat(filesByHash, abiDir, "native-%s.so");
-      device.mkDirP(dataRoot.resolve(abiDir).toString());
-      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
-
-      installMissingFiles(presentFiles, wantedFilesToInstall, "native_library");
-
-      // filesToDelete will contain the old metadata, so delete first.
-      ImmutableSortedSet<Path> filesInAbiDir =
-          ImmutableSortedSet.copyOf(Sets.filter(presentFiles, p -> p.startsWith(abiDir)));
-      deleteUnwantedFiles(filesInAbiDir, wantedFilesToInstall.keySet());
-      String metadataContents = getNativeLibraryMetadataContents(filesByHash);
-
-      ImmutableMap<Path, String> metadataToInstall =
-          ImmutableMap.of(abiDir.resolve("metadata.txt"), metadataContents);
-      installMetadata(metadataToInstall);
+      return wantedPaths.build();
     }
 
     private String getNativeLibraryMetadataContents(ImmutableMap<String, Path> libraries) {
@@ -493,6 +484,21 @@ public class ExopackageInstaller {
       try (SimplePerfEvent.Scope ignored =
               SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
           AutoCloseable ignored1 = device.createForward()) {
+        // Make sure all the directories exist.
+        filesToInstall
+            .keySet()
+            .stream()
+            .map(p -> dataRoot.resolve(p).getParent())
+            .distinct()
+            .forEach(
+                p -> {
+                  try {
+                    device.mkDirP(p.toString());
+                  } catch (Exception e) {
+                    throw new RuntimeException(e);
+                  }
+                });
+        // Install the files.
         filesToInstall.forEach(
             (devicePath, hostPath) -> {
               Path destination = dataRoot.resolve(devicePath);
