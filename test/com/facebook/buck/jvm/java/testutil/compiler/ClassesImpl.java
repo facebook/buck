@@ -52,7 +52,8 @@ class ClassesImpl implements Classes {
 
   @Override
   public void createJar(Path jarPath, boolean hashEntries) throws IOException {
-    JarBuilder jarBuilder = new JarBuilder().setShouldHashEntries(hashEntries);
+    JarBuilder jarBuilder =
+        new JarBuilder().setShouldMergeManifests(true).setShouldHashEntries(hashEntries);
 
     List<Path> files =
         Files.walk(root.getRoot().toPath())

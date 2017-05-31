@@ -42,7 +42,7 @@ class FilesystemStubJarWriter implements StubJarWriter {
     }
 
     this.outputPath = filesystem.resolve(outputPath);
-    jarBuilder = new JarBuilder().setShouldHashEntries(true);
+    jarBuilder = new JarBuilder().setShouldHashEntries(true).setShouldMergeManifests(true);
   }
 
   @Override

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -37,6 +36,6 @@ public abstract class StubJarEntry {
   public abstract void write(StubJarWriter writer) throws IOException;
 
   private static boolean isStubbableResource(LibraryReader input, Path path) {
-    return input.isResource(path) && !path.endsWith("META-INF" + File.separator + "MANIFEST.MF");
+    return input.isResource(path);
   }
 }

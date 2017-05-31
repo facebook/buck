@@ -30,12 +30,17 @@ import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.zip.DeterministicManifest;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.CharStreams;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -3260,6 +3265,7 @@ public class StubJarTest {
         compileToJar(
             EMPTY_CLASSPATH,
             Collections.emptyList(),
+            null,
             "A.java",
             Joiner.on("\n")
                 .join(
@@ -3294,6 +3300,34 @@ public class StubJarTest {
             "  public eatCake()V",
             "}")
         .checkStubJar();
+  }
+
+  @Test
+  public void shouldPreserveManifestEntries() throws IOException {
+    DeterministicManifest manifest = new DeterministicManifest();
+    manifest.getMainAttributes().putValue("Test-Value", "Test");
+    manifest.setEntryAttribute("com/example/buck/A.class", "Test-Value", "Test");
+
+    DeterministicManifest expectedManifest = new DeterministicManifest(manifest);
+    expectedManifest.setManifestAttribute("Manifest-Version", "1.0");
+    expectedManifest.setEntryAttribute(
+        "com/example/buck/A.class", "Murmur3-128-Digest", "6ddaf37b8a78b7ae705f31d1512c13c6");
+
+    tester
+        .setSourceFile("A.java", "package com.example.buck;", "public class A { }")
+        .setManifest(manifest)
+        .setExpectedStubManifest(expectedManifest)
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
   }
 
   @Test
@@ -3630,12 +3664,19 @@ public class StubJarTest {
   }
 
   private Path createStubJar(
-      SortedSet<Path> classpath, String fileName, String source, Path outputDir)
+      SortedSet<Path> classpath,
+      DeterministicManifest manifest,
+      String fileName,
+      String source,
+      Path outputDir)
       throws IOException {
     Path stubJar = outputDir.resolve("stub.jar");
 
     try (TestCompiler testCompiler = new TestCompiler()) {
       testCompiler.init();
+      if (manifest != null) {
+        testCompiler.setManifest(manifest);
+      }
       testCompiler.useFrontendOnlyJavacTask();
       testCompiler.addSourceFileContents(fileName, source);
       testCompiler.addClasspath(classpath);
@@ -3678,12 +3719,16 @@ public class StubJarTest {
   private Path compileToJar(
       SortedSet<Path> classpath,
       List<Processor> processors,
+      DeterministicManifest manifest,
       String fileName,
       String source,
       File outputDir)
       throws IOException {
     try (TestCompiler compiler = new TestCompiler()) {
       compiler.init();
+      if (manifest != null) {
+        compiler.setManifest(manifest);
+      }
       compiler.addSourceFileContents(fileName, source);
       compiler.addClasspath(classpath);
       compiler.setProcessors(processors);
@@ -3735,6 +3780,9 @@ public class StubJarTest {
     private final Map<String, List<String>> expectedStubs = new HashMap<>();
     private final Map<String, List<String>> actualStubs = new HashMap<>();
     private final List<String> expectedCompileErrors = new ArrayList<>();
+    private DeterministicManifest manifest;
+    private List<String> expectedStubManifest;
+    private List<String> actualStubManifest;
     private String sourceFileName = "";
     private String sourceFileContents = "";
     private ImmutableSortedSet<Path> classpath = EMPTY_CLASSPATH;
@@ -3752,6 +3800,22 @@ public class StubJarTest {
       actualStubs.clear();
       stubJarPath = null;
       fullJarPath = null;
+    }
+
+    public Tester setManifest(DeterministicManifest manifest) {
+      this.manifest = manifest;
+      return this;
+    }
+
+    public Tester setExpectedStubManifest(DeterministicManifest manifest) throws IOException {
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        manifest.write(out);
+        try (InputStreamReader reader =
+            new InputStreamReader(new ByteArrayInputStream(out.toByteArray()))) {
+          expectedStubManifest = CharStreams.readLines(reader);
+        }
+      }
+      return this;
     }
 
     public Tester setSourceFile(String fileName, String... lines) {
@@ -3826,6 +3890,11 @@ public class StubJarTest {
             Joiner.on('\n').join(actualStubs.get(entryName)));
       }
 
+      if (expectedStubManifest != null) {
+        assertEquals(
+            Joiner.on('\n').join(expectedStubManifest), Joiner.on('\n').join(actualStubManifest));
+      }
+
       return this;
     }
 
@@ -3835,6 +3904,7 @@ public class StubJarTest {
         stubJarPath =
             StubJarTest.this.createStubJar(
                 testingMode == MODE_SOURCE_BASED ? classpath : Collections.emptySortedSet(),
+                manifest,
                 sourceFileName,
                 sourceFileContents,
                 outputDir.toPath());
@@ -3850,7 +3920,12 @@ public class StubJarTest {
       File outputDir = temp.newFolder();
       fullJarPath =
           compileToJar(
-              classpath, Collections.emptyList(), sourceFileName, sourceFileContents, outputDir);
+              classpath,
+              Collections.emptyList(),
+              manifest,
+              sourceFileName,
+              sourceFileContents,
+              outputDir);
       return this;
     }
 
@@ -3982,6 +4057,8 @@ public class StubJarTest {
         for (JarEntry entry : entries) {
           String name = entry.getName();
           if (JarFile.MANIFEST_NAME.equals(name)) {
+            actualStubManifest =
+                new JarDumper().dumpEntry(file, entry).collect(Collectors.toList());
             continue;
           }
           actualStubDirectory.add(name);

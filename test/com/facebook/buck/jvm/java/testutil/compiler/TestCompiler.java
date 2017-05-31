@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
+import com.facebook.buck.zip.DeterministicManifest;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.sun.source.tree.CompilationUnitTree;
@@ -30,6 +31,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -107,6 +109,15 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
   public void addClasspath(Collection<Path> paths) {
     paths.stream().map(Path::toString).forEach(classpath::add);
+  }
+
+  public void setManifest(DeterministicManifest manifest) throws IOException {
+    File metaInfDir = outputFolder.newFolder("META-INF");
+    File manifestFile = new File(metaInfDir, "MANIFEST.MF");
+
+    try (FileOutputStream out = new FileOutputStream(manifestFile)) {
+      manifest.write(out);
+    }
   }
 
   public void addSourceFileContents(String fileName, String... lines) throws IOException {
