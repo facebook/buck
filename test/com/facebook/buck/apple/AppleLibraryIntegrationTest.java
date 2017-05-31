@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -654,6 +655,20 @@ public class AppleLibraryIntegrationTest {
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "precompiled_header", tmp);
+    workspace.setUp();
+    BuildTarget target = workspace.newBuildTarget("//:library#iphonesimulator-x86_64,static");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+  }
+
+  @Test
+  @Ignore // Failing test case. Should be removed when the bug is fixed.
+  public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "multicell_precompiled_header", tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:library#iphonesimulator-x86_64,static");
     ProjectWorkspace.ProcessResult result =
