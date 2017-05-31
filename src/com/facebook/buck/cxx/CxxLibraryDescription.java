@@ -66,6 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class CxxLibraryDescription
@@ -168,6 +169,46 @@ public class CxxLibraryDescription
         || LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors);
   }
 
+  /**
+   * This function is broken out so that CxxInferEnhancer can get a list of dependencies for
+   * building the library.
+   */
+  static ImmutableList<CxxPreprocessorInput> getPreprocessorInputsForBuildingLibrarySources(
+      BuildRuleResolver ruleResolver,
+      BuildTarget target,
+      CommonArg args,
+      CxxPlatform cxxPlatform,
+      ImmutableSet<BuildRule> deps,
+      TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
+      HeaderSymlinkTree headerSymlinkTree,
+      Optional<SymlinkTree> sandboxTree)
+      throws NoSuchBuildTargetException {
+    return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+        target,
+        cxxPlatform,
+        deps,
+        CxxFlags.getLanguageFlags(
+            args.getPreprocessorFlags(),
+            args.getPlatformPreprocessorFlags(),
+            args.getLangPreprocessorFlags(),
+            cxxPlatform),
+        ImmutableList.of(headerSymlinkTree),
+        ImmutableSet.of(),
+        RichStream.from(
+                transitivePreprocessorInputs.apply(
+                    target,
+                    ruleResolver,
+                    cxxPlatform,
+                    deps,
+                    // Also add private deps if we are _not_ reexporting all deps.
+                    args.isReexportAllHeaderDependencies()
+                        ? CxxDeps.EMPTY
+                        : args.getPrivateCxxDeps()))
+            .toOnceIterable(),
+        args.getIncludeDirs(),
+        sandboxTree);
+  }
+
   private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -205,23 +246,6 @@ public class CxxLibraryDescription
       sandboxTree = CxxDescriptionEnhancer.createSandboxTree(params, ruleResolver, cxxPlatform);
     }
 
-    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
-        CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            params.getBuildTarget(),
-            cxxPlatform,
-            deps,
-            CxxFlags.getLanguageFlags(
-                args.getPreprocessorFlags(),
-                args.getPlatformPreprocessorFlags(),
-                args.getLangPreprocessorFlags(),
-                cxxPlatform),
-            ImmutableList.of(headerSymlinkTree),
-            ImmutableSet.of(),
-            transitivePreprocessorInputs.apply(
-                params.getBuildTarget(), ruleResolver, cxxPlatform, deps),
-            args.getIncludeDirs(),
-            sandboxTree);
-
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
         params,
@@ -230,7 +254,15 @@ public class CxxLibraryDescription
         ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
-        cxxPreprocessorInputFromDependencies,
+        getPreprocessorInputsForBuildingLibrarySources(
+            ruleResolver,
+            params.getBuildTarget(),
+            args,
+            cxxPlatform,
+            deps,
+            transitivePreprocessorInputs,
+            headerSymlinkTree,
+            sandboxTree),
         CxxFlags.getLanguageFlags(
             args.getCompilerFlags(),
             args.getPlatformCompilerFlags(),
@@ -1052,11 +1084,12 @@ public class CxxLibraryDescription
    */
   @FunctionalInterface
   public interface TransitiveCxxPreprocessorInputFunction {
-    ImmutableCollection<CxxPreprocessorInput> apply(
+    Stream<CxxPreprocessorInput> apply(
         BuildTarget target,
         BuildRuleResolver ruleResolver,
         CxxPlatform cxxPlatform,
-        ImmutableSet<BuildRule> deps)
+        ImmutableSet<BuildRule> deps,
+        CxxDeps privateDeps)
         throws NoSuchBuildTargetException;
 
     /**
@@ -1066,7 +1099,7 @@ public class CxxLibraryDescription
      * (namely AppleTest) cannot use this.
      */
     static TransitiveCxxPreprocessorInputFunction fromLibraryRule() {
-      return (target, ruleResolver, cxxPlatform, ignored) -> {
+      return (target, ruleResolver, cxxPlatform, ignored, privateDeps) -> {
         BuildTarget rawTarget =
             target.withoutFlavors(
                 ImmutableSet.<Flavor>builder()
@@ -1075,7 +1108,24 @@ public class CxxLibraryDescription
                     .build());
         BuildRule rawRule = ruleResolver.requireRule(rawTarget);
         CxxLibrary rule = (CxxLibrary) rawRule;
-        return rule.getTransitiveCxxPreprocessorInput(cxxPlatform).values();
+        ImmutableMap<BuildTarget, CxxPreprocessorInput> inputs =
+            rule.getTransitiveCxxPreprocessorInput(cxxPlatform);
+
+        ImmutableList<CxxPreprocessorDep> privateDepsForPlatform =
+            RichStream.from(privateDeps.get(ruleResolver, cxxPlatform))
+                .filter(CxxPreprocessorDep.class)
+                .toImmutableList();
+        if (privateDepsForPlatform.isEmpty()) {
+          // Nothing to add.
+          return inputs.values().stream();
+        } else {
+          Map<BuildTarget, CxxPreprocessorInput> result = Maps.newLinkedHashMap();
+          result.putAll(inputs);
+          for (CxxPreprocessorDep dep : privateDepsForPlatform) {
+            result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
+          }
+          return result.values().stream();
+        }
       };
     }
 
@@ -1085,7 +1135,7 @@ public class CxxLibraryDescription
      * <p>This is used by AppleTest, which doesn't generate a CxxLibrary rule that computes this.
      */
     static TransitiveCxxPreprocessorInputFunction fromDeps() {
-      return (target, ruleResolver, cxxPlatform, deps) -> {
+      return (target, ruleResolver, cxxPlatform, deps, privateDeps) -> {
         Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
         input.put(
             target,
@@ -1098,7 +1148,7 @@ public class CxxLibraryDescription
                 ((CxxPreprocessorDep) rule).getTransitiveCxxPreprocessorInput(cxxPlatform));
           }
         }
-        return ImmutableList.copyOf(input.values());
+        return input.values().stream();
       };
     }
   }

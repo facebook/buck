@@ -297,32 +297,6 @@ public final class CxxInferEnhancer {
         sandboxTree);
   }
 
-  private ImmutableList<CxxPreprocessorInput> computePreprocessorInputForCxxLibraryDescriptionArg(
-      BuildRuleParams params,
-      CxxPlatform cxxPlatform,
-      CxxLibraryDescription.CommonArg args,
-      HeaderSymlinkTree headerSymlinkTree,
-      ImmutableList<String> includeDirs,
-      Optional<SymlinkTree> sandboxTree)
-      throws NoSuchBuildTargetException {
-    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
-    return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-        params.getBuildTarget(),
-        cxxPlatform,
-        deps,
-        CxxFlags.getLanguageFlags(
-            args.getPreprocessorFlags(),
-            args.getPlatformPreprocessorFlags(),
-            args.getLangPreprocessorFlags(),
-            cxxPlatform),
-        ImmutableList.of(headerSymlinkTree),
-        ImmutableSet.of(),
-        CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule()
-            .apply(params.getBuildTarget(), ruleResolver, cxxPlatform, deps),
-        includeDirs,
-        sandboxTree);
-  }
-
   private ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
       final BuildRuleParams params, ImmutableMap<String, CxxSource> sources, CxxConstructorArg args)
       throws NoSuchBuildTargetException {
@@ -376,12 +350,14 @@ public final class CxxInferEnhancer {
               sandboxTree);
     } else if (args instanceof CxxLibraryDescription.CommonArg) {
       preprocessorInputs =
-          computePreprocessorInputForCxxLibraryDescriptionArg(
-              params,
-              cxxPlatform,
+          CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
+              ruleResolver,
+              params.getBuildTarget(),
               (CxxLibraryDescription.CommonArg) args,
+              cxxPlatform,
+              args.getCxxDeps().get(ruleResolver, cxxPlatform),
+              CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule(),
               headerSymlinkTree,
-              args.getIncludeDirs(),
               sandboxTree);
     } else {
       throw new IllegalStateException("Only Binary and Library args supported.");

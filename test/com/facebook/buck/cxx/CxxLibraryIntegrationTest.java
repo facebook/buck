@@ -383,6 +383,8 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:bin-explicit-reexport").assertSuccess();
     // auto-reexport is off, but not reexporting via exported_deps
     workspace.runBuckBuild("//:bin-explicit-noexport").assertFailure();
+    // auto-reexport is off, no reexport, and a dependency-free exported header
+    workspace.runBuckBuild("//:bin-internal-dep-noexport").assertSuccess();
     // auto-reexport is on, but not reexporting via exported_deps
     workspace.runBuckBuild("//:bin-auto-reexport").assertSuccess();
   }
