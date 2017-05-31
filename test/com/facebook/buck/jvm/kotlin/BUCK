@@ -5,7 +5,7 @@ java_library(
         excludes = [
             "*Benchmark.java",
             "*Test.java",
-        ],
+        ]
     ),
     visibility = ["//test/..."],
     deps = [
