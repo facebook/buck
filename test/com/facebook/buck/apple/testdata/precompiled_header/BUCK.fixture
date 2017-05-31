@@ -1,0 +1,13 @@
+cxx_precompiled_header(
+  name = 'pch',
+  src = 'precompiled_header.pch',
+)
+
+apple_library(
+  name = 'library',
+  precompiled_header = ':pch',
+  srcs = [
+    'LibFile1.m',
+    'LibFile2.m',
+  ],
+)

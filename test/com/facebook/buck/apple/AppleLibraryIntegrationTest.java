@@ -649,6 +649,19 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildUsingPrefixHeaderFromCxxPrecompiledHeader() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "precompiled_header", tmp);
+    workspace.setUp();
+    BuildTarget target = workspace.newBuildTarget("//:library#iphonesimulator-x86_64,static");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+  }
+
+  @Test
   public void testBuildAppleLibraryThatHasSwift() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
