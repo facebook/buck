@@ -54,6 +54,19 @@ public class TreeBackedProcessorWrapperTest {
   private Messager messager;
 
   @Test
+  public void testSourceAbiOptionPresent() throws IOException {
+    runTestProcessor(
+        (annotations, roundEnv) -> {
+          assertTrue(
+              Boolean.valueOf(
+                  processingEnv
+                      .getOptions()
+                      .getOrDefault("com.facebook.buck.java.generating_abi", "false")));
+          return false;
+        });
+  }
+
+  @Test
   public void testElementUtilsIsWrapped() throws IOException {
     runTestProcessor(
         (annotations, roundEnv) -> {

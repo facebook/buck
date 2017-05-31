@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.sun.source.util.Trees;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.processing.Filer;
@@ -31,6 +32,7 @@ class TreeBackedProcessingEnvironment implements ProcessingEnvironment {
   private final ProcessingEnvironment javacProcessingEnvironment;
   private final TreeBackedMessager messager;
   private final TreeBackedFiler filer;
+  private final Map<String, String> options = new HashMap<>();
 
   public TreeBackedProcessingEnvironment(
       FrontendOnlyJavacTask task, ProcessingEnvironment javacProcessingEnvironment) {
@@ -38,11 +40,14 @@ class TreeBackedProcessingEnvironment implements ProcessingEnvironment {
     this.javacProcessingEnvironment = javacProcessingEnvironment;
     messager = new TreeBackedMessager(task, javacProcessingEnvironment.getMessager());
     filer = new TreeBackedFiler(task, javacProcessingEnvironment.getFiler());
+
+    options.putAll(javacProcessingEnvironment.getOptions());
+    options.put("com.facebook.buck.java.generating_abi", "true");
   }
 
   @Override
   public Map<String, String> getOptions() {
-    return javacProcessingEnvironment.getOptions();
+    return options;
   }
 
   @Override
