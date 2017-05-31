@@ -205,7 +205,8 @@ public class AppleLibraryDescription
           args.getLinkStyle(),
           Optional.empty(),
           ImmutableSet.of(),
-          ImmutableSortedSet.of());
+          ImmutableSortedSet.of(),
+          CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule());
     }
   }
 
@@ -269,7 +270,8 @@ public class AppleLibraryDescription
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      ImmutableSortedSet<BuildTarget> extraCxxDeps)
+      ImmutableSortedSet<BuildTarget> extraCxxDeps,
+      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput)
       throws NoSuchBuildTargetException {
     // We explicitly remove flavors from params to make sure rule
     // has the same output regardless if we will strip or not.
@@ -290,7 +292,8 @@ public class AppleLibraryDescription
             bundleLoader,
             blacklist,
             pathResolver,
-            extraCxxDeps);
+            extraCxxDeps,
+            transitiveCxxPreprocessorInput);
 
     if (!shouldWrapIntoDebuggableBinary(params.getBuildTarget(), unstrippedBinaryRule)) {
       return unstrippedBinaryRule;
@@ -342,7 +345,8 @@ public class AppleLibraryDescription
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       SourcePathResolver pathResolver,
-      ImmutableSortedSet<BuildTarget> extraCxxDeps)
+      ImmutableSortedSet<BuildTarget> extraCxxDeps,
+      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput)
       throws NoSuchBuildTargetException {
     Optional<MultiarchFileInfo> multiarchFileInfo =
         MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, params.getBuildTarget());
@@ -360,7 +364,8 @@ public class AppleLibraryDescription
                 bundleLoader,
                 blacklist,
                 pathResolver,
-                extraCxxDeps));
+                extraCxxDeps,
+                transitiveCxxPreprocessorInput));
       }
       return MultiarchFileInfos.requireMultiarchRule(
           // In the same manner that debug flavors are omitted from single-arch constituents, they
@@ -381,7 +386,8 @@ public class AppleLibraryDescription
           bundleLoader,
           blacklist,
           pathResolver,
-          extraCxxDeps);
+          extraCxxDeps,
+          transitiveCxxPreprocessorInput);
     }
   }
 
@@ -396,7 +402,8 @@ public class AppleLibraryDescription
           Optional<SourcePath> bundleLoader,
           ImmutableSet<BuildTarget> blacklist,
           SourcePathResolver pathResolver,
-          ImmutableSortedSet<BuildTarget> extraCxxDeps)
+          ImmutableSortedSet<BuildTarget> extraCxxDeps,
+          CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps)
           throws NoSuchBuildTargetException {
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
@@ -436,7 +443,8 @@ public class AppleLibraryDescription
               linkableDepType,
               bundleLoader,
               blacklist,
-              extraCxxDeps);
+              extraCxxDeps,
+              transitiveCxxDeps);
       return resolver.addToIndex(rule);
     }
   }

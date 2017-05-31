@@ -177,7 +177,8 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType pic,
       CxxLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps)
+      ImmutableSet<BuildRule> deps,
+      TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs)
       throws NoSuchBuildTargetException {
 
     boolean shouldCreatePrivateHeadersSymlinks =
@@ -216,7 +217,8 @@ public class CxxLibraryDescription
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
-            getTransitiveCxxPreprocessorInput(params, ruleResolver, cxxPlatform, deps),
+            transitivePreprocessorInputs.apply(
+                params.getBuildTarget(), ruleResolver, cxxPlatform, deps),
             args.getIncludeDirs(),
             sandboxTree);
 
@@ -247,43 +249,6 @@ public class CxxLibraryDescription
         sandboxTree);
   }
 
-  public static ImmutableCollection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      CxxPlatform cxxPlatform,
-      ImmutableSet<BuildRule> deps)
-      throws NoSuchBuildTargetException {
-
-    // Check if there is a target node representative for the library in the action graph and,
-    // if so, grab the cached transitive C/C++ preprocessor input from that.
-    BuildTarget rawTarget =
-        params
-            .getBuildTarget()
-            .withoutFlavors(
-                ImmutableSet.<Flavor>builder()
-                    .addAll(LIBRARY_TYPE.getFlavors())
-                    .add(cxxPlatform.getFlavor())
-                    .build());
-    Optional<BuildRule> rawRule = ruleResolver.getRuleOptional(rawTarget);
-    if (rawRule.isPresent()) {
-      CxxLibrary rule = (CxxLibrary) rawRule.get();
-      return rule.getTransitiveCxxPreprocessorInput(cxxPlatform).values();
-    }
-
-    Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
-    input.put(
-        params.getBuildTarget(),
-        queryMetadataCxxPreprocessorInput(
-                ruleResolver, params.getBuildTarget(), cxxPlatform, HeaderVisibility.PUBLIC)
-            .orElseThrow(IllegalStateException::new));
-    for (BuildRule rule : deps) {
-      if (rule instanceof CxxPreprocessorDep) {
-        input.putAll(((CxxPreprocessorDep) rule).getTransitiveCxxPreprocessorInput(cxxPlatform));
-      }
-    }
-    return ImmutableList.copyOf(input.values());
-  }
-
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -297,7 +262,8 @@ public class CxxLibraryDescription
       ImmutableList<StringWithMacros> linkerFlags,
       ImmutableList<StringWithMacros> exportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
-      ImmutableSet<FrameworkPath> libraries)
+      ImmutableSet<FrameworkPath> libraries,
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
 
     // Create rules for compiling the PIC object files.
@@ -311,7 +277,8 @@ public class CxxLibraryDescription
             cxxPlatform,
             CxxSourceRuleFactory.PicType.PIC,
             arg,
-            deps);
+            deps,
+            transitiveCxxPreprocessorInputFunction);
 
     return NativeLinkableInput.builder()
         .addAllArgs(
@@ -350,7 +317,8 @@ public class CxxLibraryDescription
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist)
+      ImmutableSet<BuildTarget> blacklist,
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
@@ -367,7 +335,8 @@ public class CxxLibraryDescription
             cxxPlatform,
             CxxSourceRuleFactory.PicType.PIC,
             args,
-            deps);
+            deps,
+            transitiveCxxPreprocessorInputFunction);
 
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
@@ -497,7 +466,8 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      CxxSourceRuleFactory.PicType pic)
+      CxxSourceRuleFactory.PicType pic,
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
@@ -513,7 +483,8 @@ public class CxxLibraryDescription
             cxxPlatform,
             pic,
             args,
-            deps);
+            deps,
+            transitiveCxxPreprocessorInputFunction);
 
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
@@ -559,7 +530,8 @@ public class CxxLibraryDescription
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist)
+      ImmutableSet<BuildTarget> blacklist,
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<StringWithMacros> linkerFlags = ImmutableList.builder();
 
@@ -591,7 +563,8 @@ public class CxxLibraryDescription
         linkType,
         linkableDepType,
         bundleLoader,
-        blacklist);
+        blacklist,
+        transitiveCxxPreprocessorInputFunction);
   }
 
   private static BuildRule createSharedLibraryInterface(
@@ -642,7 +615,8 @@ public class CxxLibraryDescription
         args.getLinkStyle(),
         Optional.empty(),
         ImmutableSet.of(),
-        ImmutableSortedSet.of());
+        ImmutableSortedSet.of(),
+        TransitiveCxxPreprocessorInputFunction.fromLibraryRule());
   }
 
   public BuildRule createBuildRule(
@@ -653,7 +627,8 @@ public class CxxLibraryDescription
       Optional<Linker.LinkableDepType> linkableDepType,
       final Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      ImmutableSortedSet<BuildTarget> extraDeps)
+      ImmutableSortedSet<BuildTarget> extraDeps,
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
 
     // Create a copy of the metadata-rule params with the deps removed to pass around into library
@@ -688,7 +663,8 @@ public class CxxLibraryDescription
               cxxPlatform,
               CxxSourceRuleFactory.PicType.PIC,
               args,
-              cxxDeps.get(resolver, cxxPlatform));
+              cxxDeps.get(resolver, cxxPlatform),
+              transitiveCxxPreprocessorInputFunction);
       return CxxCompilationDatabase.createCompilationDatabase(params, objects.keySet());
     } else if (params
         .getBuildTarget()
@@ -744,7 +720,8 @@ public class CxxLibraryDescription
               Linker.LinkType.SHARED,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               Optional.empty(),
-              blacklist);
+              blacklist,
+              transitiveCxxPreprocessorInputFunction);
         case SHARED_INTERFACE:
           return createSharedLibraryInterface(untypedParams, resolver, platform.get());
         case MACH_O_BUNDLE:
@@ -759,7 +736,8 @@ public class CxxLibraryDescription
               Linker.LinkType.MACH_O_BUNDLE,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               bundleLoader,
-              blacklist);
+              blacklist,
+              transitiveCxxPreprocessorInputFunction);
         case STATIC:
           return createStaticLibraryBuildRule(
               untypedParams,
@@ -768,7 +746,8 @@ public class CxxLibraryDescription
               platform.get(),
               args,
               cxxDeps.get(resolver, platform.get()),
-              CxxSourceRuleFactory.PicType.PDC);
+              CxxSourceRuleFactory.PicType.PDC,
+              transitiveCxxPreprocessorInputFunction);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
               untypedParams,
@@ -777,7 +756,8 @@ public class CxxLibraryDescription
               platform.get(),
               args,
               cxxDeps.get(resolver, platform.get()),
-              CxxSourceRuleFactory.PicType.PIC);
+              CxxSourceRuleFactory.PicType.PIC,
+              transitiveCxxPreprocessorInputFunction);
         case SANDBOX_TREE:
           return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
               resolver, args, platform.get(), untypedParams);
@@ -831,7 +811,8 @@ public class CxxLibraryDescription
                     args.getExportedPlatformLinkerFlags(),
                     cxxPlatform),
                 args.getFrameworks(),
-                args.getLibraries());
+                args.getLibraries(),
+                transitiveCxxPreprocessorInputFunction);
           } catch (NoSuchBuildTargetException e) {
             throw new RuntimeException(e);
           }
@@ -1059,6 +1040,67 @@ public class CxxLibraryDescription
 
     LOG.debug("Got default flavors %s for rule types %s", result, Arrays.toString(types));
     return result;
+  }
+
+  /**
+   * This is a hack to allow fine grained control over how the transitive {@code
+   * CxxPreprocessorInput}s are found. Since not all {@code Description}s which use {@code
+   * CxxLibraryDescription} generate a {@code CxxLibrary}, blinding attempting to require it will
+   * not work.
+   *
+   * <p>Therefore for those other rules, we create the list from scratch.
+   */
+  @FunctionalInterface
+  public interface TransitiveCxxPreprocessorInputFunction {
+    ImmutableCollection<CxxPreprocessorInput> apply(
+        BuildTarget target,
+        BuildRuleResolver ruleResolver,
+        CxxPlatform cxxPlatform,
+        ImmutableSet<BuildRule> deps)
+        throws NoSuchBuildTargetException;
+
+    /**
+     * Retrieve the transitive CxxPreprocessorInput from the CxxLibrary rule.
+     *
+     * <p>This is used by CxxLibrary and AppleLibrary. Rules that do not generate a CxxLibrary rule
+     * (namely AppleTest) cannot use this.
+     */
+    static TransitiveCxxPreprocessorInputFunction fromLibraryRule() {
+      return (target, ruleResolver, cxxPlatform, ignored) -> {
+        BuildTarget rawTarget =
+            target.withoutFlavors(
+                ImmutableSet.<Flavor>builder()
+                    .addAll(LIBRARY_TYPE.getFlavors())
+                    .add(cxxPlatform.getFlavor())
+                    .build());
+        BuildRule rawRule = ruleResolver.requireRule(rawTarget);
+        CxxLibrary rule = (CxxLibrary) rawRule;
+        return rule.getTransitiveCxxPreprocessorInput(cxxPlatform).values();
+      };
+    }
+
+    /**
+     * Retrieve the transtiive {@link CxxPreprocessorInput} from an explicitly specified deps list.
+     *
+     * <p>This is used by AppleTest, which doesn't generate a CxxLibrary rule that computes this.
+     */
+    static TransitiveCxxPreprocessorInputFunction fromDeps() {
+      return (target, ruleResolver, cxxPlatform, deps) -> {
+        Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
+        input.put(
+            target,
+            queryMetadataCxxPreprocessorInput(
+                    ruleResolver, target, cxxPlatform, HeaderVisibility.PUBLIC)
+                .orElseThrow(IllegalStateException::new));
+        for (BuildRule rule : deps) {
+          if (rule instanceof CxxPreprocessorDep) {
+            input.putAll(
+                ((CxxPreprocessorDep) rule).getTransitiveCxxPreprocessorInput(cxxPlatform));
+          }
+        }
+        return ImmutableList.copyOf(input.values());
+      };
+    }
   }
 
   public interface CommonArg extends LinkableCxxConstructorArg {

@@ -317,8 +317,8 @@ public final class CxxInferEnhancer {
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
         ImmutableSet.of(),
-        CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
-            params, ruleResolver, cxxPlatform, deps),
+        CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule()
+            .apply(params.getBuildTarget(), ruleResolver, cxxPlatform, deps),
         includeDirs,
         sandboxTree);
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.Linker;
@@ -395,7 +396,8 @@ public class AppleTestDescription
               Optional.of(Linker.LinkableDepType.STATIC),
               testHostAppBinarySourcePath,
               blacklist,
-              extraCxxDeps);
+              extraCxxDeps,
+              CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromDeps());
       resolver.addToIndex(library);
     }
     return library;
