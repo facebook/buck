@@ -139,7 +139,7 @@ public class CxxLuaExtensionDescription
             .add(luaConfig.getLuaCxxLibrary(ruleResolver).getCxxPreprocessorInput(cxxPlatform))
             .addAll(
                 CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-                    params,
+                    params.getBuildTarget(),
                     cxxPlatform,
                     deps,
                     CxxFlags.getLanguageFlags(

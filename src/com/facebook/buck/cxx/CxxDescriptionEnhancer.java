@@ -495,7 +495,7 @@ public class CxxDescriptionEnhancer {
   }
 
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
-      BuildRuleParams params,
+      BuildTarget target,
       CxxPlatform cxxPlatform,
       Iterable<BuildRule> deps,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
@@ -508,8 +508,7 @@ public class CxxDescriptionEnhancer {
 
     // Add the private includes of any rules which this rule depends on, and which list this rule as
     // a test.
-    BuildTarget targetWithoutFlavor =
-        BuildTarget.of(params.getBuildTarget().getUnflavoredBuildTarget());
+    BuildTarget targetWithoutFlavor = BuildTarget.of(target.getUnflavoredBuildTarget());
     ImmutableList.Builder<CxxPreprocessorInput> cxxPreprocessorInputFromTestedRulesBuilder =
         ImmutableList.builder();
     for (BuildRule rule : deps) {
@@ -518,7 +517,7 @@ public class CxxDescriptionEnhancer {
         if (testable.isTestedBy(targetWithoutFlavor)) {
           LOG.debug(
               "Adding private includes of tested rule %s to testing rule %s",
-              rule.getBuildTarget(), params.getBuildTarget());
+              rule.getBuildTarget(), target);
           cxxPreprocessorInputFromTestedRulesBuilder.add(
               testable.getPrivateCxxPreprocessorInput(cxxPlatform));
 
@@ -534,7 +533,7 @@ public class CxxDescriptionEnhancer {
         cxxPreprocessorInputFromTestedRulesBuilder.build();
     LOG.verbose(
         "Rules tested by target %s added private includes %s",
-        params.getBuildTarget(), cxxPreprocessorInputFromTestedRules);
+        target, cxxPreprocessorInputFromTestedRules);
 
     ImmutableList.Builder<CxxHeaders> allIncludes = ImmutableList.builder();
     for (HeaderSymlinkTree headerSymlinkTree : headerSymlinkTrees) {
@@ -834,7 +833,7 @@ public class CxxDescriptionEnhancer {
     }
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         collectCxxPreprocessorInput(
-            params,
+            params.getBuildTarget(),
             cxxPlatform,
             deps,
             CxxFlags.getLanguageFlags(

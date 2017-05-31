@@ -280,7 +280,7 @@ public final class CxxInferEnhancer {
       throws NoSuchBuildTargetException {
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-        params,
+        params.getBuildTarget(),
         cxxPlatform,
         deps,
         CxxFlags.getLanguageFlags(
@@ -307,7 +307,7 @@ public final class CxxInferEnhancer {
       throws NoSuchBuildTargetException {
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-        params,
+        params.getBuildTarget(),
         cxxPlatform,
         deps,
         CxxFlags.getLanguageFlags(

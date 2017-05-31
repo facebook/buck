@@ -207,7 +207,7 @@ public class CxxLibraryDescription
 
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            params,
+            params.getBuildTarget(),
             cxxPlatform,
             deps,
             CxxFlags.getLanguageFlags(

@@ -169,7 +169,7 @@ public class CxxPythonExtensionDescription
 
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            params,
+            params.getBuildTarget(),
             cxxPlatform,
             deps,
             CxxFlags.getLanguageFlags(

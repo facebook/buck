@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -34,7 +35,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -75,23 +75,18 @@ public class CxxDescriptionEnhancerTest {
             // Ensure the test is listed as a dep of the lib.
             ImmutableSortedSet.of(testTarget));
 
-    BuildRuleParams testParams =
-        new FakeBuildRuleParamsBuilder(testTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(libRule))
-            .build();
+    ImmutableSet<BuildRule> deps = ImmutableSortedSet.of(libRule);
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            testParams,
+            testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            testParams.getBuildDeps(),
+            deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                FluentIterable.from(testParams.getBuildDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)),
+                CxxPlatformUtils.DEFAULT_PLATFORM, deps),
             ImmutableList.of(),
             Optional.empty());
 
@@ -152,23 +147,18 @@ public class CxxDescriptionEnhancerTest {
             // Ensure the test is listed as a dep of the lib.
             ImmutableSortedSet.of(testTarget));
 
-    BuildRuleParams testParams =
-        new FakeBuildRuleParamsBuilder(testTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(libRule))
-            .build();
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(libRule);
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            testParams,
+            testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            testParams.getBuildDeps(),
+            deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                FluentIterable.from(testParams.getBuildDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)),
+                CxxPlatformUtils.DEFAULT_PLATFORM, deps),
             ImmutableList.of(),
             Optional.empty());
 
@@ -216,23 +206,18 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSortedSet.of());
 
     BuildTarget otherLibDepTarget = BuildTargetFactory.newInstance("//:other");
-    BuildRuleParams otherLibDepParams =
-        new FakeBuildRuleParamsBuilder(otherLibDepTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(libRule))
-            .build();
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(libRule);
 
     ImmutableList<CxxPreprocessorInput> otherInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
-            otherLibDepParams,
+            otherLibDepTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            otherLibDepParams.getBuildDeps(),
+            deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                FluentIterable.from(otherLibDepParams.getBuildDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)),
+                CxxPlatformUtils.DEFAULT_PLATFORM, deps),
             ImmutableList.of(),
             Optional.empty());
 
