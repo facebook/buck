@@ -115,7 +115,8 @@ public abstract class IjFolder implements Comparable<IjFolder> {
     }
 
     IjFolder otherFolder = (IjFolder) other;
-    return getPath().equals(otherFolder.getPath())
+    return (hashCode() == otherFolder.hashCode())
+        && getPath().equals(otherFolder.getPath())
         && (getWantsPackagePrefix() == otherFolder.getWantsPackagePrefix())
         && getInputs().equals(otherFolder.getInputs());
   }
@@ -123,8 +124,8 @@ public abstract class IjFolder implements Comparable<IjFolder> {
   @Override
   public int hashCode() {
     return (getPath().hashCode() << 31)
-        | (getWantsPackagePrefix() ? 0x8000 : 0)
-        | inputs.hashCode();
+        ^ (getWantsPackagePrefix() ? 0x8000 : 0)
+        ^ inputs.hashCode();
   }
 
   @Override
