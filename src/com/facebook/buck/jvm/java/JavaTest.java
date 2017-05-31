@@ -41,6 +41,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -126,7 +127,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
 
   @AddToRuleKey private final Optional<Long> testCaseTimeoutMs;
 
-  @AddToRuleKey private final ImmutableMap<String, String> env;
+  @AddToRuleKey private final ImmutableMap<String, Arg> env;
 
   private final Path pathToTestLogs;
 
@@ -153,7 +154,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
-      ImmutableMap<String, String> env,
+      ImmutableMap<String, Arg> env,
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
@@ -249,7 +250,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
         nativeLibsEnvironment,
         testRuleTimeoutMs,
         testCaseTimeoutMs,
-        env,
+        Arg.stringify(env, pathResolver),
         javaRuntimeLauncher,
         args);
   }

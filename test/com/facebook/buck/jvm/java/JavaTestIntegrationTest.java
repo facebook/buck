@@ -278,4 +278,12 @@ public class JavaTestIntegrationTest {
             Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"));
     assertEquals(expectedPaths, actualPaths);
   }
+
+  @Test
+  public void testEnvLocationMacro() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "env_macros", temp);
+    workspace.setUp();
+    workspace.runBuckCommand("test", "//:env").assertSuccess();
+  }
 }

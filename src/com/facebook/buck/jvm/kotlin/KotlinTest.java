@@ -25,6 +25,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ public class KotlinTest extends JavaTest {
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
-      ImmutableMap<String, String> env,
+      ImmutableMap<String, Arg> env,
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,

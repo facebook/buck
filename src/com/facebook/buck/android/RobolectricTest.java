@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.OptionalCompat;
@@ -121,7 +122,7 @@ public class RobolectricTest extends JavaTest {
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
-      ImmutableMap<String, String> env,
+      ImmutableMap<String, Arg> env,
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
