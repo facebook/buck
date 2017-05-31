@@ -73,7 +73,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmdExe,
         args.getType(),
         installableApk.getSourcePathToOutput(),
-        args.isCacheable());
+        args.getIsCacheable());
   }
 
   @BuckStyleImmutable
@@ -87,7 +87,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
     }
 
     @Value.Default
-    default boolean isCacheable() {
+    default boolean getIsCacheable() {
       return true;
     }
   }
