@@ -523,6 +523,7 @@ public class TestCommand extends BuildCommand {
                     actionGraphAndResolver.getResolver(),
                     params.getBuildInfoStoreManager(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                    cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                     RuleKeyFactories.of(
                         params.getBuckConfig().getKeySeed(),
                         localCachingBuildEngineDelegate.getFileHashCache(),

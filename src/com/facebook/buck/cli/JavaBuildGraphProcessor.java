@@ -138,6 +138,7 @@ final class JavaBuildGraphProcessor {
               buildRuleResolver,
               params.getBuildInfoStoreManager(),
               cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+              cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
               RuleKeyFactories.of(
                   params.getBuckConfig().getKeySeed(),
                   cachingBuildEngineDelegate.getFileHashCache(),

@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
@@ -167,6 +168,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final BuildInfoStoreManager buildInfoStoreManager;
 
+  private final boolean consoleLogBuildFailuresInline;
+
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
@@ -180,6 +183,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final BuildRuleResolver resolver,
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
+      boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
@@ -199,6 +203,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+
+    this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -230,7 +236,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       RuleKeyFactories ruleKeyFactories,
-      ResourceAwareSchedulingInfo resourceAwareSchedulingInfo) {
+      ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
+      boolean consoleLogBuildFailuresInline) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
@@ -253,6 +260,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
+    this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
   }
 
   @Override
@@ -1115,6 +1123,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
               @Override
               public void onFailure(@Nonnull Throwable thrown) {
+                LOG.debug(thrown, "Building rule [%s] failed.", rule.getBuildTarget());
+
+                if (consoleLogBuildFailuresInline) {
+                  buildContext
+                      .getEventBus()
+                      .post(ConsoleEvent.severe(getErrorMessageIncludingBuildRule(thrown, rule)));
+                }
+
                 thrown = maybeAttachBuildRuleNameToException(thrown, rule);
                 handleResult(BuildResult.failure(rule, thrown));
 
@@ -1165,14 +1181,20 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     if (message != null && message.contains(rule.toString())) {
       return thrown;
     }
+    return new RuntimeException(getErrorMessageIncludingBuildRule(thrown, rule), thrown);
+  }
+
+  private static String getErrorMessageIncludingBuildRule(
+      @Nonnull Throwable thrown, BuildRule rule) {
     String betterMessage =
         String.format(
-            "Building %s failed. Caused by %s",
+            "Building rule [%s] failed. Caused by [%s]",
             rule.getBuildTarget(), thrown.getClass().getSimpleName());
     if (thrown.getMessage() != null) {
-      betterMessage += ": " + thrown.getMessage();
+      betterMessage += ":\n" + thrown.getMessage();
     }
-    return new RuntimeException(betterMessage, thrown);
+
+    return betterMessage;
   }
 
   private void registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {

@@ -44,6 +44,7 @@ public class CachingBuildEngineFactory {
   private BuildRuleResolver buildRuleResolver;
   private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
+  private boolean logBuildRuleFailuresInline = true;
   private BuildInfoStoreManager buildInfoStoreManager;
 
   public CachingBuildEngineFactory(
@@ -97,6 +98,12 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
+  public CachingBuildEngineFactory setLogBuildRuleFailuresInline(
+      boolean logBuildRuleFailuresInline) {
+    this.logBuildRuleFailuresInline = logBuildRuleFailuresInline;
+    return this;
+  }
+
   public CachingBuildEngine build() {
     if (ruleKeyFactories.isPresent()) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
@@ -114,7 +121,8 @@ public class CachingBuildEngineFactory {
           ruleFinder,
           new SourcePathResolver(ruleFinder),
           ruleKeyFactories.get(),
-          resourceAwareSchedulingInfo);
+          resourceAwareSchedulingInfo,
+          logBuildRuleFailuresInline);
     }
 
     return new CachingBuildEngine(
@@ -130,6 +138,7 @@ public class CachingBuildEngineFactory {
         buildRuleResolver,
         buildInfoStoreManager,
         resourceAwareSchedulingInfo,
+        logBuildRuleFailuresInline,
         RuleKeyFactories.of(
             0,
             cachingBuildEngineDelegate.getFileHashCache(),

@@ -893,6 +893,7 @@ public class BuildCommand extends AbstractCommand {
                 actionGraphAndResolver.getResolver(),
                 params.getBuildInfoStoreManager(),
                 cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                 RuleKeyFactories.of(
                     rootCellBuckConfig.getKeySeed(),
                     cachingBuildEngineDelegate.getFileHashCache(),

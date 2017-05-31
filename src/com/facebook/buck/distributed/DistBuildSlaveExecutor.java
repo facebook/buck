@@ -301,6 +301,7 @@ public class DistBuildSlaveExecutor {
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
                   args.getBuildInfoStoreManager(),
                   engineConfig.getResourceAwareSchedulingInfo(),
+                  engineConfig.getConsoleLogBuildRuleFailuresInline(),
                   RuleKeyFactories.of(
                       distBuildConfig.getKeySeed(),
                       cachingBuildEngineDelegate.getFileHashCache(),

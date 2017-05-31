@@ -44,6 +44,18 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
         .orElse(CachingBuildEngine.DepFiles.ENABLED);
   }
 
+  /**
+   * @return whether to log to console build rule failures as they happen, including rule name and
+   *     error text. If false, then depending on keepGoing/verbosity settings, failures may not
+   *     appear in the console at all, may only appear at the end of the build, or may be missing
+   *     important details (e.g. name of rule is logged, but no error message, or vice-versa).
+   */
+  public boolean getConsoleLogBuildRuleFailuresInline() {
+    return getDelegate()
+        .getBoolean("build", "console_log_build_rule_failures_inline")
+        .orElse(false);
+  }
+
   /** @return the maximum number of entries to support in the depfile cache. */
   public long getBuildMaxDepFileCacheEntries() {
     return getDelegate().getLong("build", "max_depfile_cache_entries").orElse(256L);

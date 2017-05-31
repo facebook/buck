@@ -125,6 +125,7 @@ public class FetchCommand extends BuildCommand {
                   actionGraphAndResolver.getResolver(),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                  cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                   RuleKeyFactories.of(
                       params.getBuckConfig().getKeySeed(),
                       localCachingBuildEngineDelegate.getFileHashCache(),
