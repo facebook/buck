@@ -64,8 +64,6 @@ public class JsBundle extends AbstractBuildRule implements JsBundleOutputs {
     final SourcePath sourceMapFile = getSourcePathToSourceMap();
     final SourcePath resourcesDir = getSourcePathToResources();
 
-    this.getProjectFilesystem().getRootPath();
-
     String jobArgs =
         Stream.concat(
                 Stream.of(
