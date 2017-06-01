@@ -90,12 +90,13 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
     try {
       selectStmt.setString(1, buildTarget.getFullyQualifiedName());
       selectStmt.setString(2, key);
-      ResultSet rs = selectStmt.executeQuery();
-      if (!rs.next()) {
-        return Optional.empty();
+      try (ResultSet rs = selectStmt.executeQuery()) {
+        if (!rs.next()) {
+          return Optional.empty();
+        }
+        String value = rs.getString(1);
+        return Optional.of(value);
       }
-      String value = rs.getString(1);
-      return Optional.of(value);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
