@@ -797,6 +797,27 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testCompressAssetLibsModularMap() throws IOException {
+    String target = "//apps/sample:app_compress_lib_asset_modular_map";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("assets/lib/libs.xzs");
+    zipInspector.assertFileExists("assets/lib/metadata.txt");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
+  }
+
+  @Test
   public void testCompressAssetLibsNoPackageModular() throws IOException {
     String target = "//apps/sample:app_cxx_lib_asset_no_package_modular";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -821,8 +842,58 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testCompressAssetLibsNoPackageModularMap() throws IOException {
+    String target = "//apps/sample:app_cxx_lib_asset_no_package_modular_map";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
+
+    zipInspector.assertFileDoesNotExist("assets/lib/libs.xzs");
+    zipInspector.assertFileDoesNotExist("assets/lib/metadata.txt");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
+  }
+
+  @Test
   public void testCompressLibsNoPackageModular() throws IOException {
     String target = "//apps/sample:app_cxx_lib_no_package_modular";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
+    zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
+
+    zipInspector.assertFileDoesNotExist("assets/lib/libs.xzs");
+    zipInspector.assertFileDoesNotExist("assets/lib/metadata.txt");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
+  }
+
+  @Test
+  public void testCompressLibsNoPackageModularMap() throws IOException {
+    String target = "//apps/sample:app_cxx_lib_no_package_modular_map";
     workspace.runBuckCommand("build", target).assertSuccess();
     ZipInspector zipInspector =
         new ZipInspector(

@@ -354,12 +354,54 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_compress_lib_asset_modular_map',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_configs = {
+    'native.cxx.libasset' : ['//native/cxx:libasset'],
+  },
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = True,
+  compress_asset_libraries = True
+)
+
+android_binary(
   name = 'app_cxx_lib_asset_no_package_modular',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   application_module_targets = [
     '//native/cxx:libasset',
   ],
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = False,
+  compress_asset_libraries = True
+)
+
+android_binary(
+  name = 'app_cxx_lib_asset_no_package_modular_map',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_configs = {
+    'native.cxx.libasset' : ['//native/cxx:libasset'],
+  },
   cpu_filters = [
     'x86',
   ],
@@ -382,6 +424,28 @@ android_binary(
     '//native/cxx:foo1',
     '//native/cxx:libasset',
   ],
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = False,
+  compress_asset_libraries = True
+)
+
+android_binary(
+  name = 'app_cxx_lib_no_package_modular_map',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_configs = {
+    'native.cxx.foo1' : ['//native/cxx:foo1'],
+    'native.cxx.libasset' : ['//native/cxx:libasset'],
+  },
   cpu_filters = [
     'x86',
   ],
