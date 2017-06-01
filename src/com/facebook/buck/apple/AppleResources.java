@@ -39,22 +39,20 @@ public class AppleResources {
    * Collect resources from recursive dependencies.
    *
    * @param targetGraph The {@link TargetGraph} containing the node and its dependencies.
-   * @param targetNodes {@link TargetNode} at the tip of the traversal.
+   * @param targetNode {@link TargetNode} at the tip of the traversal.
    * @return The recursive resource buildables.
    */
   public static ImmutableSet<AppleResourceDescriptionArg> collectRecursiveResources(
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
-      Iterable<? extends TargetNode<?, ?>> targetNodes) {
-    return FluentIterable.from(targetNodes)
-        .transformAndConcat(
-            node ->
-                AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                    targetGraph,
-                    cache,
-                    AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                    node,
-                    ImmutableSet.of(AppleResourceDescription.class)))
+      TargetNode<?, ?> targetNode) {
+    return FluentIterable.from(
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                targetGraph,
+                cache,
+                AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                targetNode,
+                ImmutableSet.of(AppleResourceDescription.class)))
         .transform(input -> (AppleResourceDescriptionArg) input.getConstructorArg())
         .toSet();
   }

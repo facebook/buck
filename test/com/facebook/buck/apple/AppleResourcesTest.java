@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
@@ -35,15 +34,6 @@ import java.util.Set;
 import org.junit.Test;
 
 public class AppleResourcesTest {
-
-  @Test
-  public void emptyInputHasEmptyResources() {
-    ImmutableSet<TargetNode<?, ?>> graphNodes = ImmutableSet.of();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleResourceDescriptionArg, ?>> targetNodes = ImmutableSet.of();
-
-    assertThat(AppleResources.collectRecursiveResources(targetGraph, null, targetNodes), empty());
-  }
 
   @Test
   public void libWithSingleResourceDepReturnsResource() {
@@ -67,10 +57,9 @@ public class AppleResourcesTest {
             .build();
     ImmutableSet<TargetNode<?, ?>> graphNodes = ImmutableSet.of(resourceNode, libNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleLibraryDescriptionArg, ?>> targetNodes = ImmutableSet.of(libNode);
 
     assertThat(
-        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), targetNodes),
+        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), libNode),
         hasItem(resourceNode.getConstructorArg()));
   }
 
@@ -100,11 +89,9 @@ public class AppleResourcesTest {
     ImmutableSet<TargetNode<?, ?>> graphNodes =
         ImmutableSet.of(fooResourceNode, fooLibNode, barResourceNode, barLibNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
-    ImmutableSet<TargetNode<AppleLibraryDescriptionArg, ?>> targetNodes =
-        ImmutableSet.of(barLibNode);
 
     assertThat(
-        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), targetNodes),
+        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), barLibNode),
         hasItems(fooResourceNode.getConstructorArg(), barResourceNode.getConstructorArg()));
   }
 }

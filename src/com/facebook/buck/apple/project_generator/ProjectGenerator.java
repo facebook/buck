@@ -705,7 +705,7 @@ public class ProjectGenerator {
             Optional.of(infoPlistPath),
             /* includeFrameworks */ true,
             AppleResources.collectRecursiveResources(
-                targetGraph, Optional.of(dependenciesCache), ImmutableList.of(targetNode)),
+                targetGraph, Optional.of(dependenciesCache), targetNode),
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveAssetCatalogs(
                 targetGraph, Optional.of(dependenciesCache), ImmutableList.of(targetNode)),
@@ -857,32 +857,34 @@ public class ProjectGenerator {
   private ImmutableList<String> convertStringWithMacros(
       TargetNode<?, ?> node, Iterable<StringWithMacros> flags) {
 
-    LocationMacroExpander locationMacroExpander = new LocationMacroExpander() {
-      @Override
-      public String expandFrom(
-          BuildTarget target,
-          CellPathResolver cellNames,
-          BuildRuleResolver resolver,
-          LocationMacro input) throws MacroException {
-        BuildTarget locationMacroTarget = input.getTarget();
+    LocationMacroExpander locationMacroExpander =
+        new LocationMacroExpander() {
+          @Override
+          public String expandFrom(
+              BuildTarget target,
+              CellPathResolver cellNames,
+              BuildRuleResolver resolver,
+              LocationMacro input)
+              throws MacroException {
+            BuildTarget locationMacroTarget = input.getTarget();
 
-        try {
-          resolver.requireRule(locationMacroTarget);
-        } catch (NoSuchBuildTargetException | TargetGraph.NoSuchNodeException e) {
-          throw new MacroException(
-              String.format("couldn't find rule referenced by location macro: %s", e.getMessage()),
-              e);
-        }
+            try {
+              resolver.requireRule(locationMacroTarget);
+            } catch (NoSuchBuildTargetException | TargetGraph.NoSuchNodeException e) {
+              throw new MacroException(
+                  String.format(
+                      "couldn't find rule referenced by location macro: %s", e.getMessage()),
+                  e);
+            }
 
-        requiredBuildTargetsBuilder.add(locationMacroTarget);
-        return super.expandFrom(target, cellNames, resolver, input);
-      }
-    };
+            requiredBuildTargetsBuilder.add(locationMacroTarget);
+            return super.expandFrom(target, cellNames, resolver, input);
+          }
+        };
 
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     for (StringWithMacros flag : flags) {
-      StringWithMacrosArg
-          .of(
+      StringWithMacrosArg.of(
               flag,
               ImmutableList.of(locationMacroExpander),
               node.getBuildTarget(),
@@ -980,16 +982,20 @@ public class ProjectGenerator {
 
         ImmutableSet<PBXFileReference> targetNodeDeps =
             collectRecursiveLibraryDependencies(targetNode);
-        ImmutableSet<PBXFileReference> excludedDeps = targetNode
-            .castArg(AppleTestDescriptionArg.class)
-            .flatMap(testNode -> {
-              // only application tests share a runtime with their host application and need to
-              // avoid linking dependencies already linked by the host.
-              // we know this is an application test if it is not a UI test and has a bundle loader.
-              return testNode.getConstructorArg().getIsUiTest() ? Optional.empty() : bundleLoaderNode;
-            })
-            .map(this::collectRecursiveLibraryDependencies)
-            .orElse(ImmutableSet.of());
+        ImmutableSet<PBXFileReference> excludedDeps =
+            targetNode
+                .castArg(AppleTestDescriptionArg.class)
+                .flatMap(
+                    testNode -> {
+                      // only application tests share a runtime with their host application and need to
+                      // avoid linking dependencies already linked by the host.
+                      // we know this is an application test if it is not a UI test and has a bundle loader.
+                      return testNode.getConstructorArg().getIsUiTest()
+                          ? Optional.empty()
+                          : bundleLoaderNode;
+                    })
+                .map(this::collectRecursiveLibraryDependencies)
+                .orElse(ImmutableSet.of());
         mutator.setArchives(Sets.difference(targetNodeDeps, excludedDeps));
       }
 
