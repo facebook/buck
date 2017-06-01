@@ -102,6 +102,9 @@ public class APKModuleGraph {
             return moduleBuilder.build();
           });
 
+  private final Supplier<ImmutableMultimap<BuildTarget, String>> sharedSeedsSupplier =
+      Suppliers.memoize(this::generateSharedSeeds);
+
   private final Supplier<Optional<Map<String, List<BuildTarget>>>> configMapSupplier =
       Suppliers.memoize(this::generateSeedConfigMap);
 
@@ -179,6 +182,7 @@ public class APKModuleGraph {
   }
 
   public Optional<Map<String, List<BuildTarget>>> getSeedConfigMap() {
+    verifyNoSharedSeeds();
     return configMapSupplier.get();
   }
 
@@ -404,5 +408,48 @@ public class APKModuleGraph {
     } else {
       return name.isEmpty() ? shortName : name + "." + shortName;
     }
+  }
+
+  private void verifyNoSharedSeeds() {
+    ImmutableMultimap<BuildTarget, String> sharedSeeds = sharedSeedsSupplier.get();
+    if (!sharedSeeds.isEmpty()) {
+      StringBuilder errorMessage = new StringBuilder();
+      for (BuildTarget seed : sharedSeeds.keySet()) {
+        errorMessage
+            .append("BuildTarget: ")
+            .append(seed)
+            .append(" is used as seed in multiple modules: ");
+        for (String module : sharedSeeds.get(seed)) {
+          errorMessage.append(module).append(' ');
+        }
+        errorMessage.append('\n');
+      }
+      throw new IllegalArgumentException(errorMessage.toString());
+    }
+  }
+
+  private ImmutableMultimap<BuildTarget, String> generateSharedSeeds() {
+    Optional<Map<String, List<BuildTarget>>> seedConfigMap = configMapSupplier.get();
+    HashMultimap<BuildTarget, String> sharedSeedMapBuilder = HashMultimap.create();
+    if (!seedConfigMap.isPresent()) {
+      return ImmutableMultimap.copyOf(sharedSeedMapBuilder);
+    }
+    // first: invert the seedConfigMap to get BuildTarget -> Seeds
+    for (Map.Entry<String, List<BuildTarget>> entry : seedConfigMap.get().entrySet()) {
+      for (BuildTarget buildTarget : entry.getValue()) {
+        sharedSeedMapBuilder.put(buildTarget, entry.getKey());
+      }
+    }
+    // second: remove keys that have only one value.
+    Set<BuildTarget> nonSharedSeeds = new HashSet<>();
+    for (BuildTarget buildTarget : sharedSeedMapBuilder.keySet()) {
+      if (sharedSeedMapBuilder.get(buildTarget).size() <= 1) {
+        nonSharedSeeds.add(buildTarget);
+      }
+    }
+    for (BuildTarget targetToRemove : nonSharedSeeds) {
+      sharedSeedMapBuilder.removeAll(targetToRemove);
+    }
+    return ImmutableMultimap.copyOf(sharedSeedMapBuilder);
   }
 }
