@@ -36,8 +36,7 @@ import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,9 +44,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Lists;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
@@ -356,10 +359,16 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
   @VisibleForTesting
   void addSymlinkCommands(BuildContext context, ImmutableList.Builder<Step> commands) {
+    if (srcs.isEmpty()) {
+      return;
+    }
     Path basePath = getBuildTarget().getBasePath();
 
+    ImmutableMap.Builder<Path, Path> linksBuilder = ImmutableSortedMap.naturalOrder();
+    // To preserve legacy behavior, we allow duplicate targets and just ignore all but the last.
+    Set<Path> seenTargets = new HashSet<>();
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    for (SourcePath src : srcs) {
+    for (SourcePath src : Lists.reverse(srcs)) {
       Path relativePath = context.getSourcePathResolver().getRelativePath(src);
       Path absolutePath = context.getSourcePathResolver().getAbsolutePath(src);
       Path canonicalPath = absolutePath.normalize();
@@ -378,15 +387,14 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
         localPath = relativePath;
       }
 
-      Path destination = pathToSrcDirectory.resolve(localPath);
-      commands.add(MkdirStep.of(getProjectFilesystem(), destination.getParent()));
-      commands.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(getProjectFilesystem())
-              .setExistingFile(relativePath)
-              .setDesiredLink(destination)
-              .build());
+      Path target = getProjectFilesystem().relativize(absolutePath);
+      if (!seenTargets.contains(target)) {
+        seenTargets.add(target);
+        linksBuilder.put(localPath, target);
+      }
     }
+    commands.add(
+        new SymlinkTreeStep(getProjectFilesystem(), pathToSrcDirectory, linksBuilder.build()));
   }
 
   /** Get the output name of the generated file, as listed in the BUCK file. */

@@ -51,7 +51,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
@@ -163,18 +163,7 @@ public class GenruleTest {
 
     MoreAsserts.assertStepsNames(
         "",
-        ImmutableList.of(
-            "rm",
-            "mkdir",
-            "rm",
-            "mkdir",
-            "rm",
-            "mkdir",
-            "mkdir",
-            "symlink_file",
-            "mkdir",
-            "symlink_file",
-            "genrule"),
+        ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "link_tree", "genrule"),
         steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
@@ -223,27 +212,20 @@ public class GenruleTest {
     assertEquals(RmStep.of(filesystem, pathToSrcDir).withRecursive(true), steps.get(4));
     assertEquals(MkdirStep.of(filesystem, pathToSrcDir), steps.get(5));
 
-    assertEquals(MkdirStep.of(filesystem, pathToSrcDir), steps.get(6));
     assertEquals(
-        SymlinkFileStep.builder()
-            .setFilesystem(filesystem)
-            .setExistingFile(filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"))
-            .setDesiredLink(filesystem.getPath(pathToSrcDir + "/convert_to_katana.py"))
-            .build(),
-        steps.get(7));
+        new SymlinkTreeStep(
+            filesystem,
+            pathToSrcDir,
+            ImmutableMap.of(
+                filesystem.getPath("convert_to_katana.py"),
+                filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
+                filesystem.getPath("AndroidManifest.xml"),
+                filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"))),
+        steps.get(6));
 
-    assertEquals(MkdirStep.of(filesystem, pathToSrcDir), steps.get(8));
-    assertEquals(
-        SymlinkFileStep.builder()
-            .setFilesystem(filesystem)
-            .setExistingFile(filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"))
-            .setDesiredLink(filesystem.getPath(pathToSrcDir + "/AndroidManifest.xml"))
-            .build(),
-        steps.get(9));
-
-    Step sixthStep = steps.get(10);
-    assertTrue(sixthStep instanceof AbstractGenruleStep);
-    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) sixthStep;
+    Step eighthStep = steps.get(7);
+    assertTrue(eighthStep instanceof AbstractGenruleStep);
+    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) eighthStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(
         ImmutableMap.<String, String>builder()
@@ -462,37 +444,20 @@ public class GenruleTest {
 
     Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
 
-    MoreAsserts.assertStepsNames(
-        "",
-        ImmutableList.of("mkdir", "symlink_file", "mkdir", "symlink_file", "mkdir", "symlink_file"),
-        commands);
+    MoreAsserts.assertStepsNames("", ImmutableList.of("link_tree"), commands);
 
-    assertEquals(MkdirStep.of(filesystem, baseTmpPath), commands.get(0));
     assertEquals(
-        SymlinkFileStep.builder()
-            .setFilesystem(filesystem)
-            .setExistingFile(filesystem.getPath("in-dir.txt"))
-            .setDesiredLink(baseTmpPath.resolve("in-dir.txt"))
-            .build(),
-        commands.get(1));
-
-    assertEquals(MkdirStep.of(filesystem, baseTmpPath.resolve("foo")), commands.get(2));
-    assertEquals(
-        SymlinkFileStep.builder()
-            .setFilesystem(filesystem)
-            .setExistingFile(filesystem.getPath("foo", "bar.html"))
-            .setDesiredLink(baseTmpPath.resolve("foo").resolve("bar.html"))
-            .build(),
-        commands.get(3));
-
-    assertEquals(MkdirStep.of(filesystem, baseTmpPath.resolve("other")), commands.get(4));
-    assertEquals(
-        SymlinkFileStep.builder()
-            .setFilesystem(filesystem)
-            .setExistingFile(filesystem.getPath("other", "place.txt"))
-            .setDesiredLink(baseTmpPath.resolve("other").resolve("place.txt"))
-            .build(),
-        commands.get(5));
+        new SymlinkTreeStep(
+            filesystem,
+            baseTmpPath,
+            ImmutableMap.of(
+                filesystem.getPath("in-dir.txt"),
+                filesystem.getPath("in-dir.txt"),
+                filesystem.getPath("foo/bar.html"),
+                filesystem.getPath("foo/bar.html"),
+                filesystem.getPath("other/place.txt"),
+                filesystem.getPath("other/place.txt"))),
+        commands.get(0));
   }
 
   private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver)
