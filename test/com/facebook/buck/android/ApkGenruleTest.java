@@ -180,7 +180,21 @@ public class ApkGenruleTest {
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());
-    assertEquals(11, steps.size());
+    MoreAsserts.assertStepsNames(
+        "",
+        ImmutableList.of(
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "mkdir",
+            "symlink_file",
+            "mkdir",
+            "symlink_file",
+            "genrule"),
+        steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(

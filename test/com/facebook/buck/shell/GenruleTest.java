@@ -53,6 +53,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -159,7 +160,22 @@ public class GenruleTest {
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = genrule.getBuildSteps(buildContext, new FakeBuildableContext());
-    assertEquals(11, steps.size());
+
+    MoreAsserts.assertStepsNames(
+        "",
+        ImmutableList.of(
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "mkdir",
+            "symlink_file",
+            "mkdir",
+            "symlink_file",
+            "genrule"),
+        steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
 
@@ -333,7 +349,9 @@ public class GenruleTest {
 
     ExecutionContext executionContext = newEmptyExecutionContext(Platform.LINUX);
 
-    assertEquals(7, steps.size());
+    MoreAsserts.assertStepsNames(
+        "", ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "worker"), steps);
+
     Step step = steps.get(6);
     assertTrue(step instanceof WorkerShellStep);
     WorkerShellStep workerShellStep = (WorkerShellStep) step;
@@ -444,7 +462,11 @@ public class GenruleTest {
 
     Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
 
-    assertEquals(6, commands.size());
+    MoreAsserts.assertStepsNames(
+        "",
+        ImmutableList.of("mkdir", "symlink_file", "mkdir", "symlink_file", "mkdir", "symlink_file"),
+        commands);
+
     assertEquals(MkdirStep.of(filesystem, baseTmpPath), commands.get(0));
     assertEquals(
         SymlinkFileStep.builder()

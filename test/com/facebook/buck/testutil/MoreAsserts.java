@@ -214,6 +214,20 @@ public final class MoreAsserts {
     assertListEquals(userMessage, expectedStepDescriptions, commands);
   }
 
+  /**
+   * Invokes the {@link Step#getDescription(ExecutionContext)} method on each of the observed steps
+   * to create a list of strings and compares it to the expected value.
+   */
+  public static void assertStepsNames(
+      String userMessage, List<String> expectedStepDescriptions, List<Step> observedSteps) {
+    ImmutableList<String> commands =
+        observedSteps
+            .stream()
+            .map(step -> step.getShortName())
+            .collect(MoreCollectors.toImmutableList());
+    assertListEquals(userMessage, expectedStepDescriptions, commands);
+  }
+
   public static void assertDepends(String userMessage, BuildRule rule, BuildRule dep) {
     assertDepends(userMessage, rule, dep.getBuildTarget());
   }
