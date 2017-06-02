@@ -25,7 +25,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
@@ -47,7 +47,8 @@ abstract class AbstractStringWithMacrosArg implements Arg {
 
   abstract StringWithMacros getStringWithMacros();
 
-  abstract ImmutableList<AbstractMacroExpander<? extends Macro>> getExpanders();
+  abstract ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
+      getExpanders();
 
   abstract BuildTarget getBuildTarget();
 
@@ -56,19 +57,22 @@ abstract class AbstractStringWithMacrosArg implements Arg {
   abstract BuildRuleResolver getBuildRuleResolver();
 
   @Value.Derived
-  ImmutableMap<Class<? extends Macro>, AbstractMacroExpander<? extends Macro>> getClassExpanders() {
-    ImmutableMap.Builder<Class<? extends Macro>, AbstractMacroExpander<? extends Macro>> builder =
-        ImmutableMap.builder();
-    for (AbstractMacroExpander<? extends Macro> expander : getExpanders()) {
+  ImmutableMap<Class<? extends Macro>, AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
+      getClassExpanders() {
+    ImmutableMap.Builder<
+            Class<? extends Macro>, AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
+        builder = ImmutableMap.builder();
+    for (AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro> expander : getExpanders()) {
       builder.put(expander.getInputClass(), expander);
     }
     return builder.build();
   }
 
   @SuppressWarnings("unchecked")
-  private <M extends Macro> AbstractMacroExpander<M> getExpander(M macro) throws MacroException {
-    AbstractMacroExpander<M> expander =
-        (AbstractMacroExpander<M>) getClassExpanders().get(macro.getClass());
+  private <M extends Macro> AbstractMacroExpanderWithoutPrecomputedWork<M> getExpander(M macro)
+      throws MacroException {
+    AbstractMacroExpanderWithoutPrecomputedWork<M> expander =
+        (AbstractMacroExpanderWithoutPrecomputedWork<M>) getClassExpanders().get(macro.getClass());
     if (expander == null) {
       throw new MacroException(String.format("unexpected macro %s", macro.getClass()));
     }

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -182,13 +183,20 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    CellPathResolver cellRoots = createCellRoots(filesystem);
     assertThat(
-        expander.extractBuildTimeDeps(
-            target, createCellRoots(filesystem), ruleResolver, ImmutableList.of("//:rule")),
+        expander.extractBuildTimeDepsFrom(
+            target,
+            cellRoots,
+            ruleResolver,
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
         Matchers.containsInAnyOrder(dep1, dep2));
     assertThat(
-        expander.expand(
-            target, createCellRoots(filesystem), ruleResolver, ImmutableList.of("//:rule")),
+        expander.expandFrom(
+            target,
+            cellRoots,
+            ruleResolver,
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
         Matchers.equalTo(
             String.format(
                 "%s %s",
@@ -213,12 +221,13 @@ public class ExecutableMacroExpanderTest {
           }
         });
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    CellPathResolver cellRoots = createCellRoots(params.getProjectFilesystem());
     assertThat(
-        expander.extractRuleKeyAppendables(
+        expander.extractRuleKeyAppendablesFrom(
             target,
-            createCellRoots(params.getProjectFilesystem()),
+            cellRoots,
             ruleResolver,
-            ImmutableList.of("//:rule")),
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
         Matchers.equalTo(tool));
   }
 

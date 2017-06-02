@@ -44,7 +44,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /** Abstract base class for the query_targets and query_outputs macros */
-public abstract class QueryMacroExpander<T extends QueryMacro> extends AbstractMacroExpander<T> {
+public abstract class QueryMacroExpander<T extends QueryMacro>
+    extends AbstractMacroExpanderWithoutPrecomputedWork<T> {
 
   private ListeningExecutorService executorService;
   private Optional<TargetGraph> targetGraph;

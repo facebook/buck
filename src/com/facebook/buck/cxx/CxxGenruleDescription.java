@@ -45,12 +45,13 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
@@ -404,7 +405,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   /** A macro expander that expands to a specific {@link Tool}. */
-  private static class ToolExpander implements MacroExpander {
+  private static class ToolExpander extends SimpleMacroExpander {
 
     private final Tool tool;
 
@@ -413,52 +414,31 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public String expand(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        ImmutableList<String> input)
+    public String expandFrom(
+        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
         throws MacroException {
       SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       return shquoteJoin(tool.getCommandPrefix(pathResolver));
     }
 
     @Override
-    public ImmutableList<BuildRule> extractBuildTimeDeps(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        ImmutableList<String> input)
+    public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
+        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
         throws MacroException {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       return ImmutableList.copyOf(tool.getDeps(ruleFinder));
     }
 
     @Override
-    public void extractParseTimeDeps(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        ImmutableList<String> input,
-        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-        throws MacroException {
-      // We already return all platform-specific parse-time deps from
-      // `findDepsForTargetFromConstructorArgs`.
-    }
-
-    @Override
-    public Object extractRuleKeyAppendables(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        ImmutableList<String> input)
+    public Object extractRuleKeyAppendablesFrom(
+        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
         throws MacroException {
       return tool;
     }
   }
 
   private abstract static class FilterAndTargetsExpander
-      extends AbstractMacroExpander<FilterAndTargets> {
+      extends AbstractMacroExpanderWithoutPrecomputedWork<FilterAndTargets> {
 
     private final Filter filter;
 
@@ -864,10 +844,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public void extractParseTimeDeps(
+    public void extractParseTimeDepsFrom(
         BuildTarget target,
         CellPathResolver cellNames,
-        ImmutableList<String> input,
         ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
         ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
         throws MacroException {

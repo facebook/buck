@@ -29,7 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellPathResolver;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
@@ -42,8 +42,8 @@ import org.junit.Test;
 
 public class StringWithMacrosArgTest {
 
-  private static final ImmutableList<AbstractMacroExpander<? extends Macro>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander());
+  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
+      MACRO_EXPANDERS = ImmutableList.of(new LocationMacroExpander());
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());

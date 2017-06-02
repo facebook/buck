@@ -18,13 +18,10 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 
-public class StringExpander implements MacroExpander {
+public class StringExpander extends SimpleMacroExpander {
 
   private final String toReturn;
 
@@ -33,40 +30,15 @@ public class StringExpander implements MacroExpander {
   }
 
   @Override
-  public String expand(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input)
+  public String expandFrom(
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
       throws MacroException {
     return toReturn;
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input)
-      throws MacroException {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public void extractParseTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input,
-      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {}
-
-  @Override
-  public Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input)
+  public Object extractRuleKeyAppendablesFrom(
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
       throws MacroException {
     return toReturn;
   }

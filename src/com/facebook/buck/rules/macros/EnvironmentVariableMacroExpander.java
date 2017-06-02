@@ -27,7 +27,8 @@ import com.google.common.collect.ImmutableList;
  * expand the value of the environment variable in place. Rather, the intention is for the variable
  * to be interpreted when a shell command is invoked.
  */
-public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<String> {
+public class EnvironmentVariableMacroExpander
+    extends AbstractMacroExpanderWithoutPrecomputedWork<String> {
 
   private final Platform platform;
 

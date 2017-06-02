@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
  * <code>$</code> is preceded by a backslash.
  */
 public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
-    extends AbstractMacroExpander<M> {
+    extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
   protected abstract String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException;

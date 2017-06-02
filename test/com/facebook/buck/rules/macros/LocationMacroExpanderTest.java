@@ -30,6 +30,7 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -131,12 +132,13 @@ public class LocationMacroExpanderTest {
             TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = resolver.requireRule(node.getBuildTarget());
     LocationMacroExpander macroExpander = new LocationMacroExpander();
+    CellPathResolver cellRoots = createCellRoots(new FakeProjectFilesystem());
     assertThat(
-        macroExpander.extractRuleKeyAppendables(
+        macroExpander.extractRuleKeyAppendablesFrom(
             target,
-            createCellRoots(new FakeProjectFilesystem()),
+            cellRoots,
             resolver,
-            ImmutableList.of(input)),
+            macroExpander.parse(target, cellRoots, ImmutableList.of(input))),
         Matchers.equalTo(rule.getSourcePathToOutput()));
   }
 }

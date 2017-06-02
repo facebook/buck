@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import javax.annotation.Nullable;
 
 public interface MacroExpander {
 
@@ -32,8 +31,23 @@ public interface MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      ImmutableList<String> input,
+      Object precomputedWork)
       throws MacroException;
+
+  /**
+   * Expand the input given for the this macro to some string, which is intended to be written to a
+   * file.
+   */
+  default String expandForFile(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
+      ImmutableList<String> input,
+      Object precomputedWork)
+      throws MacroException {
+    return expand(target, cellNames, resolver, input, precomputedWork);
+  }
 
   /**
    * @return {@link BuildRule}s which provide output which is consumed by the expanded form of this
@@ -45,7 +59,8 @@ public interface MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      ImmutableList<String> input,
+      Object precomputedWork)
       throws MacroException;
 
   /**
@@ -64,8 +79,16 @@ public interface MacroExpander {
       throws MacroException;
 
   /** @return something that should be added to the rule key of the rule that expands this macro. */
-  @Nullable
   Object extractRuleKeyAppendables(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
+      ImmutableList<String> input,
+      Object precomputedWork)
+      throws MacroException;
+
+  /** @return cache-able work that can be re-used for the various extract/expand functions */
+  Object precomputeWork(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,

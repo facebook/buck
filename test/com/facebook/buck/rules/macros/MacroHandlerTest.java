@@ -19,6 +19,7 @@ package com.facebook.buck.rules.macros;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -26,12 +27,19 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -108,5 +116,80 @@ public class MacroHandlerTest {
                 "worker", new WorkerMacroExpander(),
                 "exe", new ExecutableMacroExpander()));
     assertFalse(MacroArg.containsWorkerMacro(handler, "$(exe :rule) not a worker macro in sight"));
+  }
+
+  @Test
+  public void testHandlingMacroExpanderWithPrecomputedWork() throws Exception {
+    final AtomicInteger expansionCount = new AtomicInteger(0);
+    AbstractMacroExpander<String, String> expander =
+        new AbstractMacroExpander<String, String>() {
+          @Override
+          public Class<String> getInputClass() {
+            return String.class;
+          }
+
+          @Override
+          public Class<String> getPrecomputedWorkClass() {
+            return String.class;
+          }
+
+          @Override
+          protected String parse(
+              BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
+              throws MacroException {
+            return "Parsed Result";
+          }
+
+          @Override
+          public String precomputeWorkFrom(
+              BuildTarget target,
+              CellPathResolver cellNames,
+              BuildRuleResolver resolver,
+              String input)
+              throws MacroException {
+            expansionCount.incrementAndGet();
+            return "Precomputed Work";
+          }
+
+          @Override
+          public String expandFrom(
+              BuildTarget target,
+              CellPathResolver cellNames,
+              BuildRuleResolver resolver,
+              String input,
+              String precomputedWork)
+              throws MacroException {
+            return precomputedWork;
+          }
+        };
+    MacroHandler handler = new MacroHandler(ImmutableMap.of("e", expander));
+
+    Map<MacroMatchResult, Object> cache = new HashMap<>();
+    CellPathResolver cellRoots = createCellRoots(filesystem);
+    String raw = "$(e)";
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw, cache));
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw, cache));
+
+    // We should have only done work once, despite calling expand twice
+    assertEquals(1, expansionCount.get());
+    // The cache should contain our entry:
+    assertEquals(1, cache.size());
+    assertThat(cache.values(), Matchers.contains("Precomputed Work"));
+
+    // Let's check the other operations and ensure that the precomputed work stays cached.
+    handler.extractBuildTimeDeps(target, cellRoots, resolver, raw, cache);
+    handler.extractRuleKeyAppendables(target, cellRoots, resolver, raw, cache);
+
+    assertEquals(1, expansionCount.get());
+
+    // Now call without the cache, and ensure that the work gets recomputed
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw));
+    assertEquals(2, expansionCount.get());
+
+    // Now clear the cache, and ensure it's repopulated:
+    cache.clear();
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw, cache));
+    assertEquals(3, expansionCount.get());
+    assertThat(cache.values(), Matchers.contains("Precomputed Work"));
   }
 }
