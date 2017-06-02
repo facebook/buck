@@ -19,6 +19,7 @@ package com.facebook.buck.rules.query;
 import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -61,6 +62,24 @@ public class GraphEnhancementQueryEnvironmentTest {
   public void setUp() throws Exception {
     cellRoots = new DefaultCellPathResolver(ROOT, ImmutableMap.of());
     executor = MoreExecutors.newDirectExecutorService();
+  }
+
+  @Test
+  public void getTargetsMatchingPatternThrowsInformativeException() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
+    GraphEnhancementQueryEnvironment envWithoutDeps =
+        new GraphEnhancementQueryEnvironment(
+            Optional.of(createMock(BuildRuleResolver.class)),
+            Optional.of(createMock(TargetGraph.class)),
+            cellRoots,
+            BuildTargetPatternParser.forBaseName(target.getBaseName()),
+            ImmutableSet.of());
+    try {
+      envWithoutDeps.getTargetsMatchingPattern("::", executor);
+      fail("Expected a QueryException to be thrown!");
+    } catch (Exception e) {
+      assertThat("Exception should contain a cause!", e.getCause(), Matchers.notNullValue());
+    }
   }
 
   @Test
