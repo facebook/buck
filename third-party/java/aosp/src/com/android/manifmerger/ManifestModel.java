@@ -567,6 +567,12 @@ class ManifestModel {
         USES_PERMISSION(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
         /**
+         * https://developer.android.com/guide/topics/manifest/uses-permission-sdk-23-element.html
+         * https://issuetracker.google.com/issues/62218594
+         */
+        USES_PERMISSION_SDK_23(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
+
+        /**
          * Uses-sdk (contained in manifest)
          * <br>
          * <b>See also : </b>
