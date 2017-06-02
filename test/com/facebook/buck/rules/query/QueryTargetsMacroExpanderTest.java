@@ -17,11 +17,13 @@
 package com.facebook.buck.rules.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -32,12 +34,14 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,9 +60,11 @@ public class QueryTargetsMacroExpanderTest {
   private BuildRule rule;
   private BuildRule dep;
   private MacroHandler handler;
+  private HashMapWithStats<MacroMatchResult, Object> cache;
 
   @Before
   public void setUp() throws Exception {
+    cache = new HashMapWithStats<>();
     expander = new QueryTargetsMacroExpander(Optional.empty());
     handler = new MacroHandler(ImmutableMap.of("query", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
@@ -108,6 +114,7 @@ public class QueryTargetsMacroExpanderTest {
             cellNames,
             ruleResolver,
             ImmutableList.of("'set(//exciting:dep)'"));
+    // No build time deps for targets macro
     assertEquals(
         ImmutableList.of(),
         expander.extractBuildTimeDeps(
@@ -132,10 +139,28 @@ public class QueryTargetsMacroExpanderTest {
             precomputed2));
   }
 
+  @Test
+  public void canUseCacheOfPrecomputedWork() throws Exception {
+    assertExpandsTo(
+        "$(query 'classpath(//exciting:target)')", rule, "//exciting:dep //exciting:target");
+    // Cache should be populated at this point
+    assertThat(cache.values(), Matchers.hasSize(1));
+    assertEquals(1, cache.numPuts());
+
+    int getsSoFar = cache.numGets();
+    assertExpandsTo(
+        "$(query 'classpath(//exciting:target)')", rule, "//exciting:dep //exciting:target");
+    // No new cache entry should have appeared
+    assertThat(cache.values(), Matchers.hasSize(1));
+    assertEquals(1, cache.numPuts());
+    // And we should have been able to read the value
+    assertEquals(getsSoFar + 1, cache.numGets());
+  }
+
   private void assertExpandsTo(String input, BuildRule rule, String expected)
       throws MacroException {
 
-    String results = handler.expand(rule.getBuildTarget(), cellNames, ruleResolver, input);
+    String results = handler.expand(rule.getBuildTarget(), cellNames, ruleResolver, input, cache);
 
     assertEquals(expected, results);
   }

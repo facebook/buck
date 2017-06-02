@@ -26,7 +26,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -64,10 +63,12 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      QueryTargetsMacro input)
+      QueryTargetsMacro input,
+      QueryResults precomputedQueryResults)
       throws MacroException {
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
-    return resolveQuery(target, cellNames, resolver, queryExpression)
+    return precomputedQueryResults
+        .results
+        .stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
@@ -83,11 +84,13 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
-      QueryTargetsMacro input)
+      QueryTargetsMacro input,
+      QueryResults precomputedQueryResults)
       throws MacroException {
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     // Return the set of targets which matched the query
-    return resolveQuery(target, cellNames, resolver, queryExpression)
+    return precomputedQueryResults
+        .results
+        .stream()
         .map(QueryTarget::toString)
         .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
   }
@@ -102,7 +105,8 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      QueryTargetsMacro input)
+      QueryTargetsMacro input,
+      QueryResults precomputedQueryResults)
       throws MacroException {
     // The query_targets macro is only used for inspecting the build graph or creating
     // log files, or buck invocations, so it should not depend on actual builds of the referenced

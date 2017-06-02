@@ -31,6 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -45,7 +46,7 @@ import java.util.stream.Stream;
 
 /** Abstract base class for the query_targets and query_outputs macros */
 public abstract class QueryMacroExpander<T extends QueryMacro>
-    extends AbstractMacroExpanderWithoutPrecomputedWork<T> {
+    extends AbstractMacroExpander<T, QueryMacroExpander.QueryResults> {
 
   private ListeningExecutorService executorService;
   private Optional<TargetGraph> targetGraph;
@@ -89,7 +90,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
                 return ((QueryBuildTarget) queryTarget).getBuildTarget();
               });
     } catch (QueryException e) {
-      throw new HumanReadableException("Error executing query in macro for target %s", target, e);
+      throw new HumanReadableException(e, "Error executing query in macro for target %s", target);
     }
   }
 
@@ -122,6 +123,19 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     }
   }
 
+  @Override
+  public Class<QueryResults> getPrecomputedWorkClass() {
+    return QueryResults.class;
+  }
+
+  @Override
+  public QueryResults precomputeWorkFrom(
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
+      throws MacroException {
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
+    return new QueryResults(resolveQuery(target, cellNames, resolver, queryExpression));
+  }
+
   abstract T fromQuery(Query query);
 
   @Override
@@ -146,5 +160,13 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     extractTargets(target, cellNames, Optional.empty(), input)
         .forEach(
             (detectsTargetGraphOnlyDeps() ? targetGraphOnlyDepsBuilder : buildDepsBuilder)::add);
+  }
+
+  protected static final class QueryResults {
+    ImmutableList<QueryTarget> results;
+
+    public QueryResults(Stream<QueryTarget> results) {
+      this.results = results.collect(MoreCollectors.toImmutableList());
+    }
   }
 }

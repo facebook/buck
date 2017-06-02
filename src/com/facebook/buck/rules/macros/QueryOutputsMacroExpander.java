@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -68,11 +67,13 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      QueryOutputsMacro input)
+      QueryOutputsMacro input,
+      QueryResults precomputedWork)
       throws MacroException {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
-    return resolveQuery(target, cellNames, resolver, queryExpression)
+    return precomputedWork
+        .results
+        .stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
@@ -91,13 +92,15 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
-      QueryOutputsMacro input)
+      QueryOutputsMacro input,
+      QueryResults precomputedWork)
       throws MacroException {
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
 
     // Return a list of SourcePaths to the outputs of our query results. This enables input-based
     // rule key hits.
-    return resolveQuery(target, cellNames, resolver, queryExpression)
+    return precomputedWork
+        .results
+        .stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
@@ -123,17 +126,18 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
-      QueryOutputsMacro input)
+      QueryOutputsMacro input,
+      QueryResults precomputedWork)
       throws MacroException {
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
-    return ImmutableList.copyOf(
-        resolveQuery(target, cellNames, resolver, queryExpression)
-            .map(
-                queryTarget -> {
-                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-                  return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-                })
-            .sorted()
-            .collect(Collectors.toList()));
+    return precomputedWork
+        .results
+        .stream()
+        .map(
+            queryTarget -> {
+              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+              return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+            })
+        .sorted()
+        .collect(MoreCollectors.toImmutableList());
   }
 }
