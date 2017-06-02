@@ -30,7 +30,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -86,6 +88,8 @@ public class HeaderMap {
   /** Map to help share strings. */
   private Map<String, Integer> addedStrings;
 
+  private Set<String> existingKeys;
+
   private HeaderMap(int numBuckets, int stringBytesLength) {
     Preconditions.checkArgument(numBuckets > 0, "The number of buckets must be greater than 0");
     Preconditions.checkArgument(
@@ -101,6 +105,7 @@ public class HeaderMap {
     this.stringBytes = new byte[stringBytesLength];
     this.stringBytesActualLength = 0;
     this.addedStrings = new HashMap<>();
+    this.existingKeys = new HashSet<>();
   }
 
   public int getNumEntries() {
@@ -400,6 +405,11 @@ public class HeaderMap {
       return AddResult.FAILURE_FULL;
     }
 
+    String lowercaseStr = Ascii.toLowerCase(str);
+    if (existingKeys.contains(lowercaseStr)) {
+      return AddResult.FAILURE_ALREADY_PRESENT;
+    }
+
     int hash0 = hashKey(str) & (numBuckets - 1);
 
     int hash = hash0;
@@ -410,11 +420,8 @@ public class HeaderMap {
         buckets[hash] = bucket;
         numEntries++;
         maxValueLength = max(maxValueLength, prefix.length() + suffix.length());
+        existingKeys.add(lowercaseStr);
         return AddResult.OK;
-      }
-
-      if (str.equalsIgnoreCase(getString(bucket.key))) {
-        return AddResult.FAILURE_ALREADY_PRESENT;
       }
 
       hash = (hash + 1) & (numBuckets - 1);
