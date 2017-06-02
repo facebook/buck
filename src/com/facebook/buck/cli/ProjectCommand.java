@@ -17,8 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
-import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
 import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
@@ -265,16 +263,24 @@ public class ProjectCommand extends BuildCommand {
             IjProjectCommandHelper projectCommandHelper =
                 new IjProjectCommandHelper(
                     params.getBuckEventBus(),
+                    params.getConsole(),
                     executor,
+                    params.getParser(),
                     params.getBuckConfig(),
                     params.getActionGraphCache(),
                     params.getCell(),
                     projectConfig,
+                    processAnnotations,
                     getEnableParserProfiling(),
+                    projectView,
+                    dryRun,
+                    withTests,
+                    withoutTests,
+                    withoutDependenciesTests,
                     (buildTargets, disableCaching) ->
                         runBuild(params, buildTargets, disableCaching),
-                    arguments -> parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
-                    new ProjectViewParametersImplementation(params));
+                    arguments ->
+                        parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments));
             result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
@@ -410,58 +416,6 @@ public class ProjectCommand extends BuildCommand {
     @Nullable
     public String getDefaultMetaVariable() {
       return null;
-    }
-  }
-
-  private class ProjectGeneratorParametersImplementation
-      extends CommandRunnerParametersImplementation implements ProjectGeneratorParameters {
-
-    private ProjectGeneratorParametersImplementation(CommandRunnerParams parameters) {
-      super(parameters);
-    }
-
-    @Override
-    public boolean isDryRun() {
-      return dryRun;
-    }
-
-    @Override
-    public boolean isWithTests() {
-      return withTests;
-    }
-
-    @Override
-    public boolean isWithoutTests() {
-      return withoutTests;
-    }
-
-    @Override
-    public boolean isWithDependenciesTests() {
-      return withTests && !withoutDependenciesTests;
-    }
-
-    @Override
-    public boolean isProcessAnnotations() {
-      return processAnnotations;
-    }
-  }
-
-  private class ProjectViewParametersImplementation extends ProjectGeneratorParametersImplementation
-      implements ProjectViewParameters {
-
-    private ProjectViewParametersImplementation(CommandRunnerParams parameters) {
-      super(parameters);
-    }
-
-    @Override
-    public boolean hasViewPath() {
-      return projectView != null;
-    }
-
-    @Override
-    @Nullable
-    public String getViewPath() {
-      return projectView;
     }
   }
 }

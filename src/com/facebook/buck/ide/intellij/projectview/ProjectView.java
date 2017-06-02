@@ -20,7 +20,6 @@ import static com.facebook.buck.ide.intellij.projectview.Patterns.capture;
 import static com.facebook.buck.ide.intellij.projectview.Patterns.noncapture;
 import static com.facebook.buck.ide.intellij.projectview.Patterns.optional;
 
-import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileWriter;
@@ -76,11 +74,17 @@ public class ProjectView {
   // region Public API
 
   public static int run(
-      ProjectViewParameters projectViewParameters,
+      DirtyPrintStreamDecorator stderr,
+      boolean dryRun,
+      boolean withTests,
+      String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      ActionGraphAndResolver actionGraph) {
-    return new ProjectView(projectViewParameters, targetGraph, buildTargets, actionGraph).run();
+      ActionGraphAndResolver actionGraph,
+      Config config) {
+    return new ProjectView(
+            stderr, dryRun, withTests, viewPath, targetGraph, buildTargets, actionGraph, config)
+        .run();
   }
 
   // endregion Public API
@@ -113,20 +117,24 @@ public class ProjectView {
   private final String repository = new File("").getAbsolutePath();
 
   private ProjectView(
-      ProjectViewParameters projectViewParameters,
+      DirtyPrintStreamDecorator stdErr,
+      boolean dryRun,
+      boolean withTests,
+      String viewPath,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      ActionGraphAndResolver actionGraph) {
-    this.stdErr = projectViewParameters.getStdErr();
-    this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
-    this.dryRun = projectViewParameters.isDryRun();
-    this.withTests = projectViewParameters.isWithTests();
+      ActionGraphAndResolver actionGraph,
+      Config config) {
+    this.stdErr = stdErr;
+    this.viewPath = viewPath;
+    this.dryRun = dryRun;
+    this.withTests = withTests;
 
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
     this.actionGraph = actionGraph;
 
-    this.config = projectViewParameters.getConfig();
+    this.config = config;
   }
 
   private int run() {
