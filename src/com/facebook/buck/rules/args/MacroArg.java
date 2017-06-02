@@ -33,6 +33,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /** An {@link Arg} which contains macros that need to be expanded. */
@@ -43,6 +45,8 @@ public class MacroArg implements Arg {
   protected final CellPathResolver cellNames;
   protected final BuildRuleResolver resolver;
   protected final String unexpanded;
+
+  protected Map<MacroMatchResult, Object> precomputedWorkCache = new HashMap<>();
 
   public MacroArg(
       MacroHandler expander,
@@ -70,7 +74,8 @@ public class MacroArg implements Arg {
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     try {
-      return expander.extractBuildTimeDeps(target, cellNames, resolver, unexpanded);
+      return expander.extractBuildTimeDeps(
+          target, cellNames, resolver, unexpanded, precomputedWorkCache);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
@@ -80,7 +85,9 @@ public class MacroArg implements Arg {
   public ImmutableCollection<SourcePath> getInputs() {
     ImmutableCollection<BuildRule> rules;
     try {
-      rules = expander.extractBuildTimeDeps(target, cellNames, resolver, unexpanded);
+      rules =
+          expander.extractBuildTimeDeps(
+              target, cellNames, resolver, unexpanded, precomputedWorkCache);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
@@ -97,7 +104,8 @@ public class MacroArg implements Arg {
       sink.setReflectively("arg", unexpanded)
           .setReflectively(
               "macros",
-              expander.extractRuleKeyAppendables(target, cellNames, resolver, unexpanded));
+              expander.extractRuleKeyAppendables(
+                  target, cellNames, resolver, unexpanded, precomputedWorkCache));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
