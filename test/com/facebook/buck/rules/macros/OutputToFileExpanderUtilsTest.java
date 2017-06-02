@@ -30,6 +30,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class OutputToFileExpanderTest {
+public class OutputToFileExpanderUtilsTest {
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -52,7 +53,6 @@ public class OutputToFileExpanderTest {
     String text = "cheese" + File.pathSeparator + "peas";
 
     StringExpander source = new StringExpander(text);
-    OutputToFileExpander expander = new OutputToFileExpander(source);
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> node = builder.build();
@@ -60,9 +60,10 @@ public class OutputToFileExpanderTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
     builder.build(resolver, filesystem);
+
+    MacroHandler handler = new MacroHandler(ImmutableMap.of("@macro", source));
     String result =
-        expander.expand(
-            target, createCellRoots(filesystem), resolver, ImmutableList.of("totally ignored"));
+        handler.expand(target, createCellRoots(filesystem), resolver, "$(@macro totally ignored)");
 
     assertTrue(result, result.startsWith("@"));
     Path output = Paths.get(result.substring(1));

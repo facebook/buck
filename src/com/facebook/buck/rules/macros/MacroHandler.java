@@ -60,7 +60,7 @@ public class MacroHandler {
     ImmutableMap.Builder<String, MacroExpander> builder = ImmutableMap.builder();
     for (Map.Entry<String, MacroExpander> entry : source.entrySet()) {
       builder.put(entry.getKey(), entry.getValue());
-      builder.put("@" + entry.getKey(), new OutputToFileExpander(entry.getValue()));
+      builder.put("@" + entry.getKey(), entry.getValue());
     }
     return builder.build();
   }
@@ -89,11 +89,20 @@ public class MacroHandler {
       final BuildRuleResolver resolver) {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
-      replacers.put(
-          entry.getKey(),
-          input ->
-              getExpander(entry.getKey())
-                  .expand(target, cellNames, resolver, input.getMacroInput()));
+      MacroReplacer replacer =
+          input -> {
+            MacroExpander expander = getExpander(entry.getKey());
+            if (expander instanceof MacroExpanderWithCustomFileOutput) {
+              return ((MacroExpanderWithCustomFileOutput) expander)
+                  .expandForFile(target, cellNames, resolver, input.getMacroInput());
+            } else {
+              return expander.expand(target, cellNames, resolver, input.getMacroInput());
+            }
+          };
+      if (entry.getKey().startsWith("@")) {
+        replacer = OutputToFileExpanderUtils.wrapReplacerWithFileOutput(replacer, target, resolver);
+      }
+      replacers.put(entry.getKey(), replacer);
     }
     return replacers.build();
   }
