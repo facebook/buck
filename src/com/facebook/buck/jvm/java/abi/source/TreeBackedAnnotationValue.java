@@ -28,7 +28,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
-class TreeBackedAnnotationValue implements AnnotationValue {
+class TreeBackedAnnotationValue implements ArtificialAnnotationValue {
   private final AnnotationValue underlyingAnnotationValue;
   private final Tree valueTree;
   private final TreeBackedElementResolver resolver;

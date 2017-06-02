@@ -35,7 +35,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.type.DeclaredType;
 
-class TreeBackedAnnotationMirror implements AnnotationMirror {
+class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
   private final AnnotationMirror underlyingAnnotationMirror;
   private final AnnotationTree tree;
   private final TreeBackedElementResolver resolver;

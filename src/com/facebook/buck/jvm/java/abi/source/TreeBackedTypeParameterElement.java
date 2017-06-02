@@ -34,7 +34,8 @@ import javax.lang.model.type.TypeMirror;
  * {@link TypeParameterTree}. This results in an incomplete implementation; see documentation for
  * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
-class TreeBackedTypeParameterElement extends TreeBackedElement implements TypeParameterElement {
+class TreeBackedTypeParameterElement extends TreeBackedElement
+    implements ArtificialTypeParameterElement {
   private final TypeParameterElement underlyingElement;
   private final StandaloneTypeVariable typeVar;
   @Nullable private List<TypeMirror> bounds;
@@ -50,6 +51,11 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
     // value of getEnclosedElements
+  }
+
+  @Override
+  public List<? extends ArtificialElement> getEnclosedElements() {
+    return Collections.emptyList();
   }
 
   @Override

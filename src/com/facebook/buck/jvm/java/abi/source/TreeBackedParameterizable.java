@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Parameterizable;
-import javax.lang.model.element.TypeParameterElement;
 
-abstract class TreeBackedParameterizable extends TreeBackedElement implements Parameterizable {
+abstract class TreeBackedParameterizable extends TreeBackedElement
+    implements ArtificialParameterizable {
   private final List<TreeBackedTypeParameterElement> typeParameters = new ArrayList<>();
 
   public TreeBackedParameterizable(
@@ -41,7 +40,7 @@ abstract class TreeBackedParameterizable extends TreeBackedElement implements Pa
   }
 
   @Override
-  public List<? extends TypeParameterElement> getTypeParameters() {
+  public List<TreeBackedTypeParameterElement> getTypeParameters() {
     return Collections.unmodifiableList(typeParameters);
   }
 }

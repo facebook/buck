@@ -35,7 +35,7 @@ import javax.lang.model.element.TypeElement;
  * implementation; see documentation for individual methods and {@link
  * com.facebook.buck.jvm.java.abi.source} for more information.
  */
-class TreeBackedPackageElement extends TreeBackedElement implements PackageElement {
+class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPackageElement {
   private final PackageElement javacPackage;
   private final StandalonePackageType typeMirror;
   @Nullable private CompilationUnitTree tree;

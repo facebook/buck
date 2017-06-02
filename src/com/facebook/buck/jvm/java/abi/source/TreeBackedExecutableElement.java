@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -36,7 +35,8 @@ import javax.lang.model.type.TypeMirror;
  * {@link MethodTree}. This results in an incomplete implementation; see documentation for
  * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
-class TreeBackedExecutableElement extends TreeBackedParameterizable implements ExecutableElement {
+class TreeBackedExecutableElement extends TreeBackedParameterizable
+    implements ArtificialExecutableElement {
   private final ExecutableElement underlyingElement;
   private final List<TreeBackedVariableElement> parameters = new ArrayList<>();
   @Nullable private final MethodTree tree;
@@ -56,6 +56,11 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
     this.underlyingElement = underlyingElement;
     this.tree = tree;
     enclosingElement.addEnclosedElement(this);
+  }
+
+  @Override
+  public List<? extends ArtificialElement> getEnclosedElements() {
+    return Collections.emptyList();
   }
 
   @Override
@@ -91,7 +96,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable implements E
   }
 
   @Override
-  public List<? extends VariableElement> getParameters() {
+  public List<TreeBackedVariableElement> getParameters() {
     return Collections.unmodifiableList(parameters);
   }
 

@@ -24,6 +24,7 @@ import com.sun.source.tree.ModifiersTree;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
@@ -35,7 +36,7 @@ import javax.lang.model.type.TypeMirror;
  * ClassTree}. This results in an incomplete implementation; see documentation for individual
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
-class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeElement {
+class TreeBackedTypeElement extends TreeBackedParameterizable implements ArtificialTypeElement {
   private final TypeElement underlyingElement;
   private final ClassTree tree;
   @Nullable private StandaloneDeclaredType typeMirror;
@@ -61,6 +62,22 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements TypeEle
   @Override
   public TreeBackedElement getEnclosingElement() {
     return Preconditions.checkNotNull(super.getEnclosingElement());
+  }
+
+  @Override
+  protected void addEnclosedElement(Element element) {
+    if (!(element instanceof TreeBackedElement)) {
+      throw new IllegalArgumentException();
+    }
+    super.addEnclosedElement(element);
+  }
+
+  @Override
+  public List<TreeBackedElement> getEnclosedElements() {
+    @SuppressWarnings("unchecked")
+    List<TreeBackedElement> enclosedElements =
+        (List<TreeBackedElement>) super.getEnclosedElements();
+    return enclosedElements;
   }
 
   @Override

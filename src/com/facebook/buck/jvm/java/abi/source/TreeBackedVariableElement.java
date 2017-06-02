@@ -27,7 +27,7 @@ import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
-class TreeBackedVariableElement extends TreeBackedElement implements VariableElement {
+class TreeBackedVariableElement extends TreeBackedElement implements ArtificialVariableElement {
   private final VariableElement underlyingElement;
 
   @Nullable private final VariableTree tree;
@@ -47,6 +47,11 @@ class TreeBackedVariableElement extends TreeBackedElement implements VariableEle
     } else {
       enclosingElement.addEnclosedElement(this);
     }
+  }
+
+  @Override
+  public List<? extends ArtificialElement> getEnclosedElements() {
+    return Collections.emptyList();
   }
 
   @Override

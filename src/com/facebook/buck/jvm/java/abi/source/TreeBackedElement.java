@@ -36,7 +36,7 @@ import javax.lang.model.type.TypeMirror;
  * com.sun.source.tree.Tree}. This results in an incomplete implementation; see documentation for
  * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
-abstract class TreeBackedElement implements Element {
+abstract class TreeBackedElement implements ArtificialElement {
   private final Element underlyingElement;
   @Nullable private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
