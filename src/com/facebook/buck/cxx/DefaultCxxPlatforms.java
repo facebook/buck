@@ -55,6 +55,8 @@ public class DefaultCxxPlatforms {
   private static final String DEFAULT_WINDOWS_CXX_FRONTEND = "cl";
   private static final String DEFAULT_WINDOWS_LINK = "link";
   private static final String DEFAULT_WINDOWS_LIB = "lib";
+  private static final String DEFAULT_WINDOWS_RANLIB = "lib";
+  private static final String DEFAULT_UNIX_RANLIB = "ranlib";
 
   public static CxxPlatform build(
       Platform platform, ProjectFilesystem filesystem, CxxBuckConfig config) {
@@ -71,6 +73,7 @@ public class DefaultCxxPlatforms {
     Optional<String> binaryExtension;
     ImmutableMap<String, String> env = config.getEnvironment();
     Optional<CxxToolProvider.Type> defaultToolType = Optional.empty();
+    String ranlibCommand;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
@@ -92,6 +95,7 @@ public class DefaultCxxPlatforms {
                 CxxToolProvider.Type.GCC,
                 filesystem);
         binaryExtension = Optional.empty();
+        ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
       case MACOS:
         sharedLibraryExtension = "dylib";
@@ -113,6 +117,7 @@ public class DefaultCxxPlatforms {
                 CxxToolProvider.Type.CLANG,
                 filesystem);
         binaryExtension = Optional.empty();
+        ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
@@ -143,6 +148,7 @@ public class DefaultCxxPlatforms {
                 filesystem);
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
+        ranlibCommand = DEFAULT_WINDOWS_RANLIB;
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
@@ -164,6 +170,7 @@ public class DefaultCxxPlatforms {
                 CxxToolProvider.Type.GCC,
                 filesystem);
         binaryExtension = Optional.empty();
+        ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
         //$CASES-OMITTED$
       default:
@@ -193,7 +200,7 @@ public class DefaultCxxPlatforms {
         ImmutableList.of(),
         new HashedFileTool(getExecutablePath("strip", DEFAULT_STRIP, env)),
         archiver,
-        new HashedFileTool(getExecutablePath("ranlib", DEFAULT_RANLIB, env)),
+        new HashedFileTool(getExecutablePath(ranlibCommand, DEFAULT_RANLIB, env)),
         new PosixNmSymbolNameTool(new HashedFileTool(getExecutablePath("nm", DEFAULT_NM, env))),
         ImmutableList.of(),
         ImmutableList.of(),

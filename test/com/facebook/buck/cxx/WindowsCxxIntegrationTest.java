@@ -94,6 +94,19 @@ public class WindowsCxxIntegrationTest {
     assertThat(x86RunResult.getStdout(), Matchers.containsString("The process is WOW64"));
   }
 
+  @Test
+  public void librariesInDevConsole() throws IOException, InterruptedException {
+    ProjectWorkspace.ProcessResult staticLibResult =
+        workspace.runBuckCommand(
+            getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,static");
+    staticLibResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult sharedLibResult =
+        workspace.runBuckCommand(
+            getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,shared");
+    sharedLibResult.assertSuccess();
+  }
+
   private ImmutableMap<String, String> getDevConsoleEnv(String vcvarsallBatArg)
       throws IOException, InterruptedException {
     workspace.writeContentsToPath(
