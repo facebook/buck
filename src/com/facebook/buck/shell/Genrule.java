@@ -47,8 +47,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -364,7 +366,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     }
     Path basePath = getBuildTarget().getBasePath();
 
-    ImmutableMap.Builder<Path, Path> linksBuilder = ImmutableSortedMap.naturalOrder();
+    Map<Path, Path> linksBuilder = new HashMap<>();
     // To preserve legacy behavior, we allow duplicate targets and just ignore all but the last.
     Set<Path> seenTargets = new HashSet<>();
     // Symlink all sources into the temp directory so that they can be used in the genrule.
@@ -394,7 +396,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
       }
     }
     commands.add(
-        new SymlinkTreeStep(getProjectFilesystem(), pathToSrcDirectory, linksBuilder.build()));
+        new SymlinkTreeStep(
+            getProjectFilesystem(), pathToSrcDirectory, ImmutableSortedMap.copyOf(linksBuilder)));
   }
 
   /** Get the output name of the generated file, as listed in the BUCK file. */
