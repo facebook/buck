@@ -733,9 +733,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           // If we didn't build the rule locally, reload the recorded paths from the build
           // metadata.
           if (success != BuildRuleSuccessType.BUILT_LOCALLY) {
-            for (String str :
-                onDiskBuildInfo.getValuesOrThrow(BuildInfo.MetadataKey.RECORDED_PATHS)) {
-              buildInfoRecorder.recordArtifact(Paths.get(str));
+            try {
+              for (String str :
+                  onDiskBuildInfo.getValuesOrThrow(BuildInfo.MetadataKey.RECORDED_PATHS)) {
+                buildInfoRecorder.recordArtifact(Paths.get(str));
+              }
+            } catch (IOException e) {
+              LOG.error(e, "Failed to read RECORDED_PATHS for %s", rule);
+              throw e;
             }
           }
 

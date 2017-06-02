@@ -38,7 +38,7 @@ public interface OnDiskBuildInfo {
   /**
    * Tries to read the values and if it fails it logs the attributes of the file it tried to read.
    */
-  ImmutableList<String> getValuesOrThrow(String key);
+  ImmutableList<String> getValuesOrThrow(String key) throws IOException;
 
   /**
    * @return the map of strings associated with the specified key in the build engine metadata, if
