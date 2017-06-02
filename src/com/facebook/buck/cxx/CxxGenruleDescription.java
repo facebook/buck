@@ -25,6 +25,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
+import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.model.MacroReplacer;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -897,6 +898,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
+    public String replace(MacroMatchResult input) throws MacroException {
+      return replace(input.getMacroInput());
+    }
+
     public String replace(ImmutableList<String> args) throws MacroException {
       return String.format("$(%s %s)", name, Joiner.on(' ').join(args));
     }
@@ -932,9 +937,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public String replace(ImmutableList<String> args) throws MacroException {
+    public String replace(MacroMatchResult input) throws MacroException {
       ImmutableList.Builder<String> strings = ImmutableList.builder();
-
+      ImmutableList<String> args = input.getMacroInput();
       if (filter == Filter.PARAM) {
         strings.add(args.get(0));
       }

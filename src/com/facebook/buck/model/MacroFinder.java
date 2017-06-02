@@ -88,7 +88,7 @@ public class MacroFinder {
                   matchResult.getMacroType()));
         }
         try {
-          expanded.append(replacer.replace(matchResult.getMacroInput()));
+          expanded.append(replacer.replace(matchResult));
         } catch (MacroException e) {
           throw new MacroException(
               String.format(

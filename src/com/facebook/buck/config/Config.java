@@ -83,20 +83,20 @@ public class Config {
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
   // macro.  So, add special expanders to preserve these until they get fixed.
   private static MacroReplacer getMacroPreserver(final String name) {
-    return input -> String.format("$(%s %s)", name, Joiner.on(' ').join(input));
+    return input -> String.format("$(%s %s)", name, Joiner.on(' ').join(input.getMacroInput()));
   }
 
   /** @return the input after recursively expanding any config references. */
   private String expand(String input, final Stack<String> expandStack) {
     MacroReplacer macroReplacer =
         inputs -> {
-          if (inputs.size() != 1) {
+          if (inputs.getMacroInput().size() != 1) {
             throw new HumanReadableException(
                 "references must have a single argument of the form `<section>.<field>`,"
                     + " but was '%s'",
                 inputs);
           }
-          List<String> parts = Splitter.on('.').limit(2).splitToList(inputs.get(0));
+          List<String> parts = Splitter.on('.').limit(2).splitToList(inputs.getMacroInput().get(0));
           if (parts.size() != 2) {
             throw new HumanReadableException(
                 "references must have the form `<section>.<field>`, but was '%s'", parts);

@@ -91,7 +91,9 @@ public class MacroHandler {
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
       replacers.put(
           entry.getKey(),
-          input -> getExpander(entry.getKey()).expand(target, cellNames, resolver, input));
+          input ->
+              getExpander(entry.getKey())
+                  .expand(target, cellNames, resolver, input.getMacroInput()));
     }
     return replacers.build();
   }
