@@ -259,7 +259,6 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
-  private final BuildRuleResolver defaultBuildRuleResolver;
   private final SourcePathResolver defaultPathResolver;
   private final BuckEventBus buckEventBus;
 
@@ -311,10 +310,11 @@ public class ProjectGenerator {
     this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
-    this.defaultBuildRuleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     this.defaultPathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(this.defaultBuildRuleResolver));
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -889,7 +889,7 @@ public class ProjectGenerator {
               ImmutableList.of(locationMacroExpander),
               node.getBuildTarget(),
               node.getCellNames(),
-              defaultBuildRuleResolver)
+              buildRuleResolverForNode.apply(node))
           .appendToCommandLine(result, defaultPathResolver);
     }
     return result.build();

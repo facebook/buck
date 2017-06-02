@@ -1708,46 +1708,53 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryLinkerFlagsWithLocationMacrosAreExpanded() throws IOException {
-    BuildTarget genruleTarget = BuildTarget.builder(rootPath, "//foo", "genrulelib").build();
-    TargetNode<?, ?> genruleNode = GenruleBuilder
-        .newGenruleBuilder(genruleTarget)
-        .setCmd("touch $OUT")
-        .setOut("libGenruleLib.a")
-        .build();
-
     BuildTarget exportFileTarget = BuildTarget.builder(rootPath, "//foo", "libExported.a").build();
-    TargetNode<?, ?> exportFileNode = ExportFileBuilder
-        .newExportFileBuilder(exportFileTarget)
-        .setSrc(new FakeSourcePath("libExported.a"))
-        .build();
+    TargetNode<?, ?> exportFileNode =
+        ExportFileBuilder.newExportFileBuilder(exportFileTarget)
+            .setSrc(new FakeSourcePath("libExported.a"))
+            .build();
+
+    BuildTarget transitiveDepOfGenruleTarget =
+        BuildTarget.builder(rootPath, "//foo", "libExported2.a").build();
+    TargetNode<?, ?> transitiveDepOfGenruleNode =
+        ExportFileBuilder.newExportFileBuilder(transitiveDepOfGenruleTarget)
+            .setSrc(new FakeSourcePath("libExported2.a"))
+            .build();
+
+    BuildTarget genruleTarget = BuildTarget.builder(rootPath, "//foo", "genrulelib").build();
+    TargetNode<?, ?> genruleNode =
+        GenruleBuilder.newGenruleBuilder(genruleTarget)
+            .setCmd("cp $(location //foo:libExported2.a) $OUT")
+            .setOut("libGenruleLib.a")
+            .build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
-    TargetNode<?, ?> node = AppleLibraryBuilder
-        .createBuilder(buildTarget)
-        .setConfigs(
-            ImmutableSortedMap.of(
-                "Debug",
-                ImmutableMap.of()))
-        .setLinkerFlags(
-            ImmutableList.of(
-                StringWithMacrosUtils.format("-force_load"),
-                StringWithMacrosUtils.format("%s", LocationMacro.of(genruleTarget)),
-                StringWithMacrosUtils.format("%s", LocationMacro.of(exportFileTarget))))
-        .build();
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("-force_load"),
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(genruleTarget)),
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(exportFileTarget))))
+            .build();
 
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(node, genruleNode, exportFileNode), ImmutableSet.of());
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(node, genruleNode, exportFileNode, transitiveDepOfGenruleNode),
+            ImmutableSet.of());
 
     projectGenerator.createXcodeProjects();
 
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:lib");
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
-    assertThat(projectGenerator.getRequiredBuildTargets(),
+    assertThat(
+        projectGenerator.getRequiredBuildTargets(),
         equalTo(ImmutableSet.of(genruleTarget, exportFileTarget)));
 
-    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(genruleNode, node, exportFileNode);
+    ImmutableSet<TargetNode<?, ?>> nodes =
+        ImmutableSet.of(genruleNode, node, exportFileNode, transitiveDepOfGenruleNode);
     String generatedLibraryPath = getAbsoluteOutputForNode(genruleNode, nodes).toString();
     String exportedLibraryPath = getAbsoluteOutputForNode(exportFileNode, nodes).toString();
 
@@ -3603,22 +3610,22 @@ public class ProjectGeneratorTest {
   public void applicationTestOnlyLinksLibrariesNotLinkedByTheHostApp() throws IOException {
     // libs
     BuildTarget hostOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "HostOnly").build();
-    TargetNode<?, ?> hostOnlyLibNode = AppleLibraryBuilder
-        .createBuilder(hostOnlyLibTarget)
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("HostOnly.m"))))
-        .build();
+    TargetNode<?, ?> hostOnlyLibNode =
+        AppleLibraryBuilder.createBuilder(hostOnlyLibTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("HostOnly.m"))))
+            .build();
 
     BuildTarget sharedLibTarget = BuildTarget.builder(rootPath, "//libs", "Shared").build();
-    TargetNode<?, ?> sharedLibNode = AppleLibraryBuilder
-        .createBuilder(sharedLibTarget)
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Shared.m"))))
-        .build();
+    TargetNode<?, ?> sharedLibNode =
+        AppleLibraryBuilder.createBuilder(sharedLibTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Shared.m"))))
+            .build();
 
     BuildTarget testOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "TestOnly").build();
-    TargetNode<?, ?> testOnlyLibNode = AppleLibraryBuilder
-        .createBuilder(testOnlyLibTarget)
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("TestOnly.m"))))
-        .build();
+    TargetNode<?, ?> testOnlyLibNode =
+        AppleLibraryBuilder.createBuilder(testOnlyLibTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("TestOnly.m"))))
+            .build();
 
     // host app
     BuildTarget hostAppBinaryTarget =
@@ -3646,22 +3653,35 @@ public class ProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(sharedLibTarget, testOnlyLibTarget))
             .build();
 
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(ImmutableSet.of(
-        hostOnlyLibNode, sharedLibNode, testOnlyLibNode, hostAppBinaryNode, hostAppNode, testNode
-    ), ImmutableSet.of());
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(
+                hostOnlyLibNode,
+                sharedLibNode,
+                testOnlyLibNode,
+                hostAppBinaryNode,
+                hostAppNode,
+                testNode),
+            ImmutableSet.of());
 
     projectGenerator.createXcodeProjects();
 
-    Function<PBXTarget, Set<String>> getLinkedLibsForTarget = pbxTarget -> pbxTarget
-        .getBuildPhases().get(0).getFiles().stream()
-        .map(PBXBuildFile::getFileRef)
-        .map(PBXReference::getName)
-        .collect(Collectors.toSet());
+    Function<PBXTarget, Set<String>> getLinkedLibsForTarget =
+        pbxTarget ->
+            pbxTarget
+                .getBuildPhases()
+                .get(0)
+                .getFiles()
+                .stream()
+                .map(PBXBuildFile::getFileRef)
+                .map(PBXReference::getName)
+                .collect(Collectors.toSet());
 
     PBXTarget hostPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
     assertEquals(hostPBXTarget.getBuildPhases().size(), 1);
-    assertEquals(getLinkedLibsForTarget.apply(hostPBXTarget),
+    assertEquals(
+        getLinkedLibsForTarget.apply(hostPBXTarget),
         ImmutableSet.of("libHostOnly.a", "libShared.a"));
 
     PBXTarget testPBXTarget =
@@ -3674,22 +3694,22 @@ public class ProjectGeneratorTest {
   public void uiTestLinksAllLibrariesItDependsOn() throws IOException {
     // libs
     BuildTarget hostOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "HostOnly").build();
-    TargetNode<?, ?> hostOnlyLibNode = AppleLibraryBuilder
-        .createBuilder(hostOnlyLibTarget)
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("HostOnly.m"))))
-        .build();
+    TargetNode<?, ?> hostOnlyLibNode =
+        AppleLibraryBuilder.createBuilder(hostOnlyLibTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("HostOnly.m"))))
+            .build();
 
     BuildTarget sharedLibTarget = BuildTarget.builder(rootPath, "//libs", "Shared").build();
-    TargetNode<?, ?> sharedLibNode = AppleLibraryBuilder
-        .createBuilder(sharedLibTarget)
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Shared.m"))))
-        .build();
+    TargetNode<?, ?> sharedLibNode =
+        AppleLibraryBuilder.createBuilder(sharedLibTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Shared.m"))))
+            .build();
 
     BuildTarget testOnlyLibTarget = BuildTarget.builder(rootPath, "//libs", "TestOnly").build();
-    TargetNode<?, ?> testOnlyLibNode = AppleLibraryBuilder
-        .createBuilder(testOnlyLibTarget)
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("TestOnly.m"))))
-        .build();
+    TargetNode<?, ?> testOnlyLibNode =
+        AppleLibraryBuilder.createBuilder(testOnlyLibTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("TestOnly.m"))))
+            .build();
 
     // host app
     BuildTarget hostAppBinaryTarget =
@@ -3718,28 +3738,42 @@ public class ProjectGeneratorTest {
             .setDeps(ImmutableSortedSet.of(sharedLibTarget, testOnlyLibTarget))
             .build();
 
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(ImmutableSet.of(
-        hostOnlyLibNode, sharedLibNode, testOnlyLibNode, hostAppBinaryNode, hostAppNode, testNode
-    ), ImmutableSet.of());
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(
+                hostOnlyLibNode,
+                sharedLibNode,
+                testOnlyLibNode,
+                hostAppBinaryNode,
+                hostAppNode,
+                testNode),
+            ImmutableSet.of());
 
     projectGenerator.createXcodeProjects();
 
-    Function<PBXTarget, Set<String>> getLinkedLibsForTarget = pbxTarget -> pbxTarget
-        .getBuildPhases().get(0).getFiles().stream()
-        .map(PBXBuildFile::getFileRef)
-        .map(PBXReference::getName)
-        .collect(Collectors.toSet());
+    Function<PBXTarget, Set<String>> getLinkedLibsForTarget =
+        pbxTarget ->
+            pbxTarget
+                .getBuildPhases()
+                .get(0)
+                .getFiles()
+                .stream()
+                .map(PBXBuildFile::getFileRef)
+                .map(PBXReference::getName)
+                .collect(Collectors.toSet());
 
     PBXTarget hostPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
     assertEquals(hostPBXTarget.getBuildPhases().size(), 1);
-    assertEquals(getLinkedLibsForTarget.apply(hostPBXTarget),
+    assertEquals(
+        getLinkedLibsForTarget.apply(hostPBXTarget),
         ImmutableSet.of("libHostOnly.a", "libShared.a"));
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
     assertEquals(testPBXTarget.getBuildPhases().size(), 1);
-    assertEquals(getLinkedLibsForTarget.apply(testPBXTarget),
+    assertEquals(
+        getLinkedLibsForTarget.apply(testPBXTarget),
         ImmutableSet.of("libTestOnly.a", "libShared.a"));
   }
 
