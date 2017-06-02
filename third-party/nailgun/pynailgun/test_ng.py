@@ -92,7 +92,7 @@ class TestNailgunConnection(unittest.TestCase):
         self.assertIsNone(self.ng_server_process.poll())
 
         # Give Java some time to create the listening socket.
-        for i in range(0, 300):
+        for i in range(0, 600):
             if not transport_exists(self.transport_file):
                 time.sleep(0.01)
 
