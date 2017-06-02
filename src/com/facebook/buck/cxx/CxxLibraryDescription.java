@@ -960,8 +960,10 @@ public class CxxLibraryDescription
                     CxxSymlinkTreeHeaders.from(
                         (HeaderSymlinkTree)
                             resolver.requireRule(
-                                baseTarget.withAppendedFlavors(
-                                    Type.EXPORTED_HEADERS.getFlavor(), mode.getFlavor())),
+                                baseTarget
+                                    .withoutFlavors(LIBRARY_TYPE.getFlavors())
+                                    .withAppendedFlavors(
+                                        Type.EXPORTED_HEADERS.getFlavor(), mode.getFlavor())),
                         CxxPreprocessables.IncludeType.LOCAL));
           }
           return symlinkTree.map(metadataClass::cast);
@@ -1021,8 +1023,10 @@ public class CxxLibraryDescription
               HeaderSymlinkTree symlinkTree =
                   (HeaderSymlinkTree)
                       resolver.requireRule(
-                          baseTarget.withAppendedFlavors(
-                              platform.getKey(), Type.EXPORTED_HEADERS.getFlavor()));
+                          baseTarget
+                              .withoutFlavors(LIBRARY_TYPE.getFlavors())
+                              .withAppendedFlavors(
+                                  Type.EXPORTED_HEADERS.getFlavor(), platform.getKey()));
               cxxPreprocessorInputBuilder.addIncludes(
                   CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
             }

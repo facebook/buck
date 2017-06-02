@@ -155,6 +155,21 @@ public class CxxLibraryDescriptionTest {
         GenruleBuilder.newGenruleBuilder(genSourceTarget).setOut(genSourceName);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
+    BuildTarget sharedDepTarget =
+        BuildTargetFactory.newInstance("//:sharedDep")
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    CxxLibraryBuilder sharedDepBuilder =
+        new CxxLibraryBuilder(sharedDepTarget, cxxBuckConfig)
+            .setExportedHeaders(
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test_shared.cpp"))));
+    BuildTarget sharedHeaderSymlinkTreeTarget =
+        BuildTarget.builder(sharedDepTarget.getUnflavoredBuildTarget())
+            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
+            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
+            .build();
+
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     CxxLibraryBuilder depBuilder =
         new CxxLibraryBuilder(depTarget, cxxBuckConfig)
@@ -190,7 +205,7 @@ public class CxxLibraryDescriptionTest {
                     FrameworkPath.ofSourcePath(new FakeSourcePath("/some/framework/path/s.dylib")),
                     FrameworkPath.ofSourcePath(
                         new FakeSourcePath("/another/framework/path/a.dylib"))))
-            .setDeps(ImmutableSortedSet.of(depTarget));
+            .setDeps(ImmutableSortedSet.of(depTarget, sharedDepTarget));
 
     // Build the target graph.
     TargetGraph targetGraph =
@@ -198,6 +213,7 @@ public class CxxLibraryDescriptionTest {
             genHeaderBuilder.build(),
             genSourceBuilder.build(),
             depBuilder.build(),
+            sharedDepBuilder.build(),
             cxxLibraryBuilder.build());
 
     // Build the rules.
@@ -206,6 +222,7 @@ public class CxxLibraryDescriptionTest {
     genHeaderBuilder.build(resolver, filesystem, targetGraph);
     genSourceBuilder.build(resolver, filesystem, targetGraph);
     depBuilder.build(resolver, filesystem, targetGraph);
+    sharedDepBuilder.build(resolver, filesystem, targetGraph);
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
 
     // Verify public preprocessor input.
@@ -282,6 +299,7 @@ public class CxxLibraryDescriptionTest {
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
+            sharedHeaderSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -302,6 +320,7 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             genSourceTarget,
             headerSymlinkTreeTarget,
+            sharedHeaderSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
