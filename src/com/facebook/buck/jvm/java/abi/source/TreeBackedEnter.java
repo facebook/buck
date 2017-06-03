@@ -17,14 +17,22 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.TypeParameterTree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
@@ -41,10 +49,12 @@ class TreeBackedEnter {
   private final Trees javacTrees;
   private final EnteringTreePathScanner treeScanner = new EnteringTreePathScanner();
   private final EnteringElementScanner elementScanner = new EnteringElementScanner();
+  private final TreeBackedElementResolver resolver;
 
-  TreeBackedEnter(TreeBackedElements elements, Trees javacTrees) {
+  TreeBackedEnter(TreeBackedElements elements, TreeBackedTypes types, Trees javacTrees) {
     this.elements = elements;
     this.javacTrees = javacTrees;
+    resolver = new TreeBackedElementResolver(elements, types);
   }
 
   public void enter(CompilationUnitTree compilationUnit) {
@@ -58,11 +68,21 @@ class TreeBackedEnter {
   private class EnteringTreePathScanner extends TreePathScanner<Void, Void> {
     @Override
     public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
+      if (node.getTypeDecls().isEmpty() && node.getPackageAnnotations().isEmpty()) {
+        // Nothing interesting, so don't even enter the element
+        return null;
+      }
+
+      PackageElement packageElement =
+          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
+      elements.enterElement(packageElement, this::newTreeBackedPackage);
+
       if (node.getSourceFile().isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
-        TreeBackedPackageElement packageElement =
-            Preconditions.checkNotNull(
-                elements.getPackageElement(node.getPackageName().toString()));
-        packageElement.setTree(node);
+        TreeBackedPackageElement treeBackedPackageElement =
+            (TreeBackedPackageElement)
+                Preconditions.checkNotNull(
+                    elements.getPackageElement(node.getPackageName().toString()));
+        treeBackedPackageElement.setTree(node);
       }
       return super.visitCompilationUnit(node, aVoid);
     }
@@ -75,6 +95,10 @@ class TreeBackedEnter {
       return elementScanner.scan(
           Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath())));
     }
+
+    private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
+      return new TreeBackedPackageElement(underlyingPackage, resolver);
+    }
   }
 
   private class EnteringElementScanner extends ElementScanner8<Void, Void> {
@@ -86,7 +110,8 @@ class TreeBackedEnter {
 
     @Override
     public Void visitType(TypeElement e, Void v) {
-      TreeBackedTypeElement newClass = (TreeBackedTypeElement) elements.enterElement(e);
+      TreeBackedTypeElement newClass =
+          (TreeBackedTypeElement) elements.enterElement(e, this::newTreeBackedType);
       try (ElementContext c = new ElementContext(newClass)) {
         super.visitType(e, v);
         super.scan(e.getTypeParameters(), v);
@@ -97,7 +122,8 @@ class TreeBackedEnter {
     @Override
     public Void visitTypeParameter(TypeParameterElement e, Void v) {
       TreeBackedTypeParameterElement typeParameter =
-          (TreeBackedTypeParameterElement) elements.enterElement(e);
+          (TreeBackedTypeParameterElement)
+              elements.enterElement(e, this::newTreeBackedTypeParameter);
 
       TreeBackedParameterizable currentParameterizable =
           (TreeBackedParameterizable) getCurrentContext();
@@ -110,7 +136,8 @@ class TreeBackedEnter {
 
     @Override
     public Void visitExecutable(ExecutableElement e, Void v) {
-      TreeBackedExecutableElement method = (TreeBackedExecutableElement) elements.enterElement(e);
+      TreeBackedExecutableElement method =
+          (TreeBackedExecutableElement) elements.enterElement(e, this::newTreeBackedExecutable);
 
       try (ElementContext c = new ElementContext(method)) {
         super.visitExecutable(e, v);
@@ -121,8 +148,56 @@ class TreeBackedEnter {
 
     @Override
     public Void visitVariable(VariableElement e, Void v) {
-      elements.enterElement(e);
+      elements.enterElement(e, this::newTreeBackedVariable);
       return super.visitVariable(e, v);
+    }
+
+    private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
+      return new TreeBackedTypeElement(
+          underlyingType,
+          elements.enterElement(underlyingType.getEnclosingElement(), this::assertAlreadyEntered),
+          Preconditions.checkNotNull(javacTrees.getTree(underlyingType)),
+          resolver);
+    }
+
+    private TreeBackedTypeParameterElement newTreeBackedTypeParameter(
+        TypeParameterElement underlyingTypeParameter) {
+      TreeBackedParameterizable enclosingElement =
+          (TreeBackedParameterizable)
+              elements.enterElement(
+                  underlyingTypeParameter.getEnclosingElement(), this::assertAlreadyEntered);
+
+      // Trees.getTree does not work for TypeParameterElements, so we must find it ourselves
+      TypeParameterTree tree =
+          findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
+      return new TreeBackedTypeParameterElement(
+          underlyingTypeParameter, tree, enclosingElement, resolver);
+    }
+
+    private TreeBackedExecutableElement newTreeBackedExecutable(
+        ExecutableElement underlyingExecutable) {
+      return new TreeBackedExecutableElement(
+          underlyingExecutable,
+          elements.enterElement(
+              underlyingExecutable.getEnclosingElement(), this::assertAlreadyEntered),
+          javacTrees.getTree(underlyingExecutable),
+          resolver);
+    }
+
+    private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
+      TreeBackedElement enclosingElement =
+          elements.enterElement(
+              underlyingVariable.getEnclosingElement(), this::assertAlreadyEntered);
+      return new TreeBackedVariableElement(
+          underlyingVariable,
+          enclosingElement,
+          reallyGetTreeForVariable(enclosingElement, underlyingVariable),
+          resolver);
+    }
+
+    private TreeBackedElement assertAlreadyEntered(Element underlyingElement) {
+      throw new AssertionError(
+          String.format("%s should already have been enterted by now.", underlyingElement));
     }
 
     private class ElementContext implements AutoCloseable {
@@ -135,5 +210,54 @@ class TreeBackedEnter {
         contextStack.pop();
       }
     }
+  }
+
+  private TypeParameterTree findTypeParameterTree(
+      TreeBackedParameterizable element, Name simpleName) {
+    List<? extends TypeParameterTree> typeParameters = getTypeParameters(element);
+    for (TypeParameterTree typeParameter : typeParameters) {
+      if (typeParameter.getName().equals(simpleName)) {
+        return typeParameter;
+      }
+    }
+    throw new AssertionError();
+  }
+
+  private List<? extends TypeParameterTree> getTypeParameters(TreeBackedParameterizable element) {
+    if (element instanceof TreeBackedTypeElement) {
+      TreeBackedTypeElement typeElement = (TreeBackedTypeElement) element;
+      return typeElement.getTree().getTypeParameters();
+    }
+
+    TreeBackedExecutableElement executableElement = (TreeBackedExecutableElement) element;
+    // TreeBackedExecutables with a null tree occur only for compiler-generated methods such
+    // as default construvtors. Those never have type parameters, so we should never find
+    // ourselves here without a tree.
+    return Preconditions.checkNotNull(executableElement.getTree()).getTypeParameters();
+  }
+
+  /**
+   * {@link Trees#getTree(Element)} cannot get a tree for a method parameter. This method is a
+   * workaround.
+   */
+  @Nullable
+  private VariableTree reallyGetTreeForVariable(
+      TreeBackedElement enclosing, VariableElement parameter) {
+    if (enclosing instanceof TreeBackedTypeElement) {
+      return (VariableTree) javacTrees.getTree(parameter);
+    }
+
+    TreeBackedExecutableElement method = (TreeBackedExecutableElement) enclosing;
+    MethodTree methodTree = method.getTree();
+    if (methodTree == null) {
+      return null;
+    }
+
+    for (VariableTree variableTree : methodTree.getParameters()) {
+      if (variableTree.getName().equals(parameter.getSimpleName())) {
+        return variableTree;
+      }
+    }
+    throw new AssertionError();
   }
 }

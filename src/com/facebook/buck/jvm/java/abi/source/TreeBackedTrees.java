@@ -63,6 +63,10 @@ class TreeBackedTrees extends Trees {
     this.types = types;
   }
 
+  /* package */ Trees getJavacTrees() {
+    return javacTrees;
+  }
+
   /* package */ void clear() {
     canonicalTypes.clear();
   }

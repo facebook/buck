@@ -18,25 +18,19 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.tree.VariableTree;
-import com.sun.source.util.Trees;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 
@@ -48,20 +42,12 @@ import javax.lang.model.util.Elements;
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
-  private final Trees javacTrees;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
-  private final Map<Name, TreeBackedPackageElement> knownPackages = new HashMap<>();
+  private final Map<Name, PackageElement> knownPackages = new HashMap<>();
 
-  @Nullable private TreeBackedElementResolver resolver;
-
-  public TreeBackedElements(Elements javacElements, Trees javacTrees) {
+  public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
-    this.javacTrees = javacTrees;
-  }
-
-  /* package */ void setResolver(TreeBackedElementResolver resolver) {
-    this.resolver = resolver;
   }
 
   /* package */ void clear() {
@@ -70,119 +56,24 @@ class TreeBackedElements implements Elements {
     knownPackages.clear();
   }
 
-  public TreeBackedElement enterElement(Element underlyingElement) {
+  public <UnderlyingElement extends Element> TreeBackedElement enterElement(
+      UnderlyingElement underlyingElement,
+      Function<UnderlyingElement, ? extends TreeBackedElement> constructor) {
     TreeBackedElement result = treeBackedElements.get(underlyingElement);
     if (result != null) {
       return result;
     }
 
-    ElementKind kind = underlyingElement.getKind();
-    switch (kind) {
-      case PACKAGE:
-        result = newTreeBackedPackage((PackageElement) underlyingElement);
-        break;
-      case ANNOTATION_TYPE:
-      case CLASS:
-      case ENUM:
-      case INTERFACE:
-        result = newTreeBackedType((TypeElement) underlyingElement);
-        break;
-      case TYPE_PARAMETER:
-        result = newTreeBackedTypeParameter((TypeParameterElement) underlyingElement);
-        break;
-      case ENUM_CONSTANT:
-      case FIELD:
-      case PARAMETER:
-        result = newTreeBackedVariable((VariableElement) underlyingElement);
-        break;
-      case CONSTRUCTOR:
-      case METHOD:
-        result = newTreeBackedExecutable((ExecutableElement) underlyingElement);
-        break;
-        // $CASES-OMITTED$
-      default:
-        throw new UnsupportedOperationException(String.format("Element kind %s NYI", kind));
-    }
-
+    result = constructor.apply(underlyingElement);
     treeBackedElements.put(underlyingElement, result);
-
+    if (result instanceof TypeElement) {
+      TypeElement typeElement = (TypeElement) result;
+      knownTypes.put(typeElement.getQualifiedName(), typeElement);
+    } else if (result instanceof TreeBackedPackageElement) {
+      TreeBackedPackageElement packageElement = (TreeBackedPackageElement) result;
+      knownPackages.put(packageElement.getQualifiedName(), packageElement);
+    }
     return result;
-  }
-
-  private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
-    TreeBackedPackageElement treeBackedPackage =
-        new TreeBackedPackageElement(underlyingPackage, Preconditions.checkNotNull(resolver));
-
-    knownPackages.put(treeBackedPackage.getQualifiedName(), treeBackedPackage);
-
-    return treeBackedPackage;
-  }
-
-  private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
-    TreeBackedTypeElement treeBackedType =
-        new TreeBackedTypeElement(
-            underlyingType,
-            enterElement(underlyingType.getEnclosingElement()),
-            Preconditions.checkNotNull(javacTrees.getTree(underlyingType)),
-            Preconditions.checkNotNull(resolver));
-
-    knownTypes.put(treeBackedType.getQualifiedName(), treeBackedType);
-
-    return treeBackedType;
-  }
-
-  private TreeBackedTypeParameterElement newTreeBackedTypeParameter(
-      TypeParameterElement underlyingTypeParameter) {
-    TreeBackedParameterizable enclosingElement =
-        (TreeBackedParameterizable) enterElement(underlyingTypeParameter.getEnclosingElement());
-
-    // Trees.getTree does not work for TypeParameterElements, so we must find it ourselves
-    TypeParameterTree tree =
-        findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
-    return new TreeBackedTypeParameterElement(
-        underlyingTypeParameter, tree, enclosingElement, Preconditions.checkNotNull(resolver));
-  }
-
-  private TypeParameterTree findTypeParameterTree(
-      TreeBackedParameterizable element, Name simpleName) {
-    List<? extends TypeParameterTree> typeParameters = getTypeParameters(element);
-    for (TypeParameterTree typeParameter : typeParameters) {
-      if (typeParameter.getName().equals(simpleName)) {
-        return typeParameter;
-      }
-    }
-    throw new AssertionError();
-  }
-
-  private List<? extends TypeParameterTree> getTypeParameters(TreeBackedParameterizable element) {
-    if (element instanceof TreeBackedTypeElement) {
-      TreeBackedTypeElement typeElement = (TreeBackedTypeElement) element;
-      return typeElement.getTree().getTypeParameters();
-    }
-
-    TreeBackedExecutableElement executableElement = (TreeBackedExecutableElement) element;
-    // TreeBackedExecutables with a null tree occur only for compiler-generated methods such
-    // as default construvtors. Those never have type parameters, so we should never find
-    // ourselves here without a tree.
-    return Preconditions.checkNotNull(executableElement.getTree()).getTypeParameters();
-  }
-
-  private TreeBackedExecutableElement newTreeBackedExecutable(
-      ExecutableElement underlyingExecutable) {
-    return new TreeBackedExecutableElement(
-        underlyingExecutable,
-        enterElement(underlyingExecutable.getEnclosingElement()),
-        javacTrees.getTree(underlyingExecutable),
-        Preconditions.checkNotNull(resolver));
-  }
-
-  private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
-    TreeBackedElement enclosingElement = enterElement(underlyingVariable.getEnclosingElement());
-    return new TreeBackedVariableElement(
-        underlyingVariable,
-        enclosingElement,
-        reallyGetTreeForVariable(enclosingElement, underlyingVariable),
-        Preconditions.checkNotNull(resolver));
   }
 
   @Nullable
@@ -237,13 +128,18 @@ class TreeBackedElements implements Elements {
    */
   @Override
   @Nullable
-  public TreeBackedPackageElement getPackageElement(CharSequence qualifiedNameString) {
+  public PackageElement getPackageElement(CharSequence qualifiedNameString) {
     Name qualifiedName = getName(qualifiedNameString);
 
     if (!knownPackages.containsKey(qualifiedName)) {
-      PackageElement javacPackageElement = javacElements.getPackageElement(qualifiedName);
-      if (javacPackageElement != null) {
-        enterElement(javacPackageElement);
+      PackageElement javacElement = javacElements.getPackageElement(qualifiedName);
+      if (javacElement != null) {
+        // If none of the packages for which we have parse trees matches this fully-qualified name,
+        // ask javac. javac will check the classpath, which will pick up built-ins (like java.lang)
+        // and any packages from dependency targets that are already compiled and on the classpath.
+        // Because our tree-backed elements and javac's elements are sharing a name table, we
+        // should be able to mix implementations without causing too much trouble.
+        knownPackages.put(qualifiedName, javacElement);
       }
     }
 
@@ -354,30 +250,5 @@ class TreeBackedElements implements Elements {
   @Override
   public boolean isFunctionalInterface(TypeElement type) {
     throw new UnsupportedOperationException();
-  }
-
-  /**
-   * {@link Trees#getTree(Element)} cannot get a tree for a method parameter. This method is a
-   * workaround.
-   */
-  @Nullable
-  private VariableTree reallyGetTreeForVariable(
-      TreeBackedElement enclosing, VariableElement parameter) {
-    if (enclosing instanceof TreeBackedTypeElement) {
-      return (VariableTree) javacTrees.getTree(parameter);
-    }
-
-    TreeBackedExecutableElement method = (TreeBackedExecutableElement) enclosing;
-    MethodTree methodTree = method.getTree();
-    if (methodTree == null) {
-      return null;
-    }
-
-    for (VariableTree variableTree : methodTree.getParameters()) {
-      if (variableTree.getName().equals(parameter.getSimpleName())) {
-        return variableTree;
-      }
-    }
-    throw new AssertionError();
   }
 }

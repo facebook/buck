@@ -35,7 +35,8 @@ class EnteringPlugin implements BuckJavacPlugin {
   public void init(BuckJavacTask task, String... args) {
     FrontendOnlyJavacTask frontendTask = (FrontendOnlyJavacTask) task;
     task.addTaskListener(
-        new EnteringTaskListener(frontendTask.getElements(), frontendTask.getTrees()));
+        new EnteringTaskListener(
+            frontendTask.getElements(), frontendTask.getTypes(), frontendTask.getTrees()));
   }
 
   private static class EnteringTaskListener implements TaskListener {
@@ -44,10 +45,11 @@ class EnteringPlugin implements BuckJavacPlugin {
     private final TreeBackedEnter enter;
     private int classesEnteredThisRound = 0;
 
-    public EnteringTaskListener(TreeBackedElements elements, TreeBackedTrees trees) {
+    public EnteringTaskListener(
+        TreeBackedElements elements, TreeBackedTypes types, TreeBackedTrees trees) {
       this.elements = elements;
       this.trees = trees;
-      enter = new TreeBackedEnter(this.elements, this.trees);
+      enter = new TreeBackedEnter(this.elements, types, this.trees.getJavacTrees());
     }
 
     @Override
