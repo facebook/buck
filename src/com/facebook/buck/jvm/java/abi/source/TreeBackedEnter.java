@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
@@ -27,8 +28,10 @@ import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
@@ -75,7 +78,8 @@ class TreeBackedEnter {
 
       PackageElement packageElement =
           (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
-      elements.enterElement(packageElement, this::newTreeBackedPackage);
+      TreeBackedElement treeBackedElement =
+          elements.enterElement(packageElement, this::newTreeBackedPackage);
 
       if (node.getSourceFile().isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
         TreeBackedPackageElement treeBackedPackageElement =
@@ -83,6 +87,7 @@ class TreeBackedEnter {
                 Preconditions.checkNotNull(
                     elements.getPackageElement(node.getPackageName().toString()));
         treeBackedPackageElement.setTree(node);
+        enterAnnotationMirrors(treeBackedElement, node.getPackageAnnotations());
       }
       return super.visitCompilationUnit(node, aVoid);
     }
@@ -153,11 +158,18 @@ class TreeBackedEnter {
     }
 
     private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
-      return new TreeBackedTypeElement(
-          underlyingType,
-          elements.enterElement(underlyingType.getEnclosingElement(), this::assertAlreadyEntered),
-          Preconditions.checkNotNull(javacTrees.getTree(underlyingType)),
-          resolver);
+      ClassTree tree = Preconditions.checkNotNull(javacTrees.getTree(underlyingType));
+      TreeBackedTypeElement typeElement =
+          new TreeBackedTypeElement(
+              underlyingType,
+              elements.enterElement(
+                  underlyingType.getEnclosingElement(), this::assertAlreadyEntered),
+              tree,
+              resolver);
+      enterAnnotationMirrors(
+          typeElement,
+          tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
+      return typeElement;
     }
 
     private TreeBackedTypeParameterElement newTreeBackedTypeParameter(
@@ -170,29 +182,39 @@ class TreeBackedEnter {
       // Trees.getTree does not work for TypeParameterElements, so we must find it ourselves
       TypeParameterTree tree =
           findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
-      return new TreeBackedTypeParameterElement(
-          underlyingTypeParameter, tree, enclosingElement, resolver);
+      TreeBackedTypeParameterElement result =
+          new TreeBackedTypeParameterElement(
+              underlyingTypeParameter, tree, enclosingElement, resolver);
+      enterAnnotationMirrors(
+          result, tree == null ? Collections.emptyList() : tree.getAnnotations());
+      return result;
     }
 
     private TreeBackedExecutableElement newTreeBackedExecutable(
         ExecutableElement underlyingExecutable) {
-      return new TreeBackedExecutableElement(
-          underlyingExecutable,
-          elements.enterElement(
-              underlyingExecutable.getEnclosingElement(), this::assertAlreadyEntered),
-          javacTrees.getTree(underlyingExecutable),
-          resolver);
+      MethodTree tree = javacTrees.getTree(underlyingExecutable);
+      TreeBackedExecutableElement result =
+          new TreeBackedExecutableElement(
+              underlyingExecutable,
+              elements.enterElement(
+                  underlyingExecutable.getEnclosingElement(), this::assertAlreadyEntered),
+              tree,
+              resolver);
+      enterAnnotationMirrors(
+          result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
+      return result;
     }
 
     private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
       TreeBackedElement enclosingElement =
           elements.enterElement(
               underlyingVariable.getEnclosingElement(), this::assertAlreadyEntered);
-      return new TreeBackedVariableElement(
-          underlyingVariable,
-          enclosingElement,
-          reallyGetTreeForVariable(enclosingElement, underlyingVariable),
-          resolver);
+      VariableTree tree = reallyGetTreeForVariable(enclosingElement, underlyingVariable);
+      TreeBackedVariableElement result =
+          new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, resolver);
+      enterAnnotationMirrors(
+          result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
+      return result;
     }
 
     private TreeBackedElement assertAlreadyEntered(Element underlyingElement) {
@@ -209,6 +231,24 @@ class TreeBackedEnter {
       public void close() {
         contextStack.pop();
       }
+    }
+  }
+
+  private void enterAnnotationMirrors(
+      TreeBackedElement element, List<? extends AnnotationTree> annotationTrees) {
+    List<? extends AnnotationMirror> underlyingAnnotations =
+        element.getUnderlyingElement().getAnnotationMirrors();
+    if (underlyingAnnotations.isEmpty()) {
+      return;
+    }
+    if (underlyingAnnotations.size() != annotationTrees.size()) {
+      throw new IllegalArgumentException();
+    }
+
+    for (int i = 0; i < underlyingAnnotations.size(); i++) {
+      element.addAnnotationMirror(
+          new TreeBackedAnnotationMirror(
+              underlyingAnnotations.get(i), annotationTrees.get(i), resolver));
     }
   }
 

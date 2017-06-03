@@ -17,9 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.CompilationUnitTree;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -104,15 +102,6 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
   @Override
   public StandalonePackageType asType() {
     return typeMirror;
-  }
-
-  @Override
-  protected List<? extends AnnotationTree> getAnnotationTrees() {
-    if (tree == null) {
-      return Collections.emptyList();
-    }
-
-    return tree.getPackageAnnotations();
   }
 
   @Override

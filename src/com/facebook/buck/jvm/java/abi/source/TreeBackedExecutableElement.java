@@ -18,9 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.ModifiersTree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,16 +73,6 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
       typeMirror = getResolver().createType(this);
     }
     return typeMirror;
-  }
-
-  @Override
-  protected List<? extends AnnotationTree> getAnnotationTrees() {
-    ModifiersTree modifiersTree = tree == null ? null : tree.getModifiers();
-    if (modifiersTree == null) {
-      return Collections.emptyList();
-    }
-
-    return modifiersTree.getAnnotations();
   }
 
   @Override

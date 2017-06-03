@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.sun.source.tree.AnnotationTree;
-import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.VariableTree;
 import java.util.Collections;
 import java.util.List;
@@ -66,16 +64,6 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
       type = getResolver().getCanonicalType(underlyingElement.asType());
     }
     return type;
-  }
-
-  @Override
-  protected List<? extends AnnotationTree> getAnnotationTrees() {
-    ModifiersTree modifiersTree = tree == null ? null : tree.getModifiers();
-    if (modifiersTree == null) {
-      return Collections.emptyList();
-    }
-
-    return modifiersTree.getAnnotations();
   }
 
   @Override
