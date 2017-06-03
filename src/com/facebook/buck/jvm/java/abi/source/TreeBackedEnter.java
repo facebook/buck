@@ -26,6 +26,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
@@ -34,6 +35,7 @@ import java.util.Deque;
 import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
@@ -68,13 +70,17 @@ class TreeBackedEnter {
     }
   }
 
-  // TODO(jkeljo): Consider continuing to build TreePath objects as we go, so that we don't have to
-  // re-query the tree when creating the elements in `TreeBackedElements`.
   private class EnteringElementScanner extends ElementScanner8<Void, Void> {
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
+    @Nullable private TreePath currentPath;
+    @Nullable private Tree currentTree;
 
     private TreeBackedElement getCurrentContext() {
       return contextStack.peek();
+    }
+
+    private TreePath getCurrentPath() {
+      return Preconditions.checkNotNull(currentPath);
     }
 
     public void enter(CompilationUnitTree compilationUnitTree) {
@@ -84,18 +90,23 @@ class TreeBackedEnter {
         return;
       }
 
-      TreePath rootPath = new TreePath(compilationUnitTree);
-      TreeBackedPackageElement packageElement = enterPackageElement(rootPath);
-      try (ElementContext c = new ElementContext(packageElement)) {
-        List<? extends Tree> typeDecls = compilationUnitTree.getTypeDecls();
-        enterTypes(rootPath, typeDecls);
+      currentPath = new TreePath(compilationUnitTree);
+      currentTree = compilationUnitTree;
+      try {
+        TreeBackedPackageElement packageElement = enterPackageElement();
+        try (ElementContext c = new ElementContext(packageElement)) {
+          enterTypes();
+        }
+      } finally {
+        currentPath = null;
+        currentTree = null;
       }
     }
 
-    private TreeBackedPackageElement enterPackageElement(TreePath rootPath) {
-      CompilationUnitTree compilationUnitTree = rootPath.getCompilationUnit();
+    private TreeBackedPackageElement enterPackageElement() {
+      CompilationUnitTree compilationUnitTree = getCurrentPath().getCompilationUnit();
       PackageElement packageElement =
-          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(rootPath));
+          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
       TreeBackedPackageElement treeBackedPackageElement =
           elements.enterElement(packageElement, this::newTreeBackedPackage);
       if (compilationUnitTree
@@ -108,19 +119,85 @@ class TreeBackedEnter {
       return treeBackedPackageElement;
     }
 
-    private void enterTypes(TreePath rootPath, List<? extends Tree> typeDecls) {
-      for (Tree tree : typeDecls) {
+    private void enterTypes() {
+      for (Tree tree : getCurrentPath().getCompilationUnit().getTypeDecls()) {
         // We use the Tree to find the top-level type elements in a given compilation unit,
         // then switch to Element scanning so that we can catch elements created by the compiler
         // that don't have a tree, such as default constructors or the generated methods on enums.
-        TreePath typePath = new TreePath(rootPath, tree);
-        Element element = javacTrees.getElement(typePath);
-        if (element != null) {
-          scan(element);
-        } else if (tree.getKind() != Tree.Kind.EMPTY_STATEMENT) {
-          throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
+        TreePath previousPath = currentPath;
+        Tree previousTree = currentTree;
+        currentPath = new TreePath(currentPath, tree);
+        currentTree = tree;
+        try {
+          Element element = javacTrees.getElement(currentPath);
+          if (element != null) {
+            scan(element);
+          } else if (tree.getKind() != Tree.Kind.EMPTY_STATEMENT) {
+            throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
+          }
+        } finally {
+          currentPath = previousPath;
+          currentTree = previousTree;
         }
       }
+    }
+
+    @Override
+    public Void scan(Element e, Void aVoid) {
+      TreePath previousPath = currentPath;
+      Tree previousTree = currentTree;
+      currentTree = reallyGetTree(currentPath, e);
+      currentPath = currentTree == null ? null : new TreePath(currentPath, currentTree);
+      try {
+        if (currentPath != null && javacTrees.getElement(currentPath) != e) {
+          throw new AssertionError(
+              String.format(
+                  "Element mismatch!\n  Expected: %s\n  Found: %s\n",
+                  e, javacTrees.getElement(currentPath)));
+        }
+        return super.scan(e, aVoid);
+      } finally {
+        currentPath = previousPath;
+        currentTree = previousTree;
+      }
+    }
+
+    /**
+     * Trees.getTree has a couple of blind spots -- method and type parameters. This method works
+     * around those.
+     */
+    @Nullable
+    private Tree reallyGetTree(@Nullable TreePath parentPath, Element element) {
+      if (parentPath == null) {
+        return null;
+      }
+
+      Tree result = javacTrees.getTree(element);
+      if (result == null) {
+        Tree parentTree = parentPath.getLeaf();
+        Name simpleName = element.getSimpleName();
+        if (element.getKind() == ElementKind.PARAMETER) {
+          MethodTree methodTree = (MethodTree) parentTree;
+          for (VariableTree variableTree : methodTree.getParameters()) {
+            if (variableTree.getName().equals(simpleName)) {
+              return variableTree;
+            }
+          }
+        } else if (element.getKind() == ElementKind.TYPE_PARAMETER) {
+          for (TypeParameterTree typeParameter : getTypeParameters(parentTree)) {
+            if (typeParameter.getName().equals(simpleName)) {
+              return typeParameter;
+            }
+          }
+        } else {
+          // If it's not a param or a type param, it's compiler generated
+          return null;
+        }
+
+        throw new AssertionError(String.format("Couldn't find tree for element %s", element));
+      }
+
+      return result;
     }
 
     @Override
@@ -165,7 +242,7 @@ class TreeBackedEnter {
     }
 
     private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
-      ClassTree tree = Preconditions.checkNotNull(javacTrees.getTree(underlyingType));
+      ClassTree tree = (ClassTree) Preconditions.checkNotNull(currentTree);
       TreeBackedTypeElement typeElement =
           new TreeBackedTypeElement(
               types, underlyingType, getCurrentContext(), tree, canonicalizer);
@@ -179,9 +256,10 @@ class TreeBackedEnter {
         TypeParameterElement underlyingTypeParameter) {
       TreeBackedParameterizable enclosingElement = (TreeBackedParameterizable) getCurrentContext();
 
-      // Trees.getTree does not work for TypeParameterElements, so we must find it ourselves
-      TypeParameterTree tree =
-          findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
+      // TreeBackedExecutables with a null tree occur only for compiler-generated methods such
+      // as default construvtors. Those never have type parameters, so we should never find
+      // ourselves here without a tree.
+      TypeParameterTree tree = (TypeParameterTree) Preconditions.checkNotNull(currentTree);
       TreeBackedTypeParameterElement result =
           new TreeBackedTypeParameterElement(
               types, underlyingTypeParameter, tree, enclosingElement, canonicalizer);
@@ -194,7 +272,7 @@ class TreeBackedEnter {
 
     private TreeBackedExecutableElement newTreeBackedExecutable(
         ExecutableElement underlyingExecutable) {
-      MethodTree tree = javacTrees.getTree(underlyingExecutable);
+      MethodTree tree = (MethodTree) currentTree;
       TreeBackedExecutableElement result =
           new TreeBackedExecutableElement(
               underlyingExecutable, getCurrentContext(), tree, canonicalizer);
@@ -205,7 +283,7 @@ class TreeBackedEnter {
 
     private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
       TreeBackedElement enclosingElement = getCurrentContext();
-      VariableTree tree = reallyGetTreeForVariable(enclosingElement, underlyingVariable);
+      VariableTree tree = (VariableTree) currentTree;
       TreeBackedVariableElement result =
           new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, canonicalizer);
       enterAnnotationMirrors(
@@ -243,52 +321,24 @@ class TreeBackedEnter {
     }
   }
 
-  private TypeParameterTree findTypeParameterTree(
-      TreeBackedParameterizable element, Name simpleName) {
-    List<? extends TypeParameterTree> typeParameters = getTypeParameters(element);
-    for (TypeParameterTree typeParameter : typeParameters) {
-      if (typeParameter.getName().equals(simpleName)) {
-        return typeParameter;
-      }
-    }
-    throw new AssertionError();
-  }
+  private static List<? extends TypeParameterTree> getTypeParameters(Tree parentTree) {
+    return parentTree.accept(
+        new SimpleTreeVisitor<List<? extends TypeParameterTree>, Void>() {
+          @Override
+          public List<? extends TypeParameterTree> visitClass(ClassTree node, Void aVoid) {
+            return node.getTypeParameters();
+          }
 
-  private List<? extends TypeParameterTree> getTypeParameters(TreeBackedParameterizable element) {
-    if (element instanceof TreeBackedTypeElement) {
-      TreeBackedTypeElement typeElement = (TreeBackedTypeElement) element;
-      return typeElement.getTree().getTypeParameters();
-    }
+          @Override
+          public List<? extends TypeParameterTree> visitMethod(MethodTree node, Void aVoid) {
+            return node.getTypeParameters();
+          }
 
-    TreeBackedExecutableElement executableElement = (TreeBackedExecutableElement) element;
-    // TreeBackedExecutables with a null tree occur only for compiler-generated methods such
-    // as default construvtors. Those never have type parameters, so we should never find
-    // ourselves here without a tree.
-    return Preconditions.checkNotNull(executableElement.getTree()).getTypeParameters();
-  }
-
-  /**
-   * {@link Trees#getTree(Element)} cannot get a tree for a method parameter. This method is a
-   * workaround.
-   */
-  @Nullable
-  private VariableTree reallyGetTreeForVariable(
-      TreeBackedElement enclosing, VariableElement parameter) {
-    if (enclosing instanceof TreeBackedTypeElement) {
-      return (VariableTree) javacTrees.getTree(parameter);
-    }
-
-    TreeBackedExecutableElement method = (TreeBackedExecutableElement) enclosing;
-    MethodTree methodTree = method.getTree();
-    if (methodTree == null) {
-      return null;
-    }
-
-    for (VariableTree variableTree : methodTree.getParameters()) {
-      if (variableTree.getName().equals(parameter.getSimpleName())) {
-        return variableTree;
-      }
-    }
-    throw new AssertionError();
+          @Override
+          protected List<? extends TypeParameterTree> defaultAction(Tree node, Void aVoid) {
+            throw new AssertionError(String.format("Unexpected tree %s", node));
+          }
+        },
+        null);
   }
 }
