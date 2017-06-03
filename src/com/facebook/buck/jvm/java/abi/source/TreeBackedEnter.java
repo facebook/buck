@@ -23,9 +23,10 @@ import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
-import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -51,7 +52,6 @@ class TreeBackedEnter {
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
   private final Trees javacTrees;
-  private final EnteringTreePathScanner treeScanner = new EnteringTreePathScanner();
   private final EnteringElementScanner elementScanner = new EnteringElementScanner();
   private final PostEnterCanonicalizer canonicalizer;
 
@@ -64,55 +64,63 @@ class TreeBackedEnter {
 
   public void enter(CompilationUnitTree compilationUnit) {
     try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.enter")) {
-      treeScanner.scan(compilationUnit, null);
+      elementScanner.enter(compilationUnit);
     }
   }
 
   // TODO(jkeljo): Consider continuing to build TreePath objects as we go, so that we don't have to
   // re-query the tree when creating the elements in `TreeBackedElements`.
-  private class EnteringTreePathScanner extends TreePathScanner<Void, Void> {
-    @Override
-    public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-      if (node.getTypeDecls().isEmpty() && node.getPackageAnnotations().isEmpty()) {
-        // Nothing interesting, so don't even enter the element
-        return null;
-      }
-
-      PackageElement packageElement =
-          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
-      TreeBackedElement treeBackedElement =
-          elements.enterElement(packageElement, this::newTreeBackedPackage);
-
-      if (node.getSourceFile().isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
-        TreeBackedPackageElement treeBackedPackageElement =
-            (TreeBackedPackageElement)
-                Preconditions.checkNotNull(
-                    elements.getPackageElement(node.getPackageName().toString()));
-        treeBackedPackageElement.setTree(node);
-        enterAnnotationMirrors(treeBackedElement, node.getPackageAnnotations());
-      }
-      return super.visitCompilationUnit(node, aVoid);
-    }
-
-    @Override
-    public Void visitClass(ClassTree node, Void v) {
-      // We use a TreePathScanner to find the top-level type elements in a given compilation unit,
-      // then switch to Element scanning so that we can catch elements created by the compiler
-      // that don't have a tree, such as default constructors or the generated methods on enums.
-      return elementScanner.scan(
-          Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath())));
-    }
-
-    private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
-      return new TreeBackedPackageElement(underlyingPackage, canonicalizer);
-    }
-  }
-
   private class EnteringElementScanner extends ElementScanner8<Void, Void> {
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
 
     private TreeBackedElement getCurrentContext() {
       return contextStack.peek();
+    }
+
+    public void enter(CompilationUnitTree compilationUnitTree) {
+      if (compilationUnitTree.getTypeDecls().isEmpty()
+          && compilationUnitTree.getPackageAnnotations().isEmpty()) {
+        // Nothing interesting, so don't even enter the package element
+        return;
+      }
+
+      TreePath rootPath = new TreePath(compilationUnitTree);
+      TreeBackedPackageElement packageElement = enterPackageElement(rootPath);
+      try (ElementContext c = new ElementContext(packageElement)) {
+        List<? extends Tree> typeDecls = compilationUnitTree.getTypeDecls();
+        enterTypes(rootPath, typeDecls);
+      }
+    }
+
+    private TreeBackedPackageElement enterPackageElement(TreePath rootPath) {
+      CompilationUnitTree compilationUnitTree = rootPath.getCompilationUnit();
+      PackageElement packageElement =
+          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(rootPath));
+      TreeBackedPackageElement treeBackedPackageElement =
+          elements.enterElement(packageElement, this::newTreeBackedPackage);
+      if (compilationUnitTree
+          .getSourceFile()
+          .isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
+        treeBackedPackageElement.setTree(compilationUnitTree);
+        enterAnnotationMirrors(
+            treeBackedPackageElement, compilationUnitTree.getPackageAnnotations());
+      }
+      return treeBackedPackageElement;
+    }
+
+    private void enterTypes(TreePath rootPath, List<? extends Tree> typeDecls) {
+      for (Tree tree : typeDecls) {
+        // We use the Tree to find the top-level type elements in a given compilation unit,
+        // then switch to Element scanning so that we can catch elements created by the compiler
+        // that don't have a tree, such as default constructors or the generated methods on enums.
+        TreePath typePath = new TreePath(rootPath, tree);
+        Element element = javacTrees.getElement(typePath);
+        if (element != null) {
+          scan(element);
+        } else if (tree.getKind() != Tree.Kind.EMPTY_STATEMENT) {
+          throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
+        }
+      }
     }
 
     @Override
@@ -152,16 +160,15 @@ class TreeBackedEnter {
       return super.visitVariable(e, v);
     }
 
+    private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
+      return new TreeBackedPackageElement(underlyingPackage, canonicalizer);
+    }
+
     private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
       ClassTree tree = Preconditions.checkNotNull(javacTrees.getTree(underlyingType));
       TreeBackedTypeElement typeElement =
           new TreeBackedTypeElement(
-              types,
-              underlyingType,
-              elements.enterElement(
-                  underlyingType.getEnclosingElement(), this::assertAlreadyEntered),
-              tree,
-              canonicalizer);
+              types, underlyingType, getCurrentContext(), tree, canonicalizer);
       enterAnnotationMirrors(
           typeElement,
           tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
@@ -204,11 +211,6 @@ class TreeBackedEnter {
       enterAnnotationMirrors(
           result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
       return result;
-    }
-
-    private TreeBackedElement assertAlreadyEntered(Element underlyingElement) {
-      throw new AssertionError(
-          String.format("%s should already have been enterted by now.", underlyingElement));
     }
 
     private class ElementContext implements AutoCloseable {
