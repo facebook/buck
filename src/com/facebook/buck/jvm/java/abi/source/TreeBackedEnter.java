@@ -113,8 +113,7 @@ class TreeBackedEnter {
           .getSourceFile()
           .isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
         treeBackedPackageElement.setTree(compilationUnitTree);
-        enterAnnotationMirrors(
-            treeBackedPackageElement, compilationUnitTree.getPackageAnnotations());
+        enterAnnotationMirrors(treeBackedPackageElement);
       }
       return treeBackedPackageElement;
     }
@@ -246,9 +245,7 @@ class TreeBackedEnter {
       TreeBackedTypeElement typeElement =
           new TreeBackedTypeElement(
               types, underlyingType, getCurrentContext(), tree, canonicalizer);
-      enterAnnotationMirrors(
-          typeElement,
-          tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
+      enterAnnotationMirrors(typeElement);
       return typeElement;
     }
 
@@ -263,8 +260,7 @@ class TreeBackedEnter {
       TreeBackedTypeParameterElement result =
           new TreeBackedTypeParameterElement(
               types, underlyingTypeParameter, tree, enclosingElement, canonicalizer);
-      enterAnnotationMirrors(
-          result, tree == null ? Collections.emptyList() : tree.getAnnotations());
+      enterAnnotationMirrors(result);
 
       enclosingElement.addTypeParameter(result);
       return result;
@@ -276,8 +272,7 @@ class TreeBackedEnter {
       TreeBackedExecutableElement result =
           new TreeBackedExecutableElement(
               underlyingExecutable, getCurrentContext(), tree, canonicalizer);
-      enterAnnotationMirrors(
-          result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
+      enterAnnotationMirrors(result);
       return result;
     }
 
@@ -286,9 +281,27 @@ class TreeBackedEnter {
       VariableTree tree = (VariableTree) currentTree;
       TreeBackedVariableElement result =
           new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, canonicalizer);
-      enterAnnotationMirrors(
-          result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
+      enterAnnotationMirrors(result);
       return result;
+    }
+
+    private void enterAnnotationMirrors(TreeBackedElement element) {
+      List<? extends AnnotationMirror> underlyingAnnotations =
+          element.getUnderlyingElement().getAnnotationMirrors();
+      if (underlyingAnnotations.isEmpty()) {
+        return;
+      }
+
+      List<? extends AnnotationTree> annotationTrees = getAnnotationTrees(currentTree);
+      if (underlyingAnnotations.size() != annotationTrees.size()) {
+        throw new IllegalArgumentException();
+      }
+
+      for (int i = 0; i < underlyingAnnotations.size(); i++) {
+        element.addAnnotationMirror(
+            new TreeBackedAnnotationMirror(
+                underlyingAnnotations.get(i), annotationTrees.get(i), canonicalizer));
+      }
     }
 
     private class ElementContext implements AutoCloseable {
@@ -303,22 +316,46 @@ class TreeBackedEnter {
     }
   }
 
-  private void enterAnnotationMirrors(
-      TreeBackedElement element, List<? extends AnnotationTree> annotationTrees) {
-    List<? extends AnnotationMirror> underlyingAnnotations =
-        element.getUnderlyingElement().getAnnotationMirrors();
-    if (underlyingAnnotations.isEmpty()) {
-      return;
-    }
-    if (underlyingAnnotations.size() != annotationTrees.size()) {
-      throw new IllegalArgumentException();
+  private static List<? extends AnnotationTree> getAnnotationTrees(@Nullable Tree parentTree) {
+    if (parentTree == null) {
+      return Collections.emptyList();
     }
 
-    for (int i = 0; i < underlyingAnnotations.size(); i++) {
-      element.addAnnotationMirror(
-          new TreeBackedAnnotationMirror(
-              underlyingAnnotations.get(i), annotationTrees.get(i), canonicalizer));
-    }
+    return parentTree.accept(
+        new SimpleTreeVisitor<List<? extends AnnotationTree>, Void>() {
+          @Override
+          public List<? extends AnnotationTree> visitCompilationUnit(
+              CompilationUnitTree node, Void aVoid) {
+            return node.getPackageAnnotations();
+          }
+
+          @Override
+          public List<? extends AnnotationTree> visitClass(ClassTree node, Void aVoid) {
+            return node.getModifiers().getAnnotations();
+          }
+
+          @Override
+          public List<? extends AnnotationTree> visitMethod(MethodTree node, Void aVoid) {
+            return node.getModifiers().getAnnotations();
+          }
+
+          @Override
+          public List<? extends AnnotationTree> visitVariable(VariableTree node, Void aVoid) {
+            return node.getModifiers().getAnnotations();
+          }
+
+          @Override
+          public List<? extends AnnotationTree> visitTypeParameter(
+              TypeParameterTree node, Void aVoid) {
+            return node.getAnnotations();
+          }
+
+          @Override
+          protected List<? extends AnnotationTree> defaultAction(Tree node, Void aVoid) {
+            throw new AssertionError(String.format("Unexpected tree: %s", node));
+          }
+        },
+        null);
   }
 
   private static List<? extends TypeParameterTree> getTypeParameters(Tree parentTree) {
