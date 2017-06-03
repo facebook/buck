@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,18 +40,18 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
   private final List<Element> enclosedElements = new ArrayList<>();
   private final PostEnterCanonicalizer canonicalizer;
 
-  @Nullable private final Tree tree;
+  @Nullable private final TreePath treePath;
 
   public TreeBackedElement(
       Element underlyingElement,
       @Nullable TreeBackedElement enclosingElement,
-      @Nullable Tree tree,
+      @Nullable TreePath treePath,
       PostEnterCanonicalizer canonicalizer) {
     this.underlyingElement = underlyingElement;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
     // it's up to each subtype's constructor to decide whether to add itself or not.
-    this.tree = tree;
+    this.treePath = treePath;
     this.canonicalizer = canonicalizer;
   }
 
@@ -63,8 +64,13 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
   }
 
   @Nullable
+  /* package */ TreePath getTreePath() {
+    return treePath;
+  }
+
+  @Nullable
   /* package */ Tree getTree() {
-    return tree;
+    return treePath == null ? null : treePath.getLeaf();
   }
 
   @Override

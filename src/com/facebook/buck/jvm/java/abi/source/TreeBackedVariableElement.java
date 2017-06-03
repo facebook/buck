@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.ElementKind;
@@ -35,11 +36,11 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
   TreeBackedVariableElement(
       VariableElement underlyingElement,
       TreeBackedElement enclosingElement,
-      @Nullable VariableTree tree,
+      @Nullable TreePath treePath,
       PostEnterCanonicalizer canonicalizer) {
-    super(underlyingElement, enclosingElement, tree, canonicalizer);
+    super(underlyingElement, enclosingElement, treePath, canonicalizer);
     this.underlyingElement = underlyingElement;
-    this.tree = tree;
+    this.tree = treePath == null ? null : (VariableTree) treePath.getLeaf();
     if (underlyingElement.getKind() == ElementKind.PARAMETER) {
       ((TreeBackedExecutableElement) enclosingElement).addParameter(this);
     } else {

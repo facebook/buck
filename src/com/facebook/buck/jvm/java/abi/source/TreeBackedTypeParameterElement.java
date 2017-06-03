@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
+import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,10 +42,10 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
   public TreeBackedTypeParameterElement(
       TreeBackedTypes types,
       TypeParameterElement underlyingElement,
-      Tree tree,
+      TreePath treePath,
       TreeBackedElement enclosingElement,
       PostEnterCanonicalizer canonicalizer) {
-    super(underlyingElement, enclosingElement, tree, canonicalizer);
+    super(underlyingElement, enclosingElement, treePath, canonicalizer);
     this.underlyingElement = underlyingElement;
     typeVar = new StandaloneTypeVariable(types, this);
 

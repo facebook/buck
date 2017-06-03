@@ -112,7 +112,7 @@ class TreeBackedEnter {
       if (compilationUnitTree
           .getSourceFile()
           .isNameCompatible("package-info", JavaFileObject.Kind.SOURCE)) {
-        treeBackedPackageElement.setTree(compilationUnitTree);
+        treeBackedPackageElement.setTreePath(getCurrentPath());
         enterAnnotationMirrors(treeBackedPackageElement);
       }
       return treeBackedPackageElement;
@@ -241,10 +241,9 @@ class TreeBackedEnter {
     }
 
     private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
-      ClassTree tree = (ClassTree) Preconditions.checkNotNull(currentTree);
       TreeBackedTypeElement typeElement =
           new TreeBackedTypeElement(
-              types, underlyingType, getCurrentContext(), tree, canonicalizer);
+              types, underlyingType, getCurrentContext(), getCurrentPath(), canonicalizer);
       enterAnnotationMirrors(typeElement);
       return typeElement;
     }
@@ -256,10 +255,9 @@ class TreeBackedEnter {
       // TreeBackedExecutables with a null tree occur only for compiler-generated methods such
       // as default construvtors. Those never have type parameters, so we should never find
       // ourselves here without a tree.
-      TypeParameterTree tree = (TypeParameterTree) Preconditions.checkNotNull(currentTree);
       TreeBackedTypeParameterElement result =
           new TreeBackedTypeParameterElement(
-              types, underlyingTypeParameter, tree, enclosingElement, canonicalizer);
+              types, underlyingTypeParameter, getCurrentPath(), enclosingElement, canonicalizer);
       enterAnnotationMirrors(result);
 
       enclosingElement.addTypeParameter(result);
@@ -268,19 +266,18 @@ class TreeBackedEnter {
 
     private TreeBackedExecutableElement newTreeBackedExecutable(
         ExecutableElement underlyingExecutable) {
-      MethodTree tree = (MethodTree) currentTree;
       TreeBackedExecutableElement result =
           new TreeBackedExecutableElement(
-              underlyingExecutable, getCurrentContext(), tree, canonicalizer);
+              underlyingExecutable, getCurrentContext(), currentPath, canonicalizer);
       enterAnnotationMirrors(result);
       return result;
     }
 
     private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
       TreeBackedElement enclosingElement = getCurrentContext();
-      VariableTree tree = (VariableTree) currentTree;
       TreeBackedVariableElement result =
-          new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, canonicalizer);
+          new TreeBackedVariableElement(
+              underlyingVariable, enclosingElement, currentPath, canonicalizer);
       enterAnnotationMirrors(result);
       return result;
     }
@@ -300,7 +297,9 @@ class TreeBackedEnter {
       for (int i = 0; i < underlyingAnnotations.size(); i++) {
         element.addAnnotationMirror(
             new TreeBackedAnnotationMirror(
-                underlyingAnnotations.get(i), annotationTrees.get(i), canonicalizer));
+                underlyingAnnotations.get(i),
+                new TreePath(currentPath, annotationTrees.get(i)),
+                canonicalizer));
       }
     }
 

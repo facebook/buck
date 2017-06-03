@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.util.TreePath;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +36,7 @@ import javax.lang.model.element.TypeElement;
 class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPackageElement {
   private final PackageElement javacPackage;
   private final StandalonePackageType typeMirror;
-  @Nullable private CompilationUnitTree tree;
+  @Nullable private TreePath treePath;
   private boolean resolved = false;
 
   public TreeBackedPackageElement(
@@ -46,11 +46,11 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
     typeMirror = new StandalonePackageType(this);
   }
 
-  /* package */ void setTree(CompilationUnitTree tree) {
-    if (this.tree != null) {
+  /* package */ void setTreePath(TreePath treePath) {
+    if (this.treePath != null) {
       throw new IllegalStateException();
     }
-    this.tree = tree;
+    this.treePath = treePath;
   }
 
   @Override

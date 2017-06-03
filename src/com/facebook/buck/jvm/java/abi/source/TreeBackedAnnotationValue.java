@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationValue;
@@ -30,19 +31,25 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 class TreeBackedAnnotationValue implements ArtificialAnnotationValue {
   private final AnnotationValue underlyingAnnotationValue;
+  private final TreePath treePath;
   private final Tree valueTree;
   private final PostEnterCanonicalizer canonicalizer;
 
   @Nullable private Object value;
 
   TreeBackedAnnotationValue(
-      AnnotationValue underlyingAnnotationValue, Tree tree, PostEnterCanonicalizer canonicalizer) {
+      AnnotationValue underlyingAnnotationValue,
+      TreePath treePath,
+      PostEnterCanonicalizer canonicalizer) {
     this.underlyingAnnotationValue = underlyingAnnotationValue;
+    Tree tree = treePath.getLeaf();
     if (tree instanceof AssignmentTree) {
       AssignmentTree assignmentTree = (AssignmentTree) tree;
       valueTree = assignmentTree.getExpression();
+      this.treePath = new TreePath(treePath, valueTree);
     } else {
       valueTree = tree;
+      this.treePath = treePath;
     }
     this.canonicalizer = canonicalizer;
   }
@@ -50,7 +57,7 @@ class TreeBackedAnnotationValue implements ArtificialAnnotationValue {
   @Override
   public Object getValue() {
     if (value == null) {
-      value = canonicalizer.getCanonicalValue(underlyingAnnotationValue, valueTree);
+      value = canonicalizer.getCanonicalValue(underlyingAnnotationValue, treePath);
     }
     return value;
   }

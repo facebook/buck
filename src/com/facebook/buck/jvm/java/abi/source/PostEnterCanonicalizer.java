@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +58,7 @@ class PostEnterCanonicalizer {
    * AnnotationValue}s found in the given object, which is expected to have been obtained by calling
    * {@link AnnotationValue#getValue()}.
    */
-  /* package */ Object getCanonicalValue(AnnotationValue annotationValue, Tree valueTree) {
+  /* package */ Object getCanonicalValue(AnnotationValue annotationValue, TreePath valueTreePath) {
     return annotationValue.accept(
         new SimpleAnnotationValueVisitor8<Object, Void>() {
           @Override
@@ -73,12 +73,12 @@ class PostEnterCanonicalizer {
 
           @Override
           public Object visitAnnotation(AnnotationMirror a, Void aVoid) {
-            return new TreeBackedAnnotationMirror(
-                a, (AnnotationTree) valueTree, PostEnterCanonicalizer.this);
+            return new TreeBackedAnnotationMirror(a, valueTreePath, PostEnterCanonicalizer.this);
           }
 
           @Override
           public Object visitArray(List<? extends AnnotationValue> values, Void aVoid) {
+            Tree valueTree = valueTreePath.getLeaf();
             if (valueTree instanceof NewArrayTree) {
               NewArrayTree tree = (NewArrayTree) valueTree;
               List<? extends ExpressionTree> valueTrees = tree.getInitializers();
@@ -87,13 +87,17 @@ class PostEnterCanonicalizer {
               for (int i = 0; i < values.size(); i++) {
                 result.add(
                     new TreeBackedAnnotationValue(
-                        values.get(i), valueTrees.get(i), PostEnterCanonicalizer.this));
+                        values.get(i),
+                        new TreePath(valueTreePath, valueTrees.get(i)),
+                        PostEnterCanonicalizer.this));
               }
               return result;
             } else {
               return Collections.singletonList(
                   new TreeBackedAnnotationValue(
-                      values.get(0), valueTree, PostEnterCanonicalizer.this));
+                      values.get(0),
+                      new TreePath(valueTreePath, valueTree),
+                      PostEnterCanonicalizer.this));
             }
           }
 

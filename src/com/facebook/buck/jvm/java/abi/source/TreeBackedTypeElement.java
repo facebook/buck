@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,12 +48,12 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
       TreeBackedTypes types,
       TypeElement underlyingElement,
       TreeBackedElement enclosingElement,
-      ClassTree tree,
+      TreePath treePath,
       PostEnterCanonicalizer canonicalizer) {
-    super(underlyingElement, enclosingElement, tree, canonicalizer);
+    super(underlyingElement, enclosingElement, treePath, canonicalizer);
     this.types = types;
     this.underlyingElement = underlyingElement;
-    this.tree = tree;
+    this.tree = (ClassTree) treePath.getLeaf();
     enclosingElement.addEnclosedElement(this);
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,11 +52,11 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   TreeBackedExecutableElement(
       ExecutableElement underlyingElement,
       TreeBackedElement enclosingElement,
-      @Nullable MethodTree tree,
+      @Nullable TreePath treePath,
       PostEnterCanonicalizer canonicalizer) {
-    super(underlyingElement, enclosingElement, tree, canonicalizer);
+    super(underlyingElement, enclosingElement, treePath, canonicalizer);
     this.underlyingElement = underlyingElement;
-    this.tree = tree;
+    this.tree = treePath == null ? null : (MethodTree) treePath.getLeaf();
     enclosingElement.addEnclosedElement(this);
   }
 
@@ -151,7 +152,9 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
         defaultValue =
             new TreeBackedAnnotationValue(
                 underlyingValue,
-                Preconditions.checkNotNull(tree).getDefaultValue(),
+                new TreePath(
+                    Preconditions.checkNotNull(getTreePath()),
+                    Preconditions.checkNotNull(tree).getDefaultValue()),
                 getCanonicalizer());
       }
     }
