@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.Arrays;
 import java.util.List;
 import javax.lang.model.element.Element;
@@ -44,18 +43,11 @@ import javax.lang.model.util.Types;
  */
 class TreeBackedTypes implements Types {
   private final Types javacTypes;
-  @Nullable private TreeBackedElements elements;
+  private final TreeBackedElements elements;
 
-  TreeBackedTypes(Types javacTypes) {
+  TreeBackedTypes(Types javacTypes, TreeBackedElements elements) {
     this.javacTypes = javacTypes;
-  }
-
-  /* package */ void setElements(TreeBackedElements elements) {
     this.elements = elements;
-  }
-
-  private TreeBackedElements getElements() {
-    return Preconditions.checkNotNull(elements);
   }
 
   @Override
@@ -322,7 +314,7 @@ class TreeBackedTypes implements Types {
       case TYPEVAR:
         {
           TypeVariable typeVar = (TypeVariable) typeMirror;
-          return getElements().getCanonicalElement(typeVar.asElement()).asType();
+          return elements.getCanonicalElement(typeVar.asElement()).asType();
         }
       case WILDCARD:
         {
@@ -341,7 +333,7 @@ class TreeBackedTypes implements Types {
                   ? (DeclaredType) getCanonicalType(enclosingType)
                   : null;
           TypeElement canonicalElement =
-              (TypeElement) getElements().getCanonicalElement(declaredType.asElement());
+              (TypeElement) elements.getCanonicalElement(declaredType.asElement());
           TypeMirror[] canonicalTypeArgs =
               declaredType
                   .getTypeArguments()
