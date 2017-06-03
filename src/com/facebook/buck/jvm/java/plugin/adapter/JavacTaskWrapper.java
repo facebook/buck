@@ -56,18 +56,14 @@ abstract class JavacTaskWrapper extends JavacTask {
     inner.setTaskListener(taskListener);
   }
 
+  @Override
   public void addTaskListener(TaskListener taskListener) {
-    if (taskListener != null) {
-      throw new UnsupportedOperationException(
-          "Need a java 8 tools stub in third-party to support this");
-    }
+    inner.addTaskListener(taskListener);
   }
 
+  @Override
   public void removeTaskListener(TaskListener taskListener) {
-    if (taskListener != null) {
-      throw new UnsupportedOperationException(
-          "Need a java 8 tools stub in third-party to support this");
-    }
+    inner.removeTaskListener(taskListener);
   }
 
   @Override
