@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewArrayTree;
@@ -30,22 +31,26 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
-/** Used to resolve type references in {@link TreeBackedElement}s after they've all been created. */
-class TreeBackedElementResolver {
+/**
+ * After the enter phase is complete, this class can obtain the "canonical" version of any {@link
+ * javax.lang.model.element.Element}, {@link TypeMirror}, or {@link AnnotationValue}. The canonical
+ * versions of these are the artificial ones if they exist, otherwise the javac one.
+ */
+class PostEnterCanonicalizer {
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
 
-  public TreeBackedElementResolver(TreeBackedElements elements, TreeBackedTypes types) {
+  public PostEnterCanonicalizer(TreeBackedElements elements, TreeBackedTypes types) {
     this.elements = elements;
     this.types = types;
   }
 
   public ExecutableElement getCanonicalElement(ExecutableElement element) {
-    return elements.getCanonicalElement(element);
+    return Preconditions.checkNotNull(elements.getCanonicalElement(element));
   }
 
   /* package */ TypeMirror getCanonicalType(TypeMirror javacType) {
-    return types.getCanonicalType(javacType);
+    return Preconditions.checkNotNull(types.getCanonicalType(javacType));
   }
 
   /**
@@ -58,18 +63,18 @@ class TreeBackedElementResolver {
         new SimpleAnnotationValueVisitor8<Object, Void>() {
           @Override
           public Object visitType(TypeMirror t, Void aVoid) {
-            return types.getCanonicalType(t);
+            return getCanonicalType(t);
           }
 
           @Override
           public Object visitEnumConstant(VariableElement c, Void aVoid) {
-            return elements.getCanonicalElement(c);
+            return Preconditions.checkNotNull(elements.getCanonicalElement(c));
           }
 
           @Override
           public Object visitAnnotation(AnnotationMirror a, Void aVoid) {
             return new TreeBackedAnnotationMirror(
-                a, (AnnotationTree) valueTree, TreeBackedElementResolver.this);
+                a, (AnnotationTree) valueTree, PostEnterCanonicalizer.this);
           }
 
           @Override
@@ -82,13 +87,13 @@ class TreeBackedElementResolver {
               for (int i = 0; i < values.size(); i++) {
                 result.add(
                     new TreeBackedAnnotationValue(
-                        values.get(i), valueTrees.get(i), TreeBackedElementResolver.this));
+                        values.get(i), valueTrees.get(i), PostEnterCanonicalizer.this));
               }
               return result;
             } else {
               return Collections.singletonList(
                   new TreeBackedAnnotationValue(
-                      values.get(0), valueTree, TreeBackedElementResolver.this));
+                      values.get(0), valueTree, PostEnterCanonicalizer.this));
             }
           }
 

@@ -48,8 +48,8 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
       TypeElement underlyingElement,
       TreeBackedElement enclosingElement,
       ClassTree tree,
-      TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, tree, resolver);
+      PostEnterCanonicalizer canonicalizer) {
+    super(underlyingElement, enclosingElement, tree, canonicalizer);
     this.types = types;
     this.underlyingElement = underlyingElement;
     this.tree = tree;
@@ -110,7 +110,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   @Override
   public TypeMirror getSuperclass() {
     if (superclass == null) {
-      superclass = getResolver().getCanonicalType(underlyingElement.getSuperclass());
+      superclass = getCanonicalizer().getCanonicalType(underlyingElement.getSuperclass());
     }
 
     return superclass;
@@ -124,7 +124,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
               underlyingElement
                   .getInterfaces()
                   .stream()
-                  .map(getResolver()::getCanonicalType)
+                  .map(getCanonicalizer()::getCanonicalType)
                   .collect(Collectors.toList()));
     }
     return interfaces;

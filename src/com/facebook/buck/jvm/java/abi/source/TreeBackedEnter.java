@@ -53,13 +53,13 @@ class TreeBackedEnter {
   private final Trees javacTrees;
   private final EnteringTreePathScanner treeScanner = new EnteringTreePathScanner();
   private final EnteringElementScanner elementScanner = new EnteringElementScanner();
-  private final TreeBackedElementResolver resolver;
+  private final PostEnterCanonicalizer canonicalizer;
 
   TreeBackedEnter(TreeBackedElements elements, TreeBackedTypes types, Trees javacTrees) {
     this.elements = elements;
     this.types = types;
     this.javacTrees = javacTrees;
-    resolver = new TreeBackedElementResolver(elements, types);
+    canonicalizer = new PostEnterCanonicalizer(elements, types);
   }
 
   public void enter(CompilationUnitTree compilationUnit) {
@@ -104,7 +104,7 @@ class TreeBackedEnter {
     }
 
     private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
-      return new TreeBackedPackageElement(underlyingPackage, resolver);
+      return new TreeBackedPackageElement(underlyingPackage, canonicalizer);
     }
   }
 
@@ -161,7 +161,7 @@ class TreeBackedEnter {
               elements.enterElement(
                   underlyingType.getEnclosingElement(), this::assertAlreadyEntered),
               tree,
-              resolver);
+              canonicalizer);
       enterAnnotationMirrors(
           typeElement,
           tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
@@ -177,7 +177,7 @@ class TreeBackedEnter {
           findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
       TreeBackedTypeParameterElement result =
           new TreeBackedTypeParameterElement(
-              types, underlyingTypeParameter, tree, enclosingElement, resolver);
+              types, underlyingTypeParameter, tree, enclosingElement, canonicalizer);
       enterAnnotationMirrors(
           result, tree == null ? Collections.emptyList() : tree.getAnnotations());
 
@@ -190,7 +190,7 @@ class TreeBackedEnter {
       MethodTree tree = javacTrees.getTree(underlyingExecutable);
       TreeBackedExecutableElement result =
           new TreeBackedExecutableElement(
-              underlyingExecutable, getCurrentContext(), tree, resolver);
+              underlyingExecutable, getCurrentContext(), tree, canonicalizer);
       enterAnnotationMirrors(
           result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
       return result;
@@ -200,7 +200,7 @@ class TreeBackedEnter {
       TreeBackedElement enclosingElement = getCurrentContext();
       VariableTree tree = reallyGetTreeForVariable(enclosingElement, underlyingVariable);
       TreeBackedVariableElement result =
-          new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, resolver);
+          new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, canonicalizer);
       enterAnnotationMirrors(
           result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
       return result;
@@ -237,7 +237,7 @@ class TreeBackedEnter {
     for (int i = 0; i < underlyingAnnotations.size(); i++) {
       element.addAnnotationMirror(
           new TreeBackedAnnotationMirror(
-              underlyingAnnotations.get(i), annotationTrees.get(i), resolver));
+              underlyingAnnotations.get(i), annotationTrees.get(i), canonicalizer));
     }
   }
 

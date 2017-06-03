@@ -36,8 +36,8 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
       VariableElement underlyingElement,
       TreeBackedElement enclosingElement,
       @Nullable VariableTree tree,
-      TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, tree, resolver);
+      PostEnterCanonicalizer canonicalizer) {
+    super(underlyingElement, enclosingElement, tree, canonicalizer);
     this.underlyingElement = underlyingElement;
     this.tree = tree;
     if (underlyingElement.getKind() == ElementKind.PARAMETER) {
@@ -61,7 +61,7 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
   @Override
   public TypeMirror asType() {
     if (type == null) {
-      type = getResolver().getCanonicalType(underlyingElement.asType());
+      type = getCanonicalizer().getCanonicalType(underlyingElement.asType());
     }
     return type;
   }

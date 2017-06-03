@@ -52,8 +52,8 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
       ExecutableElement underlyingElement,
       TreeBackedElement enclosingElement,
       @Nullable MethodTree tree,
-      TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, tree, resolver);
+      PostEnterCanonicalizer canonicalizer) {
+    super(underlyingElement, enclosingElement, tree, canonicalizer);
     this.underlyingElement = underlyingElement;
     this.tree = tree;
     enclosingElement.addEnclosedElement(this);
@@ -91,7 +91,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   @Override
   public TypeMirror getReturnType() {
     if (returnType == null) {
-      returnType = getResolver().getCanonicalType(underlyingElement.getReturnType());
+      returnType = getCanonicalizer().getCanonicalType(underlyingElement.getReturnType());
     }
     return returnType;
   }
@@ -108,7 +108,11 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   @Override
   public TypeMirror getReceiverType() {
     if (receiverType == null) {
-      receiverType = getResolver().getCanonicalType(underlyingElement.getReceiverType());
+      TypeMirror underlyingReceiverType = underlyingElement.getReceiverType();
+      this.receiverType =
+          underlyingReceiverType == null
+              ? null
+              : getCanonicalizer().getCanonicalType(underlyingReceiverType);
     }
     return receiverType;
   }
@@ -131,7 +135,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
               underlyingElement
                   .getThrownTypes()
                   .stream()
-                  .map(getResolver()::getCanonicalType)
+                  .map(getCanonicalizer()::getCanonicalType)
                   .collect(Collectors.toList()));
     }
 
@@ -146,7 +150,9 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
       if (underlyingValue != null) {
         defaultValue =
             new TreeBackedAnnotationValue(
-                underlyingValue, Preconditions.checkNotNull(tree).getDefaultValue(), getResolver());
+                underlyingValue,
+                Preconditions.checkNotNull(tree).getDefaultValue(),
+                getCanonicalizer());
       }
     }
     return defaultValue;

@@ -37,7 +37,7 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
   private final Element underlyingElement;
   @Nullable private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
-  private final TreeBackedElementResolver resolver;
+  private final PostEnterCanonicalizer canonicalizer;
 
   @Nullable private final Tree tree;
 
@@ -45,21 +45,21 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
       Element underlyingElement,
       @Nullable TreeBackedElement enclosingElement,
       @Nullable Tree tree,
-      TreeBackedElementResolver resolver) {
+      PostEnterCanonicalizer canonicalizer) {
     this.underlyingElement = underlyingElement;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
     // it's up to each subtype's constructor to decide whether to add itself or not.
     this.tree = tree;
-    this.resolver = resolver;
+    this.canonicalizer = canonicalizer;
   }
 
   /* package */ Element getUnderlyingElement() {
     return underlyingElement;
   }
 
-  protected final TreeBackedElementResolver getResolver() {
-    return resolver;
+  protected final PostEnterCanonicalizer getCanonicalizer() {
+    return canonicalizer;
   }
 
   @Nullable

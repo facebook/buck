@@ -44,8 +44,8 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
       TypeParameterElement underlyingElement,
       Tree tree,
       TreeBackedElement enclosingElement,
-      TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, tree, resolver);
+      PostEnterCanonicalizer canonicalizer) {
+    super(underlyingElement, enclosingElement, tree, canonicalizer);
     this.underlyingElement = underlyingElement;
     typeVar = new StandaloneTypeVariable(types, this);
 
@@ -77,7 +77,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
               underlyingElement
                   .getBounds()
                   .stream()
-                  .map(getResolver()::getCanonicalType)
+                  .map(getCanonicalizer()::getCanonicalType)
                   .collect(Collectors.toList()));
     }
 

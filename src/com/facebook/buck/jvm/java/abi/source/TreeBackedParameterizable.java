@@ -31,8 +31,8 @@ abstract class TreeBackedParameterizable extends TreeBackedElement
       Element underlyingElement,
       TreeBackedElement enclosingElement,
       @Nullable Tree tree,
-      TreeBackedElementResolver resolver) {
-    super(underlyingElement, enclosingElement, tree, resolver);
+      PostEnterCanonicalizer canonicalizer) {
+    super(underlyingElement, enclosingElement, tree, canonicalizer);
   }
 
   /* package */ void addTypeParameter(TreeBackedTypeParameterElement typeParameter) {

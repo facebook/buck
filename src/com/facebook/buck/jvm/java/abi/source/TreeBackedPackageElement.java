@@ -39,8 +39,9 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
   @Nullable private CompilationUnitTree tree;
   private boolean resolved = false;
 
-  public TreeBackedPackageElement(PackageElement javacPackage, TreeBackedElementResolver resolver) {
-    super(javacPackage, null, null, resolver);
+  public TreeBackedPackageElement(
+      PackageElement javacPackage, PostEnterCanonicalizer canonicalizer) {
+    super(javacPackage, null, null, canonicalizer);
     this.javacPackage = javacPackage;
     typeMirror = new StandalonePackageType(this);
   }

@@ -31,12 +31,12 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 class TreeBackedAnnotationValue implements ArtificialAnnotationValue {
   private final AnnotationValue underlyingAnnotationValue;
   private final Tree valueTree;
-  private final TreeBackedElementResolver resolver;
+  private final PostEnterCanonicalizer canonicalizer;
 
   @Nullable private Object value;
 
   TreeBackedAnnotationValue(
-      AnnotationValue underlyingAnnotationValue, Tree tree, TreeBackedElementResolver resolver) {
+      AnnotationValue underlyingAnnotationValue, Tree tree, PostEnterCanonicalizer canonicalizer) {
     this.underlyingAnnotationValue = underlyingAnnotationValue;
     if (tree instanceof AssignmentTree) {
       AssignmentTree assignmentTree = (AssignmentTree) tree;
@@ -44,13 +44,13 @@ class TreeBackedAnnotationValue implements ArtificialAnnotationValue {
     } else {
       valueTree = tree;
     }
-    this.resolver = resolver;
+    this.canonicalizer = canonicalizer;
   }
 
   @Override
   public Object getValue() {
     if (value == null) {
-      value = resolver.getCanonicalValue(underlyingAnnotationValue, valueTree);
+      value = canonicalizer.getCanonicalValue(underlyingAnnotationValue, valueTree);
     }
     return value;
   }
