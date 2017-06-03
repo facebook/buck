@@ -42,7 +42,7 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
   public TreeBackedPackageElement(PackageElement javacPackage, TreeBackedElementResolver resolver) {
     super(javacPackage, null, null, resolver);
     this.javacPackage = javacPackage;
-    typeMirror = resolver.createType(this);
+    typeMirror = new StandalonePackageType(this);
   }
 
   /* package */ void setTree(CompilationUnitTree tree) {

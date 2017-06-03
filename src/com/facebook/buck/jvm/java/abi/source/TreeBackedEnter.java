@@ -49,6 +49,7 @@ import javax.tools.JavaFileObject;
 class TreeBackedEnter {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeBackedEnter");
   private final TreeBackedElements elements;
+  private final TreeBackedTypes types;
   private final Trees javacTrees;
   private final EnteringTreePathScanner treeScanner = new EnteringTreePathScanner();
   private final EnteringElementScanner elementScanner = new EnteringElementScanner();
@@ -56,6 +57,7 @@ class TreeBackedEnter {
 
   TreeBackedEnter(TreeBackedElements elements, TreeBackedTypes types, Trees javacTrees) {
     this.elements = elements;
+    this.types = types;
     this.javacTrees = javacTrees;
     resolver = new TreeBackedElementResolver(elements, types);
   }
@@ -115,8 +117,7 @@ class TreeBackedEnter {
 
     @Override
     public Void visitType(TypeElement e, Void v) {
-      TreeBackedTypeElement newClass =
-          (TreeBackedTypeElement) elements.enterElement(e, this::newTreeBackedType);
+      TreeBackedTypeElement newClass = elements.enterElement(e, this::newTreeBackedType);
       try (ElementContext c = new ElementContext(newClass)) {
         super.visitType(e, v);
         super.scan(e.getTypeParameters(), v);
@@ -127,12 +128,7 @@ class TreeBackedEnter {
     @Override
     public Void visitTypeParameter(TypeParameterElement e, Void v) {
       TreeBackedTypeParameterElement typeParameter =
-          (TreeBackedTypeParameterElement)
-              elements.enterElement(e, this::newTreeBackedTypeParameter);
-
-      TreeBackedParameterizable currentParameterizable =
-          (TreeBackedParameterizable) getCurrentContext();
-      currentParameterizable.addTypeParameter(typeParameter);
+          elements.enterElement(e, this::newTreeBackedTypeParameter);
 
       try (ElementContext c = new ElementContext(typeParameter)) {
         return super.visitTypeParameter(e, v);
@@ -141,8 +137,7 @@ class TreeBackedEnter {
 
     @Override
     public Void visitExecutable(ExecutableElement e, Void v) {
-      TreeBackedExecutableElement method =
-          (TreeBackedExecutableElement) elements.enterElement(e, this::newTreeBackedExecutable);
+      TreeBackedExecutableElement method = elements.enterElement(e, this::newTreeBackedExecutable);
 
       try (ElementContext c = new ElementContext(method)) {
         super.visitExecutable(e, v);
@@ -161,6 +156,7 @@ class TreeBackedEnter {
       ClassTree tree = Preconditions.checkNotNull(javacTrees.getTree(underlyingType));
       TreeBackedTypeElement typeElement =
           new TreeBackedTypeElement(
+              types,
               underlyingType,
               elements.enterElement(
                   underlyingType.getEnclosingElement(), this::assertAlreadyEntered),
@@ -174,19 +170,18 @@ class TreeBackedEnter {
 
     private TreeBackedTypeParameterElement newTreeBackedTypeParameter(
         TypeParameterElement underlyingTypeParameter) {
-      TreeBackedParameterizable enclosingElement =
-          (TreeBackedParameterizable)
-              elements.enterElement(
-                  underlyingTypeParameter.getEnclosingElement(), this::assertAlreadyEntered);
+      TreeBackedParameterizable enclosingElement = (TreeBackedParameterizable) getCurrentContext();
 
       // Trees.getTree does not work for TypeParameterElements, so we must find it ourselves
       TypeParameterTree tree =
           findTypeParameterTree(enclosingElement, underlyingTypeParameter.getSimpleName());
       TreeBackedTypeParameterElement result =
           new TreeBackedTypeParameterElement(
-              underlyingTypeParameter, tree, enclosingElement, resolver);
+              types, underlyingTypeParameter, tree, enclosingElement, resolver);
       enterAnnotationMirrors(
           result, tree == null ? Collections.emptyList() : tree.getAnnotations());
+
+      enclosingElement.addTypeParameter(result);
       return result;
     }
 
@@ -195,20 +190,14 @@ class TreeBackedEnter {
       MethodTree tree = javacTrees.getTree(underlyingExecutable);
       TreeBackedExecutableElement result =
           new TreeBackedExecutableElement(
-              underlyingExecutable,
-              elements.enterElement(
-                  underlyingExecutable.getEnclosingElement(), this::assertAlreadyEntered),
-              tree,
-              resolver);
+              underlyingExecutable, getCurrentContext(), tree, resolver);
       enterAnnotationMirrors(
           result, tree == null ? Collections.emptyList() : tree.getModifiers().getAnnotations());
       return result;
     }
 
     private TreeBackedVariableElement newTreeBackedVariable(VariableElement underlyingVariable) {
-      TreeBackedElement enclosingElement =
-          elements.enterElement(
-              underlyingVariable.getEnclosingElement(), this::assertAlreadyEntered);
+      TreeBackedElement enclosingElement = getCurrentContext();
       VariableTree tree = reallyGetTreeForVariable(enclosingElement, underlyingVariable);
       TreeBackedVariableElement result =
           new TreeBackedVariableElement(underlyingVariable, enclosingElement, tree, resolver);

@@ -40,13 +40,14 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
   @Nullable private List<TypeMirror> bounds;
 
   public TreeBackedTypeParameterElement(
+      TreeBackedTypes types,
       TypeParameterElement underlyingElement,
       Tree tree,
       TreeBackedElement enclosingElement,
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, tree, resolver);
     this.underlyingElement = underlyingElement;
-    typeVar = resolver.createType(this);
+    typeVar = new StandaloneTypeVariable(types, this);
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
     // value of getEnclosedElements

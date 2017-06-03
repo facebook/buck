@@ -56,10 +56,12 @@ class TreeBackedElements implements Elements {
     knownPackages.clear();
   }
 
-  public <UnderlyingElement extends Element> TreeBackedElement enterElement(
-      UnderlyingElement underlyingElement,
-      Function<UnderlyingElement, ? extends TreeBackedElement> constructor) {
-    TreeBackedElement result = treeBackedElements.get(underlyingElement);
+  public <UnderlyingElement extends Element, WrappedElement extends TreeBackedElement>
+      WrappedElement enterElement(
+          UnderlyingElement underlyingElement,
+          Function<UnderlyingElement, WrappedElement> constructor) {
+    @SuppressWarnings("unchecked") // This function is the only one that inserts to this map
+    WrappedElement result = (WrappedElement) treeBackedElements.get(underlyingElement);
     if (result != null) {
       return result;
     }

@@ -26,7 +26,10 @@ import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 
 /**
  * An implementation of {@link ExecutableElement} that uses only the information available from a
@@ -70,7 +73,17 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   @Override
   public StandaloneTypeMirror asType() {
     if (typeMirror == null) {
-      typeMirror = getResolver().createType(this);
+      typeMirror =
+          new StandaloneExecutableType(
+              getReturnType(),
+              getTypeParameters()
+                  .stream()
+                  .map(TypeParameterElement::asType)
+                  .map(type -> (TypeVariable) type)
+                  .collect(Collectors.toList()),
+              getParameters().stream().map(VariableElement::asType).collect(Collectors.toList()),
+              getThrownTypes(),
+              getAnnotationMirrors());
     }
     return typeMirror;
   }

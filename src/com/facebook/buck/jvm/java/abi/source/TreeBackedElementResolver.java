@@ -23,14 +23,11 @@ import com.sun.source.tree.Tree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 /** Used to resolve type references in {@link TreeBackedElement}s after they've all been created. */
@@ -41,39 +38,6 @@ class TreeBackedElementResolver {
   public TreeBackedElementResolver(TreeBackedElements elements, TreeBackedTypes types) {
     this.elements = elements;
     this.types = types;
-  }
-
-  /* package */ StandaloneDeclaredType createType(TreeBackedTypeElement element) {
-    return new StandaloneDeclaredType(
-        types,
-        element,
-        element
-            .getTypeParameters()
-            .stream()
-            .map(TypeParameterElement::asType)
-            .collect(Collectors.toList()));
-  }
-
-  /* package */ StandaloneExecutableType createType(TreeBackedExecutableElement element) {
-    return new StandaloneExecutableType(
-        element.getReturnType(),
-        element
-            .getTypeParameters()
-            .stream()
-            .map(TypeParameterElement::asType)
-            .map(type -> (TypeVariable) type)
-            .collect(Collectors.toList()),
-        element.getParameters().stream().map(VariableElement::asType).collect(Collectors.toList()),
-        element.getThrownTypes(),
-        element.getAnnotationMirrors());
-  }
-
-  /* package */ StandaloneTypeVariable createType(TreeBackedTypeParameterElement element) {
-    return new StandaloneTypeVariable(types, element);
-  }
-
-  /* package */ StandalonePackageType createType(TreeBackedPackageElement element) {
-    return new StandalonePackageType(element);
   }
 
   public ExecutableElement getCanonicalElement(ExecutableElement element) {

@@ -27,6 +27,7 @@ import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -35,6 +36,7 @@ import javax.lang.model.type.TypeMirror;
  * methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypeElement extends TreeBackedParameterizable implements ArtificialTypeElement {
+  private final TreeBackedTypes types;
   private final TypeElement underlyingElement;
   private final ClassTree tree;
   @Nullable private StandaloneDeclaredType typeMirror;
@@ -42,11 +44,13 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   @Nullable private List<? extends TypeMirror> interfaces;
 
   TreeBackedTypeElement(
+      TreeBackedTypes types,
       TypeElement underlyingElement,
       TreeBackedElement enclosingElement,
       ClassTree tree,
       TreeBackedElementResolver resolver) {
     super(underlyingElement, enclosingElement, tree, resolver);
+    this.types = types;
     this.underlyingElement = underlyingElement;
     this.tree = tree;
     enclosingElement.addEnclosedElement(this);
@@ -91,7 +95,14 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   @Override
   public StandaloneDeclaredType asType() {
     if (typeMirror == null) {
-      typeMirror = getResolver().createType(this);
+      typeMirror =
+          (StandaloneDeclaredType)
+              types.getDeclaredType(
+                  this,
+                  getTypeParameters()
+                      .stream()
+                      .map(TypeParameterElement::asType)
+                      .toArray(TypeMirror[]::new));
     }
     return typeMirror;
   }
