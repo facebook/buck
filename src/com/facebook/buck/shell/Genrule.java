@@ -200,6 +200,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
         getProjectFilesystem()
             .resolve(getProjectFilesystem().getBuckPaths().getGenDir())
             .toString());
+    environmentVariablesBuilder.put("BOOT_CLASSPATH", System.getProperty("sun.boot.class.path"));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
 
