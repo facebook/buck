@@ -83,7 +83,7 @@ class TestNailgunConnection(unittest.TestCase):
             creationflags = DETACHED_PROCESS
 
         self.ng_server_process = subprocess.Popen(
-            ['java', '-jar', self.getNailgunUberJar(), self.transport_address],
+            ['java', '-Djna.nosys=true', '-jar', self.getNailgunUberJar(), self.transport_address],
             close_fds=True,
             preexec_fn=preexec_fn,
             creationflags=creationflags,
