@@ -17,15 +17,14 @@ package com.facebook.buck.jvm.kotlin;
 
 import static java.io.File.pathSeparator;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -40,67 +39,107 @@ public class KotlinBuckConfigTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private ProjectWorkspace workspace;
+  private Path testDataDirectory;
 
   @Before
   public void setUp() throws InterruptedException, IOException {
     KotlinTestAssumptions.assumeUnixLike();
 
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_compiler_test", tmp);
-    workspace.setUp();
+    tmp.newFolder("faux_kotlin_home", "bin");
+    tmp.newFolder("faux_kotlin_home", "libexec", "bin");
+    tmp.newFolder("faux_kotlin_home", "libexec", "lib");
+    tmp.newExecutableFile("faux_kotlin_home/bin/kotlinc");
+    tmp.newExecutableFile("faux_kotlin_home/libexec/bin/kotlinc");
+    tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-compiler.jar");
+    tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar");
+
+    testDataDirectory = tmp.getRoot();
   }
 
   @Test
-  public void testFindsKotlinCompilerInPath() throws HumanReadableException, IOException {
+  public void testFindsKotlinCompilerInPathLibexec() throws HumanReadableException, IOException {
     // Get faux kotlinc binary location in project
-    Path kotlinPath = workspace.resolve("bin");
-    Path kotlinCompiler = kotlinPath.resolve("kotlinc");
+    Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home/libexec/bin").normalize();
+    Path kotlinCompiler = kotlinHome.resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
-                    "PATH", kotlinPath.toString() + pathSeparator + System.getenv("PATH")))
+                    "PATH", kotlinHome.toString() + pathSeparator + System.getenv("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
+    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
     assertEquals(command, kotlinCompiler.toString());
   }
 
   @Test
-  public void testFindsKotlinCompilerInHome() throws HumanReadableException, IOException {
+  public void testFindsKotlinCompilerInPathBin() throws HumanReadableException, IOException {
     // Get faux kotlinc binary location in project
-    Path kotlinCompiler = workspace.resolve("bin").resolve("kotlinc");
+    Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home/bin").normalize();
+    Path kotlinCompiler = kotlinHome.resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
-                ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
+                ImmutableMap.of(
+                    "PATH", kotlinHome.toString() + pathSeparator + System.getenv("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
+    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
     assertEquals(command, kotlinCompiler.toString());
   }
 
   @Test
-  public void testFindsKotlinCompilerInConfigWithAbsolutePath()
+  public void testFindsKotlinCompilerInHomeEnvironment()
       throws HumanReadableException, IOException {
     // Get faux kotlinc binary location in project
-    Path kotlinCompiler = workspace.resolve("bin").resolve("kotlinc");
+    Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
+    Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of("kotlin", ImmutableMap.of("compiler", kotlinCompiler.toString())))
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
+            .setEnvironment(
+                ImmutableMap.of(
+                    "KOTLIN_HOME",
+                    testDataDirectory.resolve("faux_kotlin_home").toAbsolutePath().toString()))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
+    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
+    assertEquals(command, kotlinCompiler.toString());
+  }
+
+  @Test
+  public void testFindsKotlinCompilerInHomeEnvironment2()
+      throws HumanReadableException, IOException {
+    // Get faux kotlinc binary location in project
+    Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home/libexec").normalize();
+    Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
+    MoreFiles.makeExecutable(kotlinCompiler);
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
+            .setEnvironment(
+                ImmutableMap.of(
+                    "KOTLIN_HOME",
+                    testDataDirectory
+                        .resolve("faux_kotlin_home/libexec/bin")
+                        .toAbsolutePath()
+                        .toString()))
+            .build();
+
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
     assertEquals(command, kotlinCompiler.toString());
   }
 
@@ -108,77 +147,186 @@ public class KotlinBuckConfigTest {
   public void testFindsKotlinCompilerInConfigWithRelativePath()
       throws HumanReadableException, InterruptedException, IOException {
     // Get faux kotlinc binary location in project
-    Path kotlinCompiler = workspace.resolve("bin").resolve("kotlinc");
+    Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
+    Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.resolve("."));
+    ProjectFilesystem filesystem = new ProjectFilesystem(testDataDirectory.resolve("."));
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
-            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("compiler", "bin/kotlinc")))
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of("kotlin_home", "./faux_kotlin_home", "external", "true")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    String command = kotlinBuckConfig.getKotlinCompiler().get().getCommandPrefix(null).get(0);
+    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
     assertEquals(command, kotlinCompiler.toString());
   }
 
   @Test
-  public void testFindsKotlinRuntimeLibraryInPath() throws IOException {
+  public void testFindsKotlinCompilerJarInConfigWithAbsolutePath()
+      throws HumanReadableException, InterruptedException, IOException {
+
+    Path kotlinRuntime =
+        testDataDirectory
+            .resolve("faux_kotlin_home")
+            .resolve("libexec")
+            .resolve("lib")
+            .resolve("kotlin-compiler.jar");
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home",
+                        testDataDirectory.resolve("faux_kotlin_home").toAbsolutePath().toString(),
+                        "external",
+                        "false")))
+            .build();
+
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    Path compilerJar = kotlinBuckConfig.getPathToCompilerJar();
+    assertEquals(kotlinRuntime, compilerJar);
+  }
+
+  @Test
+  public void testFindsKotlinCompilerJarInConfigWithAbsolutePath2()
+      throws HumanReadableException, InterruptedException, IOException {
+
+    Path kotlinRuntime =
+        testDataDirectory
+            .resolve("faux_kotlin_home")
+            .resolve("libexec")
+            .resolve("lib")
+            .resolve("kotlin-compiler.jar");
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home",
+                        testDataDirectory
+                            .resolve("faux_kotlin_home")
+                            .resolve("libexec")
+                            .toAbsolutePath()
+                            .toString(),
+                        "external",
+                        "false")))
+            .build();
+
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    Path compilerJar = kotlinBuckConfig.getPathToCompilerJar();
+    assertEquals(kotlinRuntime, compilerJar);
+  }
+
+  @Test
+  public void testFindsKotlinCompilerLibraryInPath() throws IOException {
     // Get faux kotlinc binary location in project
-    Path kotlinPath = workspace.resolve("bin");
-    Path kotlinCompiler = kotlinPath.resolve("kotlinc");
+    Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
+    Path kotlinCompiler = kotlinHome.resolve("libexec").resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
-                    "PATH", kotlinPath.toString() + pathSeparator + System.getenv("PATH")))
+                    "PATH",
+                    kotlinCompiler.getParent().toString() + pathSeparator + System.getenv("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar().getRight();
+    Path compilerJar = kotlinBuckConfig.getPathToCompilerJar();
     Assert.assertThat(
-        runtimeJar.toString(),
-        Matchers.containsString(workspace.getPath(".").normalize().toString()));
+        compilerJar.toString(), Matchers.containsString(testDataDirectory.toString()));
   }
 
   @Test
-  public void testFindsKotlinRuntimeInConfigWithAbsolutePath()
-      throws HumanReadableException, IOException {
-
-    Path kotlinRuntime = workspace.resolve("lib").resolve("kotlin-runtime.jar");
-
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of("kotlin", ImmutableMap.of("runtime_jar", kotlinRuntime.toString())))
-            .setEnvironment(
-                ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
-            .build();
-
-    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    Path runtimeJar = kotlinBuckConfig.getPathToRuntimeJar().getRight();
-    assertEquals(runtimeJar.toString(), kotlinRuntime.toString());
-  }
-
-  @Test
-  public void testFindsKotlinRuntimeInConfigWithRelativePath()
+  public void testFindsKotlinStdlibJarInConfigWithAbsolutePath()
       throws HumanReadableException, InterruptedException, IOException {
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.resolve("."));
+    Path kotlinRuntime =
+        testDataDirectory
+            .resolve("faux_kotlin_home")
+            .resolve("libexec")
+            .resolve("lib")
+            .resolve("kotlin-stdlib.jar");
+
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setFilesystem(filesystem)
             .setSections(
-                ImmutableMap.of("kotlin", ImmutableMap.of("runtime_jar", "lib/kotlin-runtime.jar")))
-            .setEnvironment(
-                ImmutableMap.of("KOTLIN_HOME", workspace.getPath(".").normalize().toString()))
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home",
+                        testDataDirectory.resolve("faux_kotlin_home").toAbsolutePath().toString(),
+                        "external",
+                        "false")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
-    PathSourcePath runtimeJar = (PathSourcePath) kotlinBuckConfig.getPathToRuntimeJar().getLeft();
-    assertEquals(runtimeJar.getRelativePath().toString(), "lib/kotlin-runtime.jar");
+    Path runtimeJar = kotlinBuckConfig.getPathToStdlibJar();
+    assertEquals(kotlinRuntime, runtimeJar);
+  }
+
+  @Test
+  public void testFindsKotlinStdlibJarInConfigWithAbsolutePath2()
+      throws HumanReadableException, InterruptedException, IOException {
+
+    Path kotlinRuntime =
+        testDataDirectory
+            .resolve("faux_kotlin_home")
+            .resolve("libexec")
+            .resolve("lib")
+            .resolve("kotlin-stdlib.jar");
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home",
+                        testDataDirectory
+                            .resolve("faux_kotlin_home")
+                            .resolve("libexec")
+                            .resolve("lib")
+                            .toAbsolutePath()
+                            .toString(),
+                        "external",
+                        "false")))
+            .build();
+
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    Path runtimeJar = kotlinBuckConfig.getPathToStdlibJar();
+    assertEquals(kotlinRuntime, runtimeJar);
+  }
+
+  @Test
+  public void testFindsKotlinStdlibJarInConfigWithRelativePath()
+      throws HumanReadableException, InterruptedException, IOException {
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setFilesystem(new ProjectFilesystem(testDataDirectory))
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home", "faux_kotlin_home",
+                        "external", "false")))
+            .build();
+
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    Path runtimeJar = kotlinBuckConfig.getPathToStdlibJar();
+    assertNotNull(runtimeJar);
+    assertTrue(runtimeJar.endsWith("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar"));
   }
 }

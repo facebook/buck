@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.jvm.java.BaseCompileToJarStepFactory.EMPTY_EXTRA_CLASSPATH;
+
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -26,11 +28,11 @@ import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
+public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
   private final KotlinBuckConfig kotlinBuckConfig;
   private ImmutableList<String> extraKotlincArguments = ImmutableList.of();
 
-  public DefaultKotlinLibraryBuilder(
+  KotlinLibraryBuilder(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -41,7 +43,7 @@ public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
   }
 
   @Override
-  public DefaultKotlinLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
+  public KotlinLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
     super.setArgs(args);
 
     KotlinLibraryDescription.CoreArg kotlinArgs = (KotlinLibraryDescription.CoreArg) args;
@@ -58,8 +60,9 @@ public class DefaultKotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
     @Override
     protected CompileToJarStepFactory buildCompileStepFactory() {
       return new KotlincToJarStepFactory(
-          Preconditions.checkNotNull(kotlinBuckConfig).getKotlinCompiler().get(),
-          extraKotlincArguments);
+          Preconditions.checkNotNull(kotlinBuckConfig).getKotlinc(),
+          extraKotlincArguments,
+          EMPTY_EXTRA_CLASSPATH);
     }
   }
 }

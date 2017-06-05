@@ -101,8 +101,8 @@ public class KotlinLibraryDescription
       }
     }
 
-    DefaultKotlinLibraryBuilder defaultKotlinLibraryBuilder =
-        new DefaultKotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
+    KotlinLibraryBuilder defaultKotlinLibraryBuilder =
+        new KotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
             .setArgs(args);
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
@@ -116,6 +116,7 @@ public class KotlinLibraryDescription
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;
     } else {
+      resolver.addToIndex(defaultKotlinLibrary);
       return MavenUberJar.create(
           defaultKotlinLibrary,
           Preconditions.checkNotNull(paramsWithMavenFlavor),

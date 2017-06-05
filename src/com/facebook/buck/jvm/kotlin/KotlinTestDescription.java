@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.HasJavaAbi;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -52,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Level;
 import org.immutables.value.Value;
@@ -97,7 +95,7 @@ public class KotlinTestDescription
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        new DefaultKotlinLibraryBuilder(
+        new KotlinLibraryBuilder(
                 targetGraph, testsLibraryParams, resolver, cellRoots, kotlinBuckConfig)
             .setArgs(args)
             .setGeneratedSourceFolder(templateJavacOptions.getGeneratedSourceFolderName());
@@ -106,20 +104,20 @@ public class KotlinTestDescription
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+    DefaultJavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
-    return new KotlinTest(
+    return new JavaTest(
         params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         testsLibrary,
-        ImmutableSet.<Either<SourcePath, Path>>of(kotlinBuckConfig.getPathToRuntimeJar()),
+        ImmutableSet.of(Either.ofRight(kotlinBuckConfig.getPathToStdlibJar())),
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),

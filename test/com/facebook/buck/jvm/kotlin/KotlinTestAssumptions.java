@@ -32,7 +32,7 @@ public abstract class KotlinTestAssumptions {
   public static void assumeCompilerAvailable() throws IOException {
     Throwable exception = null;
     try {
-      new KotlinBuckConfig(FakeBuckConfig.builder().build()).getKotlinCompiler();
+      new KotlinBuckConfig(FakeBuckConfig.builder().build()).getPathToCompilerJar();
     } catch (HumanReadableException e) {
       exception = e;
     }

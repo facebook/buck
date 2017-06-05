@@ -26,29 +26,29 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
-public class KotlinLibraryBuilder
+public class FauxKotlinLibraryBuilder
     extends AbstractNodeBuilder<
         KotlinLibraryDescriptionArg.Builder, KotlinLibraryDescriptionArg, KotlinLibraryDescription,
         BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;
 
-  protected KotlinLibraryBuilder(
+  protected FauxKotlinLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(new KotlinLibraryDescription(null), target, projectFilesystem, hashCode);
     this.projectFilesystem = projectFilesystem;
   }
 
-  public static KotlinLibraryBuilder createBuilder(BuildTarget target) {
-    return new KotlinLibraryBuilder(target, new FakeProjectFilesystem(), null);
+  public static FauxKotlinLibraryBuilder createBuilder(BuildTarget target) {
+    return new FauxKotlinLibraryBuilder(target, new FakeProjectFilesystem(), null);
   }
 
-  public KotlinLibraryBuilder addSrc(SourcePath path) {
+  public FauxKotlinLibraryBuilder addSrc(SourcePath path) {
     getArgForPopulating().addSrcs(path);
     return this;
   }
 
-  public KotlinLibraryBuilder addSrc(Path path) {
+  public FauxKotlinLibraryBuilder addSrc(Path path) {
     return addSrc(new PathSourcePath(projectFilesystem, path));
   }
 }
