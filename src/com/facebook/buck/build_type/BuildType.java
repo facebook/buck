@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 public enum BuildType {
+  UNKNOWN,
   LOCAL_ANT,
   LOCAL_PEX,
   RELEASE_PEX,
@@ -44,7 +45,7 @@ public enum BuildType {
             public BuildType get() {
               String buildTypeFilename = System.getProperty("buck.buck_build_type_info");
               if (buildTypeFilename == null) {
-                return LOCAL_ANT;
+                return UNKNOWN;
               }
               try {
                 String contents =
