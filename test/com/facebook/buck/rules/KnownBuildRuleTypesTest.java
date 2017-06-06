@@ -29,8 +29,10 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -315,6 +317,35 @@ public class KnownBuildRuleTypesTest {
                 knownBuildRuleTypes.getBuildRuleType("ocaml_binary"));
     assertThat(
         ocamlBinaryDescription.getOcamlBuckConfig().getCxxPlatform(),
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+  }
+
+  @Test
+  public void javaDefaultCxxPlatform() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    Flavor flavor = InternalFlavor.of("flavor");
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "cxx#" + flavor,
+            ImmutableMap.of(),
+            "java",
+            ImmutableMap.of("default_cxx_platform", flavor.toString()));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    KnownBuildRuleTypes knownBuildRuleTypes =
+        KnownBuildRuleTypes.createBuilder(
+                buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver())
+            .build();
+    JavaBinaryDescription javaBinaryDescription =
+        (JavaBinaryDescription)
+            knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));
+    assertThat(
+        javaBinaryDescription.getCxxPlatform(),
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+    JavaTestDescription javaTestDescription =
+        (JavaTestDescription)
+            knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_test"));
+    assertThat(
+        javaTestDescription.getCxxPlatform(),
         Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
   }
 

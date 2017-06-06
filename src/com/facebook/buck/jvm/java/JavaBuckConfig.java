@@ -212,6 +212,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, PROPERTY_COMPILE_AGAINST_ABIS, false);
   }
 
+  public Optional<String> getDefaultCxxPlatform() {
+    return delegate.getValue(SECTION, "default_cxx_platform");
+  }
+
   public enum AbiGenerationMode {
     /** Generate ABIs by stripping .class files */
     CLASS,

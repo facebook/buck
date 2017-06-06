@@ -436,6 +436,12 @@ public class KnownBuildRuleTypes {
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
     JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
     JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
+    CxxPlatform defaultJavaCxxPlatform =
+        javaConfig
+            .getDefaultCxxPlatform()
+            .map(InternalFlavor::of)
+            .map(cxxPlatforms::getValue)
+            .orElse(defaultCxxPlatform);
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
 
@@ -616,7 +622,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(
         new JavaBinaryDescription(
-            defaultJavaOptions, defaultJavacOptions, defaultCxxPlatform, javaConfig));
+            defaultJavaOptions, defaultJavacOptions, defaultJavaCxxPlatform, javaConfig));
     builder.register(new JavaAnnotationProcessorDescription());
     builder.register(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.register(
@@ -625,7 +631,7 @@ public class KnownBuildRuleTypes {
             defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
-            defaultCxxPlatform));
+            defaultJavaCxxPlatform));
     builder.register(new JsBundleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());

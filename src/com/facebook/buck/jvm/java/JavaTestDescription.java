@@ -41,6 +41,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -170,6 +171,11 @@ public class JavaTestDescription
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }
     }
+  }
+
+    @VisibleForTesting
+  public CxxPlatform getCxxPlatform() {
+    return cxxPlatform;
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {

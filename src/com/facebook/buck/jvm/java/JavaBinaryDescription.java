@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -152,6 +153,11 @@ public class JavaBinaryDescription
   @Override
   public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
     return true;
+  }
+
+  @VisibleForTesting
+  public CxxPlatform getCxxPlatform() {
+    return cxxPlatform;
   }
 
   @BuckStyleImmutable
