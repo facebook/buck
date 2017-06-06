@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -34,7 +34,7 @@ public class ArtifactCachesTest {
     ArtifactCacheBuckConfig cacheConfig =
         ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = http");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         new ArtifactCaches(
                 cacheConfig,
@@ -52,7 +52,7 @@ public class ArtifactCachesTest {
     ArtifactCacheBuckConfig cacheConfig =
         ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         new ArtifactCaches(
                 cacheConfig,
@@ -79,7 +79,7 @@ public class ArtifactCachesTest {
             "dir = dir2",
             "dir_mode = readonly");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         stripDecorators(
             new ArtifactCaches(
@@ -115,7 +115,7 @@ public class ArtifactCachesTest {
     ArtifactCacheBuckConfig cacheConfig =
         ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir, http");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         new ArtifactCaches(
                 cacheConfig,
@@ -134,7 +134,7 @@ public class ArtifactCachesTest {
         ArtifactCacheBuckConfigTest.createFromText(
             "[cache]", "mode = dir, http", "blacklisted_wifi_ssids = weevil, evilwifi");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     ArtifactCache artifactCache =
         new ArtifactCaches(
                 cacheConfig,

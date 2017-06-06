@@ -27,7 +27,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
@@ -157,7 +157,7 @@ public class DistBuildStateTest {
             constructorArgMarshaller);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            BuckEventBusFactory.newInstance(),
+            BuckEventBusForTests.newInstance(),
             cell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -330,7 +330,7 @@ public class DistBuildStateTest {
 
   public static DistBuildTargetGraphCodec createDefaultCodec(
       final Cell cell, final Optional<Parser> parser) {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {

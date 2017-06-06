@@ -35,7 +35,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
@@ -193,7 +193,7 @@ public class ParserTest {
     filesystem =
         new ProjectFilesystem(root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
     cellRoot = filesystem.getRootPath();
-    eventBus = BuckEventBusFactory.newInstance();
+    eventBus = BuckEventBusForTests.newInstance();
 
     ImmutableMap.Builder<String, ImmutableMap<String, String>> configSectionsBuilder =
         ImmutableMap.builder();
@@ -474,7 +474,7 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets =
         filterAllTargetsInProject(
-            parser, cell, x -> true, BuckEventBusFactory.newInstance(), executorService);
+            parser, cell, x -> true, BuckEventBusForTests.newInstance(), executorService);
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(

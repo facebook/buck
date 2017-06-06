@@ -19,7 +19,7 @@ package com.facebook.buck.rage;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
@@ -65,7 +65,7 @@ public class DefectReporterTest {
     Clock clock = new DefaultClock();
     DefectReporter reporter =
         new DefaultDefectReporter(
-            filesystem, config, BuckEventBusFactory.newInstance(clock), clock);
+            filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     Path fileToBeIncluded = Paths.get("FileToBeIncluded.txt");
     filesystem.touch(fileToBeIncluded);
@@ -92,7 +92,7 @@ public class DefectReporterTest {
     Clock clock = new DefaultClock();
     DefectReporter reporter =
         new DefaultDefectReporter(
-            filesystem, config, BuckEventBusFactory.newInstance(clock), clock);
+            filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     DefectSubmitResult defectSubmitResult =
         reporter.submitReport(

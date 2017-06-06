@@ -19,7 +19,7 @@ package com.facebook.buck.file;
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -67,7 +67,7 @@ public class HttpDownloaderIntegrationTest {
     URI uri = httpd.getUri("/example");
 
     Path output = outputDir.resolve("cheese");
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     assertEquals("cheese", Files.toString(output.toFile(), UTF_16));
   }
@@ -77,7 +77,7 @@ public class HttpDownloaderIntegrationTest {
     URI uri = httpd.getUri("/redirect");
 
     Path output = outputDir.resolve("cheese");
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     assertEquals("cheese", Files.toString(output.toFile(), UTF_16));
   }

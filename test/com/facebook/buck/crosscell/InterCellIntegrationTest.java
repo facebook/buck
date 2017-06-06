@@ -34,7 +34,7 @@ import com.facebook.buck.android.AndroidNdkHelper;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -339,7 +339,7 @@ public class InterCellIntegrationTest {
             primary.asCell().getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Cell primaryCell = primary.asCell();
     BuildTarget namedTarget =

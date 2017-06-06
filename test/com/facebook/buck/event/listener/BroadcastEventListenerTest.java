@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -42,10 +42,10 @@ public class BroadcastEventListenerTest {
   @Test
   public void tryBroadcastInMultipleBuses() {
     BuckEventBus bus1 =
-        BuckEventBusFactory.newInstance(
+        BuckEventBusForTests.newInstance(
             new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)), new BuildId("bus1"));
     BuckEventBus bus2 =
-        BuckEventBusFactory.newInstance(
+        BuckEventBusForTests.newInstance(
             new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)), new BuildId("bus2"));
 
     bus1.register(

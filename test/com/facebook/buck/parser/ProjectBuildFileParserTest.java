@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.BuildFileParseException;
@@ -126,7 +126,7 @@ public class ProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -156,7 +156,7 @@ public class ProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
@@ -196,7 +196,7 @@ public class ProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
     final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -226,7 +226,7 @@ public class ProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -265,7 +265,7 @@ public class ProjectBuildFileParserTest {
 
     try (ProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
-            BuckEventBusFactory.newInstance(new FakeClock(0)),
+            BuckEventBusForTests.newInstance(new FakeClock(0)),
             "This is an error",
             "parser",
             ImmutableMap.<String, Object>builder()
@@ -305,7 +305,7 @@ public class ProjectBuildFileParserTest {
 
     try (ProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
-            BuckEventBusFactory.newInstance(new FakeClock(0)),
+            BuckEventBusForTests.newInstance(new FakeClock(0)),
             "This is an error",
             "parser",
             ImmutableMap.<String, Object>builder()
@@ -336,7 +336,7 @@ public class ProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -408,7 +408,7 @@ public class ProjectBuildFileParserTest {
 
     try (ProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
-            BuckEventBusFactory.newInstance(new FakeClock(0)),
+            BuckEventBusForTests.newInstance(new FakeClock(0)),
             "This is an error",
             "parser",
             ImmutableMap.<String, Object>builder()
@@ -458,7 +458,7 @@ public class ProjectBuildFileParserTest {
                   fakeProcessWithJsonOutput(
                       1, ImmutableList.of(), Optional.empty(), Optional.empty()),
               new TestConsole()),
-          BuckEventBusFactory.newInstance());
+          BuckEventBusForTests.newInstance());
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccess() {
@@ -469,7 +469,7 @@ public class ProjectBuildFileParserTest {
                   fakeProcessWithJsonOutput(
                       0, ImmutableList.of(), Optional.empty(), Optional.empty()),
               new TestConsole()),
-          BuckEventBusFactory.newInstance());
+          BuckEventBusForTests.newInstance());
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(

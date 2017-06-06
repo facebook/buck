@@ -18,7 +18,7 @@ package com.facebook.buck.crosscell;
 
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
@@ -70,7 +70,7 @@ public class IntraCellIntegrationTest {
 
     // This parses cleanly
     parser.buildTargetGraph(
-        BuckEventBusFactory.newInstance(),
+        BuckEventBusForTests.newInstance(),
         cell,
         false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -86,7 +86,7 @@ public class IntraCellIntegrationTest {
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
       parser.buildTargetGraph(
-          BuckEventBusFactory.newInstance(),
+          BuckEventBusForTests.newInstance(),
           childCell,
           false,
           MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),

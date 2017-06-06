@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.FileNotFoundException;
@@ -57,7 +57,7 @@ public class OnDiskMavenDownloaderTest {
 
     Downloader downloader = new OnDiskMavenDownloader(root);
     boolean result =
-        downloader.fetch(BuckEventBusFactory.newInstance(), relativePath.toUri(), output);
+        downloader.fetch(BuckEventBusForTests.newInstance(), relativePath.toUri(), output);
 
     assertFalse(result);
   }
@@ -72,7 +72,7 @@ public class OnDiskMavenDownloaderTest {
     Files.write(source, "cake".getBytes(UTF_8));
 
     Downloader downloader = new OnDiskMavenDownloader(root);
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 
@@ -93,7 +93,7 @@ public class OnDiskMavenDownloaderTest {
     Files.write(source, "cake".getBytes(UTF_8));
 
     Downloader downloader = new OnDiskMavenDownloader(root);
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 

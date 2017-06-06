@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.step.ExecutionContext;
@@ -165,7 +165,7 @@ public class WorkerShellStepTest {
             .setWorkerProcessPools(workerProcessMap)
             .setPersistentWorkerPools(persistentWorkerProcessMap)
             .setConsole(new TestConsole(Verbosity.ALL))
-            .setBuckEventBus(BuckEventBusFactory.newInstance())
+            .setBuckEventBus(BuckEventBusForTests.newInstance())
             .build();
 
     return context;
@@ -437,7 +437,7 @@ public class WorkerShellStepTest {
         TestExecutionContext.newBuilder()
             .setPlatform(Platform.LINUX)
             .setConsole(new TestConsole(Verbosity.ALL))
-            .setBuckEventBus(BuckEventBusFactory.newInstance())
+            .setBuckEventBus(BuckEventBusForTests.newInstance())
             .build();
 
     WorkerJobParams jobParamsA =

@@ -22,7 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildTarget;
@@ -81,7 +81,7 @@ public class SimpleConsoleEventBusListenerTest {
     durationTracker = new BuildRuleDurationTracker();
 
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    eventBus = BuckEventBusForTests.newInstance(fakeClock);
     console = new TestConsole();
 
     SimpleConsoleEventBusListener listener =

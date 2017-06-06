@@ -87,7 +87,7 @@ public class TestEventConfigurator {
           timestampNanos.orElse(TimeUnit.MILLISECONDS.toNanos(currentTimeMillis)),
           threadUserNanoTime,
           threadId,
-          BuckEventBusFactory.BUILD_ID_FOR_TEST);
+          BuckEventBusForTests.BUILD_ID_FOR_TEST);
       return event;
     }
   }

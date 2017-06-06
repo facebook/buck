@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.TestConsole;
@@ -124,7 +124,7 @@ public class RageCommandIntegrationTest {
       Clock clock = new DefaultClock();
       DefectReporter reporter =
           new DefaultDefectReporter(
-              filesystem, rageConfig, BuckEventBusFactory.newInstance(clock), clock);
+              filesystem, rageConfig, BuckEventBusForTests.newInstance(clock), clock);
       AutomatedReport automatedReport =
           new AutomatedReport(
               reporter,
@@ -214,7 +214,7 @@ public class RageCommandIntegrationTest {
       Clock clock = new DefaultClock();
       DefectReporter reporter =
           new DefaultDefectReporter(
-              filesystem, rageConfig, BuckEventBusFactory.newInstance(clock), clock);
+              filesystem, rageConfig, BuckEventBusForTests.newInstance(clock), clock);
       AutomatedReport automatedReport =
           new AutomatedReport(
               reporter,
@@ -277,7 +277,7 @@ public class RageCommandIntegrationTest {
       Clock clock = new DefaultClock();
       DefectReporter reporter =
           new DefaultDefectReporter(
-              filesystem, rageConfig, BuckEventBusFactory.newInstance(clock), clock);
+              filesystem, rageConfig, BuckEventBusForTests.newInstance(clock), clock);
       AutomatedReport automatedReport =
           new AutomatedReport(
               reporter,

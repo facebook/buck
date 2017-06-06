@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.google.common.eventbus.Subscribe;
@@ -33,7 +33,7 @@ import org.junit.Test;
 public class PerfStatsTrackingTest {
   @Test
   public void probingMemoryPostsToTheEventBus() throws Exception {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     final BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
     eventBus.register(
         new Object() {

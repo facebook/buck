@@ -32,12 +32,12 @@ import java.util.logging.Level;
  * <p>Also provides access to fields of a {@link BuckEventBus} that are not visible to the business
  * logic.
  */
-public class BuckEventBusFactory {
+public class BuckEventBusForTests {
 
   public static final BuildId BUILD_ID_FOR_TEST = new BuildId("CAFEBABE");
 
   /** Utility class: do not instantiate. */
-  private BuckEventBusFactory() {}
+  private BuckEventBusForTests() {}
 
   @VisibleForTesting
   public static BuckEventBus newInstance() {

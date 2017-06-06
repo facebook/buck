@@ -40,7 +40,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigurator;
@@ -289,7 +289,7 @@ public class CachingBuildEngineTest {
       FakeBuildRule dep = new FakeBuildRule(depTarget, pathResolver);
 
       // The EventBus should be updated with events indicating how the rule was built.
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+      BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
       FakeBuckEventListener listener = new FakeBuckEventListener();
       buckEventBus.register(listener);
 

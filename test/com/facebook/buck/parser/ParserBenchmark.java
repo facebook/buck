@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
@@ -107,7 +107,7 @@ public class ParserBenchmark {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    eventBus = BuckEventBusFactory.newInstance();
+    eventBus = BuckEventBusForTests.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();

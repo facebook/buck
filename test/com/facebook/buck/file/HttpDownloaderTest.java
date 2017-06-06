@@ -24,7 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -45,7 +45,7 @@ import org.junit.Test;
 public class HttpDownloaderTest {
 
   private final Path neverUsed = Paths.get("never/used");
-  private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+  private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   private HttpDownloader getDownloader(final HttpURLConnection connection) {
     return new HttpDownloader() {

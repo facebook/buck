@@ -30,7 +30,7 @@ import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -114,7 +114,7 @@ public class TargetsCommandTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     targetsCommand = new TargetsCommand();
     params =

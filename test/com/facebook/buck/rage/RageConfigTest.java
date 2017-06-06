@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +38,7 @@ public class RageConfigTest {
   @BeforeClass
   public static void setUp() {
     clock = new DefaultClock();
-    eventBus = BuckEventBusFactory.newInstance(clock);
+    eventBus = BuckEventBusForTests.newInstance(clock);
   }
 
   @Test

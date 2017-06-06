@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
@@ -245,7 +245,8 @@ public class DuplicateResourcesTest {
 
     ActionGraphAndResolver actionGraphAndResolver =
         ActionGraphCache.getFreshActionGraph(
-            BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
+            BuckEventBusForTests.newInstance(
+                new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph);
 

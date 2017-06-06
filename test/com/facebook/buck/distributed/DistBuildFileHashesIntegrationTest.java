@@ -24,7 +24,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -100,7 +100,7 @@ public class DistBuildFileHashesIntegrationTest {
             constructorArgMarshaller);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            BuckEventBusFactory.newInstance(),
+            BuckEventBusForTests.newInstance(),
             rootCell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -166,7 +166,7 @@ public class DistBuildFileHashesIntegrationTest {
             constructorArgMarshaller);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            BuckEventBusFactory.newInstance(),
+            BuckEventBusForTests.newInstance(),
             rootCell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
@@ -203,7 +203,8 @@ public class DistBuildFileHashesIntegrationTest {
       throws InterruptedException, IOException {
     ActionGraphCache cache = new ActionGraphCache(new BroadcastEventListener());
     ActionGraphAndResolver actionGraphAndResolver =
-        cache.getActionGraph(BuckEventBusFactory.newInstance(), true, false, targetGraph, KEY_SEED);
+        cache.getActionGraph(
+            BuckEventBusForTests.newInstance(), true, false, targetGraph, KEY_SEED);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);

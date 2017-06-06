@@ -23,7 +23,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -137,7 +137,7 @@ public class CommandRunnerParamsForTesting {
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
     private BuckConfig config = FakeBuckConfig.builder().build();
-    private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();

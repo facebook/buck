@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
@@ -346,7 +346,7 @@ public class ParsePipelineTest {
         SpeculativeParsing speculativeParsing)
         throws Exception {
       this.workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
-      this.eventBus = BuckEventBusFactory.newInstance();
+      this.eventBus = BuckEventBusForTests.newInstance();
       this.console = new TestConsole();
       this.executorService = executorService;
       this.projectBuildFileParsers = new HashSet<>();

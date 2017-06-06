@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
@@ -54,7 +54,7 @@ public class TestExecutionContext {
 
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
-        .setBuckEventBus(BuckEventBusFactory.newInstance())
+        .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())

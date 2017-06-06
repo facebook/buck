@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.io.ExecutableFinder;
@@ -121,7 +121,7 @@ public class ResolverIntegrationTest {
                 .build(),
             new DefaultTypeCoercerFactory(),
             ImmutableMap.of(),
-            BuckEventBusFactory.newInstance(),
+            BuckEventBusForTests.newInstance(),
             new DefaultProcessExecutor(new TestConsole()));
   }
 

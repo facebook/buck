@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -80,7 +80,7 @@ public class ActionGraphCacheTest {
     targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
     eventBus =
-        BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
+        BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
     broadcastEventListener = new BroadcastEventListener();
     broadcastEventListener.addEventBus(eventBus);
 

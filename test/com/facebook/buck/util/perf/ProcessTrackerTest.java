@@ -24,7 +24,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.FakeNuProcess;
@@ -276,7 +276,7 @@ public class ProcessTrackerTest {
 
   private ProcessTrackerForTest createProcessTracker(
       final BlockingQueue<ProcessResourceConsumptionEvent> events) {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     eventBus.register(
         new Object() {
           @Subscribe

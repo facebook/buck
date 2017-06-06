@@ -37,7 +37,7 @@ public class DefaultBuckEventBusTest {
   public void testShutdownSuccess() throws Exception {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
+            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
     eb.register(new SleepSubscriber());
     eb.post(new SleepEvent(1));
     long start = System.nanoTime();
@@ -54,7 +54,7 @@ public class DefaultBuckEventBusTest {
   public void testShutdownFailure() throws IOException {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
+            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
     eb.register(new SleepSubscriber());
     eb.post(new SleepEvent(timeoutMillis * 3));
     long start = System.nanoTime();
@@ -72,7 +72,7 @@ public class DefaultBuckEventBusTest {
   public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
+            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent event = new TestEvent();
     eb.timestamp(event);
     try {
@@ -92,7 +92,7 @@ public class DefaultBuckEventBusTest {
   public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
+            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent timestamp = new TestEvent();
     TestEvent event = new TestEvent();
     eb.timestamp(timestamp);
@@ -107,7 +107,7 @@ public class DefaultBuckEventBusTest {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
-            fakeClock, false, BuckEventBusFactory.BUILD_ID_FOR_TEST, timeoutMillis);
+            fakeClock, false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent event = new TestEvent();
     eb.post(event);
     eb.close();

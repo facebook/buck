@@ -35,7 +35,7 @@ import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -84,7 +84,7 @@ public class DistBuildSlaveEventBusListenerTest {
     stampedeId = new StampedeId();
     stampedeId.setId("this-is-the-big-id");
     distBuildServiceMock = EasyMock.createMock(DistBuildService.class);
-    eventBus = BuckEventBusFactory.newInstance();
+    eventBus = BuckEventBusForTests.newInstance();
   }
 
   private void setUpDistBuildSlaveEventBusListener() {

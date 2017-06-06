@@ -26,7 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -125,8 +125,8 @@ public class JarDirectoryStepTest {
             /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    final BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    final BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     context.getBuckEventBus().register(listener);
 
     step.execute(context);

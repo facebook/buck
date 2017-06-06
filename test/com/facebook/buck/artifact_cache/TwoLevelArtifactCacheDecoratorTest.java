@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -50,7 +50,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
                 new ProjectFilesystem(tmp.getRoot()),
-                BuckEventBusFactory.newInstance(),
+                BuckEventBusForTests.newInstance(),
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
@@ -85,7 +85,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
                 new ProjectFilesystem(tmp.getRoot()),
-                BuckEventBusFactory.newInstance(),
+                BuckEventBusForTests.newInstance(),
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 5L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.of(10L))) {
@@ -123,7 +123,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
                 new ProjectFilesystem(tmp.getRoot()),
-                BuckEventBusFactory.newInstance(),
+                BuckEventBusForTests.newInstance(),
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
@@ -162,7 +162,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
                 new ProjectFilesystem(tmp.getRoot()),
-                BuckEventBusFactory.newInstance(),
+                BuckEventBusForTests.newInstance(),
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty());
@@ -170,7 +170,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
                 new ProjectFilesystem(tmp.getRoot()),
-                BuckEventBusFactory.newInstance(),
+                BuckEventBusForTests.newInstance(),
                 /* performTwoLevelStores */ false,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {

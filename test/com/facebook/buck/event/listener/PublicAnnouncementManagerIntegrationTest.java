@@ -27,7 +27,7 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -117,7 +117,7 @@ public class PublicAnnouncementManagerIntegrationTest {
       httpd.start();
 
       Clock clock = new DefaultClock();
-      BuckEventBus eventBus = BuckEventBusFactory.newInstance(clock);
+      BuckEventBus eventBus = BuckEventBusForTests.newInstance(clock);
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(
               ImmutableMap.copyOf(System.getenv()), System.getProperties());

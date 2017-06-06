@@ -27,7 +27,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
@@ -90,7 +90,7 @@ public class AdbHelperTest {
       TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
     Console console = new TestConsole();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     return new AdbHelper(
         adbOptions, targetDeviceOptions, executionContext, console, eventBus, true) {
       @Override
@@ -386,7 +386,7 @@ public class AdbHelperTest {
     final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
     TestConsole console = new TestConsole();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     AdbHelper adbHelper =
         new AdbHelper(
             new AdbOptions(),
@@ -445,7 +445,7 @@ public class AdbHelperTest {
     final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
     TestConsole console = new TestConsole();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     AdbHelper adbHelper =
         new AdbHelper(
             new AdbOptions(),

@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -219,7 +219,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   private BuckEventBus getFakeBuckEventBus() {
-    return BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
+    return BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
   }
 
   @Test
@@ -917,7 +917,7 @@ public class WorkspaceAndProjectGeneratorTest {
       final TargetGraph targetGraph) {
     return input ->
         ActionGraphCache.getFreshActionGraph(
-                BuckEventBusFactory.newInstance(), targetGraph.getSubgraph(ImmutableSet.of(input)))
+                BuckEventBusForTests.newInstance(), targetGraph.getSubgraph(ImmutableSet.of(input)))
             .getResolver();
   }
 }

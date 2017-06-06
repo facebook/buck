@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
@@ -48,7 +48,7 @@ public class JavacExecutionContextSerializerTest {
     Path tmp = Files.createTempDirectory("junit-temp-path").toRealPath();
 
     JavacEventSink eventSink =
-        new JavacEventSinkToBuckEventBusBridge(BuckEventBusFactory.newInstance());
+        new JavacEventSinkToBuckEventBusBridge(BuckEventBusForTests.newInstance());
     PrintStream stdErr = new PrintStream(new ByteArrayOutputStream());
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     Verbosity verbosity = Verbosity.COMMANDS_AND_OUTPUT;

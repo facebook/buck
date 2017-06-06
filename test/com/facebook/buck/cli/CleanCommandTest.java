@@ -24,7 +24,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -137,7 +137,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setCell(cell)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
-        .setBuckEventBus(BuckEventBusFactory.newInstance())
+        .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))
         .setParser(createMock(Parser.class))
         .setPlatform(Platform.detect())

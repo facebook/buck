@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -82,8 +82,8 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
@@ -129,8 +129,8 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
@@ -181,8 +181,8 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
@@ -231,8 +231,8 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 

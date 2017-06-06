@@ -17,7 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildId;
@@ -36,7 +36,7 @@ import org.junit.Test;
 public class WatchmanDiagnosticEventListenerTest {
 
   private final SnoopingListener snoopingListener = new SnoopingListener();
-  private final BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+  private final BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
 
   @Before
   public void setUp() {

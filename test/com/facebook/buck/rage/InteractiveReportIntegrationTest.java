@@ -18,7 +18,7 @@ package com.facebook.buck.rage;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.TestConsole;
@@ -180,7 +180,7 @@ public class InteractiveReportIntegrationTest {
     TestConsole console = new TestConsole();
     DefectReporter defectReporter =
         new DefaultDefectReporter(
-            filesystem, rageConfig, BuckEventBusFactory.newInstance(clock), clock);
+            filesystem, rageConfig, BuckEventBusForTests.newInstance(clock), clock);
     WatchmanDiagReportCollector watchmanDiagReportCollector =
         new WatchmanDiagReportCollector(
             filesystem, WATCHMAN_DIAG_COMMAND, createFakeWatchmanDiagProcessExecutor(console));

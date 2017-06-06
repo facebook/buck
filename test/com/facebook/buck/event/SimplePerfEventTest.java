@@ -167,7 +167,7 @@ public class SimplePerfEventTest {
     PerfEventId testEventId = PerfEventId.of("Unicorn");
 
     SimplePerfEventListener listener = new SimplePerfEventListener();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     eventBus.register(listener);
 
     // This does absolutely nothing, but shouldn't crash either.
@@ -215,7 +215,7 @@ public class SimplePerfEventTest {
 
     SimplePerfEventListener listener = new SimplePerfEventListener();
     SettableFakeClock clock = new SettableFakeClock(0L, 0L);
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(clock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(clock);
     eventBus.register(listener);
 
     try (SimplePerfEvent.Scope parent = SimplePerfEvent.scope(eventBus, parentId)) {

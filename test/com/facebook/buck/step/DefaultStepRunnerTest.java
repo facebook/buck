@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +38,7 @@ public class DefaultStepRunnerTest {
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
     // The EventBus should be updated with events indicating how the steps were run.
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 

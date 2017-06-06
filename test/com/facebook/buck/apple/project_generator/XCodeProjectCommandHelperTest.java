@@ -26,7 +26,7 @@ import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -428,7 +428,7 @@ public class XCodeProjectCommandHelperTest {
             .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
             .build();
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
-        BuckEventBusFactory.newInstance(),
+        BuckEventBusForTests.newInstance(),
         cell,
         FakeBuckConfig.builder().build(),
         MoreExecutors.newDirectExecutorService(),

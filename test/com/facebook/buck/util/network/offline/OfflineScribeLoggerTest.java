@@ -29,7 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
@@ -224,7 +224,7 @@ public class OfflineScribeLoggerTest {
             blacklistCategories,
             maxScribeOfflineLogsKB,
             filesystem,
-            BuckEventBusFactory.newInstance(),
+            BuckEventBusForTests.newInstance(),
             new BuildId("sendingLogger"));
     offlineLogger.log(testCategory, ImmutableList.of("line1", "line2"));
     offlineLogger.close();
@@ -284,7 +284,7 @@ public class OfflineScribeLoggerTest {
               blacklistCategories,
               maxScribeOfflineLogs,
               filesystem,
-              BuckEventBusFactory.newInstance(),
+              BuckEventBusForTests.newInstance(),
               id);
       this.storedCategoriesWithLines = new AtomicInteger(0);
     }

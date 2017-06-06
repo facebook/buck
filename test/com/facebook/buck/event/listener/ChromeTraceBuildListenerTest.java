@@ -30,7 +30,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
@@ -194,7 +194,7 @@ public class ChromeTraceBuildListenerTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock, buildId);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock, buildId);
     eventBus.register(listener);
 
     CommandEvent.Started commandEventStarted =

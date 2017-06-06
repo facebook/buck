@@ -20,7 +20,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -206,7 +206,7 @@ public class AutoSparseIntegrationTest {
     // Only include the parent directory, not the file
     delegate.exists(repoPath.resolve("not_hidden_subdir/file_in_subdir_not_hidden"));
 
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
     AutoSparseIntegrationTest.CapturingAutoSparseStateEventListener listener =
         new AutoSparseIntegrationTest.CapturingAutoSparseStateEventListener();
     eventBus.register(listener);

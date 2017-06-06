@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
@@ -164,7 +164,7 @@ public class StackedDownloaderTest {
     Downloader works = EasyMock.createNiceMock("works", Downloader.class);
     Downloader neverCalled = EasyMock.createStrictMock("neverCalled", Downloader.class);
 
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     URI uri = new URI("http://example.com/cheese/peas");
     Path output = Paths.get("never used");
 

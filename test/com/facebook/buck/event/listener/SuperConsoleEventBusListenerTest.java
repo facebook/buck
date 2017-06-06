@@ -43,7 +43,7 @@ import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
@@ -149,7 +149,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testSimpleBuild() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
@@ -539,7 +539,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testSimpleBuildWithProgress() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
@@ -710,7 +710,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testSimpleDistBuildWithProgress() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -1015,7 +1015,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testSimpleTest() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
@@ -1266,7 +1266,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testSkippedTest() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
@@ -1523,7 +1523,7 @@ public class SuperConsoleEventBusListenerTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     TestConsole console = new TestConsole();
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
@@ -1790,7 +1790,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testBuildRuleSuspendResumeEvents() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
@@ -1929,7 +1929,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void debugConsoleEventShouldNotPrintLogLineToConsole() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     eventBus.postWithoutConfiguring(
@@ -1944,7 +1944,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testParsingStatus() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     // new daemon instance & action graph cache miss
@@ -1990,7 +1990,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testAutoSparseUpdates() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     AutoSparseStateEvents.SparseRefreshStarted sparseRefreshStarted =
@@ -2048,7 +2048,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testProjectGeneration() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     eventBus.postWithoutConfiguring(
@@ -2067,7 +2067,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testProjectGenerationWithProgress() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     Path storagePath = getStorageForTest();
@@ -2114,7 +2114,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testPostingEventBeforeAnyLines() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     eventBus.post(ConsoleEvent.info("Hello world!"));
@@ -2137,7 +2137,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void renderLinesWithLineLimit() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     try (SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus)) {
 
       FakeMultiStateRenderer fakeRenderer =
@@ -2218,7 +2218,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void timestampsInLocaleWithDecimalCommaFormatCorrectly() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             new SuperConsoleConfig(FakeBuckConfig.builder().build()),
@@ -2250,7 +2250,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testBuildTimeDoesNotDisplayNegativeOffset() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
