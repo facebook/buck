@@ -16,6 +16,10 @@ from buck_tool import BuckTool, Resource
 SERVER = Resource("buck_server")
 BOOTSTRAPPER = Resource("bootstrapper_jar")
 
+PEX_ONLY_EXPORTED_RESOURCES = [
+    Resource("external_executor_jar"),
+]
+
 
 @contextlib.contextmanager
 def closable_named_temporary_file(*args, **kwargs):
@@ -137,6 +141,9 @@ class BuckPackage(BuckTool):
             "-Dbuck.git_commit_timestamp={0}".format(self._package_info['timestamp']),
             "-Dbuck.git_dirty=0",
         ]
+
+    def _get_exported_resources(self):
+        return super(BuckPackage, self)._get_exported_resources() + PEX_ONLY_EXPORTED_RESOURCES
 
     def _get_bootstrap_classpath(self):
         return self._get_resource(BOOTSTRAPPER)

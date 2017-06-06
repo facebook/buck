@@ -47,6 +47,16 @@ def java_test(
   else:
     deps = []
 
+  if 'env' in kwargs:
+    env = kwargs['env']
+    del kwargs['env']
+  else:
+    env = {}
+
+  if '//src/com/facebook/buck/step/external:external' in deps:
+    env['EXTERNAL_STEP_RUNNER_JAR_FOR_BUCK_TEST'] = (
+      '$(location //src/com/facebook/buck/step/external:executor)')
+
   original_java_test(
     name,
     deps=deps + [
@@ -90,6 +100,7 @@ def java_test(
       # publicly accessible.
       '-Dsun.zip.disableMemoryMapping=true',
     ] + vm_args,
+    env=env,
     run_test_separately=run_test_separately,
     labels = labels + extra_labels,
     **kwargs

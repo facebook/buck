@@ -183,6 +183,9 @@ class BuckTool(object):
     def _get_extra_java_args(self):
         return []
 
+    def _get_exported_resources(self):
+        return EXPORTED_RESOURCES
+
     @property
     def _use_buckd(self):
         return not os.environ.get('NO_BUCKD') and not self._command_line.is_oop_javac()
@@ -461,7 +464,7 @@ class BuckTool(object):
             if resource_lock_path is not None:
                 java_args.append("-Dbuck.resource_lock_path={0}".format(resource_lock_path))
 
-            for resource in EXPORTED_RESOURCES:
+            for resource in self._get_exported_resources():
                 if self._has_resource(resource):
                     java_args.append(
                         "-Dbuck.{0}={1}".format(

@@ -1,0 +1,50 @@
+java_immutables_library(
+    name = "external",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/step/external:external",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/build_type:build_type",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_immutables_library(
+    name = "external_executor",
+    srcs = glob(["executor/*.java"]),
+    tests = [
+        "//test/com/facebook/buck/step/external:external",
+    ],
+    deps = [
+        "//src/com/facebook/buck/shell:worker_process",
+        "//third-party/java/gson:gson",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+export_file(
+    name = "executor_for_test",
+    src = ":executor",
+    out = "executor_for_test",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_binary(
+    name = "executor",
+    main_class = "com.facebook.buck.step.external.executor.ExternalStepExecutorMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":external_executor",
+    ],
+)
