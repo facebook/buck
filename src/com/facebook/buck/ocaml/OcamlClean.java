@@ -55,14 +55,17 @@ public class OcamlClean extends AbstractBuildRule {
       buildableContext.recordArtifact(bcDir);
       LOG.debug("Adding clean step for bytecode output dir %s", bcDir.toString());
 
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), bcDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), bcDir));
     }
 
     if (Files.exists(optDir)) {
       buildableContext.recordArtifact(optDir);
       LOG.debug("Adding clean step for native output dir %s", optDir.toString());
 
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), optDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), optDir));
     }
     return steps.build();
   }

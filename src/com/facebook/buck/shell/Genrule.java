@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -126,9 +127,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
-  private final Path absolutePathToTmpDirectory;
   private final Path pathToSrcDirectory;
-  private final Path absolutePathToSrcDirectory;
   private final Boolean isWorkerGenrule;
 
   protected Genrule(
@@ -157,11 +156,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
     this.pathToTmpDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
-    this.absolutePathToTmpDirectory = getProjectFilesystem().resolve(pathToTmpDirectory);
 
     this.pathToSrcDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
-    this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
     this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
   }
@@ -200,8 +197,10 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
         getProjectFilesystem()
             .resolve(getProjectFilesystem().getBuckPaths().getGenDir())
             .toString());
-    environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
-    environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
+    environmentVariablesBuilder.put(
+        "SRCDIR", getProjectFilesystem().resolve(pathToSrcDirectory).toString());
+    environmentVariablesBuilder.put(
+        "TMP", getProjectFilesystem().resolve(pathToTmpDirectory).toString());
 
     // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
@@ -274,7 +273,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
             flattenToSpaceSeparatedString(cmd, context.getSourcePathResolver()),
             flattenToSpaceSeparatedString(bash, context.getSourcePathResolver()),
             flattenToSpaceSeparatedString(cmdExe, context.getSourcePathResolver())),
-        absolutePathToSrcDirectory) {
+        BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory)
+            .getPathRelativeToBuildCellRoot()) {
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext executionContext,
@@ -334,11 +335,17 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     // Make sure that the directory to contain the output file exists, deleting any pre-existing
     // ones. Rules get output to a directory named after the base path, so we don't want to nuke
     // the entire directory.
-    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToOutDirectory));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutDirectory));
     // Delete the old temp directory
-    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTmpDirectory));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToTmpDirectory));
     // Create a directory to hold all the source files.
-    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToSrcDirectory));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory));
 
     addSymlinkCommands(context, commands);
 

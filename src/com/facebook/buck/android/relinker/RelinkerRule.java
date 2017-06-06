@@ -167,7 +167,9 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
     buildableContext.recordArtifact(getSymbolsNeededOutPath());
 
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchDirPath()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getScratchDirPath()))
         .add(
             new AbstractExecutionStep("xdso-dce relinker") {
               @Override

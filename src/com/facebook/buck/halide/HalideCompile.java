@@ -67,7 +67,8 @@ public class HalideCompile extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    commands.addAll(MakeCleanDirectoryStep.of(projectFilesystem, outputDir));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), projectFilesystem, outputDir));
 
     commands.add(
         new HalideCompilerStep(

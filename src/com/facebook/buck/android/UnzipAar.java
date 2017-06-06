@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
@@ -81,7 +82,9 @@ public class UnzipAar extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), unpackDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), unpackDirectory));
     steps.add(
         new UnzipStep(
             getProjectFilesystem(),
@@ -90,9 +93,14 @@ public class UnzipAar extends AbstractBuildRule
     steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
     steps.add(
         MkdirStep.of(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(getAssetsDirectory())));
-    steps.add(MkdirStep.of(getProjectFilesystem(), getNativeLibsDirectory()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                context.getSourcePathResolver().getRelativePath(getAssetsDirectory()))));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getNativeLibsDirectory())));
     steps.add(new TouchStep(getProjectFilesystem(), getTextSymbolsFile()));
 
     // We take the classes.jar file that is required to exist in an .aar and merge it with any
@@ -101,7 +109,12 @@ public class UnzipAar extends AbstractBuildRule
     // that all of the .class files in the .aar get packaged. As it is implemented today, an
     // android_library that depends on an android_prebuilt_aar can compile against anything in the
     // .aar's classes.jar or libs/.
-    steps.add(MkdirStep.of(getProjectFilesystem(), uberClassesJar.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                uberClassesJar.getParent())));
     steps.add(
         new AbstractExecutionStep("create_uber_classes_jar") {
           @Override
@@ -174,7 +187,9 @@ public class UnzipAar extends AbstractBuildRule
           }
         });
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTextSymbolsDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToTextSymbolsDir));
     steps.add(
         new ExtractFromAndroidManifestStep(
             getAndroidManifest(),

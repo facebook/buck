@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -85,10 +86,13 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Set<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
       BuildableContext buildableContext,
+      BuildContext buildContext,
       boolean skipProguard,
       ImmutableList.Builder<Step> steps) {
 
-    steps.addAll(MakeCleanDirectoryStep.of(filesystem, proguardDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            buildContext.getBuildCellRootPath(), filesystem, proguardDirectory));
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 

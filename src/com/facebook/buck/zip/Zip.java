@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -61,12 +62,16 @@ public class Zip extends AbstractBuildRule implements HasOutputName, SupportsInp
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(RmStep.of(getProjectFilesystem(), output));
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir));
 
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(getBuildTarget());
-    bundler.copy(
-        getProjectFilesystem(), context.getSourcePathResolver(), steps, scratchDir, sources);
+    bundler.copy(getProjectFilesystem(), context, steps, scratchDir, sources);
 
     steps.add(
         new ZipStep(

@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -96,11 +97,14 @@ public class GenAidl extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), genPath));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), genPath));
 
     BuildTarget target = getBuildTarget();
     Path outputDirectory = BuildTargets.getScratchPath(getProjectFilesystem(), target, "__%s.aidl");
-    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory));
 
     AidlStep command =
         new AidlStep(
@@ -125,7 +129,10 @@ public class GenAidl extends AbstractBuildRule {
                   target, importPath, target.getBasePath()));
     }
 
-    commands.add(MkdirStep.of(getProjectFilesystem(), genDirectory));
+    commands.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), genDirectory)));
 
     commands.add(
         new JarDirectoryStep(

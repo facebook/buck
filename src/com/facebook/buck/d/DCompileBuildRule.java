@@ -16,6 +16,7 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -71,7 +72,10 @@ public class DCompileBuildRule extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(compilerFlags);

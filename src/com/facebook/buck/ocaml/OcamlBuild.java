@@ -67,10 +67,12 @@ public class OcamlBuild extends AbstractBuildRule {
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                getProjectFilesystem(), ocamlContext.getNativeOutput().getParent()))
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                ocamlContext.getNativeOutput().getParent()))
         .add(
             new OcamlBuildStep(
-                context.getSourcePathResolver(),
+                context,
                 getProjectFilesystem(),
                 ocamlContext,
                 cCompiler.getEnvironment(context.getSourcePathResolver()),

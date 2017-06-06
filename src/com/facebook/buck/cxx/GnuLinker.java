@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -208,7 +209,11 @@ public class GnuLinker implements Linker {
       final Path linkerScript = getLinkerScript();
       buildableContext.recordArtifact(linkerScript);
       return ImmutableList.of(
-          MkdirStep.of(getProjectFilesystem(), linkerScript.getParent()),
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  linkerScript.getParent())),
           new WriteFileStep(
               getProjectFilesystem(),
               () -> {

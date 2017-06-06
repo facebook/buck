@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
@@ -143,7 +144,9 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaSrcFolder));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -155,7 +158,9 @@ public class DummyRDotJava extends AbstractBuildRule
       // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
       Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), emptyRDotJava.getParent()));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), emptyRDotJava.getParent()));
       steps.add(
           new WriteFileStep(
               getProjectFilesystem(),
@@ -201,14 +206,23 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Clear out the directory where the .class files will be generated.
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotJavaClassesFolder));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaClassesFolder));
 
     Path pathToJarOutputDir = outputJar.getParent();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToJarOutputDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToJarOutputDir));
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-    steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToSrcsList.getParent())));
 
     // Compile the .java files.
     compileStepFactory.createCompileStep(

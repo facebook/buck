@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dotnet;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
@@ -54,7 +55,10 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithResolver {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(RmStep.of(getProjectFilesystem(), output));
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(
         CopyStep.forFile(getProjectFilesystem(), getResolver().getAbsolutePath(assembly), output));
 

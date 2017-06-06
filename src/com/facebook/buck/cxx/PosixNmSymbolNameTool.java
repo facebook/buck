@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -146,7 +147,10 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
           };
 
       // Parse the output from running `nm` and write all symbols to the symbol file.
-      MkdirStep mkdirStep = MkdirStep.of(getProjectFilesystem(), output.getParent());
+      MkdirStep mkdirStep =
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()));
       WriteFileStep writeFileStep =
           new WriteFileStep(
               getProjectFilesystem(),

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -132,8 +133,13 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
     return new ImmutableList.Builder<Step>()
-        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
         .add(makeMainStep(context.getSourcePathResolver(), scratchDir))
         .build();
   }

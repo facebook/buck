@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -131,21 +132,31 @@ public class AaptPackageResources extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     prepareManifestForAapt(
+        context,
         steps,
         getProjectFilesystem(),
         getAndroidManifestXml(),
         context.getSourcePathResolver().getAbsolutePath(manifest),
         manifestEntries);
 
-    steps.add(MkdirStep.of(getProjectFilesystem(), getResourceApkPath().getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getResourceApkPath().getParent())));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), rDotTxtDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), rDotTxtDir));
 
     Path pathToGeneratedProguardConfig = getPathToGeneratedProguardConfigFile();
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            getProjectFilesystem(), pathToGeneratedProguardConfig.getParent()));
+            context.getBuildCellRootPath(),
+            getProjectFilesystem(),
+            pathToGeneratedProguardConfig.getParent()));
     buildableContext.recordArtifact(pathToGeneratedProguardConfig);
 
     steps.add(
@@ -200,6 +211,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   }
 
   static void prepareManifestForAapt(
+      BuildContext context,
       ImmutableList.Builder<Step> stepBuilder,
       ProjectFilesystem projectFilesystem,
       Path finalManifestPath,
@@ -209,7 +221,10 @@ public class AaptPackageResources extends AbstractBuildRule {
     // if needed. Do this before running any other commands to ensure that it is available at the
     // desired path.
 
-    stepBuilder.add(MkdirStep.of(projectFilesystem, finalManifestPath.getParent()));
+    stepBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), projectFilesystem, finalManifestPath.getParent())));
 
     Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
     if (placeholders.isPresent() && !placeholders.get().isEmpty()) {

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.StripStep;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -60,7 +61,10 @@ public class StripLinkable extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(MkdirStep.of(getProjectFilesystem(), resultDir));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), resultDir)));
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     steps.add(
         new StripStep(

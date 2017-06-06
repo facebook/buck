@@ -24,10 +24,12 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -83,9 +85,10 @@ public class GenAidlTest {
         Description.getBuildRuleType(description));
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
-    List<Step> steps =
-        genAidlRule.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(stubFilesystem.getRootPath());
+    List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
     final String pathToFrameworkAidl =
@@ -103,7 +106,11 @@ public class GenAidlTest {
 
     Path outputDirectory = BuildTargets.getScratchPath(stubFilesystem, target, "__%s.aidl");
     assertEquals(RmStep.of(stubFilesystem, outputDirectory).withRecursive(true), steps.get(2));
-    assertEquals(MkdirStep.of(stubFilesystem, outputDirectory), steps.get(3));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory)),
+        steps.get(3));
 
     ShellStep aidlStep = (ShellStep) steps.get(4);
     assertEquals(

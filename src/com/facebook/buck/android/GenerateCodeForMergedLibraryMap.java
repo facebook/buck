@@ -77,7 +77,9 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     buildableContext.recordArtifact(getMappingPath());
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()))
         .add(new WriteMapDataStep())
         .add(new RunCodeGenStep(context.getSourcePathResolver()))
         .build();

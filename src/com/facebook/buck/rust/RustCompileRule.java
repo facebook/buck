@@ -184,7 +184,9 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                     getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
 
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
         .add(
             new SymlinkFilesIntoDirectoryStep(
                 getProjectFilesystem(),
@@ -195,7 +197,9 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                 scratchDir))
         .addAll(
             MakeCleanDirectoryStep.of(
-                getProjectFilesystem(), getOutputDir(getBuildTarget(), getProjectFilesystem())))
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getOutputDir(getBuildTarget(), getProjectFilesystem())))
         .addAll(
             CxxPrepareForLinkStep.create(
                 argFilePath,

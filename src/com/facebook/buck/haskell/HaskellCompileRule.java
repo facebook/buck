@@ -259,9 +259,15 @@ public class HaskellCompileRule extends AbstractBuildRule {
     buildableContext.recordArtifact(getInterfaceDir());
     buildableContext.recordArtifact(getStubDir());
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getObjectDir()))
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getInterfaceDir()))
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getStubDir()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getObjectDir()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getInterfaceDir()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getStubDir()))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
 

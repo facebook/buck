@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -104,7 +105,10 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     Path outputDirectory = getOutputDirectory();
-    Step mkdir = MkdirStep.of(getProjectFilesystem(), outputDirectory);
+    Step mkdir =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory));
     commands.add(mkdir);
 
     ImmutableSortedSet<Path> includePaths;
@@ -112,7 +116,9 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
       Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
       Path stagingTarget = stagingRoot.resolve("META-INF");
 
-      commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), stagingRoot));
+      commands.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot));
 
       commands.add(
           SymlinkFileStep.builder()

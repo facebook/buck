@@ -141,6 +141,7 @@ public class TestRunning {
           JavaLibrary library = rulesUnderTestForCoverage.iterator().next();
           for (Step step :
               MakeCleanDirectoryStep.of(
+                  buildContext.getBuildCellRootPath(),
                   library.getProjectFilesystem(),
                   JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem()))) {
             stepRunner.runStepForBuildTarget(executionContext, step, Optional.empty());

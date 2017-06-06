@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -89,7 +90,10 @@ public class JavaSymbolsRuleTest {
         javaSymbolsRule.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), /* buildableContext */ null);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+            .build();
 
     for (Step step : buildSteps) {
       step.execute(executionContext);

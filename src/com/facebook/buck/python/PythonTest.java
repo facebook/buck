@@ -132,7 +132,11 @@ public class PythonTest extends AbstractBuildRule
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToTestOutputDirectory()))
         .add(
             new PythonRunTestsStep(
                 getProjectFilesystem().getRootPath(),

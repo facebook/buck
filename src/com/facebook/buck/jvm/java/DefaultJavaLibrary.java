@@ -377,7 +377,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         steps);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        this, buildableContext, context.getSourcePathResolver(), steps);
+        this, buildableContext, context, getProjectFilesystem(), steps);
 
     return steps.build();
   }

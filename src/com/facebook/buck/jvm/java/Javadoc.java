@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -90,7 +91,10 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(RmStep.of(getProjectFilesystem(), output));
 
     // Fast path: nothing to do so just create an empty zip and return.
@@ -108,7 +112,9 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
     Path sourcesListFilePath = scratchDir.resolve("all-sources.txt");
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir));
     // Write an @-file with all the source files in
     steps.add(
         new WriteFileStep(
@@ -141,7 +147,9 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
             getProjectFilesystem(), argsBuilder.toString(), atArgs, /* can execute */ false));
 
     Path uncompressedOutputDir = scratchDir.resolve("docs");
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), uncompressedOutputDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), uncompressedOutputDir));
     steps.add(
         new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
           @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.autodeps;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -93,7 +94,10 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Step mkdirStep = MkdirStep.of(getProjectFilesystem(), outputPath.getParent());
+    Step mkdirStep =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent()));
     Step extractSymbolsStep =
         new AbstractExecutionStep("java-symbols") {
           @Override

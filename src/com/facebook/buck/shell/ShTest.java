@@ -112,7 +112,11 @@ public class ShTest extends NoopBuildRule
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToTestOutputDirectory()))
         .add(
             // Return a single command that runs an .sh file with no arguments.
             new RunShTestAndRecordResultStep(

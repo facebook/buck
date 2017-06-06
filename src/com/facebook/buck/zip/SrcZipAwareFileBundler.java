@@ -16,9 +16,11 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -105,12 +107,13 @@ public class SrcZipAwareFileBundler {
 
   public void copy(
       ProjectFilesystem filesystem,
-      final SourcePathResolver resolver,
+      BuildContext context,
       ImmutableList.Builder<Step> steps,
       Path destinationDir,
       ImmutableSortedSet<SourcePath> toCopy) {
 
-    Map<Path, Path> relativeMap = createRelativeMap(filesystem, resolver, toCopy);
+    Map<Path, Path> relativeMap =
+        createRelativeMap(filesystem, context.getSourcePathResolver(), toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
@@ -124,7 +127,10 @@ public class SrcZipAwareFileBundler {
       }
 
       if (destination.getParent() != null) {
-        steps.add(MkdirStep.of(filesystem, destination.getParent()));
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), filesystem, destination.getParent())));
       }
       steps.add(CopyStep.forFile(filesystem, absolutePath, destination));
     }

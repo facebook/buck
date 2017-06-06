@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -122,7 +123,11 @@ public class DirectHeaderMapTest {
 
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
-            MkdirStep.of(projectFilesystem, headerMapPath.getParent()),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    projectFilesystem,
+                    headerMapPath.getParent())),
             RmStep.of(projectFilesystem, headerMapPath),
             new HeaderMapStep(
                 projectFilesystem,

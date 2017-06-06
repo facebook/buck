@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -282,7 +283,9 @@ public class JavaTest extends AbstractBuildRuleWithResolver
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path pathToTestOutput = getPathToTestOutputDirectory();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToTestOutput));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput));
     if (forkMode() == ForkMode.PER_TEST) {
       ImmutableList.Builder<JUnitStep> junitsBuilder = ImmutableList.builder();
       for (String testClass : testClassNames) {
@@ -638,7 +641,12 @@ public class JavaTest extends AbstractBuildRuleWithResolver
   @Override
   public ImmutableList<Step> getPostBuildSteps(BuildContext buildContext) {
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(getProjectFilesystem(), getClassPathFile().getParent()))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getClassPathFile().getParent())))
         .add(
             new AbstractExecutionStep("write classpath file") {
               @Override

@@ -16,14 +16,14 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.Files;
 import org.immutables.value.Value;
 
 /** Command that runs equivalent command of {@code mkdir -p} on the specified directory. */
@@ -32,19 +32,15 @@ import org.immutables.value.Value;
 abstract class AbstractMkdirStep implements Step {
 
   @Value.Parameter
-  // TODO(dwh): Remove this ProjectFilesystem when ignored files aren't a concept.
-  protected abstract ProjectFilesystem getFilesystem();
-
-  @Value.Parameter
-  /** Path to make. TODO(dwh): Make this an absolute path. */
-  protected abstract Path getAbsoluteOrRelativePath();
+  protected abstract BuildCellRelativePath getPath();
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      getFilesystem().mkdirs(getAbsoluteOrRelativePath());
+      Files.createDirectories(
+          context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
     } catch (IOException e) {
-      context.logError(e, "Cannot make directories: %s", getAbsoluteOrRelativePath());
+      context.logError(e, "Cannot make directories: %s", getPath());
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;
@@ -59,7 +55,6 @@ abstract class AbstractMkdirStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format(
         "mkdir -p %s",
-        Escaper.escapeAsShellString(
-            getFilesystem().resolve(getAbsoluteOrRelativePath()).toString()));
+        Escaper.escapeAsShellString(getPath().getPathRelativeToBuildCellRoot().toString()));
   }
 }

@@ -67,7 +67,9 @@ public class GwtModule extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path workingDirectory = outputFile.getParent();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory));
 
     // A CopyResourcesStep is needed so that a file that is at java/com/example/resource.txt in the
     // repository will be added as com/example/resource.txt in the resulting JAR (assuming that
@@ -76,7 +78,7 @@ public class GwtModule extends AbstractBuildRule {
     steps.add(
         new CopyResourcesStep(
             getProjectFilesystem(),
-            context.getSourcePathResolver(),
+            context,
             ruleFinder,
             getBuildTarget(),
             filesForGwtModule,

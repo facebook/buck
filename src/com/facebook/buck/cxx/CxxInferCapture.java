@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -109,8 +110,14 @@ public class CxxInferCapture extends AbstractBuildRule implements SupportsDepend
 
     Path inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(getProjectFilesystem(), resultsDir))
-        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), resultsDir)))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(new WriteArgFileStep(inputRelativePath))
         .add(
             new DefaultShellStep(

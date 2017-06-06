@@ -135,7 +135,11 @@ public abstract class CxxTest extends AbstractBuildRule
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToTestOutputDirectory()))
         .add(new TouchStep(getProjectFilesystem(), getPathToTestResults()))
         .add(
             new CxxTestStep(

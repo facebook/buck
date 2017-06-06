@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -88,15 +89,26 @@ public class JsBundle extends AbstractBuildRule implements JsBundleOutputs {
     return ImmutableList.<Step>builder()
         .addAll(
             MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 sourcePathResolver.getRelativePath(
                     JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), ""))))
         .add(
-            MkdirStep.of(getProjectFilesystem(), sourcePathResolver.getAbsolutePath(jsOutputDir)),
             MkdirStep.of(
-                getProjectFilesystem(),
-                sourcePathResolver.getAbsolutePath(sourceMapFile).getParent()),
-            MkdirStep.of(getProjectFilesystem(), sourcePathResolver.getAbsolutePath(resourcesDir)),
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    sourcePathResolver.getRelativePath(jsOutputDir))),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    sourcePathResolver.getRelativePath(sourceMapFile).getParent())),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    sourcePathResolver.getRelativePath(resourcesDir))),
             JsUtil.workerShellStep(
                 worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
         .build();

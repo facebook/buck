@@ -80,8 +80,12 @@ public class SplitResources extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(getOutputDirectory());
     return ImmutableList.<Step>builder()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputDirectory()))
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getScratchDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getScratchDirectory()))
         .add(new SplitResourcesStep(context.getSourcePathResolver()))
         .add(
             new ZipalignStep(

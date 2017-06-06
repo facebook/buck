@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -63,7 +64,9 @@ public class GoTestMain extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new GoTestMainStep(
             getProjectFilesystem().getRootPath(),
             testMainGen.getEnvironment(context.getSourcePathResolver()),

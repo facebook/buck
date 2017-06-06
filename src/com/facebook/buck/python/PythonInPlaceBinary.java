@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -200,7 +201,9 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     buildableContext.recordArtifact(binPath);
     return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), binPath.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())),
         new WriteFileStep(getProjectFilesystem(), script, binPath, /* executable */ true));
   }
 

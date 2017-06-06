@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -116,14 +115,22 @@ public class ReactNativeBundle extends AbstractBuildRule
     final Path jsOutput = jsOutputDir.resolve(bundleName);
     final Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), jsOutput.getParent()));
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), resource));
     steps.addAll(
-        MakeCleanDirectoryStep.of(getProjectFilesystem(), sourceMapOutputPath.getParent()));
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), depFile.getParent()));
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), jsOutput.getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), resource));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(),
+            getProjectFilesystem(),
+            sourceMapOutputPath.getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), depFile.getParent()));
 
-    appendWorkerSteps(
-        steps, context.getSourcePathResolver(), jsOutput, sourceMapOutputPath, depFile);
+    appendWorkerSteps(steps, context, jsOutput, sourceMapOutputPath, depFile);
 
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
@@ -133,7 +140,7 @@ public class ReactNativeBundle extends AbstractBuildRule
 
   private void appendWorkerSteps(
       ImmutableList.Builder<Step> stepBuilder,
-      SourcePathResolver resolver,
+      BuildContext context,
       Path outputFile,
       Path sourceMapOutputPath,
       Path depFile) {
@@ -141,19 +148,21 @@ public class ReactNativeBundle extends AbstractBuildRule
     // Setup the temp dir.
     final Path tmpDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
-    stepBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), tmpDir));
+    stepBuilder.addAll(
+        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), tmpDir));
 
     // Run the bundler.
     ReactNativeBundleWorkerStep workerStep =
         new ReactNativeBundleWorkerStep(
             getProjectFilesystem(),
             tmpDir,
-            jsPackager.getCommandPrefix(resolver),
+            jsPackager.getCommandPrefix(context.getSourcePathResolver()),
             packagerFlags,
             platform,
             isUnbundle,
             isIndexedUnbundle,
-            getProjectFilesystem().resolve(resolver.getAbsolutePath(entryPath)),
+            getProjectFilesystem()
+                .resolve(context.getSourcePathResolver().getAbsolutePath(entryPath)),
             isDevMode,
             getProjectFilesystem().resolve(outputFile),
             getProjectFilesystem().resolve(resource),
@@ -165,10 +174,11 @@ public class ReactNativeBundle extends AbstractBuildRule
         new ReactNativeDepsWorkerStep(
             getProjectFilesystem(),
             tmpDir,
-            jsPackager.getCommandPrefix(resolver),
+            jsPackager.getCommandPrefix(context.getSourcePathResolver()),
             packagerFlags,
             platform,
-            getProjectFilesystem().resolve(resolver.getAbsolutePath(entryPath)),
+            getProjectFilesystem()
+                .resolve(context.getSourcePathResolver().getAbsolutePath(entryPath)),
             getProjectFilesystem().resolve(depFile));
     stepBuilder.add(depsWorkerStep);
   }

@@ -118,7 +118,9 @@ public class SymlinkTreeTest {
     // Verify the build steps are as expected.
     ImmutableList<Step> expectedBuildSteps =
         new ImmutableList.Builder<Step>()
-            .addAll(MakeCleanDirectoryStep.of(projectFilesystem, outputPath))
+            .addAll(
+                MakeCleanDirectoryStep.of(
+                    buildContext.getBuildCellRootPath(), projectFilesystem, outputPath))
             .add(
                 new SymlinkTreeStep(
                     projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))

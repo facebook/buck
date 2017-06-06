@@ -84,7 +84,9 @@ class TrimUberRDotJava extends AbstractBuildRule {
     Optional<Path> input = pathToRDotJavaDir.map(context.getSourcePathResolver()::getRelativePath);
     buildableContext.recordArtifact(output);
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()))
         .add(new PerformTrimStep(output, input))
         .add(
             ZipScrubberStep.of(

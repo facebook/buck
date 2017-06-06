@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -103,14 +104,21 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     Path outputDir = getOutputDirectory();
     Path fatJarDir = outputDir.resolve("fat-jar-directory");
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), outputDir));
 
     // Map of the system-specific shared library name to it's resource name as a string.
     ImmutableMap.Builder<String, String> sonameToResourceMapBuilder = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
       String resource = FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT + "/" + entry.getKey();
       sonameToResourceMapBuilder.put(entry.getKey(), resource);
-      steps.add(MkdirStep.of(getProjectFilesystem(), fatJarDir.resolve(resource).getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  fatJarDir.resolve(resource).getParent())));
       steps.add(
           SymlinkFileStep.builder()
               .setFilesystem(getProjectFilesystem())
@@ -137,7 +145,11 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     // Symlink the inner JAR into it's place in the fat JAR.
     steps.add(
-        MkdirStep.of(getProjectFilesystem(), fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent()));
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
     steps.add(
         SymlinkFileStep.builder()
             .setFilesystem(getProjectFilesystem())
@@ -161,7 +173,12 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
-    steps.add(MkdirStep.of(getProjectFilesystem(), pathToSrcsList.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToSrcsList.getParent())));
 
     CompileToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);

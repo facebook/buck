@@ -83,15 +83,21 @@ public class PackageStringAssets extends AbstractBuildRule {
     // We need to generate a zip file with the following dir structure:
     // /assets/strings/*.fbstr
     Path pathToBaseDir = getPathToStringAssetsDir();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToBaseDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToBaseDir));
     Path pathToDirContainingAssetsDir = pathToBaseDir.resolve("string_assets");
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToDirContainingAssetsDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToDirContainingAssetsDir));
     final Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
     Function<String, Path> assetPathBuilder =
         locale -> pathToStrings.resolve(locale + STRING_ASSET_FILE_EXTENSION);
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
     Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToStrings));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToStrings));
     steps.add(
         new CompileStringsStep(
             getProjectFilesystem(),

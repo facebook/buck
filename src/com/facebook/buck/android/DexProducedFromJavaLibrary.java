@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.dalvik.EstimateDexWeightStep;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -97,7 +98,12 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     steps.add(RmStep.of(getProjectFilesystem(), getPathToDex()));
 
     // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
-    steps.add(MkdirStep.of(getProjectFilesystem(), getPathToDex().getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToDex().getParent())));
 
     // If there are classes, run dx.
     final ImmutableSortedMap<String, HashCode> classNamesToHashes =

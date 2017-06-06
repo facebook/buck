@@ -227,6 +227,7 @@ if os_platform == "darwin":
             "//src/com/facebook/buck/model:simple_types",
             "//src/com/facebook/buck/parser:rule_pattern",
             "//src/com/facebook/buck/rules:build_rule",
+            "//src/com/facebook/buck/rules:cell_path_resolver_impls",
             "//src/com/facebook/buck/rules:interfaces",
             "//src/com/facebook/buck/rules:rule_key",
             "//src/com/facebook/buck/rules:rules",

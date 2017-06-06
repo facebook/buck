@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -129,10 +130,15 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(MkdirStep.of(getProjectFilesystem(), primaryDexPath.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                primaryDexPath.getParent())));
 
     if (dexSplitMode.isShouldSplitDex()) {
-      addStepsForSplitDex(steps, buildableContext);
+      addStepsForSplitDex(steps, context, buildableContext);
     } else {
       addStepsForSingleDex(steps, buildableContext);
     }
@@ -170,7 +176,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
   }
 
   private void addStepsForSplitDex(
-      ImmutableList.Builder<Step> steps, BuildableContext buildableContext) {
+      ImmutableList.Builder<Step> steps, BuildContext context, BuildableContext buildableContext) {
 
     // Collect all of the DexWithClasses objects to use for merging.
     ImmutableMultimap.Builder<APKModule, DexWithClasses> dexFilesToMergeBuilder =
@@ -200,12 +206,27 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
-    steps.add(MkdirStep.of(getProjectFilesystem(), paths.jarfilesSubdir));
-    steps.add(MkdirStep.of(getProjectFilesystem(), paths.additionalJarfilesSubdir));
-    steps.add(MkdirStep.of(getProjectFilesystem(), paths.successDir));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), paths.jarfilesSubdir)));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                paths.additionalJarfilesSubdir)));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), paths.successDir)));
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), paths.metadataSubdir));
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), paths.scratchDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), paths.metadataSubdir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), paths.scratchDir));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
@@ -248,7 +269,10 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
         Path dexOutputPath = paths.additionalJarfilesSubdir.resolve(result.apkModule.getName());
-        steps.add(MkdirStep.of(getProjectFilesystem(), dexOutputPath));
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), dexOutputPath)));
       }
       aggregatedOutputToInputs.putAll(result.secondaryOutputToInputs);
       dexInputHashesBuilder.putAll(result.dexInputHashes);

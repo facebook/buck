@@ -95,7 +95,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
 
     if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
       // Javac requires that the root directory for generated sources already exist.
-      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
     }
 
     steps.add(
@@ -199,7 +199,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     if (isSpoolingToJarEnabled) {
       final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
       // Javac requires that the root directory for generated sources already exists.
-      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
 
       steps.add(
           new JavacDirectToJarStep(
@@ -246,10 +246,13 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       JavacOptions buildTimeOptions,
       ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      BuildContext buildContext) {
     Optional<Path> annotationGenFolder = buildTimeOptions.getGeneratedSourceFolderName();
     if (annotationGenFolder.isPresent()) {
-      steps.addAll(MakeCleanDirectoryStep.of(filesystem, annotationGenFolder.get()));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder.get()));
       buildableContext.recordArtifact(annotationGenFolder.get());
     }
   }

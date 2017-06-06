@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -76,7 +77,9 @@ public class CompareAbis extends AbstractBuildRule
     Path sourceAbiPath = sourcePathResolver.getAbsolutePath(sourceAbi);
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
-        MkdirStep.of(filesystem, outputPath.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent())),
         DiffAbisStep.of(classAbiPath, sourceAbiPath, verificationMode),
         CopyStep.forFile(filesystem, classAbiPath, outputPath));
   }

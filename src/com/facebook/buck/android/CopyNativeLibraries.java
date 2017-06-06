@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -134,7 +134,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   private void addStepsForCopyingStrippedNativeLibrariesOrAssets(
-      SourcePathResolver resolver,
+      BuildContext context,
       ProjectFilesystem filesystem,
       ImmutableSet<StrippedObjectDescription> strippedNativeLibrariesOrAssets,
       Path destinationRootDir,
@@ -149,10 +149,17 @@ public class CopyNativeLibraries extends AbstractBuildRule {
               .resolve(abiDirectoryComponent.get())
               .resolve(strippedObject.getStrippedObjectName());
 
-      steps.add(MkdirStep.of(getProjectFilesystem(), destination.getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  destination.getParent())));
       steps.add(
           CopyStep.forFile(
-              filesystem, resolver.getAbsolutePath(strippedObject.getSourcePath()), destination));
+              filesystem,
+              context.getSourcePathResolver().getAbsolutePath(strippedObject.getSourcePath()),
+              destination));
     }
   }
 
@@ -161,16 +168,23 @@ public class CopyNativeLibraries extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getBinPath()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), getBinPath()));
 
     final Path pathToNativeLibs = getPathToNativeLibsDir();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToNativeLibs));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToNativeLibs));
 
     final Path pathToNativeLibsAssets = getPathToNativeLibsAssetsDir();
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), pathToNativeLibsAssets));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), pathToNativeLibsAssets));
 
     for (SourcePath nativeLibDir : nativeLibDirectories.asList().reverse()) {
       copyNativeLibrary(
+          context,
           getProjectFilesystem(),
           context.getSourcePathResolver().getAbsolutePath(nativeLibDir),
           pathToNativeLibs,
@@ -179,18 +193,10 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     }
 
     addStepsForCopyingStrippedNativeLibrariesOrAssets(
-        context.getSourcePathResolver(),
-        getProjectFilesystem(),
-        stripLibRules,
-        pathToNativeLibs,
-        steps);
+        context, getProjectFilesystem(), stripLibRules, pathToNativeLibs, steps);
 
     addStepsForCopyingStrippedNativeLibrariesOrAssets(
-        context.getSourcePathResolver(),
-        getProjectFilesystem(),
-        stripLibAssetRules,
-        pathToNativeLibsAssets,
-        steps);
+        context, getProjectFilesystem(), stripLibAssetRules, pathToNativeLibsAssets, steps);
 
     final Path pathToMetadataTxt = getPathToMetadataTxt();
     steps.add(
@@ -233,6 +239,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public static void copyNativeLibrary(
+      BuildContext context,
       final ProjectFilesystem filesystem,
       Path sourceDir,
       final Path destinationDir,
@@ -251,7 +258,10 @@ public class CopyNativeLibraries extends AbstractBuildRule {
         final Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
         Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
-        final MkdirStep mkDirStep = MkdirStep.of(filesystem, libDestinationDir);
+        final MkdirStep mkDirStep =
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), filesystem, libDestinationDir));
         final CopyStep copyStep =
             CopyStep.forDirectory(
                 filesystem, libSourceDir, libDestinationDir, CopyStep.DirectoryMode.CONTENTS_ONLY);

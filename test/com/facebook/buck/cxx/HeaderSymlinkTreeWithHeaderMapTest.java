@@ -117,7 +117,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     ImmutableList<Step> expectedBuildSteps =
         new ImmutableList.Builder<Step>()
-            .addAll(MakeCleanDirectoryStep.of(projectFilesystem, symlinkTreeRoot))
+            .addAll(
+                MakeCleanDirectoryStep.of(
+                    buildContext.getBuildCellRootPath(), projectFilesystem, symlinkTreeRoot))
             .add(
                 new SymlinkTreeStep(
                     projectFilesystem, symlinkTreeRoot, resolver.getMappedPaths(links)))

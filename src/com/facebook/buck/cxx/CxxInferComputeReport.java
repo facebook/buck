@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenateStep;
 import com.facebook.buck.model.BuildTargets;
@@ -74,7 +75,10 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
             .build();
 
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(projectFilesystem, outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
             new JsonConcatenateStep(
                 projectFilesystem,
@@ -93,7 +97,10 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
   @Override
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(projectFilesystem, outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
             CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
                 analysisToReport,

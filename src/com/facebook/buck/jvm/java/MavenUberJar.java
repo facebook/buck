@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -91,7 +92,10 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     Path pathToOutput = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    MkdirStep mkOutputDirStep = MkdirStep.of(getProjectFilesystem(), pathToOutput.getParent());
+    MkdirStep mkOutputDirStep =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutput.getParent()));
     JarDirectoryStep mergeOutputsStep =
         new JarDirectoryStep(
             getProjectFilesystem(),

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -92,8 +93,13 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    stepsBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDir));
-    stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), outputPlist.getParent()));
+    stepsBuilder.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), outputDir));
+    stepsBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPlist.getParent())));
     ImmutableSortedSet<Path> absoluteAssetCatalogDirs =
         context.getSourcePathResolver().getAllAbsolutePaths(assetCatalogDirs);
     stepsBuilder.add(

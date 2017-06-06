@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
@@ -169,7 +170,9 @@ public class ApkGenruleTest {
             .stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSet()));
-    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(projectFilesystem.getRootPath());
     Iterable<Path> expectedInputsToCompareToOutputs =
         ImmutableList.of(
             fileSystem.getPath("src/com/facebook/signer.py"),
@@ -194,8 +197,13 @@ public class ApkGenruleTest {
         steps.get(0));
     assertEquals(
         MkdirStep.of(
-            projectFilesystem,
-            projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a")),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                projectFilesystem,
+                projectFilesystem
+                    .getBuckPaths()
+                    .getGenDir()
+                    .resolve("src/com/facebook/sign_fb4a"))),
         steps.get(1));
 
     assertEquals(
@@ -209,18 +217,24 @@ public class ApkGenruleTest {
         steps.get(2));
     assertEquals(
         MkdirStep.of(
-            projectFilesystem,
-            projectFilesystem
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("src/com/facebook/sign_fb4a__tmp")),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                projectFilesystem,
+                projectFilesystem
+                    .getBuckPaths()
+                    .getGenDir()
+                    .resolve("src/com/facebook/sign_fb4a__tmp"))),
         steps.get(3));
 
     Path relativePathToSrcDir =
         projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a__srcs");
     assertEquals(
         RmStep.of(projectFilesystem, relativePathToSrcDir).withRecursive(true), steps.get(4));
-    assertEquals(MkdirStep.of(projectFilesystem, relativePathToSrcDir), steps.get(5));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), projectFilesystem, relativePathToSrcDir)),
+        steps.get(5));
 
     assertEquals(
         new SymlinkTreeStep(

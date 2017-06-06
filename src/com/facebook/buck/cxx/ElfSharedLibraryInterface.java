@@ -99,7 +99,9 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
     Path output = getOutputDir().resolve(getSharedAbiLibraryName());
     buildableContext.recordArtifact(output);
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputDir()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir()))
         .add(
             ElfExtractSectionsStep.of(
                 getProjectFilesystem(),

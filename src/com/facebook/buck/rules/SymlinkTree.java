@@ -165,7 +165,8 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
       BuildContext context, BuildableContext buildableContext) {
     return new ImmutableList.Builder<Step>()
         .add(getVerifyStep())
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), root))
+        .addAll(
+            MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), root))
         .add(
             new SymlinkTreeStep(
                 getProjectFilesystem(),

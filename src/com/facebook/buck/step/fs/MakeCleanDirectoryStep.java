@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -32,11 +33,14 @@ import java.nio.file.Path;
  */
 public final class MakeCleanDirectoryStep {
 
+  // TODO(dwh): Make this just take a BuildCellRelativePath when RmStep takes one.
   public static ImmutableList<Step> of(
-      ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
+      Path buildCellRootPath, ProjectFilesystem filesystem, Path cellRelativePath) {
     return ImmutableList.of(
-        RmStep.of(filesystem, pathRelativeToProjectRoot).withRecursive(true),
-        MkdirStep.of(filesystem, pathRelativeToProjectRoot));
+        RmStep.of(filesystem, cellRelativePath).withRecursive(true),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildCellRootPath, filesystem, cellRelativePath)));
   }
 
   private MakeCleanDirectoryStep() {}

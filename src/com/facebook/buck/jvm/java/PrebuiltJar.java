@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -235,7 +236,9 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
         copiedBinaryJar);
 
     if (resolver.getFilesystem(binaryJar).isDirectory(resolvedBinaryJar)) {
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), copiedBinaryJar));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), copiedBinaryJar));
       steps.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -256,13 +259,18 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
                     getBuildTarget().getFullyQualifiedName()));
       }
 
-      steps.add(MkdirStep.of(getProjectFilesystem(), copiedBinaryJar.getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  copiedBinaryJar.getParent())));
       steps.add(CopyStep.forFile(getProjectFilesystem(), resolvedBinaryJar, copiedBinaryJar));
     }
     buildableContext.recordArtifact(copiedBinaryJar);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        this, buildableContext, context.getSourcePathResolver(), steps);
+        this, buildableContext, context, getProjectFilesystem(), steps);
 
     return steps.build();
   }

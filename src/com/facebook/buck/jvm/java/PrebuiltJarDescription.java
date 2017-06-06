@@ -132,7 +132,9 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
         ImmutableList.Builder<Step> steps = ImmutableList.builder();
-        steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()));
+        steps.addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()));
         steps.add(
             CopyStep.forFile(
                 getProjectFilesystem(),

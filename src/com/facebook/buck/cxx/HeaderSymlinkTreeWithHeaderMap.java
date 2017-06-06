@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.CxxDescriptionEnhancer.normalizeModuleName;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -118,7 +119,12 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
     if (shouldCreateModule) {
       Optional<String> umbrellaHeader = getUmbrellaHeader(getBuildTarget().getShortName());
       String moduleName = normalizeModuleName(getBuildTarget().getShortName());
-      builder.add(MkdirStep.of(getProjectFilesystem(), getRoot().resolve(moduleName)));
+      builder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  getRoot().resolve(moduleName))));
       builder.add(createCreateModuleStep(moduleName, umbrellaHeader));
     }
     return builder.build();

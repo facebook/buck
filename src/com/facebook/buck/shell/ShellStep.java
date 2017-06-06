@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -54,7 +53,10 @@ public abstract class ShellStep implements Step {
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
 
-  /** If specified, working directory will be different from project root. * */
+  /**
+   * If specified, working directory will be different from build cell root. This should be relative
+   * to the build cell root.
+   */
   protected final Path workingDirectory;
 
   /**
@@ -90,9 +92,9 @@ public abstract class ShellStep implements Step {
 
     builder.setCommand(getShellCommand(context));
     Map<String, String> environment = new HashMap<>();
-    setProcessEnvironment(context, environment, workingDirectory.toFile());
+    setProcessEnvironment(context, environment, workingDirectory.toString());
     builder.setEnvironment(ImmutableMap.copyOf(environment));
-    builder.setDirectory(workingDirectory);
+    builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
 
     Optional<String> stdin = getStdin(context);
     if (stdin.isPresent()) {
@@ -126,7 +128,7 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   void setProcessEnvironment(
-      ExecutionContext context, Map<String, String> environment, File workDir) {
+      ExecutionContext context, Map<String, String> environment, String workDir) {
 
     // Replace environment with client environment.
     environment.clear();
@@ -134,7 +136,7 @@ public abstract class ShellStep implements Step {
 
     // Make sure the special PWD variable matches the working directory
     // of the process (unless otherwise set).
-    environment.put("PWD", workDir.toString());
+    environment.put("PWD", workDir);
 
     // Add extra environment variables for step, if appropriate.
     if (!getEnvironmentVariables(context).isEmpty()) {

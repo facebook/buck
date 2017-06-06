@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -61,7 +62,10 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(getProjectFilesystem(), outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .build();
   }
 
@@ -73,7 +77,10 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(getProjectFilesystem(), outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
             CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
                 this, getProjectFilesystem(), this.outputDirectory.resolve("infer-deps.txt")))

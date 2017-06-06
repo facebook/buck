@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -90,7 +91,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
-    commands.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), temp));
+    commands.addAll(
+        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), temp));
 
     // Remove the output .aar file
     commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
@@ -148,6 +150,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     // move native assets into tmp folder under assets/lib/
     for (SourcePath dir : nativeLibAssetsDirectories) {
       CopyNativeLibraries.copyNativeLibrary(
+          context,
           getProjectFilesystem(),
           context.getSourcePathResolver().getAbsolutePath(dir),
           temp.resolve("assets").resolve("lib"),
@@ -156,7 +159,12 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     }
 
     // do the zipping
-    commands.add(MkdirStep.of(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToOutputFile.getParent())));
     commands.add(
         new ZipStep(
             getProjectFilesystem(),

@@ -334,7 +334,11 @@ public class AppleTestDescription
                   BuildContext context, BuildableContext buildableContext) {
                 buildableContext.recordArtifact(outputDirectory);
                 return new ImmutableList.Builder<Step>()
-                    .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDirectory))
+                    .addAll(
+                        MakeCleanDirectoryStep.of(
+                            context.getBuildCellRootPath(),
+                            getProjectFilesystem(),
+                            outputDirectory))
                     .add(
                         new UnzipStep(
                             getProjectFilesystem(),

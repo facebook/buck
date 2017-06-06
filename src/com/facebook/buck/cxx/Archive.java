@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -163,7 +164,9 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
 
     builder.add(
-        MkdirStep.of(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         RmStep.of(getProjectFilesystem(), output),
         new ArchiveStep(
             getProjectFilesystem(),

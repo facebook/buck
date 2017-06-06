@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.android.AndroidResource;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -56,20 +57,31 @@ public class JsBundleAndroid extends AbstractBuildRule
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToSourceMap()));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToResources()));
 
-    final Path jsDir = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-    final Path resourcesDir = sourcePathResolver.getAbsolutePath(getSourcePathToResources());
-    final Path sourceMapFile = sourcePathResolver.getAbsolutePath(getSourcePathToSourceMap());
+    final Path jsDir = sourcePathResolver.getRelativePath(getSourcePathToOutput());
+    final Path resourcesDir = sourcePathResolver.getRelativePath(getSourcePathToResources());
+    final Path sourceMapFile = sourcePathResolver.getRelativePath(getSourcePathToSourceMap());
 
     return ImmutableList.<Step>builder()
         .addAll(
             MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 sourcePathResolver.getRelativePath(
                     JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), ""))))
         .add(
-            MkdirStep.of(getProjectFilesystem(), jsDir.getParent()),
-            MkdirStep.of(getProjectFilesystem(), resourcesDir.getParent()),
-            MkdirStep.of(getProjectFilesystem(), sourceMapFile.getParent()),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), jsDir.getParent())),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    resourcesDir.getParent())),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    sourceMapFile.getParent())),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
                 sourcePathResolver.getAbsolutePath(delegate.getSourcePathToOutput()),

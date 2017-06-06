@@ -36,6 +36,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -575,7 +576,10 @@ public class RemoteFileTest {
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setCellPathResolver(TestCellPathResolver.get(filesystem))
+            .build();
     for (Step buildStep : buildSteps) {
       int result = buildStep.execute(context).getExitCode();
       if (result != 0) {

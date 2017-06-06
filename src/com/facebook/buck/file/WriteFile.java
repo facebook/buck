@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -64,7 +65,9 @@ public class WriteFile extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.of(
-        MkdirStep.of(projectFilesystem, output.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new WriteFileStep(projectFilesystem, ByteSource.wrap(fileContents), output, executable));
   }
 

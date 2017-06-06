@@ -100,7 +100,9 @@ public class RustTest extends AbstractBuildRule
       TestReportingCallback testReportingCallback) {
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory))
         .add(
             new AbstractTestStep(
                 "rust test",

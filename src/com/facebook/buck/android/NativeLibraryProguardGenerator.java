@@ -80,7 +80,9 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRule {
     Path outputDir = outputPath.getParent();
     buildableContext.recordArtifact(outputDir);
     return ImmutableList.<Step>builder()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), outputDir))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir))
         .add(new RunConfigGenStep(context.getSourcePathResolver()))
         .build();
   }

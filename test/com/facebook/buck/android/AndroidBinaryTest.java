@@ -29,9 +29,11 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -75,6 +77,7 @@ public class AndroidBinaryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
     BuildRule libraryOne =
@@ -125,7 +128,7 @@ public class AndroidBinaryTest {
         false,
         commands,
         buildableContext,
-        pathResolver);
+        buildContext);
 
     BuildTarget aaptPackageTarget =
         binaryBuildTarget.withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR);
@@ -188,6 +191,7 @@ public class AndroidBinaryTest {
                                 + ".jar"))),
         proguardOutputDir,
         buildableContext,
+        buildContext,
         false,
         expectedSteps);
 
@@ -343,7 +347,8 @@ public class AndroidBinaryTest {
         Optional.empty(),
         Optional.empty(),
         /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
+        FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -391,7 +396,8 @@ public class AndroidBinaryTest {
         Optional.of(reorderTool),
         Optional.of(reorderData),
         /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
+        FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "

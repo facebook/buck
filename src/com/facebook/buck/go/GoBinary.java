@@ -17,6 +17,7 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -98,7 +99,9 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
     }
     environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
     return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
             environment.build(),

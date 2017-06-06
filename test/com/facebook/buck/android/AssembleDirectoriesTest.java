@@ -57,6 +57,7 @@ public class AssembleDirectoriesTest {
     context =
         TestExecutionContext.newBuilder()
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
+            .setBuildCellRootPath(filesystem.getRootPath())
             .build();
   }
 
@@ -86,7 +87,8 @@ public class AssembleDirectoriesTest {
 
     ImmutableList<Step> steps =
         assembleDirectories.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(pathResolver).withBuildCellRootPath(tmp),
+            new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());
     }

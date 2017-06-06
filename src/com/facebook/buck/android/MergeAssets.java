@@ -92,7 +92,10 @@ public class MergeAssets extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
-        MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToMergedAssets().getParent()));
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(),
+            getProjectFilesystem(),
+            getPathToMergedAssets().getParent()));
     steps.add(
         new AbstractExecutionStep("finding_assets") {
           @Override

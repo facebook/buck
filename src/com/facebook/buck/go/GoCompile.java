@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -117,7 +118,10 @@ public class GoCompile extends AbstractBuildRule {
     ImmutableList<Path> asmSrcs = asmSrcListBuilder.build();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
     Optional<Path> asmHeaderPath;
 
@@ -130,7 +134,12 @@ public class GoCompile extends AbstractBuildRule {
                       "%s/" + getBuildTarget().getShortName() + "__asm_hdr")
                   .resolve("go_asm.h"));
 
-      steps.add(MkdirStep.of(getProjectFilesystem(), asmHeaderPath.get().getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  asmHeaderPath.get().getParent())));
     } else {
       asmHeaderPath = Optional.empty();
     }
@@ -162,7 +171,9 @@ public class GoCompile extends AbstractBuildRule {
               getProjectFilesystem(),
               getBuildTarget(),
               "%s/" + getBuildTarget().getShortName() + "__asm_includes");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), asmIncludeDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), asmIncludeDir));
 
       if (!headerSrcs.isEmpty()) {
         // TODO(mikekap): Allow header-map style input.
@@ -181,7 +192,9 @@ public class GoCompile extends AbstractBuildRule {
               getProjectFilesystem(),
               getBuildTarget(),
               "%s/" + getBuildTarget().getShortName() + "__asm_compile");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), asmOutputDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), asmOutputDir));
 
       ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
       for (Path asmSrc : asmSrcs) {

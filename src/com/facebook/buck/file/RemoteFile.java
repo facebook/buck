@@ -80,12 +80,18 @@ public class RemoteFile extends AbstractBuildRule {
         BuildTargets.getScratchPath(
             getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), tempFile.getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent()));
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()));
     if (type == Type.EXPLODED_ZIP) {
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), getProjectFilesystem(), output));
       steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output));
     } else {
       steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));

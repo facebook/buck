@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -64,7 +65,10 @@ public class JsonConcatenate extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(projectFilesystem, outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
             new JsonConcatenateStep(
                 projectFilesystem, inputs, output, stepShortName, stepDescription))

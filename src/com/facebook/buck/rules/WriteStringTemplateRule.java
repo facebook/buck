@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -61,7 +62,10 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(
         new StringTemplateStep(
             context.getSourcePathResolver().getAbsolutePath(template),

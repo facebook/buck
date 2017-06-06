@@ -33,7 +33,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -264,12 +263,12 @@ public class ShellStepTest {
         TestExecutionContext.newBuilder()
             .setEnvironment(
                 ImmutableMap.of(
-                    "CONTEXT_ENVIRONMENT_VARIABLE", "CONTEXT_VALUE",
-                    "PWD", "/wrong-pwd"))
+                    "CONTEXT_ENVIRONMENT_VARIABLE", "CONTEXT_VALUE", "PWD", "/wrong-pwd"))
             .build();
+    Path pwd = Paths.get("/right-pwd");
     Map<String, String> subProcessEnvironment = new HashMap<>();
     subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
-    command.setProcessEnvironment(context, subProcessEnvironment, new File("/right-pwd"));
+    command.setProcessEnvironment(context, subProcessEnvironment, pwd.toString());
     Map<String, String> actualProcessEnvironment = new HashMap<>();
     actualProcessEnvironment.putAll(context.getEnvironment());
     actualProcessEnvironment.remove("PWD");
@@ -278,7 +277,7 @@ public class ShellStepTest {
         subProcessEnvironment,
         ImmutableMap.<String, String>builder()
             .putAll(actualProcessEnvironment)
-            .put("PWD", new File("/right-pwd").getPath())
+            .put("PWD", pwd.toString())
             .putAll(ENV)
             .build());
   }

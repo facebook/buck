@@ -100,7 +100,9 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
             .toList();
 
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), output.getParent()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()))
         .add(
             new StringTemplateStep(
                 TEMPLATE,

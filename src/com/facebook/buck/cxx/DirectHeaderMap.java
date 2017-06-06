@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -71,7 +72,12 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
     }
     return ImmutableList.<Step>builder()
         .add(getVerifyStep())
-        .add(MkdirStep.of(getProjectFilesystem(), headerMapPath.getParent()))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    headerMapPath.getParent())))
         .add(RmStep.of(getProjectFilesystem(), headerMapPath))
         .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()))
         .build();

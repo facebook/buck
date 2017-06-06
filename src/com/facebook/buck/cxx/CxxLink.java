@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -124,8 +125,13 @@ public class CxxLink extends AbstractBuildRule
     }
 
     return new ImmutableList.Builder<Step>()
-        .add(MkdirStep.of(getProjectFilesystem(), output.getParent()))
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
         .add(RmStep.of(getProjectFilesystem(), argFilePath))
         .add(RmStep.of(getProjectFilesystem(), fileListPath))
         .addAll(

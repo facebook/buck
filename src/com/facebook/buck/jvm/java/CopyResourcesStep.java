@@ -15,16 +15,17 @@
  */
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -42,7 +43,7 @@ import java.util.Optional;
 public class CopyResourcesStep implements Step {
 
   private final ProjectFilesystem filesystem;
-  private final SourcePathResolver resolver;
+  private final BuildContext buildContext;
   private final SourcePathRuleFinder ruleFinder;
   private final BuildTarget target;
   private final Collection<? extends SourcePath> resources;
@@ -51,14 +52,14 @@ public class CopyResourcesStep implements Step {
 
   public CopyResourcesStep(
       ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
+      BuildContext buildContext,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Collection<? extends SourcePath> resources,
       Path outputDirectory,
       JavaPackageFinder javaPackageFinder) {
     this.filesystem = filesystem;
-    this.resolver = resolver;
+    this.buildContext = buildContext;
     this.ruleFinder = ruleFinder;
     this.target = target;
     this.resources = resources;
@@ -105,7 +106,8 @@ public class CopyResourcesStep implements Step {
       // Therefore, some path-wrangling is required to produce the correct string.
 
       Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
-      Path relativePathToResource = resolver.getRelativePath(rawResource);
+      Path relativePathToResource =
+          buildContext.getSourcePathResolver().getRelativePath(rawResource);
 
       String resource;
 
@@ -167,18 +169,24 @@ public class CopyResourcesStep implements Step {
                           "%s%s%s",
                           targetPackageDir,
                           targetPackageDir.isEmpty() ? "" : "/",
-                          resolver.getRelativePath(rawResource).getFileName()));
+                          buildContext
+                              .getSourcePathResolver()
+                              .getRelativePath(rawResource)
+                              .getFileName()));
         } else {
           relativeSymlinkPath =
               outputDirectory.getFileSystem().getPath(resource.substring(lastIndex));
         }
       }
       Path target = outputDirectory.resolve(relativeSymlinkPath);
-      allSteps.add(MkdirStep.of(filesystem, target.getParent()));
+      allSteps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, target.getParent())));
       allSteps.add(
           SymlinkFileStep.builder()
               .setFilesystem(filesystem)
-              .setExistingFile(resolver.getAbsolutePath(rawResource))
+              .setExistingFile(buildContext.getSourcePathResolver().getAbsolutePath(rawResource))
               .setDesiredLink(target)
               .build());
     }

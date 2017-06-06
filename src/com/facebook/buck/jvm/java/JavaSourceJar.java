@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -68,9 +69,13 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(RmStep.of(getProjectFilesystem(), output));
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), temp));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), temp));
 
     Set<Path> seenPackages = Sets.newHashSet();
 
@@ -81,7 +86,10 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
       Path packageFolder = packageFinder.findJavaPackageFolder(source);
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {
-        steps.add(MkdirStep.of(getProjectFilesystem(), packageDir));
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), packageDir)));
       }
       steps.add(
           CopyStep.forFile(

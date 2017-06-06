@@ -281,7 +281,9 @@ public class AndroidResource extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            getProjectFilesystem(), Preconditions.checkNotNull(pathToTextSymbolsDir)));
+            context.getBuildCellRootPath(),
+            getProjectFilesystem(),
+            Preconditions.checkNotNull(pathToTextSymbolsDir)));
     if (getRes() == null) {
       return steps
           .add(new TouchStep(getProjectFilesystem(), pathToTextSymbolsFile))

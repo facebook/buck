@@ -80,12 +80,14 @@ public class ExportFileTest {
 
     List<Step> steps =
         exportFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(pathResolver)
+                .withBuildCellRootPath(projectFilesystem.getRootPath()),
+            new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
+            "mkdir -p " + Paths.get("buck-out/gen"),
             "rm -f -r " + projectFilesystem.resolve("buck-out/gen/example.html"),
             "cp "
                 + projectFilesystem.resolve("example.html")
@@ -110,12 +112,14 @@ public class ExportFileTest {
 
     List<Step> steps =
         exportFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(pathResolver)
+                .withBuildCellRootPath(projectFilesystem.getRootPath()),
+            new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
+            "mkdir -p " + Paths.get("buck-out/gen"),
             "rm -f -r " + projectFilesystem.resolve("buck-out/gen/fish"),
             "cp "
                 + projectFilesystem.resolve("example.html")
@@ -141,12 +145,14 @@ public class ExportFileTest {
 
     List<Step> steps =
         exportFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(pathResolver)
+                .withBuildCellRootPath(projectFilesystem.getRootPath()),
+            new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
+            "mkdir -p " + Paths.get("buck-out/gen"),
             "rm -f -r " + projectFilesystem.resolve("buck-out/gen/fish"),
             "cp " + projectFilesystem.resolve("chips") + " " + Paths.get("buck-out/gen/fish")),
         steps,

@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -115,7 +116,10 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    builder.add(MkdirStep.of(getProjectFilesystem(), out.getParent()));
+    builder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
     builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
     builder.add(
         CopyStep.forDirectory(

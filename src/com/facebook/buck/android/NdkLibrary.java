@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -145,7 +146,10 @@ public class NdkLibrary extends AbstractBuildRule
     // All of them should be recorded via the BuildableContext.
     Path binDirectory = buildArtifactsDirectory.resolve("libs");
     steps.add(RmStep.of(getProjectFilesystem(), makefile));
-    steps.add(MkdirStep.of(getProjectFilesystem(), makefile.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), makefile.getParent())));
     steps.add(new WriteFileStep(getProjectFilesystem(), makefileContents, makefile, false));
     steps.add(
         new NdkBuildStep(
@@ -157,7 +161,9 @@ public class NdkLibrary extends AbstractBuildRule
             flags,
             macroExpander));
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), genDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), genDirectory));
     steps.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),

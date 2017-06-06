@@ -24,6 +24,7 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
@@ -476,7 +477,10 @@ public class AndroidBinary extends AbstractBuildRule
     // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
     // own copy of this so that we don't have a runtime dep on the `AaptPackageResources` step.
     Path manifestPath = context.getSourcePathResolver().getRelativePath(getManifestPath());
-    steps.add(MkdirStep.of(getProjectFilesystem(), manifestPath.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), manifestPath.getParent())));
     steps.add(
         CopyStep.forFile(
             getProjectFilesystem(),
@@ -485,8 +489,7 @@ public class AndroidBinary extends AbstractBuildRule
     buildableContext.recordArtifact(manifestPath);
 
     // Create the .dex files if we aren't doing pre-dexing.
-    DexFilesInfo dexFilesInfo =
-        addFinalDxSteps(buildableContext, context.getSourcePathResolver(), steps);
+    DexFilesInfo dexFilesInfo = addFinalDxSteps(buildableContext, context, steps);
 
     ////
     // BE VERY CAREFUL adding any code below here.
@@ -530,7 +533,7 @@ public class AndroidBinary extends AbstractBuildRule
             packageableCollection.getNativeLibAssetsDirectories().get(module);
 
         getStepsForNativeAssets(
-            context.getSourcePathResolver(),
+            context,
             steps,
             nativeLibDirs == null ? Optional.empty() : Optional.of(nativeLibDirs),
             libSubdirectory,
@@ -639,7 +642,10 @@ public class AndroidBinary extends AbstractBuildRule
       Path proguardConfigDir = getProguardTextFilesPath();
       Path redexedApk = getRedexedApkPath();
       apkToAlign = redexedApk;
-      steps.add(MkdirStep.of(getProjectFilesystem(), redexedApk.getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), redexedApk.getParent())));
       ImmutableList<Step> redexSteps =
           ReDexStep.createSteps(
               getProjectFilesystem(),
@@ -716,20 +722,23 @@ public class AndroidBinary extends AbstractBuildRule
   }
 
   private void getStepsForNativeAssets(
-      SourcePathResolver resolver,
+      BuildContext context,
       ImmutableList.Builder<Step> steps,
       Optional<ImmutableCollection<SourcePath>> nativeLibDirs,
       final Path libSubdirectory,
       final String metadataFilename,
       final APKModule module) {
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), libSubdirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), libSubdirectory));
 
     // Filter, rename and copy the ndk libraries marked as assets.
     if (nativeLibDirs.isPresent()) {
       for (SourcePath nativeLibDir : nativeLibDirs.get()) {
         CopyNativeLibraries.copyNativeLibrary(
+            context,
             getProjectFilesystem(),
-            resolver.getAbsolutePath(nativeLibDir),
+            context.getSourcePathResolver().getAbsolutePath(nativeLibDir),
             libSubdirectory,
             cpuFilters,
             steps);
@@ -852,14 +861,17 @@ public class AndroidBinary extends AbstractBuildRule
   /** Adds steps to do the final dexing or dex merging before building the apk. */
   private DexFilesInfo addFinalDxSteps(
       BuildableContext buildableContext,
-      SourcePathResolver resolver,
+      BuildContext buildContext,
       ImmutableList.Builder<Step> steps) {
 
     ImmutableSet<Path> classpathEntriesToDex =
         RichStream.from(enhancementResult.getClasspathEntriesToDex())
             .concat(
                 RichStream.of(enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
-            .map(input -> getProjectFilesystem().relativize(resolver.getAbsolutePath(input)))
+            .map(
+                input ->
+                    getProjectFilesystem()
+                        .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input)))
             .toImmutableSet();
 
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
@@ -875,7 +887,10 @@ public class AndroidBinary extends AbstractBuildRule
                     new AbstractMap.SimpleEntry<>(
                         input.getKey(),
                         getProjectFilesystem()
-                            .relativize(resolver.getAbsolutePath(input.getValue()))))
+                            .relativize(
+                                buildContext
+                                    .getSourcePathResolver()
+                                    .getAbsolutePath(input.getValue()))))
             .collect(MoreCollectors.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();
@@ -908,8 +923,16 @@ public class AndroidBinary extends AbstractBuildRule
       // to reflect that.
       classpathEntriesToDex = outDirPaths.build();
 
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), preprocessJavaClassesInDir));
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), preprocessJavaClassesOutDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(),
+              getProjectFilesystem(),
+              preprocessJavaClassesInDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(),
+              getProjectFilesystem(),
+              preprocessJavaClassesOutDir));
 
       steps.add(
           new AbstractExecutionStep("symlinking for preprocessing") {
@@ -969,12 +992,12 @@ public class AndroidBinary extends AbstractBuildRule
               classpathEntriesToDex,
               proguardConfigs
                   .stream()
-                  .map(resolver::getAbsolutePath)
+                  .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                   .collect(MoreCollectors.toImmutableSet()),
               skipProguard,
               steps,
               buildableContext,
-              resolver);
+              buildContext);
     }
 
     // Create the final DEX (or set of DEX files in the case of split dex).
@@ -1003,7 +1026,12 @@ public class AndroidBinary extends AbstractBuildRule
       Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier =
           addAccumulateClassNamesStep(classpathEntriesToDex, steps);
 
-      steps.add(MkdirStep.of(getProjectFilesystem(), primaryDexPath.getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  primaryDexPath.getParent())));
 
       addDexingSteps(
           classpathEntriesToDex,
@@ -1014,7 +1042,7 @@ public class AndroidBinary extends AbstractBuildRule
           dexReorderToolFile,
           dexReorderDataDumpFile,
           additionalDexStoreToJarPathMap,
-          resolver);
+          buildContext);
     } else if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
@@ -1126,7 +1154,7 @@ public class AndroidBinary extends AbstractBuildRule
       boolean skipProguard,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
-      SourcePathResolver resolver) {
+      BuildContext buildContext) {
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
@@ -1134,7 +1162,7 @@ public class AndroidBinary extends AbstractBuildRule
           buildRule
               .getImmediateClasspaths()
               .stream()
-              .map(resolver::getAbsolutePath)
+              .map(buildContext.getSourcePathResolver()::getAbsolutePath)
               .collect(MoreCollectors.toImmutableSet()));
     }
 
@@ -1142,7 +1170,8 @@ public class AndroidBinary extends AbstractBuildRule
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(resolver.getAbsolutePath(proguardConfig.get()));
+      proguardConfigsBuilder.add(
+          buildContext.getSourcePathResolver().getAbsolutePath(proguardConfig.get()));
     }
 
     Path proguardConfigDir = getProguardTextFilesPath();
@@ -1162,11 +1191,12 @@ public class AndroidBinary extends AbstractBuildRule
         javaRuntimeLauncher,
         getProjectFilesystem(),
         proguardJarOverride.isPresent()
-            ? Optional.of(resolver.getAbsolutePath(proguardJarOverride.get()))
+            ? Optional.of(
+                buildContext.getSourcePathResolver().getAbsolutePath(proguardJarOverride.get()))
             : Optional.empty(),
         proguardMaxHeapSize,
         proguardAgentPath,
-        resolver.getRelativePath(aaptGeneratedProguardConfigFile),
+        buildContext.getSourcePathResolver().getRelativePath(aaptGeneratedProguardConfigFile),
         proguardConfigsBuilder.build(),
         sdkProguardConfig,
         optimizationPasses,
@@ -1175,6 +1205,7 @@ public class AndroidBinary extends AbstractBuildRule
         additionalLibraryJarsForProguardBuilder.build(),
         proguardConfigDir,
         buildableContext,
+        buildContext,
         skipProguard,
         steps);
 
@@ -1210,7 +1241,8 @@ public class AndroidBinary extends AbstractBuildRule
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
-      SourcePathResolver resolver) {
+      BuildContext buildContext) {
+    SourcePathResolver resolver = buildContext.getSourcePathResolver();
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
@@ -1233,12 +1265,16 @@ public class AndroidBinary extends AbstractBuildRule
 
       // Intermediate directory holding the primary split-zip jar.
       Path splitZipDir = getBinPath("__%s_split_zip__");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), splitZipDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(), getProjectFilesystem(), splitZipDir));
       Path primaryJarPath = splitZipDir.resolve("primary.jar");
 
       Path secondaryJarMetaDirParent = splitZipDir.resolve("secondary_meta");
       Path secondaryJarMetaDir = secondaryJarMetaDirParent.resolve(SECONDARY_DEX_SUBDIR);
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), secondaryJarMetaDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(), getProjectFilesystem(), secondaryJarMetaDir));
       Path secondaryJarMeta = secondaryJarMetaDir.resolve("metadata.txt");
 
       // Intermediate directory holding _ONLY_ the secondary split-zip jar files.  This is
@@ -1246,18 +1282,27 @@ public class AndroidBinary extends AbstractBuildRule
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
       final Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), secondaryZipDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(), getProjectFilesystem(), secondaryZipDir));
 
       // Intermediate directory holding the directories holding _ONLY_ the additional split-zip
       // jar files that are intended for that dex store.
       final Path additionalDexStoresZipDir = getBinPath("__%s_dex_stores_zip__");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), additionalDexStoresZipDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(),
+              getProjectFilesystem(),
+              additionalDexStoresZipDir));
       for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
         steps.addAll(
             MakeCleanDirectoryStep.of(
-                getProjectFilesystem(), additionalDexStoresZipDir.resolve(dexStore.getName())));
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                additionalDexStoresZipDir.resolve(dexStore.getName())));
         steps.addAll(
             MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 secondaryJarMetaDirParent.resolve("assets").resolve(dexStore.getName())));
       }
@@ -1266,7 +1311,9 @@ public class AndroidBinary extends AbstractBuildRule
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
       Path zipSplitReportDir = getBinPath("__%s_split_zip_report__");
-      steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), zipSplitReportDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              buildContext.getBuildCellRootPath(), getProjectFilesystem(), zipSplitReportDir));
       SplitZipStep splitZipCommand =
           new SplitZipStep(
               getProjectFilesystem(),
@@ -1296,12 +1343,24 @@ public class AndroidBinary extends AbstractBuildRule
         secondaryDexDir =
             Optional.of(secondaryDexParentDir.resolve(SMART_DEX_SECONDARY_DEX_SUBDIR));
         Path intraDexReorderSecondaryDexDir = secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR);
-        steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), secondaryDexDir.get()));
         steps.addAll(
-            MakeCleanDirectoryStep.of(getProjectFilesystem(), intraDexReorderSecondaryDexDir));
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                secondaryDexDir.get()));
+        steps.addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                intraDexReorderSecondaryDexDir));
       } else {
         secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
-        steps.add(MkdirStep.of(getProjectFilesystem(), secondaryDexDir.get()));
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    secondaryDexDir.get())));
       }
 
       if (additionalDexStoreToJarPathMap.isEmpty()) {
@@ -1311,7 +1370,9 @@ public class AndroidBinary extends AbstractBuildRule
         for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
           Path dexStorePath = additionalDexAssetsDir.resolve(dexStore.getName());
           builder.add(dexStorePath);
-          steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), dexStorePath));
+          steps.addAll(
+              MakeCleanDirectoryStep.of(
+                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), dexStorePath));
         }
         additionalDexDirs = Optional.of(builder.build());
       }
@@ -1351,7 +1412,10 @@ public class AndroidBinary extends AbstractBuildRule
     // Stores checksum information from each invocation to intelligently decide when dx needs
     // to be re-run.
     Path successDir = getBinPath("__%s_smart_dex__/.success");
-    steps.add(MkdirStep.of(getProjectFilesystem(), successDir));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), successDir)));
 
     // Add the smart dexing tool that is capable of avoiding the external dx invocation(s) if
     // it can be shown that the inputs have not changed.  It also parallelizes dx invocations
@@ -1394,6 +1458,7 @@ public class AndroidBinary extends AbstractBuildRule
     if (reorderClassesIntraDex) {
       IntraDexReorderStep intraDexReorderStep =
           new IntraDexReorderStep(
+              buildContext,
               getProjectFilesystem(),
               resolver.getAbsolutePath(dexReorderToolFile.get()),
               resolver.getAbsolutePath(dexReorderDataDumpFile.get()),

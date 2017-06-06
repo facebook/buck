@@ -47,7 +47,9 @@ public class Aapt2Compile extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getOutputPath().getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), getOutputPath().getParent()));
     steps.add(
         new Aapt2CompileStep(
             getProjectFilesystem().getRootPath(),

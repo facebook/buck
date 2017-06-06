@@ -80,7 +80,9 @@ public class HaskellLinkRule extends AbstractBuildRule {
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                getProjectFilesystem(), getOutputDir(getBuildTarget(), getProjectFilesystem())))
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getOutputDir(getBuildTarget(), getProjectFilesystem())))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
 

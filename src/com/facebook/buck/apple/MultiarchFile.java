@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -73,17 +74,25 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
     lipoBinaries(context, steps);
-    copyLinkMaps(buildableContext, steps);
+    copyLinkMaps(buildableContext, context, steps);
 
     return steps.build();
   }
 
-  private void copyLinkMaps(BuildableContext buildableContext, ImmutableList.Builder<Step> steps) {
+  private void copyLinkMaps(
+      BuildableContext buildableContext,
+      BuildContext buildContext,
+      ImmutableList.Builder<Step> steps) {
     Path linkMapDir = Paths.get(output + "-LinkMap");
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), linkMapDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            buildContext.getBuildCellRootPath(), getProjectFilesystem(), linkMapDir));
 
     for (SourcePath thinBinary : thinBinaries) {
       Optional<BuildRule> maybeRule = ruleFinder.getRule(thinBinary);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -90,7 +91,12 @@ public class AndroidManifest extends AbstractBuildRule {
     commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
 
     // Make sure the directory for the output file exists.
-    commands.add(MkdirStep.of(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToOutputFile.getParent())));
 
     commands.add(
         new GenerateManifestStep(

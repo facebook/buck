@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -111,7 +112,10 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     buildableContext.recordArtifact(
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
     return ImmutableList.<Step>builder()
-        .add(MkdirStep.of(getProjectFilesystem(), specsDir))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), specsDir)))
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),

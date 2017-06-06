@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -199,7 +200,9 @@ class SwiftCompile extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), outputPath),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
         makeCompileStep(context.getSourcePathResolver()));
   }
 

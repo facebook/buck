@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -76,7 +76,9 @@ public class JavaLibraryRules {
     // might be resources that need to be copied there.
     BuildTarget target = rule.getBuildTarget();
     Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, rule.getProjectFilesystem());
-    steps.addAll(MakeCleanDirectoryStep.of(rule.getProjectFilesystem(), outputDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), rule.getProjectFilesystem(), outputDirectory));
 
     // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
@@ -95,7 +97,7 @@ public class JavaLibraryRules {
     steps.add(
         new CopyResourcesStep(
             rule.getProjectFilesystem(),
-            context.getSourcePathResolver(),
+            context,
             ruleFinder,
             target,
             resources,
@@ -104,6 +106,7 @@ public class JavaLibraryRules {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(),
             rule.getProjectFilesystem(),
             DefaultJavaLibrary.getOutputJarDirPath(target, rule.getProjectFilesystem())));
 
@@ -122,12 +125,19 @@ public class JavaLibraryRules {
       // This adds the javac command, along with any supporting commands.
       Path pathToSrcsList =
           BuildTargets.getGenPath(rule.getProjectFilesystem(), rule.getBuildTarget(), "__%s__srcs");
-      steps.add(MkdirStep.of(rule.getProjectFilesystem(), pathToSrcsList.getParent()));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  rule.getProjectFilesystem(),
+                  pathToSrcsList.getParent())));
 
       Path scratchDir =
           BuildTargets.getGenPath(
               rule.getProjectFilesystem(), target, "lib__%s____working_directory");
-      steps.addAll(MakeCleanDirectoryStep.of(rule.getProjectFilesystem(), scratchDir));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              context.getBuildCellRootPath(), rule.getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
       ImmutableSortedSet<Path> javaSrcs =
@@ -179,18 +189,24 @@ public class JavaLibraryRules {
   static void addAccumulateClassNamesStep(
       JavaLibrary javaLibrary,
       BuildableContext buildableContext,
-      SourcePathResolver pathResolver,
+      BuildContext buildContext,
+      ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<Step> steps) {
 
     Path pathToClassHashes =
         JavaLibraryRules.getPathToClassHashes(
             javaLibrary.getBuildTarget(), javaLibrary.getProjectFilesystem());
-    steps.add(MkdirStep.of(javaLibrary.getProjectFilesystem(), pathToClassHashes.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                projectFilesystem,
+                pathToClassHashes.getParent())));
     steps.add(
         new AccumulateClassNamesStep(
             javaLibrary.getProjectFilesystem(),
             Optional.ofNullable(javaLibrary.getSourcePathToOutput())
-                .map(pathResolver::getRelativePath),
+                .map(buildContext.getSourcePathResolver()::getRelativePath),
             pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
   }

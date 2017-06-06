@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -135,7 +136,10 @@ public class ExportFile extends AbstractBuildRuleWithResolver
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     if (mode == ExportFileDescription.Mode.COPY) {
       Path out = getCopiedPath();
-      builder.add(MkdirStep.of(getProjectFilesystem(), out.getParent()));
+      builder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
       builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
       if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
         builder.add(

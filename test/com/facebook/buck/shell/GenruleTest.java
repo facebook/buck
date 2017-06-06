@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -150,7 +151,9 @@ public class GenruleTest {
                     .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
             .toString(),
         genrule.getAbsoluteOutputFilePath(pathResolver));
-    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(filesystem.getRootPath());
     ImmutableList<Path> inputsToCompareToOutputs =
         ImmutableList.of(
             filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
@@ -179,11 +182,13 @@ public class GenruleTest {
         steps.get(0));
     assertEquals(
         MkdirStep.of(
-            filesystem,
-            filesystem
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("src/com/facebook/katana/katana_manifest")),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getGenDir()
+                    .resolve("src/com/facebook/katana/katana_manifest"))),
         steps.get(1));
 
     assertEquals(
@@ -197,11 +202,13 @@ public class GenruleTest {
         steps.get(2));
     assertEquals(
         MkdirStep.of(
-            filesystem,
-            filesystem
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("src/com/facebook/katana/katana_manifest__tmp")),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getGenDir()
+                    .resolve("src/com/facebook/katana/katana_manifest__tmp"))),
         steps.get(3));
 
     Path pathToSrcDir =
@@ -210,7 +217,11 @@ public class GenruleTest {
             .getGenDir()
             .resolve("src/com/facebook/katana/katana_manifest__srcs");
     assertEquals(RmStep.of(filesystem, pathToSrcDir).withRecursive(true), steps.get(4));
-    assertEquals(MkdirStep.of(filesystem, pathToSrcDir), steps.get(5));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), filesystem, pathToSrcDir)),
+        steps.get(5));
 
     assertEquals(
         new SymlinkTreeStep(
@@ -426,6 +437,9 @@ public class GenruleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(filesystem.getRootPath());
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:example");
     Genrule rule =
         GenruleBuilder.newGenruleBuilder(target, filesystem)
@@ -439,7 +453,7 @@ public class GenruleTest {
             .build(resolver);
 
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    rule.addSymlinkCommands(FakeBuildContext.withSourcePathResolver(pathResolver), builder);
+    rule.addSymlinkCommands(context, builder);
     ImmutableList<Step> commands = builder.build();
 
     Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");

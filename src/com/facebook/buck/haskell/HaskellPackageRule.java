@@ -190,7 +190,9 @@ public class HaskellPackageRule extends AbstractBuildRule {
 
     // Setup the scratch dir.
     Path scratchDir = BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), scratchDir));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir));
 
     // Setup the package DB directory.
     final Path packageDb = getPackageDb();

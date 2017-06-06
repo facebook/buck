@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -285,11 +286,18 @@ public class AppleBundle extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    stepsBuilder.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), bundleRoot));
+    stepsBuilder.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot));
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (assetCatalog.isPresent()) {
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  resourcesDestinationPath)));
       Path bundleDir = assetCatalog.get().getOutputDir();
       stepsBuilder.add(
           CopyStep.forDirectory(
@@ -300,7 +308,12 @@ public class AppleBundle extends AbstractBuildRule
     }
 
     if (coreDataModel.isPresent()) {
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  resourcesDestinationPath)));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -312,7 +325,12 @@ public class AppleBundle extends AbstractBuildRule
     }
 
     if (sceneKitAssets.isPresent()) {
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  resourcesDestinationPath)));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -331,14 +349,20 @@ public class AppleBundle extends AbstractBuildRule
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
 
     stepsBuilder.add(
-        MkdirStep.of(getProjectFilesystem(), metadataPath),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), metadataPath)),
         // TODO(bhamiltoncx): This is only appropriate for .app bundles.
         new WriteFileStep(
             getProjectFilesystem(),
             "APPLWRUN",
             metadataPath.resolve("PkgInfo"),
             /* executable */ false),
-        MkdirStep.of(getProjectFilesystem(), infoPlistSubstitutionTempPath.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                infoPlistSubstitutionTempPath.getParent())),
         new FindAndReplaceStep(
             getProjectFilesystem(),
             infoPlistInputPath,
@@ -361,7 +385,7 @@ public class AppleBundle extends AbstractBuildRule
             PlistProcessStep.OutputFormat.BINARY));
 
     if (hasBinary) {
-      appendCopyBinarySteps(stepsBuilder, context.getSourcePathResolver());
+      appendCopyBinarySteps(stepsBuilder, context);
       appendCopyDsymStep(stepsBuilder, buildableContext, context.getSourcePathResolver());
     }
 
@@ -370,7 +394,12 @@ public class AppleBundle extends AbstractBuildRule
             resources.getResourceDirs(),
             resources.getDirsContainingResourceDirs(),
             resources.getResourceFiles()))) {
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  resourcesDestinationPath)));
       for (SourcePath dir : resources.getResourceDirs()) {
         stepsBuilder.add(
             CopyStep.forDirectory(
@@ -397,8 +426,7 @@ public class AppleBundle extends AbstractBuildRule
 
     ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
 
-    addStepsToCopyExtensionBundlesDependencies(
-        context.getSourcePathResolver(), stepsBuilder, codeSignOnCopyPathsBuilder);
+    addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
 
     for (SourcePath variantSourcePath : resources.getResourceVariantFiles()) {
       Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(variantSourcePath);
@@ -413,7 +441,12 @@ public class AppleBundle extends AbstractBuildRule
 
       Path bundleVariantDestinationPath =
           resourcesDestinationPath.resolve(variantDirectory.getFileName());
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), bundleVariantDestinationPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  bundleVariantDestinationPath)));
 
       Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
       addResourceProcessingSteps(
@@ -422,7 +455,12 @@ public class AppleBundle extends AbstractBuildRule
 
     if (!frameworks.isEmpty()) {
       Path frameworksDestinationPath = bundleRoot.resolve(this.destinations.getFrameworksPath());
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), frameworksDestinationPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  frameworksDestinationPath)));
       for (SourcePath framework : frameworks) {
         Path srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
         stepsBuilder.add(
@@ -590,32 +628,38 @@ public class AppleBundle extends AbstractBuildRule
   }
 
   private void appendCopyBinarySteps(
-      ImmutableList.Builder<Step> stepsBuilder, SourcePathResolver pathResolver) {
+      ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
     Preconditions.checkArgument(hasBinary);
 
     final Path binaryOutputPath =
-        pathResolver.getRelativePath(
-            Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
+        context
+            .getSourcePathResolver()
+            .getRelativePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
 
-    copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
-    copyAnotherCopyOfWatchKitStub(stepsBuilder, binaryOutputPath);
+    copyBinaryIntoBundle(stepsBuilder, context, binaryOutputPath);
+    copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryOutputPath);
   }
 
   private void copyBinaryIntoBundle(
-      ImmutableList.Builder<Step> stepsBuilder, Path binaryOutputPath) {
+      ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
     stepsBuilder.add(
         MkdirStep.of(
-            getProjectFilesystem(), bundleRoot.resolve(this.destinations.getExecutablesPath())));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                bundleRoot.resolve(this.destinations.getExecutablesPath()))));
     stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), binaryOutputPath, bundleBinaryPath));
   }
 
   private void copyAnotherCopyOfWatchKitStub(
-      ImmutableList.Builder<Step> stepsBuilder, Path binaryOutputPath) {
+      ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
     if ((isLegacyWatchApp() || (platform.getName().contains("watch") && minOSVersion.equals("2.0")))
         && binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
-          MkdirStep.of(getProjectFilesystem(), watchKitStubDir),
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), watchKitStubDir)),
           CopyStep.forFile(
               getProjectFilesystem(), binaryOutputPath, watchKitStubDir.resolve("WK")));
     }
@@ -666,13 +710,16 @@ public class AppleBundle extends AbstractBuildRule
   }
 
   private void addStepsToCopyExtensionBundlesDependencies(
-      SourcePathResolver resolver,
+      BuildContext context,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
     for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
-      Path srcPath = resolver.getAbsolutePath(entry.getKey());
+      Path srcPath = context.getSourcePathResolver().getAbsolutePath(entry.getKey());
       Path destPath = bundleRoot.resolve(entry.getValue());
-      stepsBuilder.add(MkdirStep.of(getProjectFilesystem(), destPath));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), destPath)));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),

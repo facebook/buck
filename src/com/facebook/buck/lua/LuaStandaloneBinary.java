@@ -16,6 +16,7 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -89,7 +90,10 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
 
     // Make sure the parent directory exists.
-    steps.add(MkdirStep.of(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(RmStep.of(getProjectFilesystem(), output).withRecursive(true));

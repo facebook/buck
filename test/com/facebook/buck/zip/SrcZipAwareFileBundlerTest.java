@@ -22,11 +22,13 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -67,10 +69,11 @@ public class SrcZipAwareFileBundlerTest {
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(basePath);
     bundler.copy(
         filesystem,
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+        FakeBuildContext.withSourcePathResolver(
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())))),
         immutableStepList,
         dest,
         immutableSortedSet);
@@ -79,7 +82,10 @@ public class SrcZipAwareFileBundlerTest {
 
     for (Step step : builtStepList) {
       try {
-        step.execute(TestExecutionContext.newInstance());
+        step.execute(
+            TestExecutionContext.newBuilder()
+                .setCellPathResolver(TestCellPathResolver.get(filesystem))
+                .build());
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -110,7 +116,7 @@ public class SrcZipAwareFileBundlerTest {
   public void shouldBundleFilesIfInputIsADirectory() throws InterruptedException, IOException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
-    dest = filesystem.getRootPath().resolve("dest");
+    dest = filesystem.getPath("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src/subDir/subDir2/file1");
     subDirectoryFile2 = filesystem.getRootPath().resolve("src/subDir/file2");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src/file3");
@@ -122,7 +128,8 @@ public class SrcZipAwareFileBundlerTest {
     assertSame(bundledFilesCollection.size(), 3);
 
     for (Path path : bundledFilesCollection) {
-      Path relativePath = dest.relativize(filesystem.getPathForRelativePath(path));
+      Path relativePath =
+          filesystem.resolve(dest).relativize(filesystem.getPathForRelativePath(path));
       assertTrue(
           subDirectoryFile1.endsWith(relativePath)
               || subDirectoryFile2.endsWith(relativePath)
@@ -134,7 +141,7 @@ public class SrcZipAwareFileBundlerTest {
   public void shouldBundleFilesAndKeepHierarchy() throws InterruptedException, IOException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
-    dest = filesystem.getRootPath().resolve("dest");
+    dest = filesystem.getPath("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src/subDir/file1");
     subDirectoryFile2 = filesystem.getRootPath().resolve("src/file1");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src/subDires/file1");
@@ -146,7 +153,8 @@ public class SrcZipAwareFileBundlerTest {
     assertSame(bundledFilesCollection.size(), 3);
 
     for (Path path : bundledFilesCollection) {
-      Path relativePath = dest.relativize(filesystem.getPathForRelativePath(path));
+      Path relativePath =
+          filesystem.resolve(dest).relativize(filesystem.getPathForRelativePath(path));
       assertTrue(
           subDirectoryFile1.endsWith(relativePath)
               || subDirectoryFile2.endsWith(relativePath)
@@ -177,7 +185,7 @@ public class SrcZipAwareFileBundlerTest {
       throws InterruptedException, IOException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
 
-    dest = filesystem.getRootPath().resolve("dest");
+    dest = filesystem.getPath("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src1/subDir/file1");
     subDirectoryFile2 = filesystem.getRootPath().resolve("src2/subDir/file2");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src1/subDir/file3");
@@ -194,7 +202,8 @@ public class SrcZipAwareFileBundlerTest {
     assertSame(bundledFilesCollection.size(), 3);
 
     for (Path path : bundledFilesCollection) {
-      Path relativePath = dest.relativize(filesystem.getPathForRelativePath(path));
+      Path relativePath =
+          filesystem.resolve(dest).relativize(filesystem.getPathForRelativePath(path));
       assertTrue(
           subDirectoryFile1.getFileName().equals(relativePath)
               || subDirectoryFile2.getFileName().equals(relativePath)

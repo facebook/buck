@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -45,7 +46,11 @@ public class OcamlDebugLauncher extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(args.getOutput());
     return ImmutableList.of(
-        MkdirStep.of(getProjectFilesystem(), args.getOutput().getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                args.getOutput().getParent())),
         new OcamlDebugLauncherStep(getProjectFilesystem(), context.getSourcePathResolver(), args));
   }
 

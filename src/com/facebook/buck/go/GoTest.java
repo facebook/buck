@@ -120,8 +120,16 @@ public class GoTest extends NoopBuildRule
     }
 
     return new ImmutableList.Builder<Step>()
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestOutputDirectory()))
-        .addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), getPathToTestWorkingDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToTestOutputDirectory()))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToTestWorkingDirectory()))
         .add(
             new SymlinkTreeStep(
                 getProjectFilesystem(),

@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -149,7 +150,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
 
     // Make sure the parent directory exists.
-    steps.add(MkdirStep.of(getProjectFilesystem(), binPath.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())));
 
     // Delete any other pex that was there (when switching between pex styles).
     steps.add(RmStep.of(getProjectFilesystem(), binPath).withRecursive(true));
@@ -157,7 +161,9 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     Path workingDirectory =
         BuildTargets.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "__%s__working_directory");
-    steps.addAll(MakeCleanDirectoryStep.of(getProjectFilesystem(), workingDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory));
 
     SourcePathResolver resolver = context.getSourcePathResolver();
 

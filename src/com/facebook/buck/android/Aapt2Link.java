@@ -85,9 +85,13 @@ public class Aapt2Link extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.addAll(
-        MakeCleanDirectoryStep.of(getProjectFilesystem(), getResourceApkPath().getParent()));
+        MakeCleanDirectoryStep.of(
+            context.getBuildCellRootPath(),
+            getProjectFilesystem(),
+            getResourceApkPath().getParent()));
 
     AaptPackageResources.prepareManifestForAapt(
+        context,
         steps,
         getProjectFilesystem(),
         getFinalManifestPath(),
