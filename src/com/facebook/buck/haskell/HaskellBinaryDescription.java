@@ -100,6 +100,21 @@ public class HaskellBinaryDescription
     return Linker.LinkableDepType.STATIC;
   }
 
+  // Return the C/C++ platform to build against.
+  private CxxPlatform getCxxPlatform(BuildTarget target, HaskellBinaryDescriptionArg arg) {
+
+    Optional<CxxPlatform> flavorPlatform = cxxPlatforms.getValue(target);
+    if (flavorPlatform.isPresent()) {
+      return flavorPlatform.get();
+    }
+
+    if (arg.getCxxPlatform().isPresent()) {
+      return cxxPlatforms.getValue(arg.getCxxPlatform().get());
+    }
+
+    return defaultCxxPlatform;
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -111,8 +126,7 @@ public class HaskellBinaryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    CxxPlatform cxxPlatform =
-        cxxPlatforms.getValue(params.getBuildTarget()).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
     Linker.LinkableDepType depType = getLinkStyle(params.getBuildTarget(), args);
 
     // The target to use for the link rule.
@@ -326,5 +340,7 @@ public class HaskellBinaryDescription
     Optional<String> getMain();
 
     Optional<Linker.LinkableDepType> getLinkStyle();
+
+    Optional<Flavor> getCxxPlatform();
   }
 }
