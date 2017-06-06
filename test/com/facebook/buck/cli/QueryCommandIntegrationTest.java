@@ -20,7 +20,9 @@ import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatform
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -29,6 +31,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -583,6 +590,47 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-bfs-deps-one.dot"))));
+  }
+
+  class ParserProfileFinder extends SimpleFileVisitor<Path> {
+    private Path profilerPath = null;
+
+    @Override
+    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+      if (path.toString().contains("parser-profiler")) {
+        profilerPath = path;
+        return FileVisitResult.TERMINATE;
+      } else {
+        return FileVisitResult.CONTINUE;
+      }
+    }
+
+    public Path getProfilerPath() {
+      return profilerPath;
+    }
+  };
+
+  @Test
+  public void testQueryProfileParser() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("query", "deps(//example:one)", "--profile-buck-parser");
+    result.assertSuccess();
+
+    Path logPath = tmp.getRoot().resolve("buck-out").resolve("log");
+    ParserProfileFinder parserProfileFinder = new ParserProfileFinder();
+    Files.walkFileTree(logPath, parserProfileFinder);
+
+    assertNotNull("Profiler log not found", parserProfileFinder.getProfilerPath());
+
+    String content = new String(Files.readAllBytes(parserProfileFinder.getProfilerPath()));
+    assertTrue(content.contains("Total:"));
+    assertTrue(content.contains("# Parsed "));
+    assertTrue(content.contains("# Highlights"));
+    assertTrue(content.contains("# More details"));
   }
 
   @Test

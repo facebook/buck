@@ -65,9 +65,13 @@ class BuckPythonProgram implements AutoCloseable {
 
   private final Path rootDirectory;
 
+  private final boolean cleanupEnabled;
+
   /** Create a new instance by layout the files in a temporary directory. */
   public static BuckPythonProgram newInstance(
-      TypeCoercerFactory typeCoercerFactory, ImmutableSet<Description<?>> descriptions)
+      TypeCoercerFactory typeCoercerFactory,
+      ImmutableSet<Description<?>> descriptions,
+      boolean cleanupEnabled)
       throws IOException {
 
     Path pythonPath;
@@ -152,7 +156,7 @@ class BuckPythonProgram implements AutoCloseable {
     }
 
     LOG.debug("Created temporary buck.py instance at %s.", generatedRoot);
-    return new BuckPythonProgram(generatedRoot);
+    return new BuckPythonProgram(generatedRoot, cleanupEnabled);
   }
 
   public Path getExecutablePath() {
@@ -161,10 +165,13 @@ class BuckPythonProgram implements AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    MoreFiles.deleteRecursively(this.rootDirectory);
+    if (cleanupEnabled) {
+      MoreFiles.deleteRecursively(this.rootDirectory);
+    }
   }
 
-  private BuckPythonProgram(Path rootDirectory) {
+  private BuckPythonProgram(Path rootDirectory, boolean cleanupEnabled) {
     this.rootDirectory = rootDirectory;
+    this.cleanupEnabled = cleanupEnabled;
   }
 }

@@ -47,6 +47,7 @@ import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.MachineReadableLoggerListener;
+import com.facebook.buck.event.listener.ParserProfilerLoggerListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
@@ -1360,6 +1361,8 @@ public final class Main {
         LOG.warn("Unable to open stream for machine readable log file.");
       }
     }
+
+    eventListenersBuilder.add(new ParserProfilerLoggerListener(invocationInfo, projectFilesystem));
 
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));

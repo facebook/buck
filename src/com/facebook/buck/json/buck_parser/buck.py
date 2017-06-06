@@ -15,9 +15,10 @@ from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
 from .module_whitelist import ImportWhitelistManager
+from .profiler import Profiler
+
 import StringIO
 import abc
-import cProfile
 import functools
 import hashlib
 import imp
@@ -29,7 +30,10 @@ import os.path
 import pstats
 import pywatchman
 import re
+import select
 import sys
+import tempfile
+import time
 import traceback
 import types
 from typing import Any, Dict, List, Tuple, Optional
@@ -1061,6 +1065,7 @@ def encode_result(values, diagnostics, profile):
 
 def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
                              should_profile=False):
+    start_time = time.time()
     build_file = build_file_query.get('buildFile')
     watch_root = build_file_query.get('watchRoot')
     project_prefix = build_file_query.get('projectPrefix')
@@ -1072,11 +1077,6 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
 
     diagnostics = []
     values = []
-    if should_profile:
-        profile = cProfile.Profile()
-        profile.enable()
-    else:
-        profile = None
     try:
         values = build_file_processor.process(
             watch_root,
@@ -1084,6 +1084,7 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
             build_file,
             diagnostics=diagnostics)
     except Exception as e:
+        trace = traceback.format_exc()
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
             if e is WatchmanError:
@@ -1098,16 +1099,17 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
                     exception=sys.exc_info()))
         raise
     finally:
-        if profile is not None:
-            profile.disable()
-            s = StringIO.StringIO()
-            pstats.Stats(profile, stream=s).sort_stats('cumulative').print_stats()
-            profile_result = s.getvalue()
-        else:
-            profile_result = None
+        java_process_send_result(to_parent, values, diagnostics, None)
 
-        to_parent.write(encode_result(values, diagnostics, profile_result))
-        to_parent.flush()
+    end_time = time.time()
+    return end_time - start_time
+
+
+def java_process_send_result(to_parent, values, diagnostics, profile_result):
+    """Sends result to the Java process"""
+    data = encode_result(values, diagnostics, profile_result)
+    to_parent.write(data)
+    to_parent.flush()
 
 
 def silent_excepthook(exctype, value, tb):
@@ -1292,8 +1294,7 @@ def main():
                 source='mercurial',
                 exception=None,
             )
-            to_parent.write(encode_result([], [d], None))
-            to_parent.flush()
+            java_process_send_result(to_parent, [], [d], None)
             raise
 
     configs = {}
@@ -1336,14 +1337,25 @@ def main():
     # installed.
     with buildFileProcessor.with_env_interceptors():
         with buildFileProcessor.with_builtins(__builtin__.__dict__):
+            processed_build_file = []
+
+            profiler = None
+            if options.profile:
+                profiler = Profiler(True)
+                profiler.start()
+
             for build_file in args:
                 query = {
                     'buildFile': build_file,
                     'watchRoot': project_root,
                     'projectPrefix': project_root,
                 }
-                process_with_diagnostics(query, buildFileProcessor, to_parent,
-                                         should_profile=options.profile)
+                duration = process_with_diagnostics(
+                    query,
+                    buildFileProcessor,
+                    to_parent,
+                    should_profile=options.profile)
+                processed_build_file.append({'buildFile': build_file, 'duration': duration})
 
             # From https://docs.python.org/2/using/cmdline.html :
             #
@@ -1351,15 +1363,20 @@ def main():
             # and File Objects (for line in sys.stdin) which is not
             # influenced by this option. To work around this, you will
             # want to use file.readline() inside a while 1: loop.
-            for line in iter(sys.stdin.readline, ''):
+            for line in wait_and_read_build_file_query():
                 if line == '':
                     break
                 build_file_query = json.loads(line)
-                process_with_diagnostics(
-                    build_file_query,
-                    buildFileProcessor,
-                    to_parent,
-                    should_profile=options.profile)
+                if build_file_query.get('command') == 'report_profile':
+                    report_profile(options, to_parent, processed_build_file, profiler)
+                else:
+                    duration = process_with_diagnostics(
+                        build_file_query,
+                        buildFileProcessor,
+                        to_parent,
+                        should_profile=options.profile)
+                    processed_build_file.append(
+                        {'buildFile': build_file_query['buildFile'], 'duration': duration})
 
     if options.quiet:
         sys.excepthook = orig_excepthook
@@ -1371,6 +1388,57 @@ def main():
         to_parent.close()
     except IOError:
         pass
+
+
+def wait_build_file_query():
+    select.select([sys.stdin], [], [])
+
+
+def wait_and_read_build_file_query():
+    def default_wait():
+        return
+    wait = default_wait
+    if sys.platform != 'win32':
+        # wait_build_file_query() is useful to attribute time waiting for queries.
+        # Since select.select() is not supported on Windows, we currently don't have
+        # a reliable way to measure it on this platform. Then, we skip it.
+        wait = wait_build_file_query
+    while True:
+        wait()
+        line = sys.stdin.readline()
+        if not line:
+            return
+        yield line
+
+
+def report_profile(options, to_parent, processed_build_file, profiler):
+    if options.profile:
+        try:
+            profiler.stop()
+            profile_result = profiler.generate_report()
+            extra_result = "Total: {:.2f} sec\n\n\n".format(profiler.total_time)
+            extra_result += '# Parsed {} files'.format(len(processed_build_file))
+            processed_build_file.sort(
+                key=lambda current_child: current_child['duration'], reverse=True)
+            # Only show the top ten buck files
+            if len(processed_build_file) > 10:
+                processed_build_file = processed_build_file[:10]
+                extra_result += ', {} slower BUCK files:\n'.format(len(processed_build_file))
+            else:
+                extra_result += '\n'
+            for info in processed_build_file:
+                extra_result += 'Parsed {}: {:.2f} sec \n'.format(
+                    info['buildFile'], info['duration'])
+            extra_result += '\n\n'
+            profile_result = extra_result + profile_result
+            java_process_send_result(to_parent, [], [], profile_result)
+        except Exception as e:
+            trace = traceback.format_exc()
+            print(str(trace))
+            raise
+    else:
+        to_parent.write(encode_result([], [], None))
+        to_parent.flush()
 
 
 def make_glob(pat):

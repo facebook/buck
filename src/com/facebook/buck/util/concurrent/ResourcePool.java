@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -100,6 +101,13 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     this.closing = new AtomicBoolean(false);
     this.shutdownFuture = null;
     this.pendingWork = new HashSet<>();
+  }
+
+  public synchronized void callOnEachResource(Consumer<R> withResource) {
+    Preconditions.checkState(!closing.get());
+    for (R resource : createdResources) {
+      withResource.accept(resource);
+    }
   }
 
   /**

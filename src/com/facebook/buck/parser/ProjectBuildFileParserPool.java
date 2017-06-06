@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.ResourcePool;
 import com.google.common.base.Function;
@@ -24,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +41,8 @@ import javax.annotation.concurrent.GuardedBy;
  * used to satisfy the first pending request, otherwise it is "parked".
  */
 class ProjectBuildFileParserPool implements AutoCloseable {
+  private static final Logger LOG = Logger.get(ProjectBuildFileParserPool.class);
+
   private final int maxParsersPerCell;
 
   @GuardedBy("this")
@@ -46,19 +50,23 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
   private final Function<Cell, ProjectBuildFileParser> parserFactory;
   private final AtomicBoolean closing;
+  private final boolean enableProfiler;
 
   /**
    * @param maxParsersPerCell maximum number of parsers to create for a single cell.
    * @param parserFactory function used to create a new parser.
    */
   public ProjectBuildFileParserPool(
-      int maxParsersPerCell, Function<Cell, ProjectBuildFileParser> parserFactory) {
+      int maxParsersPerCell,
+      Function<Cell, ProjectBuildFileParser> parserFactory,
+      boolean enableProfiler) {
     Preconditions.checkArgument(maxParsersPerCell > 0);
 
     this.maxParsersPerCell = maxParsersPerCell;
     this.parserResourcePools = new HashMap<>();
     this.parserFactory = parserFactory;
     this.closing = new AtomicBoolean(false);
+    this.enableProfiler = enableProfiler;
   }
 
   /**
@@ -97,8 +105,32 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     return pool;
   }
 
+  private void reportProfile() {
+    if (!enableProfiler) {
+      return;
+    }
+    synchronized (this) {
+      parserResourcePools
+          .values()
+          .forEach(
+              resourcePool -> {
+                resourcePool.callOnEachResource(
+                    parser -> {
+                      try {
+                        parser.reportProfile();
+                      } catch (IOException exception) {
+                        LOG.debug(
+                            exception,
+                            "Exception raised during reportProfile() and we're ignoring it");
+                      }
+                    });
+              });
+    }
+  }
+
   @Override
   public void close() {
+    reportProfile();
     ImmutableSet<ResourcePool<ProjectBuildFileParser>> resourcePools;
     synchronized (this) {
       Preconditions.checkState(!closing.get());

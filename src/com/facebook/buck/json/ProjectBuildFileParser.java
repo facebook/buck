@@ -384,50 +384,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
           projectPrefix = projectWatch.getProjectPrefix().get();
         }
       }
-      buckPyProcessJsonGenerator.writeObject(
-          ImmutableMap.of(
-              "buildFile", buildFile.toString(),
-              "watchRoot", watchRoot,
-              "projectPrefix", projectPrefix));
-      try {
-        // We disable autoflush at the ObjectMapper level for
-        // performance reasons, but our protocol requires us to
-        // flush newline-delimited JSON for each buck.py query.
-        buckPyProcessJsonGenerator.flush();
-        // I tried using MinimalPrettyPrinter.setRootValueSeparator("\n") and
-        // setting it on the JsonGenerator, but it doesn't seem to
-        // actually write a newline after each element.
-        buckPyProcess.getOutputStream().write('\n');
-        // I tried enabling JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM,
-        // but it doesn't actually flush.
-        buckPyProcess.getOutputStream().flush();
-      } catch (IOException e) {
-        // https://issues.apache.org/jira/browse/EXEC-101 -- Java 8 throws
-        // IOException if the child process exited before writing/flushing
-        LOG.debug(e, "Swallowing exception on flush");
-      }
-
-      if (buckPyProcessJsonParser == null) {
-        // We have to wait to create the JsonParser until after we write our
-        // first request, because Jackson "helpfully" synchronously reads
-        // from the InputStream trying to detect whether the encoding is
-        // UTF-8 or UTF-16 as soon as you create a JsonParser:
-        //
-        // https://git.io/vSgnA
-        //
-        // Since buck.py doesn't write any data until after it receives
-        // a query, creating the JsonParser any earlier than this would
-        // hang indefinitely.
-        buckPyProcessJsonParser = ObjectMappers.createParser(buckPyProcessInput);
-      }
-      LOG.verbose("Parsing output of process %s...", buckPyProcess);
-      BuildFilePythonResult resultObject;
-      try {
-        resultObject = buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
-      } catch (IOException e) {
-        LOG.warn(e, "Parser exited while decoding JSON data");
-        throw e;
-      }
+      BuildFilePythonResult resultObject =
+          performJsonRequest(
+              ImmutableMap.of(
+                  "buildFile", buildFile.toString(),
+                  "watchRoot", watchRoot,
+                  "projectPrefix", projectPrefix));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
       handleDiagnostics(
           buildFile, buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
@@ -437,7 +399,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       LOG.verbose("Parsed %d rules from %s", values.size(), buildFile);
       profile = resultObject.getProfile();
       if (profile.isPresent()) {
-        LOG.debug("Profile result: %s", profile.get());
+        LOG.debug("Profile result:\n%s", profile.get());
       }
       return values;
     } finally {
@@ -446,6 +408,55 @@ public class ProjectBuildFileParser implements AutoCloseable {
       buckEventBus.post(
           ParseBuckFileEvent.finished(parseBuckFileStarted, values, parsedBytes, profile));
     }
+  }
+
+  private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)
+      throws IOException {
+    Preconditions.checkNotNull(request);
+    Preconditions.checkNotNull(buckPyProcessJsonGenerator);
+    buckPyProcessJsonGenerator.writeObject(request);
+    try {
+      // We disable autoflush at the ObjectMapper level for
+      // performance reasons, but our protocol requires us to
+      // flush newline-delimited JSON for each buck.py query.
+      buckPyProcessJsonGenerator.flush();
+      // I tried using MinimalPrettyPrinter.setRootValueSeparator("\n") and
+      // setting it on the JsonGenerator, but it doesn't seem to
+      // actually write a newline after each element.
+      Preconditions.checkNotNull(buckPyProcess);
+      buckPyProcess.getOutputStream().write('\n');
+      // I tried enabling JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM,
+      // but it doesn't actually flush.
+      buckPyProcess.getOutputStream().flush();
+    } catch (IOException e) {
+      // https://issues.apache.org/jira/browse/EXEC-101 -- Java 8 throws
+      // IOException if the child process exited before writing/flushing
+      LOG.debug(e, "Swallowing exception on flush");
+    }
+
+    if (buckPyProcessJsonParser == null) {
+      // We have to wait to create the JsonParser until after we write our
+      // first request, because Jackson "helpfully" synchronously reads
+      // from the InputStream trying to detect whether the encoding is
+      // UTF-8 or UTF-16 as soon as you create a JsonParser:
+      //
+      // https://git.io/vSgnA
+      //
+      // Since buck.py doesn't write any data until after it receives
+      // a query, creating the JsonParser any earlier than this would
+      // hang indefinitely.
+      Preconditions.checkNotNull(buckPyProcessInput);
+      buckPyProcessJsonParser = ObjectMappers.createParser(buckPyProcessInput);
+    }
+    LOG.verbose("Parsing output of process %s...", buckPyProcess);
+    BuildFilePythonResult resultObject;
+    try {
+      resultObject = buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
+    } catch (IOException e) {
+      LOG.warn(e, "Parser exited while decoding JSON data");
+      throw e;
+    }
+    return resultObject;
   }
 
   private static void handleDiagnostics(
@@ -639,6 +650,16 @@ public class ProjectBuildFileParser implements AutoCloseable {
     buckEventBus.post(new WatchmanDiagnosticEvent(watchmanDiagnostic));
   }
 
+  public void reportProfile() throws IOException {
+    BuildFilePythonResult resultObject =
+        performJsonRequest(ImmutableMap.of("command", "report_profile"));
+    Optional<String> profile = resultObject.getProfile();
+    if (profile.isPresent()) {
+      LOG.debug("buck parser profiler trace available");
+      buckEventBus.post(ParseBuckProfilerReportEvent.profilerReport(profile.get()));
+    }
+  }
+
   @Override
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void close() throws BuildFileParseException, InterruptedException, IOException {
@@ -724,7 +745,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private synchronized Path getPathToBuckPy(ImmutableSet<Description<?>> descriptions)
       throws IOException {
     if (buckPythonProgram == null) {
-      buckPythonProgram = BuckPythonProgram.newInstance(typeCoercerFactory, descriptions);
+      buckPythonProgram =
+          BuckPythonProgram.newInstance(typeCoercerFactory, descriptions, !enableProfiling);
     }
     return buckPythonProgram.getExecutablePath();
   }

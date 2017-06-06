@@ -53,6 +53,11 @@ import org.junit.Test;
 
 public class ProjectBuildFileParserPoolTest {
 
+  private ProjectBuildFileParserPool createParserPool(
+      int maxParsersPerCell, Function<Cell, ProjectBuildFileParser> parserFactory) {
+    return new ProjectBuildFileParserPool(maxParsersPerCell, parserFactory, false);
+  }
+
   private void assertHowManyParserInstancesAreCreated(
       ListeningExecutorService executorService,
       final int maxParsers,
@@ -64,7 +69,7 @@ public class ProjectBuildFileParserPoolTest {
 
     final CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             maxParsers,
             input -> {
               createCount.incrementAndGet();
@@ -120,7 +125,7 @@ public class ProjectBuildFileParserPoolTest {
 
     final CountDownLatch createParserLatch = new CountDownLatch(parsersCount);
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             parsersCount,
             input -> {
               parserCount.incrementAndGet();
@@ -181,7 +186,7 @@ public class ProjectBuildFileParserPoolTest {
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
 
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             parsersCount,
             input -> {
               final AtomicInteger sleepCallCount = new AtomicInteger(0);
@@ -214,7 +219,7 @@ public class ProjectBuildFileParserPoolTest {
     final CountDownLatch waitTillAllWorkIsDone = new CountDownLatch(numberOfJobs);
     final CountDownLatch waitTillCanceled = new CountDownLatch(1);
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             /* maxParsers */ 1,
             createMockParserFactory(
                 () -> {
@@ -250,7 +255,7 @@ public class ProjectBuildFileParserPoolTest {
     ImmutableSet<ListenableFuture<?>> futures;
 
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             /* maxParsers */ 1,
             createMockParserFactory(
                 () -> {
@@ -299,7 +304,7 @@ public class ProjectBuildFileParserPoolTest {
     final String exceptionMessage = "haha!";
     final AtomicBoolean throwWhileParsing = new AtomicBoolean(true);
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             /* maxParsers */ 2,
             createMockParserFactory(
                 () -> {

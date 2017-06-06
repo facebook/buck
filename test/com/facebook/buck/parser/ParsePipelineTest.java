@@ -369,7 +369,8 @@ public class ParsePipelineTest {
                   projectBuildFileParsers.add(buildFileParser);
                 }
                 return buildFileParser;
-              });
+              },
+              false);
       final TargetNodeListener<TargetNode<?, ?>> nodeListener = (buildFile, node) -> {};
       LoadingCache<Cell, BuildFileTree> buildFileTrees =
           CacheBuilder.newBuilder()
