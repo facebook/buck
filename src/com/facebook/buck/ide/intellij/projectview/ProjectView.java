@@ -91,14 +91,25 @@ public class ProjectView {
 
   // region Private implementation
 
+  // external filenames: true constants
   private static final String ANDROID_MANIFEST = "AndroidManifest.xml";
-  private static final String ANDROID_RES = "android_res";
-  private static final String ASSETS = "assets";
   private static final String CODE_STYLE_SETTINGS = "codeStyleSettings.xml";
   private static final String DOT_IDEA = ".idea";
   private static final String DOT_XML = ".xml";
-  private static final String FONTS = "fonts";
-  private static final String RES = "res";
+
+  // configurable folder names: read from .buckconfig
+  private final String INPUT_RESOURCE_FOLDERS;
+  private static final String INPUT_RESOURCE_FOLDERS_KEY = "input_resource_folders";
+  private static final String INPUT_RESOURCE_FOLDERS_DEFAULT = "android_res";
+  private final String OUTPUT_ASSETS_FOLDER;
+  private static final String OUTPUT_ASSETS_FOLDER_KEY = "output_assets_folder";
+  private static final String OUTPUT_ASSETS_FOLDER_DEFAULT = "assets";
+  private final String OUTPUT_FONTS_FOLDER;
+  private static final String OUTPUT_FONTS_FOLDER_KEY = "output_fonts_folder";
+  private static final String OUTPUT_FONTS_FOLDER_DEFAULT = "fonts";
+  private final String OUTPUT_RESOURCE_FOLDER;
+  private static final String OUTPUT_RESOURCE_FOLDER_KEY = "output_resource_folder";
+  private static final String OUTPUT_RESOURCE_FOLDER_DEFAULT = "res";
 
   private final DirtyPrintStreamDecorator stdErr;
   private final String viewPath;
@@ -135,6 +146,15 @@ public class ProjectView {
     this.actionGraph = actionGraph;
 
     this.config = config;
+
+    INPUT_RESOURCE_FOLDERS =
+        getIntellijSectionValue(INPUT_RESOURCE_FOLDERS_KEY, INPUT_RESOURCE_FOLDERS_DEFAULT);
+    OUTPUT_ASSETS_FOLDER =
+        getIntellijSectionValue(OUTPUT_ASSETS_FOLDER_KEY, OUTPUT_ASSETS_FOLDER_DEFAULT);
+    OUTPUT_FONTS_FOLDER =
+        getIntellijSectionValue(OUTPUT_FONTS_FOLDER_KEY, OUTPUT_FONTS_FOLDER_DEFAULT);
+    OUTPUT_RESOURCE_FOLDER =
+        getIntellijSectionValue(OUTPUT_RESOURCE_FOLDER_KEY, OUTPUT_RESOURCE_FOLDER_DEFAULT);
   }
 
   private int run() {
@@ -307,7 +327,8 @@ public class ProjectView {
   private void simpleResourceLink(Matcher match, String input) {
     String name = basename(input);
 
-    String directory = fileJoin(viewPath, RES, flattenResourceDirectoryName(match.group(1)));
+    String directory =
+        fileJoin(viewPath, OUTPUT_RESOURCE_FOLDER, flattenResourceDirectoryName(match.group(1)));
     mkdir(directory);
 
     symlink(fileJoin(repository, input), fileJoin(directory, name));
@@ -322,7 +343,7 @@ public class ProjectView {
 
     String configQualifier = match.groupCount() > 2 ? match.group(3) : "";
 
-    String directory = fileJoin(viewPath, RES, match.group(2));
+    String directory = fileJoin(viewPath, OUTPUT_RESOURCE_FOLDER, match.group(2));
     mkdir(directory);
 
     symlink(
@@ -338,14 +359,14 @@ public class ProjectView {
     String inside = match.group(1); // everything between .../assets/ and filename
     String name = match.group(2); // basename(input)
 
-    String directory = fileJoin(viewPath, ASSETS, inside);
+    String directory = fileJoin(viewPath, OUTPUT_ASSETS_FOLDER, inside);
     mkdir(directory);
 
     symlink(fileJoin(repository, input), fileJoin(directory, name));
   }
 
   private void fontsLink(Matcher match, String input) {
-    String target = fileJoin(viewPath, FONTS, match.group(1));
+    String target = fileJoin(viewPath, OUTPUT_FONTS_FOLDER, match.group(1));
     String path = dirname(target);
     mkdir(path);
     symlink(fileJoin(repository, input), target);
@@ -711,8 +732,10 @@ public class ProjectView {
       }
     }
 
-    String manifestPath = fileJoin(File.separator, RES, ANDROID_MANIFEST);
-    symlink(fileJoin(repository, ANDROID_RES, ANDROID_MANIFEST), fileJoin(viewPath, manifestPath));
+    String manifestPath = fileJoin(File.separator, OUTPUT_RESOURCE_FOLDER, ANDROID_MANIFEST);
+    symlink(
+        fileJoin(repository, INPUT_RESOURCE_FOLDERS, ANDROID_MANIFEST),
+        fileJoin(viewPath, manifestPath));
 
     Element module = newElement("module", attribute(TYPE, "JAVA_MODULE"), attribute(VERSION, 4));
 
