@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidNdkHelper.SymbolGetter;
 import static com.facebook.buck.android.AndroidNdkHelper.SymbolsAndDtNeeded;
+import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -1044,6 +1045,27 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertEquals(
         resourceBundleContents.get("drawable/app_icon"),
         rDotJavaContents.get("com/sample/R$drawable:app_icon"));
+  }
+
+  @Test
+  public void testResourceOverrides() throws IOException {
+    Path path = workspace.buildAndReturnOutput("//apps/sample:strings_dump_overrides");
+    assertThat(
+        workspace.getFileContents(path),
+        containsPattern(Pattern.compile("^String #[0-9]*: Real App Name$", Pattern.MULTILINE)));
+  }
+
+  @Test
+  public void testResourceOverridesAapt2() throws IOException {
+    // TODO(dreiss): Remove this when aapt2 is everywhere.
+    ProjectWorkspace.ProcessResult foundAapt2 =
+        workspace.runBuckBuild("//apps/sample:check_for_aapt2");
+    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+
+    workspace.replaceFileContents(
+        "apps/sample/BUCK", "'aapt1',  # app_with_res_overrides", "'aapt2',");
+
+    testResourceOverrides();
   }
 
   @Test

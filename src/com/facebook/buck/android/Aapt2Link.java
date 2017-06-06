@@ -42,6 +42,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -103,7 +104,9 @@ public class Aapt2Link extends AbstractBuildRule {
     steps.add(
         new Aapt2LinkStep(
             getProjectFilesystem().getRootPath(),
-            compileRules
+            // Need to reverse the order of the rules because aapt2 allows later resources
+            // to override earlier ones, but aapt gives the earlier ones precedence.
+            Lists.reverse(compileRules)
                 .stream()
                 .map(Aapt2Compile::getSourcePathToOutput)
                 .map(context.getSourcePathResolver()::getAbsolutePath)));
