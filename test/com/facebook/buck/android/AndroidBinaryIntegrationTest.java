@@ -1290,16 +1290,19 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path mergedPath = workspace.buildAndReturnOutput("//manifests:manifest");
     String contents = workspace.getFileContents(mergedPath);
 
-    Pattern readCalendar = Pattern.compile(
-        "<uses-permission-sdk-23 android:name=\"android\\.permission\\.READ_CALENDAR\" />");
+    Pattern readCalendar =
+        Pattern.compile(
+            "<uses-permission-sdk-23 android:name=\"android\\.permission\\.READ_CALENDAR\" />");
     int matchCount = 0;
     Matcher matcher = readCalendar.matcher(contents);
     while (matcher.find()) {
       matchCount++;
     }
-    assertEquals(String.format(
-        "Expected one uses-permission-sdk-23=READ_CALENDAR tag, but found %d: %s",
-        matchCount,
-        contents), 1, matchCount);
+    assertEquals(
+        String.format(
+            "Expected one uses-permission-sdk-23=READ_CALENDAR tag, but found %d: %s",
+            matchCount, contents),
+        1,
+        matchCount);
   }
 }
