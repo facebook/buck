@@ -106,7 +106,9 @@ public class CalculateAbiFromClasses extends AbstractBuildRule
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 getAbiJarPath().getParent())),
-        RmStep.of(getProjectFilesystem(), getAbiJarPath()),
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getAbiJarPath())),
         new CalculateAbiFromClassesStep(
             buildableContext,
             getProjectFilesystem(),

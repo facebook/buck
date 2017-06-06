@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -132,9 +133,11 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
         ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
         steps.addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()));
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
         steps.add(
             CopyStep.forFile(
                 getProjectFilesystem(),

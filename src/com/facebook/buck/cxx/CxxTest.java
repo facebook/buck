@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -137,9 +138,10 @@ public abstract class CxxTest extends AbstractBuildRule
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getPathToTestOutputDirectory()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getPathToTestOutputDirectory())))
         .add(new TouchStep(getProjectFilesystem(), getPathToTestResults()))
         .add(
             new CxxTestStep(

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
@@ -134,9 +135,10 @@ public class PythonTest extends AbstractBuildRule
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getPathToTestOutputDirectory()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getPathToTestOutputDirectory())))
         .add(
             new PythonRunTestsStep(
                 getProjectFilesystem().getRootPath(),

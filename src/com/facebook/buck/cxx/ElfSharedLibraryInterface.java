@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -101,7 +102,8 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())))
         .add(
             ElfExtractSectionsStep.of(
                 getProjectFilesystem(),

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -56,7 +57,9 @@ public class OcamlClean extends AbstractBuildRule {
       LOG.debug("Adding clean step for bytecode output dir %s", bcDir.toString());
 
       steps.addAll(
-          MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), bcDir));
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), bcDir)));
     }
 
     if (Files.exists(optDir)) {
@@ -65,7 +68,8 @@ public class OcamlClean extends AbstractBuildRule {
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), getProjectFilesystem(), optDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), optDir)));
     }
     return steps.build();
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -83,21 +84,29 @@ public class PackageStringAssets extends AbstractBuildRule {
     // We need to generate a zip file with the following dir structure:
     // /assets/strings/*.fbstr
     Path pathToBaseDir = getPathToStringAssetsDir();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), pathToBaseDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToBaseDir)));
     Path pathToDirContainingAssetsDir = pathToBaseDir.resolve("string_assets");
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), pathToDirContainingAssetsDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToDirContainingAssetsDir)));
     final Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
     Function<String, Path> assetPathBuilder =
         locale -> pathToStrings.resolve(locale + STRING_ASSET_FILE_EXTENSION);
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
     Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), pathToStrings));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToStrings)));
     steps.add(
         new CompileStringsStep(
             getProjectFilesystem(),

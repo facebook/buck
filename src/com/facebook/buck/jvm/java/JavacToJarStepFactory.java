@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -252,7 +253,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     if (annotationGenFolder.isPresent()) {
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder.get()));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder.get())));
       buildableContext.recordArtifact(annotationGenFolder.get());
     }
   }

@@ -131,9 +131,16 @@ public class CxxLink extends AbstractBuildRule
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
-        .add(RmStep.of(getProjectFilesystem(), argFilePath))
-        .add(RmStep.of(getProjectFilesystem(), fileListPath))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), argFilePath)))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), fileListPath)))
         .addAll(
             CxxPrepareForLinkStep.create(
                 argFilePath,
@@ -164,10 +171,20 @@ public class CxxLink extends AbstractBuildRule
             new FileScrubberStep(
                 getProjectFilesystem(), output, linker.getScrubbers(cellRoots.build())))
         .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST))
-        .add(RmStep.of(getProjectFilesystem(), argFilePath))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), argFilePath)))
         .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST))
-        .add(RmStep.of(getProjectFilesystem(), fileListPath))
-        .add(RmStep.of(getProjectFilesystem(), scratchDir).withRecursive(true))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), fileListPath)))
+        .add(
+            RmStep.of(
+                    BuildCellRelativePath.fromCellRelativePath(
+                        context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
+                .withRecursive(true))
         .build();
   }
 

@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.aapt.MiniAapt;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -281,9 +282,10 @@ public class AndroidResource extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(),
-            getProjectFilesystem(),
-            Preconditions.checkNotNull(pathToTextSymbolsDir)));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                Preconditions.checkNotNull(pathToTextSymbolsDir))));
     if (getRes() == null) {
       return steps
           .add(new TouchStep(getProjectFilesystem(), pathToTextSymbolsFile))

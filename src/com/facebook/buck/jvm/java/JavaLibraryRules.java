@@ -76,9 +76,11 @@ public class JavaLibraryRules {
     // might be resources that need to be copied there.
     BuildTarget target = rule.getBuildTarget();
     Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, rule.getProjectFilesystem());
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), rule.getProjectFilesystem(), outputDirectory));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), rule.getProjectFilesystem(), outputDirectory)));
 
     // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
@@ -106,9 +108,10 @@ public class JavaLibraryRules {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(),
-            rule.getProjectFilesystem(),
-            DefaultJavaLibrary.getOutputJarDirPath(target, rule.getProjectFilesystem())));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                rule.getProjectFilesystem(),
+                DefaultJavaLibrary.getOutputJarDirPath(target, rule.getProjectFilesystem()))));
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
@@ -135,9 +138,11 @@ public class JavaLibraryRules {
       Path scratchDir =
           BuildTargets.getGenPath(
               rule.getProjectFilesystem(), target, "lib__%s____working_directory");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), rule.getProjectFilesystem(), scratchDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), rule.getProjectFilesystem(), scratchDir)));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
       ImmutableSortedSet<Path> javaSrcs =

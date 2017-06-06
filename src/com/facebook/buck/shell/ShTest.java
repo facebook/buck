@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -114,9 +115,10 @@ public class ShTest extends NoopBuildRule
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getPathToTestOutputDirectory()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getPathToTestOutputDirectory())))
         .add(
             // Return a single command that runs an .sh file with no arguments.
             new RunShTestAndRecordResultStep(

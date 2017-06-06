@@ -73,9 +73,15 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
-    steps.add(RmStep.of(getProjectFilesystem(), output));
+    steps.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
+
     steps.addAll(
-        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), temp));
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
 
     Set<Path> seenPackages = Sets.newHashSet();
 

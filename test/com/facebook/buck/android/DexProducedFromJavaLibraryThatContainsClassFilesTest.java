@@ -130,7 +130,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     MoreAsserts.assertSteps(
         "Generate bar.dex.jar.",
         ImmutableList.of(
-            String.format("rm -f %s", filesystem.resolve(dexOutput)),
+            String.format("rm -f %s", dexOutput),
             String.format("mkdir -p %s", dexOutput.getParent()),
             "estimate_dex_weight",
             "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
@@ -187,7 +187,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     MoreAsserts.assertSteps(
         "Do not generate a .dex.jar file.",
         ImmutableList.of(
-            String.format("rm -f %s", projectFilesystem.resolve(dexOutput)),
+            String.format("rm -f %s", dexOutput),
             String.format("mkdir -p %s", dexOutput.getParent()),
             "record_empty_dx"),
         steps,

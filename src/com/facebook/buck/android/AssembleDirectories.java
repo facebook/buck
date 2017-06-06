@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -51,7 +52,8 @@ public class AssembleDirectories extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), destinationDirectory));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), destinationDirectory)));
     for (SourcePath directory : originalDirectories) {
       Path resolvedPath = context.getSourcePathResolver().getAbsolutePath(directory);
       steps.add(

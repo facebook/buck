@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.annotations.VisibleForTesting;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -86,9 +87,10 @@ public class Aapt2Link extends AbstractBuildRule {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(),
-            getProjectFilesystem(),
-            getResourceApkPath().getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getResourceApkPath().getParent())));
 
     AaptPackageResources.prepareManifestForAapt(
         context,

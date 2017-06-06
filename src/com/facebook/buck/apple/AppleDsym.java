@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -119,7 +120,10 @@ public class AppleDsym extends AbstractBuildRule
         context.getSourcePathResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.of(
-        RmStep.of(getProjectFilesystem(), dsymOutputPath).withRecursive(true),
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath))
+            .withRecursive(true),
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),

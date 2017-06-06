@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -141,9 +142,10 @@ public class TestRunning {
           JavaLibrary library = rulesUnderTestForCoverage.iterator().next();
           for (Step step :
               MakeCleanDirectoryStep.of(
-                  buildContext.getBuildCellRootPath(),
-                  library.getProjectFilesystem(),
-                  JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem()))) {
+                  BuildCellRelativePath.fromCellRelativePath(
+                      buildContext.getBuildCellRootPath(),
+                      library.getProjectFilesystem(),
+                      JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())))) {
             stepRunner.runStepForBuildTarget(executionContext, step, Optional.empty());
           }
         } catch (StepFailedException e) {

@@ -64,10 +64,12 @@ public class JsBundleAndroid extends AbstractBuildRule
     return ImmutableList.<Step>builder()
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                sourcePathResolver.getRelativePath(
-                    JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), ""))))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    sourcePathResolver.getRelativePath(
+                        JsUtil.relativeToOutputRoot(
+                            getBuildTarget(), getProjectFilesystem(), "")))))
         .add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(

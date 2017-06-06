@@ -95,7 +95,8 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
     stepsBuilder.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), outputDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(

@@ -156,14 +156,20 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                 context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())));
 
     // Delete any other pex that was there (when switching between pex styles).
-    steps.add(RmStep.of(getProjectFilesystem(), binPath).withRecursive(true));
+    steps.add(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), binPath))
+            .withRecursive(true));
 
     Path workingDirectory =
         BuildTargets.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "__%s__working_directory");
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
     SourcePathResolver resolver = context.getSourcePathResolver();
 

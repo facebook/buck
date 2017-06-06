@@ -95,7 +95,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(RmStep.of(getProjectFilesystem(), getPathToDex()));
+    steps.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getPathToDex())));
 
     // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
     steps.add(

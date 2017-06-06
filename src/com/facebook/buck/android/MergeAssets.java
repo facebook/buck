@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -91,11 +92,13 @@ public class MergeAssets extends AbstractBuildRule {
     TreeMultimap<Path, Path> assets = TreeMultimap.create();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(),
-            getProjectFilesystem(),
-            getPathToMergedAssets().getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToMergedAssets().getParent())));
     steps.add(
         new AbstractExecutionStep("finding_assets") {
           @Override

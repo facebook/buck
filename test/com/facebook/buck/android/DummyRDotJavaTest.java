@@ -130,11 +130,11 @@ public class DummyRDotJavaTest {
 
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
-            .addAll(makeCleanDirDescription(filesystem, rDotJavaSrcFolder))
+            .addAll(makeCleanDirDescription(rDotJavaSrcFolder))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
-            .addAll(makeCleanDirDescription(filesystem, rDotJavaBinFolder))
-            .addAll(makeCleanDirDescription(filesystem, rDotJavaOutputFolder))
+            .addAll(makeCleanDirDescription(rDotJavaBinFolder))
+            .addAll(makeCleanDirDescription(rDotJavaOutputFolder))
             .add(String.format("mkdir -p %s", genFolder))
             .add(
                 new JavacStep(
@@ -197,11 +197,9 @@ public class DummyRDotJavaTest {
         dummyRDotJava.getRDotJavaBinFolder());
   }
 
-  private static ImmutableList<String> makeCleanDirDescription(
-      ProjectFilesystem filesystem, Path dirname) {
+  private static ImmutableList<String> makeCleanDirDescription(Path dirname) {
     return ImmutableList.of(
-        String.format("rm -f -r %s", filesystem.getRootPath().resolve(dirname)),
-        String.format("mkdir -p %s", dirname));
+        String.format("rm -f -r %s", dirname), String.format("mkdir -p %s", dirname));
   }
 
   private void setAndroidResourceBuildOutput(BuildRule resourceRule) {

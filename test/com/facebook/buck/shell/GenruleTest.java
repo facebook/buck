@@ -173,11 +173,13 @@ public class GenruleTest {
 
     assertEquals(
         RmStep.of(
-                filesystem,
-                filesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest"))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    filesystem,
+                    filesystem
+                        .getBuckPaths()
+                        .getGenDir()
+                        .resolve("src/com/facebook/katana/katana_manifest")))
             .withRecursive(true),
         steps.get(0));
     assertEquals(
@@ -193,11 +195,13 @@ public class GenruleTest {
 
     assertEquals(
         RmStep.of(
-                filesystem,
-                filesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest__tmp"))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    filesystem,
+                    filesystem
+                        .getBuckPaths()
+                        .getGenDir()
+                        .resolve("src/com/facebook/katana/katana_manifest__tmp")))
             .withRecursive(true),
         steps.get(2));
     assertEquals(
@@ -216,7 +220,12 @@ public class GenruleTest {
             .getBuckPaths()
             .getGenDir()
             .resolve("src/com/facebook/katana/katana_manifest__srcs");
-    assertEquals(RmStep.of(filesystem, pathToSrcDir).withRecursive(true), steps.get(4));
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), filesystem, pathToSrcDir))
+            .withRecursive(true),
+        steps.get(4));
     assertEquals(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(

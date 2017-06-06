@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -186,7 +187,8 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
         .add(
             new SymlinkFilesIntoDirectoryStep(
                 getProjectFilesystem(),
@@ -197,9 +199,10 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
                 scratchDir))
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getOutputDir(getBuildTarget(), getProjectFilesystem())))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getOutputDir(getBuildTarget(), getProjectFilesystem()))))
         .addAll(
             CxxPrepareForLinkStep.create(
                 argFilePath,

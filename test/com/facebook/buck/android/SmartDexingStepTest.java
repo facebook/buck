@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -75,6 +76,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
     DxPseudoRule rule =
         new DxPseudoRule(
+            FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
             ImmutableSet.of(testIn.toPath()),
@@ -106,7 +108,14 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.empty(), Optional.empty());
+        steps,
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
+        filesystem,
+        filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.empty(),
+        Optional.empty());
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -122,7 +131,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
                     filesystem.resolve("foo.dex.jar"),
                     filesystem.resolve("bar.dex.jar") + ")"),
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
+            "rm -f classes.dex.tmp.jar",
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps.build(),
@@ -142,7 +151,14 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.of(9), Optional.empty());
+        steps,
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
+        filesystem,
+        filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.of(9),
+        Optional.empty());
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -158,7 +174,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
                     filesystem.resolve("foo.dex.jar"),
                     filesystem.resolve("bar.dex.jar") + ")"),
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
+            "rm -f classes.dex.tmp.jar",
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps.build(),
@@ -178,7 +194,14 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.empty(), Optional.empty());
+        steps,
+        FakeBuildContext.NOOP_CONTEXT,
+        filesystem,
+        filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.empty(),
+        Optional.empty());
 
     assertEquals(
         Joiner.on(" ")
@@ -206,7 +229,14 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        steps, filesystem, filesToDex, outputPath, dxOptions, Optional.empty(), Optional.empty());
+        steps,
+        FakeBuildContext.NOOP_CONTEXT,
+        filesystem,
+        filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.empty(),
+        Optional.empty());
 
     MoreAsserts.assertSteps(
         "Wrong steps",
@@ -238,6 +268,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
         new ImmutableList.Builder<>(),
+        FakeBuildContext.NOOP_CONTEXT,
         filesystem,
         filesToDex,
         outputPath,

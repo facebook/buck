@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
@@ -169,7 +170,8 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getScratchDirPath()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), getScratchDirPath())))
         .add(
             new AbstractExecutionStep("xdso-dce relinker") {
               @Override

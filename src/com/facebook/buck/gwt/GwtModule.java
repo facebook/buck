@@ -16,6 +16,7 @@
 
 package com.facebook.buck.gwt;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
@@ -69,7 +70,8 @@ public class GwtModule extends AbstractBuildRule {
     Path workingDirectory = outputFile.getParent();
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
     // A CopyResourcesStep is needed so that a file that is at java/com/example/resource.txt in the
     // repository will be added as com/example/resource.txt in the resulting JAR (assuming that

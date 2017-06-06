@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.MacroException;
@@ -79,7 +80,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(new WriteMapDataStep())
         .add(new RunCodeGenStep(context.getSourcePathResolver()))
         .build();

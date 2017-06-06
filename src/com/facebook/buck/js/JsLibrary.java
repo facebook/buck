@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -68,7 +69,9 @@ public class JsLibrary extends AbstractBuildRule {
             outputPath,
             JsUtil.resolveMapJoin(sources, sourcePathResolver, Path::toString));
     return ImmutableList.of(
-        RmStep.of(getProjectFilesystem(), outputPath),
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
         JsUtil.workerShellStep(
             worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()));
   }

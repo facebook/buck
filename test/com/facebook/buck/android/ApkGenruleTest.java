@@ -191,8 +191,13 @@ public class ApkGenruleTest {
     ExecutionContext executionContext = newEmptyExecutionContext();
     assertEquals(
         RmStep.of(
-                projectFilesystem,
-                projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a"))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    projectFilesystem,
+                    projectFilesystem
+                        .getBuckPaths()
+                        .getGenDir()
+                        .resolve("src/com/facebook/sign_fb4a")))
             .withRecursive(true),
         steps.get(0));
     assertEquals(
@@ -208,11 +213,13 @@ public class ApkGenruleTest {
 
     assertEquals(
         RmStep.of(
-                projectFilesystem,
-                projectFilesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/sign_fb4a__tmp"))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    projectFilesystem,
+                    projectFilesystem
+                        .getBuckPaths()
+                        .getGenDir()
+                        .resolve("src/com/facebook/sign_fb4a__tmp")))
             .withRecursive(true),
         steps.get(2));
     assertEquals(
@@ -229,7 +236,11 @@ public class ApkGenruleTest {
     Path relativePathToSrcDir =
         projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a__srcs");
     assertEquals(
-        RmStep.of(projectFilesystem, relativePathToSrcDir).withRecursive(true), steps.get(4));
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), projectFilesystem, relativePathToSrcDir))
+            .withRecursive(true),
+        steps.get(4));
     assertEquals(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(

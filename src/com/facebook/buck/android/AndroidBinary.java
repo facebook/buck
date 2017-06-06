@@ -728,9 +728,11 @@ public class AndroidBinary extends AbstractBuildRule
       final Path libSubdirectory,
       final String metadataFilename,
       final APKModule module) {
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), libSubdirectory));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), libSubdirectory)));
 
     // Filter, rename and copy the ndk libraries marked as assets.
     if (nativeLibDirs.isPresent()) {
@@ -925,14 +927,17 @@ public class AndroidBinary extends AbstractBuildRule
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(),
-              getProjectFilesystem(),
-              preprocessJavaClassesInDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  preprocessJavaClassesInDir)));
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(),
-              getProjectFilesystem(),
-              preprocessJavaClassesOutDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  preprocessJavaClassesOutDir)));
 
       steps.add(
           new AbstractExecutionStep("symlinking for preprocessing") {
@@ -1265,16 +1270,22 @@ public class AndroidBinary extends AbstractBuildRule
 
       // Intermediate directory holding the primary split-zip jar.
       Path splitZipDir = getBinPath("__%s_split_zip__");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(), getProjectFilesystem(), splitZipDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), splitZipDir)));
       Path primaryJarPath = splitZipDir.resolve("primary.jar");
 
       Path secondaryJarMetaDirParent = splitZipDir.resolve("secondary_meta");
       Path secondaryJarMetaDir = secondaryJarMetaDirParent.resolve(SECONDARY_DEX_SUBDIR);
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(), getProjectFilesystem(), secondaryJarMetaDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  secondaryJarMetaDir)));
       Path secondaryJarMeta = secondaryJarMetaDir.resolve("metadata.txt");
 
       // Intermediate directory holding _ONLY_ the secondary split-zip jar files.  This is
@@ -1282,38 +1293,48 @@ public class AndroidBinary extends AbstractBuildRule
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
       final Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(), getProjectFilesystem(), secondaryZipDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), secondaryZipDir)));
 
       // Intermediate directory holding the directories holding _ONLY_ the additional split-zip
       // jar files that are intended for that dex store.
       final Path additionalDexStoresZipDir = getBinPath("__%s_dex_stores_zip__");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(),
-              getProjectFilesystem(),
-              additionalDexStoresZipDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  additionalDexStoresZipDir)));
       for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
+
         steps.addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                additionalDexStoresZipDir.resolve(dexStore.getName())));
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    additionalDexStoresZipDir.resolve(dexStore.getName()))));
+
         steps.addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                secondaryJarMetaDirParent.resolve("assets").resolve(dexStore.getName())));
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    secondaryJarMetaDirParent.resolve("assets").resolve(dexStore.getName()))));
       }
 
       // Run the split-zip command which is responsible for dividing the large set of input
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
       Path zipSplitReportDir = getBinPath("__%s_split_zip_report__");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(), getProjectFilesystem(), zipSplitReportDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), zipSplitReportDir)));
       SplitZipStep splitZipCommand =
           new SplitZipStep(
               getProjectFilesystem(),
@@ -1343,16 +1364,20 @@ public class AndroidBinary extends AbstractBuildRule
         secondaryDexDir =
             Optional.of(secondaryDexParentDir.resolve(SMART_DEX_SECONDARY_DEX_SUBDIR));
         Path intraDexReorderSecondaryDexDir = secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR);
+
         steps.addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                secondaryDexDir.get()));
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    secondaryDexDir.get())));
+
         steps.addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                intraDexReorderSecondaryDexDir));
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    intraDexReorderSecondaryDexDir)));
       } else {
         secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
         steps.add(
@@ -1370,9 +1395,11 @@ public class AndroidBinary extends AbstractBuildRule
         for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
           Path dexStorePath = additionalDexAssetsDir.resolve(dexStore.getName());
           builder.add(dexStorePath);
+
           steps.addAll(
               MakeCleanDirectoryStep.of(
-                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), dexStorePath));
+                  BuildCellRelativePath.fromCellRelativePath(
+                      buildContext.getBuildCellRootPath(), getProjectFilesystem(), dexStorePath)));
         }
         additionalDexDirs = Optional.of(builder.build());
       }
@@ -1442,6 +1469,7 @@ public class AndroidBinary extends AbstractBuildRule
     }
     SmartDexingStep smartDexingCommand =
         new SmartDexingStep(
+            buildContext,
             getProjectFilesystem(),
             selectedPrimaryDexPath,
             primaryInputsToDex,

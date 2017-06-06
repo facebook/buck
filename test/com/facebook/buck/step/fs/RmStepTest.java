@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -38,15 +39,17 @@ public class RmStepTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    context = TestExecutionContext.newInstance();
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    context = TestExecutionContext.newInstance().withBuildCellRootPath(filesystem.getRootPath());
   }
 
   @Test
   public void deletesAFile() throws IOException {
     Path file = createFile();
 
-    RmStep step = RmStep.of(filesystem, file);
+    RmStep step =
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, file));
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -56,7 +59,11 @@ public class RmStepTest {
   public void deletesADirectory() throws IOException {
     Path dir = createNonEmptyDirectory();
 
-    RmStep step = RmStep.of(filesystem, dir).withRecursive(true);
+    RmStep step =
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    filesystem.getRootPath(), filesystem, dir))
+            .withRecursive(true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(dir));
@@ -66,7 +73,11 @@ public class RmStepTest {
   public void recursiveModeWorksOnFiles() throws IOException {
     Path file = createFile();
 
-    RmStep step = RmStep.of(filesystem, file).withRecursive(true);
+    RmStep step =
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    filesystem.getRootPath(), filesystem, file))
+            .withRecursive(true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -76,7 +87,9 @@ public class RmStepTest {
   public void nonRecursiveModeFailsOnDirectories() throws IOException {
     Path dir = createNonEmptyDirectory();
 
-    RmStep step = RmStep.of(filesystem, dir);
+    RmStep step =
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, dir));
     assertEquals(1, step.execute(context).getExitCode());
   }
 
@@ -84,7 +97,9 @@ public class RmStepTest {
   public void deletingNonExistentFileSucceeds() throws IOException {
     Path file = getNonExistentFile();
 
-    RmStep step = RmStep.of(filesystem, file);
+    RmStep step =
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, file));
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
@@ -94,7 +109,11 @@ public class RmStepTest {
   public void deletingNonExistentFileRecursivelySucceeds() throws IOException {
     Path file = getNonExistentFile();
 
-    RmStep step = RmStep.of(filesystem, file).withRecursive(true);
+    RmStep step =
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    filesystem.getRootPath(), filesystem, file))
+            .withRecursive(true);
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));

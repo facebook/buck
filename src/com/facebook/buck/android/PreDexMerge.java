@@ -223,10 +223,13 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), paths.metadataSubdir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), paths.metadataSubdir)));
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), paths.scratchDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), paths.scratchDir)));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
@@ -281,6 +284,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     steps.add(
         new SmartDexingStep(
+            context,
             getProjectFilesystem(),
             primaryDexPath,
             Suppliers.ofInstance(rootApkModuleResult.primaryDexInputs),

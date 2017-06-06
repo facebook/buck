@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -117,18 +118,25 @@ public class ReactNativeBundle extends AbstractBuildRule
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), jsOutput.getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), jsOutput.getParent())));
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), resource));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), resource)));
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(),
-            getProjectFilesystem(),
-            sourceMapOutputPath.getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                sourceMapOutputPath.getParent())));
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), depFile.getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), depFile.getParent())));
 
     appendWorkerSteps(steps, context, jsOutput, sourceMapOutputPath, depFile);
 
@@ -149,7 +157,9 @@ public class ReactNativeBundle extends AbstractBuildRule
     final Path tmpDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
     stepBuilder.addAll(
-        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), tmpDir));
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), tmpDir)));
 
     // Run the bundler.
     ReactNativeBundleWorkerStep workerStep =

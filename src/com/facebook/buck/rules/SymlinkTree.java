@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -163,10 +164,13 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+
     return new ImmutableList.Builder<Step>()
         .add(getVerifyStep())
         .addAll(
-            MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), root))
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), root)))
         .add(
             new SymlinkTreeStep(
                 getProjectFilesystem(),

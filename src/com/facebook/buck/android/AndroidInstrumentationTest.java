@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -129,7 +130,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     Path pathToTestOutput = getPathToTestOutputDirectory();
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput)));
     steps.add(new ApkInstallStep(buildContext.getSourcePathResolver(), apk));
     if (apk instanceof AndroidInstrumentationApk) {
       steps.add(

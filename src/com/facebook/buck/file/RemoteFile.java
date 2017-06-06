@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -82,16 +83,20 @@ public class RemoteFile extends AbstractBuildRule {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent())));
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     if (type == Type.EXPLODED_ZIP) {
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), getProjectFilesystem(), output));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output)));
       steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output));
     } else {
       steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));

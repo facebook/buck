@@ -128,7 +128,9 @@ public class DirectHeaderMapTest {
                     buildContext.getBuildCellRootPath(),
                     projectFilesystem,
                     headerMapPath.getParent())),
-            RmStep.of(projectFilesystem, headerMapPath),
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), projectFilesystem, headerMapPath)),
             new HeaderMapStep(
                 projectFilesystem,
                 headerMapPath,

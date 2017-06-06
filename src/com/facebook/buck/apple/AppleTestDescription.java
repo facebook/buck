@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -336,9 +337,10 @@ public class AppleTestDescription
                 return new ImmutableList.Builder<Step>()
                     .addAll(
                         MakeCleanDirectoryStep.of(
-                            context.getBuildCellRootPath(),
-                            getProjectFilesystem(),
-                            outputDirectory))
+                            BuildCellRelativePath.fromCellRelativePath(
+                                context.getBuildCellRootPath(),
+                                getProjectFilesystem(),
+                                outputDirectory)))
                     .add(
                         new UnzipStep(
                             getProjectFilesystem(),

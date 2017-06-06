@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.MacroException;
@@ -82,7 +83,8 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRule {
     return ImmutableList.<Step>builder()
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)))
         .add(new RunConfigGenStep(context.getSourcePathResolver()))
         .build();
   }

@@ -132,6 +132,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
+
     return new ImmutableList.Builder<Step>()
         .add(
             MkdirStep.of(
@@ -139,7 +140,8 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
         .add(makeMainStep(context.getSourcePathResolver(), scratchDir))
         .build();
   }

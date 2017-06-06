@@ -167,7 +167,9 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
-        RmStep.of(getProjectFilesystem(), output),
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)),
         new ArchiveStep(
             getProjectFilesystem(),
             archiver.getEnvironment(resolver),

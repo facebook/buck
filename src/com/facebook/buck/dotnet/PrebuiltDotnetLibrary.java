@@ -54,7 +54,10 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithResolver {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(RmStep.of(getProjectFilesystem(), output));
+    steps.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(

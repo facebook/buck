@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -55,7 +56,9 @@ public abstract class JsFile extends AbstractBuildRule {
 
   ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgsFormat, Path outputPath) {
     return ImmutableList.of(
-        RmStep.of(getProjectFilesystem(), outputPath),
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
         JsUtil.workerShellStep(
             worker,
             String.format(jobArgsFormat, extraArgs.orElse("")),

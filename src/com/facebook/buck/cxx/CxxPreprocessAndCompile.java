@@ -237,7 +237,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getScratchPath()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), getScratchPath())))
         .add(
             makeMainStep(
                 context.getSourcePathResolver(),

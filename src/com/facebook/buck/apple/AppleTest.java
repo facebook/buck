@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -238,14 +239,20 @@ public class AppleTest extends AbstractBuildRule
             .getAbsolutePath(Preconditions.checkNotNull(testBundle.getSourcePathToOutput()));
 
     Path pathToTestOutput = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput)));
 
     Path resolvedTestLogsPath = getProjectFilesystem().resolve(testLogsPath);
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(), getProjectFilesystem(), resolvedTestLogsPath));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                resolvedTestLogsPath)));
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 

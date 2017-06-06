@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -120,7 +121,8 @@ public class SymlinkTreeTest {
         new ImmutableList.Builder<Step>()
             .addAll(
                 MakeCleanDirectoryStep.of(
-                    buildContext.getBuildCellRootPath(), projectFilesystem, outputPath))
+                    BuildCellRelativePath.fromCellRelativePath(
+                        buildContext.getBuildCellRootPath(), projectFilesystem, outputPath)))
             .add(
                 new SymlinkTreeStep(
                     projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))

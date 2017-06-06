@@ -120,7 +120,11 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
-    builder.add(RmStep.of(getProjectFilesystem(), out).withRecursive(true));
+    builder.add(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), out))
+            .withRecursive(true));
     builder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),

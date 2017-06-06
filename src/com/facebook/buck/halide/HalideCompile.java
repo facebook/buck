@@ -16,6 +16,7 @@
 
 package com.facebook.buck.halide;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -68,7 +69,9 @@ public class HalideCompile extends AbstractBuildRule {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     commands.addAll(
-        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), projectFilesystem, outputDir));
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
 
     commands.add(
         new HalideCompilerStep(

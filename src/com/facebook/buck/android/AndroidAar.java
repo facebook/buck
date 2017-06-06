@@ -91,11 +91,17 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
+
     commands.addAll(
-        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), temp));
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
 
     // Remove the output .aar file
-    commands.add(RmStep.of(getProjectFilesystem(), pathToOutputFile));
+    commands.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutputFile)));
 
     // put manifest into tmp folder
     commands.add(

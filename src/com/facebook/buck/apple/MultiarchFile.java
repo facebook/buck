@@ -92,7 +92,8 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     Path linkMapDir = Paths.get(output + "-LinkMap");
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(), getProjectFilesystem(), linkMapDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), linkMapDir)));
 
     for (SourcePath thinBinary : thinBinaries) {
       Optional<BuildRule> maybeRule = ruleFinder.getRule(thinBinary);

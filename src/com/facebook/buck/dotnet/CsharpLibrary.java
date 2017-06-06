@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dotnet;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -88,7 +89,9 @@ public class CsharpLibrary extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.addAll(
-        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), filesystem, output.getParent()));
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(
         new CsharpLibraryCompile(
             filesystem.resolve(output),

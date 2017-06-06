@@ -171,9 +171,11 @@ public class GoCompile extends AbstractBuildRule {
               getProjectFilesystem(),
               getBuildTarget(),
               "%s/" + getBuildTarget().getShortName() + "__asm_includes");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), getProjectFilesystem(), asmIncludeDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), asmIncludeDir)));
 
       if (!headerSrcs.isEmpty()) {
         // TODO(mikekap): Allow header-map style input.
@@ -192,9 +194,11 @@ public class GoCompile extends AbstractBuildRule {
               getProjectFilesystem(),
               getBuildTarget(),
               "%s/" + getBuildTarget().getShortName() + "__asm_compile");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), getProjectFilesystem(), asmOutputDir));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), asmOutputDir)));
 
       ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
       for (Path asmSrc : asmSrcs) {

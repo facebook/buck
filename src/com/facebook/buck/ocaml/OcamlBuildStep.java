@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePath;
@@ -283,9 +284,10 @@ public class OcamlBuildStep implements Step {
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(),
-            filesystem,
-            ocamlContext.getCompileNativeOutputDir())) {
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                filesystem,
+                ocamlContext.getCompileNativeOutputDir()))) {
       StepExecutionResult mkDirExecutionResult = step.execute(context);
       if (!mkDirExecutionResult.isSuccess()) {
         return mkDirExecutionResult;
@@ -334,9 +336,10 @@ public class OcamlBuildStep implements Step {
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(),
-            filesystem,
-            ocamlContext.getCompileBytecodeOutputDir())) {
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                filesystem,
+                ocamlContext.getCompileBytecodeOutputDir()))) {
       StepExecutionResult mkDirExecutionResult = step.execute(context);
       if (!mkDirExecutionResult.isSuccess()) {
         return mkDirExecutionResult;
@@ -381,9 +384,10 @@ public class OcamlBuildStep implements Step {
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(),
-            filesystem,
-            ocamlContext.getGeneratedSourceDir())) {
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                filesystem,
+                ocamlContext.getGeneratedSourceDir()))) {
       StepExecutionResult mkDirExecutionResult = step.execute(context);
       if (!mkDirExecutionResult.isSuccess()) {
         return mkDirExecutionResult;

@@ -283,9 +283,11 @@ public class JavaTest extends AbstractBuildRuleWithResolver
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path pathToTestOutput = getPathToTestOutputDirectory();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput)));
     if (forkMode() == ForkMode.PER_TEST) {
       ImmutableList.Builder<JUnitStep> junitsBuilder = ImmutableList.builder();
       for (String testClass : testClassNames) {

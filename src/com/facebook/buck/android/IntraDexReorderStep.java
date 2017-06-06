@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -115,7 +116,10 @@ public class IntraDexReorderStep implements Step {
       String tmpname = "dex-tmp-" + inputPath.getFileName().toString() + "-%s";
       Path temp = BuildTargets.getScratchPath(filesystem, buildTarget, tmpname);
       // Create tmp directory if necessary
-      steps.addAll(MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), filesystem, temp));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), filesystem, temp)));
       // un-zip
       steps.add(new UnzipStep(filesystem, inputPath, temp));
       // run reorder tool

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -94,9 +95,11 @@ public class GenerateRDotJava extends AbstractBuildRule {
 
     // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
     Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            buildContext.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaSrc));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaSrc)));
 
     Path rDotTxtPath = pathResolver.getAbsolutePath(pathToRDotTxtFile);
     MergeAndroidResourcesStep mergeStep =
@@ -113,9 +116,11 @@ public class GenerateRDotJava extends AbstractBuildRule {
     if (shouldBuildStringSourceMap) {
       // Make sure we have an output directory
       Path outputDirPath = getPathForNativeStringInfoDirectory();
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              buildContext.getBuildCellRootPath(), getProjectFilesystem(), outputDirPath));
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), outputDirPath)));
 
       // Add the step that parses R.txt and all the strings.xml files, and
       // produces a JSON with android resource id's and xml paths for each string resource.

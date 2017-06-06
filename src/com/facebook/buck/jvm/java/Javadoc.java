@@ -95,7 +95,10 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
-    steps.add(RmStep.of(getProjectFilesystem(), output));
+    steps.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
 
     // Fast path: nothing to do so just create an empty zip and return.
     if (sources.isEmpty()) {
@@ -114,7 +117,8 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
     // Write an @-file with all the source files in
     steps.add(
         new WriteFileStep(
@@ -147,9 +151,11 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
             getProjectFilesystem(), argsBuilder.toString(), atArgs, /* can execute */ false));
 
     Path uncompressedOutputDir = scratchDir.resolve("docs");
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), uncompressedOutputDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), uncompressedOutputDir)));
     steps.add(
         new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
           @Override

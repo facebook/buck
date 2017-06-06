@@ -288,7 +288,8 @@ public class AppleBundle extends AbstractBuildRule
 
     stepsBuilder.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (assetCatalog.isPresent()) {
@@ -386,7 +387,7 @@ public class AppleBundle extends AbstractBuildRule
 
     if (hasBinary) {
       appendCopyBinarySteps(stepsBuilder, context);
-      appendCopyDsymStep(stepsBuilder, buildableContext, context.getSourcePathResolver());
+      appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
     if (!Iterables.isEmpty(
@@ -668,32 +669,43 @@ public class AppleBundle extends AbstractBuildRule
   private void appendCopyDsymStep(
       ImmutableList.Builder<Step> stepsBuilder,
       BuildableContext buildableContext,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     if (appleDsym.isPresent()) {
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              pathResolver.getRelativePath(appleDsym.get().getSourcePathToOutput()),
+              buildContext
+                  .getSourcePathResolver()
+                  .getRelativePath(appleDsym.get().getSourcePathToOutput()),
               bundleRoot.getParent(),
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext, pathResolver);
+      appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext, buildContext);
     }
   }
 
   private void appendDsymRenameStepToMatchBundleName(
       ImmutableList.Builder<Step> stepsBuilder,
       BuildableContext buildableContext,
-      SourcePathResolver pathResolver) {
+      BuildContext buildContext) {
     Preconditions.checkArgument(hasBinary && appleDsym.isPresent());
 
     // rename dSYM bundle to match bundle name
-    Path dsymPath = pathResolver.getRelativePath(appleDsym.get().getSourcePathToOutput());
+    Path dsymPath =
+        buildContext
+            .getSourcePathResolver()
+            .getRelativePath(appleDsym.get().getSourcePathToOutput());
     Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
     Path dsymDestinationPath =
         bundleRoot
             .getParent()
             .resolve(bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
-    stepsBuilder.add(RmStep.of(getProjectFilesystem(), dsymDestinationPath).withRecursive(true));
+    stepsBuilder.add(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    dsymDestinationPath))
+            .withRecursive(true));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
     String dwarfFilename =

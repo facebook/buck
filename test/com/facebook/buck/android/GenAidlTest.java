@@ -105,7 +105,12 @@ public class GenAidlTest {
     assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
 
     Path outputDirectory = BuildTargets.getScratchPath(stubFilesystem, target, "__%s.aidl");
-    assertEquals(RmStep.of(stubFilesystem, outputDirectory).withRecursive(true), steps.get(2));
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory))
+            .withRecursive(true),
+        steps.get(2));
     assertEquals(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(

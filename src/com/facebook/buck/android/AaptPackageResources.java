@@ -147,16 +147,20 @@ public class AaptPackageResources extends AbstractBuildRule {
                 getResourceApkPath().getParent())));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), rDotTxtDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), rDotTxtDir)));
 
     Path pathToGeneratedProguardConfig = getPathToGeneratedProguardConfigFile();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(),
-            getProjectFilesystem(),
-            pathToGeneratedProguardConfig.getParent()));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToGeneratedProguardConfig.getParent())));
     buildableContext.recordArtifact(pathToGeneratedProguardConfig);
 
     steps.add(

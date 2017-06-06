@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.Compiler;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -67,9 +68,10 @@ public class OcamlBuild extends AbstractBuildRule {
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                ocamlContext.getNativeOutput().getParent()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    ocamlContext.getNativeOutput().getParent())))
         .add(
             new OcamlBuildStep(
                 context,

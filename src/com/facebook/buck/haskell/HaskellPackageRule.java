@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -190,13 +191,19 @@ public class HaskellPackageRule extends AbstractBuildRule {
 
     // Setup the scratch dir.
     Path scratchDir = BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
 
     // Setup the package DB directory.
     final Path packageDb = getPackageDb();
-    steps.add(RmStep.of(getProjectFilesystem(), packageDb).withRecursive(true));
+    steps.add(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), packageDb))
+            .withRecursive(true));
     buildableContext.recordArtifact(packageDb);
 
     // Create the registration file.

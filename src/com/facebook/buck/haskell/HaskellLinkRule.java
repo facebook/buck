@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -80,9 +81,10 @@ public class HaskellLinkRule extends AbstractBuildRule {
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getOutputDir(getBuildTarget(), getProjectFilesystem())))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getOutputDir(getBuildTarget(), getProjectFilesystem()))))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
 

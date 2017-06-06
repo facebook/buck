@@ -144,9 +144,11 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaSrcFolder));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaSrcFolder)));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -158,9 +160,13 @@ public class DummyRDotJava extends AbstractBuildRule
       // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
       Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
+
       steps.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), getProjectFilesystem(), emptyRDotJava.getParent()));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  emptyRDotJava.getParent())));
       steps.add(
           new WriteFileStep(
               getProjectFilesystem(),
@@ -206,14 +212,18 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Clear out the directory where the .class files will be generated.
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaClassesFolder));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaClassesFolder)));
 
     Path pathToJarOutputDir = outputJar.getParent();
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), pathToJarOutputDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToJarOutputDir)));
 
     Path pathToSrcsList =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");

@@ -98,13 +98,17 @@ public class GenAidl extends AbstractBuildRule {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     commands.addAll(
-        MakeCleanDirectoryStep.of(context.getBuildCellRootPath(), getProjectFilesystem(), genPath));
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), genPath)));
 
     BuildTarget target = getBuildTarget();
     Path outputDirectory = BuildTargets.getScratchPath(getProjectFilesystem(), target, "__%s.aidl");
+
     commands.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)));
 
     AidlStep command =
         new AidlStep(

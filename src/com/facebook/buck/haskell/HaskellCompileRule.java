@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -258,16 +259,22 @@ public class HaskellCompileRule extends AbstractBuildRule {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
     buildableContext.recordArtifact(getStubDir());
+
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getObjectDir()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), getObjectDir())))
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getInterfaceDir()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getInterfaceDir())))
         .addAll(
             MakeCleanDirectoryStep.of(
-                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getStubDir()))
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), getStubDir())))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -79,7 +80,8 @@ public class CoreDataModel extends AbstractBuildRule {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     stepsBuilder.addAll(
         MakeCleanDirectoryStep.of(
-            context.getBuildCellRootPath(), getProjectFilesystem(), outputDir));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath dataModelPath : dataModelPaths) {
       stepsBuilder.add(
           new ShellStep(getProjectFilesystem().getRootPath()) {

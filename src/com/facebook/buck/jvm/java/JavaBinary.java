@@ -118,7 +118,8 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
 
       commands.addAll(
           MakeCleanDirectoryStep.of(
-              context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot));
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot)));
 
       commands.add(
           SymlinkFileStep.builder()
