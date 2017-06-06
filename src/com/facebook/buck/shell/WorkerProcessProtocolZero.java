@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
 
@@ -37,9 +38,16 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
 
   private final JsonWriter processStdinWriter;
   private final JsonReader processStdoutReader;
-  private final Path stdErr;
+  private final Optional<Path> stdErr;
   private final Runnable cleanUp;
   private boolean isClosed = false;
+
+  public WorkerProcessProtocolZero(JsonWriter processStdinWriter, JsonReader processStdoutReader) {
+    this.processStdinWriter = processStdinWriter;
+    this.processStdoutReader = processStdoutReader;
+    this.stdErr = Optional.empty();
+    this.cleanUp = () -> {};
+  }
 
   public WorkerProcessProtocolZero(
       JsonWriter processStdinWriter,
@@ -48,7 +56,7 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       Runnable cleanUp) {
     this.processStdinWriter = processStdinWriter;
     this.processStdoutReader = processStdoutReader;
-    this.stdErr = stdErr;
+    this.stdErr = Optional.of(stdErr);
     this.cleanUp = cleanUp;
   }
 
@@ -377,8 +385,11 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   }
 
   private String getStdErrorOutput() throws IOException {
+    if (!stdErr.isPresent()) {
+      return "";
+    }
     StringBuilder sb = new StringBuilder();
-    try (InputStream inputStream = Files.newInputStream(stdErr)) {
+    try (InputStream inputStream = Files.newInputStream(stdErr.get())) {
       BufferedReader errorReader = new BufferedReader(new InputStreamReader(inputStream));
       while (errorReader.ready()) {
         sb.append("\t").append(errorReader.readLine()).append("\n");
