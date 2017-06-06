@@ -150,6 +150,11 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
     return input;
   }
 
+  public Path getRelativeInputPath(SourcePathResolver resolver) {
+    // TODO(mzlee): We should make a generic solution to address this
+    return getProjectFilesystem().relativize(resolver.getAbsolutePath(input));
+  }
+
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
@@ -219,7 +224,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
                   preprocessorDelegate.getHeaderVerification(),
                   getDepFilePath(context.getSourcePathResolver()),
                   // TODO(10194465): This uses relative path so as to get relative paths in the dep file
-                  context.getSourcePathResolver().getRelativePath(input),
+                  getRelativeInputPath(context.getSourcePathResolver()),
                   output));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
@@ -241,7 +246,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRule
         resolver.getRelativePath(getSourcePathToOutput()),
         Optional.of(getDepFilePath(resolver)),
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
-        resolver.getRelativePath(input),
+        getRelativeInputPath(resolver),
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
             preprocessorDelegate.getCommandPrefix(),
