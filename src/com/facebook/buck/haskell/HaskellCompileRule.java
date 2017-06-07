@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -39,12 +39,15 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +56,11 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -61,6 +68,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class HaskellCompileRule extends AbstractBuildRule {
+
+  private static final Logger LOG = Logger.get(HaskellCompileRule.class);
 
   @AddToRuleKey private final Tool compiler;
 
@@ -259,22 +268,11 @@ public class HaskellCompileRule extends AbstractBuildRule {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
     buildableContext.recordArtifact(getStubDir());
-
+    String interfaceSuffix = picType == CxxSourceRuleFactory.PicType.PIC ? "dyn_hi" : "hi";
     return new ImmutableList.Builder<Step>()
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), getObjectDir())))
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    getInterfaceDir())))
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), getStubDir())))
+        .add(prepareOutputDir("object", getObjectDir(), "o"))
+        .add(prepareOutputDir("interface", getInterfaceDir(), interfaceSuffix))
+        .add(prepareOutputDir("stub", getStubDir(), "h"))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
 
@@ -294,9 +292,10 @@ public class HaskellCompileRule extends AbstractBuildRule {
                     .addAll(compiler.getCommandPrefix(resolver))
                     .addAll(flags)
                     .add("-no-link")
+                    .add("-hisuf", interfaceSuffix)
                     .addAll(
                         picType == CxxSourceRuleFactory.PicType.PIC
-                            ? ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi")
+                            ? ImmutableList.of("-dynamic", "-fPIC")
                             : ImmutableList.of())
                     .addAll(
                         MoreIterables.zipAndConcat(
@@ -364,5 +363,54 @@ public class HaskellCompileRule extends AbstractBuildRule {
   @VisibleForTesting
   protected ImmutableList<String> getFlags() {
     return flags;
+  }
+
+  /**
+   * @return a {@link Step} which removes outputs which don't correspond to this rule's modules from
+   *     the given output dir, as the module-derived outputs themselves will be controlled by the
+   *     haskell compiler.
+   */
+  private Step prepareOutputDir(String name, Path root, String suffix) {
+    return new AbstractExecutionStep(String.format("preparing %s output dir", name)) {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+        getProjectFilesystem().mkdirs(root);
+        getProjectFilesystem()
+            .walkRelativeFileTree(
+                root,
+                new SimpleFileVisitor<Path>() {
+
+                  // Only leave paths which would be overwritten when invoking the compiler.
+                  private final Set<Path> allowedPaths =
+                      RichStream.from(sources.getModuleNames())
+                          .map(s -> root.resolve(s.replace('.', File.separatorChar) + "." + suffix))
+                          .toImmutableSet();
+
+                  @Override
+                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                      throws IOException {
+                    Preconditions.checkState(!file.isAbsolute());
+                    if (!allowedPaths.contains(file)) {
+                      LOG.verbose("cleaning " + file);
+                      getProjectFilesystem().deleteFileAtPath(file);
+                    }
+                    return super.visitFile(file, attrs);
+                  }
+
+                  @Override
+                  public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                      throws IOException {
+                    Preconditions.checkState(!dir.isAbsolute());
+                    if (!dir.equals(root)
+                        && getProjectFilesystem().getDirectoryContents(dir).isEmpty()) {
+                      LOG.verbose("cleaning " + dir);
+                      getProjectFilesystem().deleteFileAtPath(dir);
+                    }
+                    return super.postVisitDirectory(dir, exc);
+                  }
+                });
+        return StepExecutionResult.SUCCESS;
+      }
+    };
   }
 }
