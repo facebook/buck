@@ -209,17 +209,6 @@ public class PerBuildState implements AutoCloseable {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem(), symlinkExistenceCache);
     if (!newSymlinksEncountered.isEmpty()) {
-      ParserConfig.AllowSymlinks allowSymlinks =
-          Preconditions.checkNotNull(
-              cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
-      if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
-        throw new HumanReadableException(
-            "Target %s contains input files under a path which contains a symbolic link "
-                + "(%s). To resolve this, use separate rules and declare dependencies instead of "
-                + "using symbolic links.",
-            node.getBuildTarget(), newSymlinksEncountered);
-      }
-
       Optional<ImmutableList<Path>> readOnlyPaths =
           getCell(node.getBuildTarget())
               .getBuckConfig()
@@ -239,6 +228,20 @@ public class PerBuildState implements AutoCloseable {
             return;
           }
         }
+      }
+
+      ParserConfig.AllowSymlinks allowSymlinks =
+          Preconditions.checkNotNull(
+              cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
+      if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
+        throw new HumanReadableException(
+            "Target %s contains input files under a path which contains a symbolic link "
+                + "(%s). To resolve this, use separate rules and declare dependencies instead of "
+                + "using symbolic links.\n"
+                + "If the symlink points to a read-only filesystem, you can specify it in the "
+                + "project.read_only_paths .buckconfig setting. Buck will assume files under that "
+                + "path will never change.",
+            node.getBuildTarget(), newSymlinksEncountered);
       }
 
       // If we're not explicitly forbidding symlinks, either warn to the console or the log file
