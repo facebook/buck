@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 
 public class ObjectMappers {
 
@@ -83,6 +84,10 @@ public class ObjectMappers {
     return jsonFactory.createGenerator(stream);
   }
 
+  public static <T> T convertValue(Map<String, Object> map, Class<T> clazz) {
+    return mapper.convertValue(map, clazz);
+  }
+
   // This is mutable, and doesn't share a cache with the rest of Buck.
   // All uses of it should be removed.
   // Any new code should instead use READER or WRITER.
@@ -90,11 +95,14 @@ public class ObjectMappers {
     return create();
   }
 
+  // Callers must not modify (i.e. reconfigure) this ObjectMapper.
+  private static final ObjectMapper mapper;
+
   // Callers must not modify (i.e. reconfigure) this JsonFactory.
   private static final JsonFactory jsonFactory;
 
   static {
-    ObjectMapper mapper = create();
+    mapper = create();
     READER = mapper.reader();
     WRITER = mapper.writer();
     jsonFactory = mapper.getFactory();

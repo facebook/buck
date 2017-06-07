@@ -20,12 +20,16 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.LenientBooleanJsonDeserializer;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonStreamParser;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,35 +46,44 @@ class XctoolOutputParsing {
   // Utility class; do not instantiate.
   private XctoolOutputParsing() {}
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class TestException {
     @Nullable public String filePathInProject = null;
     public int lineNumber = -1;
     @Nullable public String reason = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class BeginOcunitEvent {
     public double timestamp = -1;
     @Nullable public String targetName = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class EndOcunitEvent {
     public double timestamp = -1;
     @Nullable public String message = null;
+
+    @JsonDeserialize(using = LenientBooleanJsonDeserializer.class)
     public boolean succeeded = false;
+
     @Nullable public String targetName = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class StatusEvent {
     public double timestamp = -1;
     @Nullable public String message = null;
     @Nullable public String level = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class BeginTestSuiteEvent {
     public double timestamp = -1;
     @Nullable public String suite = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class EndTestSuiteEvent {
     public double timestamp = -1;
     public double totalDuration = -1;
@@ -79,9 +92,12 @@ class XctoolOutputParsing {
     public int testCaseCount = -1;
     public int totalFailureCount = -1;
     public int unexpectedExceptionCount = -1;
+
+    @JsonDeserialize(using = LenientBooleanJsonDeserializer.class)
     public boolean succeeded = false;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class BeginTestEvent {
     public double timestamp = -1;
     @Nullable public String test = null;
@@ -89,6 +105,7 @@ class XctoolOutputParsing {
     @Nullable public String methodName = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class EndTestEvent {
     public double totalDuration = -1;
     public double timestamp = -1;
@@ -96,7 +113,10 @@ class XctoolOutputParsing {
     @Nullable public String className = null;
     @Nullable public String methodName = null;
     @Nullable public String output = null;
+
+    @JsonDeserialize(using = LenientBooleanJsonDeserializer.class)
     public boolean succeeded = false;
+
     public List<TestException> exceptions = new ArrayList<>();
   }
 
@@ -124,58 +144,67 @@ class XctoolOutputParsing {
    * invokes the callbacks in {@code eventCallback} with each event in the stream.
    */
   public static void streamOutputFromReader(Reader reader, XctoolEventCallback eventCallback) {
-    Gson gson = new Gson();
-    JsonStreamParser streamParser = new JsonStreamParser(reader);
     try {
-      while (streamParser.hasNext()) {
-        dispatchEventCallback(gson, streamParser.next(), eventCallback);
+      MappingIterator<ImmutableMap<String, Object>> it =
+          ObjectMappers.READER
+              .forType(new TypeReference<ImmutableMap<String, Object>>() {})
+              .readValues(reader);
+      while (it.hasNext()) {
+        ImmutableMap<String, Object> element;
+        try {
+          element = it.next();
+        } catch (RuntimeJsonMappingException e) {
+          LOG.warn(e, "Couldn't parse JSON object from xctool event");
+          continue;
+        }
+        dispatchEventCallback(element, eventCallback);
       }
-    } catch (JsonParseException e) {
+    } catch (IOException e) {
       LOG.warn(e, "Couldn't parse xctool JSON stream");
     }
   }
 
   private static void dispatchEventCallback(
-      Gson gson, JsonElement element, XctoolEventCallback eventCallback) throws JsonParseException {
-    LOG.debug("Parsing xctool event: %s", element);
-    if (!element.isJsonObject()) {
-      LOG.warn("Couldn't parse JSON object from xctool event: %s", element);
+      ImmutableMap<String, Object> object, XctoolEventCallback eventCallback) {
+    LOG.debug("Parsing xctool event: %s", object);
+    if (!object.containsKey("event")) {
+      LOG.warn("Couldn't parse JSON event from xctool event: %s", object);
       return;
     }
-    JsonObject object = element.getAsJsonObject();
-    if (!object.has("event")) {
-      LOG.warn("Couldn't parse JSON event from xctool event: %s", element);
+    Object event = object.get("event");
+    if (event == null || !(event instanceof String)) {
+      LOG.warn("Couldn't parse event field from xctool event: %s", object);
       return;
     }
-    JsonElement event = object.get("event");
-    if (event == null || !event.isJsonPrimitive()) {
-      LOG.warn("Couldn't parse event field from xctool event: %s", element);
-      return;
-    }
-    switch (event.getAsString()) {
+    switch ((String) event) {
       case "begin-ocunit":
-        eventCallback.handleBeginOcunitEvent(gson.fromJson(element, BeginOcunitEvent.class));
+        eventCallback.handleBeginOcunitEvent(
+            ObjectMappers.convertValue(object, BeginOcunitEvent.class));
         break;
       case "end-ocunit":
-        eventCallback.handleEndOcunitEvent(gson.fromJson(element, EndOcunitEvent.class));
+        eventCallback.handleEndOcunitEvent(
+            ObjectMappers.convertValue(object, EndOcunitEvent.class));
         break;
       case "begin-status":
-        eventCallback.handleBeginStatusEvent(gson.fromJson(element, StatusEvent.class));
+        eventCallback.handleBeginStatusEvent(ObjectMappers.convertValue(object, StatusEvent.class));
         break;
       case "end-status":
-        eventCallback.handleEndStatusEvent(gson.fromJson(element, StatusEvent.class));
+        eventCallback.handleEndStatusEvent(ObjectMappers.convertValue(object, StatusEvent.class));
         break;
       case "begin-test-suite":
-        eventCallback.handleBeginTestSuiteEvent(gson.fromJson(element, BeginTestSuiteEvent.class));
+        eventCallback.handleBeginTestSuiteEvent(
+            ObjectMappers.convertValue(object, BeginTestSuiteEvent.class));
         break;
       case "end-test-suite":
-        eventCallback.handleEndTestSuiteEvent(gson.fromJson(element, EndTestSuiteEvent.class));
+        eventCallback.handleEndTestSuiteEvent(
+            ObjectMappers.convertValue(object, EndTestSuiteEvent.class));
         break;
       case "begin-test":
-        eventCallback.handleBeginTestEvent(gson.fromJson(element, BeginTestEvent.class));
+        eventCallback.handleBeginTestEvent(
+            ObjectMappers.convertValue(object, BeginTestEvent.class));
         break;
       case "end-test":
-        eventCallback.handleEndTestEvent(gson.fromJson(element, EndTestEvent.class));
+        eventCallback.handleEndTestEvent(ObjectMappers.convertValue(object, EndTestEvent.class));
         break;
     }
   }
