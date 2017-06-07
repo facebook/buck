@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,8 +49,8 @@ public class SwiftPlatformsIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() {
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build("iphoneos", ImmutableSet.of(), swiftcTool, swiftStdTool);
-    assertThat(swiftPlatform.getSwiftStdlibTool(), equalTo(swiftStdTool));
+        SwiftPlatforms.build("iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+    assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
@@ -59,7 +60,8 @@ public class SwiftPlatformsIntegrationTest {
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithoutTools() throws IOException {
     Path dir = tmp.newFolder("foo");
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build("iphoneos", ImmutableSet.of(dir), swiftcTool, swiftStdTool);
+        SwiftPlatforms.build(
+            "iphoneos", ImmutableSet.of(dir), swiftcTool, Optional.of(swiftStdTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -77,7 +79,7 @@ public class SwiftPlatformsIntegrationTest {
                 tmp.getRoot().resolve("foo2"),
                 tmp.getRoot().resolve("foo3")),
             swiftcTool,
-            swiftStdTool);
+            Optional.of(swiftStdTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

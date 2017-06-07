@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.rules.Tool;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 public class SwiftPlatforms {
@@ -27,7 +28,7 @@ public class SwiftPlatforms {
   private SwiftPlatforms() {}
 
   public static SwiftPlatform build(
-      String platformName, Set<Path> toolchainPaths, Tool swiftc, Tool swiftStdLibTool) {
+      String platformName, Set<Path> toolchainPaths, Tool swiftc, Optional<Tool> swiftStdLibTool) {
     SwiftPlatform.Builder builder =
         SwiftPlatform.builder().setSwiftc(swiftc).setSwiftStdlibTool(swiftStdLibTool);
 

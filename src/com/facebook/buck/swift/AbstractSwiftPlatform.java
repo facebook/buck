@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
 
@@ -29,7 +30,7 @@ interface AbstractSwiftPlatform {
 
   Tool getSwiftc();
 
-  Tool getSwiftStdlibTool();
+  Optional<Tool> getSwiftStdlibTool();
 
   Set<Path> getSwiftRuntimePaths();
 

@@ -526,10 +526,10 @@ public class AppleCxxPlatforms {
             version,
             swiftStdlibToolParamsBuilder.build());
 
-    if (swiftc.isPresent() && swiftStdLibTool.isPresent()) {
+    if (swiftc.isPresent()) {
       return Optional.of(
           SwiftPlatforms.build(
-              platformName, sdkPaths.getToolchainPaths(), swiftc.get(), swiftStdLibTool.get()));
+              platformName, sdkPaths.getToolchainPaths(), swiftc.get(), swiftStdLibTool));
     } else {
       return Optional.empty();
     }

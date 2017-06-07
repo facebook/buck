@@ -58,7 +58,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -225,7 +224,9 @@ public class AppleBundle extends AbstractBuildRule
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);
     this.swiftStdlibTool =
-        appleCxxPlatform.getSwiftPlatform().map(SwiftPlatform::getSwiftStdlibTool);
+        appleCxxPlatform.getSwiftPlatform().isPresent()
+            ? appleCxxPlatform.getSwiftPlatform().get().getSwiftStdlibTool()
+            : Optional.<Tool>empty();
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
