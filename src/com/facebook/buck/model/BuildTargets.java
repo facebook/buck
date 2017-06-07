@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 
 /** Static helpers for working with build targets. */
@@ -130,7 +131,7 @@ public class BuildTargets {
   public static ImmutableSortedSet<BuildTarget> propagateFlavorDomains(
       BuildTarget target, Iterable<FlavorDomain<?>> domains, Iterable<BuildTarget> deps) {
 
-    Set<Flavor> flavors = Sets.newHashSet();
+    Set<Flavor> flavors = new HashSet<>();
 
     // For each flavor domain, extract the corresponding flavor from the parent target and
     // verify that each dependency hasn't already set this flavor.

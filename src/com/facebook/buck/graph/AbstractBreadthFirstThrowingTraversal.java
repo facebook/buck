@@ -18,7 +18,7 @@ package com.facebook.buck.graph;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -36,7 +36,7 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
   public AbstractBreadthFirstThrowingTraversal(Iterable<? extends Node> initialNodes) {
     toExplore = new LinkedList<>();
     Iterables.addAll(toExplore, initialNodes);
-    explored = Sets.newHashSet();
+    explored = new HashSet<>();
   }
 
   public final void start() throws E {

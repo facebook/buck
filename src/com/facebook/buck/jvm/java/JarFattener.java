@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
@@ -50,6 +49,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -134,7 +134,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     steps.add(writeFatJarInfo(fatJarInfo, sonameToResourceMap));
 
     // Build up the resource and src collections.
-    Set<Path> javaSourceFilePaths = Sets.newHashSet();
+    Set<Path> javaSourceFilePaths = new HashSet<>();
     for (String srcResource : FAT_JAR_SRC_RESOURCES) {
       Path fatJarSource = outputDir.resolve(Paths.get(srcResource).getFileName());
       javaSourceFilePaths.add(fatJarSource);

@@ -35,10 +35,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -170,7 +170,7 @@ public class AuditInputCommand extends AbstractCommand {
     // than once.
     new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(graph) {
 
-      final Set<Path> inputs = Sets.newHashSet();
+      final Set<Path> inputs = new HashSet<>();
 
       @Override
       public void visit(TargetNode<?, ?> node) {

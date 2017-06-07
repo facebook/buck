@@ -32,9 +32,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -89,7 +89,7 @@ public class AndroidPackageableCollector {
   }
 
   public void addPackageables(Iterable<AndroidPackageable> packageables) {
-    Set<AndroidPackageable> explored = Sets.newHashSet();
+    Set<AndroidPackageable> explored = new HashSet<>();
 
     for (AndroidPackageable packageable : packageables) {
       postOrderTraverse(packageable, explored);

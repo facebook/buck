@@ -93,6 +93,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -946,7 +947,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               private void uploadToCache(BuildRuleSuccessType success) {
 
                 // Collect up all the rule keys we have index the artifact in the cache with.
-                Set<RuleKey> ruleKeys = Sets.newHashSet();
+                Set<RuleKey> ruleKeys = new HashSet<>();
 
                 // If the rule key has changed (and is not already in the cache), we need to push
                 // the artifact to cache using the new key.

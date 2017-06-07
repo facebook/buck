@@ -20,7 +20,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.IntStream;
 
 public class UsedResourcesFinder {
@@ -116,10 +116,10 @@ public class UsedResourcesFinder {
         int type = (id >> 16) & 0xFF;
         int k = id & 0xFFFF;
         Set<Integer> processedIdsForType =
-            Preconditions.checkNotNull(processedIds.computeIfAbsent(type, v -> Sets.newTreeSet()));
+            Preconditions.checkNotNull(processedIds.computeIfAbsent(type, v -> new TreeSet<>()));
         if (!processedIdsForType.contains(k)) {
           processedIdsForType.add(k);
-          Preconditions.checkNotNull(idsToProcess.computeIfAbsent(type, v -> Sets.newTreeSet()))
+          Preconditions.checkNotNull(idsToProcess.computeIfAbsent(type, v -> new TreeSet<>()))
               .add(k);
         }
       }

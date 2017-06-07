@@ -228,7 +228,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
       this.indexes = new HashMap<>();
       this.lowlinks = new HashMap<>();
       this.nodeStack = new LinkedList<>();
-      this.stronglyConnectedComponents = Sets.newHashSet();
+      this.stronglyConnectedComponents = new HashSet<>();
       this.index = 0;
     }
 
@@ -269,7 +269,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
       // If node is a root node, then pop the stack and generate a strongly connected component.
       if (Preconditions.checkNotNull(lowlinks.get(node)).equals(indexes.get(node))) {
-        Set<S> stronglyConnectedComponent = Sets.newHashSet();
+        Set<S> stronglyConnectedComponent = new HashSet<>();
         S componentElement;
         do {
           componentElement = nodeStack.pop();

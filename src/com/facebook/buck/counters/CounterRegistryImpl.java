@@ -23,10 +23,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -51,7 +51,7 @@ public class CounterRegistryImpl implements CounterRegistry {
       BuckEventBus eventBus,
       long firstFlushIntervalMillis,
       long flushIntervalMillis) {
-    this.counters = Sets.newLinkedHashSet();
+    this.counters = new LinkedHashSet<>();
     this.eventBus = eventBus;
     flushCountersFuture =
         service.scheduleAtFixedRate(

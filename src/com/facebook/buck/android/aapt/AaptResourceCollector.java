@@ -22,12 +22,11 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -43,7 +42,7 @@ public class AaptResourceCollector {
 
   public AaptResourceCollector() {
     this.enumerators = new HashMap<>();
-    this.resources = Sets.newHashSet();
+    this.resources = new HashSet<>();
     this.currentTypeId = 1;
   }
 

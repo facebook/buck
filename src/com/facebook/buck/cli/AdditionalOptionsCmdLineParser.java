@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.collect.Sets;
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.ClassParser;
@@ -48,7 +48,7 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
    */
   public AdditionalOptionsCmdLineParser(Object bean) {
     super(bean);
-    Set<Class<?>> visited = Sets.newHashSet();
+    Set<Class<?>> visited = new HashSet<>();
     parseAdditionalOptions(new ClassParser(), bean, visited);
   }
 

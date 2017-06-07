@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -38,13 +39,13 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private static final int MAX_FIELD_REFERENCES = 64 * 1024;
 
   private final ZipOutputStream outStream;
-  private final Set<String> entryNames = Sets.newHashSet();
+  private final Set<String> entryNames = new HashSet<>();
   private final long linearAllocLimit;
   private final Writer reportFileWriter;
   private final DalvikStatsCache dalvikStatsCache;
 
-  private final Set<DalvikMemberReference> currentMethodReferences = Sets.newHashSet();
-  private final Set<DalvikMemberReference> currentFieldReferences = Sets.newHashSet();
+  private final Set<DalvikMemberReference> currentMethodReferences = new HashSet<>();
+  private final Set<DalvikMemberReference> currentFieldReferences = new HashSet<>();
   private long currentLinearAllocSize;
 
   DalvikAwareOutputStreamHelper(

@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -62,7 +63,7 @@ final class OwnersReport {
 
   static OwnersReport emptyReport() {
     return new OwnersReport(
-        ImmutableSetMultimap.of(), Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet());
+        ImmutableSetMultimap.of(), new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
   OwnersReport updatedWith(OwnersReport other) {
@@ -88,9 +89,9 @@ final class OwnersReport {
       Cell rootCell, TargetNode<?, ?> targetNode, Iterable<String> filePaths) {
 
     // Process arguments assuming they are all relative file paths.
-    Set<Path> inputs = Sets.newHashSet();
-    Set<String> nonExistentInputs = Sets.newHashSet();
-    Set<String> nonFileInputs = Sets.newHashSet();
+    Set<Path> inputs = new HashSet<>();
+    Set<String> nonExistentInputs = new HashSet<>();
+    Set<String> nonFileInputs = new HashSet<>();
 
     for (String filePath : filePaths) {
       Path file = rootCell.getFilesystem().getPathForRelativePath(filePath);
@@ -156,8 +157,8 @@ final class OwnersReport {
                   new OwnersReport(
                       ImmutableSetMultimap.of(),
                       /* inputWithNoOwners */ ImmutableSet.of(filePath),
-                      Sets.newHashSet(),
-                      Sets.newHashSet()));
+                      new HashSet<>(),
+                      new HashSet<>()));
           continue;
         }
 

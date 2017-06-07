@@ -19,8 +19,8 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 
 public class RecordedFileHashes {
@@ -31,8 +31,8 @@ public class RecordedFileHashes {
   public RecordedFileHashes(Integer cellIndex) {
     this.remoteFileHashes = new BuildJobStateFileHashes();
     this.remoteFileHashes.setCellIndex(cellIndex);
-    this.seenPaths = Sets.newHashSet();
-    this.seenArchiveMemberPaths = Sets.newHashSet();
+    this.seenPaths = new HashSet<>();
+    this.seenArchiveMemberPaths = new HashSet<>();
   }
 
   public synchronized boolean containsAndAddPath(Path relPath) {

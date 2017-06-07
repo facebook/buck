@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -179,13 +180,13 @@ public class AuditRulesCommand extends AbstractCommand {
     out.printf("%s(\n", type);
 
     // The properties in the order they should be displayed for this rule.
-    LinkedHashSet<String> properties = Sets.newLinkedHashSet();
+    LinkedHashSet<String> properties = new LinkedHashSet<>();
 
     // Always display the "name" property first.
     properties.add("name");
 
     // Add the properties specific to the rule.
-    SortedSet<String> customProperties = Sets.newTreeSet();
+    SortedSet<String> customProperties = new TreeSet<>();
     for (String key : rawRule.keySet()) {
       // Ignore keys that start with "buck.".
       if (!(key.startsWith(BuckPyFunction.INTERNAL_PROPERTY_NAME_PREFIX)

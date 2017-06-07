@@ -81,7 +81,7 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
           return false;
         }
       }
-      if (!Sets.newHashSet().equals(Sets.difference(actualFields, expectedFields))) {
+      if (!new HashSet<>().equals(Sets.difference(actualFields, expectedFields))) {
         description.appendText(
             String.format(
                 "found unexpected fields %s at path [%s]",

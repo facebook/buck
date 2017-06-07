@@ -22,9 +22,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -49,7 +49,7 @@ public class BuildTargetsQueue {
     // Build the reverse dependency graph by traversing the action graph Top-Down.
     Map<String, Set<String>> allReverseDeps = new HashMap<>();
     Map<String, Integer> numberOfDependencies = new HashMap<>();
-    Set<String> visitedTargets = Sets.newHashSet();
+    Set<String> visitedTargets = new HashSet<>();
     Queue<BuildRule> buildRulesToProcess =
         Lists.newLinkedList(
             FluentIterable.from(targetsToBuild)
@@ -66,7 +66,7 @@ public class BuildTargetsQueue {
       for (BuildRule dependencyRule : rule.getBuildDeps()) {
         String dependencyTarget = ruleToTarget(dependencyRule);
         if (!allReverseDeps.containsKey(dependencyTarget)) {
-          allReverseDeps.put(dependencyTarget, Sets.newHashSet());
+          allReverseDeps.put(dependencyTarget, new HashSet<>());
         }
         allReverseDeps.get(dependencyTarget).add(target);
 

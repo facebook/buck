@@ -70,7 +70,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -84,6 +83,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -732,7 +732,7 @@ public class TestRunning {
 
     // Iterate through all source paths to make sure we are generating a complete set of source
     // folders for the source paths.
-    Set<String> srcFolders = Sets.newHashSet();
+    Set<String> srcFolders = new HashSet<>();
     loopThroughSourcePath:
     for (SourcePath javaSrcPath : javaSrcs) {
       if (ruleFinder.getRule(javaSrcPath).isPresent()) {

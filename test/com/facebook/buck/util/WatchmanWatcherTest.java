@@ -45,7 +45,6 @@ import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
@@ -598,7 +597,7 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", ImmutableList.of());
 
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
-    final Set<BuckEvent> events = Sets.newHashSet();
+    final Set<BuckEvent> events = new HashSet<>();
     BuckEventBus bus = BuckEventBusForTests.newInstance(new FakeClock(0));
     bus.register(
         new Object() {
@@ -642,7 +641,7 @@ public class WatchmanWatcherTest {
             ImmutableMap.of(
                 FAKE_ROOT, new WatchmanCursor("c:0:0"),
                 FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")));
-    final Set<BuckEvent> events = Sets.newHashSet();
+    final Set<BuckEvent> events = new HashSet<>();
     BuckEventBus bus = BuckEventBusForTests.newInstance(new FakeClock(0));
     bus.register(
         new Object() {

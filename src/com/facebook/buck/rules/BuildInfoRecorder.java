@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -54,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -115,7 +115,7 @@ public class BuildInfoRecorder {
 
     this.metadataToWrite = Maps.newLinkedHashMap();
     this.buildMetadata = Maps.newLinkedHashMap();
-    this.pathsToOutputs = Sets.newHashSet();
+    this.pathsToOutputs = new HashSet<>();
     this.warnedUserOfCacheStoreFailure = new AtomicBoolean(false);
   }
 

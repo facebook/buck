@@ -18,9 +18,9 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +46,7 @@ class AppendingZipOutputStreamImpl implements CustomZipOutputStream.Impl {
   private List<EntryAccounting> entries = new LinkedList<>();
   @Nullable private EntryAccounting currentEntry = null;
 
-  private Set<String> seenNames = Sets.newHashSet();
+  private Set<String> seenNames = new HashSet<>();
 
   public AppendingZipOutputStreamImpl(
       Clock clock, OutputStream stream, boolean throwExceptionsOnDuplicate) {

@@ -37,7 +37,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -46,6 +45,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -381,7 +381,7 @@ public class FilterResourcesStep implements Step {
 
     public ResourceFilter(List<String> resourceFilter) {
       this.filter = ImmutableSet.copyOf(resourceFilter);
-      this.densities = Sets.newHashSet();
+      this.densities = new HashSet<>();
 
       boolean downscale = false;
       for (String component : filter) {

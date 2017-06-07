@@ -20,8 +20,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -58,8 +58,8 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
       toExplore.add(new Explorable(node));
     }
 
-    Set<T> inProgress = Sets.newHashSet();
-    LinkedHashSet<T> explored = Sets.newLinkedHashSet();
+    Set<T> inProgress = new HashSet<>();
+    LinkedHashSet<T> explored = new LinkedHashSet<>();
 
     while (!toExplore.isEmpty()) {
       Explorable explorable = toExplore.peek();

@@ -19,7 +19,6 @@ package com.facebook.buck.testutil.integration;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGConstants;
 import com.martiansoftware.nailgun.NGContext;
@@ -30,6 +29,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -74,7 +74,7 @@ public class TestContext extends NGContext implements Closeable {
     for (String key : environment.keySet()) {
       properties.setProperty(key, environment.get(key));
     }
-    listeners = Sets.newHashSet();
+    listeners = new HashSet<>();
     addListeners = true;
   }
 

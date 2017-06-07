@@ -63,6 +63,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -329,7 +330,7 @@ public class AndroidBinaryTest {
             .setDexCompression(DexStore.JAR)
             .build(ruleResolver);
 
-    Set<Path> classpath = Sets.newHashSet();
+    Set<Path> classpath = new HashSet<>();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     Path primaryDexPath =
@@ -378,7 +379,7 @@ public class AndroidBinaryTest {
             .setIntraDexReorderResources(true, reorderTool, reorderData)
             .build(ruleResolver);
 
-    Set<Path> classpath = Sets.newHashSet();
+    Set<Path> classpath = new HashSet<>();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
     Path primaryDexPath =

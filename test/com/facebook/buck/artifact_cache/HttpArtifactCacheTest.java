@@ -37,7 +37,6 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -50,6 +49,7 @@ import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -398,7 +398,7 @@ public class HttpArtifactCacheTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path output = Paths.get("output/file");
     filesystem.writeContentsToPath(data, output);
-    final Set<RuleKey> stored = Sets.newHashSet();
+    final Set<RuleKey> stored = new HashSet<>();
     argsBuilder.setProjectFilesystem(filesystem);
     argsBuilder.setStoreClient(
         withMakeRequest(

@@ -55,8 +55,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -124,7 +124,7 @@ public class PythonBinaryDescription
     Map<Path, SourcePath> initModules = Maps.newLinkedHashMap();
 
     // Insert missing `__init__.py` modules.
-    Set<Path> packages = Sets.newHashSet();
+    Set<Path> packages = new HashSet<>();
     for (Path module : modules.keySet()) {
       Path pkg = module;
       while ((pkg = pkg.getParent()) != null && !packages.contains(pkg)) {

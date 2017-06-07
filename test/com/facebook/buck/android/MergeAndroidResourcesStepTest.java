@@ -45,13 +45,13 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -107,7 +107,7 @@ public class MergeAndroidResourcesStepTest {
     SortedSet<RDotTxtEntry> resources = packageNameToResources.get(sharedPackageName);
     assertEquals(7, resources.size());
 
-    Set<String> uniqueEntries = Sets.newHashSet();
+    Set<String> uniqueEntries = new HashSet<>();
     for (RDotTxtEntry resource : resources) {
       if (!resource.type.equals(STYLEABLE)) {
         assertFalse(

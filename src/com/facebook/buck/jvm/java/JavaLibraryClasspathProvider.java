@@ -21,7 +21,7 @@ import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.Optional;
 
 public class JavaLibraryClasspathProvider {
@@ -36,7 +36,7 @@ public class JavaLibraryClasspathProvider {
       javaExportedLibraryDeps =
           getJavaLibraryDeps(((ExportDependencies) javaLibraryRule).getExportedDeps());
     } else {
-      javaExportedLibraryDeps = Sets.newHashSet();
+      javaExportedLibraryDeps = new HashSet<>();
     }
 
     for (JavaLibrary rule : javaExportedLibraryDeps) {

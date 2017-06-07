@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assume;
@@ -68,7 +68,7 @@ public class TimeoutTest {
     Runner suite = new Computer().getSuite(builder, new Class<?>[] {testClass});
     Request request = Request.runner(suite);
 
-    final Set<Result> results = Sets.newHashSet();
+    final Set<Result> results = new HashSet<>();
     JUnitCore core = new JUnitCore();
     core.addListener(
         new RunListener() {

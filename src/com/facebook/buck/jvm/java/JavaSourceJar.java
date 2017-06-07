@@ -38,8 +38,8 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -83,7 +83,7 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
 
-    Set<Path> seenPackages = Sets.newHashSet();
+    Set<Path> seenPackages = new HashSet<>();
 
     // We only want to consider raw source files, since the java package finder doesn't have the
     // smarts to read the "package" line from a source file.

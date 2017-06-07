@@ -19,10 +19,10 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
@@ -71,7 +71,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    final SortedSet<T> builder = Sets.newTreeSet();
+    final SortedSet<T> builder = new TreeSet<>();
     fillSortedSet(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return ImmutableSortedSet.copyOf(builder);
   }

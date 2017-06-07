@@ -30,7 +30,6 @@ import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,6 +39,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +52,7 @@ public class DistBuildLogStateTracker {
   private final Path logDirectoryPath;
   private final ProjectFilesystem filesystem;
   private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = new HashMap<>();
-  private Set<String> createdLogDirRootsByRunId = Sets.newHashSet();
+  private Set<String> createdLogDirRootsByRunId = new HashSet<>();
   private List<RunId> runIdsWithLogDirs = new ArrayList<>();
 
   public DistBuildLogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {

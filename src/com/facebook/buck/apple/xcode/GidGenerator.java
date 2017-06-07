@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -28,7 +28,7 @@ public class GidGenerator {
   private final Set<String> generatedAndReservedIds;
 
   public GidGenerator() {
-    generatedAndReservedIds = Sets.newHashSet();
+    generatedAndReservedIds = new HashSet<>();
   }
 
   /**
