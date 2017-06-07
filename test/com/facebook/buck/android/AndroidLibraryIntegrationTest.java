@@ -58,7 +58,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   public void testAndroidKotlinBinaryDoesNotUseTransitiveResources()
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    KotlinTestAssumptions.assumeCompilerAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
@@ -68,7 +68,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testAndroidKotlinLibraryCompilation() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    KotlinTestAssumptions.assumeCompilerAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
         workspace.runBuckBuild("//kotlin/com/sample/lib:lib_depending_on_main_lib");
     result.assertSuccess();

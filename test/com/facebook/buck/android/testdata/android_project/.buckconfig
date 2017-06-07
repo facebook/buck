@@ -6,5 +6,8 @@
   library = //scala:scala-library
   compiler = //scala:scala-compiler
 
+[kotlin]
+  kotlin_home = kotlin/kotlinc/
+
 [android]
   redex = //tools/redex:redex

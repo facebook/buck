@@ -16,10 +16,12 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,10 +34,14 @@ public class KotlinTestIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    KotlinTestAssumptions.assumeCompilerAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_test_description", tmp);
     workspace.setUp();
+
+    Path kotlincPath = TestDataHelper.getTestDataScenario(this, "kotlinc");
+    MoreFiles.copyRecursively(kotlincPath, tmp.newFolder("kotlinc"));
+
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
   }
 
   /** Tests that a Test Rule without any tests to run does not fail. */
