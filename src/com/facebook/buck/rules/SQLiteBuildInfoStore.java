@@ -27,12 +27,22 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 import org.sqlite.BusyHandler;
+import org.sqlite.SQLiteJDBCLoader;
 
 public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final Connection connection;
   private final PreparedStatement selectStmt;
   private final PreparedStatement updateStmt;
   private final PreparedStatement deleteStmt;
+
+  static {
+    try {
+      // sqlite-jdbc loads its JNI library in a thread-unsafe manner, so initialize it statically.
+      SQLiteJDBCLoader.initialize();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   public SQLiteBuildInfoStore(ProjectFilesystem filesystem) throws IOException {
     String dbPath =
