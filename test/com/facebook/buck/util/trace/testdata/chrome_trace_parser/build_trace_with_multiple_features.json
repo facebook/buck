@@ -43,7 +43,7 @@
     "tts": 155425,
     "args": {
       "is": [
-        "This value is not a primitive: should not pass matcher.",
+        "This value is not a primitive: should not pass matcher."
       ]
     }
   },

@@ -17,15 +17,13 @@
 package com.facebook.buck.util.trace;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MappingIterator;
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,24 +46,26 @@ public class ChromeTraceParser {
      * convenience. If it is a match, it should return the data of interest in the return value. If
      * not, then it should return {@link Optional#empty()}.
      */
-    Optional<T> test(JsonObject event, String name);
+    Optional<T> test(Map<String, Object> event, String name);
   }
 
   /**
    * Tries to extract the command that was used to trigger the invocation of Buck that generated the
    * trace. If found, it returns the command as an opaque string.
    */
+  @SuppressWarnings("unchecked")
   public static final ChromeTraceEventMatcher<String> COMMAND =
       (json, name) -> {
-        JsonElement argsEl = json.get("args");
-        if (argsEl == null
-            || !argsEl.isJsonObject()
-            || argsEl.getAsJsonObject().get("command_args") == null
-            || !argsEl.getAsJsonObject().get("command_args").isJsonPrimitive()) {
+        Object rawArgs = json.get("args");
+        if (rawArgs == null || !(rawArgs instanceof Map)) {
+          return Optional.empty();
+        }
+        Map<String, Object> args = (Map<String, Object>) rawArgs;
+        if (args.get("command_args") == null || !(args.get("command_args") instanceof String)) {
           return Optional.empty();
         }
 
-        String commandArgs = argsEl.getAsJsonObject().get("command_args").getAsString();
+        String commandArgs = (String) args.get("command_args");
         String command = "buck " + name + (commandArgs.isEmpty() ? "" : " " + commandArgs);
 
         return Optional.of(command);
@@ -87,8 +87,8 @@ public class ChromeTraceParser {
    * @param chromeTraceEventMatchers set of matchers this invocation of {@code parse()} is trying to
    *     satisfy. Once a matcher finds a match, it will not consider any other events in the trace.
    * @return a {@code Map} where every matcher that found a match will have an entry whose key is
-   *     the matcher and whose value is the one returned by {@link
-   *     ChromeTraceEventMatcher#test(JsonObject, String)} without the {@link Optional} wrapper.
+   *     the matcher and whose value is the one returned by {@link ChromeTraceEventMatcher#test(Map,
+   *     String)} without the {@link Optional} wrapper.
    */
   public Map<ChromeTraceEventMatcher<?>, Object> parse(
       Path pathToTrace, Set<ChromeTraceEventMatcher<?>> chromeTraceEventMatchers)
@@ -98,25 +98,19 @@ public class ChromeTraceParser {
     Map<ChromeTraceEventMatcher<?>, Object> results = new HashMap<>();
 
     try (InputStream input = projectFilesystem.newFileInputStream(pathToTrace);
-        JsonReader jsonReader = new JsonReader(new InputStreamReader(input))) {
-      jsonReader.beginArray();
-      Gson gson = new Gson();
-
+        MappingIterator<ImmutableMap<String, Object>> it =
+            ObjectMappers.READER
+                .forType(new TypeReference<ImmutableMap<String, Object>>() {})
+                .readValues(input)) {
       featureSearch:
-      while (true) {
-        // If END_ARRAY is the next token, then there are no more elements in the array.
-        if (jsonReader.peek().equals(JsonToken.END_ARRAY)) {
-          break;
-        }
-
+      while (it.hasNext()) {
         // Verify and extract the name property before invoking any of the matchers.
-        JsonElement eventEl = gson.fromJson(jsonReader, JsonElement.class);
-        JsonObject event = eventEl.getAsJsonObject();
-        JsonElement nameEl = event.get("name");
-        if (nameEl == null || !nameEl.isJsonPrimitive()) {
+        ImmutableMap<String, Object> event = it.next();
+        Object nameEl = event.get("name");
+        if (nameEl == null || !(nameEl instanceof String)) {
           continue;
         }
-        String name = nameEl.getAsString();
+        String name = (String) nameEl;
 
         // Prefer Iterator to Iterable+foreach so we can use remove().
         for (Iterator<ChromeTraceEventMatcher<?>> iter = unmatchedMatchers.iterator();

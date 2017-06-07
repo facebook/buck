@@ -24,7 +24,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonElement;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -73,21 +72,22 @@ public class ChromeTraceParserIntegrationTest {
 
   @Test
   public void canApplyMultipleMatchersToTrace() throws IOException {
+    @SuppressWarnings("unchecked")
     ChromeTraceParser.ChromeTraceEventMatcher<Integer> meaningOfLifeMatcher =
         (json, name) -> {
           if (!"meaningOfLife".equals(name)) {
             return Optional.empty();
           }
 
-          JsonElement argsEl = json.get("args");
+          Object argsEl = json.get("args");
           if (argsEl == null
-              || !argsEl.isJsonObject()
-              || argsEl.getAsJsonObject().get("is") == null
-              || !argsEl.getAsJsonObject().get("is").isJsonPrimitive()) {
+              || !(argsEl instanceof Map)
+              || ((Map<String, Object>) argsEl).get("is") == null
+              || !(((Map<String, Object>) argsEl).get("is") instanceof Integer)) {
             return Optional.empty();
           }
 
-          int value = argsEl.getAsJsonObject().get("is").getAsInt();
+          int value = (Integer) ((Map<String, Object>) argsEl).get("is");
           return Optional.of(value);
         };
 

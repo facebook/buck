@@ -25,8 +25,6 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.trace.ChromeTraceParser;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -113,6 +111,7 @@ public class ActionGraphCacheIntegrationTest {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private static final ChromeTraceParser.ChromeTraceEventMatcher<ActionGraphCacheStatus>
       ACTION_GRAPH_CACHE_STATUS_MATCHER =
           (json, name) -> {
@@ -120,20 +119,20 @@ public class ActionGraphCacheIntegrationTest {
               return Optional.empty();
             }
 
-            JsonElement argsEl = json.get("args");
+            Object argsEl = json.get("args");
             if (argsEl == null
-                || !argsEl.isJsonObject()
-                || argsEl.getAsJsonObject().get("hit") == null
-                || !argsEl.getAsJsonObject().get("hit").isJsonPrimitive()) {
+                || !(argsEl instanceof Map)
+                || ((Map<String, Object>) argsEl).get("hit") == null
+                || !((((Map<String, Object>) argsEl)).get("hit") instanceof String)) {
               return Optional.empty();
             }
 
-            JsonObject args = argsEl.getAsJsonObject();
-            boolean isHit = args.get("hit").getAsBoolean();
+            Map<String, Object> args = (Map<String, Object>) argsEl;
+            boolean isHit = Boolean.valueOf((String) args.get("hit"));
             if (isHit) {
               return Optional.of(ActionGraphCacheStatus.HIT);
             } else {
-              boolean cacheWasEmpty = args.get("cacheWasEmpty").getAsBoolean();
+              boolean cacheWasEmpty = Boolean.valueOf((String) args.get("cacheWasEmpty"));
               return Optional.of(
                   cacheWasEmpty
                       ? ActionGraphCacheStatus.MISS_CACHE_EMPTY
