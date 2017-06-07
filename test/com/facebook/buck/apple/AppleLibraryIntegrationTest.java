@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -663,7 +662,6 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  @Ignore // Failing test case. Should be removed when the bug is fixed.
   public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
