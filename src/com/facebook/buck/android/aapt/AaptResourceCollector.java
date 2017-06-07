@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
+import javax.annotation.Nullable;
+
 /**
  * Responsible for collecting resources parsed by {@link MiniAapt} and assigning unique integer ids
  * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx} represents
