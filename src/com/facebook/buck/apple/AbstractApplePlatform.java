@@ -35,6 +35,7 @@ abstract class AbstractApplePlatform
           .setProvisioningProfileName("iOS")
           .setArchitectures(ImmutableList.of("armv7", "arm64"))
           .setMinVersionFlagPrefix("-mios-version-min=")
+          .setAppIncludesFrameworks(true)
           // only used for legacy watch apps
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
@@ -44,6 +45,7 @@ abstract class AbstractApplePlatform
           .setSwiftName("ios")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mios-simulator-version-min=")
+          .setAppIncludesFrameworks(true)
           // only used for legacy watch apps
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
