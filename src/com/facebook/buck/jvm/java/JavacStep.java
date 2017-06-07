@@ -19,9 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -32,24 +30,17 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
-/**
- * Command used to compile java libraries with a variety of ways to handle dependencies.
- */
+/** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public class JavacStep implements Step {
 
   private final Path outputDirectory;
@@ -68,8 +59,6 @@ public class JavacStep implements Step {
 
   private final BuildTarget invokingRule;
 
-  private final Optional<SuggestBuildRules> suggestBuildRules;
-
   private final SourcePathResolver resolver;
 
   private final ProjectFilesystem filesystem;
@@ -79,35 +68,6 @@ public class JavacStep implements Step {
   private final ClasspathChecker classpathChecker;
 
   private final Optional<DirectToJarOutputSettings> directToJarOutputSettings;
-
-  private static final Pattern IS_WARNING =
-      Pattern.compile(":\\s*warning:", Pattern.CASE_INSENSITIVE);
-
-  private static final Pattern IMPORT_FAILURE =
-      Pattern.compile("import ([\\w\\.\\*]*);");
-
-  private static final Pattern PACKAGE_FAILURE =
-      Pattern.compile(".*?package ([\\w\\.\\*]*) does not exist");
-
-  private static final Pattern ACCESS_FAILURE =
-      Pattern.compile(".*?error: cannot access ([\\w\\.\\*]*)");
-
-  private static final Pattern CLASS_NOT_FOUND =
-      Pattern.compile(".*?class file for ([\\w\\.\\*]*) not found");
-
-  private static final Pattern CLASS_SYMBOL_NOT_FOUND =
-      Pattern.compile(".*?symbol:\\s*class\\s*([\\w\\.\\*]*)");
-
-  private static final ImmutableList<Pattern> MISSING_IMPORT_PATTERNS =
-      ImmutableList.of(
-          IMPORT_FAILURE,
-          PACKAGE_FAILURE,
-          ACCESS_FAILURE,
-          CLASS_NOT_FOUND,
-          CLASS_SYMBOL_NOT_FOUND);
-
-  @Nullable
-  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
   public JavacStep(
       Path outputDirectory,
@@ -119,7 +79,6 @@ public class JavacStep implements Step {
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
-      Optional<SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
@@ -133,7 +92,6 @@ public class JavacStep implements Step {
     this.declaredClasspathEntries = declaredClasspathEntries;
     this.javac = javac;
     this.invokingRule = invokingRule;
-    this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
@@ -147,42 +105,36 @@ public class JavacStep implements Step {
   }
 
   private StepExecutionResult tryBuildWithFirstOrderDeps(
-      ExecutionContext context,
-      ProjectFilesystem filesystem)
+      ExecutionContext context, ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
     try {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
     } catch (IOException e) {
-      context.postEvent(
-          ConsoleEvent.severe("Invalid Java compiler options: %s", e.getMessage()));
+      context.postEvent(ConsoleEvent.severe("Invalid Java compiler options: %s", e.getMessage()));
       return StepExecutionResult.ERROR;
     }
 
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
-    try (
-      CapturingPrintStream stdout = new CapturingPrintStream();
-      CapturingPrintStream stderr = new CapturingPrintStream();
-      ExecutionContext firstOrderContext = context.createSubContext(
-          stdout,
-          stderr,
-          Optional.of(verbosity))) {
-      Javac javac = getJavac();
-      JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-          new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
-          stderr,
-          firstOrderContext.getClassLoaderCache(),
-          firstOrderContext.getObjectMapper(),
-          verbosity,
-          firstOrderContext.getCellPathResolver(),
-          firstOrderContext.getJavaPackageFinder(),
-          filesystem,
-          usedClassesFileWriter,
-          firstOrderContext.getEnvironment(),
-          firstOrderContext.getProcessExecutor(),
-          getAbsolutePathsForJavacInputs(javac),
-          directToJarOutputSettings);
-      return performBuild(context, stdout, stderr, javac, javacExecutionContext);
+    try (CapturingPrintStream stdout = new CapturingPrintStream();
+        CapturingPrintStream stderr = new CapturingPrintStream();
+        ExecutionContext firstOrderContext =
+            context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
+      JavacExecutionContext javacExecutionContext =
+          JavacExecutionContext.of(
+              new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
+              stderr,
+              firstOrderContext.getClassLoaderCache(),
+              verbosity,
+              firstOrderContext.getCellPathResolver(),
+              firstOrderContext.getJavaPackageFinder(),
+              filesystem,
+              usedClassesFileWriter,
+              firstOrderContext.getEnvironment(),
+              firstOrderContext.getProcessExecutor(),
+              getAbsolutePathsForJavacInputs(getJavac()),
+              directToJarOutputSettings);
+      return performBuild(context, stdout, stderr, getJavac(), javacExecutionContext);
     }
   }
 
@@ -191,15 +143,26 @@ public class JavacStep implements Step {
       CapturingPrintStream stdout,
       CapturingPrintStream stderr,
       Javac javac,
-      JavacExecutionContext javacExecutionContext) throws InterruptedException {
-    int declaredDepsBuildResult = javac.buildWithClasspath(
-        javacExecutionContext,
-        invokingRule,
-        getOptions(context, declaredClasspathEntries),
-        javacOptions.getSafeAnnotationProcessors(),
-        javaSourceFilePaths,
-        pathToSrcsList,
-        workingDirectory);
+      JavacExecutionContext javacExecutionContext)
+      throws InterruptedException {
+    ImmutableList<JavacPluginJsr199Fields> pluginFields =
+        ImmutableList.copyOf(
+            javacOptions
+                .getAnnotationProcessingParams()
+                .getAnnotationProcessors(filesystem, resolver)
+                .stream()
+                .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                .collect(Collectors.toList()));
+    int declaredDepsBuildResult =
+        javac.buildWithClasspath(
+            javacExecutionContext,
+            invokingRule,
+            getOptions(context, declaredClasspathEntries),
+            pluginFields,
+            javaSourceFilePaths,
+            pathToSrcsList,
+            workingDirectory,
+            javacOptions.getCompilationMode());
     String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
     Optional<String> returnedStderr;
@@ -212,84 +175,28 @@ public class JavacStep implements Step {
   }
 
   private Optional<String> processBuildFailure(
-      ExecutionContext context,
-      String firstOrderStdout,
-      String firstOrderStderr) {
-    Optional<String> returnedStderr;
-    returnedStderr = Optional.of(firstOrderStderr);
-
+      ExecutionContext context, String firstOrderStdout, String firstOrderStderr) {
     ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
     errorMessage.add(firstOrderStderr);
 
-    if (suggestBuildRules.isPresent()) {
-      processBuildFailureWithFailedImports(context, firstOrderStderr, errorMessage);
-    } else {
-      processGeneralBuildFailure(context, firstOrderStderr);
-    }
+    ImmutableSet<String> suggestions = ImmutableSet.of();
+    CompilerErrorEvent evt =
+        CompilerErrorEvent.create(
+            invokingRule, firstOrderStderr, CompilerErrorEvent.CompilerType.Java, suggestions);
+    context.postEvent(evt);
 
     if (!firstOrderStdout.isEmpty()) {
       context.postEvent(ConsoleEvent.info("%s", firstOrderStdout));
     }
-    if (!firstOrderStderr.isEmpty()) {
-      context.postEvent(ConsoleEvent.severe("%s", Joiner.on("\n").join(errorMessage.build())));
-    }
-    return returnedStderr;
-  }
-
-  private void processGeneralBuildFailure(ExecutionContext context, String firstOrderStderr) {
-    ImmutableSet<String> suggestions = ImmutableSet.of();
-    CompilerErrorEvent evt = CompilerErrorEvent.create(
-        invokingRule,
-        firstOrderStderr,
-        CompilerErrorEvent.CompilerType.Java,
-        suggestions
-    );
-    context.postEvent(evt);
-  }
-
-  private void processBuildFailureWithFailedImports(
-      ExecutionContext context,
-      String firstOrderStderr, ImmutableList.Builder<String> errorMessage) {
-    ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-    ImmutableSortedSet<String> suggestions =
-      ImmutableSortedSet.copyOf(suggestBuildRules.get().suggest(failedImports));
-
-    if (!suggestions.isEmpty()) {
-      appendSuggestionMessage(errorMessage, failedImports, suggestions);
-    }
-    CompilerErrorEvent evt = CompilerErrorEvent.create(
-        invokingRule,
-        firstOrderStderr,
-        CompilerErrorEvent.CompilerType.Java,
-        suggestions
-    );
-    context.postEvent(evt);
-  }
-
-  private void appendSuggestionMessage(
-      ImmutableList.Builder<String> errorMessage,
-      ImmutableSet<String> failedImports,
-      ImmutableSortedSet<String> suggestions) {
-    String invoker = invokingRule.toString();
-    errorMessage.add(String.format("Rule %s has failed to build.", invoker));
-    errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
-    errorMessage.add("Try adding the following deps:");
-    errorMessage.add(Joiner.on(LINE_SEPARATOR).join(suggestions));
-    errorMessage.add("");
-    errorMessage.add("");
+    return Optional.of(Joiner.on("\n").join(errorMessage.build()));
   }
 
   private ImmutableList<Path> getAbsolutePathsForJavacInputs(Javac javac) {
-    return javac.getInputs().stream().flatMap(input -> {
-      com.google.common.base.Optional<BuildRule> rule =
-          com.google.common.base.Optional.fromNullable(
-              resolver.getRule(input).orElse(null));
-      if (rule instanceof JavaLibrary) {
-        return ((JavaLibrary) rule).getTransitiveClasspaths().stream();
-      } else {
-        return ImmutableSet.of(resolver.getAbsolutePath(input)).stream();
-      }
-    }).collect(MoreCollectors.toImmutableList());
+    return javac
+        .getInputs()
+        .stream()
+        .map(resolver::getAbsolutePath)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   @VisibleForTesting
@@ -299,79 +206,60 @@ public class JavacStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getJavac().getDescription(
-        getOptions(context, getClasspathEntries()),
-        javaSourceFilePaths,
-        pathToSrcsList);
+    return getJavac()
+        .getDescription(
+            getOptions(context, getClasspathEntries()), javaSourceFilePaths, pathToSrcsList);
   }
 
   @Override
   public String getShortName() {
-    return getJavac().getShortName();
-  }
-
-  @VisibleForTesting
-  static ImmutableSet<String> findFailedImports(String output) {
-    Iterable<String> lines = Splitter.on(LINE_SEPARATOR).split(output);
-    ImmutableSortedSet.Builder<String> failedImports = ImmutableSortedSet.naturalOrder();
-    for (String line : lines) {
-      if (IS_WARNING.matcher(line).find()) {
-        continue;
-      }
-      for (Pattern missingImportPattern : MISSING_IMPORT_PATTERNS) {
-        Matcher lineMatch = missingImportPattern.matcher(line);
-        if (lineMatch.matches()) {
-          failedImports.add(lineMatch.group(1));
-          break;
-        }
-      }
-    }
-    return failedImports.build();
+    return javacOptions.getCompilationMode() != JavacCompilationMode.ABI
+        ? getJavac().getShortName()
+        : "calculate_abi_from_source";
   }
 
   /**
-   * Returns a list of command-line options to pass to javac.  These options reflect
-   * the configuration of this javac command.
+   * Returns a list of command-line options to pass to javac. These options reflect the
+   * configuration of this javac command.
    *
    * @param context the ExecutionContext with in which javac will run
    * @return list of String command-line options.
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      ExecutionContext context,
-      ImmutableSortedSet<Path> buildClasspathEntries) {
+      ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     return getOptions(
-        javacOptions,
-        filesystem,
-        outputDirectory,
-        context,
-        buildClasspathEntries);
+        javacOptions, filesystem, resolver, outputDirectory, context, buildClasspathEntries);
   }
 
   public static ImmutableList<String> getOptions(
       JavacOptions javacOptions,
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       Path outputDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
     final ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    javacOptions.appendOptionsTo(new OptionsConsumer() {
-      @Override
-      public void addOptionValue(String option, String value) {
-        builder.add("-" + option).add(value);
-      }
+    javacOptions.appendOptionsTo(
+        new OptionsConsumer() {
+          @Override
+          public void addOptionValue(String option, String value) {
+            builder.add("-" + option).add(value);
+          }
 
-      @Override
-      public void addFlag(String flagName) {
-        builder.add("-" + flagName);
-      }
+          @Override
+          public void addFlag(String flagName) {
+            builder.add("-" + flagName);
+          }
 
-      @Override
-      public void addExtras(Collection<String> extras) {
-        builder.addAll(extras);
-      }
-    }, filesystem::resolve);
+          @Override
+          public void addExtras(Collection<String> extras) {
+            builder.addAll(extras);
+          }
+        },
+        pathResolver,
+        filesystem);
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
@@ -392,9 +280,7 @@ public class JavacStep implements Step {
     return builder.build();
   }
 
-  /**
-   * @return The classpath entries used to invoke javac.
-   */
+  /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
   ImmutableSortedSet<Path> getClasspathEntries() {
     return declaredClasspathEntries;

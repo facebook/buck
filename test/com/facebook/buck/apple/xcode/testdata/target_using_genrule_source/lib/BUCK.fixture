@@ -3,6 +3,7 @@ apple_library(
   srcs=[
     'Foo.m',
     ':gen',
+    'other_cell//:gen',
   ],
 )
 

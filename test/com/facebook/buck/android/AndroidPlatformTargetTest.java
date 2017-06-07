@@ -27,17 +27,15 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class AndroidPlatformTargetTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
@@ -56,38 +54,40 @@ public class AndroidPlatformTargetTest {
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
-    AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
-        .createFromDefaultDirectoryStructure(
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.createFromDefaultDirectoryStructure(
             name,
             androidDirectoryResolver,
             platformDirectoryPath,
             additionalJarPaths,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertEquals(name, androidPlatformTarget.getName());
     assertEquals(
         ImmutableList.of(
-            MorePathsForTests.rootRelativePath(
-                "home/android/platforms/android-16/android.jar")),
+            MorePathsForTests.rootRelativePath("home/android/platforms/android-16/android.jar")),
         androidPlatformTarget.getBootclasspathEntries());
-    assertEquals(MorePathsForTests.rootRelativePath(
-            "home/android/platforms/android-16/android.jar"),
+    assertEquals(
+        MorePathsForTests.rootRelativePath("home/android/platforms/android-16/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(MorePathsForTests.rootRelativePath(
-            "home/android/platforms/android-16/framework.aidl"),
+    assertEquals(
+        MorePathsForTests.rootRelativePath("home/android/platforms/android-16/framework.aidl"),
         androidPlatformTarget.getAndroidFrameworkIdlFile());
-    assertEquals(MorePathsForTests.rootRelativePath(
-            "home/android/tools/proguard/lib/proguard.jar"),
+    assertEquals(
+        MorePathsForTests.rootRelativePath("home/android/tools/proguard/lib/proguard.jar"),
         androidPlatformTarget.getProguardJar());
-    assertEquals(MorePathsForTests.rootRelativePath(
-            "home/android/tools/proguard/proguard-android.txt"),
+    assertEquals(
+        MorePathsForTests.rootRelativePath("home/android/tools/proguard/proguard-android.txt"),
         androidPlatformTarget.getProguardConfig());
-    assertEquals(MorePathsForTests.rootRelativePath(
+    assertEquals(
+        MorePathsForTests.rootRelativePath(
             "home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
-    assertEquals(androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
+    assertEquals(
+        androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
         androidPlatformTarget.getAaptExecutable());
-    assertEquals(androidSdkDir.resolve("platform-tools/aidl"),
-        androidPlatformTarget.getAidlExecutable());
+    assertEquals(
+        androidSdkDir.resolve("platform-tools/aidl"), androidPlatformTarget.getAidlExecutable());
     assertEquals(
         androidSdkDir.resolve(
             Platform.detect() == Platform.WINDOWS ? "platform-tools/dx.bat" : "platform-tools/dx"),
@@ -119,18 +119,22 @@ public class AndroidPlatformTargetTest {
     addOnsLibsDir3.mkdirs();
     Files.touch(new File(addOnsLibsDir3, "ignored.jar"));
 
-    Optional<AndroidPlatformTarget> androidPlatformTargetOption =
+    AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
-    assertTrue(androidPlatformTargetOption.isPresent());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
-    assertTrue(androidPlatformTargetOption.get().getBootclasspathEntries().contains(
-            addOnsLibsDir2.toPath().resolve("effects.jar").toAbsolutePath()));
-    assertFalse(androidPlatformTargetOption.get().getBootclasspathEntries().contains(
-            addOnsLibsDir3.toPath().resolve("ignored.jar").toAbsolutePath()));
+    assertTrue(
+        androidPlatformTarget
+            .getBootclasspathEntries()
+            .contains(addOnsLibsDir2.toPath().resolve("effects.jar").toAbsolutePath()));
+    assertFalse(
+        androidPlatformTarget
+            .getBootclasspathEntries()
+            .contains(addOnsLibsDir3.toPath().resolve("ignored.jar").toAbsolutePath()));
   }
 
   @Test
@@ -157,13 +161,13 @@ public class AndroidPlatformTargetTest {
     Files.touch(new File(addOnsLibsDir, "usb.jar"));
 
     String platformId = "Google Inc.:Google APIs:23";
-    Optional<AndroidPlatformTarget> androidPlatformTargetOption =
+    AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
 
-    AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
     assertEquals(platformId, androidPlatformTarget.getName());
     assertEquals(
         ImmutableList.of(
@@ -193,14 +197,15 @@ public class AndroidPlatformTargetTest {
       AndroidPlatformTarget.getTargetForId(
           platformId,
           androidDirectoryResolver,
-          /* aaptOverride */ Optional.empty());
+          /* aaptOverride */ Optional.empty(),
+          /* aapt2Override */ Optional.empty());
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
           String.format(
-              "Google APIs not found in %s.\n" +
-              "Please run '%s/tools/android sdk' and select both 'SDK Platform' and " +
-              "'Google APIs' under Android (API 17)",
+              "Google APIs not found in %s.\n"
+                  + "Please run '%s/tools/android sdk' and select both 'SDK Platform' and "
+                  + "'Google APIs' under Android (API 17)",
               new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs").getAbsolutePath(),
               androidSdkDir.getPath()),
           e.getMessage());
@@ -229,31 +234,30 @@ public class AndroidPlatformTargetTest {
     Files.touch(new File(addOnsLibsDir, "usb.jar"));
 
     // This one should include the Google jars
-    Optional<AndroidPlatformTarget> androidPlatformTargetOption1 =
+    AndroidPlatformTarget androidPlatformTarget1 =
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
-    assertTrue(androidPlatformTargetOption1.isPresent());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertEquals(
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
             pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/effects.jar"),
             pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/maps.jar"),
             pathToAndroidSdkDir.resolve("add-ons/addon-google_apis-google-17/libs/usb.jar")),
-        androidPlatformTargetOption1.get().getBootclasspathEntries());
+        androidPlatformTarget1.getBootclasspathEntries());
 
     // This one should only include android.jar
-    Optional<AndroidPlatformTarget> androidPlatformTargetOption2 =
+    AndroidPlatformTarget androidPlatformTarget2 =
         AndroidPlatformTarget.getTargetForId(
             "android-17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
-    assertTrue(androidPlatformTargetOption2.isPresent());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertEquals(
-        ImmutableList.of(
-            pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
-        androidPlatformTargetOption2.get().getBootclasspathEntries());
+        ImmutableList.of(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
+        androidPlatformTarget2.getBootclasspathEntries());
   }
 
   @Test
@@ -275,14 +279,13 @@ public class AndroidPlatformTargetTest {
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
 
     String platformId = "Google Inc.:Google APIs:17";
-    Optional<AndroidPlatformTarget> androidPlatformTargetOption =
+    AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
 
-    assertTrue(androidPlatformTargetOption.isPresent());
-    AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
     assertEquals(platformId, androidPlatformTarget.getName());
     assertEquals(
         pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign"),
@@ -291,13 +294,12 @@ public class AndroidPlatformTargetTest {
     File toolsDir = new File(androidSdkDir, "tools");
     toolsDir.mkdirs();
     Files.touch(new File(toolsDir, "zipalign"));
-    androidPlatformTargetOption =
+    androidPlatformTarget =
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.empty());
-    assertTrue(androidPlatformTargetOption.isPresent());
-    androidPlatformTarget = androidPlatformTargetOption.get();
+            /* aaptOverride */ Optional.empty(),
+            /* aapt2Override */ Optional.empty());
     assertEquals(platformId, androidPlatformTarget.getName());
     assertEquals(
         pathToAndroidSdkDir.resolve("tools/zipalign"),

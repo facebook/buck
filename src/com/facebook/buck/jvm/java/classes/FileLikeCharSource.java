@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.classes;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.CharSource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

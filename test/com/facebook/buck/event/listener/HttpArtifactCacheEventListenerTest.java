@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
@@ -27,13 +28,11 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.Futures;
-
+import java.util.Optional;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class HttpArtifactCacheEventListenerTest {
 
@@ -53,28 +52,22 @@ public class HttpArtifactCacheEventListenerTest {
   @Test
   public void creatingRowWithoutColumns() throws InterruptedException {
     Capture<String> logLineCapture = Capture.newInstance();
-    EasyMock.expect(
-        fetchLogger.log(
-            EasyMock.capture(logLineCapture)))
+    EasyMock.expect(fetchLogger.log(EasyMock.capture(logLineCapture)))
         .andReturn(Optional.empty())
         .once();
-    EasyMock.expect(fetchLogger.forceFlush())
-        .andReturn(Futures.immediateFuture(null))
-        .once();
+    EasyMock.expect(fetchLogger.forceFlush()).andReturn(Futures.immediateFuture(null)).once();
     EasyMock.replay(fetchLogger);
-    EasyMock.expect(storeLogger.forceFlush())
-        .andReturn(Futures.immediateFuture(null))
-        .once();
+    EasyMock.expect(storeLogger.forceFlush()).andReturn(Futures.immediateFuture(null)).once();
     EasyMock.replay(storeLogger);
 
     String errorMsg = "My super cool error message!!!";
 
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        new RuleKey("1234"));
-    startedEvent.configure(-1, -1, -1, -1, null);
+    HttpArtifactCacheEvent.Started startedEvent =
+        ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(new RuleKey("1234"));
     Finished.Builder builder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-    builder.getFetchBuilder()
-        .setFetchResult(CacheResult.hit("http"))
+    builder
+        .getFetchBuilder()
+        .setFetchResult(CacheResult.hit("http", ArtifactCacheMode.http))
         .setErrorMessage(errorMsg);
     Finished event = builder.build();
     event.configure(-1, -1, -1, -1, BUILD_ID);

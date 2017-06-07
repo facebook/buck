@@ -1,9 +1,0 @@
-{
-  "ddplist" : {
-    "deps" : [
-      "//third-party/java/dd-plist:dd-plist",
-      "//third-party/java/junit:junit"
-    ],
-    "exported_deps" : [ ]
-  }
-}

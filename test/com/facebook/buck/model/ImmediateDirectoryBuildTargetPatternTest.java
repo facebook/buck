@@ -15,15 +15,12 @@
  */
 package com.facebook.buck.model;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class ImmediateDirectoryBuildTargetPatternTest {
 
@@ -32,39 +29,13 @@ public class ImmediateDirectoryBuildTargetPatternTest {
   @Test
   public void testApply() {
     ImmediateDirectoryBuildTargetPattern pattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/"));
+        ImmediateDirectoryBuildTargetPattern.of(ROOT, Paths.get("src/com/facebook/buck/"));
 
-    assertFalse(pattern.apply(null));
-    assertTrue(pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "buck").build()));
-    assertFalse(pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/foo/", "foo").build()));
+    assertTrue(
+        pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "buck").build()));
     assertFalse(
-        pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck/bar", "bar").build()));
-  }
-
-  @Test
-  public void testEquals() {
-    ImmediateDirectoryBuildTargetPattern pattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/"));
-    ImmediateDirectoryBuildTargetPattern samePattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/"));
-    ImmediateDirectoryBuildTargetPattern cliPattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/cli/"));
-
-    assertEquals(pattern, samePattern);
-    assertFalse(pattern.equals(null));
-    assertFalse(pattern.equals(cliPattern));
-  }
-
-  @Test
-  public void testHashCode() {
-    ImmediateDirectoryBuildTargetPattern pattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/"));
-    ImmediateDirectoryBuildTargetPattern samePattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/"));
-    ImmediateDirectoryBuildTargetPattern cliPattern =
-        new ImmediateDirectoryBuildTargetPattern(ROOT, Paths.get("src/com/facebook/buck/cli/"));
-
-    assertEquals(pattern.hashCode(), samePattern.hashCode());
-    assertNotSame(pattern.hashCode(), cliPattern.hashCode());
+        pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/foo/", "foo").build()));
+    assertFalse(
+        pattern.matches(BuildTarget.builder(ROOT, "//src/com/facebook/buck/bar", "bar").build()));
   }
 }

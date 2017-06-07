@@ -16,20 +16,9 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
-import javax.annotation.Nonnull;
-
-/**
- */
+/** */
 public class LocalCachingBuildEngineDelegate implements CachingBuildEngineDelegate {
   private final FileHashCache defaultFileHashCache;
 
@@ -38,19 +27,8 @@ public class LocalCachingBuildEngineDelegate implements CachingBuildEngineDelega
   }
 
   @Override
-  public LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader() {
-    return CacheBuilder.newBuilder()
-        .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
-          @Override
-          public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
-            FileHashCache cellCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-            FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
-                filesystem.replaceBlacklistedPaths(ImmutableSet.of()),
-                filesystem.getBuckPaths().getBuckOut());
-            return new StackedFileHashCache(
-                ImmutableList.of(defaultFileHashCache, cellCache, buckOutCache));
-          }
-        });
+  public FileHashCache getFileHashCache() {
+    return defaultFileHashCache;
   }
 
   @Override

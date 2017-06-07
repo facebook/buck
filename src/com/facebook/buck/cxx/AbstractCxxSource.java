@@ -19,29 +19,37 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
- * Describes a source file written in the C programming language or a
- * derivative (C++, Objective-C, Objective-C++, etc.) and the various
- * paths it uses from input to output.
+ * Describes a source file written in the C programming language or a derivative (C++, Objective-C,
+ * Objective-C++, etc.) and the various paths it uses from input to output.
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractCxxSource {
+// PMD is disabled for the line below. We have a check that Abstract immutable types are
+// package-private. The Immutables generator is super-helpeful and makes references to the abstract
+// version of Immutables if they're referenced from other immutables, not just the generated
+// immutable type. So if any Immutables are defined in other packages which have a getter which
+// returns a CxxSource, internally an AbstractCxxSource is referenced in the generated code, which
+// doesn't have visibility to access this type, causing a compile error.
+public abstract class AbstractCxxSource { // NOPMD
 
   public enum Type {
-
     C("c", "cpp-output", Optional.of("c-header"), "c"),
     CXX(
         "c++",
         "c++-cpp-output",
         Optional.of("c++-header"),
-        "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
+        "cc",
+        "cp",
+        "cxx",
+        "cpp",
+        "CPP",
+        "c++",
+        "C"),
     OBJC("objective-c", "objective-c-cpp-output", Optional.of("objective-c-header"), "m"),
     OBJCXX("objective-c++", "objective-c++-cpp-output", Optional.of("objective-c++-header"), "mm"),
     CUDA("cuda", "cuda-cpp-output", "cu"),
@@ -59,7 +67,6 @@ abstract class AbstractCxxSource {
     // Assembly files built with nasm/yasm.
     ASM_WITH_CPP("asm-with-cpp", "asm", "asmpp"),
     ASM("asm", "asm", "asm"),
-
     ;
 
     private final String language;
@@ -67,10 +74,7 @@ abstract class AbstractCxxSource {
     private final Optional<String> precompiledHeaderLanguage;
     private final ImmutableSet<String> extensions;
 
-    Type(
-        String language,
-        String preprocessedLanguage,
-        String... extensions) {
+    Type(String language, String preprocessedLanguage, String... extensions) {
       this(language, preprocessedLanguage, Optional.empty(), extensions);
     }
 
@@ -105,7 +109,7 @@ abstract class AbstractCxxSource {
     /**
      * "Language" type to pass to the compiler in order to generate a precompiled header.
      *
-     * Will be {@code absent} for source types which do not support precompiled headers.
+     * <p>Will be {@code absent} for source types which do not support precompiled headers.
      */
     public Optional<String> getPrecompiledHeaderLanguage() {
       return precompiledHeaderLanguage;
@@ -122,7 +126,6 @@ abstract class AbstractCxxSource {
     public boolean isAssembly() {
       return this == ASSEMBLER || this == ASSEMBLER_WITH_CPP;
     }
-
   }
 
   @Value.Parameter
@@ -133,5 +136,4 @@ abstract class AbstractCxxSource {
 
   @Value.Parameter
   public abstract List<String> getFlags();
-
 }

@@ -18,10 +18,9 @@ package com.facebook.buck.io;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
-
 import java.nio.file.Path;
 
-public class PathByteSource  {
+public class PathByteSource {
 
   private PathByteSource() {
     // Utility class.
@@ -30,5 +29,4 @@ public class PathByteSource  {
   public static ByteSource asByteSource(Path path) {
     return Files.asByteSource(path.toFile());
   }
-
 }

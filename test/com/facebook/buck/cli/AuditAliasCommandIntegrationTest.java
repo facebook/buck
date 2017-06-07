@@ -19,30 +19,37 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.util.List;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.List;
-
 public class AuditAliasCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  private ProjectWorkspace workspace;
+
+  @Before
+  public void setUp() throws InterruptedException, IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
+    workspace.setUp();
+
+    // Make sure override does not appear in list twice.
+    workspace.addBuckConfigLocalOption("alias", "foo", "//:bar_example");
+    // Make sure output is union of .buckconfig and .buckconfig.local.
+    workspace.addBuckConfigLocalOption("alias", "bar_ex", "//:bar_example");
+  }
 
   @Test
   public void testBuckAliasList() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "alias", tmp);
-    workspace.setUp();
-
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list");
     result.assertSuccess();
 
@@ -56,8 +63,26 @@ public class AuditAliasCommandIntegrationTest {
         "Aliases that appear in both .buckconfig and .buckconfig.local should appear only once.",
         3,
         aliases.size());
+    assertEquals(ImmutableSet.of("foo", "bar", "bar_ex"), ImmutableSet.copyOf(aliases));
+  }
+
+  @Test
+  public void testBuckAliasListMap() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list-map");
+    result.assertSuccess();
+
+    // Remove trailing newline from stdout before passing to Splitter.
+    String stdout = result.getStdout();
+    assertTrue(stdout.endsWith("\n"));
+    stdout = stdout.substring(0, stdout.length() - 1);
+
+    List<String> aliases = Splitter.on('\n').splitToList(stdout);
     assertEquals(
-        ImmutableSet.of("foo", "bar", "bar_ex"),
+        "Aliases that appear in both .buckconfig and .buckconfig.local should appear only once.",
+        3,
+        aliases.size());
+    assertEquals(
+        ImmutableSet.of("foo = //:bar_example", "bar = //:bar_example", "bar_ex = //:bar_example"),
         ImmutableSet.copyOf(aliases));
   }
 }

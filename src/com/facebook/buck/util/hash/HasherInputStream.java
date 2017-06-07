@@ -17,17 +17,15 @@
 package com.facebook.buck.util.hash;
 
 import com.google.common.hash.Hasher;
-
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import javax.annotation.Nonnull;
 
 /**
- * An {@link InputStream} which appends the hash of the data read from it to a {@link Hasher}.
- * As opposed to {@link com.google.common.hash.HashingInputStream}, users can wrap an existing
- * {@link Hasher} which makes this more flexible when building more complex hashes.
+ * An {@link InputStream} which appends the hash of the data read from it to a {@link Hasher}. As
+ * opposed to {@link com.google.common.hash.HashingInputStream}, users can wrap an existing {@link
+ * Hasher} which makes this more flexible when building more complex hashes.
  */
 public class HasherInputStream extends FilterInputStream {
 
@@ -68,5 +66,4 @@ public class HasherInputStream extends FilterInputStream {
   public void reset() throws IOException {
     throw new IOException("reset not supported");
   }
-
 }

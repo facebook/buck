@@ -19,9 +19,8 @@ public class ObjectFileCommonModificationDate {
   private ObjectFileCommonModificationDate() {}
 
   /**
-   * 01 Feb 1985 00:00:00 (12:00:00 AM).
-   * This value should be in sync with ZipConstants to make sure that cached files have the same
-   * time stamp as the files that have been built locally.
+   * 01 Feb 1985 00:00:00 (12:00:00 AM). This value should be in sync with ZipConstants to make sure
+   * that cached files have the same time stamp as the files that have been built locally.
    */
   public static final int COMMON_MODIFICATION_TIME_STAMP = 476064000;
 }

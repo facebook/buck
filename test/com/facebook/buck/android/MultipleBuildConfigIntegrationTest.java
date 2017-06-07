@@ -20,41 +20,35 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class MultipleBuildConfigIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  /**
-   * Regression test for https://github.com/facebook/buck/issues/187.
-   */
+  /** Regression test for https://github.com/facebook/buck/issues/187. */
   @Test
-  public void testAndroidBinarySupportsMultipleBuildConfigs() throws IOException {
+  public void testAndroidBinarySupportsMultipleBuildConfigs()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
 
     Path outputFile = workspace.buildAndReturnOutput("//java/com/buildconfigs:extract-classes-dex");
     String smali = new String(Files.readAllBytes(outputFile), UTF_8);
 
     assertThat(
-        smali,
-        containsString(Paths.get("com/example/config1/BuildConfig.smali").toString()));
+        smali, containsString(Paths.get("com/example/config1/BuildConfig.smali").toString()));
     assertThat(
-        smali,
-        containsString(Paths.get("com/example/config2/BuildConfig.smali").toString()));
+        smali, containsString(Paths.get("com/example/config2/BuildConfig.smali").toString()));
   }
 }

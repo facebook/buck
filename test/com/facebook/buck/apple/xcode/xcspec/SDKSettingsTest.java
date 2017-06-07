@@ -20,12 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Test;
 
 public class SDKSettingsTest {
   @Test

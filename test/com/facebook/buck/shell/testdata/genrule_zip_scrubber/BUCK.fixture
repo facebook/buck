@@ -21,7 +21,8 @@ genrule(
 genrule(
   name = 'extended-time-one',
   out = 'output.zip',
-  cmd = 'cp $SRCS $OUT',
+  bash = 'cp $SRCS $OUT',
+  cmd_exe = 'copy $SRCS $OUT',
   srcs = [
     'extended_time.zip',
   ],
@@ -30,7 +31,8 @@ genrule(
 genrule(
   name = 'extended-time-two',
   out = 'output.zip',
-  cmd = 'cp $SRCS $OUT',
+  bash = 'cp $SRCS $OUT',
+  cmd_exe = 'copy $SRCS $OUT',
   srcs = [
     'extended_time_2.zip',
   ],

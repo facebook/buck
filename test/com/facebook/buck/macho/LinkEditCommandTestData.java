@@ -25,17 +25,17 @@ public class LinkEditCommandTestData {
   private LinkEditCommandTestData() {}
 
   private static final byte[] codeSignBigEndian = {
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1D,
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x10,
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xAA,
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xBB,
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1D,
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x10,
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xAA,
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xBB,
   };
 
   private static final byte[] codeSignLittleEndian = {
-      (byte) 0x1D, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-      (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-      (byte) 0xAA, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-      (byte) 0xBB, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+    (byte) 0x1D, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+    (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+    (byte) 0xAA, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+    (byte) 0xBB, (byte) 0x00, (byte) 0x00, (byte) 0x00,
   };
 
   public static byte[] getCodeSignBigEndian() {
@@ -53,11 +53,7 @@ public class LinkEditCommandTestData {
     assertThat(
         command.getLoadCommandCommonFields().getCmdsize(),
         equalToObject(UnsignedInteger.fromIntBits(0x10)));
-    assertThat(
-        command.getDataoff(),
-        equalToObject(UnsignedInteger.fromIntBits(0xAA)));
-    assertThat(
-        command.getDatasize(),
-        equalToObject(UnsignedInteger.fromIntBits(0xBB)));
+    assertThat(command.getDataoff(), equalToObject(UnsignedInteger.fromIntBits(0xAA)));
+    assertThat(command.getDatasize(), equalToObject(UnsignedInteger.fromIntBits(0xBB)));
   }
 }

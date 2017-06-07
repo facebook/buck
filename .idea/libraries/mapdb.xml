@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="mapdb">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/mapdb/elsa-3.0.0-M5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/mapdb/mapdb-3.0.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

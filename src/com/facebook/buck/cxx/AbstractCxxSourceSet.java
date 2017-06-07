@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable

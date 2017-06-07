@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,25 +28,23 @@ import java.util.function.Consumer;
 
 public interface ProcessExecutor {
   /**
-   * Convenience method for
-   * {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional, Optional)} with
-   * boolean values set to {@code false} and optional values set to absent.
+   * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional,
+   * Optional)} with boolean values set to {@code false} and optional values set to absent.
    */
   Result launchAndExecute(ProcessExecutorParams params) throws InterruptedException, IOException;
 
-  Result launchAndExecute(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws InterruptedException, IOException;
+  Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
+      throws InterruptedException, IOException;
 
   /**
    * Launches then executes a process with the specified {@code params}.
-   * <p>
-   * If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process will
-   * be written directly to the stdout passed to the constructor of this executor. Otherwise,
+   *
+   * <p>If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process
+   * will be written directly to the stdout passed to the constructor of this executor. Otherwise,
    * the stdout of the process will be made available via {@link Result#getStdout()}.
-   * <p>
-   * If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process will
-   * be written directly to the stderr passed to the constructor of this executor. Otherwise,
+   *
+   * <p>If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process
+   * will be written directly to the stderr passed to the constructor of this executor. Otherwise,
    * the stderr of the process will be made available via {@link Result#getStderr()}.
    */
   Result launchAndExecute(
@@ -55,7 +52,8 @@ public interface ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException, IOException;
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException, IOException;
 
   Result launchAndExecute(
       ProcessExecutorParams params,
@@ -66,49 +64,38 @@ public interface ProcessExecutor {
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException;
 
-  /**
-   * Launches a {@link Process} given {@link ProcessExecutorParams}.
-   */
+  /** Launches a {@link Process} given {@link ProcessExecutorParams}. */
   LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException;
 
-  LaunchedProcess launchProcess(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws IOException;
+  LaunchedProcess launchProcess(ProcessExecutorParams params, ImmutableMap<String, String> context)
+      throws IOException;
 
-  /**
-   * Terminates a process previously returned by {@link #launchProcess(ProcessExecutorParams)}.
-   */
+  /** Terminates a process previously returned by {@link #launchProcess(ProcessExecutorParams)}. */
   void destroyLaunchedProcess(LaunchedProcess launchedProcess);
 
   /**
-   * Blocks while waiting for a process previously returned by
-   * {@link #launchProcess(ProcessExecutorParams)} to exit, then returns the
-   * exit code of the process.
+   * Blocks while waiting for a process previously returned by {@link
+   * #launchProcess(ProcessExecutorParams)} to exit, then returns the exit code of the process.
    *
-   * After this method returns, the {@code launchedProcess} can no longer be passed
-   * to any methods of this object.
+   * <p>After this method returns, the {@code launchedProcess} can no longer be passed to any
+   * methods of this object.
    */
-  Result waitForLaunchedProcess(
-      LaunchedProcess launchedProcess) throws InterruptedException;
+  Result waitForLaunchedProcess(LaunchedProcess launchedProcess) throws InterruptedException;
 
-  /**
-   * As {@link #waitForLaunchedProcess(LaunchedProcess)} but with a timeout in milliseconds.
-   */
+  /** As {@link #waitForLaunchedProcess(LaunchedProcess)} but with a timeout in milliseconds. */
   Result waitForLaunchedProcessWithTimeout(
-      LaunchedProcess launchedProcess,
-      long millis,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException;
+      LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException;
 
   /**
-   * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional, Optional, Optional)}.
+   * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional,
+   * Optional, Optional)}.
    */
   public enum Option {
     PRINT_STD_OUT,
     PRINT_STD_ERR,
 
-    /**
-     * If set, will not highlight output to stdout or stderr when printing.
-     */
+    /** If set, will not highlight output to stdout or stderr when printing. */
     EXPECTING_STD_OUT,
     EXPECTING_STD_ERR,
 
@@ -120,18 +107,26 @@ public interface ProcessExecutor {
     IS_SILENT,
   }
 
-  /**
-   * Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}.
-   */
+  /** Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}. */
   public interface LaunchedProcess {
+    /** @return false if process is killed, or true if it is alive. */
+    boolean isAlive();
+
+    /**
+     * Output stream that maps into stdin of the process. You'd write into process' stdin using it.
+     */
     OutputStream getOutputStream();
+
+    /** Input stream that maps into stdout of the process. You'd read process' stdout from it. */
     InputStream getInputStream();
+
+    /** Input stream that maps into stderr of the process. You'd read process' stderr from it. */
     InputStream getErrorStream();
   }
 
   /**
-   * Wraps a {@link Process} and exposes only its I/O streams, so callers have to pass it back
-   * to this class.
+   * Wraps a {@link Process} and exposes only its I/O streams, so callers have to pass it back to
+   * this class.
    */
   @VisibleForTesting
   public static class LaunchedProcessImpl implements LaunchedProcess {
@@ -139,6 +134,11 @@ public interface ProcessExecutor {
 
     public LaunchedProcessImpl(Process process) {
       this.process = process;
+    }
+
+    @Override
+    public boolean isAlive() {
+      return process.isAlive();
     }
 
     @Override
@@ -158,8 +158,8 @@ public interface ProcessExecutor {
   }
 
   /**
-   * Values from the result of
-   * {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional, Optional, Optional)}.
+   * Values from the result of {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set,
+   * Optional, Optional, Optional)}.
    */
   public static class Result {
 
@@ -169,10 +169,7 @@ public interface ProcessExecutor {
     private final Optional<String> stderr;
 
     public Result(
-        int exitCode,
-        boolean timedOut,
-        Optional<String> stdout,
-        Optional<String> stderr) {
+        int exitCode, boolean timedOut, Optional<String> stdout, Optional<String> stderr) {
       this.exitCode = exitCode;
       this.timedOut = timedOut;
       this.stdout = stdout;
@@ -209,12 +206,7 @@ public interface ProcessExecutor {
 
     public String getMessageForResult(String message) {
       return String.format(
-          "%s:\n" +
-              "exit code: %s\n" +
-              "stdout:\n" +
-              "%s" + "\n" +
-              "stderr:\n" +
-              "%s" + "\n",
+          "%s:\n" + "exit code: %s\n" + "stdout:\n" + "%s" + "\n" + "stderr:\n" + "%s" + "\n",
           message,
           getExitCode(),
           MoreStrings.truncatePretty(getStdout().orElse("")),
@@ -222,11 +214,6 @@ public interface ProcessExecutor {
     }
   }
 
-  /**
-   * Makes a clone of this process executor with the stdout and
-   * stderr streams overridden.
-   */
-  ProcessExecutor cloneWithOutputStreams(
-      PrintStream stdOutStream,
-      PrintStream stdErrStream);
+  /** Makes a clone of this process executor with the stdout and stderr streams overridden. */
+  ProcessExecutor cloneWithOutputStreams(PrintStream stdOutStream, PrintStream stdErrStream);
 }

@@ -22,5 +22,4 @@ public abstract class TestUtil {
   public static String buckFile(String... lines) {
     return Joiner.on("\n").join(lines) + "\n";
   }
-
 }

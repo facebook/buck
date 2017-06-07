@@ -17,17 +17,15 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.jvm.java.classes.FileLike;
-
 import java.io.IOException;
 
-/**
- * Interface for generating a zip file.
- */
+/** Interface for generating a zip file. */
 interface ZipOutputStreamHelper extends AutoCloseable {
 
   /**
-   * Tests whether the file-like instance can be placed into the zip entry without
-   * exceeding the maximum size limit.
+   * Tests whether the file-like instance can be placed into the zip entry without exceeding the
+   * maximum size limit.
+   *
    * @param fileLike File-like instance to test.
    * @return True if the file-like instance is small enough to fit; false otherwise.
    * @see #putEntry
@@ -36,10 +34,11 @@ interface ZipOutputStreamHelper extends AutoCloseable {
 
   /**
    * Attempt to put the next entry.
+   *
    * @param fileLike File-like instance to add as a zip entry.
    * @throws IOException
-   * @throws IllegalStateException Thrown if putting this entry would exceed the maximum size
-   *     limit.  See {#link #canPutEntry}.
+   * @throws IllegalStateException Thrown if putting this entry would exceed the maximum size limit.
+   *     See {#link #canPutEntry}.
    */
   void putEntry(FileLike fileLike) throws IOException;
 

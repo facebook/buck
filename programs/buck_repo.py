@@ -1,99 +1,17 @@
 from __future__ import print_function
-import glob
 import os
-import platform
 import subprocess
 import sys
-import tempfile
 import textwrap
 
-from timing import monotonic_time_nanos
 from tracing import Tracing
-from buck_tool import BuckTool, check_output, JAVA_MAX_HEAP_SIZE_MB
+from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB, platform_path
 from buck_tool import BuckToolException, RestartBuck
+from subprocess import check_output
 from subprocutils import which
 import buck_version
 
-JAVA_CLASSPATHS = [
-    "build/abi_processor/classes",
-    "build/classes",
-    "build/src-gen/classes",
-    "build/aosp/classes",
-    "build/dx_classes",
-    "src",
-    "src-gen",
-    "third-party/java/android/sdklib.jar",
-    "third-party/java/android/sdk-common-24.2.3.jar",
-    "third-party/java/android/common-24.2.3.jar",
-    "third-party/java/android/layoutlib-api-24.2.3.jar",
-    "third-party/java/aopalliance/aopalliance.jar",
-    "third-party/java/args4j/args4j-2.0.30.jar",
-    "third-party/java/asm/asm-debug-all-5.0.3.jar",
-    "third-party/java/closure-templates/soy-excluding-deps.jar",
-    "third-party/java/commons-compress/commons-compress-1.8.1.jar",
-    "third-party/java/commons-logging/commons-logging-1.2.jar",
-    "third-party/java/concurrent-locks/concurrent-locks-1.0.0.jar",
-    "third-party/java/dd-plist/dd-plist.jar",
-    "third-party/java/ddmlib/ddmlib-22.5.3.jar",
-    "third-party/java/eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar",
-    "third-party/java/eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar",
-    "third-party/java/eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar",
-    "third-party/java/eclipse/org.eclipse.core.runtime_3.12.0.v20160427-1901.jar",
-    "third-party/java/eclipse/org.eclipse.equinox.common_3.8.0.v20160422-1942.jar",
-    "third-party/java/eclipse/org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar",
-    "third-party/java/eclipse/org.eclipse.jdt.core.prefs",
-    "third-party/java/eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar",
-    "third-party/java/eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar",
-    "third-party/java/gson/gson-2.2.4.jar",
-    "third-party/java/guava/guava-19.0.jar",
-    "third-party/java/guice/guice-3.0.jar",
-    "third-party/java/guice/guice-assistedinject-3.0.jar",
-    "third-party/java/guice/guice-multibindings-3.0.jar",
-    "third-party/java/httpcomponents/httpclient-4.4.1.jar",
-    "third-party/java/httpcomponents/httpcore-4.4.1.jar",
-    "third-party/java/icu4j/icu4j-54.1.1.jar",
-    "third-party/java/infer-annotations/infer-annotations-1.5.jar",
-    "third-party/java/ini4j/ini4j-0.5.2.jar",
-    "third-party/java/jackson/jackson-annotations-2.7.8.jar",
-    "third-party/java/jackson/jackson-core-2.7.8.jar",
-    "third-party/java/jackson/jackson-databind-2.7.8.jar",
-    "third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar",
-    "third-party/java/jackson/jackson-datatype-guava-2.7.8.jar",
-    "third-party/java/jetty/jetty-all-9.2.10.v20150310.jar",
-    "third-party/java/jna/jna-4.2.0.jar",
-    "third-party/java/jna/jna-platform-4.2.0.jar",
-    "third-party/java/jsr/javax.inject-1.jar",
-    "third-party/java/jsr/jsr305.jar",
-    "third-party/java/kxml2/kxml2-2.3.0.jar",
-    "third-party/java/nailgun/nailgun-server-0.9.2-SNAPSHOT.jar",
-    "third-party/java/nuprocess/nuprocess-1.1.0.jar",
-    "third-party/java/ObjCBridge/ObjCBridge.jar",
-    "third-party/java/okhttp/okhttp-3.3.0.jar",
-    "third-party/java/okio/okio-1.8.0.jar",
-    "third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar",
-    "third-party/java/servlet-api/javax.servlet-api-3.1.0.jar",
-    "third-party/java/slf4j/slf4j-jdk14-1.7.5.jar",
-    "third-party/java/stringtemplate/ST-4.0.8.jar",
-    "third-party/java/thrift/libthrift-0.9.3.jar",
-    "third-party/java/xz-java-1.5/xz-1.5.jar",
-    # maven/aether libs
-    "third-party/java/aether/aether-api-1.0.2.v20150114.jar",
-    "third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar",
-    "third-party/java/aether/aether-impl-1.0.0.v20140518.jar",
-    "third-party/java/aether/aether-spi-1.0.2.v20150114.jar",
-    "third-party/java/aether/aether-transport-http-1.0.2.v20150114.jar",
-    "third-party/java/aether/aether-transport-file-1.0.2.v20150114.jar",
-    "third-party/java/aether/aether-util-1.0.2.v20150114.jar",
-    "third-party/java/commons-codec/commons-codec-1.6.jar",
-    "third-party/java/maven/maven-aether-provider-3.2.5.jar",
-    "third-party/java/maven/maven-model-3.2.5.jar",
-    "third-party/java/maven/maven-model-builder-3.2.5.jar",
-    "third-party/java/slf4j/slf4j-api-1.7.5.jar",
-    "third-party/java/plexus/plexus-utils-3.0.20.jar",
-    "third-party/java/plexus/plexus-interpolation-1.21.jar",
-    "third-party/java/eden/eden.jar",
-    "third-party/java/eden/java-thrift-dependencies.jar",
-]
+# If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
 RESOURCES = {
     "abi_processor_classes": "build/abi_processor/classes",
@@ -107,16 +25,17 @@ RESOURCES = {
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "path_to_rawmanifest_py": "src/com/facebook/buck/util/versioncontrol/rawmanifest.py",
-    "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
-    "path_to_intellij_py": "src/com/facebook/buck/command/intellij.py",
-    "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
+    "path_to_intellij_py": "src/com/facebook/buck/ide/intellij/deprecated/intellij.py",
     "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
-    "path_to_pywatchman": "third-party/py/pywatchman",
-    "path_to_scandir_py": "third-party/py/scandir/scandir.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_static_content": "webserver/static",
     "report_generator_jar": "build/report-generator.jar",
     "testrunner_classes": "build/testrunner/classes",
+
+    # python resources used by buck file parser.
+    "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
+    "path_to_pywatchman": "third-party/py/pywatchman",
+    "path_to_typing": "third-party/py/typing/python2",
 }
 
 
@@ -138,7 +57,7 @@ class BuckRepo(BuckTool):
     def __init__(self, buck_bin_dir, buck_project):
         super(BuckRepo, self).__init__(buck_project)
 
-        self._buck_dir = self._platform_path(os.path.dirname(buck_bin_dir))
+        self._buck_dir = platform_path(os.path.dirname(buck_bin_dir))
         self._build_success_file = os.path.join(
             self._buck_dir, "build", "successful-build")
 
@@ -281,6 +200,9 @@ class BuckRepo(BuckTool):
                 self._run_ant(ant)
                 print("All done, continuing with build.", file=sys.stderr)
 
+    def _get_resource_lock_path(self):
+        return None
+
     def _has_resource(self, resource):
         return True
 
@@ -362,4 +284,19 @@ class BuckRepo(BuckTool):
         return self._join_buck_dir("build/bootstrapper/bootstrapper.jar")
 
     def _get_java_classpath(self):
-        return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
+        classpath_file_path = os.path.join(self._buck_dir, "programs", "classpaths")
+        classpath_entries = []
+        with open(classpath_file_path, 'r') as classpath_file:
+            for line in classpath_file.readlines():
+                line = line.strip()
+                if line.startswith('#'):
+                    continue
+                classpath_entries.append(line)
+        return self._pathsep.join([self._join_buck_dir(p) for p in classpath_entries])
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass

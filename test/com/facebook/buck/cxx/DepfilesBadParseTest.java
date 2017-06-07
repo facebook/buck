@@ -17,17 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.HumanReadableException;
-
-import org.junit.rules.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.StringReader;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DepfilesBadParseTest {
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void parseDepfileWithMultipleRulesThrows() throws IOException {

@@ -1,8 +1,8 @@
 prebuilt_jar(
-  name = 'stringtemplate',
-  binary_jar = 'ST-4.0.8.jar',
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [ 'PUBLIC' ],
+    name = "stringtemplate",
+    binary_jar = "ST-4.0.8.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = ["PUBLIC"],
 )

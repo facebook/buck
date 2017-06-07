@@ -25,7 +25,6 @@ import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +32,7 @@ import java.util.Optional;
 /**
  * A fast constraint resolver which selects versions using pre-defined version universes.
  *
- * TODO(andrewjcg): Validate version constraints.
+ * <p>TODO(agallagher): Validate version constraints.
  */
 public class VersionUniverseVersionSelector implements VersionSelector {
 
@@ -43,20 +42,17 @@ public class VersionUniverseVersionSelector implements VersionSelector {
   private final ImmutableMap<String, VersionUniverse> universes;
 
   public VersionUniverseVersionSelector(
-      TargetGraph targetGraph,
-      ImmutableMap<String, VersionUniverse> universes) {
+      TargetGraph targetGraph, ImmutableMap<String, VersionUniverse> universes) {
     this.targetGraph = targetGraph;
     this.universes = universes;
   }
 
-  @SuppressWarnings("unchecked")
   private <A> Optional<String> getVersionUniverseName(TargetNode<A, ?> root) {
     A arg = root.getConstructorArg();
-    try {
-      return (Optional<String>) arg.getClass().getField("versionUniverse").get(arg);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      return Optional.empty();
+    if (arg instanceof HasVersionUniverse) {
+      return ((HasVersionUniverse) arg).getVersionUniverse();
     }
+    return Optional.empty();
   }
 
   @VisibleForTesting
@@ -72,28 +68,24 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     if (universe == null) {
       throw new VerifyException(
           String.format(
-              "%s: unknown version universe \"%s\"",
-              root.getBuildTarget(),
-              universeName.get()));
+              "%s: unknown version universe \"%s\"", root.getBuildTarget(), universeName.get()));
     }
-    return Optional.of(
-        new AbstractMap.SimpleEntry<>(universeName.get(), universe));
+    return Optional.of(new AbstractMap.SimpleEntry<>(universeName.get(), universe));
   }
 
   private ImmutableMap<BuildTarget, Version> selectVersions(
-      BuildTarget root,
-      ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
+      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
       throws VersionException {
 
     TargetNode<?, ?> node = targetGraph.get(root);
     ImmutableMap.Builder<BuildTarget, Version> selectedVersions = ImmutableMap.builder();
 
     Optional<Map.Entry<String, VersionUniverse>> universe = getVersionUniverse(node);
-    LOG.verbose("%s: selected universe: %s", root.getBuildTarget(), universe);
+    LOG.verbose("%s: selected universe: %s", root, universe);
     for (Map.Entry<BuildTarget, ImmutableSet<Version>> ent : domain.entrySet()) {
       Version version;
-      if (universe.isPresent() &&
-          ((version = universe.get().getValue().getVersions().get(ent.getKey())) != null)) {
+      if (universe.isPresent()
+          && ((version = universe.get().getValue().getVersions().get(ent.getKey())) != null)) {
         if (!ent.getValue().contains(version)) {
           throw new VersionException(
               root,
@@ -115,10 +107,8 @@ public class VersionUniverseVersionSelector implements VersionSelector {
 
   @Override
   public ImmutableMap<BuildTarget, Version> resolve(
-      BuildTarget root,
-      ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
+      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
       throws VersionException {
     return selectVersions(root, domain);
   }
-
 }

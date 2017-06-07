@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
 public class CxxLinkStep extends ShellStep {
@@ -29,9 +28,7 @@ public class CxxLinkStep extends ShellStep {
   private final ImmutableList<String> linker;
   private final Path argFilePath;
 
-  /**
-   * Directory to use to store intermediate/temp files used for linking.
-   */
+  /** Directory to use to store intermediate/temp files used for linking. */
   private final Path scratchDir;
 
   public CxxLinkStep(
@@ -49,10 +46,7 @@ public class CxxLinkStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.<String>builder()
-        .addAll(linker)
-        .add("@" + argFilePath.toString())
-        .build();
+    return ImmutableList.<String>builder().addAll(linker).add("@" + argFilePath.toString()).build();
   }
 
   @Override
@@ -69,5 +63,4 @@ public class CxxLinkStep extends ShellStep {
   public String getShortName() {
     return "c++ link";
   }
-
 }

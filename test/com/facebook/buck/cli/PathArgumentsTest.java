@@ -21,34 +21,32 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class PathArgumentsTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "path_arguments", tmp).setUp();
 
     Path projectRoot = tmp.getRoot();
-    ImmutableSet<String> nonCanonicalFilePaths = ImmutableSet.of(
-        "src/com/facebook/CanonicalRelativePath.txt",
-        projectRoot + "/NonExistingPath.txt",
-        "./src/com/otherpackage/.././/facebook/NonCanonicalPath.txt",
-        projectRoot + "/ProjectRoot/src/com/facebook/AbsolutePath.txt",
-        projectRoot + "/ProjectRoot/../PathNotUnderProjectRoot.txt");
+    ImmutableSet<String> nonCanonicalFilePaths =
+        ImmutableSet.of(
+            "src/com/facebook/CanonicalRelativePath.txt",
+            projectRoot + "/NonExistingPath.txt",
+            "./src/com/otherpackage/.././/facebook/NonCanonicalPath.txt",
+            projectRoot + "/ProjectRoot/src/com/facebook/AbsolutePath.txt",
+            projectRoot + "/ProjectRoot/../PathNotUnderProjectRoot.txt");
 
-    PathArguments.ReferencedFiles referencedFiles = PathArguments.getCanonicalFilesUnderProjectRoot(
-        projectRoot.resolve("ProjectRoot"),
-        nonCanonicalFilePaths);
+    PathArguments.ReferencedFiles referencedFiles =
+        PathArguments.getCanonicalFilesUnderProjectRoot(
+            projectRoot.resolve("ProjectRoot"), nonCanonicalFilePaths);
     assertEquals(
         ImmutableSet.of(
             Paths.get("src/com/facebook/CanonicalRelativePath.txt"),

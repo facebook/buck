@@ -17,10 +17,12 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
@@ -30,23 +32,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBinaryBuilder
-    extends AbstractNodeBuilder<AndroidBinaryDescription.Arg, AndroidBinaryDescription> {
+    extends AbstractNodeBuilder<
+        AndroidBinaryDescriptionArg.Builder, AndroidBinaryDescriptionArg, AndroidBinaryDescription,
+        AndroidBinary> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
         new AndroidBinaryDescription(
+            DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
-            CxxPlatformUtils.DEFAULT_CONFIG),
+            FakeBuckConfig.builder().build(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new DxConfig(FakeBuckConfig.builder().build())),
         target);
   }
 
@@ -55,76 +61,95 @@ public class AndroidBinaryBuilder
   }
 
   public AndroidBinaryBuilder setManifest(SourcePath manifest) {
-    arg.manifest = manifest;
+    getArgForPopulating().setManifest(manifest);
     return this;
   }
 
   public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildTarget> originalDeps) {
-    arg.deps = originalDeps;
+    getArgForPopulating().setDeps(originalDeps);
     return this;
   }
 
   public AndroidBinaryBuilder setKeystore(BuildTarget keystore) {
-    arg.keystore = keystore;
-    amend(arg.deps, keystore);
+    getArgForPopulating().setKeystore(keystore);
+    getArgForPopulating().addDeps(keystore);
     return this;
   }
 
   public AndroidBinaryBuilder setPackageType(String packageType) {
-    arg.packageType = Optional.of(packageType);
+    getArgForPopulating().setPackageType(Optional.of(packageType));
     return this;
   }
 
   public AndroidBinaryBuilder setShouldSplitDex(boolean shouldSplitDex) {
-    arg.useSplitDex = Optional.of(shouldSplitDex);
+    getArgForPopulating().setUseSplitDex(shouldSplitDex);
     return this;
   }
 
   public AndroidBinaryBuilder setDexCompression(DexStore dexStore) {
-    arg.dexCompression = Optional.of(dexStore);
+    getArgForPopulating().setDexCompression(Optional.of(dexStore));
     return this;
   }
 
   public AndroidBinaryBuilder setLinearAllocHardLimit(long limit) {
-    arg.linearAllocHardLimit = Optional.of(limit);
+    getArgForPopulating().setLinearAllocHardLimit(limit);
     return this;
   }
 
   public AndroidBinaryBuilder setPrimaryDexScenarioOverflowAllowed(boolean allowed) {
-    arg.primaryDexScenarioOverflowAllowed = Optional.of(allowed);
+    getArgForPopulating().setPrimaryDexScenarioOverflowAllowed(allowed);
     return this;
   }
 
   public AndroidBinaryBuilder setBuildTargetsToExcludeFromDex(
       Set<BuildTarget> buildTargetsToExcludeFromDex) {
-    arg.noDx = Optional.of(buildTargetsToExcludeFromDex);
+    getArgForPopulating().setNoDx(buildTargetsToExcludeFromDex);
     return this;
   }
 
   public AndroidBinaryBuilder setResourceCompressionMode(
       ResourceCompressionMode resourceCompressionMode) {
-    arg.resourceCompression = Optional.of(resourceCompressionMode.toString());
+    getArgForPopulating().setResourceCompression(Optional.of(resourceCompressionMode.toString()));
     return this;
   }
 
   public AndroidBinaryBuilder setResourceFilter(ResourceFilter resourceFilter) {
     List<String> rawFilters = ImmutableList.copyOf(resourceFilter.getFilter());
-    arg.resourceFilter = rawFilters;
+    getArgForPopulating().setResourceFilter(rawFilters);
     return this;
   }
 
-  public AndroidBinaryBuilder setIntraDexReorderResources(boolean enableReorder,
-      SourcePath reorderTool,
-      SourcePath reorderData) {
-    arg.reorderClassesIntraDex = Optional.of(enableReorder);
-    arg.dexReorderToolFile = Optional.of(reorderTool);
-    arg.dexReorderDataDumpFile = Optional.of(reorderData);
+  public AndroidBinaryBuilder setIntraDexReorderResources(
+      boolean enableReorder, SourcePath reorderTool, SourcePath reorderData) {
+    getArgForPopulating().setReorderClassesIntraDex(enableReorder);
+    getArgForPopulating().setDexReorderToolFile(Optional.of(reorderTool));
+    getArgForPopulating().setDexReorderDataDumpFile(Optional.of(reorderData));
     return this;
   }
 
   public AndroidBinaryBuilder setNoDx(Set<BuildTarget> noDx) {
-    arg.noDx = Optional.of(noDx);
+    getArgForPopulating().setNoDx(noDx);
     return this;
   }
 
+  public AndroidBinaryBuilder setDuplicateResourceBehavior(
+      AndroidBinaryDescriptionArg.DuplicateResourceBehaviour value) {
+    getArgForPopulating().setDuplicateResourceBehavior(value);
+    return this;
+  }
+
+  public AndroidBinaryBuilder setBannedDuplicateResourceTypes(Set<RDotTxtEntry.RType> value) {
+    getArgForPopulating().setBannedDuplicateResourceTypes(value);
+    return this;
+  }
+
+  public AndroidBinaryBuilder setAllowedDuplicateResourceTypes(Set<RDotTxtEntry.RType> value) {
+    getArgForPopulating().setAllowedDuplicateResourceTypes(value);
+    return this;
+  }
+
+  public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<String> command) {
+    getArgForPopulating().setPostFilterResourcesCmd(command);
+    return this;
+  }
 }

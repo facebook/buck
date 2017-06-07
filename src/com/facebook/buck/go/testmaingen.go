@@ -31,7 +31,9 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"go/ast"
+	"go/build"
 	"go/doc"
 	"go/parser"
 	"go/scanner"
@@ -39,6 +41,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"text/template"
@@ -155,9 +158,11 @@ func loadTestFuncsFromFiles(packageImportPath string, files []string) (*testFunc
 //
 //
 //
-// Below is an almost direct copy-paste from https://github.com/golang/go/blob/master/src/cmd/go/test.go.
-// If/when golang team makes a common package that creates _testmain.go from
-// a bunch of test cases, we should use that instead.
+// Most of the code below is a direct copy from the 'go test' command, but
+// adapted to support multiple versions of the go stdlib.  This was last
+// updated for the changes in go1.8. The source for the 'go test' generator
+// for go1.8 can be found here:
+//   https://github.com/golang/go/blob/release-branch.go1.8/src/cmd/go/test.go
 //
 //
 //
@@ -168,214 +173,11 @@ type Package struct {
 	ImportPath string `json:",omitempty"` // import path of package in dir
 }
 
-// CoverVar holds the name of the generated coverage variables
-// targeting the named file.
-type CoverVar struct {
-	File string // local file name
-	Var  string // name of count struct
-}
-
-type coverInfo struct {
-	Package *Package
-	Vars    map[string]*CoverVar
-}
-
-type testFuncs struct {
-	Tests       []testFunc
-	Benchmarks  []testFunc
-	Examples    []testFunc
-	TestMain    *testFunc
-	Package     *Package
-	ImportTest  bool
-	NeedTest    bool
-	ImportXtest bool
-	NeedXtest   bool
-	NeedCgo     bool
-	Cover       []coverInfo
-}
-
-func (t *testFuncs) CoverMode() string {
-	return testCoverMode
-}
-
-func (t *testFuncs) CoverEnabled() bool {
-	return testCover
-}
-
-// Covered returns a string describing which packages are being tested for coverage.
-// If the covered package is the same as the tested package, it returns the empty string.
-// Otherwise it is a comma-separated human-readable list of packages beginning with
-// " in", ready for use in the coverage message.
-func (t *testFuncs) Covered() string {
-	if testCoverPaths == nil {
-		return ""
-	}
-	return " in " + strings.Join(testCoverPaths, ", ")
-}
-
-type testFunc struct {
-	Package string // imported package name (_test or _xtest)
-	Name    string // function name
-	Output  string // output, for examples
-}
-
-var testFileSet = token.NewFileSet()
-
-func (t *testFuncs) load(filename, pkg string, doImport, seen *bool) error {
-	f, err := parser.ParseFile(testFileSet, filename, nil, parser.ParseComments)
-	if err != nil {
-		return expandScanner(err)
-	}
-	for _, d := range f.Decls {
-		n, ok := d.(*ast.FuncDecl)
-		if !ok {
-			continue
-		}
-		if n.Recv != nil {
-			continue
-		}
-		name := n.Name.String()
-		switch {
-		case isTestMain(n):
-			if t.TestMain != nil {
-				return errors.New("multiple definitions of TestMain")
-			}
-			t.TestMain = &testFunc{pkg, name, ""}
-			*doImport, *seen = true, true
-		case isTest(name, "Test"):
-			t.Tests = append(t.Tests, testFunc{pkg, name, ""})
-			*doImport, *seen = true, true
-		case isTest(name, "Benchmark"):
-			t.Benchmarks = append(t.Benchmarks, testFunc{pkg, name, ""})
-			*doImport, *seen = true, true
-		}
-	}
-	ex := doc.Examples(f)
-	sort.Sort(byOrder(ex))
-	for _, e := range ex {
-		*doImport = true // import test file whether executed or not
-		if e.Output == "" && !e.EmptyOutput {
-			// Don't run examples with no output.
-			continue
-		}
-		t.Examples = append(t.Examples, testFunc{pkg, "Example" + e.Name, e.Output})
-		*seen = true
-	}
-	return nil
-}
-
-type byOrder []*doc.Example
-
-func (x byOrder) Len() int           { return len(x) }
-func (x byOrder) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
-func (x byOrder) Less(i, j int) bool { return x[i].Order < x[j].Order }
-
-var testmainTmpl = template.Must(template.New("main").Parse(`
-package main
-import (
-{{if not .TestMain}}
-	"os"
-{{end}}
-	"regexp"
-	"testing"
-{{if .ImportTest}}
-	{{if .NeedTest}}_test{{else}}_{{end}} {{.Package.ImportPath | printf "%q"}}
-{{end}}
-{{if .ImportXtest}}
-	{{if .NeedXtest}}_xtest{{else}}_{{end}} {{.Package.ImportPath | printf "%s_test" | printf "%q"}}
-{{end}}
-{{range $i, $p := .Cover}}
-	_cover{{$i}} {{$p.Package.ImportPath | printf "%q"}}
-{{end}}
-{{if .NeedCgo}}
-	_ "runtime/cgo"
-{{end}}
-)
-var tests = []testing.InternalTest{
-{{range .Tests}}
-	{"{{.Name}}", {{.Package}}.{{.Name}}},
-{{end}}
-}
-var benchmarks = []testing.InternalBenchmark{
-{{range .Benchmarks}}
-	{"{{.Name}}", {{.Package}}.{{.Name}}},
-{{end}}
-}
-var examples = []testing.InternalExample{
-{{range .Examples}}
-	{"{{.Name}}", {{.Package}}.{{.Name}}, {{.Output | printf "%q"}}},
-{{end}}
-}
-var matchPat string
-var matchRe *regexp.Regexp
-func matchString(pat, str string) (result bool, err error) {
-	if matchRe == nil || matchPat != pat {
-		matchPat = pat
-		matchRe, err = regexp.Compile(matchPat)
-		if err != nil {
-			return
-		}
-	}
-	return matchRe.MatchString(str), nil
-}
-{{if .CoverEnabled}}
-// Only updated by init functions, so no need for atomicity.
-var (
-	coverCounters = make(map[string][]uint32)
-	coverBlocks = make(map[string][]testing.CoverBlock)
-)
-func init() {
-	{{range $i, $p := .Cover}}
-	{{range $file, $cover := $p.Vars}}
-	coverRegisterFile({{printf "%q" $cover.File}}, _cover{{$i}}.{{$cover.Var}}.Count[:], _cover{{$i}}.{{$cover.Var}}.Pos[:], _cover{{$i}}.{{$cover.Var}}.NumStmt[:])
-	{{end}}
-	{{end}}
-}
-func coverRegisterFile(fileName string, counter []uint32, pos []uint32, numStmts []uint16) {
-	if 3*len(counter) != len(pos) || len(counter) != len(numStmts) {
-		panic("coverage: mismatched sizes")
-	}
-	if coverCounters[fileName] != nil {
-		// Already registered.
-		return
-	}
-	coverCounters[fileName] = counter
-	block := make([]testing.CoverBlock, len(counter))
-	for i := range counter {
-		block[i] = testing.CoverBlock{
-			Line0: pos[3*i+0],
-			Col0: uint16(pos[3*i+2]),
-			Line1: pos[3*i+1],
-			Col1: uint16(pos[3*i+2]>>16),
-			Stmts: numStmts[i],
-		}
-	}
-	coverBlocks[fileName] = block
-}
-{{end}}
-func main() {
-{{if .CoverEnabled}}
-	testing.RegisterCover(testing.Cover{
-		Mode: {{printf "%q" .CoverMode}},
-		Counters: coverCounters,
-		Blocks: coverBlocks,
-		CoveredPackages: {{printf "%q" .Covered}},
-	})
-{{end}}
-	m := testing.MainStart(matchString, tests, benchmarks, examples)
-{{with .TestMain}}
-	{{.Package}}.{{.Name}}(m)
-{{else}}
-	os.Exit(m.Run())
-{{end}}
-}
-`))
-
-// isTestMain tells whether fn is a TestMain(m *testing.M) function.
-func isTestMain(fn *ast.FuncDecl) bool {
-	if fn.Name.String() != "TestMain" ||
-		fn.Type.Results != nil && len(fn.Type.Results.List) > 0 ||
-		fn.Type.Params == nil ||
+// isTestFunc tells whether fn has the type of a testing function. arg
+// specifies the parameter type we look for: B, M or T.
+func isTestFunc(fn *ast.FuncDecl, arg string) bool {
+	if fn.Type.Results != nil && len(fn.Type.Results.List) > 0 ||
+		fn.Type.Params.List == nil ||
 		len(fn.Type.Params.List) != 1 ||
 		len(fn.Type.Params.List[0].Names) > 1 {
 		return false
@@ -387,10 +189,11 @@ func isTestMain(fn *ast.FuncDecl) bool {
 	// We can't easily check that the type is *testing.M
 	// because we don't know how testing has been imported,
 	// but at least check that it's *M or *something.M.
-	if name, ok := ptr.X.(*ast.Ident); ok && name.Name == "M" {
+	// Same applies for B and T.
+	if name, ok := ptr.X.(*ast.Ident); ok && name.Name == arg {
 		return true
 	}
-	if sel, ok := ptr.X.(*ast.SelectorExpr); ok && sel.Sel.Name == "M" {
+	if sel, ok := ptr.X.(*ast.SelectorExpr); ok && sel.Sel.Name == arg {
 		return true
 	}
 	return false
@@ -438,3 +241,267 @@ func expandScanner(err error) error {
 	}
 	return err
 }
+
+// CoverVar holds the name of the generated coverage variables
+// targeting the named file.
+type CoverVar struct {
+	File string // local file name
+	Var  string // name of count struct
+}
+
+type coverInfo struct {
+	Package *Package
+	Vars    map[string]*CoverVar
+}
+
+type testFuncs struct {
+	Tests       []testFunc
+	Benchmarks  []testFunc
+	Examples    []testFunc
+	TestMain    *testFunc
+	Package     *Package
+	ImportTest  bool
+	NeedTest    bool
+	ImportXtest bool
+	NeedXtest   bool
+	Cover       []coverInfo
+}
+
+func (t *testFuncs) CoverMode() string {
+	return testCoverMode
+}
+
+func (t *testFuncs) CoverEnabled() bool {
+	return testCover
+}
+
+func (t *testFuncs) ReleaseTag(want string) bool {
+	for _, r := range build.Default.ReleaseTags {
+		if want == r {
+			return true
+		}
+	}
+	return false
+}
+
+// Covered returns a string describing which packages are being tested for coverage.
+// If the covered package is the same as the tested package, it returns the empty string.
+// Otherwise it is a comma-separated human-readable list of packages beginning with
+// " in", ready for use in the coverage message.
+func (t *testFuncs) Covered() string {
+	if testCoverPaths == nil {
+		return ""
+	}
+	return " in " + strings.Join(testCoverPaths, ", ")
+}
+
+type testFunc struct {
+	Package   string // imported package name (_test or _xtest)
+	Name      string // function name
+	Output    string // output, for examples
+	Unordered bool   // output is allowed to be unordered.
+}
+
+var testFileSet = token.NewFileSet()
+
+func (t *testFuncs) load(filename, pkg string, doImport, seen *bool) error {
+	f, err := parser.ParseFile(testFileSet, filename, nil, parser.ParseComments)
+	if err != nil {
+		return expandScanner(err)
+	}
+	for _, d := range f.Decls {
+		n, ok := d.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+		if n.Recv != nil {
+			continue
+		}
+		name := n.Name.String()
+		switch {
+		case name == "TestMain" && isTestFunc(n, "M"):
+			if t.TestMain != nil {
+				return errors.New("multiple definitions of TestMain")
+			}
+			t.TestMain = &testFunc{pkg, name, "", false}
+			*doImport, *seen = true, true
+		case isTest(name, "Test"):
+			err := checkTestFunc(n, "T")
+			if err != nil {
+				return err
+			}
+			t.Tests = append(t.Tests, testFunc{pkg, name, "", false})
+			*doImport, *seen = true, true
+		case isTest(name, "Benchmark"):
+			err := checkTestFunc(n, "B")
+			if err != nil {
+				return err
+			}
+			t.Benchmarks = append(t.Benchmarks, testFunc{pkg, name, "", false})
+			*doImport, *seen = true, true
+		}
+	}
+	ex := doc.Examples(f)
+	sort.Sort(byOrder(ex))
+	for _, e := range ex {
+		*doImport = true // import test file whether executed or not
+		if e.Output == "" && !e.EmptyOutput {
+			// Don't run examples with no output.
+			continue
+		}
+
+		// Go 1.7 and beyond has support for unordered test output on examples.
+		// We can use reflection to see if the Unordered field is there. This
+		// can be removed when go 1.6 is not supported by buck.
+		unordered := false
+		v := reflect.Indirect(reflect.ValueOf(e))
+		if f := v.FieldByName("Unordered"); f.IsValid() {
+			unordered = f.Bool()
+		}
+
+		t.Examples = append(t.Examples, testFunc{pkg, "Example" + e.Name, e.Output, unordered})
+		*seen = true
+	}
+	return nil
+}
+
+func checkTestFunc(fn *ast.FuncDecl, arg string) error {
+	if !isTestFunc(fn, arg) {
+		name := fn.Name.String()
+		pos := testFileSet.Position(fn.Pos())
+		return fmt.Errorf("%s: wrong signature for %s, must be: func %s(%s *testing.%s)", pos, name, name, strings.ToLower(arg), arg)
+	}
+	return nil
+}
+
+type byOrder []*doc.Example
+
+func (x byOrder) Len() int           { return len(x) }
+func (x byOrder) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x byOrder) Less(i, j int) bool { return x[i].Order < x[j].Order }
+
+var testmainTmpl = template.Must(template.New("main").Parse(`
+package main
+import (
+{{if not .TestMain}}
+	"os"
+{{end}}
+	"io"
+	"regexp"
+	"runtime/pprof"
+	"testing"
+{{if .ImportTest}}
+	{{if .NeedTest}}_test{{else}}_{{end}} {{.Package.ImportPath | printf "%q"}}
+{{end}}
+{{if .ImportXtest}}
+	{{if .NeedXtest}}_xtest{{else}}_{{end}} {{.Package.ImportPath | printf "%s_test" | printf "%q"}}
+{{end}}
+{{range $i, $p := .Cover}}
+	_cover{{$i}} {{$p.Package.ImportPath | printf "%q"}}
+{{end}}
+)
+
+var tests = []testing.InternalTest{
+{{range .Tests}}
+	{"{{.Name}}", {{.Package}}.{{.Name}}},
+{{end}}
+}
+var benchmarks = []testing.InternalBenchmark{
+{{range .Benchmarks}}
+	{"{{.Name}}", {{.Package}}.{{.Name}}},
+{{end}}
+}
+var examples = []testing.InternalExample{
+{{range .Examples}}
+	{"{{.Name}}", {{.Package}}.{{.Name}}, {{.Output | printf "%q"}}{{if $.ReleaseTag "go1.7"}}, {{.Unordered}}{{end}}},
+{{end}}
+}
+
+type testDeps struct{}
+
+var matchPat string
+var matchRe *regexp.Regexp
+
+func (testDeps) MatchString(pat, str string) (result bool, err error) {
+	if matchRe == nil || matchPat != pat {
+		matchPat = pat
+		matchRe, err = regexp.Compile(matchPat)
+		if err != nil {
+			return
+		}
+	}
+	return matchRe.MatchString(str), nil
+}
+
+func (testDeps) StartCPUProfile(w io.Writer) error {
+	return pprof.StartCPUProfile(w)
+}
+
+func (testDeps) StopCPUProfile() {
+	pprof.StopCPUProfile()
+}
+
+func (testDeps) WriteHeapProfile(w io.Writer) error {
+	return pprof.WriteHeapProfile(w)
+}
+
+func (testDeps) WriteProfileTo(name string, w io.Writer, debug int) error {
+	return pprof.Lookup(name).WriteTo(w, debug)
+}
+
+{{if .CoverEnabled}}
+// Only updated by init functions, so no need for atomicity.
+var (
+	coverCounters = make(map[string][]uint32)
+	coverBlocks = make(map[string][]testing.CoverBlock)
+)
+func init() {
+	{{range $i, $p := .Cover}}
+	{{range $file, $cover := $p.Vars}}
+	coverRegisterFile({{printf "%q" $cover.File}}, _cover{{$i}}.{{$cover.Var}}.Count[:], _cover{{$i}}.{{$cover.Var}}.Pos[:], _cover{{$i}}.{{$cover.Var}}.NumStmt[:])
+	{{end}}
+	{{end}}
+}
+func coverRegisterFile(fileName string, counter []uint32, pos []uint32, numStmts []uint16) {
+	if 3*len(counter) != len(pos) || len(counter) != len(numStmts) {
+		panic("coverage: mismatched sizes")
+	}
+	if coverCounters[fileName] != nil {
+		// Already registered.
+		return
+	}
+	coverCounters[fileName] = counter
+	block := make([]testing.CoverBlock, len(counter))
+	for i := range counter {
+		block[i] = testing.CoverBlock{
+			Line0: pos[3*i+0],
+			Col0: uint16(pos[3*i+2]),
+			Line1: pos[3*i+1],
+			Col1: uint16(pos[3*i+2]>>16),
+			Stmts: numStmts[i],
+		}
+	}
+	coverBlocks[fileName] = block
+}
+{{end}}
+func main() {
+{{if .CoverEnabled}}
+	testing.RegisterCover(testing.Cover{
+		Mode: {{printf "%q" .CoverMode}},
+		Counters: coverCounters,
+		Blocks: coverBlocks,
+		CoveredPackages: {{printf "%q" .Covered}},
+	})
+{{end}}
+{{if .ReleaseTag "go1.8"}}
+	m := testing.MainStart(testDeps{}, tests, benchmarks, examples)
+{{else}}
+	m := testing.MainStart(testDeps{}.MatchString, tests, benchmarks, examples)
+{{end}}
+{{with .TestMain}}
+	{{.Package}}.{{.Name}}(m)
+{{else}}
+	os.Exit(m.Run())
+{{end}}
+}
+`))

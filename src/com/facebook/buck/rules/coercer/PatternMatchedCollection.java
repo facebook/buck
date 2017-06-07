@@ -16,12 +16,18 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
-
+import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class PatternMatchedCollection<T> {
+public class PatternMatchedCollection<T>
+    implements TargetTranslatable<PatternMatchedCollection<T>> {
 
   private final ImmutableList<Pair<Pattern, T>> values;
 
@@ -49,6 +55,18 @@ public class PatternMatchedCollection<T> {
       vals.add(value.getSecond());
     }
     return vals.build();
+  }
+
+  @Override
+  public Optional<PatternMatchedCollection<T>> translateTargets(
+      CellPathResolver cellPathResolver,
+      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      TargetNodeTranslator translator) {
+    Optional<ImmutableList<Pair<Pattern, T>>> translatedValues =
+        translator.translate(cellPathResolver, pattern, values);
+    return translatedValues.isPresent()
+        ? Optional.of(new PatternMatchedCollection<>(translatedValues.get()))
+        : Optional.empty();
   }
 
   public static <T> PatternMatchedCollection<T> of() {

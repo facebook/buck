@@ -22,13 +22,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 public class JsonObjectHashingTest {
   private Hasher hasher;
@@ -47,43 +45,43 @@ public class JsonObjectHashingTest {
   @Test
   public void stringSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", "v"));
-    assertEquals("d12f81e02f7891e706334281f823c1010c271dd7", hasher.hash().toString());
+    assertEquals("fe58988370f1bac4597f7cffc04a315d3ea5493d", hasher.hash().toString());
   }
 
   @Test
   public void booleanSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", true));
-    assertEquals("ab07e5750e4b34a1efd493ca9965981cec926666", hasher.hash().toString());
+    assertEquals("b3913145947a4a567ff95e9a321d4133cfbe602f", hasher.hash().toString());
   }
 
   @Test
   public void shortSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 4096L));
-    assertEquals("ed6da6185c0a876fb545b3003952dca8bea2175c", hasher.hash().toString());
+    assertEquals("d052359a75b28c9f1097fdbcab6e9f2b52b47193", hasher.hash().toString());
   }
 
   @Test
   public void intSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 64738L));
-    assertEquals("9ce0538522e4b3708d277ea409a7c6b89b36ef81", hasher.hash().toString());
+    assertEquals("a41891d41f003499d698a2e7d7aa3f0760a5c6d2", hasher.hash().toString());
   }
 
   @Test
   public void longSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 2147483648L));
-    assertEquals("46a04bf8c2272a738bc6f58330b55feb2f6748bb", hasher.hash().toString());
+    assertEquals("5ec3ef74c52a97a02c1367767ae81a47554c36e4", hasher.hash().toString());
   }
 
   @Test
   public void floatSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 123.456));
-    assertEquals("a0593804d2a5f010416eb0e80a30aea639d7b8fc", hasher.hash().toString());
+    assertEquals("c1c8a5cd9eddc08ffb1221d886eec398a4565bd9", hasher.hash().toString());
   }
 
   @Test
   public void doubleSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 1.79769313486231570e+308));
-    assertEquals("c008259c4ac2f1c1d86d383129d6cb61abfe6580", hasher.hash().toString());
+    assertEquals("93e9a1600777d06a6c8e1d2926b7d8c6d601d4b8", hasher.hash().toString());
   }
 
   @Test
@@ -97,13 +95,13 @@ public class JsonObjectHashingTest {
   @Test
   public void arraySha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", ImmutableList.of(1L, 2L, 3L)));
-    assertEquals("341c75f9118e092512b162fb6dde882f18a86266", hasher.hash().toString());
+    assertEquals("a1175b70883560d2b89caee549c86157048f3859", hasher.hash().toString());
   }
 
   @Test
   public void objectSha1Hash() throws IOException {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", ImmutableMap.of("k2", "v2")));
-    assertEquals("5fe15cee6527c655f4adcbb2eaf819f5f9ad1909", hasher.hash().toString());
+    assertEquals("d19ac4d9a68ce5a15574fa3d2064084d93aac18c", hasher.hash().toString());
   }
 
   @Test
@@ -131,12 +129,8 @@ public class JsonObjectHashingTest {
 
   @Test
   public void mapOrderDoesNotChangeHash() {
-    Map<?, ?> map1 = ImmutableMap.of(
-        "firstKey", 24,
-        "secondKey", new Float(13.5));
-    Map<?, ?> map2 = ImmutableMap.of(
-        "secondKey", new Float(13.5),
-        "firstKey", 24);
+    Map<?, ?> map1 = ImmutableMap.of("firstKey", 24, "secondKey", new Float(13.5));
+    Map<?, ?> map2 = ImmutableMap.of("secondKey", new Float(13.5), "firstKey", 24);
 
     Hasher hasher1 = Hashing.sha1().newHasher();
     Hasher hasher2 = Hashing.sha1().newHasher();
@@ -152,9 +146,9 @@ public class JsonObjectHashingTest {
    * making changes within Buck (such as adding or removing constructor arg fields) this means that
    * there are fewer places where tests fail, meaning less time being spent debugging "failed"
    * tests.
-   * <p>
-   * This means that two maps may generate the same hashcode, despite not being strictly equal. We
-   * rely on the use case that this class was designed for (namely, generating target hashes) to
+   *
+   * <p>This means that two maps may generate the same hashcode, despite not being strictly equal.
+   * We rely on the use case that this class was designed for (namely, generating target hashes) to
    * ensure that correct functionality is maintained.
    */
   @Test

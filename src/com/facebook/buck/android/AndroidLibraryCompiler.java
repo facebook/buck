@@ -21,57 +21,38 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableCollection;
 import java.nio.file.Path;
 
 /**
- * Jvm compiler abstraction for android.
- * Implementations of this class are used in {@link AndroidLibraryDescription} to provide
- * the actual compilation step.
- * This allows us to use different compilers for different {@link JvmLanguage}.
+ * Jvm compiler abstraction for android. Implementations of this class are used in {@link
+ * AndroidLibraryDescription} to provide the actual compilation step. This allows us to use
+ * different compilers for different {@link JvmLanguage}.
  */
-@SuppressWarnings("unused")
 public abstract class AndroidLibraryCompiler
-    implements ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
+    implements ImplicitDepsInferringDescription<AndroidLibraryDescription.CoreArg> {
 
   public static final Function<BuildContext, Iterable<Path>> ANDROID_CLASSPATH_FROM_CONTEXT =
       context -> context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
 
   public abstract CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg args,
+      AndroidLibraryDescription.CoreArg args,
       JavacOptions javacOptions,
       BuildRuleResolver resolver);
-
-  public Iterable<BuildRule> getDeclaredDeps(
-      AndroidLibraryDescription.Arg args,
-      BuildRuleResolver resolver) {
-    return ImmutableList.of();
-  }
-
-  public Iterable<BuildRule> getExtraDeps(
-      AndroidLibraryDescription.Arg args,
-      BuildRuleResolver resolver) {
-    return ImmutableList.of();
-  }
 
   public boolean trackClassUsage(JavacOptions javacOptions) {
     return javacOptions.trackClassUsage();
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.Arg constructorArg) {
-
-    return ImmutableList.of();
-  }
+      AndroidLibraryDescription.CoreArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 }
-
-

@@ -97,3 +97,26 @@
 {/call}
 {/template}
 
+/***/
+{template .extra_xcode_sources}
+{call buck.arg}
+  {param name : 'extra_xcode_sources' /}
+  {param default: '[]' /}
+  {param desc}
+  When the project is generated, this is the list of files that will added to the build phase
+  "Compile Sources" of the given target.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .extra_xcode_files}
+{call buck.arg}
+  {param name : 'extra_xcode_files' /}
+  {param default: '[]' /}
+  {param desc}
+  When the project is generated, this is the list of files that will added to the project.
+  Those files won't be added to the build phase "Compile Sources".
+  {/param}
+{/call}
+{/template}

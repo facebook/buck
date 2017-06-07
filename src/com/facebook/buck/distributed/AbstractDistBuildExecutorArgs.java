@@ -18,9 +18,11 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
@@ -28,19 +30,15 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.immutables.value.Value;
-
 import java.util.Map;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractDistBuildExecutorArgs {
   public abstract DistBuildState getState();
-
-  public abstract ObjectMapper getObjectMapper();
 
   public abstract Cell getRootCell();
 
@@ -66,7 +64,21 @@ abstract class AbstractDistBuildExecutorArgs {
 
   public abstract FileContentsProvider getProvider();
 
+  public abstract DistBuildMode getDistBuildMode();
+
+  public abstract Integer getCoordinatorPort();
+
+  public abstract StampedeId getStampedeId();
+
+  public String getCoordinatorAddress() {
+    return "localhost";
+  }
+
   public BuckConfig getRemoteRootCellConfig() {
     return getState().getRootCell().getBuckConfig();
   }
+
+  public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
+
+  public abstract BuildInfoStoreManager getBuildInfoStoreManager();
 }

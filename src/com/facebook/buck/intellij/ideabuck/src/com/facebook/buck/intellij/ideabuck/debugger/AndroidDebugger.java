@@ -20,7 +20,6 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
-import com.facebook.buck.util.HumanReadableException;
 import com.intellij.execution.ProgramRunnerUtil;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
@@ -30,7 +29,6 @@ import com.intellij.execution.remote.RemoteConfiguration;
 import com.intellij.execution.remote.RemoteConfigurationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-
 import org.jetbrains.annotations.NonNls;
 
 public class AndroidDebugger {
@@ -39,18 +37,16 @@ public class AndroidDebugger {
   private static final int RETRY_TIME = 10;
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
-  @NonNls
-  private static final String RUN_CONFIGURATION_NAME_PATTERN = "Android Debugger (%s)";
+  @NonNls private static final String RUN_CONFIGURATION_NAME_PATTERN = "Android Debugger (%s)";
 
   private AndroidDebugger() {}
 
-  public static void init() throws HumanReadableException, InterruptedException {
-    if (AndroidDebugBridge.getBridge() == null ||
-        !isAdbInitialized(AndroidDebugBridge.getBridge())) {
+  public static void init() throws InterruptedException {
+    if (AndroidDebugBridge.getBridge() == null
+        || !isAdbInitialized(AndroidDebugBridge.getBridge())) {
       AndroidDebugBridge.initIfNeeded(/* clientSupport */ true);
       AndroidDebugBridge.createBridge(
-          BuckSettingsProvider.getInstance().getState().adbExecutable,
-          false);
+          BuckSettingsProvider.getInstance().getState().adbExecutable, false);
     }
 
     long start = System.currentTimeMillis();
@@ -68,15 +64,15 @@ public class AndroidDebugger {
   }
 
   public static void disconnect() {
-    if (AndroidDebugBridge.getBridge() != null &&
-        isAdbInitialized(AndroidDebugBridge.getBridge())) {
+    if (AndroidDebugBridge.getBridge() != null
+        && isAdbInitialized(AndroidDebugBridge.getBridge())) {
       AndroidDebugBridge.disconnectBridge();
       AndroidDebugBridge.terminate();
     }
   }
 
   public static void attachDebugger(final String packageName, final Project project)
-      throws HumanReadableException, InterruptedException {
+      throws InterruptedException {
     IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
     if (devices.length == 0) {
       return;
@@ -95,28 +91,30 @@ public class AndroidDebugger {
     } while (client == null && currentRetryNumber < MAX_RETRIES);
 
     if (client == null) {
-      throw new HumanReadableException("Connecting to the adb debug server timed out." +
-          "Can't find package with name " + packageName + ".");
+      throw new RuntimeException(
+          "Connecting to the adb debug server timed out."
+              + "Can't find package with name "
+              + packageName
+              + ".");
     }
 
     String debugPort = String.valueOf(client.getDebuggerListenPort());
-    final RunnerAndConfigurationSettings settings =
-        createRunConfiguration(project, debugPort);
+    final RunnerAndConfigurationSettings settings = createRunConfiguration(project, debugPort);
 
-    ApplicationManager.getApplication().invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        // Needs read access which is available on the read thread.
-        ProgramRunnerUtil.executeConfiguration(
-            project,
-            settings,
-            DefaultDebugExecutor.getDebugExecutorInstance());
-      }
-    });
+    ApplicationManager.getApplication()
+        .invokeLater(
+            new Runnable() {
+              @Override
+              public void run() {
+                // Needs read access which is available on the read thread.
+                ProgramRunnerUtil.executeConfiguration(
+                    project, settings, DefaultDebugExecutor.getDebugExecutorInstance());
+              }
+            });
   }
 
-  private static RunnerAndConfigurationSettings createRunConfiguration
-      (Project project, String debugPort) {
+  private static RunnerAndConfigurationSettings createRunConfiguration(
+      Project project, String debugPort) {
     final RemoteConfigurationType remoteConfigurationType = RemoteConfigurationType.getInstance();
 
     final ConfigurationFactory factory = remoteConfigurationType.getFactory();

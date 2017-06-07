@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -32,7 +33,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -41,10 +41,10 @@ public class MacroArgTest {
   @Test
   public void stringify() {
     MacroHandler macroHandler =
-        new MacroHandler(
-            ImmutableMap.of("macro", new StringExpander("expanded")));
+        new MacroHandler(ImmutableMap.of("macro", new StringExpander("expanded")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroArg arg =
         new MacroArg(
@@ -53,20 +53,19 @@ public class MacroArgTest {
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
             "$(macro)");
-    assertThat(Arg.stringifyList(arg), Matchers.contains("expanded"));
+    assertThat(Arg.stringifyList(arg, pathResolver), Matchers.contains("expanded"));
   }
 
   @Test
   public void getDeps() throws Exception {
     MacroHandler macroHandler =
-        new MacroHandler(
-            ImmutableMap.of("loc", new LocationMacroExpander()));
+        new MacroHandler(ImmutableMap.of("loc", new LocationMacroExpander()));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Genrule rule =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver);
     MacroArg arg =
@@ -76,9 +75,6 @@ public class MacroArgTest {
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
             "$(loc //:rule)");
-    assertThat(
-        arg.getDeps(pathResolver),
-        Matchers.contains(rule));
+    assertThat(arg.getDeps(ruleFinder), Matchers.contains(rule));
   }
-
 }

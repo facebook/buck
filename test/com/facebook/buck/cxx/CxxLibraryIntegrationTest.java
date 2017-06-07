@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -28,21 +30,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
-
-import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
-import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -50,16 +44,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
+import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class CxxLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void exportedPreprocessorFlagsApplyToBothTargetAndDependents() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "exported_preprocessor_flags", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exported_preprocessor_flags", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:main").assertSuccess();
   }
@@ -68,8 +65,8 @@ public class CxxLibraryIntegrationTest {
   public void appleBinaryBuildsOnApplePlatform() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "apple_cxx_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_cxx_library", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:main#iphonesimulator-i386").assertSuccess();
   }
@@ -78,16 +75,16 @@ public class CxxLibraryIntegrationTest {
   public void appleLibraryBuildsOnApplePlatform() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "apple_cxx_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_cxx_library", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:lib#iphonesimulator-i386,static").assertSuccess();
   }
 
   @Test
   public void libraryCanIncludeAllItsHeadersAndExportedHeadersOfItsDeps() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "private_and_exported_headers", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "private_and_exported_headers", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:good-bin");
@@ -96,8 +93,8 @@ public class CxxLibraryIntegrationTest {
 
   @Test
   public void libraryCannotIncludePrivateHeadersOfDeps() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "private_and_exported_headers", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "private_and_exported_headers", tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:bad-bin");
@@ -105,10 +102,10 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void libraryBuildPathIsSoName() throws IOException {
+  public void libraryBuildPathIsSoName() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.LINUX);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "shared_library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
     assertTrue(
@@ -118,8 +115,7 @@ public class CxxLibraryIntegrationTest {
                     new ProjectFilesystem(workspace.getDestPath()),
                     BuildTargetFactory.newInstance("//subdir:library")
                         .withFlavors(
-                            DefaultCxxPlatforms.FLAVOR,
-                            CxxDescriptionEnhancer.SHARED_FLAVOR),
+                            DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR),
                     "%s/libsubdir_library.so"))));
     result.assertSuccess();
   }
@@ -157,20 +153,14 @@ public class CxxLibraryIntegrationTest {
   @Test
   public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
-        this,
-        tmp,
-        Optional.empty());
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.runBuckBuild("//foo:dep_one#infer").assertSuccess();
   }
 
   @Test
   public void runInferCaptureOnLibraryWithHeadersOnly() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
-        this,
-        tmp,
-        Optional.empty());
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.runBuckBuild("//foo:headers_only_lib#infer-capture-all").assertSuccess();
   }
 
@@ -183,20 +173,18 @@ public class CxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
     workspace.setUp();
     Path archive =
-        workspace.buildAndReturnOutput(
-            "-c", "cxx.archive_contents=thin",
-            "//:foo#default,static");
+        workspace.buildAndReturnOutput("-c", "cxx.archive_contents=thin", "//:foo#default,static");
 
     // NOTE: Replace the thin header with a normal header just so the commons compress parser
     // can parse the archive contents.
     try (OutputStream outputStream =
-             Files.newOutputStream(workspace.getPath(archive), StandardOpenOption.WRITE)) {
+        Files.newOutputStream(workspace.getPath(archive), StandardOpenOption.WRITE)) {
       outputStream.write(ObjectFileScrubbers.GLOBAL_HEADER);
     }
 
     // Now iterate the archive and verify it contains no absolute paths.
-    try (ArArchiveInputStream stream = new ArArchiveInputStream(
-        new FileInputStream(workspace.getPath(archive).toFile()))) {
+    try (ArArchiveInputStream stream =
+        new ArArchiveInputStream(new FileInputStream(workspace.getPath(archive).toFile()))) {
       ArArchiveEntry entry;
       while ((entry = stream.getNextArEntry()) != null) {
         if (!entry.getName().isEmpty()) {
@@ -209,211 +197,15 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void sharedInterfaceLibraryPreventsRebuildAfterNonLocalVarNameChange() throws IOException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
-    workspace.setUp();
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:binary"),
-            Optional.empty());
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            ImmutableFlavor.of("default"),
-            Linker.LinkType.SHARED);
-    BuckBuildLog log;
-
-    // First verify that *not* using shared library interfaces causes a rebuild even after making a
-    // non-interface change.
-    ImmutableList<String> args =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=false",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] argv = args.toArray(new String[args.size()]);
-    workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1", "bar2");
-    workspace.runBuckBuild(argv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
-
-    // Now verify that using shared library interfaces does not cause a rebuild after making a
-    // non-interface change.
-    ImmutableList<String> iArgs =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=true",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar2", "bar3");
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetHadMatchingInputRuleKey(binaryTarget.toString());
-  }
-
-  @Test
-  public void sharedInterfaceLibraryPreventsRebuildAfterCodeChange() throws IOException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
-    workspace.setUp();
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            ImmutableFlavor.of("default"),
-            Linker.LinkType.SHARED);
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:binary"),
-            Optional.empty());
-    BuckBuildLog log;
-
-    // First verify that *not* using shared library interfaces causes a rebuild even after making a
-    // non-interface change.
-    ImmutableList<String> args =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=false",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] argv = args.toArray(new String[args.size()]);
-    workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1 = 0", "bar1 = 1");
-    workspace.runBuckBuild(argv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
-
-    // Now verify that using shared library interfaces does not cause a rebuild after making a
-    // non-interface change.
-    ImmutableList<String> iArgs =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=true",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1 = 1", "bar1 = 2");
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetHadMatchingInputRuleKey(binaryTarget.toString());
-  }
-
-  @Test
-  public void sharedInterfaceLibraryPreventsRebuildAfterAddedCode() throws IOException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
-    workspace.setUp();
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            ImmutableFlavor.of("default"),
-            Linker.LinkType.SHARED);
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:binary"),
-            Optional.empty());
-    BuckBuildLog log;
-
-    // First verify that *not* using shared library interfaces causes a rebuild even after making a
-    // non-interface change.
-    ImmutableList<String> args =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=false",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] argv = args.toArray(new String[args.size()]);
-    workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "return bar1", "return bar1 += 15");
-    workspace.runBuckBuild(argv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
-
-    // Revert changes.
-    workspace.replaceFileContents("subdir/library.cpp", "return bar1 += 15", "return bar1");
-
-    // Now verify that using shared library interfaces does not cause a rebuild after making a
-    // non-interface change.
-    ImmutableList<String> iArgs =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=true",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "return bar1", "return bar1 += 15");
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetHadMatchingInputRuleKey(binaryTarget.toString());
-  }
-
-  @Test
-  public void sharedInterfaceLibraryDoesRebuildAfterInterfaceChange() throws IOException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
-    workspace.setUp();
-    ImmutableList<String> args =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=true",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary");
-    String[] argv = args.toArray(new String[args.size()]);
-    workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "foo", "bar");
-    workspace.runBuckBuild(argv).assertFailure();
-  }
-
-  @Test
-  public void sharedInterfaceLibraryDoesNotAffectStaticLinking() throws IOException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
-    workspace.setUp();
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:static_binary"),
-            Optional.empty());
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            ImmutableFlavor.of("default"),
-            CxxSourceRuleFactory.PicType.PDC);
-    BuckBuildLog log;
-
-    // Verify that using shared library interfaces does not affect static linking.
-    ImmutableList<String> iArgs =
-        ImmutableList.of(
-            "-c", "cxx.shared_library_interfaces=true",
-            "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:static_binary");
-    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1", "bar2");
-    workspace.runBuckBuild(iArgv).assertSuccess();
-    log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
-  }
-
-  @Test
-  public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
+  public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
+      throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//foo:library_with_header");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:library_with_header");
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
             "build",
@@ -424,10 +216,176 @@ public class CxxLibraryIntegrationTest {
             "defaults.cxx_library.platform=android-armv7");
     result.assertSuccess();
 
-    BuildTarget implicitTarget = target.withAppendedFlavors(
-        ImmutableFlavor.of("static-pic"),
-        ImmutableFlavor.of("android-armv7")
-    );
+    BuildTarget implicitTarget =
+        target.withAppendedFlavors(
+            InternalFlavor.of("static-pic"), InternalFlavor.of("android-armv7"));
     workspace.getBuildLog().assertTargetBuiltLocally(implicitTarget.getFullyQualifiedName());
+  }
+
+  @Test
+  public void prebuiltLibraryWithHeaderMapDoesntChangeIncludeTypeOfOtherHeaderMaps()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "header_map_include_type", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("-v=3", "//:test_prebuilt").assertSuccess();
+    workspace.runBuckBuild("-v=3", "//:test_lib").assertFailure();
+    workspace.runBuckBuild("-v=3", "//:test_both").assertFailure();
+  }
+
+  @Test
+  public void explicitHeaderOnlyDependency() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "explicit_header_only_dependency", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    ProjectWorkspace.ProcessResult shouldFail =
+        workspace.runBuckBuild("//:binary-lacking-symbols").assertFailure();
+    assertThat(
+        "Should not link in archive of direct header-only dependency.",
+        shouldFail.getStderr(),
+        containsString("lib1_function"));
+    assertThat(
+        "Dependencies of header-only dependencies should also be header only.",
+        shouldFail.getStderr(),
+        containsString("lib1_dep_function"));
+  }
+
+  @Test
+  public void sourceChangeInHeaderOnlyDependencyDoesntCauseRebuild() throws IOException {
+    // gcc doesn't support the `-all_load` flag which we need to use to ensure our symbols don't
+    // get stripped. Skip the test on linux (a gcc platform) for now.
+    assumeTrue(Platform.detect() != Platform.LINUX);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "explicit_header_only_caching", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    workspace.runBuckCommand("clean");
+    workspace.copyFile("lib1.c.new", "lib1.c");
+    workspace.runBuckBuild("//:binary").assertSuccess();
+    BuckBuildLog log = workspace.getBuildLog();
+    log.assertTargetWasFetchedFromCache("//:lib3#default,static");
+  }
+
+  @Test
+  public void sourceFromCxxGenrule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sources_from_cxx_genrule", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:lib#default,shared").assertSuccess();
+  }
+
+  @Test
+  public void headerFromCxxGenrule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sources_from_cxx_genrule", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:lib_header#default,shared").assertSuccess();
+  }
+
+  private void assumeSymLinkTreeWithHeaderMap(Path rootPath)
+      throws InterruptedException, IOException {
+    // We can only disable symlink trees if header map is supported.
+    CxxPreprocessables.HeaderMode headerMode =
+        CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
+    assumeTrue(headerMode == CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
+  }
+
+  @Test
+  public void buildWithHeadersSymlink() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("-v=3", "//:main#default").assertSuccess();
+    Path rootPath = tmp.getRoot();
+    assumeSymLinkTreeWithHeaderMap(rootPath);
+    assertTrue(
+        Files.exists(
+            rootPath.resolve(
+                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
+    assertTrue(
+        Files.exists(
+            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+  }
+
+  @Test
+  public void buildWithoutPublicHeadersSymlink() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "-c", "cxx.exported_headers_symlinks_enabled=false", "-v=3", "//:main#default")
+        .assertSuccess();
+    Path rootPath = tmp.getRoot();
+    assumeSymLinkTreeWithHeaderMap(rootPath);
+    assertFalse(
+        Files.exists(
+            rootPath.resolve(
+                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
+    assertTrue(
+        Files.exists(
+            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+  }
+
+  @Test
+  public void buildWithoutPrivateHeadersSymlink() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "cxx.headers_symlinks_enabled=false", "-v=3", "//:main#default")
+        .assertSuccess();
+    Path rootPath = tmp.getRoot();
+    assumeSymLinkTreeWithHeaderMap(rootPath);
+    assertTrue(
+        Files.exists(
+            rootPath.resolve(
+                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
+    assertFalse(
+        Files.exists(
+            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+  }
+
+  @Test
+  public void buildWithoutHeadersSymlink() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "-c",
+            "cxx.headers_symlinks_enabled=false",
+            "-c",
+            "cxx.exported_headers_symlinks_enabled=false",
+            "-v=3",
+            "//:main#default")
+        .assertSuccess();
+    Path rootPath = tmp.getRoot();
+    assumeSymLinkTreeWithHeaderMap(rootPath);
+    assertFalse(
+        Files.exists(
+            rootPath.resolve(
+                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
+    assertFalse(
+        Files.exists(
+            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+  }
+
+  @Test
+  public void testExplicitReexportOfHeaderDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "reexport_header_deps", tmp);
+    workspace.setUp();
+    // auto-reexport is off, but reexporting via exported_deps
+    workspace.runBuckBuild("//:bin-explicit-reexport").assertSuccess();
+    // auto-reexport is off, but not reexporting via exported_deps
+    workspace.runBuckBuild("//:bin-explicit-noexport").assertFailure();
+    // auto-reexport is off, no reexport, and a dependency-free exported header
+    workspace.runBuckBuild("//:bin-internal-dep-noexport").assertSuccess();
+    // auto-reexport is on, but not reexporting via exported_deps
+    workspace.runBuckBuild("//:bin-auto-reexport").assertSuccess();
   }
 }

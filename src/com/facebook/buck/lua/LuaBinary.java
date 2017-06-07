@@ -16,48 +16,53 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
-public class LuaBinary
-    extends AbstractBuildRule
-    implements BinaryBuildRule, HasRuntimeDeps {
+public class LuaBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Path output;
   private final Tool wrappedBinary;
   private final String mainModule;
   private final LuaPackageComponents components;
   private final Tool lua;
+  private final SourcePathRuleFinder ruleFinder;
+  private final LuaConfig.PackageStyle packageStyle;
 
   public LuaBinary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Path output,
       Tool wrappedBinary,
       String mainModule,
       LuaPackageComponents components,
-      Tool lua) {
-    super(buildRuleParams, resolver);
+      Tool lua,
+      LuaConfig.PackageStyle packageStyle) {
+    super(buildRuleParams);
+    this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(!output.isAbsolute());
     this.output = output;
     this.wrappedBinary = wrappedBinary;
     this.mainModule = mainModule;
     this.components = components;
     this.lua = lua;
+    this.packageStyle = packageStyle;
   }
 
   @Override
@@ -66,42 +71,39 @@ public class LuaBinary
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  protected Path getBinPath() {
-    return output;
+  public boolean outputFileCanBeCopied() {
+    return packageStyle != LuaConfig.PackageStyle.INPLACE;
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getBinPath();
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @VisibleForTesting
-  protected String getMainModule() {
+  String getMainModule() {
     return mainModule;
   }
 
   @VisibleForTesting
-  protected LuaPackageComponents getComponents() {
+  LuaPackageComponents getComponents() {
     return components;
   }
 
   @VisibleForTesting
-  protected Tool getLua() {
+  Tool getLua() {
     return lua;
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getDeclaredDeps())
-        .addAll(wrappedBinary.getDeps(getResolver()))
-        .build();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return Stream.concat(getDeclaredDeps().stream(), wrappedBinary.getDeps(ruleFinder).stream())
+        .map(BuildRule::getBuildTarget);
   }
-
 }

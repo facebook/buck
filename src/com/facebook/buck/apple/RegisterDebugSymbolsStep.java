@@ -24,7 +24,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -37,10 +36,7 @@ class RegisterDebugSymbolsStep implements Step {
   private final Path dsymPath;
 
   public RegisterDebugSymbolsStep(
-      SourcePath binary,
-      Tool lldb,
-      SourcePathResolver resolver,
-      Path dsymPath) {
+      SourcePath binary, Tool lldb, SourcePathResolver resolver, Path dsymPath) {
     this.binary = binary;
     this.lldb = lldb;
     this.resolver = resolver;
@@ -51,19 +47,22 @@ class RegisterDebugSymbolsStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(resolver);
-    ProcessExecutorParams params = ProcessExecutorParams
-        .builder()
-        .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
-        .build();
-    return StepExecutionResult.of(context.getProcessExecutor().launchAndExecute(
-        params,
-        ImmutableSet.of(),
-        Optional.of(
-            String.format("target create %s\ntarget symbols add %s",
-                resolver.getAbsolutePath(binary),
-                dsymPath)),
-        Optional.empty(),
-        Optional.empty()));
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
+            .build();
+    return StepExecutionResult.of(
+        context
+            .getProcessExecutor()
+            .launchAndExecute(
+                params,
+                ImmutableSet.of(),
+                Optional.of(
+                    String.format(
+                        "target create %s\ntarget symbols add %s",
+                        resolver.getAbsolutePath(binary), dsymPath)),
+                Optional.empty(),
+                Optional.empty()));
   }
 
   @Override
@@ -74,8 +73,6 @@ class RegisterDebugSymbolsStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format(
-        "register debug symbols for binary '%s': '%s'",
-        resolver.getRelativePath(binary),
-        dsymPath);
+        "register debug symbols for binary '%s': '%s'", resolver.getRelativePath(binary), dsymPath);
   }
 }

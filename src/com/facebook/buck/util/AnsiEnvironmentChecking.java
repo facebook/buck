@@ -18,28 +18,22 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
-
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Utility class to check if the environment supports ANSI escape sequences.
- */
+/** Utility class to check if the environment supports ANSI escape sequences. */
 public class AnsiEnvironmentChecking {
   // Utility class, do not instantiate.
-  private AnsiEnvironmentChecking() { }
+  private AnsiEnvironmentChecking() {}
 
   private static final Logger LOG = Logger.get(AnsiEnvironmentChecking.class);
   private static final String TERM_ENV = "TERM";
   private static final String NAILGUN_STDOUT_ISTTY_ENV = "NAILGUN_TTY_1";
   private static final String NAILGUN_STDERR_ISTTY_ENV = "NAILGUN_TTY_2";
 
-  /**
-   * Returns true if the environment supports ANSI escape sequences, false otherwise.
-   */
+  /** Returns true if the environment supports ANSI escape sequences, false otherwise. */
   public static boolean environmentSupportsAnsiEscapes(
-      Platform platform,
-      Map<String, String> environment) {
+      Platform platform, Map<String, String> environment) {
     boolean isWindows = (platform == Platform.WINDOWS);
     boolean isDumbTerminal = Objects.equals(environment.get(TERM_ENV), "dumb");
 

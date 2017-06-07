@@ -18,22 +18,22 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeDepFileBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -41,221 +41,908 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
-import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Predicate;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class DependencyFileRuleKeyFactoryTest {
 
   @Test
-  public void ruleKeyDoesNotChangeIfInputContentsChanges() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path output = Paths.get("output");
+  public void testKeysWhenInputPathContentsChanges() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver ruleResolver = newRuleResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(filesystem)
-            .build();
-    FakeDepFileBuildRule rule = new FakeDepFileBuildRule(params, pathResolver);
+    SourcePath usedSourcePath = new PathSourcePath(filesystem, Paths.get("usedInput"));
+    SourcePath unusedSourcePath = new PathSourcePath(filesystem, Paths.get("unusedInput"));
+    SourcePath noncoveredSourcePath = new PathSourcePath(filesystem, Paths.get("noncoveredInput"));
+    SourcePath interestingSourcePath = new PathSourcePath(filesystem, Paths.get("interestingIn"));
 
-    // Build a rule key with a particular hash set for the output for the above rule.
-    FakeFileHashCache hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            output,
-            HashCode.fromInt(0)));
-
-    RuleKey inputKey1 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .build(rule, ImmutableList.of()).get().getFirst();
-
-    // Now, build a rule key with a different hash for the output for the above rule.
-    hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            output,
-            HashCode.fromInt(1)));
-
-    RuleKey inputKey2 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .build(rule, ImmutableList.of()).get().getFirst();
-
-    assertThat(inputKey1, Matchers.equalTo(inputKey2));
+    testKeysWhenInputContentsChanges(
+        ruleFinder,
+        pathResolver,
+        usedSourcePath,
+        unusedSourcePath,
+        noncoveredSourcePath,
+        interestingSourcePath,
+        pathResolver.getAbsolutePath(usedSourcePath),
+        pathResolver.getAbsolutePath(unusedSourcePath),
+        pathResolver.getAbsolutePath(noncoveredSourcePath),
+        pathResolver.getAbsolutePath(interestingSourcePath),
+        DependencyFileEntry.fromSourcePath(usedSourcePath, pathResolver));
   }
 
   @Test
-  public void ruleKeyDoesNotChangeIfInputContentsInRuleKeyAppendableChanges() throws IOException {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final Path output = Paths.get("output");
+  public void testKeysWhenInputTargetOutputChanges() throws Exception {
+    BuildRuleResolver ruleResolver = newRuleResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:rule").build();
-    FakeDepFileBuildRule rule = new FakeDepFileBuildRule(params, pathResolver) {
-      @AddToRuleKey
-      RuleKeyAppendableWithInput input =
-          new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
-    };
+    BuildTarget usedTarget = BuildTargetFactory.newInstance("//:used");
+    BuildTarget unusedTarget = BuildTargetFactory.newInstance("//:unused");
+    BuildTarget noncoveredTarget = BuildTargetFactory.newInstance("//:noncovered");
+    BuildTarget interestingTarget = BuildTargetFactory.newInstance("//:interesting");
+    SourcePath usedSourcePath = new DefaultBuildTargetSourcePath(usedTarget);
+    SourcePath unusedSourcePath = new DefaultBuildTargetSourcePath(unusedTarget);
+    SourcePath noncoveredSourcePath = new DefaultBuildTargetSourcePath(noncoveredTarget);
+    SourcePath interestingSourcePath = new DefaultBuildTargetSourcePath(interestingTarget);
+    ruleResolver.addToIndex(new FakeBuildRule(usedTarget, pathResolver).setOutputFile("used"));
+    ruleResolver.addToIndex(new FakeBuildRule(unusedTarget, pathResolver).setOutputFile("unused"));
+    ruleResolver.addToIndex(new FakeBuildRule(noncoveredTarget, pathResolver).setOutputFile("nc"));
+    ruleResolver.addToIndex(new FakeBuildRule(interestingTarget, pathResolver).setOutputFile("in"));
 
-    // Build a rule key with a particular hash set for the output for the above rule.
-    FakeFileHashCache hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            filesystem.resolve(output),
-            HashCode.fromInt(0)));
-
-    RuleKey inputKey1 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .build(rule, ImmutableList.of()).get().getFirst();
-
-    // Now, build a rule key with a different hash for the output for the above rule.
-    hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            filesystem.resolve(output),
-            HashCode.fromInt(1)));
-
-    RuleKey inputKey2 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .build(rule, ImmutableList.of()).get().getFirst();
-
-    assertThat(inputKey1, Matchers.equalTo(inputKey2));
+    testKeysWhenInputContentsChanges(
+        ruleFinder,
+        pathResolver,
+        usedSourcePath,
+        unusedSourcePath,
+        noncoveredSourcePath,
+        interestingSourcePath,
+        pathResolver.getAbsolutePath(usedSourcePath),
+        pathResolver.getAbsolutePath(unusedSourcePath),
+        pathResolver.getAbsolutePath(noncoveredSourcePath),
+        pathResolver.getAbsolutePath(interestingSourcePath),
+        DependencyFileEntry.fromSourcePath(usedSourcePath, pathResolver));
   }
 
   @Test
-  public void manifestKeyDoesNotChangeIfPossibleDepFileContentsChange()throws IOException {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final Path output = Paths.get("output");
+  public void testKeysWhenInputArchiveMemberChanges() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver ruleResolver = newRuleResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildRuleParams depParams = new FakeBuildRuleParamsBuilder("//:dep").build();
-    final BuildRule dep = new FakeDepFileBuildRule(depParams, pathResolver)
-        .setOutputPath(output)
-        .setPossibleInputPaths(ImmutableSet.of());
-    resolver.addToIndex(dep);
+    SourcePath archivePath = new PathSourcePath(filesystem, Paths.get("archive"));
+    SourcePath usedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("used"));
+    SourcePath unusedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("unused"));
+    SourcePath noncoveredSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("nc"));
+    SourcePath interestingSourcePath =
+        ArchiveMemberSourcePath.of(archivePath, Paths.get("META-INF"));
 
-    final BuildTargetSourcePath inputSourcePath = new BuildTargetSourcePath(dep.getBuildTarget());
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:rule").build();
-    FakeDepFileBuildRule rule = new FakeDepFileBuildRule(params, pathResolver) {
-      @AddToRuleKey
-      SourcePath input = inputSourcePath;
+    testKeysWhenInputContentsChanges(
+        ruleFinder,
+        pathResolver,
+        usedSourcePath,
+        unusedSourcePath,
+        noncoveredSourcePath,
+        interestingSourcePath,
+        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(usedSourcePath).toString()),
+        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(unusedSourcePath).toString()),
+        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(noncoveredSourcePath).toString()),
+        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(interestingSourcePath).toString()),
+        DependencyFileEntry.fromSourcePath(usedSourcePath, pathResolver));
+  }
+
+  /** Tests all types of changes (or the lack of it): used, unused, noncovered. */
+  private void testKeysWhenInputContentsChanges(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      SourcePath usedSourcePath,
+      SourcePath unusedSourcePath,
+      SourcePath noncoveredSourcePath,
+      SourcePath interestingSourcePath,
+      Path usedAbsolutePath,
+      Path unusedAbsolutePath,
+      Path noncoveredAbsolutePath,
+      Path interestingAbsolutePath,
+      DependencyFileEntry usedDepFileEntry)
+      throws Exception {
+    testDepFileRuleKeyWhenInputContentsChanges(
+        ruleFinder,
+        pathResolver,
+        usedSourcePath,
+        unusedSourcePath,
+        noncoveredSourcePath,
+        interestingSourcePath,
+        usedAbsolutePath,
+        unusedAbsolutePath,
+        noncoveredAbsolutePath,
+        interestingAbsolutePath,
+        usedDepFileEntry);
+    testManifestKeyWhenInputContentsChanges(
+        ruleFinder,
+        pathResolver,
+        unusedSourcePath,
+        noncoveredSourcePath,
+        interestingSourcePath,
+        unusedAbsolutePath,
+        noncoveredAbsolutePath,
+        interestingAbsolutePath);
+  }
+
+  /** Tests all types of changes (or the lack of it): used, unused, noncovered. */
+  private void testDepFileRuleKeyWhenInputContentsChanges(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      SourcePath usedSourcePath,
+      SourcePath unusedSourcePath,
+      SourcePath noncoveredSourcePath,
+      SourcePath interestingSourcePath,
+      Path usedAbsolutePath,
+      Path unusedAbsolutePath,
+      Path noncoveredAbsolutePath,
+      Path interestingAbsolutePath,
+      DependencyFileEntry usedDepFileEntry)
+      throws Exception {
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should remain same
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when none of the inputs changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should remain same
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when none of the inputs changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(205),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should remain same
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when only dep-file-covered but unused inputs change.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(205),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should remain same
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when only dep-file-covered but unused inputs change.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(105),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        false, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should change when a dep-file-covered and used input changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(105),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        false, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should change when a dep-file-covered and used input changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(305),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        false, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should change when a not dep-file-covered input changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(405)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when an interesting, but unused input changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(405)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when an interesting, but unused input changes.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(usedSourcePath, interestingSourcePath),
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(205),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        true, // rule key should remain same
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should NOT change when a covered but unused input is added/removed.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, interestingSourcePath),
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(305),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        false, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should change when a not dep-file-covered input is added/removed.");
+
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(usedSourcePath, unusedSourcePath, noncoveredSourcePath),
+        ImmutableList.of(
+            usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(300)),
+        ImmutableMap.of( // after
+            usedAbsolutePath, HashCode.fromInt(100),
+            unusedAbsolutePath, HashCode.fromInt(200),
+            noncoveredAbsolutePath, HashCode.fromInt(305),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(usedSourcePath, unusedSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        ImmutableList.of(usedDepFileEntry),
+        false, // rule key should change
+        ImmutableSet.of(usedSourcePath),
+        "Dep file rule key should change when an interesting input is added/removed.");
+
+    try {
+      testDepFileRuleKey(
+          ruleFinder,
+          pathResolver,
+          ImmutableList.of(
+              usedSourcePath, unusedSourcePath, noncoveredSourcePath, interestingSourcePath),
+          ImmutableMap.of( // before
+              usedAbsolutePath, HashCode.fromInt(100),
+              unusedAbsolutePath, HashCode.fromInt(200),
+              noncoveredAbsolutePath, HashCode.fromInt(300),
+              interestingAbsolutePath, HashCode.fromInt(400)),
+          ImmutableMap.of( // after
+              usedAbsolutePath, HashCode.fromInt(100),
+              unusedAbsolutePath, HashCode.fromInt(200),
+              noncoveredAbsolutePath, HashCode.fromInt(300),
+              interestingAbsolutePath, HashCode.fromInt(400)),
+          ImmutableSet.of(unusedSourcePath)::contains, // "used" is not accounted as covered
+          ImmutableSet.of(interestingSourcePath),
+          ImmutableList.of(usedDepFileEntry),
+          true, // rule key should not change
+          ImmutableSet.of(usedSourcePath),
+          "should throw");
+      Assert.fail("Unaccounted inputs should cause an exception.");
+    } catch (NoSuchFileException e) { // NOPMD
+      // expected
     }
-    .setPossibleInputPaths(ImmutableSet.of(inputSourcePath));
+  }
 
-    // Build a rule key with a particular hash set for the output for the above rule.
-    FakeFileHashCache hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            filesystem.resolve(output),
-            HashCode.fromInt(0)));
+  /** Tests SourcePaths both directly, and when wrapped with a RuleKeyAppendable. */
+  private void testDepFileRuleKey(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      Object fieldValue,
+      ImmutableMap<Path, HashCode> hashesBefore,
+      ImmutableMap<Path, HashCode> hashesAfter,
+      Predicate<SourcePath> coveredInputPaths,
+      ImmutableSet<SourcePath> interestingInputPaths,
+      ImmutableList<DependencyFileEntry> depFileEntries,
+      boolean expectSameKeys,
+      ImmutableSet<SourcePath> expectedDepFileInputsAfter,
+      String failureMessage)
+      throws Exception {
+    testDepFileRuleKey(
+        ruleFinder,
+        pathResolver,
+        fieldValue, // same field value before and after
+        fieldValue, // same field value before and after
+        hashesBefore,
+        hashesAfter,
+        coveredInputPaths,
+        interestingInputPaths,
+        depFileEntries,
+        expectSameKeys,
+        expectedDepFileInputsAfter,
+        failureMessage);
+  }
 
-    RuleKey manifestKey1 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .buildManifestKey(rule)
-            .get()
-            .getFirst();
+  private void testDepFileRuleKey(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      Object fieldValueBefore,
+      Object fieldValueAfter,
+      ImmutableMap<Path, HashCode> hashesBefore,
+      ImmutableMap<Path, HashCode> hashesAfter,
+      Predicate<SourcePath> coveredInputPaths,
+      ImmutableSet<SourcePath> interestingInputPaths,
+      ImmutableList<DependencyFileEntry> depFileEntries,
+      boolean expectSameKeys,
+      ImmutableSet<SourcePath> expectedDepFileInputsAfter,
+      String failureMessage)
+      throws Exception {
+    testDepFileRuleKeyImpl(
+        ruleFinder,
+        pathResolver,
+        fieldValueBefore,
+        fieldValueAfter,
+        hashesBefore,
+        hashesAfter,
+        coveredInputPaths,
+        interestingInputPaths,
+        depFileEntries,
+        expectSameKeys,
+        expectedDepFileInputsAfter,
+        failureMessage);
+    // make sure the behavior is same if wrapped with RuleKeyAppendable
+    testDepFileRuleKeyImpl(
+        ruleFinder,
+        pathResolver,
+        new RuleKeyAppendableWrapped(fieldValueBefore),
+        new RuleKeyAppendableWrapped(fieldValueAfter),
+        hashesBefore,
+        hashesAfter,
+        coveredInputPaths,
+        interestingInputPaths,
+        depFileEntries,
+        expectSameKeys,
+        expectedDepFileInputsAfter,
+        failureMessage);
+  }
 
-    // Now, build a rule key with a different hash for the output for the above rule.
-    hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            filesystem.resolve(output),
-            HashCode.fromInt(1)));
+  private void testDepFileRuleKeyImpl(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      Object fieldValueBefore,
+      Object fieldValueAfter,
+      ImmutableMap<Path, HashCode> hashesBefore,
+      ImmutableMap<Path, HashCode> hashesAfter,
+      Predicate<SourcePath> coveredInputPaths,
+      ImmutableSet<SourcePath> interestingInputPaths,
+      ImmutableList<DependencyFileEntry> depFileEntries,
+      boolean expectSameKeys,
+      ImmutableSet<SourcePath> expectedDepFileInputsAfter,
+      String failureMessage)
+      throws Exception {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
+    FakeDepFileBuildRule rule1 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueBefore;
+        };
+    rule1.setCoveredByDepFilePredicate(coveredInputPaths);
+    rule1.setExistenceOfInterestPredicate(interestingInputPaths);
+    FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
+    RuleKeyAndInputs res1 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .build(rule1, depFileEntries);
 
-    RuleKey manifestKey2 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .buildManifestKey(rule)
-            .get()
-            .getFirst();
+    FakeDepFileBuildRule rule2 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueAfter;
+        };
+    rule2.setCoveredByDepFilePredicate(coveredInputPaths);
+    rule2.setExistenceOfInterestPredicate(interestingInputPaths);
+    hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
+    RuleKeyAndInputs res2 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .build(rule2, depFileEntries);
 
-    assertThat(manifestKey1, Matchers.equalTo(manifestKey2));
+    if (expectSameKeys) {
+      assertThat(failureMessage, res2.getRuleKey(), Matchers.equalTo(res1.getRuleKey()));
+    } else {
+      assertThat(
+          failureMessage, res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));
+    }
+    assertThat(res2.getInputs(), Matchers.equalTo(expectedDepFileInputsAfter));
+  }
+
+  /** Tests all types of changes (or the lack of it): used, unused, noncovered. */
+  private void testManifestKeyWhenInputContentsChanges(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      SourcePath coveredSourcePath,
+      SourcePath noncoveredSourcePath,
+      SourcePath interestingSourcePath,
+      Path coveredAbsolutePath,
+      Path noncoveredAbsolutePath,
+      Path interestingAbsolutePath)
+      throws Exception {
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should remain same
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when none of the inputs changes.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should remain same
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when none of the inputs changes.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(105),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        (SourcePath path) -> true, // all inputs are covered by dep file
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should remain same
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when only dep-file-covered inputs change.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(105),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should remain same
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when only dep-file-covered but unused inputs change.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(305),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        false, // rule key should change
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should change when a not dep-file-covered input changes.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(405)),
+        (SourcePath path) -> true, // all files covered
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should change
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when an interesting, but covered input changes.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(405)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should change
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when an interesting, but covered input changes.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(noncoveredSourcePath, interestingSourcePath),
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(105),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        true, // rule key should remain same
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should NOT change when only dep-file-covered inputs are added/removed.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, interestingSourcePath),
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        false, // rule key should change
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should change when a not dep-file-covered input is added/removed.");
+
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath),
+        ImmutableList.of(coveredSourcePath, noncoveredSourcePath, interestingSourcePath),
+        ImmutableMap.of( // before
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300)),
+        ImmutableMap.of( // after
+            coveredAbsolutePath, HashCode.fromInt(100),
+            noncoveredAbsolutePath, HashCode.fromInt(300),
+            interestingAbsolutePath, HashCode.fromInt(400)),
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath)::contains,
+        ImmutableSet.of(interestingSourcePath),
+        false, // rule key should change
+        ImmutableSet.of(coveredSourcePath, interestingSourcePath),
+        "Manifest key should change when a mandatory input is added/removed.");
+  }
+
+  /** Tests SourcePaths both directly, and when wrapped with a RuleKeyAppendable. */
+  private void testManifestKey(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      Object fieldValue,
+      ImmutableMap<Path, HashCode> hashesBefore,
+      ImmutableMap<Path, HashCode> hashesAfter,
+      Predicate<SourcePath> coveredInputPaths,
+      ImmutableSet<SourcePath> interestingInputPaths,
+      boolean expectSameKeys,
+      ImmutableSet<SourcePath> expectedDepFileInputsAfter,
+      String failureMessage)
+      throws Exception {
+    testManifestKey(
+        ruleFinder,
+        pathResolver,
+        fieldValue, // same field value before and after
+        fieldValue, // same field value before and after
+        hashesBefore,
+        hashesAfter,
+        coveredInputPaths,
+        interestingInputPaths,
+        expectSameKeys,
+        expectedDepFileInputsAfter,
+        failureMessage);
+  }
+
+  private void testManifestKey(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      Object fieldValueBefore,
+      Object fieldValueAfter,
+      ImmutableMap<Path, HashCode> hashesBefore,
+      ImmutableMap<Path, HashCode> hashesAfter,
+      Predicate<SourcePath> coveredInputPaths,
+      ImmutableSet<SourcePath> interestingInputPaths,
+      boolean expectSameKeys,
+      ImmutableSet<SourcePath> expectedDepFileInputsAfter,
+      String failureMessage)
+      throws Exception {
+    testManifestKeyImpl(
+        ruleFinder,
+        pathResolver,
+        fieldValueBefore,
+        fieldValueAfter,
+        hashesBefore,
+        hashesAfter,
+        coveredInputPaths,
+        interestingInputPaths,
+        expectSameKeys,
+        expectedDepFileInputsAfter,
+        failureMessage);
+    // make sure the behavior is same if wrapped with RuleKeyAppendable
+    testManifestKeyImpl(
+        ruleFinder,
+        pathResolver,
+        new RuleKeyAppendableWrapped(fieldValueBefore),
+        new RuleKeyAppendableWrapped(fieldValueAfter),
+        hashesBefore,
+        hashesAfter,
+        coveredInputPaths,
+        interestingInputPaths,
+        expectSameKeys,
+        expectedDepFileInputsAfter,
+        failureMessage);
+  }
+
+  private void testManifestKeyImpl(
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
+      Object fieldValueBefore,
+      Object fieldValueAfter,
+      ImmutableMap<Path, HashCode> hashesBefore,
+      ImmutableMap<Path, HashCode> hashesAfter,
+      Predicate<SourcePath> coveredInputPaths,
+      ImmutableSet<SourcePath> interestingInputPaths,
+      boolean expectSameKeys,
+      ImmutableSet<SourcePath> expectedDepFileInputsAfter,
+      String failureMessage)
+      throws Exception {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
+    FakeDepFileBuildRule rule1 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueBefore;
+        };
+    rule1.setCoveredByDepFilePredicate(coveredInputPaths);
+    rule1.setExistenceOfInterestPredicate(interestingInputPaths);
+    FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
+    RuleKeyAndInputs res1 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .buildManifestKey(rule1);
+
+    FakeDepFileBuildRule rule2 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField = fieldValueAfter;
+        };
+    rule2.setCoveredByDepFilePredicate(coveredInputPaths);
+    rule2.setExistenceOfInterestPredicate(interestingInputPaths);
+    hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
+    RuleKeyAndInputs res2 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .buildManifestKey(rule2);
+
+    if (expectSameKeys) {
+      assertThat(failureMessage, res2.getRuleKey(), Matchers.equalTo(res1.getRuleKey()));
+    } else {
+      assertThat(
+          failureMessage, res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));
+    }
+    assertThat(res2.getInputs(), Matchers.equalTo(expectedDepFileInputsAfter));
   }
 
   @Test
-  public void manifestKeyChangesIfNotPossibleDepFileContentsChange() throws IOException {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final Path localInput = Paths.get("localInput");
+  public void testKeysGetHashed() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
+    BuildRuleResolver ruleResolver = newRuleResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:rule").build();
-    final PathSourcePath inputSourcePath = new PathSourcePath(filesystem, localInput);
-    FakeDepFileBuildRule rule = new FakeDepFileBuildRule(params, pathResolver) {
-      @AddToRuleKey
-      SourcePath input = inputSourcePath;
-    }
-    .setPossibleInputPaths(ImmutableSet.of());
+    SourcePath unusedSourcePath = new PathSourcePath(filesystem, Paths.get("input0"));
+    SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get("input"));
+    DependencyFileEntry dependencyFileEntry =
+        DependencyFileEntry.fromSourcePath(sourcePath, pathResolver);
 
-    // Build a rule key with a particular hash set for the localInput for the above rule.
-    FakeFileHashCache hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            filesystem.resolve(localInput),
-            HashCode.fromInt(0)));
+    ImmutableMap<Path, HashCode> hashes =
+        ImmutableMap.of(pathResolver.getAbsolutePath(sourcePath), HashCode.fromInt(42));
 
-    RuleKey manifestKey1 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .buildManifestKey(rule)
-            .get()
-            .getFirst();
+    Predicate<SourcePath> coveredPredicate =
+        ImmutableSet.of(sourcePath, unusedSourcePath)::contains;
 
-    // Now, build a rule key with a different hash for the localInput for the above rule.
-    hashCache = new FakeFileHashCache(
-        ImmutableMap.of(
-            filesystem.resolve(localInput),
-            HashCode.fromInt(1)));
+    FakeDepFileBuildRule rule1 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField1 = sourcePath;
+          @AddToRuleKey final Object myField2 = unusedSourcePath;
+        };
+    rule1.setCoveredByDepFilePredicate(coveredPredicate);
+    FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
+    RuleKeyAndInputs res1 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .build(rule1, ImmutableList.of(dependencyFileEntry));
 
-    RuleKey manifestKey2 =
-        new DefaultDependencyFileRuleKeyFactory(
-            0,
-            hashCache,
-            pathResolver)
-            .buildManifestKey(rule)
-            .get()
-            .getFirst();
+    FakeDepFileBuildRule rule2 =
+        new FakeDepFileBuildRule("//:rule") {
+          @AddToRuleKey final Object myField1 = unusedSourcePath;
+          @AddToRuleKey final Object myField2 = sourcePath;
+        };
+    rule2.setCoveredByDepFilePredicate(coveredPredicate);
+    hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
+    RuleKeyAndInputs res2 =
+        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+            .build(rule2, ImmutableList.of(dependencyFileEntry));
 
-    assertThat(manifestKey1, Matchers.not(Matchers.equalTo(manifestKey2)));
+    assertThat(res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));
+    assertThat(res2.getInputs(), Matchers.equalTo(ImmutableSet.of(sourcePath)));
   }
 
-  private static class RuleKeyAppendableWithInput implements RuleKeyAppendable {
+  private static class RuleKeyAppendableWrapped implements RuleKeyAppendable {
 
-    private final SourcePath input;
+    private final Object field;
 
-    public RuleKeyAppendableWithInput(SourcePath input) {
-      this.input = input;
+    public RuleKeyAppendableWrapped(Object field) {
+      this.field = field;
     }
 
     @Override
     public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("input", input);
+      sink.setReflectively("field", field);
     }
-
   }
 
+  private BuildRuleResolver newRuleResolver() {
+    return new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+  }
 }

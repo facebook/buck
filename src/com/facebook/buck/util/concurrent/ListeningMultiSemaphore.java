@@ -20,14 +20,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A semaphore using {@link ListenableFuture}s for acquisition of different resource types
- * rather than blocking.
+ * A semaphore using {@link ListenableFuture}s for acquisition of different resource types rather
+ * than blocking.
  */
 public class ListeningMultiSemaphore {
 
@@ -37,8 +36,7 @@ public class ListeningMultiSemaphore {
   private final ResourceAllocationFairness fairness;
 
   public ListeningMultiSemaphore(
-      ResourceAmounts availableResources,
-      ResourceAllocationFairness fairness) {
+      ResourceAmounts availableResources, ResourceAllocationFairness fairness) {
     this.usedValues = ResourceAmounts.ZERO;
     this.maximumValues = availableResources;
     this.fairness = fairness;
@@ -47,13 +45,11 @@ public class ListeningMultiSemaphore {
   /**
    * Returns the future which will be completed by the moment when resources will be acquired.
    * Future may be returned already completed. You should subscribe to the future and perform your
-   * resource requiring job once the future will be completed and not cancelled.
-   * When you finish your job, you must release acquired resources by calling release() method
-   * below.
+   * resource requiring job once the future will be completed and not cancelled. When you finish
+   * your job, you must release acquired resources by calling release() method below.
    *
    * @param resources Resource amounts that need to be acquired. If they are higher than maximum
-   *                  amounts, they will be capped to them.
-   *
+   *     amounts, they will be capped to them.
    * @return Future that will be completed once resource will be acquired.
    */
   public synchronized ListenableFuture<Void> acquire(ResourceAmounts resources) {
@@ -74,8 +70,8 @@ public class ListeningMultiSemaphore {
   /**
    * Releases previously acquired resources.
    *
-   * @param resources Resource amounts that need to be released. This argument should
-   *                  match one you used during resource acquiring.
+   * @param resources Resource amounts that need to be released. This argument should match one you
+   *     used during resource acquiring.
    */
   public void release(ResourceAmounts resources) {
     if (resources.equals(ResourceAmounts.ZERO)) {
@@ -88,7 +84,7 @@ public class ListeningMultiSemaphore {
   }
 
   private synchronized ImmutableList<ListeningSemaphoreArrayPendingItem>
-  getPendingItemsThatCanBeProcessed() {
+      getPendingItemsThatCanBeProcessed() {
     ImmutableList.Builder<ListeningSemaphoreArrayPendingItem> builder = ImmutableList.builder();
 
     Iterator<ListeningSemaphoreArrayPendingItem> iterator = pending.iterator();
@@ -134,7 +130,8 @@ public class ListeningMultiSemaphore {
     Preconditions.checkState(
         resources.allValuesLessThanOrEqual(maximumValues),
         "Resource amounts (%s) must be capped to the maximum amounts (%s)",
-        resources, maximumValues);
+        resources,
+        maximumValues);
     return usedValues.append(resources).allValuesLessThanOrEqual(maximumValues);
   }
 
@@ -147,7 +144,9 @@ public class ListeningMultiSemaphore {
     Preconditions.checkArgument(
         !updatedAmounts.containsValuesLessThan(ResourceAmounts.ZERO),
         "Cannot increase available resources by %s. Current: %s, Maximum: %s",
-        resources, usedValues, maximumValues);
+        resources,
+        usedValues,
+        maximumValues);
     usedValues = updatedAmounts;
   }
 

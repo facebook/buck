@@ -22,14 +22,10 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-
 import org.immutables.value.Value;
 
-/**
- * Per-build context used by {@link BuildEngine}.
- */
+/** Per-build context used by {@link BuildEngine}. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractBuildEngineBuildContext {
@@ -39,9 +35,11 @@ abstract class AbstractBuildEngineBuildContext {
   public abstract BuildContext getBuildContext();
 
   public abstract ArtifactCache getArtifactCache();
-  protected abstract ObjectMapper getObjectMapper();
+
   protected abstract Clock getClock();
+
   protected abstract BuildId getBuildId();
+
   protected abstract ImmutableMap<String, String> getEnvironment();
 
   @Value.Default
@@ -51,27 +49,29 @@ abstract class AbstractBuildEngineBuildContext {
 
   /**
    * Creates an {@link OnDiskBuildInfo}.
-   * <p>
-   * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
-   * in general.
+   *
+   * <p>This method should be visible to {@link AbstractBuildRuleWithResolver}, but not {@link
+   * BuildRule}s in general.
    */
-  OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target, ProjectFilesystem filesystem) {
-    return new DefaultOnDiskBuildInfo(target, filesystem, getObjectMapper());
+  OnDiskBuildInfo createOnDiskBuildInfoFor(
+      BuildTarget target, ProjectFilesystem filesystem, BuildInfoStore buildInfoStore) {
+    return new DefaultOnDiskBuildInfo(target, filesystem, buildInfoStore);
   }
 
   /**
    * Creates an {@link BuildInfoRecorder}.
-   * <p>
-   * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
-   * in general.
+   *
+   * <p>This method should be visible to {@link AbstractBuildRuleWithResolver}, but not {@link
+   * BuildRule}s in general.
    */
-  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  BuildInfoRecorder createBuildInfoRecorder(
+      BuildTarget buildTarget, ProjectFilesystem filesystem, BuildInfoStore buildInfoStore) {
     return new BuildInfoRecorder(
         buildTarget,
         filesystem,
+        buildInfoStore,
         getClock(),
         getBuildId(),
-        getObjectMapper(),
         ImmutableMap.copyOf(getEnvironment()));
   }
 

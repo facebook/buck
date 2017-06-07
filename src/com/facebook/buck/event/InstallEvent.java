@@ -19,11 +19,9 @@ package com.facebook.buck.event;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
-
 import java.util.Optional;
 
-public abstract class InstallEvent
-    extends AbstractBuckEvent
+public abstract class InstallEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
   private final BuildTarget buildTarget;
 
@@ -51,10 +49,7 @@ public abstract class InstallEvent
   }
 
   public static Finished finished(
-      Started started,
-      boolean success,
-      Optional<Long> pid,
-      Optional<String> packageName) {
+      Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
     return new Finished(started, success, pid, packageName);
   }
 
@@ -79,10 +74,7 @@ public abstract class InstallEvent
     private final String packageName;
 
     protected Finished(
-        Started started,
-        boolean success,
-        Optional<Long> pid,
-        Optional<String> packageName) {
+        Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.orElse(invalidPid);

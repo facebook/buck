@@ -19,7 +19,6 @@ package com.facebook.buck.log;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.IOError;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,12 +29,9 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-
 import javax.annotation.concurrent.GuardedBy;
 
-/**
- * Implementation of Handler which writes to the console (System.err by default).
- */
+/** Implementation of Handler which writes to the console (System.err by default). */
 public class ConsoleHandler extends Handler {
   private static final Level DEFAULT_LEVEL = Level.SEVERE;
 
@@ -68,9 +64,9 @@ public class ConsoleHandler extends Handler {
   @Override
   public void publish(LogRecord record) {
     synchronized (this) {
-      if (closed ||
-          !(isLoggable(record) || isLoggableWithRegisteredLogLevel(record)) ||
-          isBlacklisted(record)) {
+      if (closed
+          || !(isLoggable(record) || isLoggableWithRegisteredLogLevel(record))
+          || isBlacklisted(record)) {
         return;
       }
     }
@@ -115,8 +111,7 @@ public class ConsoleHandler extends Handler {
     }
 
     try {
-      for (ConsoleHandlerState.Writer outputStreamWriter :
-          state.getAllAvailableWriters()) {
+      for (ConsoleHandlerState.Writer outputStreamWriter : state.getAllAvailableWriters()) {
         synchronized (outputStreamWriter) {
           outputStreamWriter.flush();
         }
@@ -138,8 +133,7 @@ public class ConsoleHandler extends Handler {
     }
   }
 
-  public static ConsoleHandlerState.Writer utf8OutputStreamWriter(
-      OutputStream outputStream) {
+  public static ConsoleHandlerState.Writer utf8OutputStreamWriter(OutputStream outputStream) {
     try {
       final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
       return new ConsoleHandlerState.Writer() {
@@ -177,15 +171,15 @@ public class ConsoleHandler extends Handler {
     }
 
     // Level.ALL.intValue() is Integer.MIN_VALUE, so have to compare it explicitly.
-    return commandIdLogLevel.equals(Level.ALL) ||
-      commandIdLogLevel.intValue() >= record.getLevel().intValue();
+    return commandIdLogLevel.equals(Level.ALL)
+        || commandIdLogLevel.intValue() >= record.getLevel().intValue();
   }
 
   private boolean isBlacklisted(LogRecord record) {
     // Guava futures internals are not very actionable to the user but we still want to have
     // them in the log.
-    return record.getLoggerName() != null &&
-        record.getLoggerName().startsWith("com.google.common.util.concurrent");
+    return record.getLoggerName() != null
+        && record.getLoggerName().startsWith("com.google.common.util.concurrent");
   }
 
   private Iterable<ConsoleHandlerState.Writer> getOutputStreamWritersForRecord(LogRecord record) {

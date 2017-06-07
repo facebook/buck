@@ -20,10 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.util.concurrent.ExecutionException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.concurrent.ExecutionException;
 
 public class ConcurrentMapCacheTest {
 

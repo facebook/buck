@@ -27,7 +27,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -35,16 +34,11 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 public class DxStep extends ShellStep {
-
-  /**
-   */
-  public static final String XMX_OVERRIDE =
-      "";
 
   /** Options to pass to {@code dx}. */
   public enum Option {
@@ -60,11 +54,11 @@ public class DxStep extends ShellStep {
      */
     USE_CUSTOM_DX_IF_AVAILABLE,
 
-    /**
-     * Execute DX in-process instead of fork/execing.
-     * This only works with custom dx.
-     */
+    /** Execute DX in-process instead of fork/execing. This only works with custom dx. */
     RUN_IN_PROCESS,
+
+    /** Run DX with the --no-locals flag. */
+    NO_LOCALS,
     ;
   }
 
@@ -72,9 +66,9 @@ public class DxStep extends ShellStep {
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
+  private final Optional<String> maxHeapSize;
 
-  @Nullable
-  private Collection<String> resourcesReferencedInCode;
+  @Nullable private Collection<String> resourcesReferencedInCode;
 
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go.
@@ -96,15 +90,32 @@ public class DxStep extends ShellStep {
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options) {
+    this(filesystem, outputDexFile, filesToDex, options, Optional.empty());
+  }
+
+  /**
+   * @param outputDexFile path to the file where the generated classes.dex should go.
+   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
+   *     files, or a directory of .class files.
+   * @param options to pass to {@code dx}.
+   * @param maxHeapSize The max heap size used for out of process dex.
+   */
+  public DxStep(
+      ProjectFilesystem filesystem,
+      Path outputDexFile,
+      Iterable<Path> filesToDex,
+      EnumSet<Option> options,
+      Optional<String> maxHeapSize) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
+    this.maxHeapSize = maxHeapSize;
 
     Preconditions.checkArgument(
-        !options.contains(Option.RUN_IN_PROCESS) ||
-            options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+        !options.contains(Option.RUN_IN_PROCESS)
+            || options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         "In-process dexing is only supported with custom DX");
   }
 
@@ -124,8 +135,8 @@ public class DxStep extends ShellStep {
 
     // Add the Xmx override, but not for in-process dexing, since the dexer won't understand it.
     // Also, if DX works in-process, it probably wouldn't need an enlarged Xmx.
-    if (!XMX_OVERRIDE.isEmpty() && !options.contains(Option.RUN_IN_PROCESS)) {
-      builder.add(XMX_OVERRIDE);
+    if (maxHeapSize.isPresent() && !options.contains(Option.RUN_IN_PROCESS)) {
+      builder.add(String.format("-JXmx%s", maxHeapSize.get()));
     }
 
     builder.add("--dex");
@@ -141,6 +152,11 @@ public class DxStep extends ShellStep {
 
     if (options.contains(Option.FORCE_JUMBO)) {
       builder.add("--force-jumbo");
+    }
+
+    // --no-locals flag, if appropriate.
+    if (options.contains(Option.NO_LOCALS)) {
+      builder.add("--no-locals");
     }
 
     // verbose flag, if appropriate.
@@ -179,12 +195,13 @@ public class DxStep extends ShellStep {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     PrintStream stderrStream = new PrintStream(stderr);
     try {
-      com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main();
-      int returncode = dexer.run(
-          args.toArray(new String[args.size()]),
-          context.getStdOut(),
-          stderrStream
-      );
+      com.android.dx.command.dexer.DxContext dxContext =
+          new com.android.dx.command.dexer.DxContext(context.getStdOut(), stderrStream);
+      com.android.dx.command.dexer.Main.Arguments arguments =
+          new com.android.dx.command.dexer.Main.Arguments();
+      com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main(dxContext);
+      arguments.parseCommandLine(args.toArray(new String[args.size()]), dxContext);
+      int returncode = dexer.run(arguments);
       String stdErrOutput = stderr.toString();
       if (!stdErrOutput.isEmpty()) {
         context.postEvent(ConsoleEvent.warning("%s", stdErrOutput));
@@ -215,11 +232,9 @@ public class DxStep extends ShellStep {
   }
 
   /**
-   * Return the names of resources referenced in the code that was dexed.
-   * This is only valid after the step executes successfully and
-   * only when in-process dexing is used.
-   * It only returns resources referenced in java classes being dexed,
-   * not merged dex files.
+   * Return the names of resources referenced in the code that was dexed. This is only valid after
+   * the step executes successfully and only when in-process dexing is used. It only returns
+   * resources referenced in java classes being dexed, not merged dex files.
    */
   @Nullable
   Collection<String> getResourcesReferencedInCode() {

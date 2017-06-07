@@ -16,27 +16,32 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.apple.AppleBundleResources;
+import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Collections;
-
 public class IosReactNativeLibraryDescription
-    implements
-    Description<ReactNativeLibraryArgs>,
-    Flavored,
-    ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
+    implements Description<ReactNativeLibraryArg>,
+        Flavored,
+        HasAppleBundleResourcesDescription<ReactNativeLibraryArg>,
+        ImplicitDepsInferringDescription<AbstractReactNativeLibraryArg> {
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
@@ -47,16 +52,17 @@ public class IosReactNativeLibraryDescription
   }
 
   @Override
-  public ReactNativeLibraryArgs createUnpopulatedConstructorArg() {
-    return new ReactNativeLibraryArgs();
+  public Class<ReactNativeLibraryArg> getConstructorArgType() {
+    return ReactNativeLibraryArg.class;
   }
 
   @Override
-  public <A extends ReactNativeLibraryArgs> ReactNativeBundle createBuildRule(
+  public ReactNativeBundle createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      CellPathResolver cellRoots,
+      ReactNativeLibraryArg args) {
     return enhancer.enhanceForIos(params, resolver, args);
   }
 
@@ -66,11 +72,29 @@ public class IosReactNativeLibraryDescription
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      ReactNativeLibraryArgs constructorArg) {
-    return SourcePaths.filterBuildTargetSourcePaths(Collections.singleton(packager.get()));
+      AbstractReactNativeLibraryArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    RichStream.of(packager.get())
+        .filter(BuildTargetSourcePath.class)
+        .map(BuildTargetSourcePath::getTarget)
+        .forEach(extraDepsBuilder::add);
   }
 
+  @Override
+  public void addAppleBundleResources(
+      AppleBundleResources.Builder builder,
+      TargetNode<ReactNativeLibraryArg, ?> targetNode,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver resolver) {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    builder.addDirsContainingResourceDirs(
+        new ExplicitBuildTargetSourcePath(
+            buildTarget, ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
+        new ExplicitBuildTargetSourcePath(
+            buildTarget, ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
+  }
 }

@@ -16,6 +16,12 @@
 
 package com.facebook.buck.test;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
@@ -24,29 +30,23 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.XmlDomParser;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class XmlTestResultParser {
 
-  /** Utility Class:  Do not instantiate. */
+  /** Utility Class: Do not instantiate. */
   private XmlTestResultParser() {}
 
   public static List<TestCaseSummary> parseAndroid(Path xmlFile, String serialNumber)
       throws IOException, SAXException {
     String fileContents = new String(Files.readAllBytes(xmlFile), UTF_8);
-    Document doc = XmlDomParser.parse(new InputSource(new StringReader(fileContents)),
-        /* namespaceAware */ true);
+    Document doc =
+        XmlDomParser.parse(
+            new InputSource(new StringReader(fileContents)), /* namespaceAware */ true);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testsuite".equals(root.getTagName()));
 
@@ -72,9 +72,8 @@ public class XmlTestResultParser {
     }
 
     for (Map.Entry<String, List<TestResultSummary>> entry : testResultsMap.entrySet()) {
-      TestCaseSummary testCaseSummary = new TestCaseSummary(
-          getTestCaseName(entry.getKey(), serialNumber),
-          entry.getValue());
+      TestCaseSummary testCaseSummary =
+          new TestCaseSummary(getTestCaseName(entry.getKey(), serialNumber), entry.getValue());
       results.add(testCaseSummary);
     }
 
@@ -119,14 +118,7 @@ public class XmlTestResultParser {
       message = firstLineParts.length > 1 ? firstLineParts[1].trim() : "";
     }
     return new TestResultSummary(
-        testCaseName,
-        testName,
-        type,
-        Math.round(time * 1000),
-        message,
-        stacktrace,
-        stdOut,
-        stdErr);
+        testCaseName, testName, type, Math.round(time * 1000), message, stacktrace, stdOut, stdErr);
   }
 
   public static TestCaseSummary parse(Path xmlFile) throws IOException {
@@ -142,8 +134,8 @@ public class XmlTestResultParser {
   }
 
   private static TestCaseSummary doParse(String xml) throws IOException, SAXException {
-    Document doc = XmlDomParser.parse(new InputSource(new StringReader(xml)),
-        /* namespaceAware */ true);
+    Document doc =
+        XmlDomParser.parse(new InputSource(new StringReader(xml)), /* namespaceAware */ true);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testcase".equals(root.getTagName()));
     String testCaseName = root.getAttribute("name");
@@ -183,15 +175,9 @@ public class XmlTestResultParser {
         stdErr = null;
       }
 
-      TestResultSummary testResult = new TestResultSummary(
-          testCaseName,
-          testName,
-          type,
-          time,
-          message,
-          stacktrace,
-          stdOut,
-          stdErr);
+      TestResultSummary testResult =
+          new TestResultSummary(
+              testCaseName, testName, type, time, message, stacktrace, stdOut, stdErr);
       testResults.add(testResult);
     }
 
@@ -199,7 +185,10 @@ public class XmlTestResultParser {
   }
 
   private static String createDetailedExceptionMessage(Path xmlFile, String xmlFileContents) {
-    return "Error parsing test result data in " + xmlFile.toAbsolutePath() + ".\n" +
-        "File contents:\n" + xmlFileContents;
+    return "Error parsing test result data in "
+        + xmlFile.toAbsolutePath()
+        + ".\n"
+        + "File contents:\n"
+        + xmlFileContents;
   }
 }

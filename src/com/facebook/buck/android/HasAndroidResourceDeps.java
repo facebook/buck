@@ -16,40 +16,29 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-
 import javax.annotation.Nullable;
 
-/**
- * Indicates that this class may have android resources that should be packaged into an APK.
- */
-public interface HasAndroidResourceDeps extends HasBuildTarget {
-  /**
-   * @return the package name in which to generate the R.java representing these resources.
-   */
+/** Indicates that this class may have android resources that should be packaged into an APK. */
+public interface HasAndroidResourceDeps {
+
+  BuildTarget getBuildTarget();
+
+  /** @return the package name in which to generate the R.java representing these resources. */
   String getRDotJavaPackage();
 
-  /**
-   * @return path to a temporary directory for storing text symbols.
-   */
+  /** @return path to a temporary directory for storing text symbols. */
   SourcePath getPathToTextSymbolsFile();
 
-  /**
-   * @return path to a file containing the package name for R.java.
-   */
+  /** @return path to a file containing the package name for R.java. */
   SourcePath getPathToRDotJavaPackageFile();
 
-  /**
-   * @return path to a directory containing Android resources.
-   */
+  /** @return path to a directory containing Android resources. */
   @Nullable
   SourcePath getRes();
 
-  /**
-   * @return path to a directory containing Android assets.
-   */
+  /** @return path to a directory containing Android assets. */
   @Nullable
   SourcePath getAssets();
-
 }

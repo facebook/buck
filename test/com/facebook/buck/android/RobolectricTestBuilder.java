@@ -17,20 +17,24 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-
 import java.util.Optional;
 
 public class RobolectricTestBuilder
-    extends AbstractNodeBuilder<RobolectricTestDescription.Arg, RobolectricTestDescription> {
+    extends AbstractNodeBuilder<
+        RobolectricTestDescriptionArg.Builder, RobolectricTestDescriptionArg,
+        RobolectricTestDescription, RobolectricTest> {
 
-  private RobolectricTestBuilder(BuildTarget target) {
+  private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new RobolectricTestDescription(
+            javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.empty(),
@@ -41,6 +45,7 @@ public class RobolectricTestBuilder
   private RobolectricTestBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
         new RobolectricTestDescription(
+            DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.empty(),
@@ -50,23 +55,26 @@ public class RobolectricTestBuilder
   }
 
   public static RobolectricTestBuilder createBuilder(BuildTarget target) {
-    return new RobolectricTestBuilder(target);
+    return new RobolectricTestBuilder(target, DEFAULT_JAVA_CONFIG);
   }
 
   public static RobolectricTestBuilder createBuilder(
-      BuildTarget target,
-      ProjectFilesystem filesystem) {
+      BuildTarget target, JavaBuckConfig javaBuckConfig) {
+    return new RobolectricTestBuilder(target, javaBuckConfig);
+  }
+
+  public static RobolectricTestBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem filesystem) {
     return new RobolectricTestBuilder(target, filesystem);
   }
 
   public RobolectricTestBuilder addDep(BuildTarget rule) {
-    arg.deps = amend(arg.deps, rule);
+    getArgForPopulating().addDeps(rule);
     return this;
   }
 
   public RobolectricTestBuilder addProvidedDep(BuildTarget rule) {
-    arg.providedDeps = amend(arg.providedDeps, rule);
+    getArgForPopulating().addProvidedDeps(rule);
     return this;
   }
-
 }

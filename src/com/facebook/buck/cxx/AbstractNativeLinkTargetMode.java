@@ -18,23 +18,17 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractNativeLinkTargetMode {
 
-  /**
-   * @return the link type.
-   */
+  /** @return the link type. */
   abstract Linker.LinkType getType();
 
-  /**
-   * @return the name of the library, if applicable.
-   */
+  /** @return the name of the library, if applicable. */
   abstract Optional<String> getLibraryName();
 
   @Value.Check
@@ -59,5 +53,4 @@ abstract class AbstractNativeLinkTargetMode {
   public static NativeLinkTargetMode library() {
     return library(Optional.empty());
   }
-
 }

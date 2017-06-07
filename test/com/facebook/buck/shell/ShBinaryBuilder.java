@@ -22,27 +22,26 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-
 public class ShBinaryBuilder
-    extends AbstractNodeBuilder<ShBinaryDescription.Arg, ShBinaryDescription> {
+    extends AbstractNodeBuilder<
+        ShBinaryDescriptionArg.Builder, ShBinaryDescriptionArg, ShBinaryDescription, ShBinary> {
 
   public ShBinaryBuilder(BuildTarget target) {
     super(new ShBinaryDescription(), target);
   }
 
   public ShBinaryBuilder setMain(SourcePath path) {
-    arg.main = path;
+    getArgForPopulating().setMain(path);
     return this;
   }
 
   public ShBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public ShBinaryBuilder setResources(ImmutableSet<SourcePath> resources) {
-    arg.resources = resources;
+    getArgForPopulating().setResources(resources);
     return this;
   }
-
 }

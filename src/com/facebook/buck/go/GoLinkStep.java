@@ -23,7 +23,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
 public class GoLinkStep extends ShellStep {
@@ -33,6 +32,7 @@ public class GoLinkStep extends ShellStep {
     // Other gc modes: http://blog.ralch.com/tutorial/golang-sharing-libraries/
 
     private final String buildMode;
+
     LinkMode(String buildMode) {
       this.buildMode = buildMode;
     }
@@ -77,11 +77,12 @@ public class GoLinkStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> command = ImmutableList.<String>builder()
-        .addAll(linkCommandPrefix)
-        .addAll(flags)
-        .add("-o", output.toString())
-        .add("-buildmode", linkMode.getBuildMode());
+    ImmutableList.Builder<String> command =
+        ImmutableList.<String>builder()
+            .addAll(linkCommandPrefix)
+            .addAll(flags)
+            .add("-o", output.toString())
+            .add("-buildmode", linkMode.getBuildMode());
 
     for (Path libraryPath : libraryPaths) {
       command.add("-L", libraryPath.toString());
@@ -92,8 +93,10 @@ public class GoLinkStep extends ShellStep {
       if (cxxLinkCommandPrefix.size() > 1) {
         command.add(
             "-extldflags",
-            FluentIterable.from(cxxLinkCommandPrefix).skip(1)
-                .transform(Escaper.BASH_ESCAPER).join(Joiner.on(" ")));
+            FluentIterable.from(cxxLinkCommandPrefix)
+                .skip(1)
+                .transform(Escaper.BASH_ESCAPER)
+                .join(Joiner.on(" ")));
       }
     } else {
       command.add("-linkmode", "internal");

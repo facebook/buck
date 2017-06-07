@@ -6,5 +6,4 @@ public class SimpleTest2 {
   public void passingTest() {
     System.out.println("passed!");
   }
-
 }

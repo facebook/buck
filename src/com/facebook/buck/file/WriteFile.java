@@ -16,53 +16,41 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public class WriteFile extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final byte[] fileContents;
+  @AddToRuleKey private final byte[] fileContents;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
-  @AddToRuleKey
-  private final boolean executable;
+
+  @AddToRuleKey private final boolean executable;
 
   public WriteFile(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      String fileContents,
-      Path output,
-      boolean executable) {
-    this(
-        buildRuleParams,
-        resolver,
-        fileContents.getBytes(StandardCharsets.UTF_8),
-        output,
-        executable);
+      BuildRuleParams buildRuleParams, String fileContents, Path output, boolean executable) {
+    this(buildRuleParams, fileContents.getBytes(StandardCharsets.UTF_8), output, executable);
   }
 
   public WriteFile(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      byte[] fileContents,
-      Path output,
-      boolean executable) {
-    super(buildRuleParams, resolver);
+      BuildRuleParams buildRuleParams, byte[] fileContents, Path output, boolean executable) {
+    super(buildRuleParams);
 
     Preconditions.checkArgument(!output.isAbsolute(), "'%s' must not be absolute.", output);
 
@@ -77,17 +65,15 @@ public class WriteFile extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.of(
-        new MkdirStep(projectFilesystem, output.getParent()),
-        new WriteFileStep(
-            projectFilesystem,
-            ByteSource.wrap(fileContents),
-            output,
-            executable));
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
+        new WriteFileStep(projectFilesystem, ByteSource.wrap(fileContents), output, executable));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   public byte[] getFileContents() {

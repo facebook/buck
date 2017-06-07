@@ -17,19 +17,17 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -41,10 +39,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Manifest {
 
   private static final int VERSION = 0;
+
+  private final RuleKey key;
 
   private final List<String> headers;
   private final Map<String, Integer> headerIndices;
@@ -54,10 +56,9 @@ public class Manifest {
 
   private final List<Pair<RuleKey, int[]>> entries;
 
-  /**
-   * Create an empty manifest.
-   */
-  public Manifest() {
+  /** Create an empty manifest. */
+  public Manifest(RuleKey key) {
+    this.key = key;
     headers = new ArrayList<>();
     headerIndices = new HashMap<>();
     hashes = new ArrayList<>();
@@ -65,13 +66,15 @@ public class Manifest {
     entries = new ArrayList<>();
   }
 
-  /**
-   * Deserialize an existing manifest from the given {@link InputStream}.
-   */
+  /** Deserialize an existing manifest from the given {@link InputStream}. */
   public Manifest(InputStream rawInput) throws IOException {
     DataInputStream input = new DataInputStream(rawInput);
 
-    Preconditions.checkState(input.readInt() == VERSION);
+    // Verify the manifest version.
+    int version = input.readInt();
+    Preconditions.checkState(version == VERSION, "invalid version: %s != %s", version, VERSION);
+
+    key = new RuleKey(input.readUTF());
 
     int numberOfHeaders = input.readInt();
     headers = new ArrayList<>(numberOfHeaders);
@@ -105,6 +108,10 @@ public class Manifest {
     }
   }
 
+  public RuleKey getKey() {
+    return key;
+  }
+
   private Integer addHash(String header, HashCode hash) {
     Integer headerIndex = headerIndices.get(header);
     if (headerIndex == null) {
@@ -123,14 +130,13 @@ public class Manifest {
     return hashIndex;
   }
 
+  /** Hash the files pointed to by the source paths. */
   @VisibleForTesting
   protected static HashCode hashSourcePathGroup(
-      FileHashCache fileHashCache,
-      SourcePathResolver resolver,
-      ImmutableList<SourcePath> paths)
+      FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {
-      return hashSourcePath(paths.asList().get(0), fileHashCache, resolver);
+      return hashSourcePath(paths.get(0), fileHashCache, resolver);
     }
     Hasher hasher = Hashing.md5().newHasher();
     for (SourcePath path : paths) {
@@ -140,9 +146,8 @@ public class Manifest {
   }
 
   private static HashCode hashSourcePath(
-      SourcePath path,
-      FileHashCache fileHashCache,
-      SourcePathResolver resolver) throws IOException {
+      SourcePath path, FileHashCache fileHashCache, SourcePathResolver resolver)
+      throws IOException {
     if (path instanceof ArchiveMemberSourcePath) {
       return fileHashCache.get(resolver.getAbsoluteArchiveMemberPath(path));
     } else {
@@ -178,16 +183,26 @@ public class Manifest {
   }
 
   /**
-   * @return the {@link RuleKey} of the entry that matches the on disk hashes provided by
-   *     {@code fileHashCache}.
+   * @return the {@link RuleKey} of the entry that matches the on disk hashes provided by {@code
+   *     fileHashCache}.
    */
   public Optional<RuleKey> lookup(
-      FileHashCache fileHashCache,
-      SourcePathResolver resolver,
-      ImmutableSet<SourcePath> universe)
+      FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableSet<SourcePath> universe)
       throws IOException {
+    // Create a set of all paths we care about.
+    ImmutableSet.Builder<String> interestingPathsBuilder = new ImmutableSet.Builder<>();
+    for (Pair<?, int[]> entry : entries) {
+      for (int hashIndex : entry.getSecond()) {
+        interestingPathsBuilder.add(headers.get(hashes.get(hashIndex).getFirst()));
+      }
+    }
+    ImmutableSet<String> interestingPaths = interestingPathsBuilder.build();
+
+    // Create a multimap from paths we care about to SourcePaths that maps to them.
     ImmutableListMultimap<String, SourcePath> mappedUniverse =
-        Multimaps.index(universe, sourcePathToManifestHeaderFunction(resolver));
+        index(universe, sourcePathToManifestHeaderFunction(resolver), interestingPaths::contains);
+
+    // Find a matching entry.
     for (Pair<RuleKey, int[]> entry : entries) {
       if (hashesMatch(fileHashCache, resolver, mappedUniverse, entry.getSecond())) {
         return Optional.of(entry.getFirst());
@@ -201,9 +216,7 @@ public class Manifest {
     return input -> sourcePathToManifestHeader(input, resolver);
   }
 
-  private static String sourcePathToManifestHeader(
-      SourcePath input,
-      SourcePathResolver resolver) {
+  private static String sourcePathToManifestHeader(SourcePath input, SourcePathResolver resolver) {
     if (input instanceof ArchiveMemberSourcePath) {
       return resolver.getRelativeArchiveMemberPath(input).toString();
     } else {
@@ -211,9 +224,7 @@ public class Manifest {
     }
   }
 
-  /**
-   * Adds a new output file to the manifest.
-   */
+  /** Adds a new output file to the manifest. */
   public void addEntry(
       FileHashCache fileHashCache,
       RuleKey key,
@@ -221,31 +232,34 @@ public class Manifest {
       ImmutableSet<SourcePath> universe,
       ImmutableSet<SourcePath> inputs)
       throws IOException {
+
+    // Construct the input sub-paths that we care about.
+    ImmutableSet<String> inputPaths =
+        RichStream.from(inputs).map(sourcePathToManifestHeaderFunction(resolver)).toImmutableSet();
+
+    // Create a multimap from paths we care about to SourcePaths that maps to them.
+    ImmutableListMultimap<String, SourcePath> sortedUniverse =
+        index(universe, sourcePathToManifestHeaderFunction(resolver), inputPaths::contains);
+
+    // Record the Entry.
     int index = 0;
     int[] hashIndices = new int[inputs.size()];
-    ImmutableListMultimap<String, SourcePath> sortedUniverse =
-        Multimaps.index(
-            universe,
-            sourcePathToManifestHeaderFunction(resolver));
-    for (SourcePath input : inputs) {
-      String relativePath = sourcePathToManifestHeader(input, resolver);
+    for (String relativePath : inputPaths) {
       ImmutableList<SourcePath> paths = sortedUniverse.get(relativePath);
       Preconditions.checkState(!paths.isEmpty());
       hashIndices[index++] =
-          addHash(
-              relativePath,
-              hashSourcePathGroup(fileHashCache, resolver, paths));
+          addHash(relativePath, hashSourcePathGroup(fileHashCache, resolver, paths));
     }
     entries.add(new Pair<>(key, hashIndices));
   }
 
-  /**
-   * Serializes the manifest to the given {@link OutputStream}.
-   */
+  /** Serializes the manifest to the given {@link OutputStream}. */
   public void serialize(OutputStream rawOutput) throws IOException {
     DataOutputStream output = new DataOutputStream(rawOutput);
 
     output.writeInt(VERSION);
+
+    output.writeUTF(key.toString());
 
     output.writeInt(headers.size());
     for (String header : headers) {
@@ -289,8 +303,8 @@ public class Manifest {
   }
 
   @VisibleForTesting
-  static Manifest fromMap(ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> map) {
-    Manifest manifest = new Manifest();
+  static Manifest fromMap(RuleKey key, ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> map) {
+    Manifest manifest = new Manifest(key);
     for (Map.Entry<RuleKey, ImmutableMap<String, HashCode>> entry : map.entrySet()) {
       int entryHashIndex = 0;
       int[] entryHashIndices = new int[entry.getValue().size()];
@@ -302,5 +316,22 @@ public class Manifest {
     }
     return manifest;
   }
-
+  /**
+   * Create a multimap that's the result of apply the function to the input values, filtered by a
+   * predicate.
+   *
+   * <p>This is conceptually similar to {@code filterKeys(index(values, keyFunc), filter)}, but much
+   * more efficient as it doesn't construct entries that will be filtered out.
+   */
+  private static <K, V> ImmutableListMultimap<K, V> index(
+      Iterable<V> values, Function<V, K> keyFunc, Predicate<K> keyFilter) {
+    ImmutableListMultimap.Builder<K, V> builder = new ImmutableListMultimap.Builder<>();
+    for (V value : values) {
+      K key = keyFunc.apply(value);
+      if (keyFilter.test(key)) {
+        builder.put(key, value);
+      }
+    }
+    return builder.build();
+  }
 }

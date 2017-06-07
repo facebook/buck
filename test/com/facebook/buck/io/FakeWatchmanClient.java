@@ -22,13 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Fake implementation of {@link WatchmanClient} for tests.
- */
+/** Fake implementation of {@link WatchmanClient} for tests. */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
   private final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>
-    queryResults;
+      queryResults;
   private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
@@ -48,15 +46,13 @@ public class FakeWatchmanClient implements WatchmanClient {
 
   @Override
   public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
-      long timeoutNanos,
-      Object... query) throws InterruptedException, IOException {
+      long timeoutNanos, Object... query) throws InterruptedException, IOException {
     Map<String, ? extends Object> result = queryResults.get(Arrays.asList(query));
     if (result == null) {
       throw new RuntimeException(
           String.format(
               "Could not find results for query %s in %s",
-              Arrays.asList(query),
-              queryResults.keySet()));
+              Arrays.asList(query), queryResults.keySet()));
     }
     if (queryElapsedTimeNanos > timeoutNanos) {
       return Optional.empty();
@@ -74,6 +70,5 @@ public class FakeWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public void close() {
-  }
+  public void close() {}
 }

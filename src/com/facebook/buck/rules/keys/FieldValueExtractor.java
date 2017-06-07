@@ -17,12 +17,9 @@
 package com.facebook.buck.rules.keys;
 
 import java.lang.reflect.Field;
-
 import javax.annotation.Nullable;
 
-/**
- * Extracts a value of a given field, that is assumed to be accessible.
- */
+/** Extracts a value of a given field, that is assumed to be accessible. */
 public class FieldValueExtractor implements ValueExtractor {
   private final Field field;
 

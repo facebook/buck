@@ -16,10 +16,9 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -29,20 +28,18 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.easymock.EasyMockSupport;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Optional;
 
 public class ShTestTest extends EasyMockSupport {
 
@@ -53,65 +50,33 @@ public class ShTestTest extends EasyMockSupport {
   }
 
   @Test
-  public void testHasTestResultFiles() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
-            .setProjectFilesystem(filesystem)
-            .build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.of(),
-        /* env */ ImmutableMap.of(),
-        /* resources */ ImmutableSortedSet.of(),
-        Optional.empty(),
-        /* runTestSeparately */ false,
-        /* labels */ ImmutableSet.of(),
-        /* contacts */ ImmutableSet.of());
-    filesystem.touch(shTest.getPathToTestOutputResult());
-
-    assertTrue(
-        "hasTestResultFiles() should return true if result.json exists.",
-        shTest.hasTestResultFiles());
-  }
-
-  @Test
   public void depsAreRuntimeDeps() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
     BuildRule dep = new FakeBuildRule("//:dep", pathResolver);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .setExtraDeps(ImmutableSortedSet.of(extraDep))
-            .build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.of(),
-        /* env */ ImmutableMap.of(),
-        /* resources */ ImmutableSortedSet.of(),
-        Optional.empty(),
-        /* runTestSeparately */ false,
-        /* labels */ ImmutableSet.of(),
-        /* contacts */ ImmutableSet.of());
+    ShTest shTest =
+        new ShTest(
+            new FakeBuildRuleParamsBuilder(target)
+                .setDeclaredDeps(ImmutableSortedSet.of(dep))
+                .setExtraDeps(ImmutableSortedSet.of(extraDep))
+                .build(),
+            ruleFinder,
+            /* args */ ImmutableList.of(SourcePathArg.of(new FakeSourcePath("run_test.sh"))),
+            /* env */ ImmutableMap.of(),
+            /* resources */ ImmutableSortedSet.of(),
+            Optional.empty(),
+            /* runTestSeparately */ false,
+            /* labels */ ImmutableSet.of(),
+            /* contacts */ ImmutableSet.of());
 
     assertThat(
-        shTest.getRuntimeDeps(),
-        Matchers.containsInAnyOrder(dep, extraDep));
+        shTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
-
 }

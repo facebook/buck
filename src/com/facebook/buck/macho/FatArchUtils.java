@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.google.common.primitives.UnsignedInteger;
-
 import java.nio.ByteBuffer;
 
 public class FatArchUtils {

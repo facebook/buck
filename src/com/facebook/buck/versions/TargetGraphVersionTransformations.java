@@ -19,15 +19,14 @@ package com.facebook.buck.versions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import java.lang.reflect.Field;
 import java.util.Optional;
 
 class TargetGraphVersionTransformations {
-
-  public static final String VERSIONED_DEPS_FIELD_NAME = "versionedDeps";
 
   private TargetGraphVersionTransformations() {}
 
@@ -36,47 +35,35 @@ class TargetGraphVersionTransformations {
   }
 
   public static boolean isVersionRoot(TargetNode<?, ?> node) {
-    return (
-        node.getDescription() instanceof VersionRoot &&
-        ((VersionRoot<?>) node.getDescription()).isVersionRoot(node.getBuildTarget().getFlavors()));
+    return (node.getDescription() instanceof VersionRoot
+        && ((VersionRoot<?>) node.getDescription())
+            .isVersionRoot(node.getBuildTarget().getFlavors()));
   }
 
-  public static Optional<TargetNode<VersionedAliasDescription.Arg, ?>> getVersionedNode(
+  public static Optional<TargetNode<VersionedAliasDescriptionArg, ?>> getVersionedNode(
       TargetNode<?, ?> node) {
-    return node.castArg(VersionedAliasDescription.Arg.class);
-  }
-
-  private static Optional<Field> getVersionedDepsField(TargetNode<?, ?> node) {
-    try {
-      return Optional.of(node.getConstructorArg().getClass().getField(VERSIONED_DEPS_FIELD_NAME));
-    } catch (NoSuchFieldException e) {
-      return Optional.empty();
-    }
+    return node.castArg(VersionedAliasDescriptionArg.class);
   }
 
   @SuppressWarnings("unchecked")
   public static ImmutableMap<BuildTarget, Optional<Constraint>> getVersionedDeps(
-      TargetNode<?, ?> node) {
-    Optional<Field> versionedDepsField = getVersionedDepsField(node);
-    if (versionedDepsField.isPresent()) {
-      try {
-        ImmutableMap<BuildTarget, Optional<Constraint>> versionedDeps =
-            (ImmutableMap<BuildTarget, Optional<Constraint>>)
-                versionedDepsField.get().get(node.getConstructorArg());
-        return versionedDeps;
-      } catch (IllegalAccessException e) {
-        throw new IllegalStateException(e);
-      }
+      TypeCoercerFactory typeCoercerFactory, TargetNode<?, ?> node) {
+    ParamInfo versionedDepsParam =
+        CoercedTypeCache.INSTANCE
+            .getAllParamInfo(typeCoercerFactory, node.getConstructorArg().getClass())
+            .get("versioned_deps");
+    if (versionedDepsParam == null) {
+      return ImmutableMap.of();
     }
-    return ImmutableMap.of();
+    return (ImmutableMap<BuildTarget, Optional<Constraint>>)
+        versionedDepsParam.get(node.getConstructorArg());
   }
 
   public static <A, B extends Description<A>> Iterable<BuildTarget> getDeps(
-      TargetNode<A, B> node) {
+      TypeCoercerFactory typeCoercerFactory, TargetNode<A, B> node) {
     return Iterables.concat(
         node.getDeclaredDeps(),
         node.getExtraDeps(),
-        getVersionedDeps(node).keySet());
+        getVersionedDeps(typeCoercerFactory, node).keySet());
   }
-
 }

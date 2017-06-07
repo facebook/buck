@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.test.FakeTestResults;
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
 
 public class IndividualTestEventTest {
@@ -30,8 +29,8 @@ public class IndividualTestEventTest {
     ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
-    IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        tests, FakeTestResults.of(ImmutableList.of()));
+    IndividualTestEvent.Finished finished =
+        IndividualTestEvent.finished(tests, FakeTestResults.of(ImmutableList.of()));
 
     assertTrue(started.isRelatedTo(finished));
     assertTrue(finished.isRelatedTo(started));
@@ -43,8 +42,8 @@ public class IndividualTestEventTest {
     ImmutableList<String> otherTests = ImmutableList.of("//example:test");
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
-    IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        otherTests, FakeTestResults.of(ImmutableList.of()));
+    IndividualTestEvent.Finished finished =
+        IndividualTestEvent.finished(otherTests, FakeTestResults.of(ImmutableList.of()));
 
     assertFalse(started.isRelatedTo(finished));
     assertFalse(finished.isRelatedTo(started));

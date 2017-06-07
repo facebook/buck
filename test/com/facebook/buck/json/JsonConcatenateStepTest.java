@@ -24,17 +24,14 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.GsonBuilder;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
 
 public class JsonConcatenateStepTest {
 
@@ -46,30 +43,25 @@ public class JsonConcatenateStepTest {
   public void setUp() throws IOException {
     filesystem = new FakeProjectFilesystem();
 
-
     Path report1 = filesystem.resolve("report1");
     Path report2 = filesystem.resolve("report2");
     Path report3 = filesystem.resolve("report3");
 
     String content1 = "[{\"field_one\":1, \"field_two\":\"value\"}]";
     String content2 = "[]";
-    String content3 = "[{\"field_one\":1, \"field_two\":\"value\"}, " +
-        "{\"field_one\":7, \"field_two\":\"wow\"}]";
+    String content3 =
+        "[{\"field_one\":1, \"field_two\":\"value\"}, "
+            + "{\"field_one\":7, \"field_two\":\"wow\"}]";
 
     filesystem.writeContentsToPath(content1, report1);
     filesystem.writeContentsToPath(content2, report2);
     filesystem.writeContentsToPath(content3, report3);
 
-    ImmutableSortedSet<Path> reportsToMerge = ImmutableSortedSet.of(
-        filesystem.resolve(report1),
-        filesystem.resolve(report2),
-        filesystem.resolve(report3));
+    ImmutableSortedSet<Path> reportsToMerge =
+        ImmutableSortedSet.of(
+            filesystem.resolve(report1), filesystem.resolve(report2), filesystem.resolve(report3));
     mergedReport = filesystem.resolve(Paths.get("finalReport"));
-    jsonConcatenator =
-        new JsonConcatenator(
-            reportsToMerge,
-            mergedReport,
-            filesystem);
+    jsonConcatenator = new JsonConcatenator(reportsToMerge, mergedReport, filesystem);
   }
 
   @Test
@@ -79,8 +71,7 @@ public class JsonConcatenateStepTest {
     assertTrue("Should be empty", jsonConcatenator.isArrayEmpty("  [ ]   "));
     assertTrue("Should be empty", jsonConcatenator.isArrayEmpty("  \n[ \n\t \n]  \n"));
     assertFalse(
-        "Should not be empty",
-        jsonConcatenator.isArrayEmpty("[{\"a\":2,\"b\":\"aaa\nbbb\"}]"));
+        "Should not be empty", jsonConcatenator.isArrayEmpty("[{\"a\":2,\"b\":\"aaa\nbbb\"}]"));
     assertFalse(
         "Should not be empty",
         jsonConcatenator.isArrayEmpty("[\n\n { \"a\":2,\"b\":\"aaa\nbbb\"  }\t]"));
@@ -99,9 +90,7 @@ public class JsonConcatenateStepTest {
 
     result = jsonConcatenator.stripArrayTokens("  \n[ \n\n \n]  \n");
     assertThat(
-        "Should strip the surrounding square brackets",
-        result,
-        Matchers.equalTo(" \n\n \n"));
+        "Should strip the surrounding square brackets", result, Matchers.equalTo(" \n\n \n"));
 
     result = jsonConcatenator.stripArrayTokens("  \n[{\"a\":2,\"b\":\"aaa\nbbb\"}  ]  \n");
     assertThat(
@@ -123,14 +112,13 @@ public class JsonConcatenateStepTest {
     jsonConcatenator.appendArray("\n[\n\n ]\n");
     jsonConcatenator.appendArray(" \t [     ]  ");
     jsonConcatenator.finalizeArray();
-    Object[] records = new GsonBuilder()
-        .create()
-        .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
+    Object[] records =
+        new GsonBuilder()
+            .create()
+            .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
     List<Object> bugs = Arrays.asList(records);
     assertThat(
-        "0 bugs expected in " + mergedReport + " not found",
-        bugs.size(),
-        Matchers.equalTo(0));
+        "0 bugs expected in " + mergedReport + " not found", bugs.size(), Matchers.equalTo(0));
     String result = filesystem.readFileIfItExists(mergedReport).get();
     assertThat("Should be an empty array", result, Matchers.equalTo("[]"));
   }
@@ -141,14 +129,13 @@ public class JsonConcatenateStepTest {
     jsonConcatenator.appendArray(
         "\n [{ \"file\":\"aFile.c\", \"type\":\"NULL_DEREFERENCE\", \"line\":123} ]\n ");
     jsonConcatenator.finalizeArray();
-    Object[] records = new GsonBuilder()
-        .create()
-        .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
+    Object[] records =
+        new GsonBuilder()
+            .create()
+            .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
     List<Object> bugs = Arrays.asList(records);
     assertThat(
-        "1 bugs expected in " + mergedReport + " not found",
-        bugs.size(),
-        Matchers.equalTo(1));
+        "1 bugs expected in " + mergedReport + " not found", bugs.size(), Matchers.equalTo(1));
     String result = filesystem.readFileIfItExists(mergedReport).get();
     assertThat(
         "Should be an array with one object",
@@ -169,38 +156,34 @@ public class JsonConcatenateStepTest {
     jsonConcatenator.appendArray(
         "\n [{ \"file\":\"aFile.c\", \"type\":\"NULL_DEREFERENCE\", \"line\":789 } ]\n ");
     jsonConcatenator.finalizeArray();
-    Object[] records = new GsonBuilder()
-        .create()
-        .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
+    Object[] records =
+        new GsonBuilder()
+            .create()
+            .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
     List<Object> bugs = Arrays.asList(records);
     assertThat(
-        "3 bugs expected in " + mergedReport + " not found",
-        bugs.size(),
-        Matchers.equalTo(3));
+        "3 bugs expected in " + mergedReport + " not found", bugs.size(), Matchers.equalTo(3));
     String result = filesystem.readFileIfItExists(mergedReport).get();
     assertThat(
         "Should be an array with three objects",
         result,
         Matchers.equalTo(
-            "[" +
-                "{ \"file\":\"aFile.c\", \"type\":\"NULL_DEREFERENCE\", \"line\":123} ," +
-                "{ \"file\":\"aFile.c\", \"type\":\"RESOURCE_LEAK\", \"line\":456}," +
-                "{ \"file\":\"aFile.c\", \"type\":\"NULL_DEREFERENCE\", \"line\":789 } " +
-                "]"));
+            "["
+                + "{ \"file\":\"aFile.c\", \"type\":\"NULL_DEREFERENCE\", \"line\":123} ,"
+                + "{ \"file\":\"aFile.c\", \"type\":\"RESOURCE_LEAK\", \"line\":456},"
+                + "{ \"file\":\"aFile.c\", \"type\":\"NULL_DEREFERENCE\", \"line\":789 } "
+                + "]"));
   }
 
   @Test
   public void testMerge() throws IOException {
     jsonConcatenator.concatenate();
-    Object[] records = new GsonBuilder()
-        .create()
-        .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
+    Object[] records =
+        new GsonBuilder()
+            .create()
+            .fromJson(filesystem.readFileIfItExists(mergedReport).get(), Object[].class);
     List<Object> bugs = Arrays.asList(records);
     assertThat(
-        "3 bugs expected in " + mergedReport + " not found",
-        bugs.size(),
-        Matchers.equalTo(3));
+        "3 bugs expected in " + mergedReport + " not found", bugs.size(), Matchers.equalTo(3));
   }
-
-
 }

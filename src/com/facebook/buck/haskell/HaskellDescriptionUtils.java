@@ -35,26 +35,27 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
+import com.google.common.collect.Ordering;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -66,14 +67,15 @@ public class HaskellDescriptionUtils {
   private HaskellDescriptionUtils() {}
 
   /**
-   * Create a Haskell compile rule that compiles all the given haskell sources in one step and
-   * pulls interface files from all transitive haskell dependencies.
+   * Create a Haskell compile rule that compiles all the given haskell sources in one step and pulls
+   * interface files from all transitive haskell dependencies.
    */
   private static HaskellCompileRule createCompileRule(
       BuildTarget target,
       final BuildRuleParams baseParams,
       final BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSet<BuildRule> deps,
       final CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       final Linker.LinkableDepType depType,
@@ -89,22 +91,23 @@ public class HaskellDescriptionUtils {
         ImmutableSortedMap.naturalOrder();
     final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
-        baseParams.getDeps()) {
+    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
+
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        ImmutableSet<BuildRule> deps = empty;
+        Iterable<BuildRule> ruleDeps = empty;
         if (rule instanceof HaskellCompileDep) {
-          deps = rule.getDeps();
+          HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
+          ruleDeps = haskellCompileDep.getCompileDeps(cxxPlatform);
           HaskellCompileInput compileInput =
-              ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType);
+              haskellCompileDep.getCompileInput(cxxPlatform, depType);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
           depIncludes.put(rule.getBuildTarget(), compileInput.getIncludes());
 
           // We add packages from first-order deps as expose modules, and transitively included
           // packages as hidden ones.
-          boolean firstOrderDep = baseParams.getDeps().contains(rule);
+          boolean firstOrderDep = deps.contains(rule);
           for (HaskellPackage pkg : compileInput.getPackages()) {
             if (firstOrderDep) {
               exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
@@ -113,19 +116,18 @@ public class HaskellDescriptionUtils {
             }
           }
         }
-        return deps;
+        return ruleDeps;
       }
     }.start();
 
     Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, baseParams.getDeps());
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
     ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
     PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
     toolFlagsBuilder.setPlatformFlags(
         CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C));
     for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
       ppFlagsBuilder.addAllIncludes(input.getIncludes());
-      ppFlagsBuilder.addAllSystemIncludePaths(input.getSystemIncludeRoots());
       ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
       toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
     }
@@ -148,15 +150,15 @@ public class HaskellDescriptionUtils {
     return HaskellCompileRule.from(
         target,
         baseParams,
-        pathResolver,
+        ruleFinder,
         haskellConfig.getCompiler().resolve(resolver),
         haskellConfig.getHaskellVersion(),
         compileFlags,
         ppFlags,
         cxxPlatform,
-        depType == Linker.LinkableDepType.STATIC ?
-            CxxSourceRuleFactory.PicType.PDC :
-            CxxSourceRuleFactory.PicType.PIC,
+        depType == Linker.LinkableDepType.STATIC
+            ? CxxSourceRuleFactory.PicType.PDC
+            : CxxSourceRuleFactory.PicType.PIC,
         main,
         packageInfo,
         includes,
@@ -167,18 +169,17 @@ public class HaskellDescriptionUtils {
   }
 
   protected static BuildTarget getCompileBuildTarget(
-      BuildTarget target,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType depType) {
+      BuildTarget target, CxxPlatform cxxPlatform, Linker.LinkableDepType depType) {
     return target.withFlavors(
         cxxPlatform.getFlavor(),
-        ImmutableFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
+        InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
   }
 
   public static HaskellCompileRule requireCompileRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSet<BuildRule> deps,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkableDepType depType,
@@ -202,7 +203,8 @@ public class HaskellDescriptionUtils {
             target,
             params,
             resolver,
-            pathResolver,
+            ruleFinder,
+            deps,
             cxxPlatform,
             haskellConfig,
             depType,
@@ -220,7 +222,7 @@ public class HaskellDescriptionUtils {
       BuildTarget target,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkType linkType,
@@ -243,15 +245,12 @@ public class HaskellDescriptionUtils {
     if (linkType.equals(Linker.LinkType.SHARED)) {
       name =
           CxxDescriptionEnhancer.getSharedLibrarySoname(
-              Optional.empty(),
-              target.withFlavors(),
-              cxxPlatform);
+              Optional.empty(), target.withFlavors(), cxxPlatform);
       argsBuilder.addAll(StringArg.from("-shared", "-dynamic"));
       argsBuilder.addAll(
           StringArg.from(
               MoreIterables.zipAndConcat(
-                  Iterables.cycle("-optl"),
-                  cxxPlatform.getLd().resolve(resolver).soname(name))));
+                  Iterables.cycle("-optl"), cxxPlatform.getLd().resolve(resolver).soname(name))));
     }
 
     // Add in extra flags passed into this function.
@@ -261,7 +260,7 @@ public class HaskellDescriptionUtils {
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
-         NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
+        NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
       linkerArgsBuilder.addAll(
           NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable).getArgs());
     }
@@ -269,25 +268,28 @@ public class HaskellDescriptionUtils {
     // Since we use `-optl` to pass all linker inputs directly to the linker, the haskell linker
     // will complain about not having any input files.  So, create a dummy archive with an empty
     // module and pass that in normally to work around this.
-    BuildTarget emptyModuleTarget = target.withAppendedFlavors(ImmutableFlavor.of("empty-module"));
+    BuildTarget emptyModuleTarget = target.withAppendedFlavors(InternalFlavor.of("empty-module"));
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(
-                baseParams.copyWithBuildTarget(emptyModuleTarget),
-                pathResolver,
+                baseParams.withBuildTarget(emptyModuleTarget),
                 "module Unused where",
                 BuildTargets.getGenPath(
-                    baseParams.getProjectFilesystem(),
-                    emptyModuleTarget,
-                    "%s/Unused.hs"),
+                    baseParams.getProjectFilesystem(), emptyModuleTarget, "%s/Unused.hs"),
                 /* executable */ false));
     HaskellCompileRule emptyCompiledModule =
         resolver.addToIndex(
             createCompileRule(
-                target.withAppendedFlavors(ImmutableFlavor.of("empty-compiled-module")),
+                target.withAppendedFlavors(InternalFlavor.of("empty-compiled-module")),
                 baseParams,
                 resolver,
-                pathResolver,
+                ruleFinder,
+                // TODO(agallagher): We shouldn't need any deps to compile an empty module, but ghc
+                // implicitly tries to load the prelude and in some setups this is provided via a
+                // Buck dependency.
+                RichStream.from(deps)
+                    .filter(BuildRule.class)
+                    .toImmutableSortedSet(Ordering.natural()),
                 cxxPlatform,
                 haskellConfig,
                 depType,
@@ -295,44 +297,40 @@ public class HaskellDescriptionUtils {
                 Optional.empty(),
                 ImmutableList.of(),
                 HaskellSources.builder()
-                    .putModuleMap("Unused", new BuildTargetSourcePath(emptyModule.getBuildTarget()))
+                    .putModuleMap("Unused", emptyModule.getSourcePathToOutput())
                     .build()));
-    BuildTarget emptyArchiveTarget =
-        target.withAppendedFlavors(ImmutableFlavor.of("empty-archive"));
+    BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         resolver.addToIndex(
             Archive.from(
                 emptyArchiveTarget,
                 baseParams,
-                pathResolver,
+                ruleFinder,
                 cxxPlatform,
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(
-                    baseParams.getProjectFilesystem(),
-                    emptyArchiveTarget,
-                    "%s/libempty.a"),
+                    baseParams.getProjectFilesystem(), emptyArchiveTarget, "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
-    argsBuilder.add(
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(emptyArchive.getBuildTarget())));
+    argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return resolver.addToIndex(
         new HaskellLinkRule(
-            baseParams.copyWithChanges(
-                target,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(linker.getDeps(pathResolver))
-                        .addAll(
-                            Stream.of(args, linkerArgs)
-                                .flatMap(Collection::stream)
-                                .flatMap(arg -> arg.getDeps(pathResolver).stream())
-                                .iterator())
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
+            baseParams
+                .withBuildTarget(target)
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(linker.getDeps(ruleFinder))
+                            .addAll(
+                                Stream.of(args, linkerArgs)
+                                    .flatMap(Collection::stream)
+                                    .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                                    .iterator())
+                            .build()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
             linker,
             name,
             args,
@@ -340,27 +338,22 @@ public class HaskellDescriptionUtils {
             haskellConfig.shouldCacheLinks()));
   }
 
-  /**
-   * @return parse-time deps needed by Haskell descriptions.
-   */
-  public static Iterable<BuildTarget> getParseTimeDeps(
+  /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */
+  public static void getParseTimeDeps(
       HaskellConfig haskellConfig,
-      Iterable<CxxPlatform> cxxPlatforms) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+      Iterable<CxxPlatform> cxxPlatforms,
+      ImmutableCollection.Builder<BuildTarget> depsBuilder) {
 
     // Since this description generates haskell link rules, make sure the parsed includes any
     // of the linkers parse time deps.
-    deps.addAll(haskellConfig.getLinker().getParseTimeDeps());
+    depsBuilder.addAll(haskellConfig.getLinker().getParseTimeDeps());
 
     // Since this description generates haskell compile rules, make sure the parsed includes any
     // of the compilers parse time deps.
-    deps.addAll(haskellConfig.getCompiler().getParseTimeDeps());
+    depsBuilder.addAll(haskellConfig.getCompiler().getParseTimeDeps());
 
     // We use the C/C++ linker's Linker object to find out how to pass in the soname, so just add
     // all C/C++ platform parse time deps.
-    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms));
-
-    return deps.build();
+    depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms));
   }
-
 }

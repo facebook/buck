@@ -20,33 +20,39 @@ import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-
+import com.facebook.buck.rules.SourcePath;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class AndroidPrebuiltAarBuilder
-    extends AbstractNodeBuilder<AndroidPrebuiltAarDescription.Arg, AndroidPrebuiltAarDescription> {
+    extends AbstractNodeBuilder<
+        AndroidPrebuiltAarDescriptionArg.Builder, AndroidPrebuiltAarDescriptionArg,
+        AndroidPrebuiltAarDescription, AndroidPrebuiltAar> {
 
- private AndroidPrebuiltAarBuilder(BuildTarget target) {
-  super(new AndroidPrebuiltAarDescription(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS), target);
- }
+  private AndroidPrebuiltAarBuilder(BuildTarget target) {
+    super(
+        new AndroidPrebuiltAarDescription(
+            JavaCompilationConstants.DEFAULT_JAVA_CONFIG,
+            JavaCompilationConstants.ANDROID_JAVAC_OPTIONS),
+        target);
+  }
 
- public static AndroidPrebuiltAarBuilder createBuilder(BuildTarget target) {
-  return new AndroidPrebuiltAarBuilder(target);
- }
+  public static AndroidPrebuiltAarBuilder createBuilder(BuildTarget target) {
+    return new AndroidPrebuiltAarBuilder(target);
+  }
 
- public AndroidPrebuiltAarBuilder setBinaryAar(Path binaryAar) {
-  arg.aar = new FakeSourcePath(binaryAar.toString());
-  return this;
- }
+  public AndroidPrebuiltAarBuilder setBinaryAar(SourcePath binaryAar) {
+    getArgForPopulating().setAar(binaryAar);
+    return this;
+  }
 
- public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
-  arg.sourceJar = Optional.of(new FakeSourcePath(sourcesJar.toString()));
-  return this;
- }
+  public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
+    getArgForPopulating().setSourceJar(Optional.of(new FakeSourcePath(sourcesJar.toString())));
+    return this;
+  }
 
- public AndroidPrebuiltAarBuilder setJavadocUrl(String javadocUrl) {
-  arg.javadocUrl = Optional.of(javadocUrl);
-  return this;
- }
+  public AndroidPrebuiltAarBuilder setJavadocUrl(String javadocUrl) {
+    getArgForPopulating().setJavadocUrl(Optional.of(javadocUrl));
+    return this;
+  }
 }

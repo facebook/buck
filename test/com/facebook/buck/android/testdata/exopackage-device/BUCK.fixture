@@ -12,6 +12,7 @@ android_binary(
   exopackage_modes = [
     'native_library',
     'secondary_dex',
+    'resources',
   ],
   primary_dex_patterns = [
     '^exotest/AppShell^',
@@ -40,6 +41,7 @@ android_library(
   deps = [
     ':buck-android-support',
     ':build_config',
+    ':res-real-name',
   ],
 )
 
@@ -53,6 +55,8 @@ android_library(
     '//jni/one:one',
     '//jni/two:two',
     ':buck-android-support',
+    ':extra_asset',
+    ':res',
   ]
 )
 
@@ -66,6 +70,47 @@ genrule(
   cmd = 'VALUE=`cat value.txt` ; sed s/HERE/$VALUE/ < Value.java.template > $OUT'
 )
 
+android_resource(
+  name = 'res-real-name',
+  res = subdir_glob([('res-real-name', '**')]),
+  package = 'buck.exotest',
+  deps = [
+   ':res',
+  ],
+)
+
+
+android_resource(
+  name = 'res',
+  res = subdir_glob([('res', '**')]),
+  assets = subdir_glob([('assets', '**')]),
+  package = 'buck.exotest',
+  deps = [
+   ':res-name-and-icon',
+  ],
+)
+
+android_resource(
+  name = 'res-name-and-icon',
+  res = subdir_glob([('res-name-and-icon', '**')]),
+  package = 'buck.exotest',
+  deps = [
+    ':res-other',
+  ],
+)
+
+android_resource(
+  name = 'res-other',
+  res = subdir_glob([('res-other', '**')]),
+  package = 'buck.exotest',
+)
+
+android_resource(
+  name = 'extra_asset',
+  assets = subdir_glob([('assets2', '**')]),
+  package = 'buck.exotest',
+)
+
 prebuilt_jar(
   name = 'buck-android-support',
   binary_jar = 'buck-android-support.jar',
@@ -75,4 +120,5 @@ keystore(
   name = 'debug_keystore',
   store = 'debug.keystore',
   properties = 'debug.keystore.properties',
+  visibility = [ 'PUBLIC' ],
 )

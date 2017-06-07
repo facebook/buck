@@ -22,143 +22,122 @@ import com.google.common.collect.ImmutableMap;
 import com.zaxxer.nuprocess.NuAbstractProcessHandler;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 
 /**
- * Replacement for {@link ProcessBuilder} which provides an
- * asynchronous callback interface to notify the caller on a
- * background thread when a process starts, performs I/O, or exits.
+ * Replacement for {@link ProcessBuilder} which provides an asynchronous callback interface to
+ * notify the caller on a background thread when a process starts, performs I/O, or exits.
  *
- * Unlike {@link ProcessExecutor}, this does not automatically forward
- * output to {@link Console} formatted with ANSI escapes.
+ * <p>Unlike {@link ProcessExecutor}, this does not automatically forward output to {@link Console}
+ * formatted with ANSI escapes.
  */
 public class ListeningProcessExecutor {
 
   private static final Logger LOG = Logger.get(ListeningProcessExecutor.class);
 
   /**
-   * Callback API to notify the caller on a background thread when a process
-   * starts, exits, has stdout or stderr bytes to read, or is ready to receive
-   * bytes on stdin.
+   * Callback API to notify the caller on a background thread when a process starts, exits, has
+   * stdout or stderr bytes to read, or is ready to receive bytes on stdin.
    */
   public interface ProcessListener {
-    /**
-     * Called just after the process starts.
-     */
+    /** Called just after the process starts. */
     void onStart(LaunchedProcess process);
 
-    /**
-     * Called just after the process exits.
-     */
-
+    /** Called just after the process exits. */
     void onExit(int exitCode);
 
     /**
      * Called when the process writes bytes to stdout.
      *
-     * Before this method returns, you must set {@code buffer.position()}
-     * to indicate how many bytes you have consumed.
+     * <p>Before this method returns, you must set {@code buffer.position()} to indicate how many
+     * bytes you have consumed.
      *
-     * If you do not consume the entire buffer, any remaining bytes will
-     * be passed back to you upon the next invocation (for example, when
-     * implementing a UTF-8 decoder which might contain a byte sequence
-     * spanning multiple reads).
+     * <p>If you do not consume the entire buffer, any remaining bytes will be passed back to you
+     * upon the next invocation (for example, when implementing a UTF-8 decoder which might contain
+     * a byte sequence spanning multiple reads).
      *
-     * If {@code closed} is {@code true}, then stdout has been closed and
-     * no more bytes will be received.
+     * <p>If {@code closed} is {@code true}, then stdout has been closed and no more bytes will be
+     * received.
      */
     void onStdout(ByteBuffer buffer, boolean closed);
 
     /**
      * Called when the process writes bytes to stderr.
      *
-     * Before this method returns, you must set {@code buffer.position()}
-     * to indicate how many bytes you have consumed.
+     * <p>Before this method returns, you must set {@code buffer.position()} to indicate how many
+     * bytes you have consumed.
      *
-     * If you do not consume the entire buffer, any remaining bytes will
-     * be passed back to you upon the next invocation (for example, when
-     * implementing a UTF-8 decoder which might contain a byte sequence
-     * spanning multiple reads).
+     * <p>If you do not consume the entire buffer, any remaining bytes will be passed back to you
+     * upon the next invocation (for example, when implementing a UTF-8 decoder which might contain
+     * a byte sequence spanning multiple reads).
      *
-     * If {@code closed} is {@code true}, then stdout has been closed and
-     * no more bytes will be received.
+     * <p>If {@code closed} is {@code true}, then stdout has been closed and no more bytes will be
+     * received.
      */
     void onStderr(ByteBuffer buffer, boolean closed);
 
     /**
      * Called when the process is ready to receive bytes on stdin.
      *
-     * Before this method returns, you must set the {@code buffer}'s
-     * {@link ByteBuffer#position() position} and {@link ByteBuffer#limit() limit} (for example, by
-     * invoking {@link ByteBuffer#flip()}) to indicate how much data is in the buffer
-     * before returning from this method.
+     * <p>Before this method returns, you must set the {@code buffer}'s {@link ByteBuffer#position()
+     * position} and {@link ByteBuffer#limit() limit} (for example, by invoking {@link
+     * ByteBuffer#flip()}) to indicate how much data is in the buffer before returning from this
+     * method.
      *
-     * You must first call {@link LaunchedProcess#wantWrite()} at
-     * least once before this method will be invoked.
+     * <p>You must first call {@link LaunchedProcess#wantWrite()} at least once before this method
+     * will be invoked.
      *
-     * If not all of the data needed to be written will fit in {@code buffer},
-     * you can return {@code true} to indicate that you would like to write more
-     * data.
+     * <p>If not all of the data needed to be written will fit in {@code buffer}, you can return
+     * {@code true} to indicate that you would like to write more data.
      *
-     * Otherwise, return {@code false} if you have no more data to write to
-     * stdin. (You can always invoke {@link LaunchedProcess#wantWrite()} any
-     * time in the future.
+     * <p>Otherwise, return {@code false} if you have no more data to write to stdin. (You can
+     * always invoke {@link LaunchedProcess#wantWrite()} any time in the future.
      */
     boolean onStdinReady(ByteBuffer buffer);
   }
 
-  /**
-   * Represents a process which was launched by a {@link ListeningProcessExecutor}.
-   */
+  /** Represents a process which was launched by a {@link ListeningProcessExecutor}. */
   public interface LaunchedProcess {
-    /**
-     * The capacity of each I/O buffer, in bytes.
-     */
+    /** The capacity of each I/O buffer, in bytes. */
     int BUFFER_CAPACITY = NuProcess.BUFFER_CAPACITY;
 
     /**
      * Invoke this to indicate you wish to write to the launched process's stdin.
      *
-     * Your {@link ProcessListener#onStdinReady(ByteBuffer)} method will be invoked
+     * <p>Your {@link ProcessListener#onStdinReady(ByteBuffer)} method will be invoked
      * asynchronously when the process is ready to receive data on stdin.
      */
     void wantWrite();
 
     /**
-     * Invoke this to directly write data to the launched process's stdin.
-     * This method does not block, and will enqueue the buffer to be written
-     * to the launched process's stdin at a later date.
+     * Invoke this to directly write data to the launched process's stdin. This method does not
+     * block, and will enqueue the buffer to be written to the launched process's stdin at a later
+     * date.
      *
-     * If you need to be notified when the write to stdin completes, use
-     * {@link #wantWrite()} and {@link ProcessListener#onStdinReady(ByteBuffer)}
-     * instead.
+     * <p>If you need to be notified when the write to stdin completes, use {@link #wantWrite()} and
+     * {@link ProcessListener#onStdinReady(ByteBuffer)} instead.
      */
     void writeStdin(ByteBuffer buffer);
 
     /**
-     * Closes the stdin of the process. Call this if the process expects stdin
-     * to be closed before it writes to stdout.
+     * Closes the stdin of the process. Call this if the process expects stdin to be closed before
+     * it writes to stdout.
      *
-     * If {@code force} is {@code true}, then pending writes to stdin are
-     * discarded. Otherwise, waits for pending writes to flush, then closes
-     * stdin.
+     * <p>If {@code force} is {@code true}, then pending writes to stdin are discarded. Otherwise,
+     * waits for pending writes to flush, then closes stdin.
      */
     void closeStdin(boolean force);
 
     /**
-     * Returns {@code true} if the process has any data queued to write to stdin,
-     * {@code false} otherwise.
+     * Returns {@code true} if the process has any data queued to write to stdin, {@code false}
+     * otherwise.
      */
     boolean hasPendingWrites();
 
-    /**
-     * Returns {@code true} if the process is running, {@code false} otherwise.
-     */
+    /** Returns {@code true} if the process is running, {@code false} otherwise. */
     boolean isRunning();
   }
 
@@ -200,8 +179,7 @@ public class ListeningProcessExecutor {
   private static class ListeningProcessHandler extends NuAbstractProcessHandler {
     private final ProcessExecutorParams params;
     private final ProcessListener listener;
-    @Nullable
-    public LaunchedProcessImpl process;
+    @Nullable public LaunchedProcessImpl process;
 
     public ListeningProcessHandler(ProcessListener listener, ProcessExecutorParams params) {
       this.listener = listener;
@@ -248,11 +226,11 @@ public class ListeningProcessExecutor {
   }
 
   /**
-   * Launches a process and asynchronously sends notifications to {@code listener} on a
-   * background thread when the process starts, has I/O, or exits.
+   * Launches a process and asynchronously sends notifications to {@code listener} on a background
+   * thread when the process starts, has I/O, or exits.
    */
   public LaunchedProcess launchProcess(ProcessExecutorParams params, final ProcessListener listener)
-    throws IOException {
+      throws IOException {
     LOG.debug("Launching process with params %s", params);
 
     ListeningProcessHandler processHandler = new ListeningProcessHandler(listener, params);
@@ -280,14 +258,14 @@ public class ListeningProcessExecutor {
   }
 
   /**
-   * Blocks the calling thread until either the process exits or the timeout expires,
-   * whichever is first.
+   * Blocks the calling thread until either the process exits or the timeout expires, whichever is
+   * first.
    *
-   * @return {@code Integer.MIN_VALUE} if the timeout expired or the process failed to start,
-   * or the exit code of the process otherwise.
+   * @return {@code Integer.MIN_VALUE} if the timeout expired or the process failed to start, or the
+   *     exit code of the process otherwise.
    */
   public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit)
-    throws InterruptedException {
+      throws InterruptedException {
     LOG.debug("Waiting for process %s timeout %d %s", process, timeout, timeUnit);
     Preconditions.checkArgument(process instanceof LaunchedProcessImpl);
     LaunchedProcessImpl processImpl = (LaunchedProcessImpl) process;
@@ -302,8 +280,7 @@ public class ListeningProcessExecutor {
    * @return the exit code of the process.
    * @throws IOException if the process failed to start.
    */
-  public int waitForProcess(LaunchedProcess process)
-      throws InterruptedException, IOException {
+  public int waitForProcess(LaunchedProcess process) throws InterruptedException, IOException {
     long infiniteWait = 0;
     int exitCode = waitForProcess(process, infiniteWait, TimeUnit.SECONDS);
     if (exitCode == Integer.MIN_VALUE) {
@@ -318,8 +295,8 @@ public class ListeningProcessExecutor {
   }
 
   /**
-   * Destroys a process. If {@code force} is {@code true}, then forcibly
-   * destroys the process in a way it cannot ignore.
+   * Destroys a process. If {@code force} is {@code true}, then forcibly destroys the process in a
+   * way it cannot ignore.
    */
   public void destroyProcess(LaunchedProcess process, boolean force) {
     LOG.debug("Destroying process %s (force %s)", process, force);

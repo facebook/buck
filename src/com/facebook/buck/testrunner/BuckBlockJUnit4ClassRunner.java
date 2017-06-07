@@ -17,7 +17,10 @@
 package com.facebook.buck.testrunner;
 
 import com.facebook.buck.util.concurrent.MostExecutors;
-
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -28,21 +31,16 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
 /**
  * JUnit-4-compatible test class runner that supports the concept of a "default timeout." If the
  * value of {@code defaultTestTimeoutMillis} passed to the constructor is non-zero, then it will be
  * used in place of {@link Test#timeout()} if {@link Test#timeout()} returns zero.
- * <p>
- * The superclass, {@link BlockJUnit4ClassRunner}, was introduced in JUnit 4.5 as a published API
+ *
+ * <p>The superclass, {@link BlockJUnit4ClassRunner}, was introduced in JUnit 4.5 as a published API
  * that was designed to be extended.
- * <p>
- * This runner also creates Descriptions that allow JUnitRunner to filter which test-methods to run
- * and should be forced into the test code path whenever test-selectors are in use.
+ *
+ * <p>This runner also creates Descriptions that allow JUnitRunner to filter which test-methods to
+ * run and should be forced into the test code path whenever test-selectors are in use.
  */
 public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
 
@@ -50,12 +48,13 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   // Executors.newSingleThreadExecutor(). The problem with Executors.newSingleThreadExecutor() is
   // that it does not let us specify a RejectedExecutionHandler, which we need to ensure that
   // garbage is not spewed to the user's console if the build fails.
-  private final ThreadLocal<ExecutorService> executor = new ThreadLocal<ExecutorService>() {
-    @Override
-    protected ExecutorService initialValue() {
-      return MostExecutors.newSingleThreadExecutor(getClass().getSimpleName());
-    }
-  };
+  private final ThreadLocal<ExecutorService> executor =
+      new ThreadLocal<ExecutorService>() {
+        @Override
+        protected ExecutorService initialValue() {
+          return MostExecutors.newSingleThreadExecutor(getClass().getSimpleName());
+        }
+      };
 
   private final long defaultTestTimeoutMillis;
 
@@ -89,7 +88,7 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     Test annotation = method.getMethod().getAnnotation(Test.class);
     if (annotation != null) {
       long timeout = annotation.timeout();
-      if (timeout != 0) {  // 0 represents the default timeout
+      if (timeout != 0) { // 0 represents the default timeout
         return Long.MAX_VALUE;
       }
     }
@@ -113,16 +112,12 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
 
     long timeout = getTimeout(method);
 
-    return new SameThreadFailOnTimeout(
-          executor.get(),
-          timeout,
-          testName(method),
-          statement);
+    return new SameThreadFailOnTimeout(executor.get(), timeout, testName(method), statement);
   }
 
   /**
-   * @return {@code true} if the test class has any fields annotated with {@code Rule} whose type
-   *     is {@link Timeout}.
+   * @return {@code true} if the test class has any fields annotated with {@code Rule} whose type is
+   *     {@link Timeout}.
    */
   static boolean hasTimeoutRule(TestClass testClass) {
     // Many protected convenience methods in BlockJUnit4ClassRunner that are available in JUnit 4.11
@@ -140,14 +135,11 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     return false;
   }
 
-  /**
-   * Override default init error collector so that class without any test methods will pass
-   */
+  /** Override default init error collector so that class without any test methods will pass */
   @Override
   protected void collectInitializationErrors(List<Throwable> errors) {
     if (!computeTestMethods().isEmpty()) {
       super.collectInitializationErrors(errors);
     }
   }
-
 }

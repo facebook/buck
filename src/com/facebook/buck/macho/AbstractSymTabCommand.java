@@ -18,7 +18,6 @@ package com.facebook.buck.macho;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -29,15 +28,21 @@ abstract class AbstractSymTabCommand implements LoadCommand {
 
   @Override
   public abstract LoadCommandCommonFields getLoadCommandCommonFields();
-  public abstract UnsignedInteger getSymoff();      // 32 bit
-  public abstract UnsignedInteger getNsyms();       // 32 bit
-  public abstract UnsignedInteger getStroff();      // 32 bit
-  public abstract UnsignedInteger getStrsize();     // 32 bit
+
+  public abstract UnsignedInteger getSymoff(); // 32 bit
+
+  public abstract UnsignedInteger getNsyms(); // 32 bit
+
+  public abstract UnsignedInteger getStroff(); // 32 bit
+
+  public abstract UnsignedInteger getStrsize(); // 32 bit
 
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(getLoadCommandCommonFields().getCmd().equals(LC_SYMTAB));
-    Preconditions.checkArgument(getLoadCommandCommonFields().getCmdsize().equals(
-        UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
+    Preconditions.checkArgument(
+        getLoadCommandCommonFields()
+            .getCmdsize()
+            .equals(UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
   }
 }

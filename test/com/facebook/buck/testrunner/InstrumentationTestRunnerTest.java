@@ -17,31 +17,24 @@
 
 package com.facebook.buck.testrunner;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-
 import com.android.ddmlib.IShellEnabledDevice;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.InstrumentationResultParser;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-/**
- * Tests {@link InstrumentationTestRunner}
- */
+/** Tests {@link InstrumentationTestRunner} */
 public class InstrumentationTestRunnerTest {
-  /**
-   * Just verifies the reflection is legit
-   */
+  /** Just verifies the reflection is legit */
   @Test
   public void testSetTrimLinesHappyPath() throws Throwable {
     IShellEnabledDevice shellEnabledDevice = EasyMock.createMock(IShellEnabledDevice.class);
     EasyMock.replay(shellEnabledDevice);
-    RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-      "foobar",
-      "blah",
-      shellEnabledDevice);
+    RemoteAndroidTestRunner runner =
+        new RemoteAndroidTestRunner("foobar", "blah", shellEnabledDevice);
 
     Field field = RemoteAndroidTestRunner.class.getDeclaredField("mParser");
     field.setAccessible(true);

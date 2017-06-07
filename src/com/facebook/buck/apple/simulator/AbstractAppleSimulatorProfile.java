@@ -17,29 +17,25 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import java.util.Set;
 import org.immutables.value.Value;
 
-import java.util.Set;
-
-/**
- * Immutable value type containing metadata about an Apple simulator.
- */
+/** Immutable value type containing metadata about an Apple simulator. */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractAppleSimulatorProfile {
   /**
-   * Set of integers describing which Apple product families this simulator
-   * supports (1: iPhone, 2: iPad, 4: Apple Watch, etc.)
+   * Set of integers describing which Apple product families this simulator supports (1: iPhone, 2:
+   * iPad, 4: Apple Watch, etc.)
    *
-   * We don't return an enum here since new identifiers are introduced over
-   * time, and we don't want to lost the information at this level.
+   * <p>We don't return an enum here since new identifiers are introduced over time, and we don't
+   * want to lost the information at this level.
    */
   Set<Integer> getSupportedProductFamilyIDs();
 
   /**
-   * Set of strings containing the architectures supported by this
-   * simulator (i.e., i386, x86_64, etc.)
+   * Set of strings containing the architectures supported by this simulator (i.e., i386, x86_64,
+   * etc.)
    */
   Set<String> getSupportedArchitectures();
 }

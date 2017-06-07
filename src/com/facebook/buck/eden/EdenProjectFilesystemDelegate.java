@@ -16,7 +16,7 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.event.EventBus;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -25,7 +25,6 @@ import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -52,7 +51,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   @Override
-  public void ensureConcreteFilesExist(EventBus eventBus) {
+  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     return;
   }
 

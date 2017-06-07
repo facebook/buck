@@ -18,16 +18,13 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-
 import org.immutables.value.Value;
 
 @Value.Immutable(intern = true)
 @BuckStyleImmutable
 abstract class AbstractBuildRuleType {
 
-  /**
-   * @return the name as displayed in a build file, such as "java_library"
-   */
+  /** @return the name as displayed in a build file, such as "java_library" */
   @Value.Parameter
   public abstract String getName();
 
@@ -46,5 +43,4 @@ abstract class AbstractBuildRuleType {
   public String toString() {
     return getName();
   }
-
 }

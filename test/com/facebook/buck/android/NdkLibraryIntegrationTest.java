@@ -19,35 +19,31 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-
 public class NdkLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp1 = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp1 = new TemporaryPaths();
 
-  @Rule
-  public TemporaryPaths tmp2 = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Test
-  public void cxxLibraryDep() throws IOException {
+  public void cxxLibraryDep() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
-    ProjectWorkspace workspace1 = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cxx_deps", tmp1);
+    ProjectWorkspace workspace1 =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace1.setUp();
     workspace1.runBuckBuild("//jni:foo").assertSuccess();
 
-    ProjectWorkspace workspace2 = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cxx_deps", tmp2);
+    ProjectWorkspace workspace2 =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp2);
     workspace2.setUp();
     workspace2.runBuckBuild("//jni:foo").assertSuccess();
 
@@ -60,28 +56,27 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void sourceFilesChangeTargetHash() throws IOException {
+  public void sourceFilesChangeTargetHash() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cxx_deps", tmp1);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "//jni:foo",
-        "--show-target-hash",
-        "--target-hash-file-mode=PATHS_ONLY");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "//jni:foo", "--show-target-hash", "--target-hash-file-mode=PATHS_ONLY");
     result.assertSuccess();
     String[] targetAndHash = result.getStdout().trim().split("\\s+");
     assertEquals("//jni:foo", targetAndHash[0]);
     String hashBefore = targetAndHash[1];
 
-    ProjectWorkspace.ProcessResult result2 = workspace.runBuckCommand(
-        "targets",
-        "//jni:foo",
-        "--show-target-hash",
-        "--target-hash-file-mode=PATHS_ONLY",
-        "--target-hash-modified-paths=" + workspace.resolve("jni/foo.cpp"));
+    ProjectWorkspace.ProcessResult result2 =
+        workspace.runBuckCommand(
+            "targets",
+            "//jni:foo",
+            "--show-target-hash",
+            "--target-hash-file-mode=PATHS_ONLY",
+            "--target-hash-modified-paths=" + workspace.resolve("jni/foo.cpp"));
 
     result2.assertSuccess();
     String[] targetAndHash2 = result2.getStdout().trim().split("\\s+");
@@ -92,17 +87,16 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void ndkLibraryOwnsItsSources() throws IOException {
+  public void ndkLibraryOwnsItsSources() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cxx_deps", tmp1);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "query",
-        String.format("owner(%s)", workspace.resolve("jni/foo.cpp")));
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query", String.format("owner(%s)", workspace.resolve("jni/foo.cpp")));
     result.assertSuccess();
     assertEquals("//jni:foo", result.getStdout().trim());
   }
-
 }

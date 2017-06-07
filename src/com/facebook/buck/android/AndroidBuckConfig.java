@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -67,8 +67,20 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "clang_version");
   }
 
-  public Optional<NdkCxxPlatforms.CxxRuntime> getNdkCxxRuntime() {
-    return delegate.getEnum("ndk", "cxx_runtime", NdkCxxPlatforms.CxxRuntime.class);
+  public Optional<NdkCxxRuntime> getNdkCxxRuntime() {
+    return delegate.getEnum("ndk", "cxx_runtime", NdkCxxRuntime.class);
+  }
+
+  public ImmutableList<String> getExtraNdkCFlags() {
+    return delegate.getListWithoutComments("ndk", "extra_cflags", ' ');
+  }
+
+  public ImmutableList<String> getExtraNdkCxxFlags() {
+    return delegate.getListWithoutComments("ndk", "extra_cxxflags", ' ');
+  }
+
+  public ImmutableList<String> getExtraNdkLdFlags() {
+    return delegate.getListWithoutComments("ndk", "extra_ldflags", ' ');
   }
 
   /**
@@ -76,7 +88,19 @@ public class AndroidBuckConfig {
    * project. If not specified, the Android platform aapt will be used.
    */
   public Optional<Path> getAaptOverride() {
-    Optional<String> pathString = delegate.getValue("tools", "aapt");
+    return getToolOverride("aapt");
+  }
+
+  /**
+   * Returns the path to the platform specific aapt2 executable that is overridden by the current
+   * project. If not specified, the Android platform aapt will be used.
+   */
+  public Optional<Path> getAapt2Override() {
+    return getToolOverride("aapt2");
+  }
+
+  private Optional<Path> getToolOverride(String tool) {
+    Optional<String> pathString = delegate.getValue("tools", tool);
     if (!pathString.isPresent()) {
       return Optional.empty();
     }
@@ -92,8 +116,7 @@ public class AndroidBuckConfig {
       return Optional.empty();
     }
 
-    Path pathToAapt = Paths.get(pathString.get(), platformDir, "aapt");
-    return delegate.checkPathExists(pathToAapt.toString(), "Overridden aapt path not found: ");
+    Path pathToTool = Paths.get(pathString.get(), platformDir, tool);
+    return delegate.checkPathExists(pathToTool.toString(), "Overridden path not found: ");
   }
-
 }

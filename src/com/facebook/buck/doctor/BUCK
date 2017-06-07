@@ -1,11 +1,26 @@
 java_library(
-  name = 'doctor',
-  srcs = glob(['*.java'],),
-  autodeps = True,
-  tests = [
-   '//test/com/facebook/buck/doctor:doctor',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "doctor",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/doctor:doctor",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/doctor/config:config",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rage:config",
+        "//src/com/facebook/buck/rage:rage",
+        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/unit:unit",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/okhttp:okhttp",
+    ],
 )

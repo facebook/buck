@@ -32,7 +32,7 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
       final VirtualFile root,
       final BuckCommand command,
       final FutureCallback futureCallback) {
-    super(project, VfsUtil.virtualToIoFile(root), command);
+    super(project, VfsUtil.virtualToIoFile(root), command, true);
     this.futureCallback = futureCallback;
     this.stdout = new StringBuilder();
   }

@@ -1,2 +1,0 @@
-[2016-06-21 17:16:24.679][debug][command:ac8bd626-6137-4747-84dd-5d4f215c876c][tid:01][com.facebook.buck.event.listener.SuperConsoleEventBusListener] Starting render scheduler (interval 100 ms)
-[2016-06-21 17:16:24.729][debug][command:ac8bd626-6137-4747-84dd-5d4f215c876c][tid:01][com.facebook.buck.cli.Main] InvocationInfo BuildId=[ac8bd626-6137-4747-84dd-5d4f215c876c] Args=[build, buck]

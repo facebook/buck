@@ -16,31 +16,41 @@
 
 package com.facebook.buck.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Optional;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-/**
- * Executes a {@link Process} and blocks until it is finished.
- */
+/** Executes a {@link Process} and blocks until it is finished. */
 public class DefaultProcessExecutor implements ProcessExecutor {
 
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
+  private static final ThreadPoolExecutor THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("ProcessExecutor"));
 
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
@@ -49,8 +59,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private final ProcessRegistry processRegistry;
 
   /**
-   * Creates a new {@link DefaultProcessExecutor} with the specified parameters used for writing the output
-   * of the process.
+   * Creates a new {@link DefaultProcessExecutor} with the specified parameters used for writing the
+   * output of the process.
    */
   public DefaultProcessExecutor(Console console) {
     this(
@@ -76,14 +86,9 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public ProcessExecutor cloneWithOutputStreams(
-      PrintStream newStdOutStream,
-      PrintStream newStdErrStream) {
+      PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new DefaultProcessExecutor(
-        newStdOutStream,
-        newStdErrStream,
-        ansi,
-        processHelper,
-        processRegistry);
+        newStdOutStream, newStdErrStream, ansi, processHelper, processRegistry);
   }
 
   @Override
@@ -93,9 +98,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public Result launchAndExecute(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws InterruptedException, IOException {
+  public Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
+      throws InterruptedException, IOException {
     return launchAndExecute(
         params,
         context,
@@ -135,8 +139,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public LaunchedProcess launchProcess(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws IOException {
+      ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
     ImmutableList<String> command = params.getCommand();
     /* On Windows, we need to escape the arguments we hand off to `CreateProcess`.  See
      * http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
@@ -177,33 +180,24 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public Result waitForLaunchedProcess(
-      LaunchedProcess launchedProcess) throws InterruptedException {
+  public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
+      throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     int exitCode = ((LaunchedProcessImpl) launchedProcess).process.waitFor();
-    return new Result(
-        exitCode,
-        false,
-        Optional.empty(),
-        Optional.empty()
-    );
+    return new Result(exitCode, false, Optional.empty(), Optional.empty());
   }
 
   @Override
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess,
       long millis,
-      final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
+      final Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     final Process process = ((LaunchedProcessImpl) launchedProcess).process;
     boolean timedOut = waitForTimeoutInternal(process, millis, timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
-    return new Result(
-        exitCode,
-        timedOut,
-        Optional.empty(),
-        Optional.empty()
-    );
+    return new Result(exitCode, timedOut, Optional.empty(), Optional.empty());
   }
 
   /**
@@ -212,43 +206,44 @@ public class DefaultProcessExecutor implements ProcessExecutor {
    * @return whether the wait has timed out.
    */
   private boolean waitForTimeoutInternal(
-      final Process process,
-      long millis,
-      final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
-    final AtomicBoolean timedOut = new AtomicBoolean(false);
-    Thread waiter =
-        new Thread(
+      final Process process, long millis, final Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
+    Future<?> waiter =
+        THREAD_POOL.submit(
             () -> {
               try {
                 process.waitFor();
               } catch (InterruptedException e) {
-                timedOut.set(true);
-                if (timeOutHandler.isPresent()) {
-                  try {
-                    timeOutHandler.get().accept(process);
-                  } catch (RuntimeException e2) {
-                    LOG.error(e2, "timeOutHandler threw an Exception!");
-                  }
-                }
+                // The thread waiting has hit its timeout.
               }
             });
-    waiter.start();
-    waiter.join(millis);
-    waiter.interrupt();
-    waiter.join();
-    return timedOut.get();
+    try {
+      waiter.get(millis, TimeUnit.MILLISECONDS);
+    } catch (TimeoutException e) {
+      try {
+        timeOutHandler.ifPresent(consumer -> consumer.accept(process));
+      } catch (RuntimeException e1) {
+        LOG.error(e1, "ProcessExecutor timeOutHandler threw an exception, ignored.");
+      }
+      waiter.cancel(true);
+      return true;
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Unexpected exception thrown from waiter.", e);
+    }
+    return false;
   }
 
   /**
    * Executes the specified already-launched process.
-   * <p>
-   * If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process will
-   * be written directly to the stdout passed to the constructor of this executor. Otherwise,
+   *
+   * <p>If {@code options} contains {@link Option#PRINT_STD_OUT}, then the stdout of the process
+   * will be written directly to the stdout passed to the constructor of this executor. Otherwise,
    * the stdout of the process will be made available via {@link Result#getStdout()}.
-   * <p>
-   * If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process will
-   * be written directly to the stderr passed to the constructor of this executor. Otherwise,
+   *
+   * <p>If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process
+   * will be written directly to the stderr passed to the constructor of this executor. Otherwise,
    * the stderr of the process will be made available via {@link Result#getStderr()}.
+   *
    * @param timeOutHandler If present, this method will be called before the process is killed.
    */
   public Result execute(
@@ -256,45 +251,37 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     Process process = ((LaunchedProcessImpl) launchedProcess).process;
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     boolean shouldPrintStdOut = options.contains(Option.PRINT_STD_OUT);
     boolean expectingStdOut = options.contains(Option.EXPECTING_STD_OUT);
-    PrintStream stdOutToWriteTo = shouldPrintStdOut ?
-        stdOutStream : new CapturingPrintStream();
-    InputStreamConsumer stdOut = new InputStreamConsumer(
-        process.getInputStream(),
-        InputStreamConsumer.createAnsiHighlightingHandler(
-            /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut,
-            stdOutToWriteTo,
-            ansi));
+    PrintStream stdOutToWriteTo = shouldPrintStdOut ? stdOutStream : new CapturingPrintStream();
+    InputStreamConsumer stdOut =
+        new InputStreamConsumer(
+            process.getInputStream(),
+            InputStreamConsumer.createAnsiHighlightingHandler(
+                /* flagOutputWrittenToStream */ !shouldPrintStdOut && !expectingStdOut,
+                stdOutToWriteTo,
+                ansi));
 
     boolean shouldPrintStdErr = options.contains(Option.PRINT_STD_ERR);
     boolean expectingStdErr = options.contains(Option.EXPECTING_STD_ERR);
-    PrintStream stdErrToWriteTo = shouldPrintStdErr ?
-        stdErrStream : new CapturingPrintStream();
-    InputStreamConsumer stdErr = new InputStreamConsumer(
-        process.getErrorStream(),
-        InputStreamConsumer.createAnsiHighlightingHandler(
-            /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr,
-            stdErrToWriteTo,
-            ansi));
+    PrintStream stdErrToWriteTo = shouldPrintStdErr ? stdErrStream : new CapturingPrintStream();
+    InputStreamConsumer stdErr =
+        new InputStreamConsumer(
+            process.getErrorStream(),
+            InputStreamConsumer.createAnsiHighlightingHandler(
+                /* flagOutputWrittenToStream */ !shouldPrintStdErr && !expectingStdErr,
+                stdErrToWriteTo,
+                ansi));
 
     // Consume the streams so they do not deadlock.
-    FutureTask<Void> stdOutTerminationFuture = new FutureTask<>(stdOut);
-    Thread stdOutConsumer = Threads.namedThread(
-        "ProcessExecutor (stdOut)",
-        stdOutTerminationFuture);
-    stdOutConsumer.start();
-
-    FutureTask<Void> stdErrTerminationFuture = new FutureTask<>(stdErr);
-    Thread stdErrConsumer = Threads.namedThread(
-        "ProcessExecutor (stdErr)",
-        stdErrTerminationFuture);
-    stdErrConsumer.start();
+    Future<Void> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
+    Future<Void> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
 
     boolean timedOut = false;
 
@@ -356,14 +343,12 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   private static Optional<String> getDataIfNotPrinted(
-      PrintStream printStream,
-      boolean shouldPrint) {
+      PrintStream printStream, boolean shouldPrint) {
     if (!shouldPrint) {
       CapturingPrintStream capturingPrintStream = (CapturingPrintStream) printStream;
-      return Optional.of(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
+      return Optional.of(capturingPrintStream.getContentsAsString(UTF_8));
     } else {
       return Optional.empty();
     }
   }
-
 }

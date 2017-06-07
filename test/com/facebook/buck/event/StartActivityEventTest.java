@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTargetFactory;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -31,13 +30,12 @@ public class StartActivityEventTest {
   @Test
   public void testEquals() throws Exception {
     StartActivityEvent.Started started =
-        configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar"));
+        configureTestEvent(
+            StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"), "com.foo.bar"));
     StartActivityEvent.Started startedTwo =
-        configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar"));
-    StartActivityEvent finished =
-        configureTestEvent(StartActivityEvent.finished(started, false));
+        configureTestEvent(
+            StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"), "com.foo.bar"));
+    StartActivityEvent finished = configureTestEvent(StartActivityEvent.finished(started, false));
     StartActivityEvent finishedTwo =
         configureTestEvent(StartActivityEvent.finished(started, false));
     StartActivityEvent finishedSucceed =

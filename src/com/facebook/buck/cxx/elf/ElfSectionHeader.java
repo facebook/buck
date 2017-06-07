@@ -18,9 +18,7 @@ package com.facebook.buck.cxx.elf;
 
 import java.nio.ByteBuffer;
 
-/**
- * Encapsulate the data in an ELF section header.
- */
+/** Encapsulate the data in an ELF section header. */
 // CHECKSTYLE.OFF: LocalVariableName
 // CHECKSTYLE.OFF: ParameterName
 public class ElfSectionHeader {
@@ -61,9 +59,7 @@ public class ElfSectionHeader {
     this.sh_entsize = sh_entsize;
   }
 
-  /**
-   * @return either a 32- or 64-bit ELF section header parsed from the given buffer.
-   */
+  /** @return either a 32- or 64-bit ELF section header parsed from the given buffer. */
   static ElfSectionHeader parse(ElfHeader.EIClass eiClass, ByteBuffer buffer) {
     if (eiClass == ElfHeader.EIClass.ELFCLASS32) {
       return new ElfSectionHeader(
@@ -93,7 +89,6 @@ public class ElfSectionHeader {
   }
 
   public static enum SHType {
-
     SHT_NULL(0),
     SHT_PROGBITS(1),
     SHT_SYMTAB(2),
@@ -125,9 +120,7 @@ public class ElfSectionHeader {
       }
       return SHT_UNKNOWN;
     }
-
   }
-
 }
 
 // CHECKSTYLE.ON: ParameterName

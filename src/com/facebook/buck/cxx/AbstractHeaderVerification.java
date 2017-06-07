@@ -20,16 +20,14 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
-import java.util.regex.Pattern;
-
 /**
- * Defines how to handle headers that get included during the build but aren't explicitly tracked
- * in any build files.
+ * Defines how to handle headers that get included during the build but aren't explicitly tracked in
+ * any build files.
  */
 @Value.Immutable
 @BuckStyleImmutable
@@ -38,29 +36,32 @@ abstract class AbstractHeaderVerification implements RuleKeyAppendable {
   @Value.Parameter
   public abstract Mode getMode();
 
-  /**
-   * @return a list of regexes which match headers which should be exempt from verification.
-   */
+  /** @return a list of regexes which match headers which should be exempt from verification. */
   @Value.Parameter
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<String> getWhitelist();
 
+  /**
+   * @return a list of regexes which match headers from the platform SDK. The path for the platforms
+   *     might depend on the disk layout. Therefore, we don't want that one to be included in the
+   *     rule keys.
+   */
+  @Value.Parameter
+  @Value.NaturalOrder
+  protected abstract ImmutableSortedSet<String> getPlatformWhitelist();
+
   @Value.Derived
-  protected ImmutableList<Pattern> getWhitelistPatterns() {
-    return getWhitelist().stream()
+  protected Iterable<Pattern> getWhitelistPatterns() {
+    return Stream.concat(getWhitelist().stream(), getPlatformWhitelist().stream())
         .map(Pattern::compile)
         .collect(MoreCollectors.toImmutableList());
   }
 
   public static HeaderVerification of(Mode mode) {
-    return HeaderVerification.builder()
-        .setMode(mode)
-        .build();
+    return HeaderVerification.builder().setMode(mode).build();
   }
 
-  /**
-   * @return whether the given header has been whitelisted.
-   */
+  /** @return whether the given header has been whitelisted. */
   public boolean isWhitelisted(String header) {
     for (Pattern pattern : getWhitelistPatterns()) {
       if (pattern.matcher(header).matches()) {
@@ -78,23 +79,19 @@ abstract class AbstractHeaderVerification implements RuleKeyAppendable {
     }
   }
 
-  public enum Mode {
-
-    /**
-     * Allow untracked headers.
-     */
-    IGNORE,
-
-    /**
-     * Warn on untracked headers.
-     */
-    WARN,
-
-    /**
-     * Error on untracked headers.
-     */
-    ERROR,
-
+  public HeaderVerification withPlatformWhitelist(Iterable<String> elements) {
+    return HeaderVerification.builder().from(this).addAllPlatformWhitelist(elements).build();
   }
 
+  public enum Mode {
+
+    /** Allow untracked headers. */
+    IGNORE,
+
+    /** Warn on untracked headers. */
+    WARN,
+
+    /** Error on untracked headers. */
+    ERROR,
+  }
 }

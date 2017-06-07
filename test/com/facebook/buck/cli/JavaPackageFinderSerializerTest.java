@@ -24,22 +24,19 @@ import com.facebook.buck.jvm.java.JavaPackageFinderSerializer;
 import com.facebook.buck.jvm.java.ResourcesRootPackageFinder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Map;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class JavaPackageFinderSerializerTest {
   @Test
   public void testSerializingAndDeserializing() throws Exception {
-    DefaultJavaPackageFinder defaultFinder = new DefaultJavaPackageFinder(
-        ImmutableSortedSet.of("paths", "from", "root"),
-        ImmutableSet.of("path", "elements"));
-    ResourcesRootPackageFinder resourcesRootFinder = new ResourcesRootPackageFinder(
-        Paths.get("/path/to/res/root"),
-        defaultFinder);
+    DefaultJavaPackageFinder defaultFinder =
+        new DefaultJavaPackageFinder(
+            ImmutableSortedSet.of("paths", "from", "root"), ImmutableSet.of("path", "elements"));
+    ResourcesRootPackageFinder resourcesRootFinder =
+        new ResourcesRootPackageFinder(Paths.get("/path/to/res/root"), defaultFinder);
 
     Map<String, Object> data = JavaPackageFinderSerializer.serialize(resourcesRootFinder);
     JavaPackageFinder result = JavaPackageFinderSerializer.deserialize(data);
@@ -54,10 +51,8 @@ public class JavaPackageFinderSerializerTest {
     assertThat(chainedFinder, Matchers.instanceOf(DefaultJavaPackageFinder.class));
     DefaultJavaPackageFinder outDefFinder = (DefaultJavaPackageFinder) chainedFinder;
     assertThat(
-        outDefFinder.getPathElements(),
-        Matchers.equalToObject(defaultFinder.getPathElements()));
+        outDefFinder.getPathElements(), Matchers.equalToObject(defaultFinder.getPathElements()));
     assertThat(
-        outDefFinder.getPathsFromRoot(),
-        Matchers.equalToObject(defaultFinder.getPathsFromRoot()));
+        outDefFinder.getPathsFromRoot(), Matchers.equalToObject(defaultFinder.getPathsFromRoot()));
   }
 }

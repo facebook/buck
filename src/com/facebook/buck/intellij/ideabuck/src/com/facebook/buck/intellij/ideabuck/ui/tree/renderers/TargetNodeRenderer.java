@@ -19,18 +19,13 @@ package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeTarget;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.components.JBLabel;
-
-import javax.swing.SwingConstants;
 import java.awt.Component;
-
+import javax.swing.SwingConstants;
 
 public class TargetNodeRenderer implements BuildElementRenderer {
   @Override
   public Component render(Object value) {
     return new JBLabel(
-        ((BuckTreeNodeTarget) value).getTarget(),
-        AllIcons.Ide.Error,
-        SwingConstants.HORIZONTAL
-    );
+        ((BuckTreeNodeTarget) value).getTarget(), AllIcons.Ide.Error, SwingConstants.HORIZONTAL);
   }
 }

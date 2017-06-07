@@ -21,22 +21,22 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 
 public class GroovyLibraryBuilder
-    extends AbstractNodeBuilder<GroovyLibraryDescription.Arg, GroovyLibraryDescription> {
+    extends AbstractNodeBuilder<
+        GroovyLibraryDescriptionArg.Builder, GroovyLibraryDescriptionArg, GroovyLibraryDescription,
+        BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;
 
   protected GroovyLibraryBuilder(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      HashCode hashCode) {
+      BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
         new GroovyLibraryDescription(null, DEFAULT_JAVAC_OPTIONS),
         target,
@@ -50,12 +50,11 @@ public class GroovyLibraryBuilder
   }
 
   public GroovyLibraryBuilder addSrc(SourcePath path) {
-    arg.srcs = amend(arg.srcs, path);
+    argBuilder.addSrcs(path);
     return this;
   }
 
   public GroovyLibraryBuilder addSrc(Path path) {
     return addSrc(new PathSourcePath(projectFilesystem, path));
   }
-
 }

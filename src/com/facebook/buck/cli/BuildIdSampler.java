@@ -21,16 +21,14 @@ import com.facebook.buck.util.SampleRate;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
-/**
- * Decides whether a particular {@link BuildId} belongs to a sampling group of a supplied size.
- */
+/** Decides whether a particular {@link BuildId} belongs to a sampling group of a supplied size. */
 public class BuildIdSampler implements Function<BuildId, Boolean> {
 
   private SampleRate sampleRate;
 
   /**
-   * @param sampleRate value in percent between 0 and 100 inclusive. This decides the probability
-   *                   of a random {@link BuildId} belongin to the sample.
+   * @param sampleRate value in percent between 0 and 100 inclusive. This decides the probability of
+   *     a random {@link BuildId} belongin to the sample.
    */
   public BuildIdSampler(SampleRate sampleRate) {
     this.sampleRate = sampleRate;
@@ -47,7 +45,7 @@ public class BuildIdSampler implements Function<BuildId, Boolean> {
 
   /**
    * @param sampleRate It decides the probability of a random {@link BuildId} belonging to the
-   *                   sample.
+   *     sample.
    * @param buildId {@link BuildId} to test.
    * @return Whether the supplied {@link BuildId} belongs to the sample.
    */
@@ -71,4 +69,3 @@ public class BuildIdSampler implements Function<BuildId, Boolean> {
     return sampleRate.getSampleRate() > scaledHash;
   }
 }
-

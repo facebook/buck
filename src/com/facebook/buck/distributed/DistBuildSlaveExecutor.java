@@ -18,56 +18,66 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.PathTypeCoercer;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-
 import javax.annotation.Nullable;
 
 public class DistBuildSlaveExecutor {
+  private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
+
   private final DistBuildExecutorArgs args;
 
-  @Nullable
-  private TargetGraph targetGraph;
+  @Nullable private TargetGraph targetGraph;
 
-  @Nullable
-  private ActionGraphAndResolver actionGraphAndResolver;
+  @Nullable private ActionGraphAndResolver actionGraphAndResolver;
 
-  @Nullable
-  private DistBuildCachingEngineDelegate cachingBuildEngineDelegate;
-
-  private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
+  @Nullable private DistBuildCachingEngineDelegate cachingBuildEngineDelegate;
 
   public DistBuildSlaveExecutor(DistBuildExecutorArgs args) {
     this.args = args;
@@ -75,165 +85,313 @@ public class DistBuildSlaveExecutor {
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
     createBuildEngineDelegate();
-    BuckConfig config = args.getRemoteRootCellConfig();
-    CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
-        config.getView(CachingBuildEngineBuckConfig.class);
-    BuildEngine buildEngine = new CachingBuildEngine(
-        Preconditions.checkNotNull(cachingBuildEngineDelegate),
-        args.getExecutorService(),
-        new DefaultStepRunner(),
-        cachingBuildEngineBuckConfig.getBuildEngineMode(),
-        cachingBuildEngineBuckConfig.getBuildDepFiles(),
-        cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-        cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-        cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-        args.getObjectMapper(),
-        Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
-        config.getKeySeed(),
-        cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo());
+    LocalBuilder localBuilder = new LocalBuilderImpl();
 
-    // TODO(ruibm): Fix this to work with Android.
-    try (Build build = new Build(
-        Preconditions.checkNotNull(actionGraphAndResolver).getActionGraph(),
-        Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
-        args.getRootCell(),
-        Optional.empty(),
-        getExplodingAndroidSupplier(),
-        buildEngine,
-        args.getArtifactCache(),
-        config.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-        args.getConsole(),
-        /* defaultTestTimeoutMillis */ 1000,
-        /* isCodeCoverageEnabled */ false,
-        /* isInclNoLocationClassesEnabled */ false,
-        /* isDebugEnabled */ false,
-        /* shouldReportAbsolutePaths */ false,
-        args.getBuckEventBus(),
-        args.getPlatform(),
-        ImmutableMap.of(),
-        args.getObjectMapper(),
-        args.getClock(),
-        new ConcurrencyLimit(
-            4,
-            1,
-            config.getResourceAllocationFairness(),
-            4,
-            config.getDefaultResourceAmounts(),
-            config.getMaximumResourceAmounts().withCpu(4)),
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty(),
-        args.getExecutors())) {
+    DistBuildModeRunner runner = null;
+    switch (args.getDistBuildMode()) {
+      case REMOTE_BUILD:
+        runner =
+            new RemoteBuildModeRunner(
+                localBuilder, args.getState().getRemoteState().getTopLevelTargets());
+        break;
 
-      // TODO(ruibm): We need to pass to the distbuild target via de distributed build
-      //              thrift structs.
-      FluentIterable<BuildTarget> allTargets = FluentIterable.from(
-          Preconditions.checkNotNull(targetGraph).getNodes())
-          .transform(TargetNode::getBuildTarget);
+      case COORDINATOR:
+        runner = newCoordinatorMode();
+        break;
 
-      return build.executeAndPrintFailuresToEventBus(
-          allTargets,
-          /* isKeepGoing */ true,
-          args.getBuckEventBus(),
-          args.getConsole(),
-          Optional.empty());
+      case MINION:
+        runner = newMinionMode(localBuilder);
+        break;
+
+      case COORDINATOR_AND_MINION:
+        runner =
+            new CoordinatorAndMinionModeRunner(newCoordinatorMode(), newMinionMode(localBuilder));
+        break;
+
+      default:
+        LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
+        return -1;
     }
+
+    return runner.runAndReturnExitCode();
   }
 
-  private TargetGraph createTargetGraph() throws IOException {
+  private MinionModeRunner newMinionMode(LocalBuilder localBuilder) {
+    return new MinionModeRunner(
+        args.getCoordinatorAddress(),
+        args.getCoordinatorPort(),
+        localBuilder,
+        args.getStampedeId());
+  }
+
+  private CoordinatorModeRunner newCoordinatorMode() {
+    BuildTargetsQueue queue =
+        BuildTargetsQueue.newQueue(
+            Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+            fullyQualifiedNameToBuildTarget(args.getState().getRemoteState().getTopLevelTargets()));
+    return new CoordinatorModeRunner(args.getCoordinatorPort(), queue, args.getStampedeId());
+  }
+
+  private TargetGraph createTargetGraph() throws IOException, InterruptedException {
     if (targetGraph != null) {
       return targetGraph;
     }
 
     DistBuildTargetGraphCodec codec = createGraphCodec();
-    targetGraph = Preconditions.checkNotNull(codec.createTargetGraph(
-        args.getState().getRemoteState().getTargetGraph(),
-        Functions.forMap(args.getState().getCells())));
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        Preconditions.checkNotNull(
+            codec.createTargetGraph(
+                args.getState().getRemoteState().getTargetGraph(),
+                Functions.forMap(args.getState().getCells())));
+
+    try {
+      if (args.getRemoteRootCellConfig().getBuildVersions()) {
+        targetGraph =
+            args.getVersionedTargetGraphCache()
+                .toVersionedTargetGraph(
+                    args.getBuckEventBus(),
+                    args.getRemoteRootCellConfig(),
+                    new DefaultTypeCoercerFactory(
+                        PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+                    targetGraphAndBuildTargets)
+                .getTargetGraph();
+      } else {
+        targetGraph = targetGraphAndBuildTargets.getTargetGraph();
+      }
+    } catch (VersionException e) {
+      throw new RuntimeException(e);
+    }
+
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver() throws IOException {
+  private ActionGraphAndResolver createActionGraphAndResolver()
+      throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
     createTargetGraph();
 
-    actionGraphAndResolver = Preconditions.checkNotNull(
-        args.getActionGraphCache().getActionGraph(
-            args.getBuckEventBus(),
-            /* checkActionGraphs */ false,
-            Preconditions.checkNotNull(targetGraph),
-            args.getCacheKeySeed()));
+    actionGraphAndResolver =
+        Preconditions.checkNotNull(
+            args.getActionGraphCache()
+                .getActionGraph(
+                    args.getBuckEventBus(),
+                    /* checkActionGraphs */ false,
+                    /* skipActionGraphCache */ false,
+                    Preconditions.checkNotNull(targetGraph),
+                    args.getCacheKeySeed()));
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate() throws IOException {
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
+      throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
 
-    LoadingCache<ProjectFilesystem, DistBuildFileMaterializer> fileHashLoaders =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<ProjectFilesystem, DistBuildFileMaterializer>() {
-              @Override
-              public DistBuildFileMaterializer load(ProjectFilesystem filesystem) throws Exception {
-                return args.getState().createMaterializingLoader(filesystem, args.getProvider());
-              }
-            });
-
-    // Create all symlinks and touch all other files.
-    // TODO(alisdair04): remove this once action graph doesn't read from file system.
-    for (Cell cell : args.getState().getCells().values()) {
-      try {
-        fileHashLoaders.get(cell.getFilesystem()).preloadAllFiles();
-      } catch (ExecutionException e) {
-        LOG.error(e);
-        throw new RuntimeException(e);
-      }
-    }
-
+    StackedFileHashCaches caches = createStackedFileHashesAndPreload();
     createActionGraphAndResolver();
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(Preconditions.checkNotNull(actionGraphAndResolver).getResolver());
     cachingBuildEngineDelegate =
         new DistBuildCachingEngineDelegate(
-            new SourcePathResolver(
-                Preconditions.checkNotNull(actionGraphAndResolver).getResolver()),
-            args.getState(),
-            fileHashLoaders);
+            new SourcePathResolver(ruleFinder),
+            ruleFinder,
+            caches.remoteStateCache,
+            caches.materializingCache);
     return cachingBuildEngineDelegate;
+  }
+
+  private StackedFileHashCache createStackOfDefaultFileHashCache()
+      throws InterruptedException, IOException {
+    ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder = ImmutableList.builder();
+    Cell rootCell = args.getState().getRootCell();
+
+    // 1. Add all cells (including the root cell).
+    for (Path cellPath : rootCell.getKnownRoots()) {
+      Cell cell = rootCell.getCell(cellPath);
+      allCachesBuilder.add(
+          DefaultFileHashCache.createDefaultFileHashCache(
+              cell.getFilesystem(), rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
+    }
+
+    // 2. Add the Operating System roots.
+    allCachesBuilder.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
+
+    return new StackedFileHashCache(allCachesBuilder.build());
   }
 
   private Supplier<AndroidPlatformTarget> getExplodingAndroidSupplier() {
     return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
   }
 
+  private List<BuildTarget> fullyQualifiedNameToBuildTarget(Iterable<String> buildTargets) {
+    List<BuildTarget> targets = new ArrayList<>();
+    CellPathResolver distBuildCellPathResolver =
+        args.getState().getRootCell().getCellPathResolver();
+    for (String fullyQualifiedBuildTarget : buildTargets) {
+      BuildTarget target =
+          BuildTargetParser.INSTANCE.parse(
+              fullyQualifiedBuildTarget,
+              BuildTargetPatternParser.fullyQualified(),
+              distBuildCellPathResolver);
+      targets.add(target);
+    }
+
+    return targets;
+  }
+
   private DistBuildTargetGraphCodec createGraphCodec() {
-    DistBuildTypeCoercerFactory typeCoercerFactory =
-        new DistBuildTypeCoercerFactory(args.getObjectMapper());
+    // Note: This is a hack. Do not confuse this hack with the other hack where we 'pre-load' all
+    // files so that file existence checks in TG -> AG transformation pass (which is a bigger bug).
+    // We need this hack in addition to the other one, because some source file dependencies get
+    // shaved off in the versioned target graph, and so they don't get recorded in the distributed
+    // state, and hence they're not pre-loaded. So even when we pre-load the files, we need this
+    // hack so that the coercer does not check for existence of these unrecorded files.
+    TypeCoercerFactory typeCoercerFactory =
+        new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
 
-    DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
-        args.getObjectMapper(),
-        parserTargetNodeFactory,
-        new Function<TargetNode<?, ?>, Map<String, Object>>() {
-          @Nullable
-          @Override
-          public Map<String, Object> apply(TargetNode<?, ?> input) {
-            try {
-              return args.getParser().getRawTargetNode(
-                  args.getBuckEventBus(),
-                  args.getRootCell().getCell(input.getBuildTarget()),
-                      /* enableProfiling */ false,
-                  args.getExecutorService(),
-                  input);
-            } catch (BuildFileParseException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        });
+    DistBuildTargetGraphCodec targetGraphCodec =
+        new DistBuildTargetGraphCodec(
+            parserTargetNodeFactory,
+            new Function<TargetNode<?, ?>, Map<String, Object>>() {
+              @Nullable
+              @Override
+              public Map<String, Object> apply(TargetNode<?, ?> input) {
+                try {
+                  return args.getParser()
+                      .getRawTargetNode(
+                          args.getBuckEventBus(),
+                          args.getRootCell().getCell(input.getBuildTarget()),
+                          /* enableProfiling */ false,
+                          args.getExecutorService(),
+                          input);
+                } catch (BuildFileParseException e) {
+                  throw new RuntimeException(e);
+                }
+              }
+            },
+            new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
 
     return targetGraphCodec;
+  }
+
+  private class LocalBuilderImpl implements LocalBuilder {
+    private final BuckConfig distBuildConfig;
+    private final CachingBuildEngineBuckConfig engineConfig;
+
+    public LocalBuilderImpl() {
+      this.distBuildConfig = args.getRemoteRootCellConfig();
+      this.engineConfig = distBuildConfig.getView(CachingBuildEngineBuckConfig.class);
+    }
+
+    @Override
+    public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
+        throws IOException, InterruptedException {
+      // TODO(ruibm): Fix this to work with Android.
+      MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
+      try (CachingBuildEngine buildEngine =
+              new CachingBuildEngine(
+                  Preconditions.checkNotNull(cachingBuildEngineDelegate),
+                  args.getExecutorService(),
+                  args.getExecutorService(),
+                  new DefaultStepRunner(),
+                  engineConfig.getBuildEngineMode(),
+                  engineConfig.getBuildMetadataStorage(),
+                  engineConfig.getBuildDepFiles(),
+                  engineConfig.getBuildMaxDepFileCacheEntries(),
+                  engineConfig.getBuildArtifactCacheSizeLimit(),
+                  Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+                  args.getBuildInfoStoreManager(),
+                  engineConfig.getResourceAwareSchedulingInfo(),
+                  engineConfig.getConsoleLogBuildRuleFailuresInline(),
+                  RuleKeyFactories.of(
+                      distBuildConfig.getKeySeed(),
+                      cachingBuildEngineDelegate.getFileHashCache(),
+                      actionGraphAndResolver.getResolver(),
+                      engineConfig.getBuildInputRuleKeyFileSizeLimit(),
+                      new DefaultRuleKeyCache<>()));
+          Build build =
+              new Build(
+                  Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+                  args.getRootCell(),
+                  Optional.empty(),
+                  getExplodingAndroidSupplier(),
+                  buildEngine,
+                  args.getArtifactCache(),
+                  distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
+                  args.getConsole(),
+                  /* defaultTestTimeoutMillis */ 1000,
+                  /* isCodeCoverageEnabled */ false,
+                  /* isInclNoLocationClassesEnabled */ false,
+                  /* isDebugEnabled */ false,
+                  /* shouldReportAbsolutePaths */ false,
+                  RuleKeyDiagnosticsMode.NEVER,
+                  args.getBuckEventBus(),
+                  args.getPlatform(),
+                  ImmutableMap.of(),
+                  args.getClock(),
+                  new ConcurrencyLimit(
+                      4,
+                      distBuildConfig.getResourceAllocationFairness(),
+                      4,
+                      distBuildConfig.getDefaultResourceAmounts(),
+                      distBuildConfig.getMaximumResourceAmounts().withCpu(4)),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  new DefaultProcessExecutor(args.getConsole()),
+                  args.getExecutors())) {
+
+        return build.executeAndPrintFailuresToEventBus(
+            fullyQualifiedNameToBuildTarget(targetsToBuild),
+            /* isKeepGoing */ true,
+            args.getBuckEventBus(),
+            args.getConsole(),
+            Optional.empty());
+      }
+    }
+  }
+
+  private static class StackedFileHashCaches {
+    public final StackedFileHashCache remoteStateCache;
+    public final StackedFileHashCache materializingCache;
+
+    private StackedFileHashCaches(
+        StackedFileHashCache remoteStateCache, StackedFileHashCache materializingCache) {
+      this.remoteStateCache = remoteStateCache;
+      this.materializingCache = materializingCache;
+    }
+  }
+
+  private StackedFileHashCaches createStackedFileHashesAndPreload()
+      throws InterruptedException, IOException {
+    StackedFileHashCache stackedFileHashCache = createStackOfDefaultFileHashCache();
+    // Used for rule key computations.
+    StackedFileHashCache remoteStackedFileHashCache =
+        stackedFileHashCache.newDecoratedFileHashCache(
+            cache -> args.getState().createRemoteFileHashCache(cache));
+
+    // Used for the real build.
+    StackedFileHashCache materializingStackedFileHashCache =
+        stackedFileHashCache.newDecoratedFileHashCache(
+            cache -> {
+              try {
+                return args.getState().createMaterializerAndPreload(cache, args.getProvider());
+              } catch (IOException exception) {
+                throw new RuntimeException(
+                    String.format(
+                        "Failed to create the Materializer for file system [%s]",
+                        cache.getFilesystem()),
+                    exception);
+              }
+            });
+
+    return new StackedFileHashCaches(remoteStackedFileHashCache, materializingStackedFileHashCache);
   }
 }

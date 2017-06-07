@@ -22,11 +22,8 @@ import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
 
-/**
- * Base class for events about Java annotation processing.
- */
-public abstract class AnnotationProcessingEvent
-    extends AbstractBuckEvent
+/** Base class for events about Java annotation processing. */
+public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
     implements WorkAdvanceEvent {
 
   public enum Operation {
@@ -85,9 +82,9 @@ public abstract class AnnotationProcessingEvent
   }
 
   public String getCategory() {
-    return annotationProcessorName +
-        "." +
-        CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString());
+    return annotationProcessorName
+        + "."
+        + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString());
   }
 
   public static Started started(

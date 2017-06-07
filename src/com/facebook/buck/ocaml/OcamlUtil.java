@@ -26,48 +26,45 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Utility functions
- */
+/** Utility functions */
 public class OcamlUtil {
-  private OcamlUtil() {
-  }
+  private OcamlUtil() {}
 
   /**
-   * Constructs a Predicate instance which returns true if the input argument ends with
-   * any String in extensions
+   * Constructs a Predicate instance which returns true if the input argument ends with any String
+   * in extensions
    *
    * @param extensions for which to return true
    * @return a Predicate instance
    */
   public static Predicate<? super Path> ext(final String... extensions) {
-    return (Predicate<Path>) input -> {
-      String strInput = input.toString();
-      for (String ext : extensions) {
-        if (strInput.endsWith(ext)) {
-          return true;
-        }
-      }
-      return false;
-    };
+    return (Predicate<Path>)
+        input -> {
+          String strInput = input.toString();
+          for (String ext : extensions) {
+            if (strInput.endsWith(ext)) {
+              return true;
+            }
+          }
+          return false;
+        };
   }
 
   public static Predicate<? super SourcePath> sourcePathExt(
-      final SourcePathResolver resolver,
-      final String... extensions) {
-    return (Predicate<SourcePath>) input -> {
-      String strInput = resolver.getRelativePath(input).toString();
-      for (String ext : extensions) {
-        if (strInput.endsWith(ext)) {
-          return true;
-        }
-      }
-      return false;
-    };
+      final SourcePathResolver resolver, final String... extensions) {
+    return (Predicate<SourcePath>)
+        input -> {
+          String strInput = resolver.getRelativePath(input).toString();
+          for (String ext : extensions) {
+            if (strInput.endsWith(ext)) {
+              return true;
+            }
+          }
+          return false;
+        };
   }
 
   public static ImmutableList<OcamlLibrary> getTransitiveOcamlInput(
@@ -75,24 +72,16 @@ public class OcamlUtil {
 
     final DirectedAcyclicGraph<BuildRule> graph =
         BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-            inputs,
-            OcamlLibrary.class::isInstance,
-            OcamlLibrary.class::isInstance);
+            inputs, OcamlLibrary.class::isInstance, OcamlLibrary.class::isInstance);
 
     final ImmutableList<BuildRule> sorted = TopologicalSort.sort(graph);
 
-    return FluentIterable
-            .from(sorted)
-            .filter(OcamlLibrary.class)
-            .toList();
+    return FluentIterable.from(sorted).filter(OcamlLibrary.class).toList();
   }
 
-
-  static ImmutableSet<Path> getExtensionVariants(
-      Path output,
-      String...extensions) {
+  static ImmutableSet<Path> getExtensionVariants(Path output, String... extensions) {
     String withoutExtension = stripExtension(output.toString());
-    ImmutableSet.Builder<Path> builder =  ImmutableSet.builder();
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     for (String ext : extensions) {
       builder.add(Paths.get(withoutExtension + ext));
     }

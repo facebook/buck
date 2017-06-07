@@ -22,44 +22,35 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class DefaultJavaPackageFinderTest {
 
-  /**
-   * If no paths are specified, then the project root should be considered a Java source root.
-   */
+  /** If no paths are specified, then the project root should be considered a Java source root. */
   @Test
   public void testNoPathsSpecified() {
-    DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.of());
-    assertEquals(
-        Paths.get(""),
-        javaPackageFinder.findJavaPackageFolder(Paths.get("Base.java")));
+    DefaultJavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of());
+    assertEquals(Paths.get(""), javaPackageFinder.findJavaPackageFolder(Paths.get("Base.java")));
     assertEquals(
         Paths.get("java/com/example/base/"),
-        javaPackageFinder.findJavaPackageFolder(
-            Paths.get("java/com/example/base/Base.java")));
+        javaPackageFinder.findJavaPackageFolder(Paths.get("java/com/example/base/Base.java")));
   }
 
   @Test
   public void testSinglePathFromRoot() {
-    DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.of("/java/"));
+    DefaultJavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("/java/"));
     assertEquals(
         Paths.get("com/example/base/"),
-        javaPackageFinder.findJavaPackageFolder(
-            Paths.get("java/com/example/base/Base.java")));
-    assertEquals("com.example.base",
+        javaPackageFinder.findJavaPackageFolder(Paths.get("java/com/example/base/Base.java")));
+    assertEquals(
+        "com.example.base",
         javaPackageFinder.findJavaPackage(Paths.get("java/com/example/base/Base.java")));
     assertEquals(
-        Paths.get(""),
-        javaPackageFinder.findJavaPackageFolder(Paths.get("java/Weird.java")));
-    assertEquals("",
-        javaPackageFinder.findJavaPackage(Paths.get("java/Weird.java")));
+        Paths.get(""), javaPackageFinder.findJavaPackageFolder(Paths.get("java/Weird.java")));
+    assertEquals("", javaPackageFinder.findJavaPackage(Paths.get("java/Weird.java")));
     assertEquals(
         "When there is no match, the project root should be treated as a Java source root.",
         Paths.get("notjava/"),
@@ -72,19 +63,15 @@ public class DefaultJavaPackageFinderTest {
 
   @Test
   public void testOverlappingPathsFromRoot() {
-    DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.of(
-            "/java",
-            "/java/more/specific",
-            "/javatests"));
+    DefaultJavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+            ImmutableList.of("/java", "/java/more/specific", "/javatests"));
     assertEquals(
         Paths.get("com/example/base/"),
-        javaPackageFinder.findJavaPackageFolder(
-            Paths.get("java/com/example/base/Base.java")));
+        javaPackageFinder.findJavaPackageFolder(Paths.get("java/com/example/base/Base.java")));
     assertEquals(
         Paths.get("base/"),
-        javaPackageFinder.findJavaPackageFolder(
-            Paths.get("java/more/specific/base/Base.java")));
+        javaPackageFinder.findJavaPackageFolder(Paths.get("java/more/specific/base/Base.java")));
     assertEquals(
         Paths.get("com/example/base/"),
         javaPackageFinder.findJavaPackageFolder(
@@ -93,8 +80,8 @@ public class DefaultJavaPackageFinderTest {
 
   @Test
   public void testSinglePathElement() {
-    DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.of("src"));
+    DefaultJavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("src"));
     assertEquals(
         Paths.get("com/example/base/"),
         javaPackageFinder.findJavaPackageFolder(
@@ -105,8 +92,7 @@ public class DefaultJavaPackageFinderTest {
         javaPackageFinder.findJavaPackageFolder(
             Paths.get("java/main/src/other/project/src/com/example/base/Base.java")));
     assertEquals(
-        Paths.get(""),
-        javaPackageFinder.findJavaPackageFolder(Paths.get("src/Weird.java")));
+        Paths.get(""), javaPackageFinder.findJavaPackageFolder(Paths.get("src/Weird.java")));
     assertEquals(
         "When there is no match, the project root should be treated as a Java source root.",
         Paths.get("notjava/"),
@@ -115,8 +101,8 @@ public class DefaultJavaPackageFinderTest {
 
   @Test
   public void testMultiplePathElements() {
-    DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.of("src", "src-gen"));
+    DefaultJavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("src", "src-gen"));
     assertEquals(
         Paths.get("com/example/base/"),
         javaPackageFinder.findJavaPackageFolder(
@@ -125,8 +111,8 @@ public class DefaultJavaPackageFinderTest {
 
   @Test
   public void testMixOfPrefixesAndPathElements() {
-    DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.of("/java", "src"));
+    DefaultJavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableList.of("/java", "src"));
     assertEquals(
         "Prefixes take precedence over path elements",
         Paths.get("com/example/base/"),

@@ -27,9 +27,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -38,10 +38,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.annotation.Nullable;
 
-public class WorkerProcess {
+public class WorkerProcess implements Closeable {
 
   private static final Logger LOG = Logger.get(WorkerProcess.class);
 
@@ -52,17 +51,16 @@ public class WorkerProcess {
   private final Path stdErr;
   private final AtomicInteger currentMessageID = new AtomicInteger();
   private boolean handshakePerformed = false;
-  @Nullable
-  private WorkerProcessProtocol protocol;
-  @Nullable
-  private ProcessExecutor.LaunchedProcess launchedProcess;
+  @Nullable private WorkerProcessProtocol protocol;
+  @Nullable private ProcessExecutor.LaunchedProcess launchedProcess;
 
   /**
-   * Worker process is a process that stays alive and receives commands which describe jobs.
-   * Worker processes may be combined into pools so they can perform different jobs concurrently.
-   * It communicates via JSON stream and via files.
-   * Submitted job blocks the calling thread until it receives the result back.
-   * Worker process must understand the protocol that Buck will use to communicate with it.
+   * Worker process is a process that stays alive and receives commands which describe jobs. Worker
+   * processes may be combined into pools so they can perform different jobs concurrently. It
+   * communicates via JSON stream and via files. Submitted job blocks the calling thread until it
+   * receives the result back. Worker process must understand the protocol that Buck will use to
+   * communicate with it.
+   *
    * @param executor Process executor that will start worker process.
    * @param processParams Arguments for process executor.
    * @param filesystem File system for the worker process.
@@ -73,33 +71,43 @@ public class WorkerProcess {
       ProcessExecutor executor,
       ProcessExecutorParams processParams,
       ProjectFilesystem filesystem,
-      Path tmpPath) throws IOException {
+      Path tmpPath)
+      throws IOException {
     this.executor = executor;
     this.stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
-    this.processParams = processParams.withRedirectError(
-        ProcessBuilder.Redirect.to(stdErr.toFile()));
+    this.processParams =
+        processParams.withRedirectError(ProcessBuilder.Redirect.to(stdErr.toFile()));
     this.filesystem = filesystem;
     this.tmpPath = tmpPath;
+  }
+
+  public boolean isAlive() {
+    return launchedProcess != null && launchedProcess.isAlive();
   }
 
   public synchronized void ensureLaunchAndHandshake() throws IOException {
     if (handshakePerformed) {
       return;
     }
-    LOG.debug("Starting up process %d using command: \'%s\'",
-        this.hashCode(),
-        Joiner.on(' ').join(processParams.getCommand()));
+    LOG.debug(
+        "Starting up process %d using command: \'%s\'",
+        this.hashCode(), Joiner.on(' ').join(processParams.getCommand()));
     launchedProcess = executor.launchProcess(processParams);
-    JsonWriter processStdinWriter = new JsonWriter(
-        new BufferedWriter(new OutputStreamWriter(launchedProcess.getOutputStream())));
-    JsonReader processStdoutReader = new JsonReader(
-        new BufferedReader(new InputStreamReader(launchedProcess.getInputStream())));
-    protocol = new WorkerProcessProtocolZero(
-        executor,
-        launchedProcess,
-        processStdinWriter,
-        processStdoutReader,
-        stdErr);
+    JsonWriter processStdinWriter =
+        new JsonWriter(
+            new BufferedWriter(new OutputStreamWriter(launchedProcess.getOutputStream())));
+    JsonReader processStdoutReader =
+        new JsonReader(new BufferedReader(new InputStreamReader(launchedProcess.getInputStream())));
+    protocol =
+        new WorkerProcessProtocolZero(
+            processStdinWriter,
+            processStdoutReader,
+            stdErr,
+            () -> {
+              if (launchedProcess != null) {
+                executor.destroyLaunchedProcess(launchedProcess);
+              }
+            });
 
     int messageID = currentMessageID.getAndAdd(1);
     LOG.debug("Sending handshake to process %d", this.hashCode());
@@ -115,43 +123,32 @@ public class WorkerProcess {
         "Tried to submit a job to the worker process before the handshake was performed.");
 
     int messageID = currentMessageID.getAndAdd(1);
-    Path argsPath = Paths.get(
-        tmpPath.toString(),
-        String.format("%d.args", messageID));
-    Path stdoutPath = Paths.get(
-        tmpPath.toString(),
-        String.format("%d.out", messageID));
-    Path stderrPath = Paths.get(
-        tmpPath.toString(),
-        String.format("%d.err", messageID));
+    Path argsPath = Paths.get(tmpPath.toString(), String.format("%d.args", messageID));
+    Path stdoutPath = Paths.get(tmpPath.toString(), String.format("%d.out", messageID));
+    Path stderrPath = Paths.get(tmpPath.toString(), String.format("%d.err", messageID));
+    filesystem.deleteFileAtPathIfExists(stdoutPath);
+    filesystem.deleteFileAtPathIfExists(stderrPath);
     filesystem.writeContentsToPath(jobArgs, argsPath);
 
-    LOG.debug("Sending job %d to process %d \n" +
-        " job arguments: \'%s\'",
-        messageID,
-        this.hashCode(),
-        jobArgs);
+    LOG.debug(
+        "Sending job %d to process %d \n" + " job arguments: \'%s\'",
+        messageID, this.hashCode(), jobArgs);
     protocol.sendCommand(messageID, WorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
-    LOG.debug("Receiving response for job %d from process %d",
-        messageID,
-        this.hashCode());
+    LOG.debug("Receiving response for job %d from process %d", messageID, this.hashCode());
     int exitCode = protocol.receiveCommandResponse(messageID);
     Optional<String> stdout = filesystem.readFileIfItExists(stdoutPath);
     Optional<String> stderr = filesystem.readFileIfItExists(stderrPath);
     LOG.debug(
-        "Job %d for process %d finished \n" +
-            "  exit code: %d \n" +
-            "  stdout: %s \n" +
-            "  stderr: %s",
-        messageID,
-        this.hashCode(),
-        exitCode,
-        stdout.orElse(""),
-        stderr.orElse(""));
+        "Job %d for process %d finished \n"
+            + "  exit code: %d \n"
+            + "  stdout: %s \n"
+            + "  stderr: %s",
+        messageID, this.hashCode(), exitCode, stdout.orElse(""), stderr.orElse(""));
 
     return WorkerJobResult.of(exitCode, stdout, stderr);
   }
 
+  @Override
   public void close() {
     LOG.debug("Closing process %d", this.hashCode());
     try {
@@ -160,18 +157,23 @@ public class WorkerProcess {
       }
       Files.deleteIfExists(stdErr);
     } catch (Exception e) {
-      LOG.debug(e, "Error closing worker process %s.", this.hashCode());
+      LOG.debug(e, "Error closing worker process %s.", processParams.getCommand());
 
       LOG.debug("Worker process stderr at %s", this.stdErr.toString());
 
-      String workerStderr = MoreStrings
-          .truncatePretty(filesystem.readFileIfItExists(this.stdErr).orElse(""))
-          .trim()
-          .replace("\n", "\nstderr: ");
-      LOG.error("stderr: %s", workerStderr);
+      try {
+        String workerStderr =
+            MoreStrings.truncatePretty(filesystem.readFileIfItExists(this.stdErr).orElse(""))
+                .trim()
+                .replace("\n", "\nstderr: ");
+        LOG.error("stderr: %s", workerStderr);
+      } catch (Throwable t) {
+        LOG.error(t, "Couldn't read stderr on failing close!");
+      }
 
-      throw new HumanReadableException(e,
-          "Error while trying to close the process %s at the end of the build.",
+      throw new HumanReadableException(
+          e,
+          "Error while trying to close the worker process %s.",
           Joiner.on(' ').join(processParams.getCommand()));
     }
   }

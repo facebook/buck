@@ -24,9 +24,7 @@ import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 
-/**
- * Run buck uninstall command.
- */
+/** Run buck uninstall command. */
 public class BuckUninstallAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck uninstall";
@@ -50,10 +48,8 @@ public class BuckUninstallAction extends BuckBaseAction {
     }
 
     // Initiate a buck uninstall
-    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
-        project,
-        project.getBaseDir(),
-        BuckCommand.UNINSTALL);
+    BuckBuildCommandHandler handler =
+        new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.UNINSTALL);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

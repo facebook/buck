@@ -19,9 +19,7 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Function;
-
 import org.junit.Test;
-
 
 @SuppressWarnings("PMD.PrematureDeclaration")
 public class EitherTest {
@@ -30,11 +28,11 @@ public class EitherTest {
     BuildTarget expected = BuildTargetFactory.newInstance("//:cake");
     Either<String, Object> either = Either.ofLeft(expected.toString());
 
-    Function<String, BuildTarget> workingTransformer =
-        BuildTargetFactory::newInstance;
-    Function<Object, BuildTarget> failingTransformer = input -> {
-      throw new RuntimeException("Did not expect to be called");
-    };
+    Function<String, BuildTarget> workingTransformer = BuildTargetFactory::newInstance;
+    Function<Object, BuildTarget> failingTransformer =
+        input -> {
+          throw new RuntimeException("Did not expect to be called");
+        };
 
     BuildTarget actual = either.transform(workingTransformer, failingTransformer);
 
@@ -46,11 +44,11 @@ public class EitherTest {
     BuildTarget expected = BuildTargetFactory.newInstance("//:cake");
     Either<Object, String> either = Either.ofRight(expected.toString());
 
-    Function<String, BuildTarget> workingTransformer =
-        BuildTargetFactory::newInstance;
-    Function<Object, BuildTarget> failingTransformer = input -> {
-      throw new RuntimeException("Did not expect to be called");
-    };
+    Function<String, BuildTarget> workingTransformer = BuildTargetFactory::newInstance;
+    Function<Object, BuildTarget> failingTransformer =
+        input -> {
+          throw new RuntimeException("Did not expect to be called");
+        };
 
     BuildTarget actual = either.transform(failingTransformer, workingTransformer);
 

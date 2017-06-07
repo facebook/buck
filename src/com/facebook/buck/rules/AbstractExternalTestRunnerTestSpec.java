@@ -28,26 +28,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 /**
  * A JSON-serializable structure that gets passed to external test runners.
  *
- * NOTE: We're relying on the fact we're using POJOs here and that all the sub-types are
- * JSON-serializable already.  Be careful that we don't break serialization when adding item
- * here.
+ * <p>NOTE: We're relying on the fact we're using POJOs here and that all the sub-types are
+ * JSON-serializable already. Be careful that we don't break serialization when adding item here.
  */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
 
-  /**
-   * @return the build target of this rule.
-   */
+  /** @return the build target of this rule. */
   public abstract BuildTarget getTarget();
 
   /**
@@ -56,37 +51,32 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
    */
   public abstract String getType();
 
-  /**
-   * @return the command the external test runner must invoke to run the test.
-   */
-
+  /** @return the command the external test runner must invoke to run the test. */
   public abstract ImmutableList<String> getCommand();
 
   /**
-   * @return coverage threshold and list of source path to be passed the test
-   * command for test coverage.
+   * @return coverage threshold and list of source path to be passed the test command for test
+   *     coverage.
    */
   public abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
 
   /**
-   * @return environment variables the external test runner should provide for the test command.
+   * @return a list of source path to be passed the test command for calculating additional test
+   *     coverage.
    */
+  public abstract ImmutableSet<Path> getAdditionalCoverageTargets();
+
+  /** @return environment variables the external test runner should provide for the test command. */
   public abstract ImmutableMap<String, String> getEnv();
 
-  /**
-   * @return test labels.
-   */
-  public abstract ImmutableList<Label> getLabels();
+  /** @return test labels. */
+  public abstract ImmutableList<String> getLabels();
 
-  /**
-   * @return test contacts.
-   */
+  /** @return test contacts. */
   public abstract ImmutableList<String> getContacts();
 
   @Override
-  public void serialize(
-      JsonGenerator jsonGenerator,
-      SerializerProvider serializerProvider)
+  public void serialize(JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
       throws IOException {
     jsonGenerator.writeStartObject();
     jsonGenerator.writeStringField("target", getTarget().toString());
@@ -94,17 +84,17 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
     jsonGenerator.writeObjectField("command", getCommand());
     jsonGenerator.writeObjectField("env", getEnv());
     if (!getNeededCoverage().isEmpty()) {
-        jsonGenerator.writeObjectField(
-                "needed_coverage",
-                Iterables.transform(
-                    getNeededCoverage(),
-                    input -> ImmutableList.of(input.getFirst(), input.getSecond())));
+      jsonGenerator.writeObjectField(
+          "needed_coverage",
+          Iterables.transform(
+              getNeededCoverage(), input -> ImmutableList.of(input.getFirst(), input.getSecond())));
+    }
+    if (!getAdditionalCoverageTargets().isEmpty()) {
+      jsonGenerator.writeObjectField("additional_coverage_targets", getAdditionalCoverageTargets());
     }
     jsonGenerator.writeObjectField(
         "labels",
-        getLabels().stream()
-            .map(Object::toString)
-            .collect(MoreCollectors.toImmutableList()));
+        getLabels().stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
     jsonGenerator.writeObjectField("contacts", getContacts());
     jsonGenerator.writeEndObject();
   }
@@ -117,5 +107,4 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
       throws IOException {
     serialize(jsonGenerator, serializerProvider);
   }
-
 }

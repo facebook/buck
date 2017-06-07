@@ -22,10 +22,6 @@ public class PrintStreamProcessExecutorFactory implements ProcessExecutorFactory
   @Override
   public ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
     return new DefaultProcessExecutor(
-        new Console(
-            Verbosity.SILENT,
-            stdout,
-            stderr,
-            Ansi.withoutTty()));
+        new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty()));
   }
 }

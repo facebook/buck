@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -51,6 +50,8 @@ import java.util.Optional;
 public class DirArtifactCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(DirArtifactCache.class);
+
+  private static final ArtifactCacheMode CACHE_MODE = ArtifactCacheMode.dir;
   // Ratio of bytes stored to max size that expresses how many bytes need to be stored after we
   // attempt to delete old files.
   private static final float STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER = 0.5f;
@@ -62,21 +63,21 @@ public class DirArtifactCache implements ArtifactCache {
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
-  private final boolean doStore;
+  private final CacheReadMode cacheMode;
   private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
       String name,
       ProjectFilesystem filesystem,
       Path cacheDir,
-      boolean doStore,
+      CacheReadMode cacheMode,
       Optional<Long> maxCacheSizeBytes)
       throws IOException {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
-    this.doStore = doStore;
+    this.cacheMode = cacheMode;
     this.bytesSinceLastDeleteOldFiles = 0L;
 
     // Check first, as mkdirs will fail if the path is a symlink.
@@ -92,9 +93,9 @@ public class DirArtifactCache implements ArtifactCache {
       // First, build up the metadata from the metadata file.
       ImmutableMap.Builder<String, String> metadata = ImmutableMap.builder();
       try (DataInputStream in =
-               new DataInputStream(
-                   filesystem.newFileInputStream(
-                       getPathForRuleKey(ruleKey, Optional.of(".metadata"))))) {
+          new DataInputStream(
+              filesystem.newFileInputStream(
+                  getPathForRuleKey(ruleKey, Optional.of(".metadata"))))) {
         int sz = in.readInt();
         for (int i = 0; i < sz; i++) {
           String key = in.readUTF();
@@ -108,32 +109,27 @@ public class DirArtifactCache implements ArtifactCache {
       // Now copy the artifact out.
       filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.empty()), output.get());
 
-      result = CacheResult.hit(name, metadata.build(), filesystem.getFileSize(output.get()));
+      result =
+          CacheResult.hit(name, CACHE_MODE, metadata.build(), filesystem.getFileSize(output.get()));
     } catch (NoSuchFileException e) {
       result = CacheResult.miss();
     } catch (IOException e) {
-      LOG.warn(
-          e,
-          "Artifact fetch(%s, %s) error",
-          ruleKey,
-          output);
-      result = CacheResult.error(name, String.format("%s: %s", e.getClass(), e.getMessage()));
+      LOG.warn(e, "Artifact fetch(%s, %s) error", ruleKey, output);
+      result =
+          CacheResult.error(
+              name, CACHE_MODE, String.format("%s: %s", e.getClass(), e.getMessage()));
     }
 
-    LOG.debug(
+    LOG.verbose(
         "Artifact fetch(%s, %s) cache %s",
-        ruleKey,
-        output,
-        (result.getType().isSuccess() ? "hit" : "miss"));
+        ruleKey, output, (result.getType().isSuccess() ? "hit" : "miss"));
     return result;
   }
 
   @Override
-  public ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output) {
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
 
-    if (!doStore) {
+    if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
 
@@ -184,16 +180,12 @@ public class DirArtifactCache implements ArtifactCache {
       }
 
     } catch (IOException e) {
-      LOG.warn(
-          e,
-          "Artifact store(%s, %s) error",
-          info.getRuleKeys(),
-          output);
+      LOG.warn(e, "Artifact store(%s, %s) error", info.getRuleKeys(), output);
     }
 
-    if (maxCacheSizeBytes.isPresent() &&
-        bytesSinceLastDeleteOldFiles >
-            (maxCacheSizeBytes.get() * STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER)) {
+    if (maxCacheSizeBytes.isPresent()
+        && bytesSinceLastDeleteOldFiles
+            > (maxCacheSizeBytes.get() * STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER)) {
       bytesSinceLastDeleteOldFiles = 0L;
       deleteOldFiles();
     }
@@ -251,12 +243,9 @@ public class DirArtifactCache implements ArtifactCache {
     }
   }
 
-  /**
-   * @return {@code true}: storing artifacts is always supported by this class.
-   */
   @Override
-  public boolean isStoreSupported() {
-    return doStore;
+  public CacheReadMode getCacheReadMode() {
+    return cacheMode;
   }
 
   @Override
@@ -267,9 +256,7 @@ public class DirArtifactCache implements ArtifactCache {
     }
   }
 
-  /**
-   * Deletes files that haven't been accessed recently from the directory cache.
-   */
+  /** Deletes files that haven't been accessed recently from the directory cache. */
   @VisibleForTesting
   void deleteOldFiles() {
     if (!maxCacheSizeBytes.isPresent()) {
@@ -278,51 +265,57 @@ public class DirArtifactCache implements ArtifactCache {
 
     Path cacheDirInFs = filesystem.resolve(cacheDir);
     try {
-      newDirectoryCleaner().clean(cacheDirInFs);
+      synchronized (this) {
+        newDirectoryCleaner().clean(cacheDirInFs);
+      }
     } catch (IOException e) {
       LOG.error(e, "Failed to clean path [%s].", cacheDirInFs);
     }
   }
 
   @VisibleForTesting
-  List<Path> getAllFilesInCache() throws IOException {
+  List<Path> getAllFilesInCache() {
     final List<Path> allFiles = new ArrayList<>();
-    Files.walkFileTree(
-        filesystem.resolve(cacheDir),
-        ImmutableSet.of(),
-        Integer.MAX_VALUE,
-        new SimpleFileVisitor<Path>() {
+    final Path tempFolderPath = getPathToTempFolder();
+    try {
+      Files.walkFileTree(
+          filesystem.resolve(cacheDir),
+          ImmutableSet.of(),
+          Integer.MAX_VALUE,
+          new SimpleFileVisitor<Path>() {
 
-          @Override
-          public FileVisitResult preVisitDirectory(
-              Path dir, BasicFileAttributes attrs) throws IOException {
-            // do not work with files in temp folder as they will be moved later
-            if (dir.equals(getPathToTempFolder())) {
-              return FileVisitResult.SKIP_SUBTREE;
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                throws IOException {
+              // do not work with files in temp folder as they will be moved later
+              if (dir.equals(tempFolderPath)) {
+                return FileVisitResult.SKIP_SUBTREE;
+              }
+              return super.preVisitDirectory(dir, attrs);
             }
-            return super.preVisitDirectory(dir, attrs);
-          }
 
-          @Override
-          public FileVisitResult visitFile(
-              Path file,
-              BasicFileAttributes attrs) throws IOException {
-            allFiles.add(file);
-            return super.visitFile(file, attrs);
-          }
-        });
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              allFiles.add(file);
+              return super.visitFile(file, attrs);
+            }
+          });
+    } catch (IOException e) {
+      LOG.error(e, "Error getting a list of files in %s", tempFolderPath);
+    }
 
     return allFiles;
   }
 
   private DirectoryCleaner newDirectoryCleaner() {
-    DirectoryCleanerArgs cleanerArgs = DirectoryCleanerArgs.builder()
-        .setPathSelector(
-            getDirectoryCleanerPathSelector())
-        .setMaxTotalSizeBytes(maxCacheSizeBytes.get())
-        .setMaxBytesAfterDeletion((long) (maxCacheSizeBytes.get() * MAX_BYTES_TRIM_RATIO))
-        .setMinAmountOfEntriesToKeep(0)
-        .build();
+    DirectoryCleanerArgs cleanerArgs =
+        DirectoryCleanerArgs.builder()
+            .setPathSelector(getDirectoryCleanerPathSelector())
+            .setMaxTotalSizeBytes(maxCacheSizeBytes.get())
+            .setMaxBytesAfterDeletion((long) (maxCacheSizeBytes.get() * MAX_BYTES_TRIM_RATIO))
+            .setMinAmountOfEntriesToKeep(0)
+            .build();
 
     return new DirectoryCleaner(cleanerArgs);
   }
@@ -336,14 +329,17 @@ public class DirArtifactCache implements ArtifactCache {
       }
 
       @Override
-      public int comparePaths(
-          DirectoryCleaner.PathStats path1,
-          DirectoryCleaner.PathStats path2) {
+      public int comparePaths(DirectoryCleaner.PathStats path1, DirectoryCleaner.PathStats path2) {
         return ComparisonChain.start()
             .compare(path1.getLastAccessMillis(), path2.getLastAccessMillis())
             .compare(path1.getCreationMillis(), path2.getCreationMillis())
             .result();
       }
     };
+  }
+
+  @VisibleForTesting
+  Path getCacheDir() {
+    return cacheDir;
   }
 }

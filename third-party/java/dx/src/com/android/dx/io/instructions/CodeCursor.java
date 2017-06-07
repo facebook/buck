@@ -31,7 +31,7 @@ public interface CodeCursor {
     /**
      * Gets the base address associated with the current cursor. This
      * differs from the cursor value when explicitly set (by {@link
-     * #setBaseAddress). This is used, in particular, to convey base
+     * #setBaseAddress}). This is used, in particular, to convey base
      * addresses to switch data payload instructions, whose relative
      * addresses are relative to the address of a dependant switch
      * instruction.

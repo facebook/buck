@@ -1,20 +1,20 @@
 python_library(
-  name = 'pathlib',
-  srcs = [
-    'pathlib.py',
-  ],
-  base_module = '',
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "pathlib",
+    srcs = [
+        "pathlib.py",
+    ],
+    base_module = "",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 export_file(
-  name = 'pathlib.py',
-  visibility=[
-    'PUBLIC',
-  ],
+    name = "pathlib.py",
+    visibility = [
+        "PUBLIC",
+    ],
 )

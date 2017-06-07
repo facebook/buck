@@ -17,7 +17,6 @@
 package com.facebook.buck.intellij.ideabuck.lang;
 
 import com.intellij.lexer.FlexAdapter;
-
 import java.io.Reader;
 
 public class BuckLexerAdapter extends FlexAdapter {

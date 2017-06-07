@@ -25,9 +25,25 @@ struct ArtifactMetadata {
   2: optional map<string, string> metadata;
   3: optional string buildTarget;
   4: optional string repository;
-  5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
+  // 5: DEPRECATED
   6: optional string scheduleType;
   7: optional string artifactPayloadMd5;
+  8: optional bool distributedBuildModeEnabled;
+}
+
+struct FetchDebugInfo {
+  // All stores used to look up the artifact.
+  1: optional list<string> storesLookedUp;
+
+  // 2: DEPRECATED.
+
+  // Fastest store to return a cache hit.
+  3: optional string fastestCacheHitStore;
+}
+
+struct StoreDebugInfo {
+  // All stores used in the write.
+  1: optional list<string> storesWrittenInto;
 }
 
 struct BuckCacheStoreRequest {
@@ -39,17 +55,20 @@ struct BuckCacheStoreRequest {
 }
 
 struct BuckCacheStoreResponse {
+  1: optional StoreDebugInfo debugInfo;
 }
 
 struct BuckCacheFetchRequest {
   1: optional RuleKey ruleKey;
   2: optional string repository;
   3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
 }
 
 struct BuckCacheFetchResponse {
   1: optional bool artifactExists;
   2: optional ArtifactMetadata metadata;
+  3: optional FetchDebugInfo debugInfo;
 
   // If this field is not present then the payload is passed via a different
   // out of band method.

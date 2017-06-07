@@ -17,9 +17,8 @@
 package com.facebook.buck.slb;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
 import java.net.URI;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -42,12 +41,13 @@ public class ServerHealthState {
         maxSamplesStored);
     this.maxSamplesStored = maxSamplesStored;
     this.server = server;
-    this.pingLatencies = Lists.newLinkedList();
-    this.requests = Lists.newLinkedList();
+    this.pingLatencies = new LinkedList<>();
+    this.requests = new LinkedList<>();
   }
 
   /**
    * NOTE: Assumes nowMillis is roughly non-decreasing in consecutive calls.
+   *
    * @param nowMillis
    * @param latencyMillis
    */
@@ -60,6 +60,7 @@ public class ServerHealthState {
 
   /**
    * NOTE: Assumes nowMillis is roughly non-decreasing in consecutive calls.
+   *
    * @param nowMillis
    */
   public void reportRequestSuccess(long nowMillis) {
@@ -68,6 +69,7 @@ public class ServerHealthState {
 
   /**
    * NOTE: Assumes nowMillis is roughly non-decreasing in consecutive calls.
+   *
    * @param nowMillis
    */
   public void reportRequestError(long nowMillis) {
@@ -103,7 +105,6 @@ public class ServerHealthState {
   /**
    * @param nowMillis Current timestamp.
    * @param timeRangeMillis Time range for 'nowMillis' to compute the errorPercentage for.
-   *
    * @return Value in the interval [0.0, 1.0].
    */
   public float getErrorPercentage(long nowMillis, int timeRangeMillis) {
@@ -111,7 +112,7 @@ public class ServerHealthState {
     int requestCount = 0;
     long initialMillis = nowMillis - timeRangeMillis;
     synchronized (requests) {
-      ListIterator<RequestSample> iterator =  requests.listIterator(requests.size());
+      ListIterator<RequestSample> iterator = requests.listIterator(requests.size());
       while (iterator.hasPrevious()) {
         RequestSample sample = iterator.previous();
         long requestMillis = sample.getEpochMillis();
@@ -144,8 +145,7 @@ public class ServerHealthState {
       ListIterator<LatencySample> iterator = pingLatencies.listIterator(pingLatencies.size());
       while (iterator.hasPrevious()) {
         LatencySample sample = iterator.previous();
-        if (sample.getEpochMillis() >= initialMillis &&
-            sample.getEpochMillis() <= nowMillis) {
+        if (sample.getEpochMillis() >= initialMillis && sample.getEpochMillis() <= nowMillis) {
           sum += sample.getLatencyMillis();
           ++count;
         }
@@ -160,11 +160,14 @@ public class ServerHealthState {
   }
 
   public String toString(long nowMillis, int timeRangeMillis) {
-    return "ServerHealthState{" +
-        "server=" + server +
-        ", latencyMillis=" + getPingLatencyMillis(nowMillis, timeRangeMillis) +
-        ", errorCount=" + getErrorPercentage(nowMillis, timeRangeMillis) +
-        '}';
+    return "ServerHealthState{"
+        + "server="
+        + server
+        + ", latencyMillis="
+        + getPingLatencyMillis(nowMillis, timeRangeMillis)
+        + ", errorCount="
+        + getErrorPercentage(nowMillis, timeRangeMillis)
+        + '}';
   }
 
   private static final class RequestSample {

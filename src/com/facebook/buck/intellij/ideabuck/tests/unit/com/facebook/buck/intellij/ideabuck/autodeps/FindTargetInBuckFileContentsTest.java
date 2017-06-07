@@ -16,25 +16,17 @@
 
 package com.facebook.buck.intellij.ideabuck.autodeps;
 
+import static com.facebook.buck.intellij.ideabuck.test.TestUtil.buckFile;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
-
-import static com.facebook.buck.intellij.ideabuck.test.TestUtil.buckFile;
 
 import org.junit.Test;
 
 public class FindTargetInBuckFileContentsTest {
   @Test
   public void canFindTarget() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile("# Comment", "rule(", "\tname = 'foo',", "\tdeps = [", "\t\t'/this',", "\t]", ")");
     int expected[] = {14, 56};
     int actual[] = BuckDeps.findTargetInBuckFileContents(buckInput, "foo");
     assertArrayEquals(expected, actual);
@@ -42,27 +34,27 @@ public class FindTargetInBuckFileContentsTest {
 
   @Test
   public void canFindTargetInMiddleOfFile() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")",
-        "rule(",
-        "\tname = 'bar',",
-        "\tdeps = [",
-        "\t\t'/that',",
-        "\t]",
-        ")",
-        "rule(",
-        "\tname = 'baz',",
-        "\tdeps = [",
-        "\t\t'/other',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tdeps = [",
+            "\t\t'/this',",
+            "\t]",
+            ")",
+            "rule(",
+            "\tname = 'bar',",
+            "\tdeps = [",
+            "\t\t'/that',",
+            "\t]",
+            ")",
+            "rule(",
+            "\tname = 'baz',",
+            "\tdeps = [",
+            "\t\t'/other',",
+            "\t]",
+            ")");
     int expected[] = {61, 103};
     int actual[] = BuckDeps.findTargetInBuckFileContents(buckInput, "bar");
     assertArrayEquals(expected, actual);
@@ -70,27 +62,27 @@ public class FindTargetInBuckFileContentsTest {
 
   @Test
   public void returnsNullWhenTargetMissing() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tdeps = [",
-        "\t\t'/this',",
-        "\t]",
-        ")",
-        "rule(",
-        "\tname = 'bar',",
-        "\tdeps = [",
-        "\t\t'/that',",
-        "\t]",
-        ")",
-        "rule(",
-        "\tname = 'baz',",
-        "\tdeps = [",
-        "\t\t'/other',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tdeps = [",
+            "\t\t'/this',",
+            "\t]",
+            ")",
+            "rule(",
+            "\tname = 'bar',",
+            "\tdeps = [",
+            "\t\t'/that',",
+            "\t]",
+            ")",
+            "rule(",
+            "\tname = 'baz',",
+            "\tdeps = [",
+            "\t\t'/other',",
+            "\t]",
+            ")");
     assertNull(BuckDeps.findTargetInBuckFileContents(buckInput, "qux"));
   }
 }

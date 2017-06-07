@@ -1,0 +1,684 @@
+﻿<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+The license above applies to this Apache Xalan release of:
+  Xalan-Java 2 - XSLT Processor
+  Xalan-Java 2 - Serializer
+  
+The license above also applies to the jar files
+xalan.jar and xsltc.jar - Xalan-Java 2 - XSLT Processor from 
+Source: http://xalan.apache.org/
+  
+The license above also applies to the jar file
+serializer.jar - Xalan-Java 2 - Serializer
+Source:  http://xalan.apache.org/
+Used by: Xalan-Java 2 and Xerces-Java 2
+
+The license above also applies to the jar file
+xercesImpl.jar - Xerces-Java 2 XML Parser.
+Source:	  http://xerces.apache.org/
+Used by:  Xalan-Java 2
+
+The license above also applies to the jar file
+xml-apis.jar - Xerces-Java 2 XML Parser.
+Source:   http://xerces.apache.org/
+Used by:  Xalan-Java 2 and release copy of Xerces-Java 2
+
+
+
+
+
+
+
+
+The following license applies to the included files:
+  tools/ant.jar
+  tools/antRun
+  tools/antRun.bat
+Source:	 http://ant.apache.org/
+Used By: Xalan's build process: java/build.xml and test/build.xml
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+/*
+ * ============================================================================
+ *                   The Apache Software License, Version 1.1
+ * ============================================================================
+ * 
+ *    Copyright (C) 1999 The Apache Software Foundation. All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modifica-
+ * tion, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of  source code must  retain the above copyright  notice,
+ *    this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. The end-user documentation included with the redistribution, if any, must
+ *    include  the following  acknowledgment:  "This product includes  software
+ *    developed  by the  Apache Software Foundation  (http://www.apache.org/)."
+ *    Alternately, this  acknowledgment may  appear in the software itself,  if
+ *    and wherever such third-party acknowledgments normally appear.
+ * 
+ * 4. The names "Ant" and  "Apache Software Foundation"  must not be used to
+ *    endorse  or promote  products derived  from this  software without  prior
+ *    written permission. For written permission, please contact
+ *    apache@apache.org.
+ * 
+ * 5. Products  derived from this software may not  be called "Apache", nor may
+ *    "Apache" appear  in their name,  without prior written permission  of the
+ *    Apache Software Foundation.
+ * 
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS  FOR A PARTICULAR  PURPOSE ARE  DISCLAIMED.  IN NO  EVENT SHALL  THE
+ * APACHE SOFTWARE  FOUNDATION  OR ITS CONTRIBUTORS  BE LIABLE FOR  ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL,  EXEMPLARY, OR CONSEQUENTIAL  DAMAGES (INCLU-
+ * DING, BUT NOT LIMITED TO, PROCUREMENT  OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR  PROFITS; OR BUSINESS  INTERRUPTION)  HOWEVER CAUSED AND ON
+ * ANY  THEORY OF LIABILITY,  WHETHER  IN CONTRACT,  STRICT LIABILITY,  OR TORT
+ * (INCLUDING  NEGLIGENCE OR  OTHERWISE) ARISING IN  ANY WAY OUT OF THE  USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * This software  consists of voluntary contributions made  by many individuals
+ * on behalf of the  Apache Software Foundation.  For more  information  on the 
+ * Apache Software Foundation, please see <http://www.apache.org/>.
+ *
+ */
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license, Apache Software License, Version 1.1,
+applies to the included BCEL.jar from Apache Jakarta
+(Byte Code Engineering Library).
+Source:  http://jakarta.apache.org/bcel
+Used By: XSLTC component of xml-xalan/java
+
+The following license, Apache Software License, Version 1.1, 
+also applies to the included regexp.jar,
+jakarta-regexp-1.2.jar from Apache Jakarta.
+Source:  http://jakarta.apache.org/regexp
+Used By: BCEL.jar which is used by XSLTC component of xml-xalan/java
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+/*
+ *
+ * Copyright (c) 2001 The Apache Software Foundation.  All rights
+ * reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Apache" and "Apache Software Foundation" and 
+ *    "Apache BCEL" must not be used to endorse or promote products 
+ *    derived from this software without prior written permission. For 
+ *    written permission, please contact apache@apache.org.
+ *
+ * 5. Products derived from this software may not be called "Apache",
+ *    "Apache BCEL", nor may "Apache" appear in their name, without 
+ *    prior written permission of the Apache Software Foundation.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of the Apache Software Foundation.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
+ */
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license applies to the DOM documentation
+for the org.w3c.dom.* packages:
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+W3C® DOCUMENT LICENSE
+http://www.w3.org/Consortium/Legal/2002/copyright-documents-20021231
+Public documents on the W3C site are provided by the copyright holders 
+under the following license. By using and/or copying this document, 
+or the W3C document from which this statement is linked, you (the licensee) 
+agree that you have read, understood, and will comply with the following 
+terms and conditions:
+
+Permission to copy, and distribute the contents of this document, or the 
+W3C document from which this statement is linked, in any medium for any 
+purpose and without fee or royalty is hereby granted, provided that you include 
+the following on ALL copies of the document, or portions thereof, that you use:
+
+1. A link or URL to the original W3C document. 
+2. The pre-existing copyright notice of the original author, or if it 
+   doesn't exist, a notice (hypertext is preferred, but a textual representation
+    is permitted) of the form: "Copyright © [$date-of-document] World Wide Web
+    Consortium, (Massachusetts Institute of Technology, European Research
+    Consortium for Informatics and Mathematics, Keio University). All Rights 
+    Reserved. http://www.w3.org/Consortium/Legal/2002/copyright-documents-20021231" 
+3. If it exists, the STATUS of the W3C document. 
+
+When space permits, inclusion of the full text of this NOTICE should be provided. 
+We request that authorship attribution be provided in any software, documents, 
+or other items or products that you create pursuant to the implementation of the
+contents of this document, or any portion thereof.
+
+No right to create modifications or derivatives of W3C documents is granted pursuant
+to this license. However, if additional requirements (documented in the Copyright FAQ)
+are satisfied, the right to create modifications or derivatives is sometimes granted
+by the W3C to individuals complying with those requirements.
+
+THIS DOCUMENT IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS
+OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR TITLE;
+THAT THE CONTENTS OF THE DOCUMENT ARE SUITABLE FOR ANY PURPOSE; NOR THAT THE
+IMPLEMENTATION OF SUCH CONTENTS WILL NOT INFRINGE ANY THIRD PARTY PATENTS,
+COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS.
+
+COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
+CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE DOCUMENT OR THE PERFORMANCE
+OR IMPLEMENTATION OF THE CONTENTS THEREOF.
+
+The name and trademarks of copyright holders may NOT be used in advertising
+or publicity pertaining to this document or its contents without specific,
+written prior permission. Title to copyright in this document will at all
+times remain with copyright holders.
+
+
+----------------------------------------------------------------------------
+
+This formulation of W3C's notice and license became active on December 31 2002.
+This version removes the copyright ownership notice such that this license
+can be used with materials other than those owned by the W3C, moves information
+on style sheets, DTDs, and schemas to the Copyright FAQ, reflects that ERCIM
+is now a host of the W3C, includes references to this specific dated version
+of the license, and removes the ambiguous grant of "use". See the older
+formulation for the policy prior to this date. Please see our Copyright FAQ for
+common questions about using materials from our site, such as the translating
+or annotating specifications. Other questions about this notice can be directed
+to site-policy@w3.org.
+
+
+Joseph Reagle <mailto:site-policy@w3.org 
+Last revised by Reagle $Date: 2005-07-19 12:33:09 -0400 (Tue, 19 Jul 2005) $
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+
+The following license applies to the DOM software,
+for the org.w3c.dom.* packages in jar file xml-apis.jar:
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+W3C® SOFTWARE NOTICE AND LICENSE
+http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
+This work (and included software, documentation such as READMEs,
+or other related items) is being provided by the copyright holders
+under the following license. By obtaining, using and/or copying this
+work, you (the licensee) agree that you have read, understood, and will
+comply with the following terms and conditions.
+
+Permission to copy, modify, and distribute this software and its
+documentation, with or without modification, for any purpose and
+without fee or royalty is hereby granted, provided that you include
+the following on ALL copies of the software and documentation or
+portions thereof, including modifications:
+
+1. The full text of this NOTICE in a location viewable to users of the
+   redistributed or derivative work. 
+2. Any pre-existing intellectual property disclaimers, notices,
+   or terms and conditions. If none exist, the W3C Software Short Notice
+   should be included (hypertext is preferred, text is permitted) within
+   the body of any redistributed or derivative code. 
+3. Notice of any changes or modifications to the files, including the
+   date changes were made. (We recommend you provide URIs to the location
+   from which the code is derived.) 
+   
+THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS
+MAKE NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR
+PURPOSE OR THAT THE USE OF THE SOFTWARE OR DOCUMENTATION WILL NOT INFRINGE
+ANY THIRD PARTY PATENTS, COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS.
+
+COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
+CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENTATION.
+
+The name and trademarks of copyright holders may NOT be used in advertising
+or publicity pertaining to the software without specific, written prior
+permission. Title to copyright in this software and any associated documentation
+will at all times remain with copyright holders.
+
+
+____________________________________
+
+This formulation of W3C's notice and license became active on December 31 2002.
+This version removes the copyright ownership notice such that this license can
+be used with materials other than those owned by the W3C, reflects that ERCIM
+is now a host of the W3C, includes references to this specific dated version
+of the license, and removes the ambiguous grant of "use". Otherwise, this
+version is the same as the previous version and is written so as to preserve
+the Free Software Foundation's assessment of GPL compatibility and OSI's
+certification under the Open Source Definition. Please see our Copyright FAQ
+for common questions about using materials from our site, including specific
+terms and conditions for packages like libwww, Amaya, and Jigsaw. Other
+questions about this notice can be directed to site-policy@w3.org.
+ 
+
+Joseph Reagle <mailto:site-policy@w3.org 
+Last revised by Reagle $Date: 2005-07-19 12:33:09 -0400 (Tue, 19 Jul 2005) $
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license applies to the SAX software,
+for the org.xml.sax.* packages in jar file xml-apis.jar:
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+This module, both source code and documentation, is in the Public Domain,
+and comes with NO WARRANTY. See http://www.saxproject.org for further information. 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license applies to the jar file 
+java_cup.jar - LALR Parser Generator for Java(TM).
+Source:  http://www.cs.princeton.edu/~appel/modern/java/CUP
+Used By: XSLTC component of xml-xalan/java
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+CUP Parser Generator Copyright Notice, License, and Disclaimer
+
+Copyright 1996-1999 by Scott Hudson, Frank Flannery, C. Scott Ananian 
+
+Permission to use, copy, modify, and distribute this software and its 
+documentation for any purpose and without fee is hereby granted, provided 
+that the above copyright notice appear in all copies and that both
+the copyright notice and this permission notice and warranty disclaimer 
+appear in supporting documentation, and that the names of the authors 
+or their employers not be used in advertising or publicity pertaining 
+to distribution of the software without specific, written prior permission. 
+
+The authors and their employers disclaim all warranties with regard to 
+this software, including all implied warranties of merchantability 
+and fitness. In no event shall the authors or their employers be liable 
+for any special, indirect or consequential damages or any damages 
+whatsoever resulting from loss of use, data or profits, whether in an action 
+of contract, negligence or other tortious action, arising out of or 
+in connection with the use or performance of this software. 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license applies to the jar file runtime.jar - Component
+of JavaCup: LALR Parser Generator for Java(TM).
+Source:  http://www.cs.princeton.edu/~appel/modern/java/CUP
+Used By: XSLTC component of xml-xalan/java
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+CUP Parser Generator Copyright Notice, License, and Disclaimer
+(runtime.jar component)
+
+Copyright 1996-1999 by Scott Hudson, Frank Flannery, C. Scott Ananian 
+
+Permission to use, copy, modify, and distribute this software and its 
+documentation for any purpose and without fee is hereby granted, provided 
+that the above copyright notice appear in all copies and that both
+the copyright notice and this permission notice and warranty disclaimer 
+appear in supporting documentation, and that the names of the authors 
+or their employers not be used in advertising or publicity pertaining 
+to distribution of the software without specific, written prior permission. 
+
+The authors and their employers disclaim all warranties with regard to 
+this software, including all implied warranties of merchantability 
+and fitness. In no event shall the authors or their employers be liable 
+for any special, indirect or consequential damages or any damages 
+whatsoever resulting from loss of use, data or profits, whether in an action 
+of contract, negligence or other tortious action, arising out of or 
+in connection with the use or performance of this software. 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license applies to the JLEX jar file 
+JLex.jar - A Lexical Analyzer Generator for Java(TM).
+Source:  http://www.cs.princeton.edu/~appel/modern/java/JLex
+Used By: XSLTC component of xml-xalan/java
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+JLEX COPYRIGHT NOTICE, LICENSE AND DISCLAIMER.
+
+Copyright 1996-2000 by Elliot Joel Berk and C. Scott Ananian 
+
+Permission to use, copy, modify, and distribute this software and its 
+documentation for any purpose and without fee is hereby granted, 
+provided that the above copyright notice appear in all copies and 
+that both the copyright notice and this permission notice and 
+warranty disclaimer appear in supporting documentation, and that the 
+name of the authors or their employers not be used in advertising or 
+publicity pertaining to distribution of the software without specific, 
+written prior permission. 
+
+The authors and their employers disclaim all warranties with regard 
+to this software, including all implied warranties of merchantability and 
+fitness. In no event shall the authors or their employers be liable for any
+special, indirect or consequential damages or any damages whatsoever resulting 
+from loss of use, data or profits, whether in an action of contract, 
+negligence or other tortious action, arising out of or in connection
+with the use or performance of this software. 
+
+Java is a trademark of Sun Microsystems, Inc. References to the Java 
+programming language in relation to JLex are not meant to imply that 
+Sun endorses this product. 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+The following license applies to the jar file 
+stylebook-1.0-b3_xalan-2.jar - Tool for generating Xalan documentation. 
+Integrated with Xalan-Java 2 and Xerces 2.
+Source:  http://svn.apache.org/viewvc/xml/stylebook/
+Used by: Xalan-Java 2, Xalan-C++
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+/*
+ * The Apache Software License, Version 1.1
+ *
+ *
+ * Copyright (c) 1999 The Apache Software Foundation.  All rights 
+ * reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer. 
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *    if any, must include the following acknowledgment:  
+ *       "This product includes software developed by the
+ *        Apache Software Foundation (http://www.apache.org/)."
+ *    Alternately, this acknowledgment may appear in the software itself,
+ *    if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Xalan", "Xerces", and "Apache Software Foundation" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written 
+ *    permission, please contact apache@apache.org.
+ *
+ * 5. Products derived from this software may not be called "Apache",
+ *    nor may "Apache" appear in their name, without prior written
+ *    permission of the Apache Software Foundation.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of the Apache Software Foundation and was
+ * originally based on software copyright (c) 1999, International
+ * Business Machines, Inc., http://www.apache.org.  For more
+ * information on the Apache Software Foundation, please see
+ * <http://www.apache.org/>.
+ */
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

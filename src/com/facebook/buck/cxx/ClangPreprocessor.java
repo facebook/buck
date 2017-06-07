@@ -16,25 +16,19 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
+import java.nio.file.Path;
 import java.util.Optional;
 
-public class ClangPreprocessor implements Preprocessor {
-
-  private final Tool tool;
+public class ClangPreprocessor extends AbstractPreprocessor {
 
   public ClangPreprocessor(Tool tool) {
-    this.tool = tool;
+    super(tool);
   }
 
   @Override
@@ -53,39 +47,33 @@ public class ClangPreprocessor implements Preprocessor {
   }
 
   @Override
-  public Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
+  public final Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(Iterables.cycle("-I"), includeRoots);
   }
 
   @Override
-  public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
+  public final Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(Iterables.cycle("-isystem"), includeRoots);
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
+  public final Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
+    return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
   }
 
   @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
+  public final Iterable<String> prefixHeaderArgs(
+      SourcePathResolver resolver, SourcePath prefixHeader) {
+    return ImmutableList.of("-include", resolver.getAbsolutePath(prefixHeader).toString());
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+  public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    return ImmutableList.of(
+        "-include-pch",
+        pchOutputPath.toString(),
+        // Force clang to accept pch even if mtime of its input changes, since buck tracks
+        // input contents, this should be safe.
+        "-Wp,-fno-validate-pch");
   }
 }

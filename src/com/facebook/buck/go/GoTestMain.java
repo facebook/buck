@@ -16,14 +16,15 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -31,14 +32,12 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 
 public class GoTestMain extends AbstractBuildRule {
-  @AddToRuleKey
-  private final Tool testMainGen;
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> testSources;
+  @AddToRuleKey private final Tool testMainGen;
+  @AddToRuleKey private final ImmutableSet<SourcePath> testSources;
+
   @AddToRuleKey(stringify = true)
   private final Path testPackage;
 
@@ -46,44 +45,44 @@ public class GoTestMain extends AbstractBuildRule {
 
   public GoTestMain(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool testMainGen,
       ImmutableSet<SourcePath> testSources,
       Path testPackage) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.testMainGen = testMainGen;
     this.testSources = testSources;
     this.testPackage = testPackage;
-    this.output = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/" + getBuildTarget().getShortName() + "_test_main.go");
+    this.output =
+        BuildTargets.getScratchPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "%s/" + getBuildTarget().getShortName() + "_test_main.go");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new GoTestMainStep(
             getProjectFilesystem().getRootPath(),
-            testMainGen.getEnvironment(),
-            testMainGen.getCommandPrefix(getResolver()),
+            testMainGen.getEnvironment(context.getSourcePathResolver()),
+            testMainGen.getCommandPrefix(context.getSourcePathResolver()),
             /* coverageMode */ "",
             /* coverageVariables */ ImmutableMap.of(),
             testPackage,
-            testSources.stream()
-                .map(getResolver()::getAbsolutePath)
+            testSources
+                .stream()
+                .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(MoreCollectors.toImmutableList()),
-            output
-        )
-    );
+            output));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 }

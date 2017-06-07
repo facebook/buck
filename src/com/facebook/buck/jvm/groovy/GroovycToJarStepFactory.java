@@ -17,20 +17,21 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -41,9 +42,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
   private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
-      Tool groovyc,
-      Optional<ImmutableList<String>> extraArguments,
-      JavacOptions javacOptions) {
+      Tool groovyc, Optional<ImmutableList<String>> extraArguments, JavacOptions javacOptions) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
@@ -55,12 +54,12 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ClassUsageFileWriter usedClassesFileWriter,
       /* out params */
       ImmutableList.Builder<Step> steps,
@@ -81,8 +80,23 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     groovyc.appendToRuleKey(sink);
-    sink
-        .setReflectively("extraArguments", extraArguments)
+    sink.setReflectively("extraArguments", extraArguments)
         .setReflectively("javacOptions", javacOptions);
+  }
+
+  @Override
+  protected Tool getCompiler() {
+    return groovyc;
+  }
+
+  @Override
+  public Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder) {
+    // I'm not really sure if groovyc passes the AP parameters thru to javac or not, but just in
+    // case...
+    // If any dep of an annotation processor changes, we need to recompile, so we add those as
+    // extra deps
+    return Iterables.concat(
+        super.getExtraDeps(ruleFinder),
+        ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
   }
 }

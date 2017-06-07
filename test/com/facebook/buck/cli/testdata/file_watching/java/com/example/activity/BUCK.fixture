@@ -3,7 +3,3 @@ java_library(
   srcs = ['MyFirstActivity.java'],
   visibility = [ 'PUBLIC' ],
 )
-
-project_config(
-  src_target = ':activity',
-)

@@ -18,28 +18,23 @@ package com.facebook.buck.tools.dxanalysis;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
 
 /**
- * This is a command-line tool for performing ad-hoc static analysis of the DX tool.
- * Specifically, it is intended to find structures that would make it unsafe to run
- * within the buckd process.
+ * This is a command-line tool for performing ad-hoc static analysis of the DX tool. Specifically,
+ * it is intended to find structures that would make it unsafe to run within the buckd process.
  */
 public class DxAnalysisMain {
   private static final boolean DEBUG_MUTABILITY = false;
 
   private DxAnalysisMain() {}
 
-  /**
-   * @param args  One argument is expected: the path to dx.jar.
-   */
+  /** @param args One argument is expected: the path to dx.jar. */
   public static void main(String[] args) throws IOException {
     String zipFileName = args[0];
     ImmutableMap<String, ClassNode> allClasses = loadAllClasses(zipFileName);
@@ -77,7 +72,6 @@ public class DxAnalysisMain {
     System.out.println();
     System.out.println();
     System.out.println();
-
   }
 
   private static ImmutableMap<String, ClassNode> loadAllClasses(String zipFileName)
@@ -89,10 +83,9 @@ public class DxAnalysisMain {
           continue;
         }
         // Skip external libraries.
-        if (
-            entry.getName().startsWith("junit/") ||
-            entry.getName().startsWith("org/junit/") ||
-            entry.getName().startsWith("com/google/common/")) {
+        if (entry.getName().startsWith("junit/")
+            || entry.getName().startsWith("org/junit/")
+            || entry.getName().startsWith("com/google/common/")) {
           continue;
         }
         byte[] rawClass = ByteStreams.toByteArray(inJar.getInputStream(entry));

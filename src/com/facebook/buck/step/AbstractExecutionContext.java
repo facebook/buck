@@ -17,18 +17,17 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -36,21 +35,18 @@ import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.immutables.value.Value;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -72,9 +68,6 @@ abstract class AbstractExecutionContext implements Closeable {
   abstract JavaPackageFinder getJavaPackageFinder();
 
   @Value.Parameter
-  abstract ObjectMapper getObjectMapper();
-
-  @Value.Parameter
   abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
 
   @Value.Parameter
@@ -86,11 +79,22 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Parameter
   abstract Optional<AdbOptions> getAdbOptions();
 
+  /**
+   * Worker process pools that are persisted across buck invocations inside buck daemon. If buck is
+   * running without daemon, there will be no persisted pools.
+   */
   @Value.Parameter
   abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
 
   @Value.Parameter
   abstract CellPathResolver getCellPathResolver();
+
+  /** See {@link com.facebook.buck.rules.BuildContext#getBuildCellRootPath}. */
+  @Value.Parameter
+  abstract Path getBuildCellRootPath();
+
+  @Value.Parameter
+  abstract ProcessExecutor getProcessExecutor();
 
   /**
    * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to
@@ -127,6 +131,15 @@ abstract class AbstractExecutionContext implements Closeable {
   }
 
   @Value.Default
+  public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
+    return RuleKeyDiagnosticsMode.NEVER;
+  }
+
+  /**
+   * Worker process pools that you can populate as needed. These will be destroyed as soon as buck
+   * invocation finishes, thus, these pools are not persisted across buck invocations.
+   */
+  @Value.Default
   public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();
   }
@@ -135,7 +148,6 @@ abstract class AbstractExecutionContext implements Closeable {
   public ConcurrencyLimit getConcurrencyLimit() {
     return new ConcurrencyLimit(
         /* threadLimit */ Runtime.getRuntime().availableProcessors(),
-        /* loadLimit */ Double.POSITIVE_INFINITY,
         ResourceAllocationFairness.FAIR,
         ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT,
         ResourceAmountsEstimator.DEFAULT_AMOUNTS,
@@ -145,11 +157,6 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {
     return new ClassLoaderCache();
-  }
-
-  @Value.Default
-  public ProcessExecutor getProcessExecutor() {
-    return new DefaultProcessExecutor(getConsole());
   }
 
   @Value.Derived
@@ -178,27 +185,22 @@ abstract class AbstractExecutionContext implements Closeable {
   }
 
   /**
-   * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a
-   * {@link NoAndroidSdkException}. Use this when your logic requires the user to specify the
-   * location of an Android SDK. A user who is building a "pure Java" (i.e., not Android) project
-   * using Buck should never have to exercise this code path.
-   * <p>
-   * If the location of an Android SDK is optional, then use
-   * {@link #getAndroidPlatformTargetSupplier()}.
-   * @throws NoAndroidSdkException if no AndroidPlatformTarget is available
+   * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a {@link
+   * RuntimeException}. Use this when your logic requires the user to specify the location of an
+   * Android SDK. A user who is building a "pure Java" (i.e., not Android) project using Buck should
+   * never have to exercise this code path.
+   *
+   * <p>If the location of an Android SDK is optional, then use {@link
+   * #getAndroidPlatformTargetSupplier()}.
+   *
+   * @throws RuntimeException if no AndroidPlatformTarget is available
    */
   @Value.Lazy
-  public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
+  public AndroidPlatformTarget getAndroidPlatformTarget() {
     return getAndroidPlatformTargetSupplier().get();
   }
 
-  public ListeningExecutorService getExecutorService(ExecutorPool p) {
-    ListeningExecutorService executorService = getExecutors().get(p);
-    Preconditions.checkNotNull(executorService);
-    return executorService;
-  }
-
-  public String getPathToAdbExecutable() throws NoAndroidSdkException {
+  public String getPathToAdbExecutable() {
     return getAndroidPlatformTarget().getAdbExecutable().toString();
   }
 
@@ -211,14 +213,13 @@ abstract class AbstractExecutionContext implements Closeable {
   }
 
   public ExecutionContext createSubContext(
-      PrintStream newStdout,
-      PrintStream newStderr,
-      Optional<Verbosity> verbosityOverride) {
-    Console console = new Console(
-        verbosityOverride.orElse(this.getConsole().getVerbosity()),
-        newStdout,
-        newStderr,
-        this.getConsole().getAnsi());
+      PrintStream newStdout, PrintStream newStderr, Optional<Verbosity> verbosityOverride) {
+    Console console =
+        new Console(
+            verbosityOverride.orElse(this.getConsole().getVerbosity()),
+            newStdout,
+            newStderr,
+            this.getConsole().getAnsi());
 
     return ExecutionContext.builder()
         .from(this)

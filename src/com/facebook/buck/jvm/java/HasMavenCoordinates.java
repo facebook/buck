@@ -17,14 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
-
 import java.util.Optional;
 
 public interface HasMavenCoordinates extends BuildRule {
 
-  /**
-   * Used to identify this library within a maven repository
-   */
+  /** Used to identify this library within a maven repository */
   Optional<String> getMavenCoords();
 
   static boolean isMavenCoordsPresent(HasMavenCoordinates input) {

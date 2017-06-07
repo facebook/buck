@@ -16,34 +16,34 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
+public class AndroidBuildConfigIntegrationTest extends AbiCompilationModeTest {
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-public class AndroidBuildConfigIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  private ProjectWorkspace workspace;
+
+  @Before
+  public void setUp() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_config", tmp);
+    workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
+  }
 
   @Test
   public void testBuildConfigWithValues() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "build_config", tmp);
-    workspace.setUp();
-
     workspace.runBuckCommand("run", "//:main_values_test").assertSuccess();
   }
 
   @Test
   public void testBuildConfigWithValuesFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "build_config", tmp);
-    workspace.setUp();
-
     workspace.runBuckCommand("run", "//:main_values_file_test").assertSuccess();
   }
 }

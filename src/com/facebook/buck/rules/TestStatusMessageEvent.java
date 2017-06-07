@@ -22,11 +22,8 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.TestStatusMessage;
 
-/**
- * Events posted when a test emits a diagnostic status message event.
- */
-public abstract class TestStatusMessageEvent
-    extends AbstractBuckEvent
+/** Events posted when a test emits a diagnostic status message event. */
+public abstract class TestStatusMessageEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
 
   private TestStatusMessage testStatusMessage;
@@ -71,9 +68,7 @@ public abstract class TestStatusMessageEvent
     @Override
     protected String getValueString() {
       return String.format(
-          "%s: %s",
-          getTestStatusMessage().getLevel(),
-          getTestStatusMessage().getMessage());
+          "%s: %s", getTestStatusMessage().getLevel(), getTestStatusMessage().getMessage());
     }
   }
 
@@ -82,8 +77,9 @@ public abstract class TestStatusMessageEvent
 
     public Finished(Started started, TestStatusMessage testStatusMessage) {
       super(testStatusMessage, started.getEventKey());
-      this.elapsedTimeMillis = testStatusMessage.getTimestampMillis() -
-          started.getTestStatusMessage().getTimestampMillis();
+      this.elapsedTimeMillis =
+          testStatusMessage.getTimestampMillis()
+              - started.getTestStatusMessage().getTimestampMillis();
     }
 
     public long getElapsedTimeMillis() {

@@ -46,20 +46,18 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class PythonBinaryIntegrationTest {
@@ -68,15 +66,15 @@ public class PythonBinaryIntegrationTest {
   public static Collection<Object[]> data() {
     ImmutableList.Builder<Object[]> validPermutations = ImmutableList.builder();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
-      for (boolean pexDirectory : new boolean[]{true, false}) {
+      for (boolean pexDirectory : new boolean[] {true, false}) {
         if (packageStyle == PythonBuckConfig.PackageStyle.INPLACE && pexDirectory) {
           continue;
         }
 
         for (NativeLinkStrategy linkStrategy : NativeLinkStrategy.values()) {
-          for (boolean sandboxSource : new boolean[]{true, false}) {
+          for (boolean sandboxSource : new boolean[] {true, false}) {
             validPermutations.add(
-                new Object[]{packageStyle, pexDirectory, linkStrategy, sandboxSource});
+                new Object[] {packageStyle, pexDirectory, linkStrategy, sandboxSource});
           }
         }
       }
@@ -84,8 +82,7 @@ public class PythonBinaryIntegrationTest {
     return validPermutations.build();
   }
 
-  @Parameterized.Parameter
-  public PythonBuckConfig.PackageStyle packageStyle;
+  @Parameterized.Parameter public PythonBuckConfig.PackageStyle packageStyle;
 
   @Parameterized.Parameter(value = 1)
   public boolean pexDirectory;
@@ -96,23 +93,29 @@ public class PythonBinaryIntegrationTest {
   @Parameterized.Parameter(value = 3)
   public boolean sandboxSources;
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_binary", tmp);
     workspace.setUp();
     String pexFlags = pexDirectory ? "--directory" : "";
     workspace.writeContentsToPath(
-        "[python]\n" +
-            "  package_style = " + packageStyle.toString().toLowerCase() + "\n" +
-            "  native_link_strategy = " + nativeLinkStrategy.toString().toLowerCase() + "\n" +
-            "  pex_flags = " + pexFlags + "\n" +
-          "[cxx]\n" +
-            "  sandbox_sources=" + sandboxSources,
+        "[python]\n"
+            + "  package_style = "
+            + packageStyle.toString().toLowerCase()
+            + "\n"
+            + "  native_link_strategy = "
+            + nativeLinkStrategy.toString().toLowerCase()
+            + "\n"
+            + "  pex_flags = "
+            + pexFlags
+            + "\n"
+            + "[cxx]\n"
+            + "  sandbox_sources="
+            + sandboxSources,
         ".buckconfig");
     PythonBuckConfig config = getPythonBuckConfig();
     assertThat(config.getPackageStyle(), equalTo(packageStyle));
@@ -129,16 +132,17 @@ public class PythonBinaryIntegrationTest {
   public void executionThroughSymlink() throws IOException, InterruptedException {
     assumeThat(Platform.detect(), Matchers.oneOf(Platform.MACOS, Platform.LINUX));
     workspace.runBuckBuild("//:bin").assertSuccess();
-    String output = workspace.runBuckCommand("targets", "--show-output", "//:bin")
-        .assertSuccess()
-        .getStdout()
-        .trim();
+    String output =
+        workspace
+            .runBuckCommand("targets", "--show-output", "//:bin")
+            .assertSuccess()
+            .getStdout()
+            .trim();
     Path link = workspace.getPath("link");
     Files.createSymbolicLink(
-        link,
-        workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
-    ProcessExecutor.Result result = workspace.runCommand(
-        getPythonBuckConfig().getPythonInterpreter(), link.toString());
+        link, workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
+    ProcessExecutor.Result result =
+        workspace.runCommand(getPythonBuckConfig().getPythonInterpreter(), link.toString());
     assertThat(
         result.getStdout().orElse("") + result.getStderr().orElse(""),
         result.getExitCode(),
@@ -149,9 +153,7 @@ public class PythonBinaryIntegrationTest {
   public void commandLineArgs() throws IOException {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("run", ":bin", "HELLO WORLD").assertSuccess();
-    assertThat(
-        result.getStdout(),
-        containsString("HELLO WORLD"));
+    assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
 
   @Test
@@ -175,9 +177,7 @@ public class PythonBinaryIntegrationTest {
         not(equalTo(Platform.MACOS)));
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
-    assertThat(
-        result.getStdout(),
-        containsString("HELLO WORLD"));
+    assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
 
   @Test
@@ -189,13 +189,13 @@ public class PythonBinaryIntegrationTest {
   public void arg0IsPreserved() throws IOException {
     workspace.writeContentsToPath("import sys; print(sys.argv[0])", "main.py");
     String arg0 = workspace.runBuckCommand("run", ":bin").assertSuccess().getStdout().trim();
-    String output = workspace.runBuckCommand("targets", "--show-output", "//:bin")
-        .assertSuccess()
-        .getStdout()
-        .trim();
-    assertThat(
-        arg0,
-        endsWith(Splitter.on(" ").splitToList(output).get(1)));
+    String output =
+        workspace
+            .runBuckCommand("targets", "--show-output", "//:bin")
+            .assertSuccess()
+            .getStdout()
+            .trim();
+    assertThat(arg0, endsWith(Splitter.on(" ").splitToList(output).get(1)));
   }
 
   @Test
@@ -209,8 +209,7 @@ public class PythonBinaryIntegrationTest {
         not(equalTo(Platform.MACOS)));
 
     String nativeLibsEnvVarName =
-        CxxPlatformUtils
-            .build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
             .getLd()
             .resolve(resolver)
             .searchPathEnvVar();
@@ -221,42 +220,38 @@ public class PythonBinaryIntegrationTest {
 
     // Pre-set library path.
     String nativeLibsEnvVar =
-        workspace.runBuckCommandWithEnvironmentOverridesAndContext(
-            workspace.getPath(""),
-            Optional.empty(),
-            ImmutableMap.of(nativeLibsEnvVarName, originalNativeLibsEnvVar),
-            "run",
-            ":bin-with-native-libs")
+        workspace
+            .runBuckCommandWithEnvironmentOverridesAndContext(
+                workspace.getPath(""),
+                Optional.empty(),
+                ImmutableMap.of(nativeLibsEnvVarName, originalNativeLibsEnvVar),
+                "run",
+                ":bin-with-native-libs")
             .assertSuccess()
             .getStdout()
             .trim();
-    assertThat(
-        nativeLibsEnvVar,
-        equalTo(originalNativeLibsEnvVar));
+    assertThat(nativeLibsEnvVar, equalTo(originalNativeLibsEnvVar));
 
     // Empty library path.
     nativeLibsEnvVar =
-        workspace.runBuckCommandWithEnvironmentOverridesAndContext(
-            workspace.getPath(""),
-            Optional.empty(),
-            ImmutableMap.of(),
-            "run",
-            ":bin-with-native-libs")
+        workspace
+            .runBuckCommandWithEnvironmentOverridesAndContext(
+                workspace.getPath(""),
+                Optional.empty(),
+                ImmutableMap.of(),
+                "run",
+                ":bin-with-native-libs")
             .assertSuccess()
             .getStdout()
             .trim();
-    assertThat(
-        nativeLibsEnvVar,
-        equalTo("None"));
+    assertThat(nativeLibsEnvVar, equalTo("None"));
   }
 
   @Test
   public void sysPathDoesNotIncludeWorkingDir() throws IOException {
     workspace.writeContentsToPath("import sys; print(sys.path[0])", "main.py");
     String sysPath0 = workspace.runBuckCommand("run", ":bin").assertSuccess().getStdout().trim();
-    assertThat(
-        sysPath0,
-        not(equalTo("")));
+    assertThat(sysPath0, not(equalTo("")));
   }
 
   @Test
@@ -277,22 +272,14 @@ public class PythonBinaryIntegrationTest {
 
     ProjectWorkspace.ProcessResult firstResult =
         workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "python.path_to_pex=//:pex_tool",
-            "--show-rulekey",
-            "//:bin");
+            "targets", "-c", "python.path_to_pex=//:pex_tool", "--show-rulekey", "//:bin");
     String firstRuleKey = firstResult.assertSuccess().getStdout().trim();
 
     workspace.writeContentsToPath("changes", "pex_tool.sh");
 
     ProjectWorkspace.ProcessResult secondResult =
         workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "python.path_to_pex=//:pex_tool",
-            "--show-rulekey",
-            "//:bin");
+            "targets", "-c", "python.path_to_pex=//:pex_tool", "--show-rulekey", "//:bin");
     String secondRuleKey = secondResult.assertSuccess().getStdout().trim();
 
     assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
@@ -303,8 +290,10 @@ public class PythonBinaryIntegrationTest {
     assumeThat(Platform.detect(), not(Matchers.is(Platform.WINDOWS)));
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild(
-            "-c", "python#a.library=//:platform_a",
-            "-c", "python#b.library=//:platform_b",
+            "-c",
+            "python#a.library=//:platform_a",
+            "-c",
+            "python#b.library=//:platform_b",
             "//:binary_with_extension_a",
             "//:binary_with_extension_b");
     result.assertSuccess();
@@ -333,13 +322,14 @@ public class PythonBinaryIntegrationTest {
    * both a linkable root and an excluded rule, causing an internal omnibus failure.
    */
   @Test
-  public void omnibusExcludedNativeLinkableRoot() throws IOException {
+  public void omnibusExcludedNativeLinkableRoot() throws InterruptedException, IOException {
     assumeThat(nativeLinkStrategy, Matchers.is(NativeLinkStrategy.MERGED));
-    workspace.runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
+    workspace
+        .runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
         .assertSuccess();
   }
 
-  private PythonBuckConfig getPythonBuckConfig() throws IOException {
+  private PythonBuckConfig getPythonBuckConfig() throws InterruptedException, IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(
@@ -349,9 +339,6 @@ public class PythonBinaryIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(
-        buckConfig,
-        new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
   }
-
 }

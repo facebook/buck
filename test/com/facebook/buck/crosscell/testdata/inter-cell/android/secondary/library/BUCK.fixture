@@ -1,0 +1,9 @@
+cxx_library(
+  name = 'I',
+  srcs = ['I.c'],
+  soname = 'libI.so',
+  deps = [
+    '//merge:H',
+  ],
+  visibility = ['PUBLIC'],
+)

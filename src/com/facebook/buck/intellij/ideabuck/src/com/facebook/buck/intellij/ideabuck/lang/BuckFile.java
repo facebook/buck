@@ -20,7 +20,6 @@ import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
-
 import javax.swing.Icon;
 
 public class BuckFile extends PsiFileBase {

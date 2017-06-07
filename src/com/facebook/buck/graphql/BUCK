@@ -1,5 +1,19 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/graphql:graphql',
-  ],
+java_immutables_library(
+    name = "graphql",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/graphql:graphql",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//third-party/java/guava:guava",
+        "//third-party/java/infer-annotations:infer-annotations",
+    ],
 )

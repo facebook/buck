@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,10 +44,12 @@ public enum JarShape {
           ((HasClasspathEntries) root).getTransitiveClasspathDeps();
 
       toPackage.addAll(classpathDeps);
-      Set<HasMavenCoordinates> mavenDeps = toPackage.stream()
-          .filter(HasMavenCoordinates::isMavenCoordsPresent)
-          .filter(lib -> !lib.equals(root))
-          .collect(Collectors.toSet());
+      Set<HasMavenCoordinates> mavenDeps =
+          toPackage
+              .stream()
+              .filter(HasMavenCoordinates::isMavenCoordsPresent)
+              .filter(lib -> !lib.equals(root))
+              .collect(Collectors.toSet());
       Set<JavaLibrary> toRemoveFromMavenDeps = new HashSet<>();
 
       for (HasMavenCoordinates mavenDep : mavenDeps) {
@@ -56,16 +57,11 @@ public enum JarShape {
             ((HasClasspathEntries) mavenDep).getTransitiveClasspathDeps();
         toPackage.removeAll(transitive);
         toRemoveFromMavenDeps.addAll(
-            transitive.stream()
-                .filter(dep -> !dep.equals(mavenDep))
-                .collect(Collectors.toSet()));
+            transitive.stream().filter(dep -> !dep.equals(mavenDep)).collect(Collectors.toSet()));
       }
       mavenDeps.removeAll(toRemoveFromMavenDeps);
 
-      return new Summary(
-          toPackage,
-          classpathDeps,
-          mavenDeps);
+      return new Summary(toPackage, classpathDeps, mavenDeps);
     }
   },
   SINGLE {
@@ -80,10 +76,7 @@ public enum JarShape {
       ImmutableSet<JavaLibrary> classpath =
           ((HasClasspathEntries) root).getTransitiveClasspathDeps();
 
-      return new Summary(
-          ImmutableSortedSet.of(root),
-          classpath,
-          ImmutableSortedSet.of());
+      return new Summary(ImmutableSortedSet.of(root), classpath, ImmutableSortedSet.of());
     }
   },
   ;

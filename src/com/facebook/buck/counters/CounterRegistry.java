@@ -21,25 +21,16 @@ import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.Closeable;
 import java.util.Collection;
 
 public interface CounterRegistry extends Closeable {
-  IntegerCounter newIntegerCounter(
-      String category,
-      String name,
-      ImmutableMap<String, String> tags);
+  IntegerCounter newIntegerCounter(String category, String name, ImmutableMap<String, String> tags);
 
   SamplingCounter newSamplingCounter(
-      String category,
-      String name,
-      ImmutableMap<String, String> tags);
+      String category, String name, ImmutableMap<String, String> tags);
 
-  TagSetCounter newTagSetCounter(
-      String category,
-      String name,
-      ImmutableMap<String, String> tags);
+  TagSetCounter newTagSetCounter(String category, String name, ImmutableMap<String, String> tags);
 
   void registerCounters(Collection<Counter> counters);
 

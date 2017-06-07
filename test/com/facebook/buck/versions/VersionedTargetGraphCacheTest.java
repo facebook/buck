@@ -19,24 +19,23 @@ package com.facebook.buck.versions;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.concurrent.ForkJoinPool;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.concurrent.ForkJoinPool;
-
 public class VersionedTargetGraphCacheTest {
 
-  private static final BuckEventBus BUS =
-      new BuckEventBus(new FakeClock(0), new BuildId());
+  private static final BuckEventBus BUS = new DefaultBuckEventBus(new FakeClock(0), new BuildId());
   private static final ForkJoinPool POOL = new ForkJoinPool(1);
 
   @Test
@@ -44,7 +43,8 @@ public class VersionedTargetGraphCacheTest {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
     TargetGraphAndBuildTargets graph = createSimpleGraph();
     VersionedTargetGraphCacheResult result =
-        cache.getVersionedTargetGraph(BUS, graph, ImmutableMap.of(), POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
     assertEmpty(result);
   }
 
@@ -53,10 +53,12 @@ public class VersionedTargetGraphCacheTest {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
     TargetGraphAndBuildTargets graph = createSimpleGraph();
     VersionedTargetGraphCacheResult firstResult =
-        cache.getVersionedTargetGraph(BUS, graph, ImmutableMap.of(), POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
-        cache.getVersionedTargetGraph(BUS, graph, ImmutableMap.of(), POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
   }
 
@@ -65,10 +67,12 @@ public class VersionedTargetGraphCacheTest {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
     TargetGraphAndBuildTargets graph = createSimpleGraph();
     VersionedTargetGraphCacheResult firstResult =
-        cache.getVersionedTargetGraph(BUS, graph, ImmutableMap.of(), POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
-        cache.getVersionedTargetGraph(BUS, graph, ImmutableMap.of(), new ForkJoinPool(2));
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), new ForkJoinPool(2));
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
   }
 
@@ -77,11 +81,13 @@ public class VersionedTargetGraphCacheTest {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
     TargetGraphAndBuildTargets firstGraph = createSimpleGraph();
     VersionedTargetGraphCacheResult firstResult =
-        cache.getVersionedTargetGraph(BUS, firstGraph, ImmutableMap.of(), POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), firstGraph, ImmutableMap.of(), POOL);
     assertEmpty(firstResult);
     TargetGraphAndBuildTargets secondGraph = createSimpleGraph();
     VersionedTargetGraphCacheResult secondResult =
-        cache.getVersionedTargetGraph(BUS, secondGraph, ImmutableMap.of(), POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), secondGraph, ImmutableMap.of(), POOL);
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
   }
 
@@ -91,12 +97,14 @@ public class VersionedTargetGraphCacheTest {
     TargetGraphAndBuildTargets graph = createSimpleGraph();
     ImmutableMap<String, VersionUniverse> firstVersionUniverses = ImmutableMap.of();
     VersionedTargetGraphCacheResult firstResult =
-        cache.getVersionedTargetGraph(BUS, graph, firstVersionUniverses, POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, firstVersionUniverses, POOL);
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
         ImmutableMap.of("foo", VersionUniverse.of(ImmutableMap.of()));
     VersionedTargetGraphCacheResult secondResult =
-        cache.getVersionedTargetGraph(BUS, graph, secondVersionUniverses, POOL);
+        cache.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, secondVersionUniverses, POOL);
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
   }
 
@@ -107,8 +115,7 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private void assertHit(
-      VersionedTargetGraphCacheResult result,
-      TargetGraphAndBuildTargets previousGraph) {
+      VersionedTargetGraphCacheResult result, TargetGraphAndBuildTargets previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.HIT));
     assertThat(result.getTargetGraphAndBuildTargets(), Matchers.is(previousGraph));
   }
@@ -118,10 +125,8 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private void assertMismatch(
-      VersionedTargetGraphCacheResult result,
-      TargetGraphAndBuildTargets previousGraph) {
+      VersionedTargetGraphCacheResult result, TargetGraphAndBuildTargets previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.MISMATCH));
     assertThat(result.getTargetGraphAndBuildTargets(), Matchers.not(Matchers.is(previousGraph)));
   }
-
 }

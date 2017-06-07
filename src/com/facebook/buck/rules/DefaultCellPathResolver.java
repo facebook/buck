@@ -24,17 +24,17 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 public class DefaultCellPathResolver implements CellPathResolver {
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
@@ -43,39 +43,43 @@ public class DefaultCellPathResolver implements CellPathResolver {
 
   private final Path root;
   private final ImmutableMap<String, Path> cellPaths;
+  private final ImmutableMap<Path, String> canonicalNames;
 
   public DefaultCellPathResolver(Path root, ImmutableMap<String, Path> cellPaths) {
     this.root = root;
     this.cellPaths = cellPaths;
+    this.canonicalNames =
+        cellPaths
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.collectingAndThen(
+                    Collectors.toMap(
+                        Map.Entry::getValue,
+                        Map.Entry::getKey,
+                        BinaryOperator.minBy(Comparator.<String>naturalOrder())),
+                    ImmutableMap::copyOf));
   }
 
   public DefaultCellPathResolver(Path root, Config config) {
     this(root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
-  public static DefaultCellPathResolver createWithConfigRepositoriesSection(
-      final Path root,
-      ImmutableMap<String, String> repositoriesSection) {
-    return new DefaultCellPathResolver(
-        root,
-        getCellPathsFromConfigRepositoriesSection(root, repositoriesSection));
-  }
-
-  private static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
-      Path root,
-      ImmutableMap<String, String> repositoriesSection) {
+  static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
+      Path root, ImmutableMap<String, String> repositoriesSection) {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             repositoriesSection,
-            input -> root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
-                .normalize()));
+            input ->
+                root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
+                    .normalize()));
   }
 
   /**
    * Recursively walks configuration files to find all possible {@link Cell} locations.
    *
-   * @return MultiMap of Path to cell name. The map will contain multiple names for a path if
-   *         that cell is reachable through different paths from the current cell.
+   * @return MultiMap of Path to cell name. The map will contain multiple names for a path if that
+   *     cell is reachable through different paths from the current cell.
    */
   public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
@@ -84,11 +88,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
     HashSet<Path> seenPaths = new HashSet<>();
     seenPaths.add(root);
 
-    constructFullMapping(
-        builder,
-        seenPaths,
-        RelativeCellName.of(ImmutableList.of()),
-        this);
+    constructFullMapping(builder, seenPaths, RelativeCellName.of(ImmutableList.of()), this);
     return builder.build();
   }
 
@@ -96,17 +96,9 @@ public class DefaultCellPathResolver implements CellPathResolver {
     return root;
   }
 
-  public ImmutableSet<Path> getKnownRoots() {
-    return ImmutableSet.<Path>builder()
-        .addAll(getPartialMapping().values())
-        .add(root)
-        .build();
-  }
-
   private ImmutableMap<String, Path> getPartialMapping() {
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
-
     ImmutableMap.Builder<String, Path> rootsMap = ImmutableMap.builder();
     for (String cellName : sortedCellNames) {
       Path cellRoot = Preconditions.checkNotNull(getCellPath(cellName));
@@ -152,10 +144,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
         continue;
       }
       constructFullMapping(
-          result,
-          pathStack,
-          relativeCellName,
-          new DefaultCellPathResolver(cellRoot, config));
+          result, pathStack, relativeCellName, new DefaultCellPathResolver(cellRoot, config));
       pathStack.remove(cellRoot);
     }
   }
@@ -164,7 +153,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
     Path path = cellPaths.get(cellName);
     if (path == null) {
       throw new HumanReadableException(
-          "Unable to find repository '%s' in cell rooted at: %s", cellName, root);
+          "In cell rooted at %s: cell named '%s' is not defined.", root, cellName);
     }
     return path;
   }
@@ -180,5 +169,18 @@ public class DefaultCellPathResolver implements CellPathResolver {
   @Override
   public ImmutableMap<String, Path> getCellPaths() {
     return cellPaths;
+  }
+
+  @Override
+  public Optional<String> getCanonicalCellName(Path cellPath) {
+    if (cellPath.equals(root)) {
+      return Optional.empty();
+    } else {
+      String name = canonicalNames.get(cellPath);
+      if (name == null) {
+        throw new IllegalArgumentException("Unknown cell path: " + cellPath);
+      }
+      return Optional.of(name);
+    }
   }
 }

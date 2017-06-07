@@ -12,12 +12,6 @@ import inspect
 import imp
 
 
-class NoopImportWhitelistManager(object):
-    @contextlib.contextmanager
-    def allow_unsafe_import(self, allow=True):
-        yield
-
-
 class ImportWhitelistManager(object):
     def __init__(self, import_whitelist, safe_modules_config, path_predicate):
         """

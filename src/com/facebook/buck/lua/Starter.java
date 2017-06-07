@@ -19,14 +19,9 @@ package com.facebook.buck.lua;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 
-/**
- * An interface which builds a Lua starter executable.
- */
+/** An interface which builds a Lua starter executable. */
 public interface Starter {
 
-  /**
-   * @return builds and returns the {@link SourcePath} to the starter.
-   */
+  /** @return builds and returns the {@link SourcePath} to the starter. */
   SourcePath build() throws NoSuchBuildTargetException;
-
 }

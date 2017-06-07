@@ -24,48 +24,46 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Saves and loads the {@link TargetNode}s needed for the build.
- */
+/** Saves and loads the {@link TargetNode}s needed for the build. */
 public class DistBuildTargetGraphCodec {
 
-  private final ObjectMapper objectMapper;
   private final ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
+  private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
-      ObjectMapper objectMapper,
       ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory,
-      Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode) {
-    this.objectMapper = objectMapper;
+      Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode,
+      Set<String> topLevelTargets) {
     this.parserTargetNodeFactory = parserTargetNodeFactory;
     this.nodeToRawNode = nodeToRawNode;
+    this.topLevelTargets = topLevelTargets;
   }
 
   public BuildJobStateTargetGraph dump(
-      Collection<TargetNode<?, ?>> targetNodes,
-      Function<Path, Integer> cellIndexer) {
+      Collection<TargetNode<?, ?>> targetNodes, DistBuildCellIndexer cellIndexer) {
     BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
 
     for (TargetNode<?, ?> targetNode : targetNodes) {
@@ -73,10 +71,10 @@ public class DistBuildTargetGraphCodec {
       ProjectFilesystem projectFilesystem = targetNode.getFilesystem();
 
       BuildJobStateTargetNode remoteNode = new BuildJobStateTargetNode();
-      remoteNode.setCellIndex(cellIndexer.apply(projectFilesystem.getRootPath()));
+      remoteNode.setCellIndex(cellIndexer.getCellIndex(projectFilesystem.getRootPath()));
       remoteNode.setBuildTarget(encodeBuildTarget(targetNode.getBuildTarget()));
       try {
-        remoteNode.setRawNode(objectMapper.writeValueAsString(rawTargetNode));
+        remoteNode.setRawNode(ObjectMappers.WRITER.writeValueAsString(rawTargetNode));
       } catch (JsonProcessingException e) {
         throw new RuntimeException(e);
       }
@@ -94,24 +92,26 @@ public class DistBuildTargetGraphCodec {
       remoteTarget.setCellName(buildTarget.getCell().get());
     }
     remoteTarget.setFlavors(
-        buildTarget.getFlavors().stream()
-            .map(Object::toString)
-            .collect(Collectors.toSet()));
+        buildTarget.getFlavors().stream().map(Object::toString).collect(Collectors.toSet()));
     return remoteTarget;
   }
 
   public static BuildTarget decodeBuildTarget(BuildJobStateBuildTarget remoteTarget, Cell cell) {
 
-    UnflavoredBuildTarget unflavoredBuildTarget = UnflavoredBuildTarget.builder()
-        .setShortName(remoteTarget.getShortName())
-        .setBaseName(remoteTarget.getBaseName())
-        .setCellPath(cell.getRoot())
-        .setCell(Optional.ofNullable(remoteTarget.getCellName()))
-        .build();
+    UnflavoredBuildTarget unflavoredBuildTarget =
+        UnflavoredBuildTarget.builder()
+            .setShortName(remoteTarget.getShortName())
+            .setBaseName(remoteTarget.getBaseName())
+            .setCellPath(cell.getRoot())
+            .setCell(Optional.ofNullable(remoteTarget.getCellName()))
+            .build();
 
-    ImmutableSet<Flavor> flavors = remoteTarget.flavors.stream()
-        .map(ImmutableFlavor::of)
-        .collect(MoreCollectors.toImmutableSet());
+    ImmutableSet<Flavor> flavors =
+        remoteTarget
+            .flavors
+            .stream()
+            .map(InternalFlavor::of)
+            .collect(MoreCollectors.toImmutableSet());
 
     return BuildTarget.builder()
         .setUnflavoredBuildTarget(unflavoredBuildTarget)
@@ -119,45 +119,57 @@ public class DistBuildTargetGraphCodec {
         .build();
   }
 
-  public TargetGraph createTargetGraph(
-      BuildJobStateTargetGraph remoteTargetGraph,
-      Function<Integer, Cell> cellLookup) throws IOException {
+  public TargetGraphAndBuildTargets createTargetGraph(
+      BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
+      throws IOException {
 
     ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> targetNodeIndexBuilder =
         ImmutableMap.builder();
+
+    ImmutableSet.Builder<BuildTarget> buildTargetsBuilder = ImmutableSet.builder();
 
     for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
       Cell cell = cellLookup.apply(remoteNode.getCellIndex());
       ProjectFilesystem projectFilesystem = cell.getFilesystem();
       BuildTarget target = decodeBuildTarget(remoteNode.getBuildTarget(), cell);
+      if (topLevelTargets.contains(target.getFullyQualifiedName())) {
+        buildTargetsBuilder.add(target);
+      }
 
       @SuppressWarnings("unchecked")
-      Map<String, Object> rawNode = objectMapper.readValue(remoteNode.getRawNode(), Map.class);
-      Path buildFilePath = projectFilesystem
-          .resolve(target.getBasePath())
-          .resolve(cell.getBuildFileName());
+      Map<String, Object> rawNode = ObjectMappers.readValue(remoteNode.getRawNode(), Map.class);
+      Path buildFilePath =
+          projectFilesystem.resolve(target.getBasePath()).resolve(cell.getBuildFileName());
 
-      TargetNode<?, ?> targetNode = parserTargetNodeFactory.createTargetNode(
-          cell,
-          buildFilePath,
-          target,
-          rawNode,
-          input -> SimplePerfEvent.scope(Optional.empty(), input));
+      TargetNode<?, ?> targetNode =
+          parserTargetNodeFactory.createTargetNode(
+              cell,
+              buildFilePath,
+              target,
+              rawNode,
+              input -> SimplePerfEvent.scope(Optional.empty(), input));
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
     }
+
+    ImmutableSet<BuildTarget> buildTargets = buildTargetsBuilder.build();
+    Preconditions.checkArgument(topLevelTargets.size() == buildTargets.size());
+
     ImmutableMap<BuildTarget, TargetNode<?, ?>> targetNodeIndex = targetNodeIndexBuilder.build();
 
     MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph = new MutableDirectedGraph<>();
     for (TargetNode<?, ?> targetNode : targetNodeIndex.values()) {
       mutableTargetGraph.addNode(targetNode);
-      for (BuildTarget dep : targetNode.getDeps()) {
+      for (BuildTarget dep : targetNode.getParseDeps()) {
         mutableTargetGraph.addEdge(
-            targetNode,
-            Preconditions.checkNotNull(targetNodeIndex.get(dep)));
+            targetNode, Preconditions.checkNotNull(targetNodeIndex.get(dep)));
       }
     }
 
-    // TODO(csarbora): make this work with TargetGroups
-    return new TargetGraph(mutableTargetGraph, targetNodeIndex, ImmutableSet.of());
+    TargetGraph targetGraph = new TargetGraph(mutableTargetGraph, targetNodeIndex);
+
+    return TargetGraphAndBuildTargets.builder()
+        .setTargetGraph(targetGraph)
+        .addAllBuildTargets(buildTargets)
+        .build();
   }
 }

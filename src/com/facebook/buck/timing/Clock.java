@@ -18,18 +18,12 @@ package com.facebook.buck.timing;
 
 public interface Clock {
 
-  /**
-   * @see System#currentTimeMillis()
-   */
+  /** @see System#currentTimeMillis() */
   long currentTimeMillis();
 
-  /**
-   * @see System#nanoTime()
-   */
+  /** @see System#nanoTime() */
   long nanoTime();
 
-  /**
-   * @see java.lang.management.ThreadMXBean#getThreadUserTime(long)
-   */
+  /** @see java.lang.management.ThreadMXBean#getThreadUserTime(long) */
   long threadUserNanoTime(long threadId);
 }

@@ -18,10 +18,8 @@ package com.facebook.buck.macho;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -33,13 +31,20 @@ abstract class AbstractMachoHeader {
   public static final UnsignedInteger MH_MAGIC_64 = UnsignedInteger.fromIntBits(0xfeedfacf);
   public static final UnsignedInteger MH_CIGAM_64 = UnsignedInteger.fromIntBits(0xcffaedfe);
 
-  public abstract UnsignedInteger getMagic();              // 32 bit
-  public abstract Integer getCputype();                    // 32 bit
-  public abstract Integer getCpusubtype();                 // 32 bit
-  public abstract UnsignedInteger getFiletype();           // 32 bit
-  public abstract UnsignedInteger getNcmds();              // 32 bit
-  public abstract UnsignedInteger getSizeofcmds();         // 32 bit
-  public abstract UnsignedInteger getFlags();              // 32 bit
+  public abstract UnsignedInteger getMagic(); // 32 bit
+
+  public abstract Integer getCputype(); // 32 bit
+
+  public abstract Integer getCpusubtype(); // 32 bit
+
+  public abstract UnsignedInteger getFiletype(); // 32 bit
+
+  public abstract UnsignedInteger getNcmds(); // 32 bit
+
+  public abstract UnsignedInteger getSizeofcmds(); // 32 bit
+
+  public abstract UnsignedInteger getFlags(); // 32 bit
+
   public abstract Optional<UnsignedInteger> getReserved(); // 32 bit, only present for 64 bit arch
 
   @Value.Check

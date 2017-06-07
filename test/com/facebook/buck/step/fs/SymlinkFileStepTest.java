@@ -31,32 +31,20 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class SymlinkFileStepTest {
 
-  @Rule
-  public final TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testAbsoluteSymlinkFiles() throws IOException {
-    internalTestSymlinkFiles(/* useAbsolutePaths */ true);
-  }
-
-  @Test
-  public void testRelativeSymlinkFiles() throws IOException {
-    internalTestSymlinkFiles(/* useAbsolutePaths */ false);
-  }
-
-  public void internalTestSymlinkFiles(boolean useAbsolutePaths) throws IOException {
+  public void testAbsoluteSymlinkFiles() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
@@ -65,11 +53,12 @@ public class SymlinkFileStepTest {
     File target = tmpDir.newFile();
     target.delete();
 
-    SymlinkFileStep step = new SymlinkFileStep(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        /* source */ Paths.get(source.getName()),
-        /* target */ Paths.get(target.getName()),
-        useAbsolutePaths);
+    SymlinkFileStep step =
+        SymlinkFileStep.builder()
+            .setFilesystem(new ProjectFilesystem(tmpDir.getRoot().toPath()))
+            .setExistingFile(Paths.get(source.getName()))
+            .setDesiredLink(Paths.get(target.getName()))
+            .build();
     step.execute(context);
     // Run twice to ensure we can overwrite an existing symlink
     step.execute(context);
@@ -87,18 +76,21 @@ public class SymlinkFileStepTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     // Run `ln -s /path/that/does/not/exist dummy` in /tmp.
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of("ln", "-s", "/path/that/does/not/exist", "my_symlink"))
-        .setDirectory(tmpDir.getRoot().toPath())
-        .build();
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of("ln", "-s", "/path/that/does/not/exist", "my_symlink"))
+            .setDirectory(tmpDir.getRoot().toPath())
+            .build();
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     executor.launchAndExecute(params);
 
     // Verify that the symlink points to a non-existent file.
     Path symlink = Paths.get(tmpDir.getRoot().getAbsolutePath(), "my_symlink");
-    assertFalse("exists() should reflect the existence of what the symlink points to",
+    assertFalse(
+        "exists() should reflect the existence of what the symlink points to",
         symlink.toFile().exists());
-    assertTrue("even though exists() is false, isSymbolicLink should be true",
+    assertTrue(
+        "even though exists() is false, isSymbolicLink should be true",
         java.nio.file.Files.isSymbolicLink(symlink));
 
     // Create an ExecutionContext to return the ProjectFilesystem.
@@ -106,11 +98,12 @@ public class SymlinkFileStepTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     tmpDir.newFile("dummy");
-    SymlinkFileStep symlinkStep = new SymlinkFileStep(
-        projectFilesystem,
-        /* source */ Paths.get("dummy"),
-        /* target */ Paths.get("my_symlink"),
-        /* useAbsolutePaths*/ true);
+    SymlinkFileStep symlinkStep =
+        SymlinkFileStep.builder()
+            .setFilesystem(projectFilesystem)
+            .setExistingFile(Paths.get("dummy"))
+            .setDesiredLink(Paths.get("my_symlink"))
+            .build();
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));

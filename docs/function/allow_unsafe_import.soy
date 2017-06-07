@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'allow_unsafe_import()' /}
+    {param navid: 'function_allow_unsafe_import' /}
     {param prettify: true /}
     {param description}
       When build file sandboxing is enabled, allow_unsafe_import() function may be used to
@@ -14,8 +15,11 @@
 {call buck.function}
 {param status: 'FROZEN' /}
 {param overview}
-When <a href="{ROOT}concept/buckconfig.html#project.enable_build_file_sandboxing">build file sandboxing</a> is
-enabled, <code>allow_unsafe_import()</code> function may be used to create a context that lifts the
+Buck has restrictions on importing arbitrary Python modules in {call buck.build_file /}s which make
+it harder to accidentally violate assumptions about determinism of {call buck.build_file /}s and
+build rules.
+
+The <code>allow_unsafe_import()</code> function may be used to create a context that lifts the
 restrictions on module importing.
 
 <p>

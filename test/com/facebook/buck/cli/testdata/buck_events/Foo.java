@@ -16,5 +16,4 @@
 
 package buck.events;
 
-public class Foo {
-}
+public class Foo {}

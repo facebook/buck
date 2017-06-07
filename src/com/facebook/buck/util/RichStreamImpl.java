@@ -37,9 +37,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-/**
- * Implementation that delegates to the standard Stream and wraps the resulting streams.
- */
+/** Implementation that delegates to the standard Stream and wraps the resulting streams. */
 final class RichStreamImpl<T> implements RichStream<T> {
   private final Stream<T> delegate;
 
@@ -154,17 +152,13 @@ final class RichStreamImpl<T> implements RichStream<T> {
 
   @Override
   public <U> U reduce(
-      U identity,
-      BiFunction<U, ? super T, U> accumulator,
-      BinaryOperator<U> combiner) {
+      U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner) {
     return delegate.reduce(identity, accumulator, combiner);
   }
 
   @Override
   public <R> R collect(
-      Supplier<R> supplier,
-      BiConsumer<R, ? super T> accumulator,
-      BiConsumer<R, R> combiner) {
+      Supplier<R> supplier, BiConsumer<R, ? super T> accumulator, BiConsumer<R, R> combiner) {
     return delegate.collect(supplier, accumulator, combiner);
   }
 

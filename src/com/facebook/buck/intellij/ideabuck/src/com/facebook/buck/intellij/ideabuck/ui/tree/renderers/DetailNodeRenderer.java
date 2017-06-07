@@ -20,14 +20,14 @@ import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
 import com.google.common.html.HtmlEscapers;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.components.JBLabel;
+import java.awt.Component;
 import javax.swing.Icon;
 import javax.swing.SwingConstants;
-import java.awt.Component;
 
 public class DetailNodeRenderer implements BuildElementRenderer {
   @Override
   public Component render(Object value) {
-    BuckTreeNodeDetail node = (BuckTreeNodeDetail ) value;
+    BuckTreeNodeDetail node = (BuckTreeNodeDetail) value;
 
     Icon icon = AllIcons.Ide.Info_notifications;
     if (node.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
@@ -36,15 +36,12 @@ public class DetailNodeRenderer implements BuildElementRenderer {
       icon = AllIcons.Ide.Warning_notifications;
     }
 
-    String message = "<html><pre style='margin:0px'>" +
-        HtmlEscapers.htmlEscaper().escape(node.getDetail()) +
-        "</pre></html>";
+    String message =
+        "<html><pre style='margin:0px'>"
+            + HtmlEscapers.htmlEscaper().escape(node.getDetail())
+            + "</pre></html>";
 
-    JBLabel result = new JBLabel(
-        message,
-        icon,
-        SwingConstants.HORIZONTAL
-    );
+    JBLabel result = new JBLabel(message, icon, SwingConstants.HORIZONTAL);
 
     result.setToolTipText("<pre>" + node.getDetail() + "</pre>");
 

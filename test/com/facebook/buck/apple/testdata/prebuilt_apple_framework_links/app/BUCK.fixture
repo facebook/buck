@@ -14,3 +14,8 @@ apple_bundle(
     info_plist = 'Info.plist',
     deps = [':TestApp'],
 )
+
+xcode_workspace_config(
+    name = 'workspace',
+    src_target = ':TestAppBundle',
+)

@@ -30,21 +30,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
 public class PreDexedFilesSorterTest {
-  @Rule
-  public TemporaryFolder tempDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   private static final String PRIMARY_DEX_PATTERN = "primary";
   private static final long DEX_WEIGHT_LIMIT = 10 * 1024 * 1024;
@@ -55,10 +52,11 @@ public class PreDexedFilesSorterTest {
 
   @Before
   public void setUp() throws IOException {
-    moduleGraph = new APKModuleGraph(
-        TargetGraph.EMPTY,
-        BuildTargetFactory.newInstance("//fakeTarget:yes"),
-        Optional.empty());
+    moduleGraph =
+        new APKModuleGraph(
+            TargetGraph.EMPTY,
+            BuildTargetFactory.newInstance("//fakeTarget:yes"),
+            Optional.empty());
     extraModule = APKModule.builder().setName("extra").build();
   }
 
@@ -68,10 +66,9 @@ public class PreDexedFilesSorterTest {
     int numberOfSecondaryDexes = 0;
     int numberOfExtraDexes = 0;
 
-    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults = generatePreDexSorterResults(
-        numberOfPrimaryDexes,
-        numberOfSecondaryDexes,
-        numberOfExtraDexes);
+    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
+        generatePreDexSorterResults(
+            numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
     for (String store : sortResults.keySet()) {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
     }
@@ -84,10 +81,7 @@ public class PreDexedFilesSorterTest {
     int numberOfSecondaryDexes = 0;
     int numberOfExtraDexes = 0;
 
-    generatePreDexSorterResults(
-        numberOfPrimaryDexes,
-        numberOfSecondaryDexes,
-        numberOfExtraDexes);
+    generatePreDexSorterResults(numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
   }
 
   @Test
@@ -96,10 +90,9 @@ public class PreDexedFilesSorterTest {
     int numberOfSecondaryDexes = 10;
     int numberOfExtraDexes = 0;
 
-    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults = generatePreDexSorterResults(
-        numberOfPrimaryDexes,
-        numberOfSecondaryDexes,
-        numberOfExtraDexes);
+    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
+        generatePreDexSorterResults(
+            numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
     PreDexedFilesSorter.Result rootResult = sortResults.get(APKModuleGraph.ROOT_APKMODULE_NAME);
     for (String store : sortResults.keySet()) {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
@@ -115,10 +108,9 @@ public class PreDexedFilesSorterTest {
     int numberOfSecondaryDexes = 15;
     int numberOfExtraDexes = 0;
 
-    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults = generatePreDexSorterResults(
-        numberOfPrimaryDexes,
-        numberOfSecondaryDexes,
-        numberOfExtraDexes);
+    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
+        generatePreDexSorterResults(
+            numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
     for (String store : sortResults.keySet()) {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
     }
@@ -143,10 +135,9 @@ public class PreDexedFilesSorterTest {
     int numberOfSecondaryDexes = 0;
     int numberOfExtraDexes = 10;
 
-    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults = generatePreDexSorterResults(
-        numberOfPrimaryDexes,
-        numberOfSecondaryDexes,
-        numberOfExtraDexes);
+    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
+        generatePreDexSorterResults(
+            numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
     for (String store : sortResults.keySet()) {
       assertThat(store, oneOf(moduleGraph.getRootAPKModule().getName(), extraModule.getName()));
     }
@@ -169,10 +160,9 @@ public class PreDexedFilesSorterTest {
     int numberOfSecondaryDexes = 15;
     int numberOfExtraDexes = 15;
 
-    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults = generatePreDexSorterResults(
-        numberOfPrimaryDexes,
-        numberOfSecondaryDexes,
-        numberOfExtraDexes);
+    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
+        generatePreDexSorterResults(
+            numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
     for (String store : sortResults.keySet()) {
       assertThat(store, oneOf(moduleGraph.getRootAPKModule().getName(), extraModule.getName()));
     }
@@ -193,8 +183,8 @@ public class PreDexedFilesSorterTest {
   }
 
   private ImmutableMap<String, PreDexedFilesSorter.Result> generatePreDexSorterResults(
-      int numberOfPrimaryDexes,
-      int numberOfSecondaryDexes, int numberOfExtraDexes) throws IOException {
+      int numberOfPrimaryDexes, int numberOfSecondaryDexes, int numberOfExtraDexes)
+      throws IOException {
     ImmutableMultimap.Builder<APKModule, DexWithClasses> inputDexes = ImmutableMultimap.builder();
     for (int i = 0; i < numberOfPrimaryDexes; i++) {
       inputDexes.put(
@@ -202,8 +192,7 @@ public class PreDexedFilesSorterTest {
           createFakeDexWithClasses(
               Paths.get("primary").resolve(String.format("/primary%d.dex", i)),
               ImmutableSet.of(String.format("primary.primary%d.class", i)),
-              STANDARD_DEX_FILE_ESTIMATE)
-      );
+              STANDARD_DEX_FILE_ESTIMATE));
     }
     for (int i = 0; i < numberOfSecondaryDexes; i++) {
       inputDexes.put(
@@ -211,8 +200,7 @@ public class PreDexedFilesSorterTest {
           createFakeDexWithClasses(
               Paths.get("secondary").resolve(String.format("secondary%d.dex", i)),
               ImmutableSet.of(String.format("secondary.secondary%d.class", i)),
-              STANDARD_DEX_FILE_ESTIMATE)
-      );
+              STANDARD_DEX_FILE_ESTIMATE));
     }
     for (int i = 0; i < numberOfExtraDexes; i++) {
       inputDexes.put(
@@ -220,30 +208,27 @@ public class PreDexedFilesSorterTest {
           createFakeDexWithClasses(
               Paths.get("extra").resolve(String.format("extra%d.dex", i)),
               ImmutableSet.of(String.format("extra.extra%d.class", i)),
-              STANDARD_DEX_FILE_ESTIMATE)
-      );
+              STANDARD_DEX_FILE_ESTIMATE));
     }
 
-    PreDexedFilesSorter sorter = new PreDexedFilesSorter(
-        Optional.empty(),
-        inputDexes.build(),
-        ImmutableSet.of(PRIMARY_DEX_PATTERN),
-        moduleGraph,
-        tempDir.newFolder("scratch").toPath(),
-        DEX_WEIGHT_LIMIT,
-        DexStore.JAR,
-        tempDir.newFolder("secondary").toPath(),
-        tempDir.newFolder("additional").toPath());
+    PreDexedFilesSorter sorter =
+        new PreDexedFilesSorter(
+            Optional.empty(),
+            inputDexes.build(),
+            ImmutableSet.of(PRIMARY_DEX_PATTERN),
+            moduleGraph,
+            tempDir.newFolder("scratch").toPath(),
+            DEX_WEIGHT_LIMIT,
+            DexStore.JAR,
+            tempDir.newFolder("secondary").toPath(),
+            tempDir.newFolder("additional").toPath());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     return sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps);
   }
 
   private DexWithClasses createFakeDexWithClasses(
-      final Path pathToDex,
-      final ImmutableSet<String> classNames,
-      final int weightEstimate
-  ) {
+      final Path pathToDex, final ImmutableSet<String> classNames, final int weightEstimate) {
     return new DexWithClasses() {
       @Override
       public Path getPathToDexFile() {

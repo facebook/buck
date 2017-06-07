@@ -26,52 +26,47 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Optional;
-
 public class DoctorReportHelperTest {
 
-  @Rule
-  public TemporaryPaths tempFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tempFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
-  private ObjectMapper objectMapper;
 
   @Before
   public void setUp() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
-    objectMapper = ObjectMappers.newDefaultInstance();
   }
 
   @Test
   public void testErrorMessage() throws Exception {
     TestConsole console = new TestConsole();
-    DoctorConfig doctorConfig = DoctorConfig.of(
-        FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of(
-                    DoctorConfig.DOCTOR_SECTION,
-                    ImmutableMap.of(DoctorConfig.URL_FIELD, "url"))).build());
+    DoctorConfig doctorConfig =
+        DoctorConfig.of(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        DoctorConfig.DOCTOR_SECTION,
+                        ImmutableMap.of(DoctorConfig.URL_FIELD, "url")))
+                .build());
 
-    DoctorReportHelper helper = new DoctorReportHelper(
-        workspace.asCell().getFilesystem(),
-        (new UserInputFixture("0")).getUserInput(),
-        console,
-        objectMapper,
-        doctorConfig);
+    DoctorReportHelper helper =
+        new DoctorReportHelper(
+            workspace.asCell().getFilesystem(),
+            (new UserInputFixture("0")).getUserInput(),
+            console,
+            doctorConfig);
 
     String errorMessage = "This is an error message.";
-    DoctorEndpointResponse response = DoctorEndpointResponse.of(
-        Optional.of(errorMessage),
-        ImmutableList.of());
+    DoctorEndpointResponse response =
+        DoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
 
     helper.presentResponse(response);
     assertEquals("=> " + errorMessage + "\n", console.getTextWrittenToStdOut());
@@ -80,29 +75,26 @@ public class DoctorReportHelperTest {
   @Test
   public void testNoAvailableSuggestions() throws Exception {
     TestConsole console = new TestConsole();
-    DoctorConfig doctorConfig = DoctorConfig.of(
-        FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of(
-                DoctorConfig.DOCTOR_SECTION,
-                ImmutableMap.of(DoctorConfig.URL_FIELD, "url"))).build());
+    DoctorConfig doctorConfig =
+        DoctorConfig.of(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        DoctorConfig.DOCTOR_SECTION,
+                        ImmutableMap.of(DoctorConfig.URL_FIELD, "url")))
+                .build());
 
-    DoctorReportHelper helper = new DoctorReportHelper(
-        workspace.asCell().getFilesystem(),
-        (new UserInputFixture("0")).getUserInput(),
-        console,
-        objectMapper,
-        doctorConfig);
+    DoctorReportHelper helper =
+        new DoctorReportHelper(
+            workspace.asCell().getFilesystem(),
+            (new UserInputFixture("0")).getUserInput(),
+            console,
+            doctorConfig);
 
-    DoctorEndpointResponse response = DoctorEndpointResponse.of(
-        Optional.empty(),
-        ImmutableList.of());
+    DoctorEndpointResponse response =
+        DoctorEndpointResponse.of(Optional.empty(), ImmutableList.of());
 
     helper.presentResponse(response);
-    assertEquals(
-        "\n:: No available suggestions right now.\n\n",
-        console.getTextWrittenToStdOut());
+    assertEquals("\n:: No available suggestions right now.\n\n", console.getTextWrittenToStdOut());
   }
-
 }
-
-

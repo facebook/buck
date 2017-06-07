@@ -16,9 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-
 import com.facebook.buck.io.ProjectFilesystem;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,7 +27,7 @@ public class ApiStubber {
     // Command line utility.
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws InterruptedException, IOException {
     Path source = Paths.get(args[0]);
     Path destination = Paths.get(args[1]);
 

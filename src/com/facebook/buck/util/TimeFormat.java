@@ -22,9 +22,7 @@ public class TimeFormat {
 
   private TimeFormat() {}
 
-  /**
-   * @return a six-character string, so it is a fixed width
-   */
+  /** @return a six-character string, so it is a fixed width */
   public static String formatForConsole(Locale locale, long durationInMillis, Ansi ansi) {
     if (durationInMillis < 100) {
       return ansi.asSuccessText("<100ms");

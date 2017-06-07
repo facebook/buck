@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -74,25 +73,25 @@ public class DirectToJarOutputSettingsSerializer {
 
   @SuppressWarnings("unchecked")
   public static DirectToJarOutputSettings deserialize(Map<String, Object> data) {
-    Preconditions.checkArgument(data.containsKey(OUTPUT_PATH));
-    Preconditions.checkArgument(data.containsKey(CLASSES_TO_REMOVE));
-    Preconditions.checkArgument(data.containsKey(ENTRIES));
-
-    Path outputPath = Paths.get((String) data.get(OUTPUT_PATH));
+    Path outputPath = Paths.get((String) Preconditions.checkNotNull(data.get(OUTPUT_PATH)));
 
     ImmutableSet.Builder<Pattern> classesToRemove = ImmutableSet.builder();
     for (Map<String, Object> patternData :
-        (List<Map<String, Object>>) data.get(CLASSES_TO_REMOVE)) {
-      Preconditions.checkArgument(patternData.containsKey(CLASSES_TO_REMOVE_PATTERN));
-      Preconditions.checkArgument(patternData.containsKey(CLASSES_TO_REMOVE_PATTERN_FLAGS));
+        (List<Map<String, Object>>) Preconditions.checkNotNull(data.get(CLASSES_TO_REMOVE))) {
       classesToRemove.add(
           Pattern.compile(
-              (String) patternData.get(CLASSES_TO_REMOVE_PATTERN),
-              (int) patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS)));
+              (String)
+                  Preconditions.checkNotNull(
+                      patternData.get(CLASSES_TO_REMOVE_PATTERN),
+                      "Didn't find classes to remove pattern in serialized DirectToJarOutputSettings"),
+              (int)
+                  Preconditions.checkNotNull(
+                      patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS),
+                      "Didn't find flags in serialized DirectToJarOutputSettings")));
     }
 
     ImmutableSortedSet.Builder<Path> entries = ImmutableSortedSet.naturalOrder();
-    for (String entry : (List<String>) data.get(ENTRIES)) {
+    for (String entry : (List<String>) Preconditions.checkNotNull(data.get(ENTRIES))) {
       entries.add(Paths.get(entry));
     }
 
@@ -107,10 +106,6 @@ public class DirectToJarOutputSettingsSerializer {
     }
 
     return DirectToJarOutputSettings.of(
-        outputPath,
-        classesToRemove.build(),
-        entries.build(),
-        mainClass,
-        manifestFile);
+        outputPath, classesToRemove.build(), entries.build(), mainClass, manifestFile);
   }
 }

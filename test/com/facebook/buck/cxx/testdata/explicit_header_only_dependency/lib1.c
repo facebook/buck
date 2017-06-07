@@ -1,0 +1,1 @@
+void lib1_function(void) {}

@@ -25,34 +25,29 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class AndroidBinaryFlavorsIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_project",
-        temporaryFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", temporaryFolder);
     workspace.setUp();
   }
 
@@ -61,14 +56,13 @@ public class AndroidBinaryFlavorsIntegrationTest {
     String target = "//apps/sample:app_comp_str#package_string_assets";
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
-    Path path = BuildTargets.getScratchPath(
-        filesystem,
-        BuildTargetFactory.newInstance(target),
-        PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
+    Path path =
+        BuildTargets.getScratchPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
     result.assertSuccess();
-    assertThat(
-        result.getStdout().trim().split(" ")[1],
-        equalTo(path.toString()));
+    assertThat(result.getStdout().trim().split(" ")[1], equalTo(path.toString()));
   }
 
   @Test
@@ -76,14 +70,13 @@ public class AndroidBinaryFlavorsIntegrationTest {
     String target = "//apps/sample:app_str#package_string_assets";
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
-    Path path = BuildTargets.getScratchPath(
-        filesystem,
-        BuildTargetFactory.newInstance(target),
-        PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
+    Path path =
+        BuildTargets.getScratchPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
     result.assertSuccess();
-    assertThat(
-        result.getStdout().trim().split(" ")[1],
-        equalTo(path.toString()));
+    assertThat(result.getStdout().trim().split(" ")[1], equalTo(path.toString()));
   }
 
   @Test

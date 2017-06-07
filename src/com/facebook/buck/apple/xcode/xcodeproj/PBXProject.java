@@ -19,15 +19,12 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * The root object representing the project itself.
- */
+/** The root object representing the project itself. */
 public class PBXProject extends PBXContainer {
   private String name;
   private final PBXGroup mainGroup;
@@ -38,7 +35,7 @@ public class PBXProject extends PBXContainer {
   public PBXProject(String name) {
     this.name = name;
     this.mainGroup = new PBXGroup("mainGroup", null, PBXReference.SourceTree.GROUP);
-    this.targets = Lists.newArrayList();
+    this.targets = new ArrayList<>();
     this.buildConfigurationList = new XCConfigurationList();
     this.compatibilityVersion = "Xcode 3.2";
   }
@@ -83,12 +80,16 @@ public class PBXProject extends PBXContainer {
 
     s.addField("mainGroup", mainGroup);
 
-    Collections.sort(targets, Ordering.natural().onResultOf(new Function<PBXTarget, String>() {
-      @Override
-      public String apply(PBXTarget input) {
-        return input.getName();
-      }
-    }));
+    Collections.sort(
+        targets,
+        Ordering.natural()
+            .onResultOf(
+                new Function<PBXTarget, String>() {
+                  @Override
+                  public String apply(PBXTarget input) {
+                    return input.getName();
+                  }
+                }));
     s.addField("targets", targets);
     s.addField("buildConfigurationList", buildConfigurationList);
     s.addField("compatibilityVersion", compatibilityVersion);

@@ -16,48 +16,46 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
-
 /**
- * Creates a debug launch script. The script will run OCaml debugger with
- * the target binary loaded. This works with bytecode and provides limited debugging
- * functionality like stepping, breakpoints, etc.
+ * Creates a debug launch script. The script will run OCaml debugger with the target binary loaded.
+ * This works with bytecode and provides limited debugging functionality like stepping, breakpoints,
+ * etc.
  */
 public class OcamlDebugLauncher extends AbstractBuildRule {
-  @AddToRuleKey
-  private final OcamlDebugLauncherStep.Args args;
+  @AddToRuleKey private final OcamlDebugLauncherStep.Args args;
 
-  public OcamlDebugLauncher(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      OcamlDebugLauncherStep.Args args) {
-    super(params, resolver);
+  public OcamlDebugLauncher(BuildRuleParams params, OcamlDebugLauncherStep.Args args) {
+    super(params);
     this.args = args;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(args.getOutput());
     return ImmutableList.of(
-      new MkdirStep(getProjectFilesystem(), args.getOutput().getParent()),
-      new OcamlDebugLauncherStep(getProjectFilesystem(), getResolver(), args)
-    );
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                args.getOutput().getParent())),
+        new OcamlDebugLauncherStep(getProjectFilesystem(), context.getSourcePathResolver(), args));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return args.getOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.getOutput());
   }
 }

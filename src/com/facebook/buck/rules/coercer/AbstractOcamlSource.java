@@ -18,12 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
-/**
- * Describes a OCaml source and the various paths it uses from input to output.
- */
+/** Describes a OCaml source and the various paths it uses from input to output. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractOcamlSource {

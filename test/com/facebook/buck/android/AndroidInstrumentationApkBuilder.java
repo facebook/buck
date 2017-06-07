@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -26,21 +27,21 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 
-
 public class AndroidInstrumentationApkBuilder
-    extends
-    AbstractNodeBuilder<
-        AndroidInstrumentationApkDescription.Arg,
-        AndroidInstrumentationApkDescription> {
+    extends AbstractNodeBuilder<
+        AndroidInstrumentationApkDescriptionArg.Builder, AndroidInstrumentationApkDescriptionArg,
+        AndroidInstrumentationApkDescription, AndroidInstrumentationApk> {
 
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(
         new AndroidInstrumentationApkDescription(
+            DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ANDROID_JAVAC_OPTIONS,
             ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
-            new CxxBuckConfig(new FakeBuckConfig.Builder().build())),
+            new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
+            new DxConfig(FakeBuckConfig.builder().build())),
         target);
   }
 
@@ -49,13 +50,12 @@ public class AndroidInstrumentationApkBuilder
   }
 
   public AndroidInstrumentationApkBuilder setManifest(SourcePath manifest) {
-    arg.manifest = manifest;
+    getArgForPopulating().setManifest(manifest);
     return this;
   }
 
   public AndroidInstrumentationApkBuilder setApk(BuildTarget apk) {
-    arg.apk = apk;
+    getArgForPopulating().setApk(apk);
     return this;
   }
-
 }

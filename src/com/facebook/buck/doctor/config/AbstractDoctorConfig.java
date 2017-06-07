@@ -20,10 +20,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
@@ -49,5 +47,4 @@ abstract class AbstractDoctorConfig implements ConfigView<BuckConfig> {
   public ImmutableMap<String, String> getExtraRequestArgs() {
     return getDelegate().getMap(DOCTOR_SECTION, DOCTOR_EXTRA_ARGS_FIELD);
   }
-
 }

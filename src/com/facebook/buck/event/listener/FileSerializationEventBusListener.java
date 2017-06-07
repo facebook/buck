@@ -20,9 +20,8 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.IndividualTestEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,19 +32,16 @@ import java.nio.file.StandardOpenOption;
 
 public class FileSerializationEventBusListener implements BuckEventListener, Closeable {
 
-  private final ObjectMapper objectMapper;
   private final BufferedWriter bufferedWriter;
 
-  public FileSerializationEventBusListener(
-      Path outputPath,
-      ObjectMapper objectMapper) throws IOException {
-    this.objectMapper = objectMapper;
-    this.bufferedWriter = Files.newBufferedWriter(
-        outputPath,
-        StandardCharsets.UTF_8,
-        StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE,
-        StandardOpenOption.APPEND);
+  public FileSerializationEventBusListener(Path outputPath) throws IOException {
+    this.bufferedWriter =
+        Files.newBufferedWriter(
+            outputPath,
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE,
+            StandardOpenOption.APPEND);
   }
 
   @Override
@@ -68,12 +64,11 @@ public class FileSerializationEventBusListener implements BuckEventListener, Clo
 
   private String serializeEvent(BuckEvent event) {
     try {
-      return objectMapper.writeValueAsString(event);
+      return ObjectMappers.WRITER.writeValueAsString(event);
     } catch (IOException e) {
       return String.format(
           "{\"errorType\":\"%s\",\"errorMessage\":\"%s\"}",
-          e.getClass().toString(),
-          e.getMessage().replace('"', '\''));
+          e.getClass().toString(), e.getMessage().replace('"', '\''));
     }
   }
 

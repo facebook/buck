@@ -17,15 +17,15 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractWorkerJobResult {
   int getExitCode();
+
   Optional<String> getStdout();
+
   Optional<String> getStderr();
 }

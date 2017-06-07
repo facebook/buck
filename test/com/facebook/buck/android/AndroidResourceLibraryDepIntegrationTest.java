@@ -17,32 +17,30 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AndroidResourceLibraryDepIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
   }
 
   @Test
-  public void testModifyingLibraryDependencyDoesNotCauseRebuilt() throws IOException {
+  public void testModifyingLibraryDependencyDoesNotCauseRebuilt()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     String appTarget = "//apps/sample:app_res_lib_dep";
     String resTarget = "//res/com/sample/base:base_with_lib_dep";
@@ -60,9 +58,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
 
     // Update the java library dependency, which will force it to be rebuilt.
     workspace.replaceFileContents(
-        "java/com/sample/small/Sample.java",
-        "savedInstanceState",
-        "savedInstanceState2");
+        "java/com/sample/small/Small.java", "savedInstanceState", "savedInstanceState2");
 
     workspace.resetBuildLogFile();
 
@@ -76,5 +72,4 @@ public class AndroidResourceLibraryDepIntegrationTest {
     secondBuildLog.assertTargetHadMatchingRuleKey(resTarget);
     secondBuildLog.assertTargetBuiltLocally(libTarget);
   }
-
 }

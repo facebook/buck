@@ -17,22 +17,21 @@
 package com.facebook.buck.testutil.integration;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.MorePaths;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.CharStreams;
-
-import org.hamcrest.Matchers;
-
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.hamcrest.Matchers;
 
 public class ZipInspector {
 
@@ -60,23 +59,27 @@ public class ZipInspector {
     assertThat(zipFileEntries, not(hasItem((pathRelativeToRoot))));
   }
 
-  public void assertFilesDoNotExist(String...pathsRelativeToRoot) {
+  public void assertFilesDoNotExist(String... pathsRelativeToRoot) {
     for (String path : pathsRelativeToRoot) {
       assertFileDoesNotExist(path);
     }
   }
 
   public void assertFileContents(String pathRelativeToRoot, String expected) throws IOException {
-    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
-      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
-      assertThat(
-          CharStreams.toString(new InputStreamReader(zipFile.getInputStream(entry))),
-          Matchers.equalTo(expected));
-    }
+    assertThat(
+        new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
+        Matchers.equalTo(expected));
   }
 
   public void assertFileContents(Path pathRelativeToRoot, String expected) throws IOException {
     assertFileContents(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
+  }
+
+  public byte[] getFileContents(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      return ByteStreams.toByteArray(zipFile.getInputStream(entry));
+    }
   }
 
   public ImmutableSet<String> getZipFileEntries() {
@@ -87,9 +90,7 @@ public class ZipInspector {
     try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
       long crc = entry.getCrc();
-      Preconditions.checkState(crc != -1,
-          "Error accessing crc for entry: %s",
-          pathRelativeToRoot);
+      Preconditions.checkState(crc != -1, "Error accessing crc for entry: %s", pathRelativeToRoot);
       return crc;
     }
   }
@@ -98,10 +99,25 @@ public class ZipInspector {
     try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
       long size = entry.getSize();
-      Preconditions.checkState(size != -1,
-          "Error accessing size for entry: %s",
-          pathRelativeToRoot);
+      Preconditions.checkState(
+          size != -1, "Error accessing size for entry: %s", pathRelativeToRoot);
       return size;
+    }
+  }
+
+  public void assertFileIsCompressed(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      assertThat(entry.getMethod(), is(not(ZipEntry.STORED)));
+      assertThat(entry.getCompressedSize(), Matchers.lessThan(entry.getSize()));
+    }
+  }
+
+  public void assertFileIsNotCompressed(String pathRelativeToRoot) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      assertThat(entry.getMethod(), is(ZipEntry.STORED));
+      assertThat(entry.getCompressedSize(), Matchers.equalTo(entry.getSize()));
     }
   }
 }

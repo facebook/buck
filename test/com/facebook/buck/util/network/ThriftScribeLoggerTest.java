@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.LogRequestType;
+import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +36,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.After;
@@ -44,18 +48,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-
-import javax.annotation.Nullable;
-
 public class ThriftScribeLoggerTest {
 
   private static final String CATEGORY = "TEST_CATEGORY";
   private static final ImmutableList<String> LINES = ImmutableList.of("t1", "t2");
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private ListeningExecutorService executorService;
   private ThriftScribeLogger logger;
@@ -63,12 +61,25 @@ public class ThriftScribeLoggerTest {
 
   @Before
   public void setUp() {
+    logger = null;
     executorService = MoreExecutors.newDirectExecutorService();
   }
 
   @After
   public void tearDown() throws Exception {
-    logger.close();
+    if (logger != null) {
+      logger.close();
+      logger = null;
+    }
+  }
+
+  @Test
+  public void testAllNullLinesAreRemoved() {
+    ScribeData data = new ScribeData().setCategory("slicespin");
+    assertEquals(0, data.getLinesSize());
+    List<String> lines = Lists.newArrayList("topspin", null, "down", "the", "lines");
+    ThriftScribeLogger.copyLinesWithoutNulls(lines, data);
+    assertEquals(lines.size() - 1, data.getLinesSize());
   }
 
   @Test
@@ -99,25 +110,21 @@ public class ThriftScribeLoggerTest {
     assertEquals(request.getType(), FrontendRequestType.LOG);
     assertEquals(request.getLogRequest().getType(), LogRequestType.SCRIBE_DATA);
     assertEquals(request.getLogRequest().getScribeData().getCategory(), CATEGORY);
-    assertThat(request.getLogRequest().getScribeData().getLines(), Matchers.allOf(
-        hasItem(LINES.get(0)),
-        hasItem(LINES.get(1)),
-        IsIterableWithSize.iterableWithSize(2)
-    ));
+    assertThat(
+        request.getLogRequest().getScribeData().getLines(),
+        Matchers.allOf(
+            hasItem(LINES.get(0)), hasItem(LINES.get(1)), IsIterableWithSize.iterableWithSize(2)));
   }
 
   private ThriftService<FrontendRequest, FrontendResponse> createDefaultListener() {
     return new ThriftService<FrontendRequest, FrontendResponse>() {
       @Override
-      public void makeRequest(
-          FrontendRequest frontendRequest,
-          FrontendResponse frontendResponse) {
+      public void makeRequest(FrontendRequest frontendRequest, FrontendResponse frontendResponse) {
         request = frontendRequest;
       }
 
       @Override
-      public void close() throws IOException {
-      }
+      public void close() throws IOException {}
     };
   }
 
@@ -133,34 +140,29 @@ public class ThriftScribeLoggerTest {
     future.get();
   }
 
-  private ThriftService<FrontendRequest, FrontendResponse>
-  getNotThrowingThriftService(final boolean wasSuccessful) {
+  private ThriftService<FrontendRequest, FrontendResponse> getNotThrowingThriftService(
+      final boolean wasSuccessful) {
     return new ThriftService<FrontendRequest, FrontendResponse>() {
       @Override
-      public void makeRequest(
-          FrontendRequest frontendRequest,
-          FrontendResponse frontendResponse) {
+      public void makeRequest(FrontendRequest frontendRequest, FrontendResponse frontendResponse) {
         frontendResponse.setWasSuccessful(wasSuccessful);
       }
 
       @Override
-      public void close() throws IOException {
-      }
+      public void close() throws IOException {}
     };
   }
 
   private ThriftService<FrontendRequest, FrontendResponse> getThrowingThriftService() {
     return new ThriftService<FrontendRequest, FrontendResponse>() {
       @Override
-      public void makeRequest(
-          FrontendRequest frontendRequest,
-          FrontendResponse frontendResponse) throws ThriftException {
+      public void makeRequest(FrontendRequest frontendRequest, FrontendResponse frontendResponse)
+          throws ThriftException {
         throw new ThriftException("Error");
       }
 
       @Override
-      public void close() throws IOException {
-      }
+      public void close() throws IOException {}
     };
   }
 

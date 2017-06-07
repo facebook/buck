@@ -18,13 +18,12 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.PrintStream;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class VersionCommand implements Command {
 
@@ -34,6 +33,7 @@ public class VersionCommand implements Command {
   /**
    * Returns current Buck version, in the form {@code [*]<git-commit-hash>}, where {@code *}
    * indicates that the working tree of the Buck repository is dirty.
+   *
    * @return The version of Buck currently running
    */
   private String getBuckVersion() {
@@ -80,9 +80,20 @@ public class VersionCommand implements Command {
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
+  public Iterable<BuckEventListener> getEventListeners() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public void printUsage(PrintStream stream) {
+    // Can't get here, because --version is a flag and:
+    // `buck help --version` will just return that `--version` is not a valid option for help
+    // `buck --version --help` and `buck --help --version` will return the version instead
+    throw new IllegalStateException();
+  }
+
+  @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    return OptionalInt.empty();
   }
 }

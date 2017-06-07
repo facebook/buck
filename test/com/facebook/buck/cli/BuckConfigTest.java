@@ -41,56 +41,54 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.easymock.EasyMock;
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class BuckConfigTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   /**
    * Ensure that whichever alias is listed first in the file is the one used in the reverse map if
    * the value appears multiple times.
    */
   @Test
-  public void testGetBasePathToAliasMap() throws IOException, NoSuchBuildTargetException {
-    Reader reader1 = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "fb4a   =   //java/com/example:fbandroid",
-        "katana =   //java/com/example:fbandroid"));
-    BuckConfig config1 = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader1);
+  public void testGetBasePathToAliasMap()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
+    Reader reader1 =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[alias]",
+                    "fb4a   =   //java/com/example:fbandroid",
+                    "katana =   //java/com/example:fbandroid"));
+    BuckConfig config1 = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader1);
     assertEquals(
-        ImmutableMap.of(Paths.get("java/com/example"), "fb4a"),
-        config1.getBasePathToAliasMap());
+        ImmutableMap.of(Paths.get("java/com/example"), "fb4a"), config1.getBasePathToAliasMap());
     assertEquals(
         ImmutableMap.of(
             "fb4a", "//java/com/example:fbandroid",
             "katana", "//java/com/example:fbandroid"),
         config1.getEntriesForSection("alias"));
 
-    Reader reader2 = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "katana =   //java/com/example:fbandroid",
-        "fb4a   =   //java/com/example:fbandroid"));
-    BuckConfig config2 = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader2);
+    Reader reader2 =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[alias]",
+                    "katana =   //java/com/example:fbandroid",
+                    "fb4a   =   //java/com/example:fbandroid"));
+    BuckConfig config2 = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader2);
     assertEquals(
-        ImmutableMap.of(Paths.get("java/com/example"), "katana"),
-        config2.getBasePathToAliasMap());
+        ImmutableMap.of(Paths.get("java/com/example"), "katana"), config2.getBasePathToAliasMap());
     assertEquals(
         ImmutableMap.of(
             "fb4a", "//java/com/example:fbandroid",
@@ -98,18 +96,16 @@ public class BuckConfigTest {
         config2.getEntriesForSection("alias"));
 
     Reader noAliasesReader = new StringReader("");
-    BuckConfig noAliasesConfig = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        noAliasesReader);
+    BuckConfig noAliasesConfig =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, noAliasesReader);
     assertEquals(ImmutableMap.of(), noAliasesConfig.getBasePathToAliasMap());
     assertEquals(ImmutableMap.of(), noAliasesConfig.getEntriesForSection("alias"));
   }
 
   @Test
-  public void testConstructorThrowsForMalformedBuildTarget() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "fb4a   = :fb4a"));
+  public void testConstructorThrowsForMalformedBuildTarget()
+      throws InterruptedException, IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join("[alias]", "fb4a   = :fb4a"));
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.replay(projectFilesystem);
 
@@ -124,35 +120,34 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testConstructorWithNonExistentBasePath() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "katana = //java/com/example:fb4a"));
+  public void testConstructorWithNonExistentBasePath() throws InterruptedException, IOException {
+    Reader reader =
+        new StringReader(Joiner.on('\n').join("[alias]", "katana = //java/com/example:fb4a"));
 
     // BuckConfig should allow nonexistent targets without throwing.
     BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
   }
 
   @Test
-  public void testGetBuildTargetForAlias() throws IOException, NoSuchBuildTargetException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "foo = //java/com/example:foo",
-        "bar = //java/com/example:bar",
-        "baz = //java/com/example:foo //java/com/example:bar",
-        "bash = "));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+  public void testGetBuildTargetForAlias()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[alias]",
+                    "foo = //java/com/example:foo",
+                    "bar = //java/com/example:bar",
+                    "baz = //java/com/example:foo //java/com/example:bar",
+                    "bash = "));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
 
     assertEquals(
         ImmutableSet.of("//java/com/example:foo"), config.getBuildTargetForAliasAsString("foo"));
     assertEquals(
         ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("bar"));
     assertEquals(
-        ImmutableSet.of(
-            "//java/com/example:foo",
-            "//java/com/example:bar"),
+        ImmutableSet.of("//java/com/example:foo", "//java/com/example:bar"),
         config.getBuildTargetForAliasAsString("baz"));
     assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("bash"));
 
@@ -164,9 +159,7 @@ public class BuckConfigTest {
         ImmutableSet.of("//java/com/example:bar#fl1,fl2"),
         config.getBuildTargetForAliasAsString("bar#fl1,fl2"));
     assertEquals(
-        ImmutableSet.of(
-            "//java/com/example:foo#fl1,fl2",
-            "//java/com/example:bar#fl1,fl2"),
+        ImmutableSet.of("//java/com/example:foo#fl1,fl2", "//java/com/example:bar#fl1,fl2"),
         config.getBuildTargetForAliasAsString("baz#fl1,fl2"));
     assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("bash#fl1,fl2"));
 
@@ -178,9 +171,8 @@ public class BuckConfigTest {
     assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("notathing#src_jar"));
 
     Reader noAliasesReader = new StringReader("");
-    BuckConfig noAliasesConfig = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        noAliasesReader);
+    BuckConfig noAliasesConfig =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, noAliasesReader);
     assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("foo"));
     assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("bar"));
     assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("baz"));
@@ -188,30 +180,29 @@ public class BuckConfigTest {
 
   @Test
   public void testGetBuildTargetListResolvesAliases()
-      throws IOException, NoSuchBuildTargetException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "foo = //java/com/example:foo",
-        "[section]",
-        "some_list = \\",
-        "foo, \\",
-        "//java/com/example:bar"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[alias]",
+                    "foo = //java/com/example:foo",
+                    "[section]",
+                    "some_list = \\",
+                    "foo, \\",
+                    "//java/com/example:bar"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
 
-    ImmutableList<String> expected = ImmutableList.of(
-        "//java/com/example:foo",
-        "//java/com/example:bar");
-    ImmutableList<String> result = ImmutableList.copyOf(FluentIterable
-            .from(config.getBuildTargetList("section", "some_list"))
-            .transform(Object::toString));
+    ImmutableList<String> expected =
+        ImmutableList.of("//java/com/example:foo", "//java/com/example:bar");
+    ImmutableList<String> result =
+        ImmutableList.copyOf(
+            FluentIterable.from(config.getBuildTargetList("section", "some_list"))
+                .transform(Object::toString));
     assertThat(result, Matchers.equalTo(expected));
   }
 
-  /**
-   * Ensures that all public methods of BuckConfig return reasonable values for an empty config.
-   */
+  /** Ensures that all public methods of BuckConfig return reasonable values for an empty config. */
   @Test
   public void testEmptyConfig() {
     BuckConfig emptyConfig = FakeBuckConfig.builder().build();
@@ -245,19 +236,21 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testReferentialAliases() throws IOException, NoSuchBuildTargetException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "foo            = //java/com/example:foo",
-        "bar            = //java/com/example:bar",
-        "foo_codename   = foo",
-        "",
-        "# Do not delete these: automation builds require these aliases to exist!",
-        "automation_foo = foo_codename",
-        "automation_bar = bar"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+  public void testReferentialAliases()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[alias]",
+                    "foo            = //java/com/example:foo",
+                    "bar            = //java/com/example:bar",
+                    "foo_codename   = foo",
+                    "",
+                    "# Do not delete these: automation builds require these aliases to exist!",
+                    "automation_foo = foo_codename",
+                    "automation_bar = bar"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     assertEquals(
         ImmutableSet.of("//java/com/example:foo"), config.getBuildTargetForAliasAsString("foo"));
     assertEquals(
@@ -275,11 +268,11 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testUnresolvedAliasThrows() throws IOException, NoSuchBuildTargetException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "foo = //java/com/example:foo",
-        "bar = food"));
+  public void testUnresolvedAliasThrows()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n').join("[alias]", "foo = //java/com/example:foo", "bar = food"));
     try {
       BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
       fail("Should have thrown HumanReadableException.");
@@ -289,36 +282,33 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testDuplicateAliasDefinitionThrows() throws IOException, NoSuchBuildTargetException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "foo = //java/com/example:foo",
-        "foo = //java/com/example:foo"));
+  public void testDuplicateAliasDefinitionThrows()
+      throws InterruptedException, IOException, NoSuchBuildTargetException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join("[alias]", "foo = //java/com/example:foo", "foo = //java/com/example:foo"));
     try {
       BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals(
-          "Throw an exception if there are duplicate definitions for an alias, " +
-              "even if the values are the same.",
-          "Duplicate definition for foo in the [alias] section of your .buckconfig or " +
-              ".buckconfig.local.",
+          "Throw an exception if there are duplicate definitions for an alias, "
+              + "even if the values are the same.",
+          "Duplicate definition for foo in the [alias] section of your .buckconfig or "
+              + ".buckconfig.local.",
           e.getHumanReadableErrorMessage());
     }
   }
 
   @Test
-  public void testExcludedLabels() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[test]",
-        "excluded_labels = windows, linux"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+  public void testExcludedLabels() throws InterruptedException, IOException {
+    Reader reader =
+        new StringReader(Joiner.on('\n').join("[test]", "excluded_labels = windows, linux"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
 
     assertEquals(
-        ImmutableList.of("windows", "linux"),
-        config.getDefaultRawExcludedLabelSelectors());
+        ImmutableList.of("windows", "linux"), config.getDefaultRawExcludedLabelSelectors());
   }
 
   @Test
@@ -345,9 +335,19 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testResolveHomeDirPathThatMayBeOutsideTheProjectFilesystem() throws IOException {
+    BuckConfig config = createFromText("");
+    Path homePath = Paths.get("").getFileSystem().getPath(System.getProperty("user.home"));
+    assertEquals(
+        homePath.resolve("foo/bar"),
+        config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get("~/foo/bar")));
+  }
+
+  @Test
   public void testBuckPyIgnorePaths() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "buck_py_ignore_paths", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "buck_py_ignore_paths", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "--all");
@@ -355,57 +355,38 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetDefaultTestTimeoutMillis() throws IOException {
+  public void testGetDefaultTestTimeoutMillis() throws InterruptedException, IOException {
     assertEquals(0L, FakeBuckConfig.builder().build().getDefaultTestTimeoutMillis());
 
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[test]",
-        "timeout = 54321"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+    Reader reader = new StringReader(Joiner.on('\n').join("[test]", "timeout = 54321"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     assertEquals(54321L, config.getDefaultTestTimeoutMillis());
   }
 
   @Test
-  public void testGetMaxTraces() throws IOException {
-    assertEquals(25, FakeBuckConfig.builder().build().getMaxTraces());
-
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[log]",
-        "max_traces = 42"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
-    assertEquals(42, config.getMaxTraces());
-  }
-
-  @Test
   public void testGetAndroidTargetSdkWithSpaces() throws IOException {
-    BuckConfig config = createFromText(
-        "[android]",
-        "target = Google Inc.:Google APIs:16");
-    assertEquals(
-        "Google Inc.:Google APIs:16",
-        config.getValue("android", "target").get());
+    BuckConfig config = createFromText("[android]", "target = Google Inc.:Google APIs:16");
+    assertEquals("Google Inc.:Google APIs:16", config.getValue("android", "target").get());
   }
 
   @Test
   public void testCreateAnsi() {
-    BuckConfig windowsConfig = FakeBuckConfig.builder()
-        .setArchitecture(Architecture.X86_64)
-        .setPlatform(Platform.WINDOWS)
-        .build();
+    BuckConfig windowsConfig =
+        FakeBuckConfig.builder()
+            .setArchitecture(Architecture.X86_64)
+            .setPlatform(Platform.WINDOWS)
+            .build();
     // "auto" on Windows is equivalent to "never".
     assertFalse(windowsConfig.createAnsi(Optional.empty()).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
     assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
 
-    BuckConfig linuxConfig = FakeBuckConfig.builder()
-        .setArchitecture(Architecture.I386)
-        .setPlatform(Platform.LINUX)
-        .build();
+    BuckConfig linuxConfig =
+        FakeBuckConfig.builder()
+            .setArchitecture(Architecture.I386)
+            .setPlatform(Platform.LINUX)
+            .build();
     // We don't test "auto" on Linux, because the behavior would depend on how the test was run.
     assertTrue(linuxConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
@@ -415,16 +396,15 @@ public class BuckConfigTest {
   public void getEnvUsesSuppliedEnvironment() {
     String name = "SOME_ENVIRONMENT_VARIABLE";
     String value = "SOME_VALUE";
-    BuckConfig config = FakeBuckConfig.builder()
-        .setEnvironment(ImmutableMap.of(name, value))
-        .build();
+    BuckConfig config =
+        FakeBuckConfig.builder().setEnvironment(ImmutableMap.of(name, value)).build();
     String[] expected = {value};
     assertArrayEquals("Should match value in environment.", expected, config.getEnv(name, ":"));
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        MorePathsForTests.rootRelativePath("project/root"));
+    ProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(MorePathsForTests.rootRelativePath("project/root"));
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfigTestUtils.createFromReader(
         reader,
@@ -436,9 +416,10 @@ public class BuckConfigTest {
 
   @Test
   public void testShouldSetNumberOfThreadsFromBuckConfig() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(ImmutableMap.of(
-        "build",
-        ImmutableMap.of("threads", "3"))).build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("threads", "3")))
+            .build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(3));
   }
 
@@ -446,8 +427,7 @@ public class BuckConfigTest {
   public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     assertThat(
-        buckConfig.getNumThreads(),
-        Matchers.equalTo(Runtime.getRuntime().availableProcessors()));
+        buckConfig.getNumThreads(), Matchers.equalTo(Runtime.getRuntime().availableProcessors()));
   }
 
   @Test
@@ -458,52 +438,47 @@ public class BuckConfigTest {
 
   @Test
   public void testBuildThreadsRatioSanityCheck() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("thread_core_ratio", "1")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "1")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(10));
   }
 
   @Test
   public void testBuildThreadsRatioGreaterThanZero() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("thread_core_ratio", "0.00001")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0.00001")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(1), Matchers.equalTo(1));
   }
 
   @Test
   public void testBuildThreadsRatioRoundsUp() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("thread_core_ratio", "0.3")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0.3")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(4), Matchers.equalTo(2));
   }
 
   @Test
   public void testNonZeroBuildThreadsRatio() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("thread_core_ratio", "0.1")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0.1")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(1), Matchers.equalTo(1));
   }
 
   @Test
   public void testZeroBuildThreadsRatio() {
     try {
-      BuckConfig buckConfig = FakeBuckConfig.builder()
-          .setSections(
-              ImmutableMap.of(
-                  "build", ImmutableMap.of("thread_core_ratio", "0")))
-          .build();
+      BuckConfig buckConfig =
+          FakeBuckConfig.builder()
+              .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0")))
+              .build();
       buckConfig.getDefaultMaximumNumberOfThreads(1);
     } catch (HumanReadableException e) {
       assertThat(
@@ -515,11 +490,10 @@ public class BuckConfigTest {
   @Test
   public void testLessThanZeroBuildThreadsRatio() {
     try {
-      BuckConfig buckConfig = FakeBuckConfig.builder()
-          .setSections(
-              ImmutableMap.of(
-                  "build", ImmutableMap.of("thread_core_ratio", "-0.1")))
-          .build();
+      BuckConfig buckConfig =
+          FakeBuckConfig.builder()
+              .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "-0.1")))
+              .build();
       buckConfig.getDefaultMaximumNumberOfThreads(1);
     } catch (HumanReadableException e) {
       assertThat(
@@ -530,72 +504,69 @@ public class BuckConfigTest {
 
   @Test
   public void testBuildThreadsRatioWithReservedCores() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build",
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
                 ImmutableMap.of(
-                    "thread_core_ratio", "1",
-                    "thread_core_ratio_reserved_cores", "2"
-                )
-            )
-        )
-        .build();
+                    "build",
+                    ImmutableMap.of(
+                        "thread_core_ratio", "1",
+                        "thread_core_ratio_reserved_cores", "2")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(8));
   }
 
   @Test
   public void testCappedBuildThreadsRatio() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build",
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
                 ImmutableMap.of(
-                    "thread_core_ratio", "0.5",
-                    "thread_core_ratio_max_threads", "4"
-                )
-            )
-        )
-        .build();
+                    "build",
+                    ImmutableMap.of(
+                        "thread_core_ratio", "0.5",
+                        "thread_core_ratio_max_threads", "4")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(4));
   }
 
   @Test
   public void testFloorLimitedBuildThreadsRatio() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build",
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
                 ImmutableMap.of(
-                    "thread_core_ratio", "0.25",
-                    "thread_core_ratio_min_threads", "6"
-                )
-            )
-        )
-        .build();
+                    "build",
+                    ImmutableMap.of(
+                        "thread_core_ratio", "0.25",
+                        "thread_core_ratio_min_threads", "6")))
+            .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(6));
   }
 
   @Test
   public void testEqualsForDaemonRestart() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("threads", "3"),
-                "cxx", ImmutableMap.of("cc", "/some_location/gcc")))
-        .build();
-    BuckConfig buckConfigMoreThreads = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("threads", "4"),
-                "cxx", ImmutableMap.of("cc", "/some_location/gcc")))
-        .build();
-    BuckConfig buckConfigDifferentCompiler = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "build", ImmutableMap.of("threads", "3"),
-                "cxx", ImmutableMap.of("cc", "/some_location/clang")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "3"),
+                    "cxx", ImmutableMap.of("cc", "/some_location/gcc")))
+            .build();
+    BuckConfig buckConfigMoreThreads =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "4"),
+                    "cxx", ImmutableMap.of("cc", "/some_location/gcc")))
+            .build();
+    BuckConfig buckConfigDifferentCompiler =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "3"),
+                    "cxx", ImmutableMap.of("cc", "/some_location/clang")))
+            .build();
 
     assertFalse(buckConfig.equals(buckConfigMoreThreads));
     assertFalse(buckConfig.equals(buckConfigDifferentCompiler));
@@ -607,31 +578,26 @@ public class BuckConfigTest {
 
   @Test
   public void hasUserDefinedValueReturnsTrueForEmptySetting() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-            ImmutableMap.of(
-                "cache", ImmutableMap.of("mode", "")))
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("cache", ImmutableMap.of("mode", "")))
+            .build();
     assertTrue(buckConfig.hasUserDefinedValue("cache", "mode"));
   }
 
   @Test
   public void hasUserDefinedValueReturnsFalseForNoSetting() {
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of())
-        .build();
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(ImmutableMap.of()).build();
     assertFalse(buckConfig.hasUserDefinedValue("cache", "mode"));
   }
 
   @Test
-  public void testGettingResourceAmountsPerRuleType() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[resources_per_rule]",
-        "some_rule = 1, 20, 3, 4",
-        "other_rule = 4,30,2,1"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+  public void testGettingResourceAmountsPerRuleType() throws InterruptedException, IOException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join("[resources_per_rule]", "some_rule = 1, 20, 3, 4", "other_rule = 4,30,2,1"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     ImmutableMap<String, ResourceAmounts> result = config.getResourceAmountsPerRuleType();
     assertEquals(
         ImmutableMap.of(
@@ -641,39 +607,37 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testInvalidResourceAmountsConfiguration() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[resources_per_rule]",
-        "some_rule = 1, 20, 3, 4",
-        "other_rule = 4,30,2,1",
-        "wrong_config = 1,2,3,4,5,6,7,8,9,0"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+  public void testInvalidResourceAmountsConfiguration() throws InterruptedException, IOException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[resources_per_rule]",
+                    "some_rule = 1, 20, 3, 4",
+                    "other_rule = 4,30,2,1",
+                    "wrong_config = 1,2,3,4,5,6,7,8,9,0"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     try {
       config.getResourceAmountsPerRuleType();
     } catch (IllegalArgumentException e) {
       assertThat(
           e.getMessage(),
-          Matchers.containsString("Buck config entry [resources_per_rule].wrong_config" +
-              " contains 10 values, but expected to contain 4 values in the following order: " +
-              "cpu, memory, disk_io, network_io"));
+          Matchers.containsString(
+              "Buck config entry [resources_per_rule].wrong_config"
+                  + " contains 10 values, but expected to contain 4 values in the following order: "
+                  + "cpu, memory, disk_io, network_io"));
       return;
     }
     assertThat("IllegalArgumentException should be thrown", Matchers.equalTo(""));
   }
 
   @Test
-  public void testGetMap() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[section]",
-        "args_map = key0=>val0,key1=>val1"));
-   BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-       temporaryFolder,
-       reader);
+  public void testGetMap() throws InterruptedException, IOException {
+    Reader reader =
+        new StringReader(Joiner.on('\n').join("[section]", "args_map = key0=>val0,key1=>val1"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
 
     assertEquals(
-        ImmutableMap.of("key0", "val0", "key1", "val1"),
-        config.getMap("section", "args_map"));
+        ImmutableMap.of("key0", "val0", "key1", "val1"), config.getMap("section", "args_map"));
   }
 }

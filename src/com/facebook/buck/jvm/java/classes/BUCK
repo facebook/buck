@@ -1,5 +1,15 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/jvm/java/classes:classes',
-  ],
+java_library(
+    name = "classes",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/jvm/java/classes:classes",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

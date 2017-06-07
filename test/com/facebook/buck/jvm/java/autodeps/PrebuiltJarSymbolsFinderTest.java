@@ -19,8 +19,6 @@ package com.facebook.buck.jvm.java.autodeps;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,32 +27,27 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -64,34 +57,33 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class PrebuiltJarSymbolsFinderTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void extractSymbolsFromBinaryJar() throws IOException {
-    ImmutableSet<String> entries = ImmutableSet.of(
-        "META-INF/",
-        "META-INF/MANIFEST.MF",
-        "com/",
-        "com/facebook/",
-        "com/facebook/buck/",
-        "com/facebook/buck/cli/",
-        "com/facebook/buck/cli/Main.class",
-        "com/facebook/buck/cli/Main$1.class",
-        "com/facebook/buck/cli/TestSelectorOptions.class",
-        "com/facebook/buck/cli/TestSelectorOptions$TestSelectorsOptionHandler$1.class",
-        "com/facebook/buck/cli/TestSelectorOptions$TestSelectorsOptionHandler.class");
+  public void extractSymbolsFromBinaryJar() throws InterruptedException, IOException {
+    ImmutableSet<String> entries =
+        ImmutableSet.of(
+            "META-INF/",
+            "META-INF/MANIFEST.MF",
+            "com/",
+            "com/facebook/",
+            "com/facebook/buck/",
+            "com/facebook/buck/cli/",
+            "com/facebook/buck/cli/Main.class",
+            "com/facebook/buck/cli/Main$1.class",
+            "com/facebook/buck/cli/TestSelectorOptions.class",
+            "com/facebook/buck/cli/TestSelectorOptions$TestSelectorsOptionHandler$1.class",
+            "com/facebook/buck/cli/TestSelectorOptions$TestSelectorsOptionHandler.class");
     PrebuiltJarSymbolsFinder finder = createFinderForFileWithEntries("real.jar", entries);
     Symbols symbols = finder.extractSymbols();
     assertEquals(
         "Only entries that correspond to .class files for top-level types should be included.",
-        ImmutableSet.of(
-            "com.facebook.buck.cli.Main",
-            "com.facebook.buck.cli.TestSelectorOptions"),
+        ImmutableSet.of("com.facebook.buck.cli.Main", "com.facebook.buck.cli.TestSelectorOptions"),
         ImmutableSet.copyOf(symbols.provided));
-    assertTrue(Iterables.isEmpty(symbols.required));
   }
 
   @Test
@@ -102,30 +94,20 @@ public class PrebuiltJarSymbolsFinderTest {
     assertTrue(
         "There should be no provided symbols if the binaryJar is not a PathSourcePath.",
         Iterables.isEmpty(symbols.provided));
-    assertTrue(
-        "There should be no required symbols if the binaryJar is not a PathSourcePath.",
-        Iterables.isEmpty(symbols.required));
   }
 
   @Test
-  public void contentsOfBinaryJarShouldAffectRuleKey() throws IOException {
+  public void contentsOfBinaryJarShouldAffectRuleKey() throws InterruptedException, IOException {
     // The path to the JAR file to use as the binaryJar of the PrebuiltJarSymbolsFinder.
     final Path relativePathToJar = Paths.get("common.jar");
     final Path absolutePathToJar = tmp.getRoot().resolve(relativePathToJar);
 
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
-    final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
-    expect(pathResolver.getRule(anyObject(SourcePath.class)))
-        .andReturn(Optional.empty())
-        .anyTimes();
-    expect(pathResolver.getRelativePath(anyObject(SourcePath.class)))
-        .andReturn(relativePathToJar)
-        .anyTimes();
-    expect(pathResolver.getAbsolutePath(anyObject(SourcePath.class)))
-        .andReturn(absolutePathToJar)
-        .anyTimes();
-    replay(pathResolver);
+    final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    createMock(SourcePathResolver.class);
+    expect(ruleFinder.getRule(anyObject(SourcePath.class))).andReturn(Optional.empty()).anyTimes();
 
     // Calculates the RuleKey for a JavaSymbolsRule with a PrebuiltJarSymbolsFinder whose binaryJar
     // is a JAR file with the specified entries.
@@ -136,25 +118,23 @@ public class PrebuiltJarSymbolsFinderTest {
           JavaSymbolsRule javaSymbolsRule;
           FakeFileHashCache fileHashCache;
           try {
-            PrebuiltJarSymbolsFinder finder = createFinderForFileWithEntries(
-                relativePathToJar.getFileName().toString(),
-                entries);
+            PrebuiltJarSymbolsFinder finder =
+                createFinderForFileWithEntries(relativePathToJar.getFileName().toString(), entries);
             HashCode hash = Files.hash(jarFile, Hashing.sha1());
             Map<Path, HashCode> pathsToHashes = ImmutableMap.of(absolutePathToJar, hash);
             fileHashCache = new FakeFileHashCache(pathsToHashes);
 
-            javaSymbolsRule = new JavaSymbolsRule(
-                BuildTargetFactory.newInstance("//foo:rule"),
-                finder,
-                /* generatedSymbols */ ImmutableSortedSet.of(),
-                ObjectMappers.newDefaultInstance(),
-                new ProjectFilesystem(tmp.getRoot())
-            );
-          } catch (IOException e) {
+            javaSymbolsRule =
+                new JavaSymbolsRule(
+                    BuildTargetFactory.newInstance("//foo:rule"),
+                    finder,
+                    new ProjectFilesystem(tmp.getRoot()));
+          } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);
           }
-          RuleKey ruleKey = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver)
-              .build(javaSymbolsRule);
+          RuleKey ruleKey =
+              new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+                  .build(javaSymbolsRule);
           jarFile.delete();
 
           return ruleKey;
@@ -173,65 +153,56 @@ public class PrebuiltJarSymbolsFinderTest {
         key1,
         key2);
     assertNotEquals(
-        "Changing the contents of the binaryJar for the PrebuiltJarSymbolsFinder should change " +
-            "the RuleKey of the JavaSymbolsRule that contains it.",
+        "Changing the contents of the binaryJar for the PrebuiltJarSymbolsFinder should change "
+            + "the RuleKey of the JavaSymbolsRule that contains it.",
         key1,
         key3);
-    verify(pathResolver);
   }
 
   @Test
-  public void generatedBinaryJarShouldNotAffectRuleKey() {
+  public void generatedBinaryJarShouldNotAffectRuleKey() throws InterruptedException {
     SourcePathResolver pathResolver = null;
+    SourcePathRuleFinder ruleFinder = null;
 
     Path jarFile = tmp.getRoot().resolve("common.jar");
-    Map<Path, HashCode> pathsToHashes = ImmutableMap.of(
-        jarFile,
-        HashCode.fromString(Strings.repeat("abcd", 10)));
+    Map<Path, HashCode> pathsToHashes =
+        ImmutableMap.of(jarFile, HashCode.fromString(Strings.repeat("abcd", 10)));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(pathsToHashes);
 
-    JavaSymbolsRule javaSymbolsRule1 = new JavaSymbolsRule(
-        BuildTargetFactory.newInstance("//foo:rule"),
-        createFinderForGeneratedJar("//foo:jar_genrule1"),
-        /* generatedSymbols */ ImmutableSortedSet.of(),
-        ObjectMappers.newDefaultInstance(),
-        new ProjectFilesystem(tmp.getRoot())
-    );
+    JavaSymbolsRule javaSymbolsRule1 =
+        new JavaSymbolsRule(
+            BuildTargetFactory.newInstance("//foo:rule"),
+            createFinderForGeneratedJar("//foo:jar_genrule1"),
+            new ProjectFilesystem(tmp.getRoot()));
 
-    RuleKey key1 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).build(
-        javaSymbolsRule1);
+    RuleKey key1 =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+            .build(javaSymbolsRule1);
 
-    JavaSymbolsRule javaSymbolsRule2 = new JavaSymbolsRule(
-        BuildTargetFactory.newInstance("//foo:rule"),
-        createFinderForGeneratedJar("//foo:jar_genrule2"),
-        /* generatedSymbols */ ImmutableSortedSet.of(),
-        ObjectMappers.newDefaultInstance(),
-        new ProjectFilesystem(tmp.getRoot())
-    );
-    RuleKey key2 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).build(
-        javaSymbolsRule2);
+    JavaSymbolsRule javaSymbolsRule2 =
+        new JavaSymbolsRule(
+            BuildTargetFactory.newInstance("//foo:rule"),
+            createFinderForGeneratedJar("//foo:jar_genrule2"),
+            new ProjectFilesystem(tmp.getRoot()));
+    RuleKey key2 =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+            .build(javaSymbolsRule2);
 
     assertNotNull(key1);
     assertNotNull(key2);
     assertEquals(
-        "Keys should match even though different BuildTargetSourcePaths are used.",
-        key1,
-        key2);
+        "Keys should match even though different BuildTargetSourcePaths are used.", key1, key2);
   }
 
   private PrebuiltJarSymbolsFinder createFinderForFileWithEntries(
-      String jarFileName,
-      Iterable<String> entries) throws IOException {
+      String jarFileName, Iterable<String> entries) throws InterruptedException, IOException {
     Clock clock = new FakeClock(1);
     Path jarFile = tmp.newFile(jarFileName);
-    try (
-        OutputStream stream = new BufferedOutputStream(
-            java.nio.file.Files.newOutputStream(jarFile));
+    try (OutputStream stream =
+            new BufferedOutputStream(java.nio.file.Files.newOutputStream(jarFile));
         CustomZipOutputStream out =
-             ZipOutputStreams.newOutputStream(
-                 stream,
-                 ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION,
-                 clock)) {
+            ZipOutputStreams.newOutputStream(
+                stream, ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION, clock)) {
       for (String entry : entries) {
         out.putNextEntry(new ZipEntry(entry));
       }
@@ -244,7 +215,7 @@ public class PrebuiltJarSymbolsFinderTest {
 
   private PrebuiltJarSymbolsFinder createFinderForGeneratedJar(String target) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
-    SourcePath sourcePath = new BuildTargetSourcePath(buildTarget);
+    SourcePath sourcePath = new DefaultBuildTargetSourcePath(buildTarget);
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }
 }

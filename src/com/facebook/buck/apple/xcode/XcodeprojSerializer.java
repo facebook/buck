@@ -24,9 +24,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXObject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
-
 import java.util.List;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -34,7 +32,7 @@ import javax.annotation.concurrent.NotThreadSafe;
  * Serializer that handles conversion of an in-memory object graph representation of an xcode
  * project (instances of {@link PBXObject}) into an Apple property list.
  *
- * Serialization proceeds from the root object, a ${link PBXProject} instance, to all of its
+ * <p>Serialization proceeds from the root object, a ${link PBXProject} instance, to all of its
  * referenced objects. Each object being visited calls back into this class ({@link #addField}) to
  * populate the plist representation with its fields.
  */
@@ -45,8 +43,7 @@ public class XcodeprojSerializer {
   private final PBXProject rootObject;
   private final NSDictionary objects;
   private final GidGenerator gidGenerator;
-  @Nullable
-  private NSDictionary currentObject;
+  @Nullable private NSDictionary currentObject;
 
   public XcodeprojSerializer(GidGenerator gidGenerator, PBXProject project) {
     rootObject = project;
@@ -54,9 +51,7 @@ public class XcodeprojSerializer {
     this.gidGenerator = gidGenerator;
   }
 
-  /**
-   * Generate a plist serialization of project bound to this serializer.
-   */
+  /** Generate a plist serialization of project bound to this serializer. */
   public NSDictionary toPlist() {
     serializeObject(rootObject);
 
@@ -74,7 +69,6 @@ public class XcodeprojSerializer {
    * Serialize a {@link PBXObject} and its recursive descendants into the object dictionary.
    *
    * @return the GID of the serialized object
-   *
    * @see PBXObject#serializeInto
    */
   @Nullable

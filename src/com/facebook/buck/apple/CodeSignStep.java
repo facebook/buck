@@ -29,7 +29,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -41,6 +40,7 @@ class CodeSignStep implements Step {
   private final Path pathToSign;
   private final Optional<Path> pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
+  private final Tool codesign;
   private final Optional<Tool> codesignAllocatePath;
   private final Optional<Path> dryRunResultsPath;
   private final ProjectFilesystem filesystem;
@@ -51,6 +51,7 @@ class CodeSignStep implements Step {
       Path pathToSign,
       Optional<Path> pathToSigningEntitlements,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      Tool codesign,
       Optional<Tool> codesignAllocatePath,
       Optional<Path> dryRunResultsPath) {
     this.filesystem = filesystem;
@@ -58,6 +59,7 @@ class CodeSignStep implements Step {
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
+    this.codesign = codesign;
     this.codesignAllocatePath = codesignAllocatePath;
     this.dryRunResultsPath = dryRunResultsPath;
   }
@@ -75,9 +77,8 @@ class CodeSignStep implements Step {
         filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
         return StepExecutionResult.SUCCESS;
       } catch (IOException e) {
-        context.logError(e,
-            "Failed when trying to write dry run results: %s",
-            getDescription(context));
+        context.logError(
+            e, "Failed when trying to write dry run results: %s", getDescription(context));
         return StepExecutionResult.ERROR;
       }
     }
@@ -89,10 +90,8 @@ class CodeSignStep implements Step {
           ImmutableMap.of("CODESIGN_ALLOCATE", Joiner.on(" ").join(commandPrefix)));
     }
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    commandBuilder.add(
-        "codesign",
-        "--force",
-        "--sign", getIdentityArg(codeSignIdentitySupplier.get()));
+    commandBuilder.addAll(codesign.getCommandPrefix(resolver));
+    commandBuilder.add("--force", "--sign", getIdentityArg(codeSignIdentitySupplier.get()));
     if (pathToSigningEntitlements.isPresent()) {
       commandBuilder.add("--entitlements", pathToSigningEntitlements.get().toString());
     }
@@ -107,15 +106,21 @@ class CodeSignStep implements Step {
     ProcessExecutor.Result result;
     try {
       ProcessExecutor processExecutor = context.getProcessExecutor();
-      result = processExecutor.launchAndExecute(
-          processExecutorParams,
-          options,
+      result =
+          processExecutor.launchAndExecute(
+              processExecutorParams,
+              options,
               /* stdin */ Optional.empty(),
-              /* timeOutMs */ Optional.empty(),
+              /* timeOutMs */ Optional.of((long) 120000),
               /* timeOutHandler */ Optional.empty());
     } catch (InterruptedException | IOException e) {
       context.logError(e, "Could not execute codesign.");
       return StepExecutionResult.ERROR;
+    }
+
+    if (result.isTimedOut()) {
+      throw new RuntimeException(
+          "codesign timed out.  This may be due to the keychain being locked.");
     }
 
     if (result.getExitCode() != 0) {
@@ -131,13 +136,10 @@ class CodeSignStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("code-sign %s",
-        pathToSign);
+    return String.format("code-sign %s", pathToSign);
   }
 
-  /**
-   * Convert a {@link CodeSignIdentity} into a string argument for the codesign tool.
-   */
+  /** Convert a {@link CodeSignIdentity} into a string argument for the codesign tool. */
   public static String getIdentityArg(CodeSignIdentity identity) {
     if (identity.getFingerprint().isPresent()) {
       return identity.getFingerprint().get().toString().toUpperCase();

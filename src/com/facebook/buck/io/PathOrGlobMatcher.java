@@ -17,7 +17,6 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Preconditions;
-
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -74,8 +73,9 @@ public class PathOrGlobMatcher {
 
     PathOrGlobMatcher that = (PathOrGlobMatcher) other;
 
-    return Objects.equals(type, that.type) &&
-        Objects.equals(basePath, that.basePath) &&
+    return Objects.equals(type, that.type)
+        && Objects.equals(basePath, that.basePath)
+        &&
         // We don't compare globMatcher here, since sun.nio.fs.UnixFileSystem.getPathMatcher()
         // returns an anonymous class which doesn't implement equals().
         Objects.equals(globPattern, that.globPattern);
@@ -89,11 +89,7 @@ public class PathOrGlobMatcher {
   @Override
   public String toString() {
     return String.format(
-        "%s type=%s basePath=%s globPattern=%s",
-        super.toString(),
-        type,
-        basePath,
-        globPattern);
+        "%s type=%s basePath=%s globPattern=%s", super.toString(), type, basePath, globPattern);
   }
 
   public boolean matches(Path path) {

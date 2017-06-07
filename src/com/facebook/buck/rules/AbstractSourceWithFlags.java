@@ -19,14 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
-
+import java.util.List;
 import org.immutables.value.Value;
 
-import java.util.List;
-
-/**
- * Simple type representing a {@link SourcePath} and a list of file-specific flags.
- */
+/** Simple type representing a {@link SourcePath} and a list of file-specific flags. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithFlags> {
@@ -50,9 +46,6 @@ abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithF
   }
 
   public static SourceWithFlags of(SourcePath sourcePath) {
-    return SourceWithFlags.builder()
-        .setSourcePath(sourcePath)
-        .build();
+    return SourceWithFlags.builder().setSourcePath(sourcePath).build();
   }
-
 }

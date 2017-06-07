@@ -23,30 +23,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-
 /**
- * Represents hints given when deal with the value returned by
- * {@link Description#createUnpopulatedConstructorArg()}.
+ * Represents hints given when deal with the value of a type returned by {@link
+ * com.facebook.buck.rules.Description#getConstructorArgType()}.
  */
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})
 public @interface Hint {
-  public static final String DEFAULT_NAME = "";
   public static final boolean DEFAULT_IS_DEP = true;
   public static final boolean DEFAULT_IS_INPUT = true;
 
-  /**
-   * @return The name to use in preference to the field or property name (eg. "field_name")
-   */
-  String name() default DEFAULT_NAME;
-
-  /**
-   * @return Whether to search the field's value for dependencies
-   */
+  /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
 
-  /**
-   * @return Whether to use the field's value as an input
-   */
+  /** @return Whether to use the field's value as an input */
   boolean isInput() default DEFAULT_IS_INPUT;
 }

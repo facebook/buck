@@ -20,12 +20,11 @@ import com.sun.jna.NativeLibrary;
 import com.sun.jna.Platform;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
-
 import java.io.IOException;
 
 /**
- * Safely kill background processes on nailgun client exit.  All process creation must synchronize
- * on the class object's monitor lock to make sure children inherit the correct signal handler set.
+ * Safely kill background processes on nailgun client exit. All process creation must synchronize on
+ * the class object's monitor lock to make sure children inherit the correct signal handler set.
  */
 public class BgProcessKiller {
 
@@ -83,9 +82,9 @@ public class BgProcessKiller {
 
   private BgProcessKiller() {}
 
-  private static void checkArmedStatus() throws IOException {
+  private static void checkArmedStatus() {
     if (armed) {
-      throw new IOException("process creation blocked due to pending nailgun exit");
+      throw new BuckIsDyingException("process creation blocked due to pending nailgun exit");
     }
   }
 

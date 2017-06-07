@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,8 +84,8 @@ public class JUnitStep extends ShellStep {
         testCaseTimeoutMs.orElse(context.getDefaultTestTimeoutMillis()));
 
     if (junitJvmArgs.isDebugEnabled()) {
-      warnUser(context,
-          "Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.");
+      warnUser(
+          context, "Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.");
     }
 
     return args.build();
@@ -116,29 +115,31 @@ public class JUnitStep extends ShellStep {
           Optional<Long> pid = Optional.empty();
           Platform platform = context.getPlatform();
           try {
-            switch(platform) {
+            switch (platform) {
               case LINUX:
               case FREEBSD:
-              case MACOS: {
-                Field field = process.getClass().getDeclaredField("pid");
-                field.setAccessible(true);
-                try {
-                  pid = Optional.of((long) field.getInt(process));
-                } catch (IllegalAccessException e) {
-                  LOG.error(e, "Failed to access `pid`.");
+              case MACOS:
+                {
+                  Field field = process.getClass().getDeclaredField("pid");
+                  field.setAccessible(true);
+                  try {
+                    pid = Optional.of((long) field.getInt(process));
+                  } catch (IllegalAccessException e) {
+                    LOG.error(e, "Failed to access `pid`.");
+                  }
+                  break;
                 }
-                break;
-              }
-              case WINDOWS: {
-                Field field = process.getClass().getDeclaredField("handle");
-                field.setAccessible(true);
-                try {
-                  pid = Optional.of(field.getLong(process));
-                } catch (IllegalAccessException e) {
-                  LOG.error(e, "Failed to access `handle`.");
+              case WINDOWS:
+                {
+                  Field field = process.getClass().getDeclaredField("handle");
+                  field.setAccessible(true);
+                  try {
+                    pid = Optional.of(field.getLong(process));
+                  } catch (IllegalAccessException e) {
+                    LOG.error(e, "Failed to access `handle`.");
+                  }
+                  break;
                 }
-                break;
-              }
               case UNKNOWN:
                 LOG.info("Unknown platform; unable to obtain the process id!");
                 break;
@@ -147,33 +148,38 @@ public class JUnitStep extends ShellStep {
             LOG.error(e);
           }
 
-          Optional<Path> jstack = new ExecutableFinder(context.getPlatform())
-              .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
+          Optional<Path> jstack =
+              new ExecutableFinder(context.getPlatform())
+                  .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
           if (!pid.isPresent() || !jstack.isPresent()) {
             LOG.info("Unable to print a stack trace for timed out test!");
             return;
           }
 
-          context.getStdErr().println(
-              "Test has timed out!  Here is a trace of what it is currently doing:");
+          context
+              .getStdErr()
+              .println("Test has timed out!  Here is a trace of what it is currently doing:");
           try {
-            context.getProcessExecutor().launchAndExecute(
-                /* command */ ProcessExecutorParams.builder()
-                    .addCommand(jstack.get().toString(), "-l", pid.get().toString())
-                    .setEnvironment(context.getEnvironment())
-                    .build(),
-                /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
-                    .add(ProcessExecutor.Option.PRINT_STD_OUT)
-                    .add(ProcessExecutor.Option.PRINT_STD_ERR)
-                    .build(),
-                /* stdin */ Optional.empty(),
-                /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
-                /* timeOutHandler */ Optional.of(
-                    input -> {
-                      context.getStdErr().print(
-                          "Printing the stack took longer than 30 seconds. No longer trying.");
-                    }
-                ));
+            context
+                .getProcessExecutor()
+                .launchAndExecute(
+                    /* command */ ProcessExecutorParams.builder()
+                        .addCommand(jstack.get().toString(), "-l", pid.get().toString())
+                        .setEnvironment(context.getEnvironment())
+                        .build(),
+                    /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
+                        .add(ProcessExecutor.Option.PRINT_STD_OUT)
+                        .add(ProcessExecutor.Option.PRINT_STD_ERR)
+                        .build(),
+                    /* stdin */ Optional.empty(),
+                    /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
+                    /* timeOutHandler */ Optional.of(
+                        input -> {
+                          context
+                              .getStdErr()
+                              .print(
+                                  "Printing the stack took longer than 30 seconds. No longer trying.");
+                        }));
           } catch (Exception e) {
             LOG.error(e);
           }
@@ -199,5 +205,4 @@ public class JUnitStep extends ShellStep {
   public boolean hasTimedOut() {
     return hasTimedOut;
   }
-
 }

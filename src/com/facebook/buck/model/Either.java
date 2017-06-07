@@ -18,15 +18,13 @@ package com.facebook.buck.model;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /**
  * A simple discriminated union of two parameters.
  *
- * Note that the corresponding coercer #{link EitherTypeCoercer} is left-biased. That is, if the
+ * <p>Note that the corresponding coercer #{link EitherTypeCoercer} is left-biased. That is, if the
  * input value can coerce to the left parameter, then the left value will be populated, even if it
  * can also be coerced to the right parameter.
  */
@@ -36,8 +34,7 @@ public final class Either<LEFT, RIGHT> {
 
   private Either(@Nullable LEFT left, @Nullable RIGHT right) {
     Preconditions.checkState(
-        left != null ^ right != null,
-        "Exactly one of left or right must be set");
+        left != null ^ right != null, "Exactly one of left or right must be set");
     this.left = left;
     this.right = right;
   }
@@ -67,8 +64,7 @@ public final class Either<LEFT, RIGHT> {
   public boolean equals(Object obj) {
     if (obj instanceof Either) {
       Either<?, ?> that = (Either<?, ?>) obj;
-      return Objects.equals(this.left, that.left) &&
-          Objects.equals(this.right, that.right);
+      return Objects.equals(this.left, that.left) && Objects.equals(this.right, that.right);
     }
     return false;
   }
@@ -81,9 +77,7 @@ public final class Either<LEFT, RIGHT> {
     return new Either<>(null, value);
   }
 
-  public <X> X transform(
-      Function<LEFT, X> lhsTransformer,
-      Function<RIGHT, X> rhsTransformer) {
+  public <X> X transform(Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer) {
     if (isLeft()) {
       return lhsTransformer.apply(getLeft());
     }

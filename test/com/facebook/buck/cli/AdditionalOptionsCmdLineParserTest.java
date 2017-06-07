@@ -41,18 +41,15 @@ public class AdditionalOptionsCmdLineParserTest {
     @Option(name = O1)
     String one;
 
-    @AdditionalOptions
-    SubOptions sub;
+    @AdditionalOptions SubOptions sub;
 
-    @AdditionalOptions
-    SubOptions2 sub2;
+    @AdditionalOptions SubOptions2 sub2;
 
     static class SubOptions {
       @Option(name = O2)
       String two;
 
-      @AdditionalOptions
-      SubSubOptions sub;
+      @AdditionalOptions SubSubOptions sub;
     }
   }
 
@@ -67,31 +64,30 @@ public class AdditionalOptionsCmdLineParserTest {
   }
 
   static class InfiniteOptions {
-    @AdditionalOptions
-    InfiniteOptions infiniteOptions;
+    @AdditionalOptions InfiniteOptions infiniteOptions;
   }
 
   static class DuplicateOptions {
     @AdditionalOptions
     Object object1; // There are no args4j annotations in Object, so we can use that.
-    @AdditionalOptions
-    Object object2;
+
+    @AdditionalOptions Object object2;
   }
 
   @Before
   public void setUp() {
-     options = new RootOptions();
-     parser = new AdditionalOptionsCmdLineParser(options);
+    options = new RootOptions();
+    parser = new AdditionalOptionsCmdLineParser(options);
   }
 
   @Test(expected = IllegalAnnotationError.class)
   public void testDuplicateAdditionalOptionsClass() {
-      new AdditionalOptionsCmdLineParser(new DuplicateOptions());
+    new AdditionalOptionsCmdLineParser(new DuplicateOptions());
   }
 
   @Test(expected = IllegalAnnotationError.class)
   public void testRecursiveAdditionalOptions() {
-      new AdditionalOptionsCmdLineParser(new InfiniteOptions());
+    new AdditionalOptionsCmdLineParser(new InfiniteOptions());
   }
 
   @Test

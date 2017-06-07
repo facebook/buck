@@ -109,10 +109,10 @@ public class PatternTestSelectorTest {
 
   private void assertMatchesTestDescription(TestDescription description, String rawSelector) {
     TestSelector testSelector = PatternTestSelector.buildFromSelectorString(rawSelector);
-    String message = String.format("Test selector '%s' should match class:%s method:%s",
-        rawSelector,
-        description.getClassName(),
-        description.getMethodName());
+    String message =
+        String.format(
+            "Test selector '%s' should match class:%s method:%s",
+            rawSelector, description.getClassName(), description.getMethodName());
     assertTrue(message, testSelector.matches(description));
   }
 

@@ -18,10 +18,8 @@ package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -58,9 +56,5 @@ abstract class AbstractDoctorSuggestion {
     public String getText() {
       return this.text;
     }
-
   }
-
 }
-
-

@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'rust_library()' /}
+    {param navid: 'rule_rust_library' /}
     {param prettify: true /}
     {param description}
       A rust_library() rule builds a native Rust library.
@@ -16,6 +17,9 @@
 <p>
   A rust_library() rule builds a native library from the supplied set of Rust source files
   and dependencies.
+</p>
+<p>
+  {call rust_common.check_flavor /}
 </p>
 <p>
   {call rust_common.supported_language_version /}
@@ -43,7 +47,9 @@
 
 {call rust_common.crate_root /}
 
-{call native_common.link_style /}
+{call native_common.preferred_linkage /}
+
+{call buck.tests_arg /}
 
 {/param} // close args
 

@@ -16,33 +16,28 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import static org.hamcrest.Matchers.containsString;
-
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
-/**
- * Integration test for the {@code buck build} command with no arguments.
- */
+/** Integration test for the {@code buck build} command with no arguments. */
 public class BuildWithNoTargetSpecifiedIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testBuckBuildWithoutTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_with_no_alias", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_no_alias", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
@@ -56,8 +51,9 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
 
   @Test
   public void testBuckBuildWithoutTargetWithSingleAliasConfigured() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_with_one_alias", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_one_alias", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
@@ -66,60 +62,70 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     assertThat(
         "`buck build` should suggest the alias found in .buckconfig as a target.",
         result.getStderr(),
-        containsString(Joiner.on('\n').join(
-            "BUILD FAILED: Must specify at least one build target.",
-            "Try building one of the following targets:",
-            "myapp") + '\n'));
-
+        containsString(
+            Joiner.on('\n')
+                    .join(
+                        "BUILD FAILED: Must specify at least one build target.",
+                        "Try building one of the following targets:",
+                        "myapp")
+                + '\n'));
   }
 
   /**
-   * Ensure that if there are multiple aliases (but less than ten) they
-   * are all displayed as targets in the order specified in .buckconfig.
+   * Ensure that if there are multiple aliases (but less than ten) they are all displayed as targets
+   * in the order specified in .buckconfig.
    */
   @Test
   public void testBuckBuildWithoutTargetWithUnderTenAliasesConfigured() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_with_five_aliases", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_five_aliases", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertFailure("buck build should exit with an error.");
 
     assertThat(
-        Joiner.on(' ').join(
-            "`buck build` should suggest the five aliases found in .buckconfig",
-            "(in the order in which they are listed in) as targets."),
+        Joiner.on(' ')
+            .join(
+                "`buck build` should suggest the five aliases found in .buckconfig",
+                "(in the order in which they are listed in) as targets."),
         result.getStderr(),
         containsString(
-            Joiner.on('\n').join(
-                "BUILD FAILED: Must specify at least one build target.",
-                "Try building one of the following targets:",
-                "myapp my_app mi_app mon_app mein_app") + '\n'));
+            Joiner.on('\n')
+                    .join(
+                        "BUILD FAILED: Must specify at least one build target.",
+                        "Try building one of the following targets:",
+                        "myapp my_app mi_app mon_app mein_app")
+                + '\n'));
   }
 
   /**
-   * Ensure that if there are more than ten aliases only the first ten
-   * (based on the order specified in .buckconfig) are displayed as targets.
+   * Ensure that if there are more than ten aliases only the first ten (based on the order specified
+   * in .buckconfig) are displayed as targets.
    */
   @Test
   public void testBuckBuildWithoutTargetWithOverTenAliasesConfigured() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "project_with_fifteen_aliases", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_fifteen_aliases", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertFailure("buck build should exit with an error.");
 
     assertThat(
-        Joiner.on(' ').join(
-            "`buck build` should suggest the first ten aliases found in .buckconfig",
-            "(in the order in which they are listed in) as targets."),
+        Joiner.on(' ')
+            .join(
+                "`buck build` should suggest the first ten aliases found in .buckconfig",
+                "(in the order in which they are listed in) as targets."),
         result.getStderr(),
-        containsString(Joiner.on('\n').join(
-            "BUILD FAILED: Must specify at least one build target.",
-            "Try building one of the following targets:",
-            "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4") + '\n'));
+        containsString(
+            Joiner.on('\n')
+                    .join(
+                        "BUILD FAILED: Must specify at least one build target.",
+                        "Try building one of the following targets:",
+                        "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4")
+                + '\n'));
   }
-
 }

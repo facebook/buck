@@ -25,13 +25,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 /**
  * List of fields to add to a generated {@code BuildConfig.java} file. Each field knows its Java
@@ -56,48 +54,45 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
     public abstract String getValue();
 
     /**
-     * @return a string that could be passed to
-     *     {@link BuildConfigFields#fromFieldDeclarations(Iterable)} such that it could be parsed
-     *     to return a {@link Field} equal to this object.
+     * @return a string that could be passed to {@link
+     *     BuildConfigFields#fromFieldDeclarations(Iterable)} such that it could be parsed to return
+     *     a {@link Field} equal to this object.
      */
     @Override
     public String toString() {
       return String.format("%s %s = %s", getType(), getName(), getValue());
     }
-
   }
 
-  private static final Pattern VARIABLE_DEFINITION_PATTERN = Pattern.compile(
-      "(?<type>[a-zA-Z_$][a-zA-Z0-9_.<>]+(" + Pattern.quote("[]") + ")?)" +
-      "\\s+" +
-      "(?<name>[a-zA-Z_$][a-zA-Z0-9_$]+)" +
-      "\\s*=\\s*" +
-      "(?<value>.+)");
+  private static final Pattern VARIABLE_DEFINITION_PATTERN =
+      Pattern.compile(
+          "(?<type>[a-zA-Z_$][a-zA-Z0-9_.<>]+("
+              + Pattern.quote("[]")
+              + ")?)"
+              + "\\s+"
+              + "(?<name>[a-zA-Z_$][a-zA-Z0-9_$]+)"
+              + "\\s*=\\s*"
+              + "(?<value>.+)");
 
-  private static final ImmutableSet<String> PRIMITIVE_NUMERIC_TYPE_NAMES = ImmutableSet.of(
-      "byte",
-      "char",
-      "double",
-      "float",
-      "int",
-      "long",
-      "short");
+  private static final ImmutableSet<String> PRIMITIVE_NUMERIC_TYPE_NAMES =
+      ImmutableSet.of("byte", "char", "double", "float", "int", "long", "short");
 
-  private static final Function<String, Field> TRANSFORM = input -> {
-    Matcher matcher = VARIABLE_DEFINITION_PATTERN.matcher(input);
-    if (matcher.matches()) {
-      return Field.builder()
-          .setType(matcher.group("type"))
-          .setName(matcher.group("name"))
-          .setValue(matcher.group("value"))
-          .build();
-    } else {
-      throw new HumanReadableException("Not a valid BuildConfig variable declaration: %s", input);
-    }
-  };
+  private static final Function<String, Field> TRANSFORM =
+      input -> {
+        Matcher matcher = VARIABLE_DEFINITION_PATTERN.matcher(input);
+        if (matcher.matches()) {
+          return Field.builder()
+              .setType(matcher.group("type"))
+              .setName(matcher.group("name"))
+              .setValue(matcher.group("value"))
+              .build();
+        } else {
+          throw new HumanReadableException(
+              "Not a valid BuildConfig variable declaration: %s", input);
+        }
+      };
 
-  private static final BuildConfigFields EMPTY = BuildConfigFields.of(
-      ImmutableMap.of());
+  private static final BuildConfigFields EMPTY = BuildConfigFields.of(ImmutableMap.of());
 
   @Value.Parameter
   protected abstract Map<String, Field> getNameToField();
@@ -113,12 +108,8 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
 
   /** @return a {@link BuildConfigFields} that contains the specified fields in iteration order. */
   public static BuildConfigFields fromFields(Iterable<Field> fields) {
-    ImmutableMap<String, Field> entries = FluentIterable
-        .from(fields)
-        .uniqueIndex(Field::getName);
-    return BuildConfigFields.builder()
-        .putAllNameToField(entries)
-        .build();
+    ImmutableMap<String, Field> entries = FluentIterable.from(fields).uniqueIndex(Field::getName);
+    return BuildConfigFields.builder().putAllNameToField(entries).build();
   }
 
   /**
@@ -140,6 +131,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
 
   /**
    * Creates the Java code for a {@code BuildConfig.java} file in the specified {@code javaPackage}.
+   *
    * @param source The build target of the rule that is responsible for generating this
    *     BuildConfig.java file.
    * @param javaPackage The Java package for the generated file.
@@ -148,9 +140,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
    *     non-constant-expression that is guaranteed to evaluate to the literal value.
    */
   public String generateBuildConfigDotJava(
-      UnflavoredBuildTarget source,
-      String javaPackage,
-      boolean useConstantExpressions) {
+      UnflavoredBuildTarget source, String javaPackage, boolean useConstantExpressions) {
 
     StringBuilder builder = new StringBuilder();
     // By design, we drop the flavor from the BuildTarget (if present), so this debug text makes
@@ -168,8 +158,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
         boolean isTrue = "true".equals(field.getValue());
         if (!(isTrue || "false".equals(field.getValue()))) {
           throw new HumanReadableException(
-              "expected boolean literal but was: %s",
-              field.getValue());
+              "expected boolean literal but was: %s", field.getValue());
         }
         String value;
         if (useConstantExpressions) {
@@ -212,5 +201,4 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
   public String toString() {
     return Joiner.on(';').join(getNameToField().values());
   }
-
 }

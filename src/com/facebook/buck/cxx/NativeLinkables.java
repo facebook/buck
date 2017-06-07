@@ -31,8 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -46,12 +45,14 @@ public class NativeLinkables {
    *
    * @param from the starting set of {@link BuildRule}s to begin the search from.
    * @param traverse a {@link Predicate} determining acceptable dependencies to traverse when
-   *                 searching for {@link NativeLinkable}s.
+   *     searching for {@link NativeLinkable}s.
+   * @param skip Skip this {@link BuildRule} even if it is an instance of {@link NativeLinkable}
    * @return all the roots found as a map from {@link BuildTarget} to {@link NativeLinkable}.
    */
-  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
+  static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
       Iterable<? extends BuildRule> from,
-      final Predicate<Object> traverse) {
+      final Predicate<Object> traverse,
+      final Predicate<Object> skip) {
 
     final ImmutableMap.Builder<BuildTarget, NativeLinkable> nativeLinkables =
         ImmutableMap.builder();
@@ -62,7 +63,7 @@ public class NativeLinkables {
 
             // If this is `NativeLinkable`, we've found a root so record the rule and terminate
             // the search.
-            if (rule instanceof NativeLinkable) {
+            if (rule instanceof NativeLinkable && !skip.apply(rule)) {
               NativeLinkable nativeLinkable = (NativeLinkable) rule;
               nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
               return ImmutableSet.of();
@@ -70,7 +71,7 @@ public class NativeLinkables {
 
             // Otherwise, make sure this rule is marked as traversable before following it's deps.
             if (traverse.apply(rule)) {
-              return rule.getDeps();
+              return rule.getBuildDeps();
             }
 
             return ImmutableSet.of();
@@ -82,13 +83,26 @@ public class NativeLinkables {
   }
 
   /**
+   * Find all {@link NativeLinkable} transitive roots reachable from the given {@link BuildRule}s.
+   *
+   * @param from the starting set of {@link BuildRule}s to begin the search from.
+   * @param traverse a {@link Predicate} determining acceptable dependencies to traverse when
+   *     searching for {@link NativeLinkable}s.
+   * @return all the roots found as a map from {@link BuildTarget} to {@link NativeLinkable}.
+   */
+  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
+      Iterable<? extends BuildRule> from, final Predicate<Object> traverse) {
+    return getNativeLinkableRoots(from, traverse, x -> false);
+  }
+
+  /**
    * Extract from the dependency graph all the libraries which must be considered for linking.
    *
-   * Traversal proceeds depending on whether each dependency is to be statically or dynamically
+   * <p>Traversal proceeds depending on whether each dependency is to be statically or dynamically
    * linked.
    *
-   * @param linkStyle how dependencies should be linked, if their preferred_linkage is
-   *                  {@code NativeLinkable.Linkage.ANY}.
+   * @param linkStyle how dependencies should be linked, if their preferred_linkage is {@code
+   *     NativeLinkable.Linkage.ANY}.
    */
   public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
       final CxxPlatform cxxPlatform,
@@ -96,7 +110,7 @@ public class NativeLinkables {
       final Linker.LinkableDepType linkStyle,
       final Predicate<? super NativeLinkable> traverse) {
 
-    final Map<BuildTarget, NativeLinkable> nativeLinkables = Maps.newHashMap();
+    final Map<BuildTarget, NativeLinkable> nativeLinkables = new HashMap<>();
     for (NativeLinkable nativeLinkable : inputs) {
       nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
     }
@@ -168,8 +182,7 @@ public class NativeLinkables {
   }
 
   public static Linker.LinkableDepType getLinkStyle(
-      NativeLinkable.Linkage preferredLinkage,
-      Linker.LinkableDepType requestedLinkStyle) {
+      NativeLinkable.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
     Linker.LinkableDepType linkStyle;
     switch (preferredLinkage) {
       case SHARED:
@@ -177,9 +190,9 @@ public class NativeLinkables {
         break;
       case STATIC:
         linkStyle =
-            requestedLinkStyle == Linker.LinkableDepType.STATIC ?
-                Linker.LinkableDepType.STATIC :
-                Linker.LinkableDepType.STATIC_PIC;
+            requestedLinkStyle == Linker.LinkableDepType.STATIC
+                ? Linker.LinkableDepType.STATIC
+                : Linker.LinkableDepType.STATIC_PIC;
         break;
       case ANY:
         linkStyle = requestedLinkStyle;
@@ -191,27 +204,29 @@ public class NativeLinkables {
   }
 
   public static NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType linkStyle,
-      NativeLinkable nativeLinkable) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType linkStyle, NativeLinkable nativeLinkable)
+      throws NoSuchBuildTargetException {
     NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
     return nativeLinkable.getNativeLinkableInput(cxxPlatform, getLinkStyle(link, linkStyle));
   }
 
   /**
    * Collect up and merge all {@link com.facebook.buck.cxx.NativeLinkableInput} objects from
-   * transitively traversing all unbroken dependency chains of
-   * {@link com.facebook.buck.cxx.NativeLinkable} objects found via the passed in
-   * {@link com.facebook.buck.rules.BuildRule} roots.
+   * transitively traversing all unbroken dependency chains of {@link
+   * com.facebook.buck.cxx.NativeLinkable} objects found via the passed in {@link
+   * com.facebook.buck.rules.BuildRule} roots.
    */
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
-      Predicate<Object> traverse) throws NoSuchBuildTargetException {
+      Predicate<Object> traverse,
+      Predicate<Object> skip)
+      throws NoSuchBuildTargetException {
 
     // Get the topologically sorted native linkables.
-    ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, traverse);
+    ImmutableMap<BuildTarget, NativeLinkable> roots =
+        getNativeLinkableRoots(inputs, traverse, skip);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getNativeLinkables(cxxPlatform, roots.values(), depType);
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
@@ -222,10 +237,9 @@ public class NativeLinkables {
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkable> getTransitiveNativeLinkables(
-      final CxxPlatform cxxPlatform,
-      Iterable<? extends NativeLinkable> inputs) {
+      final CxxPlatform cxxPlatform, Iterable<? extends NativeLinkable> inputs) {
 
-    final Map<BuildTarget, NativeLinkable> nativeLinkables = Maps.newHashMap();
+    final Map<BuildTarget, NativeLinkable> nativeLinkables = new HashMap<>();
     for (NativeLinkable nativeLinkable : inputs) {
       nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
     }
@@ -239,9 +253,9 @@ public class NativeLinkables {
             graph.addNode(target);
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep :
-                 Iterables.concat(
-                     nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform),
-                     nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform))) {
+                Iterables.concat(
+                    nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform),
+                    nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform))) {
               BuildTarget depTarget = dep.getBuildTarget();
               graph.addEdge(target, depTarget);
               deps.add(depTarget);
@@ -256,6 +270,21 @@ public class NativeLinkables {
   }
 
   /**
+   * Collect up and merge all {@link com.facebook.buck.cxx.NativeLinkableInput} objects from
+   * transitively traversing all unbroken dependency chains of {@link
+   * com.facebook.buck.cxx.NativeLinkable} objects found via the passed in {@link
+   * com.facebook.buck.rules.BuildRule} roots.
+   */
+  public static NativeLinkableInput getTransitiveNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> inputs,
+      Linker.LinkableDepType depType,
+      Predicate<Object> traverse)
+      throws NoSuchBuildTargetException {
+    return getTransitiveNativeLinkableInput(cxxPlatform, inputs, depType, traverse, x -> false);
+  }
+
+  /**
    * Collect all the shared libraries generated by {@link NativeLinkable}s found by transitively
    * traversing all unbroken dependency chains of {@link com.facebook.buck.cxx.NativeLinkable}
    * objects found via the passed in {@link com.facebook.buck.rules.BuildRule} roots.
@@ -265,9 +294,12 @@ public class NativeLinkables {
   public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      Predicate<Object> traverse) throws NoSuchBuildTargetException {
+      Predicate<Object> traverse,
+      Predicate<Object> skip)
+      throws NoSuchBuildTargetException {
 
-    ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, traverse);
+    ImmutableMap<BuildTarget, NativeLinkable> roots =
+        getNativeLinkableRoots(inputs, traverse, skip);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getTransitiveNativeLinkables(cxxPlatform, roots.values());
 
@@ -280,10 +312,7 @@ public class NativeLinkables {
           SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
           if (prev != null && !prev.equals(lib.getValue())) {
             throw new HumanReadableException(
-                "conflicting libraries for key %s: %s != %s",
-                lib.getKey(),
-                lib.getValue(),
-                prev);
+                "conflicting libraries for key %s: %s != %s", lib.getKey(), lib.getValue(), prev);
           }
         }
       }
@@ -292,11 +321,21 @@ public class NativeLinkables {
   }
 
   /**
-   * @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any.
+   * Collect all the shared libraries generated by {@link NativeLinkable}s found by transitively
+   * traversing all unbroken dependency chains of {@link com.facebook.buck.cxx.NativeLinkable}
+   * objects found via the passed in {@link com.facebook.buck.rules.BuildRule} roots.
+   *
+   * @return a mapping of library name to the library {@link SourcePath}.
    */
+  public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
+      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, Predicate<Object> traverse)
+      throws NoSuchBuildTargetException {
+    return getTransitiveSharedLibraries(cxxPlatform, inputs, traverse, x -> false);
+  }
+
+  /** @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any. */
   public static Optional<NativeLinkTarget> getNativeLinkTarget(
-      Object object,
-      CxxPlatform cxxPlatform) {
+      Object object, CxxPlatform cxxPlatform) {
     if (object instanceof NativeLinkTarget) {
       return Optional.of((NativeLinkTarget) object);
     }
@@ -305,5 +344,4 @@ public class NativeLinkables {
     }
     return Optional.empty();
   }
-
 }

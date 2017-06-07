@@ -18,13 +18,12 @@ package com.facebook.buck.macho;
 import com.google.common.primitives.UnsignedInteger;
 
 /**
- * Symbolic debugger symbols.  The comments give the conventional use for
+ * Symbolic debugger symbols. The comments give the conventional use for
  *
- *      .stabs "n_name", n_type, n_sect, n_desc, n_value
+ * <p>.stabs "n_name", n_type, n_sect, n_desc, n_value
  *
- * where n_type is the defined constant and not listed in the comment.  Other
- * fields not listed are zero. n_sect is the section ordinal the entry is
- * referring to.
+ * <p>where n_type is the defined constant and not listed in the comment. Other fields not listed
+ * are zero. n_sect is the section ordinal the entry is referring to.
  */
 public class Stab {
   private Stab() {}

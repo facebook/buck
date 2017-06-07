@@ -22,8 +22,8 @@ import com.intellij.lang.ImportOptimizer;
 import com.intellij.psi.PsiFile;
 
 /**
- * Import optimizer is used for sort and remove unused java/python imports.
- * Buck has no imports, but we use it to sort dependencies.
+ * Import optimizer is used for sort and remove unused java/python imports. Buck has no imports, but
+ * we use it to sort dependencies.
  */
 public class BuckImportOptimizer implements ImportOptimizer {
   @Override
@@ -33,7 +33,10 @@ public class BuckImportOptimizer implements ImportOptimizer {
 
   @Override
   public Runnable processFile(final PsiFile psiFile) {
-    psiFile.getProject().getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+    psiFile
+        .getProject()
+        .getMessageBus()
+        .syncPublisher(IntellijBuckAction.EVENT)
         .consume(this.getClass().toString());
     return new Runnable() {
       @Override

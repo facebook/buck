@@ -26,4 +26,8 @@ public class AllExistingProjectFilesystem extends FakeProjectFilesystem {
     return true;
   }
 
+  @Override
+  protected byte[] getFileBytes(Path path) {
+    return new byte[0];
+  }
 }

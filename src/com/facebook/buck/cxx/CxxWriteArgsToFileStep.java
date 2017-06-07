@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -27,66 +28,65 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * This step takes a list of args, stringify, escape them (if {@link #escaper} is present), and
- * finally store to a file {@link #argFilePath}.
+ * This step takes a list of args, stringify, escape them (if escaper is present), and finally store
+ * to a file {@link #argFilePath}.
  */
 public class CxxWriteArgsToFileStep implements Step {
 
   private final Path argFilePath;
-  private final ImmutableList<Arg> args;
-  private final Optional<Function<String, String>> escaper;
-  private final Path currentCellPath;
+  private final ImmutableList<String> argFileContents;
 
-  CxxWriteArgsToFileStep(
+  public static CxxWriteArgsToFileStep create(
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
-      Path currentCellPath) {
-    this.argFilePath = argFilePath;
-    this.args = args;
-    this.escaper = escaper;
-    this.currentCellPath = currentCellPath;
-  }
-
-  private void createArgFile() throws IOException {
-    if (Files.notExists(argFilePath.getParent())) {
-      Files.createDirectories(argFilePath.getParent());
-    }
-    ImmutableList<String> argFileContents = stringify(args);
+      Path currentCellPath,
+      SourcePathResolver pathResolver) {
+    ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
     if (escaper.isPresent()) {
-      argFileContents = argFileContents.stream()
-          .map(escaper.get()::apply)
-          .collect(MoreCollectors.toImmutableList());
+      argFileContents =
+          argFileContents
+              .stream()
+              .map(escaper.get()::apply)
+              .collect(MoreCollectors.toImmutableList());
     }
-    MoreFiles.writeLinesToFile(argFileContents, argFilePath);
+    return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
   }
 
-  private ImmutableList<String> stringify(ImmutableCollection<Arg> args) {
+  private CxxWriteArgsToFileStep(Path argFilePath, ImmutableList<String> argFileContents) {
+    this.argFilePath = argFilePath;
+    this.argFileContents = argFileContents;
+  }
+
+  static ImmutableList<String> stringify(
+      ImmutableCollection<Arg> args, Path currentCellPath, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
-        ((FileListableLinkerInputArg) arg).appendToCommandLineRel(builder, currentCellPath);
+        ((FileListableLinkerInputArg) arg)
+            .appendToCommandLineRel(builder, currentCellPath, pathResolver);
       } else if (arg instanceof SourcePathArg) {
-        ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath);
+        ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath, pathResolver);
       } else {
-        arg.appendToCommandLine(builder);
+        arg.appendToCommandLine(builder, pathResolver);
       }
     }
     return builder.build();
   }
 
-
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    createArgFile();
+    if (Files.notExists(argFilePath.getParent())) {
+      Files.createDirectories(argFilePath.getParent());
+    }
+    MoreFiles.writeLinesToFile(argFileContents, argFilePath);
     return StepExecutionResult.SUCCESS;
   }
 

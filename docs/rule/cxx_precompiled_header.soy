@@ -1,0 +1,185 @@
+{namespace cxx_precompiled_header}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cxx_precompiled_header()' /}
+    {param navid: 'rule_cxx_precompiled_header' /}
+    {param prettify: true /}
+    {param description}
+      A <code>cxx_precompiled_header</code> rule specifies a single header file that can be
+      precompiled and made available for use in other build rules.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  <p>
+  A <code>cxx_precompiled_header</code> rule specifies a single header file that can be
+  precompiled and made available for use in other build rules such as a{sp}
+  {call buck.cxx_library /}{sp}
+  or a{sp}
+  <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary</code></a>.
+  </p>
+
+  <p>
+  This header file is precompiled by the preprocessor on behalf of the
+  C, C++, Objective-C, or Objective-C++ rule using it, via its{sp}
+  <code>precompiled_header</code>{sp}
+  parameter.
+  Afterwards the precompiled header is applied during the rule's own compilation
+  (often with an appreciable reduction in build time, the main benefit of PCH).
+  </p>
+
+  <p>
+  This PCH is built once per combination of build flags which might affect the PCH's compatibility.
+  For example, a distinct pre-compilation of the header occurs per combination of flags related to
+  optimization, debug, architecture, and so on, used by rules which employ PCH.
+  The flags used during the build of the dependent rule (that is, the "PCH-using rule")
+  are in effect while building the PCH itself.  Similarly, to the same end, the include paths used
+  when building the PCH are applied to the dependent rule.  For example, <code>deps</code> in the
+  PCH rule are propagated back to the dependent rule, and the PCH's header search paths
+  (e.g. <code>-I</code> or <code>-isystem</code> options) are prefixed onto the list of
+  include paths for the dependent rule.
+  </p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+    A descriptive name for the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'src' /}
+  {param desc}
+    The path to the header file that should be precompiled.
+    Only one header file can be specified.  But of course this header could include
+    any number of other headers.  The included headers could belong to -- that is,
+    be <code>exported_headers</code> from -- another rule, in which case, the rule would
+    have to be added to <code>deps</code> as usual.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default: 'None' /}
+  {param desc}
+    Dependency rules which export headers used by the header specified in <code>src</code>.
+  {/param}
+{/call}
+
+{/param}  // close args
+
+{param examples}
+
+<p>
+The best way to see how the <code>cxx_precompiled_header()</code> rule works is with an
+example.  Let there be a header called <code>common.h</code> which has the following:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+#pragma once
+
+/* Include common C++ files. */
+#include &lt;string>
+#include &lt;map>
+#include &lt;set>
+#include &lt;type_traits>
+#include &lt;vector>
+
+/* Some frequently-used headers from the Folly project. */
+#include &lt;folly/Conv.h>
+#include &lt;folly/Executor.h>
+#include &lt;folly/io/async/EventBase.h>
+</pre>
+{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+cxx_precompiled_header(
+  name = 'common_pch',
+  src = 'common.h',
+  deps = [
+    # Needed for standard C++ headers:
+    '//external/libcxx:headers',
+    # Needed for the Folly includes:
+    '//folly:folly',
+    '//folly/io/async:async',
+  ],
+)
+
+cxx_binary(
+  name = 'main',
+  srcs = ['main.cpp'],
+  precompiled_header = ':common_pch',
+  deps = [ ... ],
+  compiler_flags = ['-g', '-O2', '-fPIC'],
+)
+</pre>
+{/literal}
+
+<p>
+The <code>cxx_precompiled_header</code> rule declares a precompiled header "template"
+containing the header file path, and dependencies.
+In this example we indicate that{sp}
+<code>common.h</code>{sp}
+is to be precompiled when used by another build rule.
+</p>
+
+<p>
+Note that, by itself, this <code>cxx_precompiled_header</code> rule will not result
+in anything being built.  The <em>usage</em> of this rule from another rule --
+an "instantiation" of this precompiled header template -- is what will trigger the
+PCH build.
+</p>
+
+<p>
+In the example above, the build for the binary named <code>"main"</code> will depend on
+the header being precompiled in a separate step, prior to compiling <code>main.cpp</code>,
+and the resulting PCH will be used in{sp}
+<code>main</code>'s compilation.
+</p>
+
+<p>
+The dependencies specified in this precompiled header rule's <code>deps</code> are transitive; they
+will propagate to rules using this PCH, so that during link time, any libraries which are
+required by the code made available in the header will be included in the final binary build.
+</p>
+
+<p>
+The precompiled header dynamically created from the "template" will be built with flags
+which would be used in the dependent rule.  In this case, <code>main</code>'s use of specific
+compiler flags <code>-g -O2 -fPIC</code> will result in the production of a precompiled header
+with the same flags.  This is so the precompiled code fully jives with rules using the PCH,
+i.e. they will have the same debug, optimization, CPU, etc. options.  (The compiler is usually
+smart enough to reject a bad PCH, fortunately.  But we want to ensure we take the appropriate
+steps to ensure we <em>always have</em> a PCH which works with any build that uses it.)
+</p>
+
+<p>
+Another effect of a rule using a precompiled header is that the rule's list of
+build flags will change; not just to employ PCH with e.g.{sp}
+<code>-include-pch</code>{sp}
+(if using Clang), but also, to alter the sequence of header search paths.
+The rule using the precompiled header will "inherit" the lists of paths used
+during the PCH build, applying them <em>first</em> in its own search paths.
+This is to ensure that an <code>#include</code> directive will resolve in exactly
+the same way in this build as it would have in the PCH, to ensure full compatibility
+between the PCH and other rule's builds.  For example, if the PCH were to use one version
+of <code>stdcxx</code> and another rule use a different version, the version differences
+won't clash, thereby avoiding different versions of the <code>&lt;cstring&gt;</code> header
+used between the precompiled header and the dependent rule, and preventing confused
+structure definitions, ABI incompatibility, and so on (catastrophe, in other words).
+</p>
+
+{/param}
+
+{/call}  // End of buck.rule
+
+    {/param}
+  {/call}
+{/template}

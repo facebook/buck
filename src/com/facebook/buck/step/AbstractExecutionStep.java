@@ -19,8 +19,8 @@ package com.facebook.buck.step;
 import java.io.IOException;
 
 /**
- * Abstract implementation of {@link Step} that takes the description as a constructor parameter
- * and requires only the implementation of {@link #execute(ExecutionContext)}. This facilitates the
+ * Abstract implementation of {@link Step} that takes the description as a constructor parameter and
+ * requires only the implementation of {@link #execute(ExecutionContext)}. This facilitates the
  * creation of an anonymous implementation of {@link Step}.
  */
 public abstract class AbstractExecutionStep implements Step {
@@ -44,5 +44,4 @@ public abstract class AbstractExecutionStep implements Step {
   public String getDescription(ExecutionContext context) {
     return description;
   }
-
 }

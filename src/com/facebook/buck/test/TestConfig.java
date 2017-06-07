@@ -29,14 +29,12 @@ public class TestConfig {
   }
 
   public TestResultSummaryVerbosity getResultSummaryVerbosity() {
-    boolean includeStdErr = delegate.getBooleanValue(
-        TEST_SUMMARY_SECTION_NAME,
-        "include_std_err",
-        DEFAULT_SUMMARY_INCLUDE_STDERR);
-    boolean includeStdOut = delegate.getBooleanValue(
-        TEST_SUMMARY_SECTION_NAME,
-        "include_std_out",
-        DEFAULT_SUMMARY_INCLUDE_STDOUT);
+    boolean includeStdErr =
+        delegate.getBooleanValue(
+            TEST_SUMMARY_SECTION_NAME, "include_std_err", DEFAULT_SUMMARY_INCLUDE_STDERR);
+    boolean includeStdOut =
+        delegate.getBooleanValue(
+            TEST_SUMMARY_SECTION_NAME, "include_std_out", DEFAULT_SUMMARY_INCLUDE_STDOUT);
 
     return TestResultSummaryVerbosity.of(includeStdErr, includeStdOut);
   }

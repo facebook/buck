@@ -1,0 +1,5 @@
+[project]
+  ide = intellij
+  intellij_aggregation_mode = 1
+[intellij]
+  aggregate_android_resource_modules = true

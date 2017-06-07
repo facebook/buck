@@ -28,5 +28,4 @@ public class MoreExceptions {
     }
     return Throwables.getRootCause(e).getLocalizedMessage();
   }
-
 }

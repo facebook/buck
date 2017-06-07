@@ -17,7 +17,7 @@
 package com.facebook.buck.event;
 
 /**
- * Interface for events that are only sent out after there was some work done towards completing
- * the current command. Absence of those events can be used to detect a possible deadlock.
+ * Interface for events that are only sent out after there was some work done towards completing the
+ * current command. Absence of those events can be used to detect a possible deadlock.
  */
 public interface WorkAdvanceEvent extends BuckEvent {}

@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Supplier;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,10 +26,8 @@ import java.nio.file.attribute.FileAttribute;
 public class NamedTemporaryFile implements Closeable, Supplier<Path> {
   private final Path tempPath;
 
-  public NamedTemporaryFile(
-      String prefix,
-      String suffix,
-      FileAttribute<?>... attrs) throws IOException {
+  public NamedTemporaryFile(String prefix, String suffix, FileAttribute<?>... attrs)
+      throws IOException {
     tempPath = Files.createTempFile(prefix, suffix, attrs);
   }
 

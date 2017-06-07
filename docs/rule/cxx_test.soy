@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'cxx_test()' /}
+    {param navid: 'rule_cxx_test' /}
     {param prettify: true /}
     {param description}
       A cxx_test() rule builds a native C/C++ executable.
@@ -14,7 +15,7 @@
 {param status: 'UNFROZEN' /}
 {param overview}
 A cxx_test() rule builds a C/C++ binary against a C/C++ testing framework and runs
-it as part of <code>buck test</code>.
+it as part of {call buck.cmd_test /}.
 {/param}
 
 {param args}
@@ -36,14 +37,22 @@ it as part of <code>buck test</code>.
 
 {call cxx_common.linker_flags_arg /}
 
+{call cxx_common.precompiled_header_arg /}
+
+{call buck.deps_query_arg /}
+
 {call test_common.resources_arg /}
 
 {call buck.arg}
   {param name: 'framework' /}
   {param default : '"gtest"' /}
   {param desc}
-  The testing framework to build against and run with.
-  We currently support <a href="https://code.google.com/p/googletest/"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  <p>
+    The testing framework to build against and run with.  We currently support <a href="https://github.com/google/googletest"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  </p>
+  <p>
+    When set to <code>gtest</code>, you must also set {call buckconfig.cxx_gtest_dep /}.
+  </p>
   {/param}
 {/call}
 
@@ -84,6 +93,10 @@ it as part of <code>buck test</code>.
 {call buck.run_test_separately_arg /}
 
 {call buck.test_rule_timeout_ms /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

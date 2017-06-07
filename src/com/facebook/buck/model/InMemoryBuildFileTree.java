@@ -22,19 +22,17 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeSet;
-
 import javax.annotation.Nullable;
 
 /**
@@ -43,10 +41,12 @@ import javax.annotation.Nullable;
  */
 public class InMemoryBuildFileTree extends BuildFileTree {
 
-  private static final Comparator<Path> PATH_COMPARATOR = (a, b) -> ComparisonChain.start()
-      .compare(a.getNameCount(), b.getNameCount())
-      .compare(a.toString(), b.toString())
-      .result();
+  private static final Comparator<Path> PATH_COMPARATOR =
+      (a, b) ->
+          ComparisonChain.start()
+              .compare(a.getNameCount(), b.getNameCount())
+              .compare(a.toString(), b.toString())
+              .result();
 
   private final Map<Path, Node> basePathToNodeIndex;
 
@@ -66,7 +66,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
     // Initialize basePathToNodeIndex with a Node that corresponds to the empty string. This ensures
     // that findParent() will always return a non-null Node because the empty string is a prefix of
     // all base paths.
-    basePathToNodeIndex = Maps.newHashMap();
+    basePathToNodeIndex = new HashMap<>();
     Node root = new Node(Paths.get(""));
     basePathToNodeIndex.put(Paths.get(""), root);
 
@@ -109,7 +109,8 @@ public class InMemoryBuildFileTree extends BuildFileTree {
     if (node.children == null) {
       return ImmutableList.of();
     } else {
-      return node.children.stream()
+      return node.children
+          .stream()
           .map(child -> MorePaths.relativize(path, child.basePath))
           .collect(MoreCollectors.toImmutableList());
     }
@@ -117,6 +118,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
 
   /**
    * Finds the parent Node of the specified child Node.
+   *
    * @param child whose parent is sought in {@code basePathToNodeIndex}.
    * @param basePathToNodeIndex Map that must contain a Node with a basePath that is a prefix of
    *     {@code child}'s basePath.
@@ -143,8 +145,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
     private final Path basePath;
 
     /** List of child nodes: created lazily to save memory. */
-    @Nullable
-    private List<Node> children;
+    @Nullable private List<Node> children;
 
     Node(Path basePath) {
       this.basePath = basePath;
@@ -152,7 +153,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
 
     void addChild(Node node) {
       if (children == null) {
-        children = Lists.newArrayList();
+        children = new ArrayList<>();
       }
       children.add(node);
     }

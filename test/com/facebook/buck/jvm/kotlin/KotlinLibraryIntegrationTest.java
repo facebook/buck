@@ -19,29 +19,27 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class KotlinLibraryIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     KotlinTestAssumptions.assumeCompilerAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "kotlin_library_description", tmp);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_library_description", tmp);
     workspace.setUp();
   }
 
   @Test
   public void shouldCompileKotlinClass() throws Exception {
+    KotlinTestAssumptions.assumeCompilerAvailable();
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
@@ -49,6 +47,7 @@ public class KotlinLibraryIntegrationTest {
 
   @Test
   public void shouldCompileLibraryWithDependencyOnAnother() throws Exception {
+    KotlinTestAssumptions.assumeCompilerAvailable();
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");
@@ -56,6 +55,7 @@ public class KotlinLibraryIntegrationTest {
 
   @Test
   public void shouldFailToCompileInvalidKotlinCode() throws Exception {
+    KotlinTestAssumptions.assumeCompilerAvailable();
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();

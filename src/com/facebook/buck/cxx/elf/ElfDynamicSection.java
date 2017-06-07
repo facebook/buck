@@ -45,5 +45,4 @@ public class ElfDynamicSection {
       return DT_UNKNOWN;
     }
   }
-
 }

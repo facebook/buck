@@ -22,10 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -37,10 +35,12 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   private static final CacheResult IGNORED_RESULT =
       CacheResult.of(
           CacheResultType.IGNORED,
+          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
@@ -51,24 +51,35 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
-  @JsonProperty("type") public abstract CacheResultType getType();
+  @JsonProperty("type")
+  public abstract CacheResultType getType();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
-  @JsonProperty("cacheSource") protected abstract Optional<String> cacheSource();
+  @JsonProperty("cacheSource")
+  protected abstract Optional<String> cacheSource();
 
   @Value.Parameter
-  @JsonProperty("cacheError") protected abstract Optional<String> cacheError();
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @JsonProperty("cacheMode")
+  protected abstract Optional<ArtifactCacheMode> cacheMode();
 
   @Value.Parameter
-  @JsonProperty("metadata") protected abstract Optional<ImmutableMap<String, String>> metadata();
+  @JsonProperty("cacheError")
+  protected abstract Optional<String> cacheError();
 
   @Value.Parameter
-  @JsonProperty("artifactSizeBytes") protected abstract Optional<Long> artifactSizeBytes();
+  @JsonProperty("metadata")
+  protected abstract Optional<ImmutableMap<String, String>> metadata();
+
+  @Value.Parameter
+  @JsonProperty("artifactSizeBytes")
+  protected abstract Optional<Long> artifactSizeBytes();
 
   public String getCacheSource() {
     Preconditions.checkState(
@@ -101,29 +112,34 @@ abstract class AbstractCacheResult {
 
   public static CacheResult hit(
       String cacheSource,
+      ArtifactCacheMode cacheMode,
       ImmutableMap<String, String> metadata,
       long artifactSize) {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
+        Optional.of(cacheMode),
         Optional.empty(),
         Optional.of(metadata),
         Optional.of(artifactSize));
   }
 
-  public static CacheResult hit(String cacheSource) {
+  public static CacheResult hit(String cacheSource, ArtifactCacheMode cacheMode) {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
+        Optional.of(cacheMode),
         Optional.empty(),
         Optional.of(ImmutableMap.of()),
         Optional.empty());
   }
 
-  public static CacheResult error(String cacheSource, String cacheError) {
+  public static CacheResult error(
+      String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
     return CacheResult.of(
         CacheResultType.ERROR,
         Optional.of(cacheSource),
+        Optional.of(cacheMode),
         Optional.of(cacheError),
         Optional.empty(),
         Optional.empty());
@@ -151,12 +167,11 @@ abstract class AbstractCacheResult {
         String rest = val.substring(0, val.length() - type.name().length());
         return CacheResult.of(
             type,
-            rest.isEmpty() ?
-                Optional.empty() :
-                Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
-            type == CacheResultType.ERROR ?
-                Optional.of("") :
-                Optional.empty(),
+            rest.isEmpty()
+                ? Optional.empty()
+                : Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty());
       }
@@ -171,8 +186,9 @@ abstract class AbstractCacheResult {
 
   @Value.Check
   protected void check() {
-    Preconditions.checkState(cacheSource().isPresent() ||
-            (getType() != CacheResultType.HIT && getType() != CacheResultType.ERROR));
+    Preconditions.checkState(
+        cacheSource().isPresent()
+            || (getType() != CacheResultType.HIT && getType() != CacheResultType.ERROR));
     Preconditions.checkState(cacheError().isPresent() || getType() != CacheResultType.ERROR);
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.macho;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
-
 import org.immutables.value.Value;
 
 //CHECKSTYLE.OFF: MethodNameCheck
@@ -29,6 +28,7 @@ abstract class AbstractFatHeader {
   public static final UnsignedInteger FAT_CIGAM = UnsignedInteger.fromIntBits(0xBEBAFECA);
 
   public abstract UnsignedInteger getMagic();
+
   public abstract UnsignedInteger getNfat_arch();
 
   @Value.Check

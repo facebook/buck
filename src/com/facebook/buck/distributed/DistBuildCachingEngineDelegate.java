@@ -16,55 +16,53 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.cache.LoadingCache;
-
 import java.util.concurrent.ExecutionException;
 
-import javax.annotation.Nonnull;
-
 /**
- * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file
- * in distributed build.
+ * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file in
+ * distributed build.
  */
 public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegate {
-  private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCacheLoader;
-  private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
+  private final StackedFileHashCache remoteStackedFileHashCache;
 
+  private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
+      materializingRuleKeyFactories;
+
+  /**
+   * @param sourcePathResolver Distributed build source parse resolver.
+   * @param ruleFinder Used by the distributed build rule key factories.
+   * @param remoteStackedFileHashCache Cache that only requires SHA1.
+   * @param materializingStackedFileHashCache Cache that writes the files to the disk.
+   */
   public DistBuildCachingEngineDelegate(
       SourcePathResolver sourcePathResolver,
-      final DistBuildState remoteState,
-      final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders) {
-    this.fileHashCacheLoader = CacheBuilder.newBuilder()
-        .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
-          @Override
-          public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
-            return remoteState.createRemoteFileHashCache(filesystem);
-          }
-        });
-    ruleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
-        sourcePathResolver,
-        fileHashLoaders,
-        /* keySeed */ 0);
+      SourcePathRuleFinder ruleFinder,
+      StackedFileHashCache remoteStackedFileHashCache,
+      StackedFileHashCache materializingStackedFileHashCache) {
+    this.remoteStackedFileHashCache = remoteStackedFileHashCache;
+    materializingRuleKeyFactories =
+        DistBuildFileHashes.createRuleKeyFactories(
+            sourcePathResolver, ruleFinder, materializingStackedFileHashCache, /* keySeed */ 0);
   }
 
   @Override
-  public LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader() {
-    return fileHashCacheLoader;
+  public FileHashCache getFileHashCache() {
+    return remoteStackedFileHashCache;
   }
 
   @Override
   public void onRuleAboutToBeBuilt(BuildRule buildRule) {
     try {
-      ruleKeyFactories.get(buildRule.getProjectFilesystem()).build(buildRule);
+      materializingRuleKeyFactories.get(buildRule.getProjectFilesystem()).build(buildRule);
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }

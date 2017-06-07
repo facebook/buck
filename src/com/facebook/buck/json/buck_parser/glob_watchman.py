@@ -118,7 +118,8 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
                 exception=None))
     result = res.get('files', [])
     if watchman_glob_stat_results:
-        result = stat_results(base_path, result, diagnostics)
+        absolute_base_path = os.path.join(watchman_watch_root, relative_root)
+        result = stat_results(absolute_base_path, result, diagnostics)
     return sorted(result)
 
 

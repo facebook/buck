@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class ZipalignStep extends ShellStep {
@@ -49,5 +48,4 @@ public class ZipalignStep extends ShellStep {
   public String getShortName() {
     return "zipalign";
   }
-
 }

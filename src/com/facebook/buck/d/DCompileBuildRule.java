@@ -16,6 +16,7 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -23,46 +24,37 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * A build rule for invoking the D compiler.
- */
+/** A build rule for invoking the D compiler. */
 public class DCompileBuildRule extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool compiler;
+  @AddToRuleKey private final Tool compiler;
 
-  @AddToRuleKey
-  private final ImmutableList<String> compilerFlags;
+  @AddToRuleKey private final ImmutableList<String> compilerFlags;
 
-  @AddToRuleKey
-  private final String name;
+  @AddToRuleKey private final String name;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
 
-  @AddToRuleKey
-  private final ImmutableList<DIncludes> includes;
+  @AddToRuleKey private final ImmutableList<DIncludes> includes;
 
   public DCompileBuildRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool compiler,
       ImmutableList<String> compilerFlags,
       String name,
       ImmutableSortedSet<SourcePath> sources,
       ImmutableList<DIncludes> includes) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.compiler = compiler;
     this.compilerFlags = compilerFlags;
     this.name = name;
@@ -72,42 +64,47 @@ public class DCompileBuildRule extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getPathToOutput());
+      BuildContext context, BuildableContext buildableContext) {
+    Path output =
+        context
+            .getSourcePathResolver()
+            .getRelativePath(Preconditions.checkNotNull(getSourcePathToOutput()));
+    buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(
-        new MkdirStep(
-            getProjectFilesystem(),
-            Preconditions.checkNotNull(getPathToOutput()).getParent()));
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(compilerFlags);
     for (DIncludes include : includes) {
-      flagsBuilder.add("-I" + getResolver().getAbsolutePath(include.getLinkTree()));
+      flagsBuilder.add(
+          "-I" + context.getSourcePathResolver().getAbsolutePath(include.getLinkTree()));
     }
     ImmutableList<String> flags = flagsBuilder.build();
 
     steps.add(
         new DCompileStep(
             getProjectFilesystem().getRootPath(),
-            compiler.getEnvironment(),
-            compiler.getCommandPrefix(getResolver()),
+            compiler.getEnvironment(context.getSourcePathResolver()),
+            compiler.getCommandPrefix(context.getSourcePathResolver()),
             flags,
-            getPathToOutput(),
-            getResolver().getAllAbsolutePaths(sources)));
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            context.getSourcePathResolver().getAllAbsolutePaths(sources)));
     return steps.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + name + ".o");
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + name + ".o"));
   }
 
   @Override
   public BuildableProperties getProperties() {
     return new BuildableProperties(BuildableProperties.Kind.LIBRARY);
   }
-
 }

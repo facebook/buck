@@ -1722,6 +1722,7 @@ public final class Rops {
                     case Type.BT_DOUBLE: return CONV_I2D;
                     default:             break;
                 }
+		break;
             }
             case Type.BT_LONG: {
                 switch (dbt) {
@@ -1730,6 +1731,7 @@ public final class Rops {
                     case Type.BT_DOUBLE: return CONV_L2D;
                     default:             break;
                 }
+		break;
             }
             case Type.BT_FLOAT: {
                 switch (dbt) {
@@ -1738,6 +1740,7 @@ public final class Rops {
                     case Type.BT_DOUBLE: return CONV_F2D;
                     default:             break;
                 }
+		break;
             }
             case Type.BT_DOUBLE: {
                 switch (dbt) {
@@ -1746,6 +1749,7 @@ public final class Rops {
                     case Type.BT_FLOAT:  return CONV_D2F;
                     default:             break;
                 }
+		break;
             }
         }
 

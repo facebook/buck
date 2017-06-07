@@ -18,21 +18,16 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
 
-  public PreprocessorProvider(
-      Path path,
-      Optional<Type> type) {
+  public PreprocessorProvider(Path path, Optional<Type> type) {
     super(path, type);
   }
 
-  public PreprocessorProvider(
-      ToolProvider toolProvider,
-      Type type) {
+  public PreprocessorProvider(ToolProvider toolProvider, Type type) {
     super(toolProvider, type);
   }
 
@@ -41,13 +36,13 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
     switch (type) {
       case CLANG:
         return new ClangPreprocessor(tool);
-      case DEFAULT:
       case GCC:
-        return new DefaultPreprocessor(tool);
+        return new GccPreprocessor(tool);
       case WINDOWS:
         return new WindowsPreprocessor(tool);
+        // $CASES-OMITTED$
+      default:
     }
-    throw new IllegalStateException();
+    throw new IllegalStateException("cannot get preprocessor for type " + type);
   }
-
 }

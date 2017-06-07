@@ -17,18 +17,15 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Superclass of build phases. Each build phase represents one step in building a target.
- */
+/** Superclass of build phases. Each build phase represents one step in building a target. */
 public abstract class PBXBuildPhase extends PBXProjectItem {
   private final List<PBXBuildFile> files;
 
   public PBXBuildPhase() {
-    this.files = Lists.newArrayList();
+    this.files = new ArrayList<>();
   }
 
   public List<PBXBuildFile> getFiles() {

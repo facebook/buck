@@ -16,7 +16,6 @@
 
 package com.example.activity;
 
-
 public class MyFirstActivity {
 
   public void doSomething(int param) {

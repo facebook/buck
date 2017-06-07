@@ -28,7 +28,12 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.zip.ZipEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.hamcrest.Matchers;
@@ -36,18 +41,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.zip.ZipEntry;
-
 public class UnzipTest {
   private static final byte[] DUMMY_FILE_CONTENTS = "BUCK Unzip Test String!\nNihao\n".getBytes();
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private Path zipFile;
 
@@ -56,9 +53,8 @@ public class UnzipTest {
     zipFile = tmpFolder.getRoot().resolve("tmp.zip");
   }
 
-
   @Test
-  public void testExtractZipFile() throws IOException {
+  public void testExtractZipFile() throws InterruptedException, IOException {
 
     try (Zip zip = new Zip(zipFile, true)) {
       zip.add("1.bin", DUMMY_FILE_CONTENTS);
@@ -67,10 +63,11 @@ public class UnzipTest {
     }
 
     Path extractFolder = tmpFolder.newFolder();
-    ImmutableList<Path> result = Unzip.extractZipFile(
-        zipFile.toAbsolutePath(),
-        extractFolder.toAbsolutePath(),
-        Unzip.ExistingFileMode.OVERWRITE);
+    ImmutableList<Path> result =
+        Unzip.extractZipFile(
+            zipFile.toAbsolutePath(),
+            extractFolder.toAbsolutePath(),
+            Unzip.ExistingFileMode.OVERWRITE);
     assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("1.bin")));
     Path bin2 = extractFolder.toAbsolutePath().resolve("subdir/2.bin");
     assertTrue(Files.exists(bin2));
@@ -84,15 +81,13 @@ public class UnzipTest {
       }
     }
     assertEquals(
-        ImmutableList.of(
-          extractFolder.resolve("1.bin"),
-          extractFolder.resolve("subdir/2.bin")),
+        ImmutableList.of(extractFolder.resolve("1.bin"), extractFolder.resolve("subdir/2.bin")),
         result);
   }
 
   @Test
   public void testExtractZipFilePreservesExecutePermissionsAndModificationTime()
-      throws IOException {
+      throws InterruptedException, IOException {
 
     // getFakeTime returs time with some non-zero millis. By doing division and multiplication by
     // 1000 we get rid of that.
@@ -101,8 +96,8 @@ public class UnzipTest {
     // Create a simple zip archive using apache's commons-compress to store executable info.
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       ZipArchiveEntry entry = new ZipArchiveEntry("test.exe");
-      entry.setUnixMode((int) MorePosixFilePermissions.toMode(
-          PosixFilePermissions.fromString("r-x------")));
+      entry.setUnixMode(
+          (int) MorePosixFilePermissions.toMode(PosixFilePermissions.fromString("r-x------")));
       entry.setSize(DUMMY_FILE_CONTENTS.length);
       entry.setMethod(ZipEntry.STORED);
       entry.setTime(time);
@@ -113,21 +108,20 @@ public class UnzipTest {
 
     // Now run `Unzip.extractZipFile` on our test zip and verify that the file is executable.
     Path extractFolder = tmpFolder.newFolder();
-    ImmutableList<Path> result = Unzip.extractZipFile(
-        zipFile.toAbsolutePath(),
-        extractFolder.toAbsolutePath(),
-        Unzip.ExistingFileMode.OVERWRITE);
+    ImmutableList<Path> result =
+        Unzip.extractZipFile(
+            zipFile.toAbsolutePath(),
+            extractFolder.toAbsolutePath(),
+            Unzip.ExistingFileMode.OVERWRITE);
     Path exe = extractFolder.toAbsolutePath().resolve("test.exe");
     assertTrue(Files.exists(exe));
-    assertThat(
-        Files.getLastModifiedTime(exe).toMillis(),
-        Matchers.equalTo(time));
+    assertThat(Files.getLastModifiedTime(exe).toMillis(), Matchers.equalTo(time));
     assertTrue(Files.isExecutable(exe));
     assertEquals(ImmutableList.of(extractFolder.resolve("test.exe")), result);
   }
 
   @Test
-  public void testExtractSymlink() throws IOException {
+  public void testExtractSymlink() throws InterruptedException, IOException {
     assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
 
     // Create a simple zip archive using apache's commons-compress to store executable info.
@@ -145,12 +139,84 @@ public class UnzipTest {
     // Now run `Unzip.extractZipFile` on our test zip and verify that the file is executable.
     Path extractFolder = tmpFolder.newFolder();
     Unzip.extractZipFile(
-        zipFile.toAbsolutePath(),
-        extractFolder.toAbsolutePath(),
-        Unzip.ExistingFileMode.OVERWRITE);
+        zipFile.toAbsolutePath(), extractFolder.toAbsolutePath(), Unzip.ExistingFileMode.OVERWRITE);
     Path link = extractFolder.toAbsolutePath().resolve("link.txt");
     assertTrue(Files.isSymbolicLink(link));
     assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
   }
 
+  @Test
+  public void testExtractWeirdIndex() throws InterruptedException, IOException {
+
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/baz"));
+      zip.write(DUMMY_FILE_CONTENTS, 0, DUMMY_FILE_CONTENTS.length);
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/"));
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("qux/"));
+      zip.closeArchiveEntry();
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    ImmutableList<Path> result =
+        Unzip.extractZipFile(
+            zipFile.toAbsolutePath(),
+            extractFolder.toAbsolutePath(),
+            Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar/baz")));
+
+    assertEquals(ImmutableList.of(extractFolder.resolve("foo/bar/baz")), result);
+  }
+
+  @Test
+  public void testNonCanonicalPaths() throws InterruptedException, IOException {
+    String names[] = {
+      "foo/./", "foo/./bar/", "foo/./bar/baz.cpp", "foo/./bar/baz.h",
+    };
+
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      for (String name : names) {
+        zip.putArchiveEntry(new ZipArchiveEntry(name));
+        zip.closeArchiveEntry();
+      }
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    for (String name : names) {
+      assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
+    }
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    for (String name : names) {
+      assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
+    }
+  }
+
+  @Test
+  public void testParentDirPaths() throws InterruptedException, IOException {
+
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      // It seems very unlikely that a zip file would contain ".." paths, but handle it anyways.
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/"));
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/../"));
+      zip.closeArchiveEntry();
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar")));
+  }
 }

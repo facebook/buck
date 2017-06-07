@@ -22,26 +22,26 @@ import com.google.common.collect.Iterables;
 
 /**
  * Use this formatter as you would use a Builder to create Hive formatted rows that will transmit
- * correctly
- * according to Scribe/Hive protocol.
+ * correctly according to Scribe/Hive protocol.
  */
 public final class HiveRowFormatter {
   private static final String COLUMN_SEPARATOR = "\001";
 
   /**
    * In reality scribe/hive can encode further nested levels (array<array<string>>) by increasing
-   * the ASCII value all the way up to \010. In some codebases, that seems to be the limit.
-   * However, for our purpose here we will keep it simple with just one level.
+   * the ASCII value all the way up to \010. In some codebases, that seems to be the limit. However,
+   * for our purpose here we will keep it simple with just one level.
    */
   private static final String ARRAY_SEPARATOR = "\002";
 
-  private static final Function<Object, String> ESCAPE_FUNCTION = input -> {
-    if (input == null) {
-      return "";
-    }
+  private static final Function<Object, String> ESCAPE_FUNCTION =
+      input -> {
+        if (input == null) {
+          return "";
+        }
 
-    return escapeHiveString(input.toString());
-  };
+        return escapeHiveString(input.toString());
+      };
 
   private final StringBuilder row;
 
@@ -92,6 +92,5 @@ public final class HiveRowFormatter {
         .replace(ARRAY_SEPARATOR, "\\002")
         .replace("\n", "\\n")
         .replace("\r", "\\r");
-
   }
 }

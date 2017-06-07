@@ -23,15 +23,16 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 public interface JavacOptionsAmender extends RuleKeyAppendable {
   JavacOptions amend(JavacOptions original, BuildContext context);
 
-  JavacOptionsAmender IDENTITY = new JavacOptionsAmender() {
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      // Do nothing.
-    }
+  JavacOptionsAmender IDENTITY =
+      new JavacOptionsAmender() {
+        @Override
+        public void appendToRuleKey(RuleKeyObjectSink sink) {
+          // Do nothing.
+        }
 
-    @Override
-    public JavacOptions amend(JavacOptions original, BuildContext context) {
-      return original;
-    }
-  };
+        @Override
+        public JavacOptions amend(JavacOptions original, BuildContext context) {
+          return original;
+        }
+      };
 }

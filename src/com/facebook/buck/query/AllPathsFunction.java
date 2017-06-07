@@ -35,16 +35,16 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.facebook.buck.util.MoreSets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
 /**
- * A allpaths(from, to) expression, which computes all paths between the
- * build targets in the set 'from' and the build targets in the set 'to',
- * by following the dependencies between nodes in the target graph.
+ * A allpaths(from, to) expression, which computes all paths between the build targets in the set
+ * 'from' and the build targets in the set 'to', by following the dependencies between nodes in the
+ * target graph.
  *
  * <pre>expr ::= ALLPATHS '(' expr ',' expr ')'</pre>
  */
@@ -53,8 +53,7 @@ public class AllPathsFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION);
 
-  public AllPathsFunction() {
-  }
+  public AllPathsFunction() {}
 
   @Override
   public String getName() {
@@ -72,10 +71,9 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public Set<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 
@@ -95,14 +93,13 @@ public class AllPathsFunction implements QueryFunction {
     Collection<QueryTarget> worklist = result;
     while (!worklist.isEmpty()) {
       Collection<QueryTarget> reverseDeps = env.getReverseDeps(worklist);
-      worklist = Lists.newArrayList();
+      worklist = new ArrayList<>();
       for (QueryTarget target : reverseDeps) {
         if (reachableFromX.contains(target) && result.add(target)) {
           worklist.add(target);
         }
       }
     }
-    return result;
+    return ImmutableSet.copyOf(result);
   }
-
 }

@@ -26,7 +26,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 
 abstract class GoAssumptions {
@@ -42,13 +41,11 @@ abstract class GoAssumptions {
         // This should really act like some kind of readonly bind-mount onto the real filesystem.
         // But this is currently enough to check whether Go seems to be installed, so we'll live...
         FakeProjectFilesystem fs = new FakeProjectFilesystem();
-        fs.mkdirs(fs.getRootPath().getFileSystem().getPath(goRoot));
+        fs.mkdirs(fs.getPath(goRoot));
         baseConfig.setFilesystem(fs);
       }
-      new GoBuckConfig(
-          baseConfig.build(),
-          executor,
-          FlavorDomain.from("Cxx", ImmutableSet.of())).getCompiler();
+      new GoBuckConfig(baseConfig.build(), executor, FlavorDomain.from("Cxx", ImmutableSet.of()))
+          .getCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }

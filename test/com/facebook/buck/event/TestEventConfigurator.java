@@ -30,10 +30,7 @@ public class TestEventConfigurator {
   }
 
   public static <T extends AbstractBuckEvent> T configureTestEventAtTime(
-      T event,
-      long time,
-      TimeUnit timeUnit,
-      long threadid) {
+      T event, long time, TimeUnit timeUnit, long threadid) {
     return from(event)
         .setCurrentTimeMillis(timeUnit.toMillis(time))
         .setTimestampNanos(timeUnit.toNanos(time))
@@ -90,7 +87,7 @@ public class TestEventConfigurator {
           timestampNanos.orElse(TimeUnit.MILLISECONDS.toNanos(currentTimeMillis)),
           threadUserNanoTime,
           threadId,
-          BuckEventBusFactory.BUILD_ID_FOR_TEST);
+          BuckEventBusForTests.BUILD_ID_FOR_TEST);
       return event;
     }
   }

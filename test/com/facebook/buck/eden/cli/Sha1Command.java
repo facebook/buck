@@ -21,24 +21,24 @@ import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class Sha1Command implements Command {
 
-  @Option(name = "mount", aliases = {"-m"})
+  @Option(
+    name = "mount",
+    aliases = {"-m"}
+  )
   private String mountPoint;
 
-  @Argument
-  private List<String> paths = new ArrayList<>();
+  @Argument private List<String> paths = new ArrayList<>();
 
   @Override
   public int run() throws EdenError, IOException, TException {

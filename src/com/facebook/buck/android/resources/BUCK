@@ -1,0 +1,12 @@
+java_library(
+    name = "resources",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/zip:stream",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

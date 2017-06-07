@@ -19,9 +19,7 @@ package com.facebook.buck.cxx.elf;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-/**
- * Encapsulate the data found in an ELF header.
- */
+/** Encapsulate the data found in an ELF header. */
 // CHECKSTYLE.OFF: LocalVariableName
 // CHECKSTYLE.OFF: ParameterName
 public class ElfHeader {
@@ -100,9 +98,7 @@ public class ElfHeader {
     return (buffer.getShort() & 0xffff);
   }
 
-  /**
-   * @return a {@link ElfHeader} parsed from the given buffer.
-   */
+  /** @return a {@link ElfHeader} parsed from the given buffer. */
   static ElfHeader parse(ByteBuffer buffer) {
     byte[] e_ident = new byte[EI_NIDENT];
     buffer.get(e_ident);
@@ -118,7 +114,6 @@ public class ElfHeader {
   }
 
   public enum EIClass {
-
     ELFCLASSNONE(0) {
       @Override
       ElfHeader parseHeader(EIData ei_data, ByteBuffer buffer) {
@@ -168,9 +163,7 @@ public class ElfHeader {
             getUnsignedShort(buffer),
             getUnsignedShort(buffer));
       }
-    }
-
-    ;
+    };
 
     private final int value;
 
@@ -188,11 +181,9 @@ public class ElfHeader {
     }
 
     abstract ElfHeader parseHeader(EIData ei_data, ByteBuffer buffer);
-
   }
 
   public enum EIData {
-
     ELFDATANONE(0) {
       @Override
       void setOrder(ByteBuffer buffer) {
@@ -213,7 +204,6 @@ public class ElfHeader {
         buffer.order(ByteOrder.BIG_ENDIAN);
       }
     },
-
     ;
 
     private final int value;
@@ -232,9 +222,7 @@ public class ElfHeader {
       }
       throw new IllegalStateException();
     }
-
   }
-
 }
 
 // CHECKSTYLE.ON: ParameterName

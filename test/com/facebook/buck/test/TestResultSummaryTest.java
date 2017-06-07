@@ -23,25 +23,23 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.test.result.type.ResultType;
-
 import org.junit.Test;
 
-/**
- * Unit test for {@link TestResultSummary}.
- */
+/** Unit test for {@link TestResultSummary}. */
 public class TestResultSummaryTest {
 
   @Test
   public void testSuccessSummary() {
-    TestResultSummary testResultSummary = new TestResultSummary(
-        "com.facebook.buck.rules.TestResultSummaryTest",
-        "testGetters",
-        ResultType.SUCCESS,
-        123L,
-        null /* message */,
-        null /* stacktrace */,
-        null /* stdOut */,
-        null /* stdErr */);
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            "com.facebook.buck.rules.TestResultSummaryTest",
+            "testGetters",
+            ResultType.SUCCESS,
+            123L,
+            null /* message */,
+            null /* stacktrace */,
+            null /* stdOut */,
+            null /* stdErr */);
     assertEquals("testGetters", testResultSummary.getTestName());
     assertTrue(testResultSummary.isSuccess());
     assertEquals(123L, testResultSummary.getTime());
@@ -49,26 +47,29 @@ public class TestResultSummaryTest {
     assertNull(testResultSummary.getStacktrace());
     assertNull(testResultSummary.getStdOut());
     assertNull(testResultSummary.getStdErr());
-    assertEquals("PASS  123ms com.facebook.buck.rules.TestResultSummaryTest#testGetters()",
+    assertEquals(
+        "PASS  123ms com.facebook.buck.rules.TestResultSummaryTest#testGetters()",
         testResultSummary.toString());
   }
 
   @Test
   public void testFailureSummary() {
-    String assertionFailedMessage = "expected:<PASS  123ms te[]tGetters(com.faceboo...> " +
-        "but was:<PASS  123ms te[s]tGetters(com.faceboo...>";
+    String assertionFailedMessage =
+        "expected:<PASS  123ms te[]tGetters(com.faceboo...> "
+            + "but was:<PASS  123ms te[s]tGetters(com.faceboo...>";
     String stacktrace = "at org.junit.Assert.assertEquals(Assert.java:123)";
     String stdOut = "STDOUT: getTime() returned 452L";
     String stdErr = "STDERR: getTime() returned 452L";
-    TestResultSummary testResultSummary = new TestResultSummary(
-        "com.facebook.buck.rules.TestResultSummaryTest",
-        "testGetters",
-        ResultType.FAILURE,
-        456L,
-        assertionFailedMessage,
-        stacktrace,
-        stdOut,
-        stdErr);
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            "com.facebook.buck.rules.TestResultSummaryTest",
+            "testGetters",
+            ResultType.FAILURE,
+            456L,
+            assertionFailedMessage,
+            stacktrace,
+            stdOut,
+            stdErr);
     assertEquals("testGetters", testResultSummary.getTestName());
     assertFalse(testResultSummary.isSuccess());
     assertEquals(456L, testResultSummary.getTime());
@@ -76,7 +77,8 @@ public class TestResultSummaryTest {
     assertEquals(stacktrace, testResultSummary.getStacktrace());
     assertEquals(stdOut, testResultSummary.getStdOut());
     assertEquals(stdErr, testResultSummary.getStdErr());
-    assertEquals("FAIL  456ms com.facebook.buck.rules.TestResultSummaryTest#testGetters()",
+    assertEquals(
+        "FAIL  456ms com.facebook.buck.rules.TestResultSummaryTest#testGetters()",
         testResultSummary.toString());
   }
 
@@ -89,6 +91,4 @@ public class TestResultSummaryTest {
         new TestResultSummary("Class", "test", ResultType.SUCCESS, 0L, "FAIL!", null, null, null),
         new TestResultSummary("Class", "test", ResultType.FAILURE, 0L, "FAIL!", null, null, null));
   }
-
 }
-

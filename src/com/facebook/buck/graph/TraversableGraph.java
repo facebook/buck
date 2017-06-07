@@ -16,9 +16,7 @@
 
 package com.facebook.buck.graph;
 
-/**
- * Minimal interface needed by {@link AbstractBottomUpTraversal} to traverse a graph.
- */
+/** Minimal interface needed by {@link AbstractBottomUpTraversal} to traverse a graph. */
 public interface TraversableGraph<T> {
 
   /** @return {@link Iterable} that the caller is not allowed to mutate. */

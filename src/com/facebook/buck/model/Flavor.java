@@ -17,45 +17,31 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.util.regex.Pattern;
 
-@Value.Immutable
-public abstract class Flavor implements Comparable<Flavor> {
+public interface Flavor extends Comparable<Flavor> {
 
-  private static final Pattern INVALID_FLAVOR_CHARACTERS = Pattern.compile("[^-a-zA-Z0-9_\\.]");
+  Pattern INVALID_FLAVOR_CHARACTERS = Pattern.compile("[^-a-zA-Z0-9_\\.]");
 
-  public static String replaceInvalidCharacters(String name) {
+  static String replaceInvalidCharacters(String name) {
     return INVALID_FLAVOR_CHARACTERS.matcher(name).replaceAll("_");
   }
 
-  @Value.Parameter
-  public abstract String getName();
+  String getName();
 
-  @Value.Check
-  protected void check() {
-    Preconditions.checkArgument(
-        !getName().isEmpty(),
-        "Empty flavor name");
+  default void check() {
+    Preconditions.checkArgument(!getName().isEmpty(), "Empty flavor name");
     Preconditions.checkArgument(
         !INVALID_FLAVOR_CHARACTERS.matcher(getName()).find(),
         "Invalid characters in flavor name: " + getName());
   }
 
   @Override
-  public int compareTo(Flavor that) {
+  default int compareTo(Flavor that) {
     if (this == that) {
       return 0;
     }
 
     return this.getName().compareTo(that.getName());
   }
-
-  @Override
-  public String toString() {
-    return getName();
-  }
-
 }

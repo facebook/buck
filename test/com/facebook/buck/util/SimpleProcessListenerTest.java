@@ -24,14 +24,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-
+import java.nio.CharBuffer;
 import org.junit.Test;
 
-import java.nio.CharBuffer;
-
-/**
- * Tests for {@link SimpleProcessListener}.
- */
+/** Tests for {@link SimpleProcessListener}. */
 public class SimpleProcessListenerTest {
 
   @Test
@@ -44,9 +40,7 @@ public class SimpleProcessListenerTest {
     } else {
       params = ProcessExecutorParams.ofCommand("echo", "Hello");
     }
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.getStdout(), equalTo(String.format("Hello%n")));
@@ -57,18 +51,15 @@ public class SimpleProcessListenerTest {
   public void catTextSentToStdinReceivedOnStdout() throws Exception {
     ProcessExecutorParams params;
     if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand(
-          "python",
-          "-c",
-          "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
+      params =
+          ProcessExecutorParams.ofCommand(
+              "python", "-c", "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
     } else {
       params = ProcessExecutorParams.ofCommand("cat");
     }
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     SimpleProcessListener listener = new SimpleProcessListener(String.format("Meow%n"));
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     process.wantWrite();
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
@@ -80,23 +71,18 @@ public class SimpleProcessListenerTest {
   public void supplierBasedInput() throws Exception {
     ProcessExecutorParams params;
     if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand(
-          "python",
-          "-c",
-          "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
+      params =
+          ProcessExecutorParams.ofCommand(
+              "python", "-c", "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
     } else {
       params = ProcessExecutorParams.ofCommand("cat");
     }
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
-    SimpleProcessListener listener = new SimpleProcessListener(
-        ImmutableList.of(
-            CharBuffer.wrap("Meow"),
-            CharBuffer.wrap("Wow")
-        ).iterator(),
-        Charsets.UTF_8);
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
-        params,
-        listener);
+    SimpleProcessListener listener =
+        new SimpleProcessListener(
+            ImmutableList.of(CharBuffer.wrap("Meow"), CharBuffer.wrap("Wow")).iterator(),
+            Charsets.UTF_8);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     process.wantWrite();
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));

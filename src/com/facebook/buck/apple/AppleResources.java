@@ -17,56 +17,49 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.IosReactNativeLibraryDescription;
-import com.facebook.buck.js.ReactNativeBundle;
-import com.facebook.buck.js.ReactNativeLibraryArgs;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class AppleResources {
 
-  private static final ImmutableSet<Class<? extends Description<?>>>
-      APPLE_RESOURCE_DESCRIPTION_CLASSES = ImmutableSet.of(
-          AppleResourceDescription.class,
-          IosReactNativeLibraryDescription.class);
+  @VisibleForTesting
+  public static final Predicate<TargetNode<?, ?>> IS_APPLE_BUNDLE_RESOURCE_NODE =
+      node -> node.getDescription() instanceof HasAppleBundleResourcesDescription;
 
   // Utility class, do not instantiate.
-  private AppleResources() { }
+  private AppleResources() {}
 
   /**
    * Collect resources from recursive dependencies.
    *
    * @param targetGraph The {@link TargetGraph} containing the node and its dependencies.
-   * @param targetNodes {@link TargetNode} at the tip of the traversal.
+   * @param targetNode {@link TargetNode} at the tip of the traversal.
    * @return The recursive resource buildables.
    */
-  public static ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
+  public static ImmutableSet<AppleResourceDescriptionArg> collectRecursiveResources(
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
-      Iterable<? extends TargetNode<?, ?>> targetNodes) {
-    return FluentIterable
-        .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+      TargetNode<?, ?> targetNode) {
+    return FluentIterable.from(
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
                 cache,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                targetNode,
                 ImmutableSet.of(AppleResourceDescription.class)))
-        .transform(
-            input -> (AppleResourceDescription.Arg) input.getConstructorArg())
+        .transform(input -> (AppleResourceDescriptionArg) input.getConstructorArg())
         .toSet();
   }
 
   public static <T> AppleBundleResources collectResourceDirsAndFiles(
       final TargetGraph targetGraph,
+      BuildRuleResolver resolver,
       final Optional<AppleDependenciesCache> cache,
       TargetNode<T, ?> targetNode) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
@@ -77,43 +70,31 @@ public class AppleResources {
             cache,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
-
+            IS_APPLE_BUNDLE_RESOURCE_NODE);
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?, ?> resourceNode : resourceNodes) {
-      Object constructorArg = resourceNode.getConstructorArg();
-      if (constructorArg instanceof AppleResourceDescription.Arg) {
-        AppleResourceDescription.Arg appleResource = (AppleResourceDescription.Arg) constructorArg;
-        builder.addAllResourceDirs(appleResource.dirs);
-        builder.addAllResourceFiles(appleResource.files);
-        builder.addAllResourceVariantFiles(appleResource.variants);
-      } else {
-        Preconditions.checkState(constructorArg instanceof ReactNativeLibraryArgs);
-        BuildTarget buildTarget = resourceNode.getBuildTarget();
-        builder.addDirsContainingResourceDirs(
-            new BuildTargetSourcePath(
-                buildTarget,
-                ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
-            new BuildTargetSourcePath(
-                buildTarget,
-                ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
-      }
+      @SuppressWarnings("unchecked")
+      TargetNode<Object, ?> node = (TargetNode<Object, ?>) resourceNode;
+
+      @SuppressWarnings("unchecked")
+      HasAppleBundleResourcesDescription<Object> description =
+          (HasAppleBundleResourcesDescription<Object>) node.getDescription();
+
+      description.addAppleBundleResources(builder, node, filesystem, resolver);
     }
     return builder.build();
   }
 
-  public static ImmutableSet<AppleResourceDescription.Arg> collectDirectResources(
-      TargetGraph targetGraph,
-      TargetNode<?, ?> targetNode) {
-    ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
-    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
+  public static ImmutableSet<AppleResourceDescriptionArg> collectDirectResources(
+      TargetGraph targetGraph, TargetNode<?, ?> targetNode) {
+    ImmutableSet.Builder<AppleResourceDescriptionArg> builder = ImmutableSet.builder();
+    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
     for (TargetNode<?, ?> node : deps) {
       if (node.getDescription() instanceof AppleResourceDescription) {
-        builder.add((AppleResourceDescription.Arg) node.getConstructorArg());
+        builder.add((AppleResourceDescriptionArg) node.getConstructorArg());
       }
     }
     return builder.build();
   }
-
 }

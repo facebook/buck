@@ -19,10 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class CxxLinkAndCompileRules {
+
+  public final ImmutableSortedSet<BuildRule> deps;
   private final CxxLink cxxLink;
   private final Optional<CxxStrip> cxxStrip;
   final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
@@ -32,11 +33,13 @@ public class CxxLinkAndCompileRules {
       CxxLink cxxLink,
       Optional<CxxStrip> cxxStrip,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      Tool executable) {
+      Tool executable,
+      ImmutableSortedSet<BuildRule> deps) {
     this.cxxLink = cxxLink;
     this.cxxStrip = cxxStrip;
     this.compileRules = compileRules;
     this.executable = executable;
+    this.deps = deps;
   }
 
   public BuildRule getBinaryRule() {

@@ -18,15 +18,12 @@ package com.facebook.buck.graph;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-/**
- * Performs a breadth-first traversal of dependencies of a graph node.
- */
+/** Performs a breadth-first traversal of dependencies of a graph node. */
 public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Throwable> {
 
   private final Queue<Node> toExplore;
@@ -37,9 +34,9 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
   }
 
   public AbstractBreadthFirstThrowingTraversal(Iterable<? extends Node> initialNodes) {
-    toExplore = Lists.newLinkedList();
+    toExplore = new LinkedList<>();
     Iterables.addAll(toExplore, initialNodes);
-    explored = Sets.newHashSet();
+    explored = new HashSet<>();
   }
 
   public final void start() throws E {
@@ -63,9 +60,7 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
   }
 
   /** Override this method with any logic that should be run when {@link #start()} completes. */
-  protected void onComplete() throws E {
-
-  }
+  protected void onComplete() throws E {}
 
   /**
    * To perform a full traversal of the the {@code initialNode}'s transitive dependencies, this
@@ -76,4 +71,55 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
    */
   public abstract Iterable<Node> visit(Node node) throws E;
 
+  /**
+   * This will typically be implemented as a lambda passed to {@link #traverse(Object, Visitor)} or
+   * {@link #traverse(Iterable, Visitor)}
+   */
+  public interface Visitor<Node, E extends Throwable> {
+    Iterable<Node> visit(Node node) throws E;
+  }
+
+  protected static class StaticBreadthFirstTraversal<Node>
+      extends AbstractBreadthFirstThrowingTraversal<Node, RuntimeException> {
+
+    private final Visitor<Node, RuntimeException> visitor;
+
+    protected StaticBreadthFirstTraversal(
+        Node initialNode, Visitor<Node, RuntimeException> visitor) {
+      super(initialNode);
+      this.visitor = visitor;
+    }
+
+    protected StaticBreadthFirstTraversal(
+        Iterable<? extends Node> initialNodes, Visitor<Node, RuntimeException> visitor) {
+      super(initialNodes);
+      this.visitor = visitor;
+    }
+
+    @Override
+    public Iterable<Node> visit(Node node) throws RuntimeException {
+      return visitor.visit(node);
+    }
+  }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(Node initialNode, Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNode, visitor).start();
+  }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(
+      Iterable<? extends Node> initialNodes, final Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNodes, visitor).start();
+  }
 }

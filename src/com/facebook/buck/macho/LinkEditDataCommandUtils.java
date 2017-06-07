@@ -17,7 +17,6 @@ package com.facebook.buck.macho;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
-
 import java.nio.ByteBuffer;
 
 public class LinkEditDataCommandUtils {
@@ -32,18 +31,14 @@ public class LinkEditDataCommandUtils {
 
   public static void writeCommandToBuffer(LinkEditDataCommand command, ByteBuffer buffer) {
     LoadCommandCommonFieldsUtils.writeCommandToBuffer(command.getLoadCommandCommonFields(), buffer);
-    buffer
-        .putInt(command.getDataoff().intValue())
-        .putInt(command.getDatasize().intValue());
+    buffer.putInt(command.getDataoff().intValue()).putInt(command.getDatasize().intValue());
   }
 
   public static void updateLinkEditDataCommand(
-      ByteBuffer buffer,
-      LinkEditDataCommand old,
-      LinkEditDataCommand updated) {
+      ByteBuffer buffer, LinkEditDataCommand old, LinkEditDataCommand updated) {
     Preconditions.checkArgument(
-        old.getLoadCommandCommonFields().getOffsetInBinary() ==
-            updated.getLoadCommandCommonFields().getOffsetInBinary());
+        old.getLoadCommandCommonFields().getOffsetInBinary()
+            == updated.getLoadCommandCommonFields().getOffsetInBinary());
     buffer.position(updated.getLoadCommandCommonFields().getOffsetInBinary());
     writeCommandToBuffer(updated, buffer);
   }
@@ -51,8 +46,8 @@ public class LinkEditDataCommandUtils {
   public static int alignCodeSignatureOffsetValue(int value) {
     /**
      * Code signature offset is expected to be aligned by 16 bytes:
-     * https://opensource.apple.com/source/cctools/cctools-782/libstuff/checkout.c
-     * (look for "code signature data out of place" error)
+     * https://opensource.apple.com/source/cctools/cctools-782/libstuff/checkout.c (look for "code
+     * signature data out of place" error)
      */
     int alignment = 15;
     value += alignment;

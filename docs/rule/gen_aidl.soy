@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'gen_aidl()' /}
+    {param navid: 'rule_gen_aidl' /}
     {param prettify: true /}
     {param description}
       A rule that is used to generate .java files from .aidl files.
@@ -37,11 +38,13 @@ from <code>.aidl</code> files.
 {call buck.arg}
   {param name: 'import_path' /}
   {param desc}
-  The search path for import statements for the aidl command. 
-  (This is the <code>-I</code> argument when invoking aidl 
-  from the command line. For many apps it will be the base dir where all 
-  aidl files are, with project root as its parent, 
-  e.g. <code>app/src/main/aidl</code>. )
+  The search path for import statements for the aidl command.
+  (This is the <code>-I</code> argument when invoking aidl
+  from the command line. For many apps it will be the base dir where all
+  aidl files are, with project root as its parent,
+  e.g. <code>app/src/main/aidl</code>.).  This is the same as the path to the
+  {sp}<code>aidl</code> file relative to what would be returned from{sp}
+  {call buck.cmd_root /}.
   {/param}
 {/call}
 
@@ -54,6 +57,27 @@ from <code>.aidl</code> files.
 {/call}
 
 {/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+android_library(
+  name = 'lib',
+  srcs = glob(['**/*.java']) + [':aidl'],
+  manifest = '//res/org/opencv:manifest',
+  deps = [
+    '//res/org/opencv:res',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+gen_aidl(
+    name = 'aidl',
+    aidl = 'engine/OpenCVEngineInterface.aidl',
+    import_path = 'java/',
+)
+</pre>
+{/literal}
+{/param} // close examples
 
 {/call} // close buck.rule
 

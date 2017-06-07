@@ -20,7 +20,6 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.base.Preconditions;
-
 import java.net.URI;
 
 public class DownloadProgressEvent extends AbstractBuckEvent implements WorkAdvanceEvent {

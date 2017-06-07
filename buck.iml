@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-  <component name="FacetManager">
-    <facet type="Python" name="Python">
-      <configuration sdkName="" />
-    </facet>
-  </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
@@ -14,11 +9,11 @@
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/src-gen" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/json/buck_parser" type="java-resource" relativeOutputPath="buck_parser" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/cli/quickstart" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />
@@ -40,12 +35,14 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata/go_test/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/gwt/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/haskell/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ide/intellij/deprecated/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ide/intellij/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ide/intellij/projectview/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/io/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/js/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/groovy/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/abi/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/autodeps/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/kotlin/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/scala/testdata" />
@@ -65,7 +62,6 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/labels/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testrunner/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/packaged_resource/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/thrift/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/versioncontrol/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
     </content>
@@ -87,7 +83,7 @@
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
     <orderEntry type="library" name="maven-lib" level="project" />
-    <orderEntry type="library" name="android-tools-24.2.3" level="project" />
+    <orderEntry type="library" name="android-tools-25.2.0" level="project" />
     <orderEntry type="library" name="oracle-jdk-stubs" level="project" />
     <orderEntry type="library" name="junit" level="project" />
     <orderEntry type="library" name="testng" level="project" />
@@ -96,5 +92,9 @@
     <orderEntry type="library" name="xz-java-1.5" level="project" />
     <orderEntry type="library" name="jna-4.2.0" level="project" />
     <orderEntry type="library" name="jna-platform-4.2.0" level="project" />
+    <orderEntry type="library" name="diffutils-1.3.0" level="project" />
+    <orderEntry type="library" name="jdom" level="project" />
+    <orderEntry type="library" name="okhttp-3.6.0" level="project" />
+    <orderEntry type="library" name="sqlite" level="project" />
   </component>
 </module>

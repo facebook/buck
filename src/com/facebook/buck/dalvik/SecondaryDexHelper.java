@@ -19,16 +19,11 @@ package com.facebook.buck.dalvik;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Helper to write to secondary DEX files.
- */
+/** Helper to write to secondary DEX files. */
 abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStreamHelper> {
 
   private final String storeName;
@@ -38,8 +33,7 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
 
   private int currentSecondaryIndex;
 
-  @Nullable
-  private ZIP_OUTPUT_STREAM_HELPER currentSecondaryOut;
+  @Nullable private ZIP_OUTPUT_STREAM_HELPER currentSecondaryOut;
   private boolean newSecondaryOutOnNextEntry;
   private ImmutableList.Builder<Path> secondaryFiles;
 
@@ -63,15 +57,15 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
 
   ZIP_OUTPUT_STREAM_HELPER getOutputToWriteTo(FileLike entry) throws IOException {
     // Going to write this entry to a secondary zip.
-    if (currentSecondaryOut == null ||
-        !currentSecondaryOut.canPutEntry(entry) ||
-        newSecondaryOutOnNextEntry) {
+    if (currentSecondaryOut == null
+        || !currentSecondaryOut.canPutEntry(entry)
+        || newSecondaryOutOnNextEntry) {
       if (currentSecondaryOut != null) {
         currentSecondaryOut.close();
       }
       currentSecondaryIndex++;
-      Path newSecondaryFile = outSecondaryDir.resolve(
-          String.format(secondaryPattern, currentSecondaryIndex));
+      Path newSecondaryFile =
+          outSecondaryDir.resolve(String.format(secondaryPattern, currentSecondaryIndex));
       secondaryFiles.add(newSecondaryFile);
       currentSecondaryOut = newZipOutput(newSecondaryFile);
       newSecondaryOutOnNextEntry = false;
@@ -93,7 +87,7 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
     }
   }
 
-  List<Path> getFiles() {
+  ImmutableList<Path> getFiles() {
     return secondaryFiles.build();
   }
 

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.listener.CacheRateStatsKeeper;
 import com.facebook.buck.model.BuildId;
@@ -30,11 +30,10 @@ import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.google.common.eventbus.Subscribe;
 
-
 /**
- * {@link BuckEventListener} that is responsible for reporting events of interest to the
- * {@link StreamingWebSocketServlet}. This class passes high-level objects to the servlet, and the
- * servlet takes responsibility for serializing the objects as JSON down to the client.
+ * {@link BuckEventListener} that is responsible for reporting events of interest to the {@link
+ * StreamingWebSocketServlet}. This class passes high-level objects to the servlet, and the servlet
+ * takes responsibility for serializing the objects as JSON down to the client.
  */
 public class WebServerBuckEventListener implements BuckEventListener {
   private final StreamingWebSocketServlet streamingWebSocketServlet;
@@ -124,14 +123,12 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void projectGenerationStarted(
-      ProjectGenerationEvent.Started event) {
+  public void projectGenerationStarted(ProjectGenerationEvent.Started event) {
     streamingWebSocketServlet.tellClients(event);
   }
 
   @Subscribe
-  public void projectGenerationFinished(
-      ProjectGenerationEvent.Finished event) {
+  public void projectGenerationFinished(ProjectGenerationEvent.Finished event) {
     streamingWebSocketServlet.tellClients(event);
   }
 }

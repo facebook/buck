@@ -16,38 +16,56 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
-public abstract class WorkerProcessPool {
+public abstract class WorkerProcessPool implements Closeable {
+  private static final Logger LOG = Logger.get(WorkerProcessPool.class);
 
   private final int capacity;
   private final BlockingQueue<WorkerProcess> availableWorkers;
+
   @GuardedBy("createdWorkers")
   private final List<WorkerProcess> createdWorkers;
+
   private final HashCode poolHash;
 
   public WorkerProcessPool(int maxWorkers, HashCode poolHash) {
     this.capacity = maxWorkers;
-    this.availableWorkers = new LinkedBlockingQueue<>();
+    this.availableWorkers = new LinkedBlockingStack<>();
     this.createdWorkers = new ArrayList<>();
     this.poolHash = poolHash;
   }
 
-  public WorkerProcess borrowWorkerProcess()
-      throws IOException, InterruptedException {
-    WorkerProcess workerProcess = availableWorkers.poll(0, TimeUnit.SECONDS);
+  /**
+   * If there are available workers, returns one. Otherwise blocks until one becomes available and
+   * returns it. You must free worker process by calling {@link #returnWorkerProcess(WorkerProcess)}
+   * or {@link #destroyWorkerProcess(WorkerProcess)} methods after you finish using it.
+   */
+  public WorkerProcess borrowWorkerProcess() throws IOException, InterruptedException {
+    WorkerProcess workerProcess;
+    while ((workerProcess = availableWorkers.poll(0, TimeUnit.SECONDS)) != null) {
+      if (workerProcess.isAlive()) {
+        break;
+      }
+
+      try {
+        destroyWorkerProcess(workerProcess);
+      } catch (Exception ex) {
+        LOG.error(ex, "Failed to close dead worker process; ignoring.");
+      }
+    }
     if (workerProcess == null) {
       workerProcess = createNewWorkerIfPossible();
     }
@@ -68,16 +86,28 @@ public abstract class WorkerProcessPool {
     }
   }
 
-  public void returnWorkerProcess(WorkerProcess workerProcess)
-      throws InterruptedException {
+  public void returnWorkerProcess(WorkerProcess workerProcess) {
     synchronized (createdWorkers) {
       Preconditions.checkArgument(
           createdWorkers.contains(workerProcess),
           "Trying to return a foreign WorkerProcess to the pool");
     }
-    availableWorkers.put(workerProcess);
+    // Note: put() can throw, offer doesn't.
+    boolean added = availableWorkers.offer(workerProcess);
+    Preconditions.checkState(added, "Should have had enough room for existing worker");
   }
 
+  // Same as returnWorkerProcess, except this assumes the worker is borked and should be terminated
+  // with prejudice.
+  public void destroyWorkerProcess(WorkerProcess workerProcess) {
+    synchronized (createdWorkers) {
+      boolean removed = createdWorkers.remove(workerProcess);
+      Preconditions.checkArgument(removed, "Trying to return a foreign WorkerProcess to the pool");
+    }
+    workerProcess.close();
+  }
+
+  @Override
   public void close() {
     ImmutableSet<WorkerProcess> processesToClose;
     synchronized (createdWorkers) {
@@ -87,8 +117,17 @@ public abstract class WorkerProcessPool {
           "WorkerProcessPool was still running when shutdown was called.");
     }
 
+    Exception ex = null;
     for (WorkerProcess process : processesToClose) {
-      process.close();
+      try {
+        process.close();
+      } catch (Exception t) {
+        ex = t;
+      }
+    }
+
+    if (ex != null) {
+      throw new RuntimeException(ex);
     }
   }
 

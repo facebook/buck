@@ -1,8 +1,62 @@
-standard_java_library(
-  immutable_types = [
-    'MacroMatchResult',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules/macros:macros',
-  ],
+TYPES_SRCS = [
+    "AbstractClasspathMacro.java",
+    "AbstractExecutableMacro.java",
+    "AbstractLocationMacro.java",
+    "AbstractMavenCoordinatesMacro.java",
+    "AbstractQueryOutputsMacro.java",
+    "AbstractQueryTargetsMacro.java",
+    "AbstractStringWithMacros.java",
+    "BuildTargetMacro.java",
+    "Macro.java",
+    "QueryMacro.java",
+]
+
+java_immutables_library(
+    name = "types",
+    srcs = TYPES_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/versions:translator",
+    ],
+)
+
+java_immutables_library(
+    name = "macros",
+    srcs = glob(
+        ["*.java"],
+        excludes = TYPES_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/rules/macros:macros",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":types",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/core:classhash",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/model:macros",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/query:query",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/query:query",
+        "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/shell:worker_tool",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/versions:translator",
+    ],
 )

@@ -22,24 +22,22 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
-
 import org.junit.Rule;
 import org.junit.Test;
 
 public class DLibraryIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void compileAndRun() throws Exception {
     Assumptions.assumeDCompilerUsable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "library", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "library", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("-v", "10", "//:greet").assertSuccess();
@@ -48,15 +46,16 @@ public class DLibraryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:greeting");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result = workspace.runCommand(
-        workspace
-            .resolve(
-                BuildTargets.getGenPath(
-                    new FakeProjectFilesystem(),
-                    BuildTargetFactory.newInstance("//:greet")
-                        .withFlavors(DBinaryDescription.BINARY_FLAVOR),
-                    "%s/greet"))
-            .toString());
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve(
+                    BuildTargets.getGenPath(
+                        new FakeProjectFilesystem(),
+                        BuildTargetFactory.newInstance("//:greet")
+                            .withFlavors(DBinaryDescription.BINARY_FLAVOR),
+                        "%s/greet"))
+                .toString());
     assertEquals(0, result.getExitCode());
     assertEquals("Hello, world!\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());

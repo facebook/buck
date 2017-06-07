@@ -28,110 +28,103 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class CompDirReplacerIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test
   public void testCompDirReplacerForIntel64Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-x86_64");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testCompDirReplacerForIntel32Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-i386");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-i386");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testCompDirReplacerForArm64Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-arm64");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-arm64");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testCompDirReplacerForArm32Bit() throws Exception {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-armv7");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-armv7");
     runCompDirReplacerWithPlatformFlavor(platformFlavor);
   }
 
-  private void runCompDirReplacerWithPlatformFlavor(
-      Flavor platformFlavor) throws IOException, InterruptedException {
+  private void runCompDirReplacerWithPlatformFlavor(Flavor platformFlavor)
+      throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "apple_binary_with_platform", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(platformFlavor);
-    ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand(
-            "build",
-            "--config",
-            "cxx.cflags=-g",
-            target.getFullyQualifiedName());
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
+            .withAppendedFlavors(platformFlavor);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.cflags=-g", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path sanitizedObjectFilePath = workspace.getPath(
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(
-                    platformFlavor,
-                    ImmutableFlavor.of("compile-" + sanitize("main.c.o"))),
-                "%s")
-            .resolve("main.c.o"));
-    Path unsanizitedObjectFilePath = workspace.getPath(
-        filesystem.getBuckPaths().getScratchDir().resolve(Paths.get("unsanitized.main.c.o")));
+    Path sanitizedObjectFilePath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withFlavors(
+                        platformFlavor, InternalFlavor.of("compile-" + sanitize("main.c.o"))),
+                    "%s")
+                .resolve("main.c.o"));
+    Path unsanizitedObjectFilePath =
+        workspace.getPath(
+            filesystem.getBuckPaths().getScratchDir().resolve(Paths.get("unsanitized.main.c.o")));
 
     // this was stolen from the implementation detail of AppleCxxPlatforms
-    DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
-        250,
-        File.separatorChar,
-        Paths.get("."),
-        ImmutableBiMap.of());
+    DebugPathSanitizer sanitizer =
+        new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
     String oldCompDirValue = sanitizer.getCompilationDirectory();
     String newCompDirValue = workspace.getDestPath().toString();
 
-    result = workspace.runBuckCommand(
-        "machoutils",
-        "fix_compdir",
-        "--binary",
-        sanitizedObjectFilePath.toString(),
-        "--output",
-        unsanizitedObjectFilePath.toString(),
-        "--old_compdir",
-        oldCompDirValue,
-        "--new_compdir",
-        newCompDirValue);
+    result =
+        workspace.runBuckCommand(
+            "machoutils",
+            "fix_compdir",
+            "--binary",
+            sanitizedObjectFilePath.toString(),
+            "--output",
+            unsanizitedObjectFilePath.toString(),
+            "--old_compdir",
+            oldCompDirValue,
+            "--new_compdir",
+            newCompDirValue);
     result.assertSuccess();
 
     ProcessExecutor.Result sanitizedResult =

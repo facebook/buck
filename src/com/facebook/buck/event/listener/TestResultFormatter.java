@@ -33,7 +33,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -58,8 +57,8 @@ public class TestResultFormatter {
   private final TimeZone timeZone;
 
   public enum FormatMode {
-      BEFORE_TEST_RUN,
-      AFTER_TEST_RUN
+    BEFORE_TEST_RUN,
+    AFTER_TEST_RUN
   }
 
   public TestResultFormatter(
@@ -114,9 +113,7 @@ public class TestResultFormatter {
 
   /** Writes a detailed summary that ends with a trailing newline. */
   public void reportResult(ImmutableList.Builder<String> addTo, TestResults results) {
-    if (
-        verbosity.shouldPrintBinaryRunInformation() &&
-            results.getTotalNumberOfTests() > 1) {
+    if (verbosity.shouldPrintBinaryRunInformation() && results.getTotalNumberOfTests() > 1) {
       addTo.add("");
       addTo.add(
           String.format(
@@ -124,16 +121,17 @@ public class TestResultFormatter {
               "Results for %s (%d/%d) %s",
               results.getBuildTarget().getFullyQualifiedName(),
               results.getSequenceNumber(),
-              results.getTotalNumberOfTests(), verbosity));
+              results.getTotalNumberOfTests(),
+              verbosity));
     }
 
     boolean shouldReportLogSummaryAfterTests = false;
 
     for (TestCaseSummary testCase : results.getTestCases()) {
       // Only mention classes with tests.
-      if (testCase.getPassedCount() == 0 &&
-          testCase.getFailureCount() == 0 &&
-          testCase.getSkippedCount() == 0) {
+      if (testCase.getPassedCount() == 0
+          && testCase.getFailureCount() == 0
+          && testCase.getSkippedCount() == 0) {
         continue;
       }
 
@@ -174,17 +172,12 @@ public class TestResultFormatter {
   }
 
   private static void reportLogSummary(
-      Locale locale,
-      ImmutableList.Builder<String> addTo,
-      Path logPath,
-      int maxLogLines) {
+      Locale locale, ImmutableList.Builder<String> addTo, Path logPath, int maxLogLines) {
     if (maxLogLines <= 0) {
       return;
     }
     try {
-      List<String> logLines = Files.readAllLines(
-          logPath,
-          StandardCharsets.UTF_8);
+      List<String> logLines = Files.readAllLines(logPath, StandardCharsets.UTF_8);
       if (logLines.isEmpty()) {
         return;
       }
@@ -204,11 +197,12 @@ public class TestResultFormatter {
     }
   }
 
-  public void reportResultSummary(ImmutableList.Builder<String> addTo,
-                                  TestResultSummary testResult) {
+  public void reportResultSummary(
+      ImmutableList.Builder<String> addTo, TestResultSummary testResult) {
     addTo.add(
         String.format(
-            locale, "%s %s %s: %s",
+            locale,
+            "%s %s %s: %s",
             testResult.getType().toString(),
             testResult.getTestCaseName(),
             testResult.getTestName(),
@@ -259,8 +253,8 @@ public class TestResultFormatter {
         isDryRun = isDryRun || testCaseSummary.isDryRun();
         numTestsPassed += testCaseSummary.getPassedCount();
         numTestsSkipped += testCaseSummary.getSkippedCount();
-        hasAssumptionViolations = hasAssumptionViolations ||
-            testCaseSummary.hasAssumptionViolations();
+        hasAssumptionViolations =
+            hasAssumptionViolations || testCaseSummary.hasAssumptionViolations();
       }
     }
     // If no test runs to completion, don't fail, but warn
@@ -304,9 +298,8 @@ public class TestResultFormatter {
     // When something fails...
     if (!testStatusMessages.isEmpty()) {
       addTo.add("====TEST STATUS MESSAGES====");
-      SimpleDateFormat timestampFormat = new SimpleDateFormat(
-          "[yyyy-MM-dd HH:mm:ss.SSS]",
-          Locale.US);
+      SimpleDateFormat timestampFormat =
+          new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", Locale.US);
       timestampFormat.setTimeZone(timeZone);
 
       for (TestStatusMessage testStatusMessage : testStatusMessages) {

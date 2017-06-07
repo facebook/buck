@@ -16,21 +16,40 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableCollection;
 
 /**
- * While building up the target graph, we infer the implicit dependencies of a rule by parsing
- * all parameters with types {@link com.facebook.buck.rules.SourcePath} or
- * {@link com.facebook.buck.rules.BuildRule}. However, in some cases like
- * {@link com.facebook.buck.shell.GenruleDescription}, the
- * {@link com.facebook.buck.shell.AbstractGenruleDescription.Arg#cmd} argument contains build
- * targets in a specific format. Any {@link Description} that implements this interface can modify
- * its implicit deps by poking at the raw build rule params.
+ * While building up the target graph, we infer the implicit dependencies of a rule by parsing all
+ * parameters with types {@link com.facebook.buck.rules.SourcePath} or {@link
+ * com.facebook.buck.rules.BuildRule}. However, in some cases like {@link
+ * com.facebook.buck.shell.GenruleDescription}, the {@link
+ * com.facebook.buck.shell.AbstractGenruleDescription.Arg#cmd} argument contains build targets in a
+ * specific format. Any {@link Description} that implements this interface can modify its implicit
+ * deps by poking at the raw build rule params.
  */
 public interface ImplicitDepsInferringDescription<T> {
 
-  Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      T constructorArg);
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder);
+
+  /**
+   * Infers any dependencies which can only be detected with access to the whole {@link TargetGraph}
+   */
+  @SuppressWarnings("unused")
+  default void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      TargetGraph targetGraph,
+      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 }

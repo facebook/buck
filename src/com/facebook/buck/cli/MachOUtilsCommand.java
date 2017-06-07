@@ -16,39 +16,20 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
+import java.util.Optional;
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
-
-import java.io.IOException;
-import java.util.Optional;
 
 public class MachOUtilsCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-      @SubCommand(name = "fix_compdir", impl = MachOFixCompDirCommand.class),
-      @SubCommand(name = "absolutify_object_paths", impl = MachOAbsolutifyObjectPathsCommand.class),
+    @SubCommand(name = "fix_compdir", impl = MachOFixCompDirCommand.class),
+    @SubCommand(name = "absolutify_object_paths", impl = MachOAbsolutifyObjectPathsCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
-
-  @Option(
-      name = "--help",
-      usage = "Shows this screen and exits.")
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private boolean helpScreen;
-
-  @Override
-  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (subcommand == null) {
-      printUsage(params.getConsole().getStdErr());
-      return 1;
-    }
-    return subcommand.run(params);
-  }
 
   @Override
   public boolean isReadOnly() {

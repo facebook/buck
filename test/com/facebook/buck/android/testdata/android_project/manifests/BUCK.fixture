@@ -1,0 +1,18 @@
+android_library(
+  name = "lib1",
+  manifest = "Manifest1.xml",
+)
+
+android_library(
+  name = "lib2",
+  manifest = "Manifest2.xml",
+)
+
+android_manifest(
+  name = "manifest",
+  skeleton = "Skeleton.xml",
+  deps = [
+    ":lib1",
+    ":lib2",
+  ],
+)

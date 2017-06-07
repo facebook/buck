@@ -26,7 +26,9 @@ public class BuckSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 
   @Override
   public SyntaxHighlighter getSyntaxHighlighter(Project project, VirtualFile virtualFile) {
-    project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+    project
+        .getMessageBus()
+        .syncPublisher(IntellijBuckAction.EVENT)
         .consume(this.getClass().toString());
     return new BuckSyntaxHighlighter();
   }

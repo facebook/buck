@@ -25,32 +25,29 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import org.immutables.value.Value;
 
-/**
- * A step which zeros out the program headers of an ELF file.
- */
+/** A step which zeros out the program headers of an ELF file. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractElfClearProgramHeadersStep implements Step {
 
   abstract ProjectFilesystem getFilesystem();
+
   abstract Path getPath();
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (FileChannel channel =
-             FileChannel.open(
-                 getFilesystem().resolve(getPath()),
-                 StandardOpenOption.READ,
-                 StandardOpenOption.WRITE)) {
+        FileChannel.open(
+            getFilesystem().resolve(getPath()),
+            StandardOpenOption.READ,
+            StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
       Preconditions.checkState(
@@ -73,5 +70,4 @@ abstract class AbstractElfClearProgramHeadersStep implements Step {
   public String getDescription(ExecutionContext context) {
     return "Clear ELF program headers in " + getPath();
   }
-
 }

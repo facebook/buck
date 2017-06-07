@@ -23,9 +23,7 @@ import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -33,24 +31,27 @@ import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
  * Utility that aids in creating the objects necessary to traverse the target graph with special
- * knowledge of Java-based rules. This is needed by commands such as {@code buck autodeps} and
- * {@code buck suggest}.
+ * knowledge of Java-based rules. This is needed by commands such as {@code buck suggest}.
  */
 final class JavaBuildGraphProcessor {
 
@@ -58,21 +59,21 @@ final class JavaBuildGraphProcessor {
   private JavaBuildGraphProcessor() {}
 
   /**
-   * Can be thrown by
-   * {@link Processor#process(TargetGraph, JavaDepsFinder, WeightedListeningExecutorService)} to
-   * indicate the way in which processing has failed. The exit code value may be useful if the
-   * failure is bubbled up to a Buck command.
+   * Can be thrown by {@link Processor#process(TargetGraph, JavaDepsFinder,
+   * WeightedListeningExecutorService)} to indicate the way in which processing has failed. The exit
+   * code value may be useful if the failure is bubbled up to a Buck command.
    */
   static final class ExitCodeException extends Exception {
     public final int exitCode;
+
     ExitCodeException(int exitCode) {
       this.exitCode = exitCode;
     }
   }
 
   /**
-   * Does the user-defined processing on the objects built up by
-   * {@link #run(CommandRunnerParams, AbstractCommand, Processor)}.
+   * Does the user-defined processing on the objects built up by {@link #run(CommandRunnerParams,
+   * AbstractCommand, Processor)}.
    */
   interface Processor {
     void process(
@@ -87,104 +88,106 @@ final class JavaBuildGraphProcessor {
    * runs.
    */
   static void run(
-      final CommandRunnerParams params,
-      final AbstractCommand command,
-      final Processor processor
-  ) throws ExitCodeException, InterruptedException, IOException {
+      final CommandRunnerParams params, final AbstractCommand command, final Processor processor)
+      throws ExitCodeException, InterruptedException, IOException {
     final ConcurrencyLimit concurrencyLimit = command.getConcurrencyLimit(params.getBuckConfig());
-    try (CommandThreadManager pool = new CommandThreadManager(
-        command.getClass().getName(),
-        concurrencyLimit)) {
+    try (CommandThreadManager pool =
+        new CommandThreadManager(command.getClass().getName(), concurrencyLimit)) {
       Cell cell = params.getCell();
       WeightedListeningExecutorService executorService = pool.getExecutor();
 
-      // Ideally, we should be able to construct the TargetGraph quickly assuming most of it is
-      // already in memory courtesy of buckd. Though we could make a performance optimization where
-      // we pass an option to buck.py that tells it to ignore reading the BUCK.autodeps files when
-      // parsing the BUCK files because we never need to consider the existing auto-generated deps
-      // when creating the new auto-generated deps. If we did so, we would have to make sure to keep
-      // the nodes for that version of the graph separate from the ones that are actually used for
-      // building.
       TargetGraph graph;
       try {
-        graph = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                cell,
-                command.getEnableParserProfiling(),
-                executorService,
-                ImmutableList.of(
-                    TargetNodePredicateSpec.of(
-                        x -> true,
-                        BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-                /* ignoreBuckAutodepsFiles */ true).getTargetGraph();
+        graph =
+            params
+                .getParser()
+                .buildTargetGraphForTargetNodeSpecs(
+                    params.getBuckEventBus(),
+                    cell,
+                    command.getEnableParserProfiling(),
+                    executorService,
+                    ImmutableList.of(
+                        TargetNodePredicateSpec.of(
+                            x -> true,
+                            BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
+                .getTargetGraph();
       } catch (BuildTargetException | BuildFileParseException e) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        params
+            .getBuckEventBus()
+            .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         throw new ExitCodeException(1);
       }
 
-      BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
-          graph,
-          new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRuleResolver buildRuleResolver =
+          new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
-      BuildEngine buildEngine = new CachingBuildEngine(
-          new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-          executorService,
-          new DefaultStepRunner(),
-          CachingBuildEngine.BuildMode.SHALLOW,
-          cachingBuildEngineBuckConfig.getBuildDepFiles(),
-          cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-          cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-          cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-          params.getObjectMapper(),
-          buildRuleResolver,
-          params.getBuckConfig().getKeySeed(),
-          cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo());
+      LocalCachingBuildEngineDelegate cachingBuildEngineDelegate =
+          new LocalCachingBuildEngineDelegate(params.getFileHashCache());
+      try (CachingBuildEngine buildEngine =
+          new CachingBuildEngine(
+              cachingBuildEngineDelegate,
+              executorService,
+              executorService,
+              new DefaultStepRunner(),
+              CachingBuildEngine.BuildMode.SHALLOW,
+              cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
+              cachingBuildEngineBuckConfig.getBuildDepFiles(),
+              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+              buildRuleResolver,
+              params.getBuildInfoStoreManager(),
+              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+              cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
+              RuleKeyFactories.of(
+                  params.getBuckConfig().getKeySeed(),
+                  cachingBuildEngineDelegate.getFileHashCache(),
+                  buildRuleResolver,
+                  cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                  new DefaultRuleKeyCache<>())); ) {
+        // Create a BuildEngine because we store symbol information as build artifacts.
+        BuckEventBus eventBus = params.getBuckEventBus();
+        ExecutionContext executionContext =
+            ExecutionContext.builder()
+                .setConsole(params.getConsole())
+                .setConcurrencyLimit(concurrencyLimit)
+                .setBuckEventBus(eventBus)
+                .setEnvironment(/* environment */ ImmutableMap.of())
+                .setExecutors(
+                    ImmutableMap.<ExecutorPool, ListeningExecutorService>of(
+                        ExecutorPool.CPU, executorService))
+                .setJavaPackageFinder(params.getJavaPackageFinder())
+                .setPlatform(params.getPlatform())
+                .setCellPathResolver(params.getCell().getCellPathResolver())
+                .setBuildCellRootPath(params.getCell().getRoot())
+                .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+                .build();
 
-      // Create a BuildEngine because we store symbol information as build artifacts.
-      BuckEventBus eventBus = params.getBuckEventBus();
-      ExecutionContext executionContext = ExecutionContext.builder()
-          .setConsole(params.getConsole())
-          .setConcurrencyLimit(concurrencyLimit)
-          .setBuckEventBus(eventBus)
-          .setEnvironment(/* environment */ ImmutableMap.of())
-          .setExecutors(
-              ImmutableMap.<ExecutorPool, ListeningExecutorService>of(
-                  ExecutorPool.CPU,
-                  executorService))
-          .setJavaPackageFinder(params.getJavaPackageFinder())
-          .setObjectMapper(params.getObjectMapper())
-          .setPlatform(params.getPlatform())
-          .setCellPathResolver(params.getCell().getCellPathResolver())
-          .build();
+        SourcePathResolver pathResolver =
+            new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+        BuildEngineBuildContext buildContext =
+            BuildEngineBuildContext.builder()
+                .setBuildContext(
+                    BuildContext.builder()
+                        .setSourcePathResolver(pathResolver)
+                        .setBuildCellRootPath(cell.getRoot())
+                        .setJavaPackageFinder(executionContext.getJavaPackageFinder())
+                        .setEventBus(eventBus)
+                        .build())
+                .setClock(params.getClock())
+                .setArtifactCache(params.getArtifactCacheFactory().newInstance())
+                .setBuildId(eventBus.getBuildId())
+                .setEnvironment(executionContext.getEnvironment())
+                .setKeepGoing(false)
+                .build();
 
-      BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()
-          .setBuildContext(BuildContext.builder()
-              // Note we do not create a real action graph because we do not need one.
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .setJavaPackageFinder(executionContext.getJavaPackageFinder())
-              .setEventBus(eventBus)
-              .build())
-          .setClock(params.getClock())
-          .setArtifactCache(params.getArtifactCache())
-          .setBuildId(eventBus.getBuildId())
-          .setObjectMapper(params.getObjectMapper())
-          .setEnvironment(executionContext.getEnvironment())
-          .setKeepGoing(false)
-          .build();
+        // Traverse the TargetGraph to find all of the auto-generated dependencies.
+        JavaDepsFinder javaDepsFinder =
+            JavaDepsFinder.createJavaDepsFinder(
+                params.getBuckConfig(), buildContext, executionContext, buildEngine);
 
-      // Traverse the TargetGraph to find all of the auto-generated dependencies.
-      JavaDepsFinder javaDepsFinder = JavaDepsFinder.createJavaDepsFinder(
-          params.getBuckConfig(),
-          params.getCell().getCellPathResolver(),
-          params.getObjectMapper(),
-          buildContext,
-          executionContext,
-          buildEngine);
-
-      processor.process(graph, javaDepsFinder, executorService);
+        processor.process(graph, javaDepsFinder, executorService);
+      }
     }
   }
 }

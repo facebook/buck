@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -36,46 +35,50 @@ public class AnnotationProcessingEventTest {
     String annotationProcessorName = "com.facebook.FakeProcessor";
     String annotationProcessorName2 = "com.facebook.FakeProcessor2";
 
-
-    AnnotationProcessingEvent.Started initStartedEventOne = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent.Started initStartedEventTwo = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent targetTwoInitStartedEvent = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            targetTwo,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent annotationProcessorTwoInitStartedEvent = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName2,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent getSupportedOptionsStartedEvent = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS,
-            0,
-            false));
-    AnnotationProcessingEvent finishedInitEventOne = configureTestEvent(
-        AnnotationProcessingEvent.finished(initStartedEventOne));
-    AnnotationProcessingEvent finishedInitEventTwo = configureTestEvent(
-        AnnotationProcessingEvent.finished(initStartedEventTwo));
+    AnnotationProcessingEvent.Started initStartedEventOne =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent.Started initStartedEventTwo =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent targetTwoInitStartedEvent =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                targetTwo,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent annotationProcessorTwoInitStartedEvent =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName2,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent getSupportedOptionsStartedEvent =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS,
+                0,
+                false));
+    AnnotationProcessingEvent finishedInitEventOne =
+        configureTestEvent(AnnotationProcessingEvent.finished(initStartedEventOne));
+    AnnotationProcessingEvent finishedInitEventTwo =
+        configureTestEvent(AnnotationProcessingEvent.finished(initStartedEventTwo));
     assertEquals(initStartedEventOne, initStartedEventOne);
     assertNotEquals(initStartedEventOne, initStartedEventTwo);
     assertNotEquals(initStartedEventOne, targetTwoInitStartedEvent);

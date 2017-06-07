@@ -6,7 +6,7 @@ import re
 import sys
 
 # This parses buck-out/gen/jacoco/code-coverage/coverage.xml after
-# `buck test --all --code-coverage --code-coverage-format xml --no-results-cache`
+# `buck test --all --code-coverage --code-coverage-format xml`
 # has been run.
 PATH_TO_CODE_COVERAGE_XML = 'buck-out/gen/jacoco/code-coverage/coverage.xml'
 

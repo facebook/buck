@@ -24,12 +24,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,11 +35,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ResourcePoolTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void doesNotCreateMoreThanMaxResources() throws Exception {
@@ -55,13 +52,14 @@ public class ResourcePoolTest {
       List<ListenableFuture<?>> futures = new ArrayList<>();
       for (int i = 0; i < f.getMaxResources() * 10; i++) {
         futures.add(
-            f.getPool().scheduleOperationWithResource(
-                r -> {
-                  waitTillAllThreadsAreBusy.countDown();
-                  unblockAllThreads.await();
-                  return r;
-                },
-                f.getExecutorService()));
+            f.getPool()
+                .scheduleOperationWithResource(
+                    r -> {
+                      waitTillAllThreadsAreBusy.countDown();
+                      unblockAllThreads.await();
+                      return r;
+                    },
+                    f.getExecutorService()));
       }
       waitTillAllThreadsAreBusy.await();
       unblockAllThreads.countDown();
@@ -73,25 +71,22 @@ public class ResourcePoolTest {
 
   @Test
   public void exceptionOnResourceCreation() throws Exception {
-    try (Fixture f = new Fixture(
-        /* maxResources */ 2,
-        (i) -> {
-          if (i == 0) {
-            throw new TestException();
-          }
-        },
-        ResourcePool.ResourceUsageErrorPolicy.RECYCLE)) {
+    try (Fixture f =
+        new Fixture(
+            /* maxResources */ 2,
+            (i) -> {
+              if (i == 0) {
+                throw new TestException();
+              }
+            },
+            ResourcePool.ResourceUsageErrorPolicy.RECYCLE)) {
       List<ListenableFuture<TestResource>> results =
           Stream.of(0, 1)
-              .map(i -> f.getPool().scheduleOperationWithResource(
-                  r -> r,
-                  f.getExecutorService()))
+              .map(i -> f.getPool().scheduleOperationWithResource(r -> r, f.getExecutorService()))
               .collect(Collectors.toList());
 
       assertThat(
-          Futures.successfulAsList(results).get().stream()
-              .filter(r -> r != null)
-              .count(),
+          Futures.successfulAsList(results).get().stream().filter(r -> r != null).count(),
           equalTo(1L));
       expectedException.expectCause(Matchers.instanceOf(TestException.class));
       Futures.allAsList(results).get();
@@ -104,14 +99,17 @@ public class ResourcePoolTest {
       ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
       List<ListenableFuture<TestResource>> results =
           Stream.of(0, 1, 2)
-              .map(i -> f.getPool().scheduleOperationWithResource(
-                  r -> {
-                    if (i == 1) {
-                      throw new TestException();
-                    }
-                    return r;
-                  },
-                  executorService))
+              .map(
+                  i ->
+                      f.getPool()
+                          .scheduleOperationWithResource(
+                              r -> {
+                                if (i == 1) {
+                                  throw new TestException();
+                                }
+                                return r;
+                              },
+                              executorService))
               .collect(Collectors.toList());
 
       assertThat(f.getCreatedResources().get(), equalTo(1));
@@ -125,20 +123,22 @@ public class ResourcePoolTest {
 
   @Test
   public void exceptionOnResourceUsageWithRetireHandling() throws Exception {
-    try (Fixture f = new Fixture(
-        /* maxResources */ 1,
-        ResourcePool.ResourceUsageErrorPolicy.RETIRE)) {
+    try (Fixture f =
+        new Fixture(/* maxResources */ 1, ResourcePool.ResourceUsageErrorPolicy.RETIRE)) {
       ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
       List<ListenableFuture<TestResource>> results =
           Stream.of(0, 1, 2)
-              .map(i -> f.getPool().scheduleOperationWithResource(
-                  r -> {
-                    if (i == 1) {
-                      throw new TestException();
-                    }
-                    return r;
-                  },
-                  executorService))
+              .map(
+                  i ->
+                      f.getPool()
+                          .scheduleOperationWithResource(
+                              r -> {
+                                if (i == 1) {
+                                  throw new TestException();
+                                }
+                                return r;
+                              },
+                              executorService))
               .collect(Collectors.toList());
 
       Futures.successfulAsList(results).get();
@@ -165,12 +165,10 @@ public class ResourcePoolTest {
     }
 
     @Override
-    public void close() throws Exception {
-    }
+    public void close() throws Exception {}
   }
 
-  private static class TestException extends RuntimeException {
-  }
+  private static class TestException extends RuntimeException {}
 
   private static class Fixture implements AutoCloseable {
     private final AtomicInteger createdResources;
@@ -200,26 +198,27 @@ public class ResourcePoolTest {
       this.createdResources = new AtomicInteger(0);
       this.createdResourcesSet = new HashSet<>();
       this.closedResourcesSet = new HashSet<>();
-      this.pool = new ResourcePool<>(
-          /* maxResources */ maxResources,
-          errorPolicy,
-          () -> {
-            int id = createdResources.getAndIncrement();
-            beforeResourceCreatedFunction.accept(id);
-            TestResource testResource = new TestResource(id) {
-              @Override
-              public void close() throws Exception {
-                synchronized (closedResourcesSet) {
-                  closedResourcesSet.add(this);
+      this.pool =
+          new ResourcePool<>(
+              /* maxResources */ maxResources,
+              errorPolicy,
+              () -> {
+                int id = createdResources.getAndIncrement();
+                beforeResourceCreatedFunction.accept(id);
+                TestResource testResource =
+                    new TestResource(id) {
+                      @Override
+                      public void close() throws Exception {
+                        synchronized (closedResourcesSet) {
+                          closedResourcesSet.add(this);
+                        }
+                      }
+                    };
+                synchronized (createdResourcesSet) {
+                  createdResourcesSet.add(testResource);
                 }
-              }
-            };
-            synchronized (createdResourcesSet) {
-              createdResourcesSet.add(testResource);
-            }
-            return testResource;
-          }
-      );
+                return testResource;
+              });
       executorService =
           MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(maxResources));
     }

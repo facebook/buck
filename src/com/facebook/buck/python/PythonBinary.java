@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -23,37 +24,38 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
-public abstract class PythonBinary
-    extends AbstractBuildRule
+public abstract class PythonBinary extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
+  private final Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps;
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
-  private final PythonPackageComponents components;
+  @AddToRuleKey private final PythonPackageComponents components;
   private final ImmutableSet<String> preloadLibraries;
-  @AddToRuleKey
-  private final String pexExtension;
-  @AddToRuleKey
-  private final boolean legacyOutputPath;
+  @AddToRuleKey private final String pexExtension;
+  @AddToRuleKey private final boolean legacyOutputPath;
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps,
       PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries,
       String pexExtension,
       boolean legacyOutputPath) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
+    this.originalDeclaredDeps = originalDeclaredDeps;
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
     this.components = components;
@@ -62,17 +64,24 @@ public abstract class PythonBinary
     this.legacyOutputPath = legacyOutputPath;
   }
 
-  protected final Path getBinPath() {
-    BuildTarget buildTarget = getBuildTarget();
+  static Path getBinPath(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      String extension,
+      boolean legacyOutputPath) {
     if (!legacyOutputPath) {
-      buildTarget = buildTarget.withFlavors();
+      target = target.withFlavors();
     }
-    return BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s" + pexExtension);
+    return BuildTargets.getGenPath(filesystem, target, "%s" + extension);
+  }
+
+  final Path getBinPath() {
+    return getBinPath(getBuildTarget(), getProjectFilesystem(), pexExtension, legacyOutputPath);
   }
 
   @Override
-  public final Path getPathToOutput() {
-    return getBinPath();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getBinPath());
   }
 
   @VisibleForTesting
@@ -96,8 +105,7 @@ public abstract class PythonBinary
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return getDeclaredDeps();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget);
   }
-
 }

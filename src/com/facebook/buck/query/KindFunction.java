@@ -35,8 +35,8 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A kind(pattern, argument) filter expression, which computes the subset
- * of nodes in 'argument' whose kind matches the unanchored regex 'pattern'.
+ * A kind(pattern, argument) filter expression, which computes the subset of nodes in 'argument'
+ * whose kind matches the unanchored regex 'pattern'.
  *
  * <pre>expr ::= KIND '(' WORD ',' expr ')'</pre>
  */
@@ -45,8 +45,7 @@ public class KindFunction extends RegexFilterFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
 
-  public KindFunction() {
-  }
+  public KindFunction() {}
 
   @Override
   public String getName() {
@@ -75,9 +74,7 @@ public class KindFunction extends RegexFilterFunction {
 
   @Override
   protected String getStringToFilter(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      QueryTarget target)
+      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target)
       throws QueryException, InterruptedException {
     return env.getTargetKind(target);
   }

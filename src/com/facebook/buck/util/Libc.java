@@ -28,20 +28,18 @@ public interface Libc extends Library {
   Libc INSTANCE = (Libc) Native.loadLibrary(Platform.C_LIBRARY_NAME, Libc.class);
 
   Pointer signal(int signal, Pointer function);
+
   int kill(int pid, int sig) throws LastErrorException;
 
   public interface OpenPtyLibrary extends Library {
     int openpty(
-        IntByReference master,
-        IntByReference slave,
-        Pointer name,
-        Pointer terp,
-        Pointer winp);
+        IntByReference master, IntByReference slave, Pointer name, Pointer terp, Pointer winp);
   }
 
   int setsid();
 
   int ioctl(int fd, Pointer request, Object... args);
+
   int fcntl(int fd, int cmd, Object... args);
 
   public static final class Constants {
@@ -63,5 +61,4 @@ public interface Libc extends Library {
 
     public static final int SIGHUP = 1;
   }
-
 }

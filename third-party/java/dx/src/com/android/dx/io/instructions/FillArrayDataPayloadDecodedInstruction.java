@@ -76,7 +76,7 @@ public final class FillArrayDataPayloadDecodedInstruction
         this(format, opcode, data, data.length, 8);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public int getRegisterCount() {
         return 0;
     }
@@ -93,7 +93,7 @@ public final class FillArrayDataPayloadDecodedInstruction
         return data;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public DecodedInstruction withIndex(int newIndex) {
         throw new UnsupportedOperationException("no index in instruction");
     }

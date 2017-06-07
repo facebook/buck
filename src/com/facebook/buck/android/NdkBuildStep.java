@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,14 +73,10 @@ public class NdkBuildStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    Optional<Path> ndkRoot = context.getAndroidPlatformTarget().getNdkDirectory();
-    if (!ndkRoot.isPresent()) {
-      throw new HumanReadableException(
-          "Must set ANDROID_NDK to point to the absolute path of your Android NDK directory.");
-    }
-    Optional<Path> ndkBuild = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("ndk-build"),
-        ndkRoot.get());
+    Optional<Path> ndkBuild =
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("ndk-build"), context.getAndroidPlatformTarget().checkNdkDirectory());
     if (!ndkBuild.isPresent()) {
       throw new HumanReadableException("Unable to find ndk-build");
     }
@@ -92,16 +87,12 @@ public class NdkBuildStep extends ShellStep {
     builder.add(
         ndkBuild.get().toAbsolutePath().toString(),
         "-j",
-        // TODO(dcolascione): using -j here is wrong.  It lets make run too many work when we do
+        // TODO(dancol): using -j here is wrong.  It lets make run too many work when we do
         // other work in parallel.  Instead, implement the GNU Make job server so make and Buck can
         // coordinate job concurrency.
         Integer.toString(concurrencyLimit.threadLimit),
         "-C",
         this.root.toString());
-
-    if (concurrencyLimit.loadLimit < Double.POSITIVE_INFINITY) {
-      builder.add("--load-average", Double.toString(concurrencyLimit.loadLimit));
-    }
 
     Iterable<String> flags = Iterables.transform(this.flags, macroExpander);
     builder.addAll(flags);
@@ -110,8 +101,7 @@ public class NdkBuildStep extends ShellStep {
     // ndk_library.  Absolute paths are machine-specific, but relative ones should be the
     // same everywhere.
 
-    Path relativePathToProject = filesystem.resolve(root)
-        .relativize(filesystem.getRootPath());
+    Path relativePathToProject = filesystem.resolve(root).relativize(filesystem.getRootPath());
     builder.add(
         "APP_PROJECT_PATH=" + filesystem.resolve(buildArtifactsDirectory) + File.separatorChar,
         "APP_BUILD_SCRIPT=" + filesystem.resolve(makefile),
@@ -129,7 +119,7 @@ public class NdkBuildStep extends ShellStep {
     // If we're running verbosely, force all the subcommands from the ndk build to be printed out.
     if (context.getVerbosity().shouldPrintCommand()) {
       builder.add("V=1");
-    // Otherwise, suppress everything, including the "make: entering directory..." messages.
+      // Otherwise, suppress everything, including the "make: entering directory..." messages.
     } else {
       builder.add("--silent");
     }
@@ -143,5 +133,4 @@ public class NdkBuildStep extends ShellStep {
   protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
     return verbosity.shouldPrintCommand();
   }
-
 }

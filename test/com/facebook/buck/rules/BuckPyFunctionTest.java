@@ -21,18 +21,18 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
+import org.junit.Before;
+import org.junit.Test;
 
 public class BuckPyFunctionTest {
 
@@ -40,187 +40,173 @@ public class BuckPyFunctionTest {
 
   @Before
   public void setUpMarshaller() {
-    buckPyFunction =
-        new BuckPyFunction(new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance())));
+    buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory(), CoercedTypeCache.INSTANCE);
   }
 
-  public static class NoName {
-    public String random;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractNoName {
+    abstract String getRandom();
   }
 
   @Test
   public void nameWillBeAddedIfMissing() {
 
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("bad"),
-        new NoName());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("bad"), NoName.class);
 
     assertTrue(definition.contains("name"));
   }
 
-  public static class NoVis {
-    public String random;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractNoVis {
+    abstract String getRandom();
   }
 
   @Test
   public void visibilityWillBeAddedIfMissing() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("bad"),
-        new NoVis());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("bad"), NoVis.class);
 
     assertTrue(definition.contains("visibility=None"));
   }
 
-  public static class Named {
-    public String name;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractNamed {
+    abstract String getName();
   }
 
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("named"),
-        new Named());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("named"), Named.class);
 
-    assertEquals(Joiner.on("\n").join(
-        "@provide_for_build",
-        "def named(name, autodeps=None, visibility=None, build_env=None):",
-        "    add_rule({",
-        "        'buck.type': 'named',",
-        "        'name': name,",
-        "        'autodeps': autodeps,",
-        "        'visibility': visibility,",
-        "    }, build_env)",
-        "",
-        ""
-    ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def named(name, visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'named',",
+                "        'name': name,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 
-  @TargetName(name = "lollerskates")
-  public static class TargetNameOnly {
-    public String foobar;
-  }
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractLotsOfOptions {
+    abstract Optional<String> getThing();
 
-  @Test
-  public void testHasDefaultName() {
+    abstract Optional<List<BuildTarget>> getTargets();
 
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("noname"),
-        new TargetNameOnly());
+    @Value.Default
+    List<String> getStrings() {
+      return ImmutableList.of("123");
+    }
 
-    assertEquals(Joiner.on("\n").join(
-            "@provide_for_build",
-            "def noname(foobar, autodeps=None, visibility=None, build_env=None):",
-            "    add_rule({",
-            "        'buck.type': 'noname',",
-            "        'name': 'lollerskates',",
-            "        'foobar': foobar,",
-            "        'autodeps': autodeps,",
-            "        'visibility': visibility,",
-            "    }, build_env)",
-            "",
-            ""
-        ), definition);
-  }
+    abstract Optional<Integer> getVersion();
 
-  public static class BadName {
-    public int name;
-  }
+    abstract Optional<Boolean> isDoStuff();
 
-  @Test(expected = HumanReadableException.class)
-  public void theNameFieldMustBeAString() {
-    buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), new BadName());
-  }
-
-  public static class LotsOfOptions {
-    public Optional<String> thing;
-    public Optional<List<BuildTarget>> targets;
-    public List<String> strings = ImmutableList.of("123");
-    public Optional<Integer> version;
-    public Optional<Boolean> doStuff;
-    public boolean doSomething = true;
+    @Value.Default
+    boolean isDoSomething() {
+      return true;
+    }
   }
 
   @Test
   public void optionalFieldsDefaultToAbsent() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("optional"), new LotsOfOptions());
+    String definition =
+        buckPyFunction.toPythonFunction(BuildRuleType.of("optional"), LotsOfOptions.class);
 
     assertTrue(
         definition,
-        definition.contains("do_something=None, do_stuff=None, strings=None, targets=None, " +
-            "thing=None, version=None"));
+        definition.contains(
+            "do_something=None, do_stuff=None, strings=None, targets=None, "
+                + "thing=None, version=None"));
   }
 
-  public static class Either {
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractEither {
     // Alphabetical ordering is deliberate.
-    public Optional<String> cat;
-    public String dog;
-    public String egg = "EGG";
-    public String fake;
+    abstract Optional<String> getCat();
+
+    abstract String getDog();
+
+    @Value.Default
+    String getEgg() {
+      return "EGG";
+    }
+
+    abstract String getFake();
   }
 
   @Test
   public void optionalFieldsAreListedAfterMandatoryOnes() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("either"),
-        new Either());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("either"), Either.class);
 
-    assertEquals(Joiner.on("\n").join(
-        "@provide_for_build",
-        "def either(name, dog, fake, " +
-            "cat=None, egg=None, autodeps=None, visibility=None, build_env=None):",
-        "    add_rule({",
-        "        'buck.type': 'either',",
-        "        'name': name,",
-        "        'dog': dog,",
-        "        'fake': fake,",
-        "        'cat': cat,",
-        "        'egg': egg,",
-        "        'autodeps': autodeps,",
-        "        'visibility': visibility,",
-        "    }, build_env)",
-        "",
-        ""
-    ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def either(name, dog, fake, cat=None, egg=None, "
+                    + "visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'either',",
+                "        'name': name,",
+                "        'dog': dog,",
+                "        'fake': fake,",
+                "        'cat': cat,",
+                "        'egg': egg,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 
-  public static class Visible {
-    public Set<BuildTargetPattern> visibility;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractVisible {
+    abstract Set<BuildTargetPattern> getVisibility();
   }
 
   @Test(expected = HumanReadableException.class)
   public void visibilityOptionsMustNotBeSetAsTheyArePassedInBuildRuleParamsLater() {
-    buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), new Visible());
+    buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), Visible.class);
   }
 
-  public static class Dto {
-    public String someField;
-
-    @Hint(name = "all_this_was_fields")
-    public String hintedField;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractDto {
+    abstract String getSomeField();
   }
 
   @Test
   public void shouldConvertCamelCaseFieldNameToSnakeCaseParameter() {
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("case"),
-        new Dto());
+    String definition = buckPyFunction.toPythonFunction(BuildRuleType.of("case"), Dto.class);
 
-    assertEquals(Joiner.on("\n").join(
-        "@provide_for_build",
-        "def case(name, all_this_was_fields, some_field, " +
-            "autodeps=None, visibility=None, build_env=None):",
-        "    add_rule({",
-        "        'buck.type': 'case',",
-        "        'name': name,",
-        "        'hintedField': all_this_was_fields,",
-        "        'someField': some_field,",
-        "        'autodeps': autodeps,",
-        "        'visibility': visibility,",
-        "    }, build_env)",
-        "",
-        ""
-    ), definition);
+    assertEquals(
+        Joiner.on("\n")
+            .join(
+                "@provide_for_build",
+                "def case(name, some_field, "
+                    + "visibility=None, within_view=None, build_env=None):",
+                "    add_rule({",
+                "        'buck.type': 'case',",
+                "        'name': name,",
+                "        'someField': some_field,",
+                "        'visibility': visibility,",
+                "        'within_view': within_view,",
+                "    }, build_env)",
+                "",
+                ""),
+        definition);
   }
 }

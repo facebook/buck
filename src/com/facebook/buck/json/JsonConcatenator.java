@@ -19,7 +19,6 @@ package com.facebook.buck.json;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -35,19 +34,17 @@ class JsonConcatenator {
   private BufferedWriter destinationBufferedWriter;
   private boolean stillEmpty;
 
-
-  @VisibleForTesting
-  static final String JSON_ENCODING = "UTF-8";
+  @VisibleForTesting static final String JSON_ENCODING = "UTF-8";
 
   public JsonConcatenator(
-      ImmutableSortedSet<Path> inputs,
-      Path destination,
-      ProjectFilesystem filesystem) throws IOException {
+      ImmutableSortedSet<Path> inputs, Path destination, ProjectFilesystem filesystem)
+      throws IOException {
     this.inputs = inputs;
     this.stillEmpty = true;
     try {
-      this.destinationBufferedWriter = new BufferedWriter(
-          new OutputStreamWriter(filesystem.newFileOutputStream(destination), JSON_ENCODING));
+      this.destinationBufferedWriter =
+          new BufferedWriter(
+              new OutputStreamWriter(filesystem.newFileOutputStream(destination), JSON_ENCODING));
     } catch (IOException e) {
       closeAll();
       throw e;
@@ -116,5 +113,4 @@ class JsonConcatenator {
   String stripArrayTokens(String array) {
     return array.replaceAll("^(\\s)*\\[", "").replaceAll("\\](\\s)*$", "");
   }
-
 }

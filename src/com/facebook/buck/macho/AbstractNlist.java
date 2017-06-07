@@ -18,7 +18,6 @@ package com.facebook.buck.macho;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
 import org.immutables.value.Value;
 
 //CHECKSTYLE.OFF: MethodNameCheck
@@ -29,10 +28,15 @@ interface AbstractNlist {
   public static final int SIZE_IN_BYTES_64_BIT = 16;
 
   public int getOffsetInBinary();
-  public UnsignedInteger getN_strx();    // 32 bit
-  public UnsignedInteger getN_type();    // 8 bit
-  public UnsignedInteger getN_sect();    // 8 bit
-  public UnsignedInteger getN_desc();    // 16 bit
-  public UnsignedLong getN_value();      // 32 bit for 32 bit arch;  64 bit for 64 bit arch
+
+  public UnsignedInteger getN_strx(); // 32 bit
+
+  public UnsignedInteger getN_type(); // 8 bit
+
+  public UnsignedInteger getN_sect(); // 8 bit
+
+  public UnsignedInteger getN_desc(); // 16 bit
+
+  public UnsignedLong getN_value(); // 32 bit for 32 bit arch;  64 bit for 64 bit arch
 }
 //CHECKSTYLE.ON: MethodNameCheck

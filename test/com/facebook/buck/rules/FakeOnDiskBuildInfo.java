@@ -19,23 +19,22 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
-  private Map<String, String> metadata = Maps.newHashMap();
-  private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();
-  private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
+  private Map<String, String> metadata = new HashMap<>();
+  private Map<String, ImmutableList<String>> metadataValues = new HashMap<>();
+  private Map<Path, ImmutableList<String>> pathsToContents = new HashMap<>();
 
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
-    return getValue(key).map(RuleKey::new);
+    return getBuildValue(key).map(RuleKey::new);
   }
 
   /** @return this */
@@ -55,6 +54,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
+  public Optional<String> getBuildValue(String key) {
+    return Optional.ofNullable(metadata.get(key));
+  }
+
+  @Override
   public Optional<ImmutableList<String>> getValues(String key) {
     return Optional.ofNullable(metadataValues.get(key));
   }
@@ -65,7 +69,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<ImmutableMap<String, String>> getMap(String key) {
+  public Optional<ImmutableMap<String, String>> getBuildMap(String key) {
     return Optional.empty();
   }
 

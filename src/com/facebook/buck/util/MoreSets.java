@@ -17,16 +17,14 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.Sets;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 public abstract class MoreSets {
 
   /**
-   * Returns a new and mutable set containing the intersection of the
-   * two specified sets. Using the smaller of the two sets as the base for
-   * finding the intersection for performance reasons.
+   * Returns a new and mutable set containing the intersection of the two specified sets. Using the
+   * smaller of the two sets as the base for finding the intersection for performance reasons.
    */
   public static <T> Set<T> intersection(Set<T> x, Set<T> y) {
     Set<T> result = new LinkedHashSet<>();

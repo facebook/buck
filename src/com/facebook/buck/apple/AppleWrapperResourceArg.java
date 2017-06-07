@@ -16,15 +16,14 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
+import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
-/**
- * A description for a resource defined by a single path.
- */
-@SuppressFieldNotInitialized
-public class AppleWrapperResourceArg extends AbstractDescriptionArg {
-  public Path path;
+/** A description for a resource defined by a single path. */
+@BuckStyleImmutable
+@Value.Immutable
+interface AbstractAppleWrapperResourceArg extends CommonDescriptionArg {
+  Path getPath();
 }

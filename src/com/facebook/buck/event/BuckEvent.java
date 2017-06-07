@@ -21,16 +21,10 @@ import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.function.Supplier;
-
 public interface BuckEvent extends BuckEventExternalInterface {
   @VisibleForTesting
   void configure(
-      long timestamp,
-      long nanoTime,
-      long threadUserNanoTime,
-      long threadId,
-      BuildId buildId);
+      long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId);
 
   @JsonIgnore
   boolean isConfigured();
@@ -43,16 +37,14 @@ public interface BuckEvent extends BuckEventExternalInterface {
 
   long getThreadId();
 
-  /**
-   * @return an identifier that distinguishes the build with which this event is associated.
-   */
+  /** @return an identifier that distinguishes the build with which this event is associated. */
   BuildId getBuildId();
 
   /**
-   * @return Whether or not this event is related to another event.  Events are related if they
-   * pertain to the same event, for example if they are measuring the start and stop of some phase.
-   * For example,
-   * <pre>
+   * @return Whether or not this event is related to another event. Events are related if they
+   *     pertain to the same event, for example if they are measuring the start and stop of some
+   *     phase. For example,
+   *     <pre>
    *   <code>
    *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.finished("build")) == true
    *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.started("build")) == true
@@ -62,25 +54,14 @@ public interface BuckEvent extends BuckEventExternalInterface {
    */
   boolean isRelatedTo(BuckEvent event);
 
-  /**
-   * @return key used to determine whether this event is related to another event.
-   */
+  /** @return key used to determine whether this event is related to another event. */
   EventKey getEventKey();
 
-  class Scope implements AutoCloseable {
-    private final EventBus eventBus;
-    private Supplier<BuckEvent> eventSupplier;
-
-    public Scope(
-        EventBus eventBus,
-        Supplier<BuckEvent> eventBuilder) {
-      this.eventBus = eventBus;
-      this.eventSupplier = eventBuilder;
-    }
-
+  /**
+   * A more specific interface that doesn't throw rather than using {@link AutoCloseable} directly.
+   */
+  interface Scope extends AutoCloseable {
     @Override
-    public final void close() {
-      eventBus.post(eventSupplier.get());
-    }
+    void close();
   }
 }

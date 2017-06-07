@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface BuckBuildProgressUpdateConsumer {
-  Topic<BuckBuildProgressUpdateConsumer> BUCK_BUILD_PROGRESS_UPDATE = Topic.create(
-      "buck.build.progress.update",
-      BuckBuildProgressUpdateConsumer.class
-  );
+  Topic<BuckBuildProgressUpdateConsumer> BUCK_BUILD_PROGRESS_UPDATE =
+      Topic.create("buck.build.progress.update", BuckBuildProgressUpdateConsumer.class);
+
   void consumeBuckBuildProgressUpdate(long timestamp, double progressValue);
 }

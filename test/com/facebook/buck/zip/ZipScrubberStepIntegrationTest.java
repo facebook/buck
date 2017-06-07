@@ -19,17 +19,10 @@ package com.facebook.buck.zip;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
-
-import org.apache.commons.compress.archivers.zip.ZipUtil;
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,11 +31,14 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ZipScrubberStepIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void modificationTimes() throws Exception {
@@ -67,9 +63,7 @@ public class ZipScrubberStepIntegrationTest {
 
     // Execute the zip scrubber step.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    ZipScrubberStep step = new ZipScrubberStep(
-        new ProjectFilesystem(tmp.getRoot()),
-        Paths.get("output.zip"));
+    ZipScrubberStep step = ZipScrubberStep.of(tmp.getRoot().resolve(Paths.get("output.zip")));
     assertEquals(0, step.execute(executionContext).getExitCode());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
@@ -80,5 +74,4 @@ public class ZipScrubberStepIntegrationTest {
       }
     }
   }
-
 }

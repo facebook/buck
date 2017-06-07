@@ -20,7 +20,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
@@ -34,26 +34,21 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 public class WatchmanWatcherIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private Watchman watchman;
   private EventBus eventBus;
@@ -63,9 +58,7 @@ public class WatchmanWatcherIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
 
     // Create an empty watchman config file.
-    Files.write(
-        tmp.getRoot().resolve(".watchmanconfig"),
-        new byte[0]);
+    Files.write(tmp.getRoot().resolve(".watchmanconfig"), new byte[0]);
 
     watchman =
         Watchman.build(
@@ -92,7 +85,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Verify we don't get an event for the path.
     watcher.postEvents(
-        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertThat(watchmanEventCollector.getEvents(), Matchers.empty());
   }
@@ -108,14 +101,14 @@ public class WatchmanWatcherIntegrationTest {
 
     // Verify we still get an event for the created path.
     watcher.postEvents(
-        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    ImmutableList<WatchEvent<?>> events = watchmanEventCollector.getEvents();
+    ImmutableList<WatchmanEvent> events = watchmanEventCollector.getEvents();
     assertThat(events.size(), Matchers.equalTo(1));
-    WatchEvent<?> event = events.get(0);
-    Path eventPath = (Path) event.context();
+    WatchmanPathEvent event = (WatchmanPathEvent) events.get(0);
+    Path eventPath = event.getPath();
     assertThat(eventPath, Matchers.equalTo(path));
-    assertSame(event.kind(), StandardWatchEventKinds.ENTRY_CREATE);
+    assertSame(event.getKind(), WatchmanPathEvent.Kind.CREATE);
   }
 
   // Create a watcher for the given ignore paths, clearing the initial overflow event before
@@ -126,21 +119,18 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanWatcher watcher =
         new WatchmanWatcher(
             ImmutableMap.of(
-                tmp.getRoot(),
-                ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+                tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
             watchman,
             ImmutableMap.of(
                 tmp.getRoot(),
                 new WatchmanCursor(
-                    new StringBuilder("n:buckd")
-                        .append(UUID.randomUUID())
-                        .toString())));
+                    new StringBuilder("n:buckd").append(UUID.randomUUID()).toString())));
 
     // Clear out the initial overflow event.
     watcher.postEvents(
-        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new DefaultBuckEventBus(new FakeClock(0), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     watchmanEventCollector.clear();
 
@@ -149,10 +139,10 @@ public class WatchmanWatcherIntegrationTest {
 
   private static final class WatchmanEventCollector {
 
-    private final List<WatchEvent<?>> events = new ArrayList<>();
+    private final List<WatchmanEvent> events = new ArrayList<>();
 
     @Subscribe
-    protected void handle(WatchEvent<?> event) {
+    protected void handle(WatchmanEvent event) {
       events.add(event);
     }
 
@@ -160,10 +150,8 @@ public class WatchmanWatcherIntegrationTest {
       events.clear();
     }
 
-    public ImmutableList<WatchEvent<?>> getEvents() {
+    public ImmutableList<WatchmanEvent> getEvents() {
       return ImmutableList.copyOf(events);
     }
-
   }
-
 }

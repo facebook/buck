@@ -104,12 +104,12 @@ public class MoveParamCombiner {
                      */
 
                     RegisterMapper mapper = new RegisterMapper() {
-                        /** @inheritDoc */
+                        /** {@inheritDoc} */
                         public int getNewRegisterCount() {
                             return ssaMeth.getRegCount();
                         }
 
-                        /** @inheritDoc */
+                        /** {@inheritDoc} */
                         public RegisterSpec map(RegisterSpec registerSpec) {
                             if (registerSpec.getReg() == specB.getReg()) {
                                 return specA;

@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 /**
- * Superclass of all container types. This is here to reflect Xcode's object hierarchy, and does
- * not implement any special functionality.
+ * Superclass of all container types. This is here to reflect Xcode's object hierarchy, and does not
+ * implement any special functionality.
  */
 public abstract class PBXContainer extends PBXObject {
   @Override

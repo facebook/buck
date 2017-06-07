@@ -17,23 +17,20 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.io.ProjectFilesystem;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class TestArtifactCaches {
-  private TestArtifactCaches() {
-
-  }
+  private TestArtifactCaches() {}
 
   public static ArtifactCache createDirCacheForTest(Path filesystemRoot, Path cacheDir)
-      throws IOException {
+      throws InterruptedException, IOException {
     return new DirArtifactCache(
         "dir",
         new ProjectFilesystem(filesystemRoot),
         cacheDir,
-        true,
+        CacheReadMode.READWRITE,
         Optional.empty());
   }
 }

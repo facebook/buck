@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 public class BuckParseStartedHandler implements BuckEventHandler {
@@ -29,8 +28,10 @@ public class BuckParseStartedHandler implements BuckEventHandler {
       String rawMessage,
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
-      ObjectMapper objectMapper) throws IOException {
-    buckEventsConsumerFactory.getRulesParsingStartConsumer()
+      ObjectMapper objectMapper)
+      throws IOException {
+    buckEventsConsumerFactory
+        .getRulesParsingStartConsumer()
         .consumeParseRuleStart(event.getTimestamp());
   }
 }

@@ -17,8 +17,7 @@
 package com.facebook.buck.testrunner;
 
 import com.facebook.buck.log.AppendableLogRecord;
-
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD can't depend on Guava
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,16 +34,14 @@ public class JulLogFormatter extends Formatter {
   private static final int DEBUG_LEVEL = Level.FINE.intValue();
   private static final int VERBOSE_LEVEL = Level.FINER.intValue();
   private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
-    new ThreadLocal<SimpleDateFormat>() {
+      new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
-            SimpleDateFormat format = new SimpleDateFormat(
-                "[yyyy-MM-dd HH:mm:ss.SSS]",
-                Locale.US);
-            format.setTimeZone(TimeZone.getDefault());
-            return format;
+          SimpleDateFormat format = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", Locale.US);
+          format.setTimeZone(TimeZone.getDefault());
+          return format;
         }
-    };
+      };
 
   @Override
   public String format(LogRecord record) {
@@ -53,18 +50,15 @@ public class JulLogFormatter extends Formatter {
     // We explicitly don't use String.format here because this code is very
     // performance-critical: http://stackoverflow.com/a/1281651
     long tid = record.getThreadID();
-    StringBuilder sb = new StringBuilder(timestamp)
-      .append(formatRecordLevel(record.getLevel()))
-      .append("[tid:");
+    StringBuilder sb =
+        new StringBuilder(timestamp).append(formatRecordLevel(record.getLevel())).append("[tid:");
     // Zero-pad on the left. We're currently assuming we have less than 100 threads.
     if (tid < 10) {
       sb.append("0").append(tid);
     } else {
       sb.append(tid);
     }
-    sb.append("][")
-      .append(record.getLoggerName())
-      .append("] ");
+    sb.append("][").append(record.getLoggerName()).append("] ");
     if (record instanceof AppendableLogRecord) {
       ((AppendableLogRecord) record).appendFormattedMessage(sb);
     } else {
@@ -77,10 +71,9 @@ public class JulLogFormatter extends Formatter {
       // try-with-resources (but oddly, it throws IOException, so we couldn't
       // use it in a try-with-resources if we wanted to).
       StringWriter sw = new StringWriter();
-      try (PrintWriter pw = new PrintWriter(sw)) {
+      try (PrintWriter pw = new PrintWriter(sw)) { // NOPMD can't depend on Guava
         t.printStackTrace(pw);
-        sb.append(sw)
-            .append("\n");
+        sb.append(sw).append("\n");
       }
     }
     return sb.toString();

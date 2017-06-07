@@ -19,31 +19,26 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class KotlinTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws Exception {
     KotlinTestAssumptions.assumeCompilerAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "kotlin_test_description", tmp);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_test_description", tmp);
     workspace.setUp();
   }
 
-  /**
-   * Tests that a Test Rule without any tests to run does not fail.
-   */
+  /** Tests that a Test Rule without any tests to run does not fail. */
   @Test
   public void emptyTestRule() throws IOException {
     ProjectWorkspace.ProcessResult result =

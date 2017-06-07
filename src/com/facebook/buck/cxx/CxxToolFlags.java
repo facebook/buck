@@ -20,63 +20,47 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import org.immutables.value.Value;
 
 /**
  * Tracks flags passed to the preprocessor or compiler.
  *
- * Flags derived from the "platform" are differentiated from flags derived from the "rule" to allow
- * for rule flags to override platform flags. This is particularly important when the platform and
- * rule flags from different sources are merged together.
+ * <p>Flags derived from the "platform" are differentiated from flags derived from the "rule" to
+ * allow for rule flags to override platform flags. This is particularly important when the platform
+ * and rule flags from different sources are merged together.
  *
- * Users should use the API in this class instead of the concrete implementations.
+ * <p>Users should use the API in this class instead of the concrete implementations.
  */
 public abstract class CxxToolFlags {
   private static final CxxToolFlags EMPTY_FLAGS = CxxToolFlags.explicitBuilder().build();
 
-  /**
-   * Flags that precede flags from {@code #getRuleFlags()}.
-   */
+  /** Flags that precede flags from {@code #getRuleFlags()}. */
   public abstract Iterable<String> getPlatformFlags();
 
-  /**
-   * Flags that succeed flags from {@code #getPlatformFlags()}.
-   */
+  /** Flags that succeed flags from {@code #getPlatformFlags()}. */
   public abstract Iterable<String> getRuleFlags();
 
-  /**
-   * Returns all flags in the appropriate order.
-   */
+  /** Returns all flags in the appropriate order. */
   public final Iterable<String> getAllFlags() {
     return Iterables.concat(getPlatformFlags(), getRuleFlags());
   }
 
-  /**
-   * Returns a builder for explicitly specifying the flags.
-   */
+  /** Returns a builder for explicitly specifying the flags. */
   public static ExplicitCxxToolFlags.Builder explicitBuilder() {
     return ExplicitCxxToolFlags.builder();
   }
 
-  /**
-   * Returns the empty lists of flags.
-   */
+  /** Returns the empty lists of flags. */
   public static CxxToolFlags of() {
     return EMPTY_FLAGS;
   }
 
-
-  /**
-   * Directly construct an instance from the given members.
-   */
+  /** Directly construct an instance from the given members. */
   public static CxxToolFlags copyOf(Iterable<String> platformFlags, Iterable<String> ruleFlags) {
     return ExplicitCxxToolFlags.of(platformFlags, ruleFlags);
   }
 
-  /**
-   * Concatenate multiple flags in a pairwise manner.
-   */
+  /** Concatenate multiple flags in a pairwise manner. */
   public static CxxToolFlags concat(CxxToolFlags... parts) {
     Iterable<String> platformFlags = ImmutableList.of();
     Iterable<String> ruleFlags = ImmutableList.of();
@@ -92,10 +76,7 @@ interface CxxToolFlagsBuilder {
   CxxToolFlags build();
 }
 
-
-/**
- * {@code CxxToolFlags} implementation where the flags are stored explicitly as lists.
- */
+/** {@code CxxToolFlags} implementation where the flags are stored explicitly as lists. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
@@ -118,7 +99,7 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
 /**
  * {@code CxxToolFlags} implementation where the flags are stored as composed Iterables.
  *
- * This improves sharing and reduce copying and memory pressure.
+ * <p>This improves sharing and reduce copying and memory pressure.
  */
 @Value.Immutable
 @BuckStyleTuple

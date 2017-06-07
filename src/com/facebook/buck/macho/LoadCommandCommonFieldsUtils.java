@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.google.common.primitives.UnsignedInteger;
-
 import java.nio.ByteBuffer;
 
 public class LoadCommandCommonFieldsUtils {
@@ -31,12 +30,11 @@ public class LoadCommandCommonFieldsUtils {
 
   /**
    * Writes a byte representation of the load command into the given buffer.
+   *
    * @param command LoadCommandCommonFields to write into the buffer.
    * @param buffer ByteBuffer, positioned and prepared to accept new data.
    */
   public static void writeCommandToBuffer(LoadCommandCommonFields command, ByteBuffer buffer) {
-    buffer
-        .putInt(command.getCmd().intValue())
-        .putInt(command.getCmdsize().intValue());
+    buffer.putInt(command.getCmd().intValue()).putInt(command.getCmdsize().intValue());
   }
 }

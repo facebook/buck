@@ -24,14 +24,11 @@ import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.Icon;
 
-/**
- * Run buck install command.
- */
+/** Run buck install command. */
 public class BuckInstallAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck install";
@@ -63,10 +60,8 @@ public class BuckInstallAction extends BuckBaseAction {
     if (state == null) {
       return;
     }
-    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
-        project,
-        project.getBaseDir(),
-        BuckCommand.INSTALL);
+    BuckBuildCommandHandler handler =
+        new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.INSTALL);
     if (state.customizedInstallSetting) {
       // Split the whole command line into different parameters.
       String commands = state.customizedInstallSettingCommand;

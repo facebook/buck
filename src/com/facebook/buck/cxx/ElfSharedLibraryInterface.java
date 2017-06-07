@@ -16,16 +16,19 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -34,31 +37,21 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-/**
- * Build a shared library interface from an ELF shared library.
- */
-class ElfSharedLibraryInterface
-    extends AbstractBuildRule
+/** Build a shared library interface from an ELF shared library. */
+class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
     implements SupportsInputBasedRuleKey {
 
   // We only care about sections relevant to dynamic linking.
   private static final ImmutableSet<String> SECTIONS =
       ImmutableSet.of(
-          ".dynamic",
-          ".dynsym",
-          ".dynstr",
-          ".gnu.version",
-          ".gnu.version_d",
-          ".gnu.version_r");
+          ".dynamic", ".dynsym", ".dynstr", ".gnu.version", ".gnu.version_d", ".gnu.version_r");
 
-  @AddToRuleKey
-  private final Tool objcopy;
+  private final SourcePathResolver pathResolver;
+  @AddToRuleKey private final Tool objcopy;
 
-  @AddToRuleKey
-  private final SourcePath input;
+  @AddToRuleKey private final SourcePath input;
 
   private ElfSharedLibraryInterface(
       BuildRuleParams buildRuleParams,
@@ -66,6 +59,7 @@ class ElfSharedLibraryInterface
       Tool objcopy,
       SourcePath input) {
     super(buildRuleParams, resolver);
+    this.pathResolver = resolver;
     this.objcopy = objcopy;
     this.input = input;
   }
@@ -74,17 +68,19 @@ class ElfSharedLibraryInterface
       BuildTarget target,
       BuildRuleParams baseParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Tool objcopy,
       SourcePath input) {
     return new ElfSharedLibraryInterface(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(objcopy.getDeps(resolver))
-                    .addAll(resolver.filterBuildRuleInputs(input))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams
+            .withBuildTarget(target)
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(objcopy.getDeps(ruleFinder))
+                        .addAll(ruleFinder.filterBuildRuleInputs(input))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         objcopy,
         input);
@@ -95,40 +91,40 @@ class ElfSharedLibraryInterface
   }
 
   private String getSharedAbiLibraryName() {
-    return getResolver().getRelativePath(input).getFileName().toString();
+    return pathResolver.getRelativePath(input).getFileName().toString();
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     Path output = getOutputDir().resolve(getSharedAbiLibraryName());
     buildableContext.recordArtifact(output);
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputDir()),
-        ElfExtractSectionsStep.of(
-            getProjectFilesystem(),
-            objcopy.getCommandPrefix(getResolver()),
-            getResolver().getAbsolutePath(input),
-            output,
-            SECTIONS),
-        ElfClearProgramHeadersStep.of(getProjectFilesystem(), output),
-        ElfSymbolTableScrubberStep.of(
-            getProjectFilesystem(),
-            output,
-            /* section */ ".dynsym",
-            /* allowMissing */ false),
-        ElfSymbolTableScrubberStep.of(
-            getProjectFilesystem(),
-            output,
-            /* section */ ".symtab",
-            /* allowMissing */ true),
-        ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output));
+    return new ImmutableList.Builder<Step>()
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())))
+        .add(
+            ElfExtractSectionsStep.of(
+                getProjectFilesystem(),
+                objcopy.getCommandPrefix(context.getSourcePathResolver()),
+                context.getSourcePathResolver().getAbsolutePath(input),
+                output,
+                SECTIONS))
+        .add(ElfClearProgramHeadersStep.of(getProjectFilesystem(), output))
+        .add(
+            ElfSymbolTableScrubberStep.of(
+                getProjectFilesystem(), output, /* section */ ".dynsym", /* allowMissing */ false))
+        .add(
+            ElfSymbolTableScrubberStep.of(
+                getProjectFilesystem(), output, /* section */ ".symtab", /* allowMissing */ true))
+        .add(ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output))
+        .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getOutputDir().resolve(getSharedAbiLibraryName());
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(), getOutputDir().resolve(getSharedAbiLibraryName()));
   }
-
 }

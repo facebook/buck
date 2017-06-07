@@ -16,51 +16,45 @@
 
 package com.facebook.buck.jvm.java;
 
-
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public class PrebuiltJarIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
-
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void outputIsPlacedInCorrectFolder() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
     assertTrue(Files.exists(output));
 
-    Path localPath = BuildTargets.getGenPath(
-        workspace.asCell().getFilesystem(),
-        BuildTargetFactory.newInstance("//:jar_from_gen"),
-        "");
+    Path localPath =
+        BuildTargets.getGenPath(
+            workspace.asCell().getFilesystem(),
+            BuildTargetFactory.newInstance("//:jar_from_gen"),
+            "");
     Path expectedRoot = workspace.resolve(localPath);
 
     assertTrue(output.startsWith(expectedRoot));
@@ -68,20 +62,19 @@ public class PrebuiltJarIntegrationTest {
 
   @Test
   public void testAbiKeyIsHashOfFileContents() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:jar");
+    BuildTarget abiTarget = target.withAppendedFlavors(HasJavaAbi.CLASS_ABI_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(target.getFullyQualifiedName());
 
-    result = workspace.runBuckBuild("//:jar");
+    result = workspace.runBuckBuild("//:depends_on_jar");
     result.assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetHadMatchingRuleKey(target.getFullyQualifiedName());
@@ -90,10 +83,8 @@ public class PrebuiltJarIntegrationTest {
     Path binaryJar = workspace.getPath("junit.jar");
     HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
     Path expectedOut =
-        BuildTargets.getGenPath(
-            new ProjectFilesystem(workspace.getDestPath()),
-            target,
-            "%s-abi.jar");
+        BuildTargets.getGenPath(new ProjectFilesystem(workspace.getDestPath()), abiTarget, "%s")
+            .resolve(String.format("%s-abi.jar", abiTarget.getShortName()));
     Path abiJar = workspace.getPath(expectedOut.toString());
     HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());
 
@@ -103,10 +94,8 @@ public class PrebuiltJarIntegrationTest {
 
   @Test
   public void testPrebuiltJarWrappingABinaryJarGeneratedByAGenrule() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
     assertTrue(Files.exists(output));
@@ -114,10 +103,8 @@ public class PrebuiltJarIntegrationTest {
 
   @Test
   public void testPrebuiltJarGenruleDirectory() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:jar_from_gen_dir");
     assertTrue(Files.exists(output));
@@ -128,10 +115,8 @@ public class PrebuiltJarIntegrationTest {
 
   @Test
   public void testPrebuiltJarRebuildsWhenItsInputsChange() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
     assertTrue(Files.exists(output));
@@ -146,10 +131,8 @@ public class PrebuiltJarIntegrationTest {
   @Test
   public void testPrebuiltJarDoesNotRebuildWhenDependentRulesChangeWhileProducingSameOutput()
       throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
     assertTrue(Files.exists(output));
@@ -162,12 +145,9 @@ public class PrebuiltJarIntegrationTest {
   }
 
   @Test
-  public void testPrebuiltJarRenamesExtensionButKeepsNameAndWarns()
-      throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "prebuilt",
-        temp);
+  public void testPrebuiltJarRenamesExtensionButKeepsNameAndWarns() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult processResult =
         workspace.runBuckBuild("//:jar_from_exported_zip");
@@ -176,6 +156,5 @@ public class PrebuiltJarIntegrationTest {
 
     Path output = workspace.buildAndReturnOutput("//:jar_from_exported_zip");
     assertThat(MorePaths.getFileExtension(output), Matchers.equalTo("jar"));
-
   }
 }

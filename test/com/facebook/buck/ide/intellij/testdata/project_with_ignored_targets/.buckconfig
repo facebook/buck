@@ -1,0 +1,4 @@
+[intellij]
+  ignored_target_labels = ignore_in_intellij
+[project]
+  ide = intellij

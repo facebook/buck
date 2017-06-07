@@ -16,17 +16,28 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
-
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxPlatformUtils {
@@ -39,32 +50,20 @@ public class CxxPlatformUtils {
   private static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 
   private static final PreprocessorProvider DEFAULT_PREPROCESSOR_PROVIDER =
-      new PreprocessorProvider(
-          new ConstantToolProvider(DEFAULT_TOOL),
-          CxxToolProvider.Type.GCC);
+      new PreprocessorProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC);
 
   private static final CompilerProvider DEFAULT_COMPILER_PROVIDER =
-      new CompilerProvider(
-          new ConstantToolProvider(DEFAULT_TOOL),
-          CxxToolProvider.Type.GCC);
+      new CompilerProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC);
 
   static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
-      new MungingDebugPathSanitizer(
-          250,
-          File.separatorChar,
-          Paths.get("."),
-          ImmutableBiMap.of());
+      new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
   static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
-      new MungingDebugPathSanitizer(
-          250,
-          File.separatorChar,
-          Paths.get("."),
-          ImmutableBiMap.of());
+      new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
-          .setFlavor(ImmutableFlavor.of("platform"))
+          .setFlavor(InternalFlavor.of("platform"))
           .setAs(DEFAULT_COMPILER_PROVIDER)
           .setAspp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setCc(DEFAULT_COMPILER_PROVIDER)
@@ -77,8 +76,7 @@ public class CxxPlatformUtils {
           .setAsmpp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setLd(
               new DefaultLinkerProvider(
-                  LinkerProvider.Type.GNU,
-                  new ConstantToolProvider(DEFAULT_TOOL)))
+                  LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL)))
           .setStrip(DEFAULT_TOOL)
           .setAr(new GnuArchiver(DEFAULT_TOOL))
           .setRanlib(DEFAULT_TOOL)
@@ -89,6 +87,9 @@ public class CxxPlatformUtils {
           .setObjectFileExtension("o")
           .setCompilerDebugPathSanitizer(DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
           .setAssemblerDebugPathSanitizer(DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
+          .setHeaderVerification(DEFAULT_CONFIG.getHeaderVerification())
+          .setPublicHeadersSymlinksEnabled(true)
+          .setPrivateHeadersSymlinksEnabled(true)
           .build();
 
   public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =
@@ -96,5 +97,30 @@ public class CxxPlatformUtils {
 
   public static CxxPlatform build(CxxBuckConfig config) {
     return DefaultCxxPlatforms.build(Platform.detect(), new FakeProjectFilesystem(), config);
+  }
+
+  private static CxxPlatform getDefaultPlatform(Path root)
+      throws InterruptedException, IOException {
+    Config rawConfig = Configs.createDefaultConfig(root);
+    BuckConfig buckConfig =
+        new BuckConfig(
+            rawConfig,
+            new ProjectFilesystem(root),
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.of(),
+            new DefaultCellPathResolver(root, rawConfig));
+    return DefaultCxxPlatforms.build(
+        Platform.detect(), new ProjectFilesystem(root), new CxxBuckConfig(buckConfig));
+  }
+
+  public static CxxPreprocessables.HeaderMode getHeaderModeForDefaultPlatform(Path root)
+      throws InterruptedException, IOException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    CxxPlatform defaultPlatform = getDefaultPlatform(root);
+    return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
+        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+        : CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY;
   }
 }

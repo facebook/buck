@@ -24,16 +24,13 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.SystemNotifications;
-
-import org.jetbrains.annotations.NotNull;
-
 import javax.swing.event.HyperlinkEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class BuckPluginNotifications {
   private static final String GROUP_DISPLAY_ID = "BuckNotification";
 
-  private BuckPluginNotifications() {
-  }
+  private BuckPluginNotifications() {}
 
   public static void notifyActionToolbar(final Project project) {
     if (!PropertiesComponent.getInstance().isValueSet(GROUP_DISPLAY_ID)) {
@@ -41,15 +38,14 @@ public class BuckPluginNotifications {
           new Notification(
               GROUP_DISPLAY_ID,
               "Buck Plugin",
-              "<html><a href=''>Enable</a> the toolbar to easily access the buck plugin actions." +
-                  "<br>You can enable/disable it at any time by pressing on View > Toolbar " +
-                  "in the menu.</html>",
+              "<html><a href=''>Enable</a> the toolbar to easily access the buck plugin actions."
+                  + "<br>You can enable/disable it at any time by pressing on View > Toolbar "
+                  + "in the menu.</html>",
               NotificationType.INFORMATION,
               new NotificationListener() {
                 @Override
                 public void hyperlinkUpdate(
-                    @NotNull Notification notification,
-                    @NotNull HyperlinkEvent hyperlinkEvent) {
+                    @NotNull Notification notification, @NotNull HyperlinkEvent hyperlinkEvent) {
                   BuckToolWindowFactory.showMainToolbar(project);
                 }
               }),
@@ -59,9 +55,10 @@ public class BuckPluginNotifications {
   }
 
   public static void notifySystemCommandFinished(String commandName, boolean processExitStatus) {
-    SystemNotifications.getInstance().notify(
-        GROUP_DISPLAY_ID,
-        StringUtil.capitalize(commandName) + " Finished",
-        processExitStatus ? "Successful" : "Failed");
+    SystemNotifications.getInstance()
+        .notify(
+            GROUP_DISPLAY_ID,
+            StringUtil.capitalize(commandName) + " Finished",
+            processExitStatus ? "Successful" : "Failed");
   }
 }

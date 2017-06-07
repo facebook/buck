@@ -1,0 +1,9 @@
+prebuilt_jar(
+    name = "diffutils",
+    binary_jar = "diffutils-1.3.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "diffutils-1.3.0-sources.jar",
+    visibility = ["PUBLIC"],
+)

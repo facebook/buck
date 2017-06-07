@@ -157,6 +157,14 @@ cxx_binary(
 )
 
 cxx_binary(
+  name = 'untracked_header_with_prefix_header',
+  prefix_header = 'untracked_header.pch',
+  srcs = [
+    'untracked_header.cpp',
+  ],
+)
+
+cxx_binary(
   name = 'binary_with_used_relative_parent_header',
   headers = [
     'source_relative_parent_header.h',
@@ -176,4 +184,16 @@ cxx_library(
   ],
   xcode_public_headers_symlinks = False,
   xcode_private_headers_symlinks = False,
+)
+
+apple_test(
+  name = 'with_xctest',
+  srcs = [
+    'apple_test.m',
+  ],
+  info_plist = 'Test.plist',
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+  ],
 )

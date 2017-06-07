@@ -16,10 +16,11 @@
 
 package com.android.dx.rop.type;
 
+import com.android.dx.command.dexer.Main;
 import com.android.dx.util.Hex;
 import com.google.common.collect.MapMaker;
 
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Representation of a value type, such as may appear in a field, in a
@@ -29,13 +30,16 @@ import java.util.Map;
  */
 public final class Type implements TypeBearer, Comparable<Type> {
     /**
-     * {@code non-null;} intern table mapping string descriptors to
-     * instances
+     * Intern table for instances.
+     *
+     * <p>The initial capacity is based on a medium-size project.
      */
-    private static final Map<String, Type> internTable =
-        new MapMaker()
+    private static final ConcurrentMap<String, Type> internTable = new MapMaker()
+            .concurrencyLevel(Main.CONCURRENCY_LEVEL)
+            .initialCapacity(10_000)
             .weakValues()
             .makeMap();
+
 
     /** basic type constant for {@code void} */
     public static final int BT_VOID = 0;
@@ -295,10 +299,8 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * invalid syntax
      */
     public static Type intern(String descriptor) {
-        Type result;
-        synchronized (internTable) {
-            result = internTable.get(descriptor);
-        }
+        Type result = internTable.get(descriptor);
+
         if (result != null) {
             return result;
         }
@@ -488,6 +490,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int compareTo(Type other) {
         return descriptor.compareTo(other.descriptor);
     }
@@ -499,6 +502,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toHuman() {
         switch (basicType) {
             case BT_VOID:    return "void";
@@ -523,11 +527,13 @@ public final class Type implements TypeBearer, Comparable<Type> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public Type getType() {
         return this;
     }
 
     /** {@inheritDoc} */
+    @Override
     public Type getFrameType() {
         switch (basicType) {
             case BT_BOOLEAN:
@@ -543,11 +549,13 @@ public final class Type implements TypeBearer, Comparable<Type> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getBasicType() {
         return basicType;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getBasicFrameType() {
         switch (basicType) {
             case BT_BOOLEAN:
@@ -563,6 +571,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean isConstant() {
         return false;
     }
@@ -852,14 +861,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * @return {@code non-null;} the actual interned object
      */
     private static Type putIntern(Type type) {
-        synchronized (internTable) {
-            String descriptor = type.getDescriptor();
-            Type already = internTable.get(descriptor);
-            if (already != null) {
-                return already;
-            }
-            internTable.put(descriptor, type);
-            return type;
-        }
+        Type result = internTable.putIfAbsent(type.getDescriptor(), type);
+        return result != null ? result : type;
     }
 }

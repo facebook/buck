@@ -16,27 +16,26 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.google.common.collect.Sets;
-
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Generator for Global ID (GID) which are present on every xcode project object.
  *
- * The GID is a 96 bit identifier that's unique on a per-project basis.
+ * <p>The GID is a 96 bit identifier that's unique on a per-project basis.
  */
 public class GidGenerator {
   private final Set<String> generatedAndReservedIds;
 
-  public GidGenerator(Set<String> reservedIds) {
-    generatedAndReservedIds = Sets.newHashSet(reservedIds);
+  public GidGenerator() {
+    generatedAndReservedIds = new HashSet<>();
   }
 
   /**
    * Generate a stable GID based on the class name and hash of some object info.
    *
-   * GIDs generated this way will be in the form of
-   *  {@code <class-name-hash-32> <obj-hash-32> <counter-32>}
+   * <p>GIDs generated this way will be in the form of {@code <class-name-hash-32> <obj-hash-32>
+   * <counter-32>}
    */
   public String generateGid(String pbxClassName, int hash) {
     int counter = 0;

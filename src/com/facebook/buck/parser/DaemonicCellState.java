@@ -23,19 +23,21 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
-
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.concurrent.GuardedBy;
 
 class DaemonicCellState {
@@ -49,27 +51,24 @@ class DaemonicCellState {
         new ConcurrentMapCache<>(parsingThreads);
 
     @Override
-    public Optional<T> lookupComputedNode(
-        Cell cell,
-        BuildTarget target) throws BuildTargetException {
+    public Optional<T> lookupComputedNode(Cell cell, BuildTarget target)
+        throws BuildTargetException {
       try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
         return Optional.ofNullable(allComputedNodes.getIfPresent(target));
       }
     }
 
     @Override
-    public T putComputedNodeIfNotPresent(
-        Cell cell,
-        BuildTarget target,
-        T targetNode) throws BuildTargetException {
+    public T putComputedNodeIfNotPresent(Cell cell, BuildTarget target, T targetNode)
+        throws BuildTargetException {
       try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
+        Preconditions.checkState(
+            allRawNodeTargets.contains(target.getUnflavoredBuildTarget()),
+            "Added %s to computed nodes, which isn't present in raw nodes",
+            target);
         if (updatedNode.equals(targetNode)) {
-          if (cell.getBuckConfig().getView(ParserConfig.class).getTrackCellAgnosticTarget()) {
-            targetsCornucopia.put(target.withoutCell().getUnflavoredBuildTarget(), target);
-          } else {
-            targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
-          }
+          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
         }
         return updatedNode;
       }
@@ -77,19 +76,25 @@ class DaemonicCellState {
   }
 
   private final Path cellRoot;
-  private Cell cell;
+  private final Optional<String> cellCanonicalName;
+  private AtomicReference<Cell> cell;
 
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
+
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
-  @GuardedBy("rawAndComputedNodesLock")
-  private final Map<Path, ImmutableMap<String, ImmutableMap<String, Optional<String>>>>
-      buildFileConfigs;
+
   @GuardedBy("rawAndComputedNodesLock")
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
+
   @GuardedBy("rawAndComputedNodesLock")
   private final ConcurrentMapCache<Path, ImmutableSet<Map<String, Object>>> allRawNodes;
+  // Tracks all targets in `allRawNodes`.  Used to verify that every target in `allComputedNodes`
+  // is also in `allRawNodes`, as we use the latter for bookkeeping invalidations.
+  @GuardedBy("rawAndComputedNodesLock")
+  private final Set<UnflavoredBuildTarget> allRawNodeTargets;
+
   @GuardedBy("rawAndComputedNodesLock")
   private final ConcurrentMap<Class<?>, CacheImpl<?>> typedNodeCaches;
 
@@ -97,21 +102,22 @@ class DaemonicCellState {
   private final int parsingThreads;
 
   DaemonicCellState(Cell cell, int parsingThreads) {
-    this.cell = cell;
+    this.cell = new AtomicReference<>(cell);
     this.parsingThreads = parsingThreads;
     this.cellRoot = cell.getRoot();
+    this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
     this.targetsCornucopia = HashMultimap.create();
-    this.buildFileConfigs = new HashMap<>();
     this.buildFileEnv = new HashMap<>();
     this.allRawNodes = new ConcurrentMapCache<>(parsingThreads);
+    this.allRawNodeTargets = new HashSet<>();
     this.typedNodeCaches = Maps.newConcurrentMap();
     this.rawAndComputedNodesLock = new AutoCloseableReadWriteUpdateLock();
   }
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
   Cell getCell() {
-    return cell;
+    return Preconditions.checkNotNull(cell.get());
   }
 
   Path getCellRoot() {
@@ -149,12 +155,15 @@ class DaemonicCellState {
       final Path buildFile,
       final ImmutableSet<Map<String, Object>> withoutMetaIncludes,
       final ImmutableSet<Path> dependentsOfEveryNode,
-      ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       ImmutableSet<Map<String, Object>> updated =
           allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
-      buildFileConfigs.put(buildFile, configs);
+      for (Map<String, Object> node : updated) {
+        allRawNodeTargets.add(
+            RawNodeParsePipeline.parseBuildTargetFromRawRule(
+                cellRoot, cellCanonicalName, node, buildFile));
+      }
       buildFileEnv.put(buildFile, env);
       if (updated == withoutMetaIncludes) {
         // We now know all the nodes. They all implicitly depend on everything in
@@ -176,12 +185,14 @@ class DaemonicCellState {
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes) {
           UnflavoredBuildTarget target =
-              RawNodeParsePipeline.parseBuildTargetFromRawRule(cell.getRoot(), rawNode, path);
+              RawNodeParsePipeline.parseBuildTargetFromRawRule(
+                  cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
           for (CacheImpl<?> cache : typedNodeCaches.values()) {
             cache.allComputedNodes.invalidateAll(targetsCornucopia.get(target));
           }
           targetsCornucopia.removeAll(target);
+          allRawNodeTargets.remove(target);
         }
         allRawNodes.invalidate(path);
       }
@@ -196,61 +207,37 @@ class DaemonicCellState {
         invalidatedRawNodes += invalidatePath(dependent);
       }
       buildFileDependents.removeAll(path);
-      buildFileConfigs.remove(path);
       buildFileEnv.remove(path);
 
       return invalidatedRawNodes;
     }
   }
 
-  void invalidateIfBuckConfigHasChanged(Cell cell, Path buildFile) {
-    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-      // TODO(mzlee): Check whether usedConfigs includes the buildFileName
-      ImmutableMap<String, ImmutableMap<String, Optional<String>>> usedConfigs =
-          buildFileConfigs.get(buildFile);
-      if (usedConfigs == null) {
-        // TODO(mzlee): Figure out when/how we can safely update this
-        this.cell = cell;
-        return;
-      }
-      for (Map.Entry<String, ImmutableMap<String, Optional<String>>> keyEnt :
-             usedConfigs.entrySet()) {
-        for (Map.Entry<String, Optional<String>> valueEnt : keyEnt.getValue().entrySet()) {
-          Optional<String> value =
-              cell.getBuckConfig().getValue(keyEnt.getKey(), valueEnt.getKey());
-          if (!value.equals(valueEnt.getValue())) {
-            invalidatePath(buildFile);
-            this.cell = cell;
-            return;
-          }
-        }
-      }
-    }
-  }
-
   Optional<MapDifference<String, String>> invalidateIfEnvHasChanged(Cell cell, Path buildFile) {
-    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-      // Invalidate if env vars have changed.
-      ImmutableMap<String, Optional<String>> usedEnv = buildFileEnv.get(buildFile);
-      if (usedEnv == null) {
-        this.cell = cell;
-        return Optional.empty();
-      }
-      for (Map.Entry<String, Optional<String>> ent : usedEnv.entrySet()) {
-        Optional<String> value =
-            Optional.ofNullable(cell.getBuckConfig().getEnvironment().get(ent.getKey()));
-        if (!value.equals(ent.getValue())) {
-          invalidatePath(buildFile);
-          this.cell = cell;
-          return Optional.of(
-              Maps.difference(
-                  value.map(v -> ImmutableMap.of(ent.getKey(), v)).orElse(ImmutableMap.of()),
-                  ent.getValue()
-                      .map(v -> ImmutableMap.of(ent.getKey(), v)).orElse(ImmutableMap.of())));
-        }
-      }
+    // Invalidate if env vars have changed.
+    ImmutableMap<String, Optional<String>> usedEnv;
+    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+      usedEnv = buildFileEnv.get(buildFile);
+    }
+    if (usedEnv == null) {
+      this.cell.set(cell);
       return Optional.empty();
     }
+    for (Map.Entry<String, Optional<String>> ent : usedEnv.entrySet()) {
+      Optional<String> value =
+          Optional.ofNullable(cell.getBuckConfig().getEnvironment().get(ent.getKey()));
+      if (!value.equals(ent.getValue())) {
+        LOG.verbose("invalidating for env change: %s (%s != %s)", buildFile, value, ent.getValue());
+        invalidatePath(buildFile);
+        this.cell.set(cell);
+        return Optional.of(
+            Maps.difference(
+                value.map(v -> ImmutableMap.of(ent.getKey(), v)).orElse(ImmutableMap.of()),
+                ent.getValue()
+                    .map(v -> ImmutableMap.of(ent.getKey(), v))
+                    .orElse(ImmutableMap.of())));
+      }
+    }
+    return Optional.empty();
   }
-
 }

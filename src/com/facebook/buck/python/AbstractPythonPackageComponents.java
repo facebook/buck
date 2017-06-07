@@ -18,24 +18,26 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
@@ -43,11 +45,11 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
   private static final PythonPackageComponents EMPTY =
       PythonPackageComponents.of(
-        /* modules */ ImmutableMap.of(),
-        /* resources */ ImmutableMap.of(),
-        /* nativeLibraries */ ImmutableMap.of(),
-        /* prebuiltLibraries */ ImmutableSet.of(),
-        /* zipSafe */ Optional.empty());
+          /* modules */ ImmutableMap.of(),
+          /* resources */ ImmutableMap.of(),
+          /* nativeLibraries */ ImmutableMap.of(),
+          /* prebuiltLibraries */ ImmutableSet.of(),
+          /* zipSafe */ Optional.empty());
 
   // Python modules as map of their module name to location of the source.
   @Value.Parameter
@@ -73,22 +75,22 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
-    // TODO(andrewjcg): Change the types of these fields from Map to SortedMap so that we don't
+    // TODO(agallagher): Change the types of these fields from Map to SortedMap so that we don't
     // have to do all this weird stuff to ensure the key is stable. Please update
     // getInputsToCompareToOutput() as well once this is fixed.
-    for (ImmutableMap.Entry<String, Map<Path, SourcePath>> part : ImmutableMap.of(
-        "module", getModules(),
-        "resource", getResources(),
-        "nativeLibraries", getNativeLibraries()).entrySet()) {
+    for (ImmutableMap.Entry<String, Map<Path, SourcePath>> part :
+        ImmutableMap.of(
+                "module", getModules(),
+                "resource", getResources(),
+                "nativeLibraries", getNativeLibraries())
+            .entrySet()) {
       for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
         sink.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
       }
     }
   }
 
-  /**
-   * @return whether there are any native libraries included in these components.
-   */
+  /** @return whether there are any native libraries included in these components. */
   public boolean hasNativeCode(CxxPlatform cxxPlatform) {
     for (Path module : getModules().keySet()) {
       if (module.toString().endsWith(cxxPlatform.getSharedLibraryExtension())) {
@@ -102,9 +104,18 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     return EMPTY;
   }
 
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getModules().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getResources().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getPrebuiltLibraries()));
+    return deps.build();
+  }
+
   /**
-   * A helper class to construct a PythonPackageComponents instance which
-   * throws human readable error messages on duplicates.
+   * A helper class to construct a PythonPackageComponents instance which throws human readable
+   * error messages on duplicates.
    */
   public static class Builder {
 
@@ -130,10 +141,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     }
 
     private HumanReadableException createDuplicateError(
-        String type,
-        Path destination,
-        BuildTarget sourceA,
-        BuildTarget sourceB) {
+        String type, Path destination, BuildTarget sourceA, BuildTarget sourceB) {
       return new HumanReadableException(
           "%s: found duplicate entries for %s %s when creating python package (%s and %s)",
           owner, type, destination, sourceA, sourceB);
@@ -184,12 +192,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
     public Builder addNativeLibraries(Path destination, SourcePath source, BuildTarget from) {
       return add(
-          "native library",
-          nativeLibraries,
-          nativeLibrarySources,
-          destination,
-          source,
-          from);
+          "native library", nativeLibraries, nativeLibrarySources, destination, source, from);
     }
 
     public Builder addNativeLibraries(Map<Path, SourcePath> sources, BuildTarget from) {
@@ -227,7 +230,5 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
           ImmutableSet.copyOf(prebuiltLibraries),
           zipSafe);
     }
-
   }
-
 }

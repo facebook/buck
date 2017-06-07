@@ -18,10 +18,8 @@ package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.google.common.base.Charsets;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -32,12 +30,8 @@ final class SymbolExtractor {
   private SymbolExtractor() {}
 
   public static Symbols extractSymbols(
-      JavaFileParser javaFileParser,
-      boolean shouldRecordRequiredSymbols,
-      ImmutableSortedSet<Path> absolutePaths) {
+      JavaFileParser javaFileParser, ImmutableSortedSet<Path> absolutePaths) {
     Set<String> providedSymbols = new HashSet<>();
-    Set<String> requiredSymbols = new HashSet<>();
-    Set<String> exportedSymbols = new HashSet<>();
 
     for (Path src : absolutePaths) {
       String code;
@@ -47,25 +41,10 @@ final class SymbolExtractor {
         throw new RuntimeException(e);
       }
 
-      JavaFileParser.JavaFileFeatures features = javaFileParser
-          .extractFeaturesFromJavaCode(code);
-      if (shouldRecordRequiredSymbols) {
-        requiredSymbols.addAll(features.requiredSymbols);
-        exportedSymbols.addAll(features.exportedSymbols);
-      }
-
+      JavaFileParser.JavaFileFeatures features = javaFileParser.extractFeaturesFromJavaCode(code);
       providedSymbols.addAll(features.providedSymbols);
     }
 
-    return new Symbols(
-        providedSymbols,
-        FluentIterable.from(requiredSymbols).filter(SymbolExtractor::isNotABuiltInSymbol),
-        FluentIterable.from(exportedSymbols).filter(SymbolExtractor::isNotABuiltInSymbol));
-  }
-
-  private static boolean isNotABuiltInSymbol(String symbol) {
-    // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
-    // provided by JSRs.
-    return !symbol.startsWith("java.");
+    return new Symbols(providedSymbols);
   }
 }

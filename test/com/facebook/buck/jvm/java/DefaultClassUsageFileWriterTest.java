@@ -17,20 +17,24 @@
 package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.testutil.JsonMatcher;
+import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
-
-import org.junit.Test;
-
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import org.junit.Test;
 
 public class DefaultClassUsageFileWriterTest {
 
@@ -41,10 +45,10 @@ public class DefaultClassUsageFileWriterTest {
   private static final String[] FILE_NAMES = {"A", "B", "C", "D", "E", "F"};
   private static final String SINGLE_NON_JAVA_FILE_NAME = "NonJava";
 
-
   @Test
   public void fileReadOrderDoesntAffectClassesUsedOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     Path testJarPath = filesystem.getPathForRelativePath("test.jar");
     Path testTwoJarPath = filesystem.getPathForRelativePath("test2.jar");
 
@@ -63,7 +67,6 @@ public class DefaultClassUsageFileWriterTest {
       fakeFileManager.addFile(testTwoJarPath, fileName, JavaFileObject.Kind.CLASS);
     }
 
-
     DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter(outputOne);
     {
       StandardJavaFileManager wrappedFileManager = writerOne.wrapFileManager(fakeFileManager);
@@ -71,8 +74,7 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
-    writerOne.writeFile(filesystem, ObjectMappers.newDefaultInstance());
-
+    writerOne.writeFile(filesystem, cellPathResolver);
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter(outputTwo);
     {
@@ -82,10 +84,59 @@ public class DefaultClassUsageFileWriterTest {
         javaFileObject.openInputStream();
       }
     }
-    writerTwo.writeFile(filesystem, ObjectMappers.newDefaultInstance());
+    writerTwo.writeFile(filesystem, cellPathResolver);
 
     assertEquals(
+        new String(Files.readAllBytes(outputOne)), new String(Files.readAllBytes(outputTwo)));
+  }
+
+  @Test
+  public void classUsageFileWriterHandlesCrossCell() throws IOException {
+    ProjectFilesystem homeFs = FakeProjectFilesystem.createRealTempFilesystem();
+    ProjectFilesystem awayFs = FakeProjectFilesystem.createRealTempFilesystem();
+    ProjectFilesystem externalFs = FakeProjectFilesystem.createRealTempFilesystem();
+
+    CellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(
+            homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath()));
+    Path testJarPath = homeFs.getPathForRelativePath("home.jar");
+    Path testTwoJarPath = awayFs.getPathForRelativePath("away.jar");
+    Path externalJarPath = externalFs.getPathForRelativePath("external.jar");
+
+    Path outputOne = homeFs.getPathForRelativePath("used-classes-one.json");
+
+    FakeStandardJavaFileManager fakeFileManager = new FakeStandardJavaFileManager();
+    fakeFileManager.addFile(testJarPath, "HomeCellClass", JavaFileObject.Kind.CLASS);
+    fakeFileManager.addFile(testTwoJarPath, "AwayCellClass", JavaFileObject.Kind.CLASS);
+    fakeFileManager.addFile(externalJarPath, "ExternalClass", JavaFileObject.Kind.CLASS);
+
+    DefaultClassUsageFileWriter writer = new DefaultClassUsageFileWriter(outputOne);
+    {
+      StandardJavaFileManager wrappedFileManager = writer.wrapFileManager(fakeFileManager);
+      for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
+        javaFileObject.openInputStream();
+      }
+    }
+    writer.writeFile(homeFs, cellPathResolver);
+
+    // The xcell file should appear relative to the "home" filesystem, and the external class
+    // which is not under any cell in the project should not appear at all.
+    Path expectedAwayCellPath =
+        homeFs
+            .getRootPath()
+            .getRoot()
+            .resolve("AwayCell")
+            .resolve(awayFs.relativize(testTwoJarPath));
+    Escaper.Quoter quoter =
+        Platform.detect() == Platform.WINDOWS
+            ? Escaper.Quoter.DOUBLE_WINDOWS_JAVAC
+            : Escaper.Quoter.DOUBLE;
+    final String escapedExpectedAwayCellPath = quoter.quote(expectedAwayCellPath.toString());
+    assertThat(
         new String(Files.readAllBytes(outputOne)),
-        new String(Files.readAllBytes(outputTwo)));
+        new JsonMatcher(
+            String.format(
+                "{" + "\"home.jar\": [\"HomeCellClass\"], %s: [ \"AwayCellClass\" ]" + "}",
+                escapedExpectedAwayCellPath)));
   }
 }

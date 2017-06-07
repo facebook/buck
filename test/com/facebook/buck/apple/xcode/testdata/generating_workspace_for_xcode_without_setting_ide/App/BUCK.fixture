@@ -1,7 +1,0 @@
-
-apple_binary(
-  name = 'TestAppBinary',
-  srcs = [],
-  frameworks = [],
-  deps = [],
-)

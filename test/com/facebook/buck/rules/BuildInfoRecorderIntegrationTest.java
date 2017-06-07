@@ -21,26 +21,23 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
+import org.junit.Test;
 
 public class BuildInfoRecorderIntegrationTest {
   private static final String RULE_KEY = Strings.repeat("a", 40);
@@ -49,42 +46,39 @@ public class BuildInfoRecorderIntegrationTest {
 
   @Test
   public void testPerformUploadToArtifactCache() throws IOException, InterruptedException {
-    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(
-        new FakeProjectFilesystem() {
-            @Override
-            public void createZip(
-                Collection<Path> pathsToIncludeInZip,
-                Path out,
-                ImmutableMap<Path, String> additionalFileContents) throws IOException {
-              // For this test, nothing really cares about the content, so just write out the name.
-              writeBytesToPath(out.toString().getBytes(), out);
-            }
-        });
+    BuildInfoRecorder buildInfoRecorder =
+        createBuildInfoRecorder(
+            new FakeProjectFilesystem() {
+              @Override
+              public void createZip(Collection<Path> pathsToIncludeInZip, Path out)
+                  throws IOException {
+                // For this test, nothing really cares about the content, so just write out the name.
+                writeBytesToPath(out.toString().getBytes(), out);
+              }
+            });
     Path cacheDir = Files.createTempDirectory("root");
-    ArtifactCache artifactCache = TestArtifactCaches
-        .createDirCacheForTest(cacheDir, Paths.get("cache"));
+    ArtifactCache artifactCache =
+        TestArtifactCaches.createDirCacheForTest(cacheDir, Paths.get("cache"));
     buildInfoRecorder.performUploadToArtifactCache(
         ImmutableSet.of(new RuleKey(RULE_KEY)),
         artifactCache,
-        new BuckEventBus(new DefaultClock(), new BuildId()));
+        new DefaultBuckEventBus(new DefaultClock(), new BuildId()));
     assertTrue(
-        cacheDir.resolve(
-            DirArtifactCacheTestUtil
-                .getPathForRuleKey(
-                    artifactCache,
-                    new RuleKey(RULE_KEY),
-                    Optional.empty()))
-        .toFile()
-        .exists());
+        cacheDir
+            .resolve(
+                DirArtifactCacheTestUtil.getPathForRuleKey(
+                    artifactCache, new RuleKey(RULE_KEY), Optional.empty()))
+            .toFile()
+            .exists());
   }
 
   private static BuildInfoRecorder createBuildInfoRecorder(ProjectFilesystem filesystem) {
     return new BuildInfoRecorder(
         BUILD_TARGET,
         filesystem,
+        new FilesystemBuildInfoStore(filesystem),
         new DefaultClock(),
         new BuildId(),
-        ObjectMappers.newDefaultInstance(),
         ImmutableMap.of());
   }
 }

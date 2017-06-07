@@ -16,9 +16,11 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -30,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,6 +41,7 @@ import java.util.Map;
 public class SrcZipAwareFileBundler {
 
   private final Path basePath;
+
   public SrcZipAwareFileBundler(BuildTarget target) {
     this(target.getBasePath());
   }
@@ -62,8 +64,8 @@ public class SrcZipAwareFileBundler {
     }
 
     if (relativePathMap.containsKey(pathRelativeToBaseDir)) {
-      throw new HumanReadableException("The file '%s' appears twice in the hierarchy",
-          pathRelativeToBaseDir.getFileName());
+      throw new HumanReadableException(
+          "The file '%s' appears twice in the hierarchy", pathRelativeToBaseDir.getFileName());
     }
     relativePathMap.put(pathRelativeToBaseDir, absoluteFilePath);
   }
@@ -85,10 +87,7 @@ public class SrcZipAwareFileBundler {
             Path absoluteFilePath = filesystem.resolve(file);
 
             findAndAddRelativePathToMap(
-                absoluteFilePath,
-                file,
-                absoluteBasePathParent,
-                relativePathMap);
+                absoluteFilePath, file, absoluteBasePathParent, relativePathMap);
           }
         } else {
           findAndAddRelativePathToMap(
@@ -108,26 +107,30 @@ public class SrcZipAwareFileBundler {
 
   public void copy(
       ProjectFilesystem filesystem,
-      final SourcePathResolver resolver,
+      BuildContext context,
       ImmutableList.Builder<Step> steps,
       Path destinationDir,
       ImmutableSortedSet<SourcePath> toCopy) {
 
-    Map<Path, Path> relativeMap = createRelativeMap(filesystem, resolver, toCopy);
+    Map<Path, Path> relativeMap =
+        createRelativeMap(filesystem, context.getSourcePathResolver(), toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
       Path absolutePath = Preconditions.checkNotNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
 
-      if (relativePath.toString().endsWith(Javac.SRC_ZIP) ||
-          relativePath.toString().endsWith(Javac.SRC_JAR)) {
+      if (relativePath.toString().endsWith(Javac.SRC_ZIP)
+          || relativePath.toString().endsWith(Javac.SRC_JAR)) {
         steps.add(new UnzipStep(filesystem, absolutePath, destination.getParent()));
         continue;
       }
 
       if (destination.getParent() != null) {
-        steps.add(new MkdirStep(filesystem, destination.getParent()));
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), filesystem, destination.getParent())));
       }
       steps.add(CopyStep.forFile(filesystem, absolutePath, destination));
     }

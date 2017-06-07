@@ -1,0 +1,10 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  exclude_artifacts = true
+[intellij]
+  generated_sources_label_map = guava_generated_sources => %name%__guava__

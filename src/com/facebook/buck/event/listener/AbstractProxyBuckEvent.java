@@ -17,13 +17,11 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
 /**
- * Proxy events are used by the logging system when we need to slice a
- * {@link com.facebook.buck.event.BuckEvent} in half in order to calculate
- * time elapsed.
+ * Proxy events are used by the logging system when we need to slice a {@link
+ * com.facebook.buck.event.BuckEvent} in half in order to calculate time elapsed.
  */
 @Value.Immutable
 @BuckStyleImmutable
@@ -37,4 +35,3 @@ abstract class AbstractProxyBuckEvent implements BuckEventExternalInterface {
     return "Proxy BuckEvent";
   }
 }
-

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -32,12 +33,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.easymock.EasyMockSupport;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,10 +43,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.easymock.EasyMockSupport;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ProGuardObfuscateStepTest extends EasyMockSupport {
-  @Rule
-  public final TemporaryPaths tmpDir = new TemporaryPaths();
+  @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   private ExecutionContext executionContext;
 
@@ -59,15 +57,15 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   public void setUp() {
     final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
-    expect(androidPlatformTarget
-        .getOptimizedProguardConfig())
+    expect(androidPlatformTarget.getOptimizedProguardConfig())
         .andStubReturn(Paths.get("sdk-optimized.pro"));
     expect(androidPlatformTarget.getBootclasspathEntries()).andStubReturn(ImmutableList.of());
     expect(androidPlatformTarget.getProguardJar()).andStubReturn(Paths.get("proguard.jar"));
     replay(androidPlatformTarget);
-    executionContext = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(() -> androidPlatformTarget)
-        .build();
+    executionContext =
+        TestExecutionContext.newBuilder()
+            .setAndroidPlatformTargetSupplier(() -> androidPlatformTarget)
+            .build();
 
     assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
   }
@@ -94,17 +92,26 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   public void testSdkConfigArgs() {
     Path cwd = Paths.get("root");
 
-    checkSdkConfig(executionContext, cwd, ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        Optional.empty(), "sdk-default.pro");
+    checkSdkConfig(
+        executionContext,
+        cwd,
+        ProGuardObfuscateStep.SdkProguardType.DEFAULT,
+        Optional.empty(),
+        "sdk-default.pro");
     checkSdkConfig(
         executionContext,
         cwd,
         ProGuardObfuscateStep.SdkProguardType.OPTIMIZED,
-        Optional.empty(), "sdk-optimized.pro");
-    checkSdkConfig(executionContext, cwd, ProGuardObfuscateStep.SdkProguardType.NONE,
-        Optional.empty(), null);
-    checkSdkConfig(executionContext, cwd, ProGuardObfuscateStep.SdkProguardType.NONE,
-        Optional.of("/some/path"), null);
+        Optional.empty(),
+        "sdk-optimized.pro");
+    checkSdkConfig(
+        executionContext, cwd, ProGuardObfuscateStep.SdkProguardType.NONE, Optional.empty(), null);
+    checkSdkConfig(
+        executionContext,
+        cwd,
+        ProGuardObfuscateStep.SdkProguardType.NONE,
+        Optional.of("/some/path"),
+        null);
     verifyAll();
   }
 
@@ -129,13 +136,15 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),
+        FakeBuildContext.NOOP_CONTEXT,
+        false,
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
-        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
+        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
     ImmutableList<String> parameters = commandLineHelperStep.getParameters(executionContext, cwd);
     int libraryJarsArgIndex = parameters.indexOf("-libraryjars");
-    int libraryJarsValueIndex = parameters.indexOf(
-        "myfavorite.jar" + File.pathSeparatorChar + "another.jar");
+    int libraryJarsValueIndex =
+        parameters.indexOf("myfavorite.jar" + File.pathSeparatorChar + "another.jar");
     assertNotEquals(-1, libraryJarsArgIndex);
     assertEquals(libraryJarsValueIndex, libraryJarsArgIndex + 1);
   }
@@ -161,8 +170,10 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),
+        FakeBuildContext.NOOP_CONTEXT,
+        false,
         steps);
-    ProGuardObfuscateStep proguardStep = (ProGuardObfuscateStep) steps.build().get(1);
+    ProGuardObfuscateStep proguardStep = (ProGuardObfuscateStep) steps.build().get(3);
     ImmutableList<String> parameters = proguardStep.getShellCommandInternal(executionContext);
     for (String s : proguardJvmArgs) {
       assertNotEquals(-1, parameters.indexOf(s));
@@ -191,9 +202,11 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),
+        FakeBuildContext.NOOP_CONTEXT,
+        false,
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
-        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
+        (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
 
     String found = null;
     Iterator<String> argsIt = commandLineHelperStep.getParameters(context, cwd).iterator();

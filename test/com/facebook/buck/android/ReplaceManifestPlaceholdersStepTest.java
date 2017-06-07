@@ -18,34 +18,29 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
 
-/**
- * Test manifest placeholder replacement
- */
+/** Test manifest placeholder replacement */
 public class ReplaceManifestPlaceholdersStepTest {
 
   @Test
   public void shouldReplaceManifestPlaceholders() {
-    String placeholderText = "<manifest>\n" +
-        "    <permission\n" +
-        "        android:name=\"${applicationId}.permission.C2D_MESSAGE\"\n" +
-        "        android:protectionLevel=\"${custom$}\" />\n" +
-        "</manifest>";
-    ImmutableMap<String, String> placeholders = ImmutableMap.of(
-        "applicationId",
-        "com.example",
-        "custom$",
-        "0x2");
-    String replaced = ReplaceManifestPlaceholdersStep.replacePlaceholders(
-        placeholderText,
-        placeholders);
-    String expected = "<manifest>\n" +
-        "    <permission\n" +
-        "        android:name=\"com.example.permission.C2D_MESSAGE\"\n" +
-        "        android:protectionLevel=\"0x2\" />\n" +
-        "</manifest>";
+    String placeholderText =
+        "<manifest>\n"
+            + "    <permission\n"
+            + "        android:name=\"${applicationId}.permission.C2D_MESSAGE\"\n"
+            + "        android:protectionLevel=\"${custom$}\" />\n"
+            + "</manifest>";
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.of("applicationId", "com.example", "custom$", "0x2");
+    String replaced =
+        ReplaceManifestPlaceholdersStep.replacePlaceholders(placeholderText, placeholders);
+    String expected =
+        "<manifest>\n"
+            + "    <permission\n"
+            + "        android:name=\"com.example.permission.C2D_MESSAGE\"\n"
+            + "        android:protectionLevel=\"0x2\" />\n"
+            + "</manifest>";
 
     assertEquals(expected, replaced);
   }

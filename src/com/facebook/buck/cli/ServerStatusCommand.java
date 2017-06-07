@@ -18,25 +18,20 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import org.kohsuke.args4j.Option;
 
 public class ServerStatusCommand extends AbstractCommand {
 
-  @Option(
-      name = "--http-port",
-      usage = "Print the port that the server is running on.")
+  @Option(name = "--http-port", usage = "Print the port that the server is running on.")
   private boolean showHttpserverPort = false;
 
-  @Option(
-      name = "--json",
-      usage = "Print the output in a json format.")
+  @Option(name = "--json", usage = "Print the output in a json format.")
   private boolean printJson = false;
 
   public boolean isShowHttpserverPort() {
@@ -76,7 +71,7 @@ public class ServerStatusCommand extends AbstractCommand {
     Console console = params.getConsole();
 
     if (isPrintJson()) {
-      console.getStdOut().println(params.getObjectMapper().writeValueAsString(values));
+      console.getStdOut().println(ObjectMappers.WRITER.writeValueAsString(values));
     } else {
       for (Map.Entry<String, Object> entry : values.entrySet()) {
         console.getStdOut().printf("%s=%s%n", entry.getKey(), entry.getValue());

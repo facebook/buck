@@ -22,14 +22,12 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PathTypeCoercerTest {
 
@@ -38,8 +36,7 @@ public class PathTypeCoercerTest {
   private final PathTypeCoercer pathTypeCoercer =
       new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY);
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -51,10 +48,7 @@ public class PathTypeCoercerTest {
     String invalidPath = "";
     try {
       pathTypeCoercer.coerce(
-          createCellRoots(filesystem),
-          filesystem,
-          pathRelativeToProjectRoot,
-          invalidPath);
+          createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, invalidPath);
       fail("expected to throw when");
     } catch (CoerceFailedException e) {
       assertEquals("invalid path", e.getMessage());
@@ -68,20 +62,13 @@ public class PathTypeCoercerTest {
     expectedException.expectMessage(String.format("no such file or directory '%s'", missingPath));
 
     pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        pathRelativeToProjectRoot,
-        missingPath);
+        createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, missingPath);
   }
 
   @Test
   public void coercingMissingFileDoesNotThrowWhenVerificationDisabled() throws Exception {
     String missingPath = "hello";
-    new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY).coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        pathRelativeToProjectRoot,
-        missingPath);
+    new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY)
+        .coerce(createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, missingPath);
   }
-
 }

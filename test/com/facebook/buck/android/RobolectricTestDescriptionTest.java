@@ -18,88 +18,104 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeExportDependenciesRule;
-import com.facebook.buck.rules.FakeTargetNodeBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 
-public class RobolectricTestDescriptionTest {
+public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
+
+  private JavaBuckConfig javaBuckConfig;
+
+  @Before
+  public void setUp() {
+    javaBuckConfig = getJavaBuckConfigWithCompilationMode();
+  }
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    SourcePathResolver emptyPathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
-
-    FakeBuildRule exportedRule =
-        new FakeBuildRule("//:exported_rule", emptyPathResolver);
-    FakeExportDependenciesRule exportingRule =
-        new FakeExportDependenciesRule("//:exporting_rule", emptyPathResolver, exportedRule);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
     TargetNode<?, ?> robolectricTestNode =
-        RobolectricTestBuilder.createBuilder(target)
-            .addDep(exportingRule.getBuildTarget())
+        RobolectricTestBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addDep(exportingNode.getBuildTarget())
             .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        robolectricTestNode,
-        FakeTargetNodeBuilder.build(exportedRule),
-        FakeTargetNodeBuilder.build(exportingRule));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
+
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
+    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
 
-    assertThat(robolectricTest.getCompiledTestsLibrary().getDeps(),
-        Matchers.<BuildRule>hasItem(exportedRule));
+    // First order deps should become CalculateAbi rules if we're compiling against ABIs
+    if (compileAgainstAbis.equals(TRUE)) {
+      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+    }
+
+    assertThat(
+        robolectricTest.getCompiledTestsLibrary().getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
-    SourcePathResolver emptyPathResolver =
-        new SourcePathResolver(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
-
-    FakeBuildRule exportedRule =
-        new FakeBuildRule("//:exported_rule", emptyPathResolver);
-    FakeExportDependenciesRule exportingRule =
-            new FakeExportDependenciesRule("//:exporting_rule", emptyPathResolver, exportedRule);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    TargetNode<?, ?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?, ?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
     TargetNode<?, ?> robolectricTestNode =
-        RobolectricTestBuilder.createBuilder(target)
-            .addProvidedDep(exportingRule.getBuildTarget())
+        RobolectricTestBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
+            .addProvidedDep(exportingNode.getBuildTarget())
             .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        robolectricTestNode,
-        FakeTargetNodeBuilder.build(exportedRule),
-        FakeTargetNodeBuilder.build(exportingRule));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
+
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
+    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
 
-    assertThat(robolectricTest.getCompiledTestsLibrary().getDeps(),
-        Matchers.<BuildRule>hasItem(exportedRule));
+    // First order deps should become CalculateAbi rules if we're compiling against ABIs
+    if (compileAgainstAbis.equals(TRUE)) {
+      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+    }
+
+    assertThat(
+        robolectricTest.getCompiledTestsLibrary().getBuildDeps(), Matchers.hasItem(exportedRule));
   }
-
 }

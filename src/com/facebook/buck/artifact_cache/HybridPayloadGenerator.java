@@ -26,7 +26,6 @@ import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -36,11 +35,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/***
- * Creates example fetch and store requests, encodes them using the hybrid
- * thrift/binary protocol, and finally prints out the hybrid payload using base 64 encoding.
+/**
+ * * Creates example fetch and store requests, encodes them using the hybrid thrift/binary protocol,
+ * and finally prints out the hybrid payload using base 64 encoding.
  *
- * Used as input to tests in the cache server.
+ * <p>Used as input to tests in the cache server.
  */
 public class HybridPayloadGenerator {
   private static final ThriftProtocol PROTOCOL = ThriftArtifactCache.PROTOCOL;
@@ -74,9 +73,7 @@ public class HybridPayloadGenerator {
 
   public void encodeHybridFetchRequestNoPayload() throws IOException {
     ThriftArtifactCacheProtocol.Request request =
-        ThriftArtifactCacheProtocol.createRequest(
-            PROTOCOL,
-            createFetchRequest());
+        ThriftArtifactCacheProtocol.createRequest(PROTOCOL, createFetchRequest());
 
     try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
       request.writeAndClose(stream);

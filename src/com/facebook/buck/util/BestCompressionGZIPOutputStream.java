@@ -22,8 +22,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class BestCompressionGZIPOutputStream extends GZIPOutputStream {
 
-  public BestCompressionGZIPOutputStream(OutputStream out, boolean syncFlush)
-      throws IOException {
+  public BestCompressionGZIPOutputStream(OutputStream out, boolean syncFlush) throws IOException {
     super(out, syncFlush);
     def.setLevel(9);
   }

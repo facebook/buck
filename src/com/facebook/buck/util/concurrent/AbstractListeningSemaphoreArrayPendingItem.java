@@ -17,12 +17,12 @@ package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.util.concurrent.SettableFuture;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractListeningSemaphoreArrayPendingItem {
   public abstract SettableFuture<Void> getFuture();
+
   public abstract ResourceAmounts getResources();
 }

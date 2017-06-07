@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -60,9 +59,7 @@ public class RecordFileSha1Step implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("%s --input %s --metadata-key %s",
-        getShortName(),
-        inputFile.toString(),
-        metadataKey);
+    return String.format(
+        "%s --input %s --metadata-key %s", getShortName(), inputFile.toString(), metadataKey);
   }
 }

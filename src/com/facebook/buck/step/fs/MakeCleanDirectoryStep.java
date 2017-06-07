@@ -16,55 +16,24 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.CompositeStep;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
-
 /**
- * Deletes the directory, if it exists, before creating it.
- * {@link MakeCleanDirectoryStep} is preferable to {@link MkdirStep} if the directory may
- * contain many generated files and we want to avoid the case where it could accidentally include
- * generated files from a previous run in Buck.
- * <p>
- * For example, for a directory of {@code .class} files, if the user deletes a {@code .java} file
+ * Deletes the directory, if it exists, before creating it. {@link MakeCleanDirectoryStep} is
+ * preferable to {@link MkdirStep} if the directory may contain many generated files and we want to
+ * avoid the case where it could accidentally include generated files from a previous run in Buck.
+ *
+ * <p>For example, for a directory of {@code .class} files, if the user deletes a {@code .java} file
  * that generated one of the {@code .class} files, the {@code .class} file corresponding to the
  * deleted {@code .java} file should no longer be there when {@code javac} is run again.
  */
-public final class MakeCleanDirectoryStep extends CompositeStep {
+public final class MakeCleanDirectoryStep {
 
-  private final Path pathRelativeToProjectRoot;
-
-  public MakeCleanDirectoryStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
-    super(ImmutableList.of(
-        new RmStep(
-            filesystem,
-            pathRelativeToProjectRoot,
-            /* shouldForceDeletion */ true,
-            /* shouldRecurse */ true),
-        new MkdirStep(filesystem, pathRelativeToProjectRoot)));
-    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
+  public static ImmutableList<Step> of(BuildCellRelativePath path) {
+    return ImmutableList.of(RmStep.of(path).withRecursive(true), MkdirStep.of(path));
   }
 
-  @VisibleForTesting
-  public Path getPath() {
-    return pathRelativeToProjectRoot;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof MakeCleanDirectoryStep)) {
-      return false;
-    }
-    MakeCleanDirectoryStep that = (MakeCleanDirectoryStep) obj;
-    return Objects.equal(this.pathRelativeToProjectRoot, that.pathRelativeToProjectRoot);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(pathRelativeToProjectRoot);
-  }
+  private MakeCleanDirectoryStep() {}
 }

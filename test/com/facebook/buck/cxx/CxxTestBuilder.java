@@ -18,16 +18,23 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class CxxTestBuilder
-    extends
-    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestDescription, CxxTestBuilder> {
+    extends AbstractNodeBuilder<
+        CxxTestDescriptionArg.Builder, CxxTestDescriptionArg, CxxTestDescription, CxxTest> {
 
   public CxxTestBuilder(
       BuildTarget target,
@@ -43,45 +50,83 @@ public class CxxTestBuilder
         target);
   }
 
-  public CxxTestBuilder(
-      BuildTarget target,
-      CxxBuckConfig config) {
-    this(target, config, createDefaultPlatform(), createDefaultPlatforms());
+  public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
+    this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
-    arg.env = env;
+    getArgForPopulating().setEnv(env);
     return this;
   }
 
   public CxxTestBuilder setArgs(ImmutableList<String> args) {
-    arg.args = args;
+    getArgForPopulating().setArgs(args);
     return this;
   }
 
   public CxxTestBuilder setRunTestSeparately(boolean runTestSeparately) {
-    arg.runTestSeparately = Optional.of(runTestSeparately);
+    getArgForPopulating().setRunTestSeparately(Optional.of(runTestSeparately));
     return this;
   }
 
   public CxxTestBuilder setUseDefaultTestMain(boolean useDefaultTestMain) {
-    arg.useDefaultTestMain = Optional.of(useDefaultTestMain);
+    getArgForPopulating().setUseDefaultTestMain(Optional.of(useDefaultTestMain));
     return this;
   }
 
   public CxxTestBuilder setFramework(CxxTestType framework) {
-    arg.framework = Optional.of(framework);
+    getArgForPopulating().setFramework(Optional.of(framework));
     return this;
   }
 
   public CxxTestBuilder setResources(ImmutableSortedSet<Path> resources) {
-    arg.resources = resources;
+    getArgForPopulating().setResources(resources);
     return this;
   }
 
-  @Override
-  protected CxxTestBuilder getThis() {
+  public CxxTestBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
+  public CxxTestBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
+    return this;
+  }
+
+  public CxxTestBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
+    return this;
+  }
+
+  public CxxTestBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    getArgForPopulating().setCompilerFlags(compilerFlags);
+    return this;
+  }
+
+  public CxxTestBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setLinkerFlags(linkerFlags);
+    return this;
+  }
+
+  public CxxTestBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    getArgForPopulating().setPlatformLinkerFlags(platformLinkerFlags);
+    return this;
+  }
+
+  public CxxTestBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    getArgForPopulating().setFrameworks(frameworks);
+    return this;
+  }
+
+  public CxxTestBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    getArgForPopulating().setLibraries(libraries);
+    return this;
+  }
+
+  public CxxTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
 }

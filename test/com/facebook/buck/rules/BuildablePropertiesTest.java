@@ -46,5 +46,4 @@ public class BuildablePropertiesTest {
     assertTrue(buildableProperties.is(ANDROID));
     assertFalse(buildableProperties.is(TEST));
   }
-
 }

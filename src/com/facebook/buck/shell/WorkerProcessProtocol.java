@@ -19,38 +19,24 @@ import java.io.IOException;
 
 public interface WorkerProcessProtocol {
 
-  /**
-   * When worker process starts up, main process and worker process should send handshakes.
-   */
+  /** When worker process starts up, main process and worker process should send handshakes. */
   void sendHandshake(int handshakeID) throws IOException;
 
-  /**
-   * This method expects to receive a handshake from the other end.
-   */
+  /** This method expects to receive a handshake from the other end. */
   void receiveHandshake(int handshakeID) throws IOException;
 
-  /**
-   * Send the given command to the other end for invocation.
-   */
+  /** Send the given command to the other end for invocation. */
   void sendCommand(int messageID, WorkerProcessCommand command) throws IOException;
 
-  /**
-   * This method expects to receive a command to invoke on this end.
-   */
+  /** This method expects to receive a command to invoke on this end. */
   WorkerProcessCommand receiveCommand(int messageID) throws IOException;
 
-  /**
-   * Sends a response for previously received command.
-   */
+  /** Sends a response for previously received command. */
   void sendCommandResponse(int messageID, String type, int exitCode) throws IOException;
 
-  /**
-   * This method expects to receive a response for previously sent command.
-   */
+  /** This method expects to receive a response for previously sent command. */
   int receiveCommandResponse(int messageID) throws IOException;
 
-  /**
-   * Close connection and properly end the stream.
-   */
+  /** Close connection and properly end the stream. */
   void close() throws IOException;
 }

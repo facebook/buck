@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,9 +27,7 @@ import java.util.concurrent.Callable;
 
 public final class InputStreamConsumer implements Callable<Void> {
 
-  /**
-   * Interface to handle a line of input from the stream.
-   */
+  /** Interface to handle a line of input from the stream. */
   public interface Handler {
     void handleLine(String line);
   }
@@ -38,17 +35,11 @@ public final class InputStreamConsumer implements Callable<Void> {
   private final LineFetcher inputReader;
   private final ImmutableList<Handler> handlers;
 
-  public InputStreamConsumer(
-      InputStream inputStream,
-      Handler... handlers) {
-    this(
-        new InputStreamReader(inputStream),
-        handlers);
+  public InputStreamConsumer(InputStream inputStream, Handler... handlers) {
+    this(new InputStreamReader(inputStream), handlers);
   }
 
-  public InputStreamConsumer(
-      Reader reader,
-      Handler... handlers) {
+  public InputStreamConsumer(Reader reader, Handler... handlers) {
     this.inputReader = new LineFetcher(reader);
     this.handlers = ImmutableList.copyOf(handlers);
   }
@@ -65,9 +56,7 @@ public final class InputStreamConsumer implements Callable<Void> {
   }
 
   public static Handler createAnsiHighlightingHandler(
-      boolean flagOutputWrittenToStream,
-      PrintStream printStream,
-      Ansi ansi) {
+      boolean flagOutputWrittenToStream, PrintStream printStream, Ansi ansi) {
     return new HighlightingOutput(flagOutputWrittenToStream, printStream, ansi);
   }
 
@@ -79,9 +68,7 @@ public final class InputStreamConsumer implements Callable<Void> {
     private final Ansi ansi;
 
     public HighlightingOutput(
-        boolean flagOutputWrittenToStream,
-        PrintStream printStream,
-        Ansi ansi) {
+        boolean flagOutputWrittenToStream, PrintStream printStream, Ansi ansi) {
       this.flagOutputWrittenToStream = flagOutputWrittenToStream;
       this.printStream = printStream;
       this.ansi = ansi;

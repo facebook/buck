@@ -19,12 +19,12 @@ package com.facebook.buck.python;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,14 +105,14 @@ public class PexStep extends ShellStep {
     return "pex";
   }
 
-  /** Return the manifest as a JSON blob to write to the pex processes stdin.
-   * <p>
-   * We use stdin rather than passing as an argument to the processes since
-   * manifest files can occasionally get extremely large, and surpass exec/shell
-   * limits on arguments.
+  /**
+   * Return the manifest as a JSON blob to write to the pex processes stdin.
+   *
+   * <p>We use stdin rather than passing as an argument to the processes since manifest files can
+   * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  protected Optional<String> getStdin(ExecutionContext context) {
+  protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
     // Convert the map of paths to a map of strings before converting to JSON.
     ImmutableMap<Path, Path> resolvedModules;
     try {
@@ -138,7 +138,7 @@ public class PexStep extends ShellStep {
     }
     try {
       return Optional.of(
-          context.getObjectMapper().writeValueAsString(
+          ObjectMappers.WRITER.writeValueAsString(
               ImmutableMap.of(
                   "modules", modulesBuilder.build(),
                   "resources", resourcesBuilder.build(),
@@ -178,19 +178,19 @@ public class PexStep extends ShellStep {
   }
 
   private ImmutableMap<Path, Path> getExpandedSourcePaths(ImmutableMap<Path, Path> paths)
-      throws IOException {
+      throws InterruptedException, IOException {
     ImmutableMap.Builder<Path, Path> sources = ImmutableMap.builder();
 
     for (ImmutableMap.Entry<Path, Path> ent : paths.entrySet()) {
       if (ent.getValue().toString().endsWith(SRC_ZIP)) {
-        Path destinationDirectory = filesystem.resolve(
-            tempDir.resolve(ent.getKey()));
+        Path destinationDirectory = filesystem.resolve(tempDir.resolve(ent.getKey()));
         Files.createDirectories(destinationDirectory);
 
-        ImmutableList<Path> zipPaths = Unzip.extractZipFile(
-            filesystem.resolve(ent.getValue()),
-            destinationDirectory,
-            Unzip.ExistingFileMode.OVERWRITE);
+        ImmutableList<Path> zipPaths =
+            Unzip.extractZipFile(
+                filesystem.resolve(ent.getValue()),
+                destinationDirectory,
+                Unzip.ExistingFileMode.OVERWRITE);
         for (Path path : zipPaths) {
           Path modulePath = destinationDirectory.relativize(path);
           sources.put(modulePath, path);
@@ -207,5 +207,4 @@ public class PexStep extends ShellStep {
   protected ImmutableList<String> getCommandPrefix() {
     return commandPrefix;
   }
-
 }

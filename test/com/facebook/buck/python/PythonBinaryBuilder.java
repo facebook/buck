@@ -21,17 +21,20 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class PythonBinaryBuilder
-    extends AbstractNodeBuilder<PythonBinaryDescription.Arg, PythonBinaryDescription> {
+    extends AbstractNodeBuilder<
+        PythonBinaryDescriptionArg.Builder, PythonBinaryDescriptionArg, PythonBinaryDescription,
+        PythonBinary> {
 
   public PythonBinaryBuilder(
       BuildTarget target,
@@ -50,8 +53,7 @@ public class PythonBinaryBuilder
   }
 
   public static PythonBinaryBuilder create(
-      BuildTarget target,
-      FlavorDomain<PythonPlatform> pythonPlatforms) {
+      BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonBinaryBuilder(
@@ -67,53 +69,63 @@ public class PythonBinaryBuilder
   }
 
   public PythonBinaryBuilder setMainModule(String mainModule) {
-    arg.mainModule = Optional.of(mainModule);
+    getArgForPopulating().setMainModule(Optional.of(mainModule));
     return this;
   }
 
   public PythonBinaryBuilder setMain(SourcePath main) {
-    arg.main = Optional.of(main);
+    getArgForPopulating().setMain(Optional.of(main));
     return this;
   }
 
   public PythonBinaryBuilder setBaseModule(String baseModule) {
-    arg.baseModule = Optional.of(baseModule);
+    getArgForPopulating().setBaseModule(Optional.of(baseModule));
     return this;
   }
 
   public PythonBinaryBuilder setExtension(String extension) {
-    arg.extension = Optional.of(extension);
+    getArgForPopulating().setExtension(Optional.of(extension));
     return this;
   }
 
   public PythonBinaryBuilder setBuildArgs(ImmutableList<String> buildArgs) {
-    arg.buildArgs = buildArgs;
+    getArgForPopulating().setBuildArgs(buildArgs);
     return this;
   }
 
   public PythonBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
+  public PythonBinaryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    getArgForPopulating().setPlatformDeps(deps);
     return this;
   }
 
   public PythonBinaryBuilder setPreloadDeps(ImmutableSet<BuildTarget> deps) {
-    arg.preloadDeps = deps;
+    getArgForPopulating().setPreloadDeps(deps);
     return this;
   }
 
   public PythonBinaryBuilder setPlatform(String platform) {
-    arg.platform = Optional.of(platform);
+    getArgForPopulating().setPlatform(Optional.of(platform));
+    return this;
+  }
+
+  public PythonBinaryBuilder setCxxPlatform(Flavor platform) {
+    getArgForPopulating().setCxxPlatform(Optional.of(platform));
     return this;
   }
 
   public PythonBinaryBuilder setPackageStyle(PythonBuckConfig.PackageStyle packageStyle) {
-    arg.packageStyle = Optional.of(packageStyle);
+    getArgForPopulating().setPackageStyle(Optional.of(packageStyle));
     return this;
   }
 
   public PythonBinaryBuilder setLinkerFlags(ImmutableList<String> linkerFlags) {
-    arg.linkerFlags = linkerFlags;
+    getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;
   }
-
 }

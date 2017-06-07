@@ -22,10 +22,7 @@ public class FakeExportDependenciesRule extends FakeBuildRule implements ExportD
 
   private final ImmutableSortedSet<BuildRule> exportedDeps;
 
-  public FakeExportDependenciesRule(
-      String target,
-      SourcePathResolver resolver,
-      BuildRule... deps) {
+  public FakeExportDependenciesRule(String target, SourcePathResolver resolver, BuildRule... deps) {
     super(target, resolver, deps);
     this.exportedDeps = ImmutableSortedSet.copyOf(deps);
   }
@@ -34,5 +31,4 @@ public class FakeExportDependenciesRule extends FakeBuildRule implements ExportD
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
     return exportedDeps;
   }
-
 }

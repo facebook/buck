@@ -16,9 +16,9 @@
 
 package com.facebook.buck.testutil;
 
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.nio.file.Path;
 
 public class FakeFileAttributes implements BasicFileAttributes {
   private final Object fileKeyObj;
@@ -28,9 +28,9 @@ public class FakeFileAttributes implements BasicFileAttributes {
 
   /**
    * @param fileKey something uniquely representing the file this is for
-   * @param isFileElseDir this is for a file, iff this is true.  Otherwise it's a dir.
-   *        Never a symlink or "other" type.
-   * @param size file size.  Probably only makes sense for files.
+   * @param isFileElseDir this is for a file, iff this is true. Otherwise it's a dir. Never a
+   *     symlink or "other" type.
+   * @param size file size. Probably only makes sense for files.
    */
   protected FakeFileAttributes(Object fileKey, boolean isFileElseDir, long size) {
     this.fileKeyObj = fileKey;
@@ -88,8 +88,8 @@ public class FakeFileAttributes implements BasicFileAttributes {
   }
 
   /**
-   * Note: "The size of files that are not regular files is implementation specific and
-   * therefore unspecified."  Therefore we'll throw unless this is a regular file.
+   * Note: "The size of files that are not regular files is implementation specific and therefore
+   * unspecified." Therefore we'll throw unless this is a regular file.
    */
   @Override
   public long size() {

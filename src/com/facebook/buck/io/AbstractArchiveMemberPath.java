@@ -16,10 +16,8 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @Value.Immutable(builder = false)

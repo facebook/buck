@@ -16,28 +16,37 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
-
-/**
- * Expands to the path of a build rules output.
- */
-public class LocationMacroExpander extends BuildTargetMacroExpander {
+/** Expands to the path of a build rules output. */
+public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacro> {
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule)
+  public Class<LocationMacro> getInputClass() {
+    return LocationMacro.class;
+  }
+
+  @Override
+  protected LocationMacro parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-    Path output = rule.getPathToOutput();
+    return LocationMacro.of(parseBuildTarget(target, cellNames, input));
+  }
+
+  @Override
+  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+    SourcePath output = rule.getSourcePathToOutput();
     if (output == null) {
       throw new MacroException(
           String.format(
-              "%s used in location macro does not produce output",
-              rule.getBuildTarget()));
+              "%s used in location macro does not produce output", rule.getBuildTarget()));
     }
-    return rule.getProjectFilesystem().resolve(output).toString();
+    return resolver.getAbsolutePath(output).toString();
   }
-
 }

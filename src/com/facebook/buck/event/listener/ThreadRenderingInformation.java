@@ -21,7 +21,6 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
-
 import java.util.Optional;
 
 class ThreadRenderingInformation {

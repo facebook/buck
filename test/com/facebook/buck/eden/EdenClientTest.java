@@ -21,8 +21,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
@@ -31,15 +31,13 @@ import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class EdenClientTest {
 
@@ -51,9 +49,10 @@ public class EdenClientTest {
   @Before
   public void setUp() throws EdenError, TException {
     thriftClient = createMock(EdenService.Client.class);
-    mountInfos = ImmutableList.of(
-      new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""),
-      new MountInfo("/home/mbolin/src/eden", /* edenClientPath */ ""));
+    mountInfos =
+        ImmutableList.of(
+            new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""),
+            new MountInfo("/home/mbolin/src/eden", /* edenClientPath */ ""));
     expect(thriftClient.listMounts()).andReturn(mountInfos);
     replay(thriftClient);
 

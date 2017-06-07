@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface RulesParsingProgressUpdateConsumer {
-  Topic<RulesParsingProgressUpdateConsumer> BUCK_PARSE_PROGRESS_UPDATE = Topic.create(
-      "buck.parse-rule.update",
-      RulesParsingProgressUpdateConsumer.class
-  );
+  Topic<RulesParsingProgressUpdateConsumer> BUCK_PARSE_PROGRESS_UPDATE =
+      Topic.create("buck.parse-rule.update", RulesParsingProgressUpdateConsumer.class);
+
   void consumeParseRuleProgressUpdate(long timestamp, double progressValue);
 }

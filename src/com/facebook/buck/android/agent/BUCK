@@ -1,47 +1,46 @@
 android_library(
-  name = 'agent-lib',
-  srcs = glob(['*.java']),
-  # Because this code gets dx'd, we restrict the source to Java 6 so that
-  # trying to use something like try-with-resources is a compile-time error.
-  source = '6',
-  target = '6',
-  autodeps = False, # See below.
-  deps = [
-    # Do not add other deps here.  The agent should remain very small.
-    '//src/com/facebook/buck/android/agent/util:util',
-  ],
+    name = "agent-lib",
+    srcs = glob(["*.java"]),
+    # Because this code gets dx'd, we restrict the source to Java 6 so that
+    # trying to use something like try-with-resources is a compile-time error.
+    source = "6",
+    target = "6",
+    deps = [
+        # Do not add other deps here.  The agent should remain very small.
+        "//src/com/facebook/buck/android/agent/util:util",
+    ],
 )
 
 java_library(
-  name = 'manifest-as-resource',
-  resources = [
-    'AndroidManifest.xml',
-  ],
-  visibility = [
-    '//test/...',
-  ],
+    name = "manifest-as-resource",
+    resources = [
+        "AndroidManifest.xml",
+    ],
+    visibility = [
+        "//test/...",
+    ],
 )
 
 java_binary(
-  name = 'agent-for-host',
-  main_class = "com.facebook.buck.android.agent.AgentMain",
-  deps = [
-    ':agent-lib',
-  ],
+    name = "agent-for-host",
+    main_class = "com.facebook.buck.android.agent.AgentMain",
+    deps = [
+        ":agent-lib",
+    ],
 )
 
 android_binary(
-  name = 'agent',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug_keystore',
-  deps = [
-    ':agent-lib',
-    '//src/com/facebook/buck/android/agent/native:native',
-  ],
+    name = "agent",
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        ":agent-lib",
+        "//src/com/facebook/buck/android/agent/native:native",
+    ],
 )
 
 keystore(
-  name = 'debug_keystore',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
 )

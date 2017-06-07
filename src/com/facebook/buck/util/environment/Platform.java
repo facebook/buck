@@ -30,9 +30,7 @@ public enum Platform {
     this.autoconfName = autoconfName;
   }
 
-  /**
-   * @return platform name as used in autoconf target tuples
-   */
+  /** @return platform name as used in autoconf target tuples */
   public String getAutoconfName() {
     return autoconfName;
   }
@@ -43,7 +41,9 @@ public enum Platform {
 
   public static Platform detect() {
     String platformName = System.getProperty("os.name");
-    if (platformName.startsWith("Linux")) {
+    if (platformName == null) {
+      return UNKNOWN;
+    } else if (platformName.startsWith("Linux")) {
       return LINUX;
     } else if (platformName.startsWith("Mac OS")) {
       return MACOS;

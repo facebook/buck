@@ -24,10 +24,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class CxxLinkStepTest {
 
@@ -48,12 +46,12 @@ public class CxxLinkStepTest {
             Paths.get("scratchDir"));
 
     // Verify it uses the expected command.
-    ImmutableList<String> expected = ImmutableList.<String>builder()
-        .addAll(linker)
-        .add("@" + projectFilesystem.getRootPath().resolve("argfile.txt").toString())
-        .build();
+    ImmutableList<String> expected =
+        ImmutableList.<String>builder()
+            .addAll(linker)
+            .add("@" + projectFilesystem.getRootPath().resolve("argfile.txt").toString())
+            .build();
     ImmutableList<String> actual = cxxLinkStep.getShellCommand(context);
     assertEquals(expected, actual);
   }
-
 }

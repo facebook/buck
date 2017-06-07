@@ -20,13 +20,12 @@ import org.immutables.value.Value;
 /**
  * A view of a particular config class.
  *
- * A config class may implement extra state and accessors beyond the bare Config. ConfigViews
+ * <p>A config class may implement extra state and accessors beyond the bare Config. ConfigViews
  * provides domain-specific accessors to Config values.
  *
- * ConfigViews should be defined following this pattern.
- * <pre>
- * {@code
+ * <p>ConfigViews should be defined following this pattern.
  *
+ * <pre>{@code
  * @Value.Immutable(builder=false, copy=false)
  * @BuckStyleImmutable
  * abstract class AbstractFooConfigView implements ConfigView<FooConfig> {
@@ -34,8 +33,7 @@ import org.immutables.value.Value;
  *   // Additional accessors.
  * }
  *
- * }
- * </pre>
+ * }</pre>
  *
  * Config views should also not declare any additional non-derived immutable fields if it's to be
  * used with {@link ConfigViewCache}. As the cache assumes one-to-one correspondence with the main

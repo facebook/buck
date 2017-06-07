@@ -19,10 +19,8 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import java.util.Set;
 
 /**
  * A "owner" query expression, which computes the rules that own the given files.
@@ -34,8 +32,7 @@ public class OwnerFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD);
 
-  public OwnerFunction() {
-  }
+  public OwnerFunction() {}
 
   @Override
   public String getName() {
@@ -53,12 +50,10 @@ public class OwnerFunction implements QueryFunction {
   }
 
   @Override
-  public Set<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
 
-    return Sets.newHashSet(env.getFileOwners(ImmutableList.of(args.get(0).getWord()), executor));
+    return env.getFileOwners(ImmutableList.of(args.get(0).getWord()), executor);
   }
-
 }

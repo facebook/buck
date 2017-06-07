@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -97,9 +96,7 @@ public class GoPlatformFlavorDomain {
       Platform currentPlatform,
       Architecture currentArchitecture,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this(
-        currentPlatform, currentArchitecture, cxxPlatforms,
-        ImmutableMap.of(), ImmutableMap.of());
+    this(currentPlatform, currentArchitecture, cxxPlatforms, ImmutableMap.of(), ImmutableMap.of());
   }
 
   public Optional<GoPlatform> getValue(Flavor flavor) {
@@ -111,11 +108,12 @@ public class GoPlatformFlavorDomain {
     Platform os = goOsValues.get(components[0]);
     Architecture arch = goArchValues.get(components[1]);
     if (os != null && arch != null) {
-      return Optional.of(GoPlatform.builder()
-          .setGoOs(components[0])
-          .setGoArch(components[1])
-          .setCxxPlatform(getCxxPlatform(os, arch))
-          .build());
+      return Optional.of(
+          GoPlatform.builder()
+              .setGoOs(components[0])
+              .setGoArch(components[1])
+              .setCxxPlatform(getCxxPlatform(os, arch))
+              .build());
     }
     return Optional.empty();
   }
@@ -142,22 +140,25 @@ public class GoPlatformFlavorDomain {
     Preconditions.checkArgument(platform != Platform.UNKNOWN);
     Preconditions.checkArgument(architecture != Architecture.UNKNOWN);
 
-    Optional<Map.Entry<String, Platform>> osValue = goOsValues.entrySet().stream()
-        .filter(input -> input.getValue() == platform)
-        .findFirst();
-    Optional<Map.Entry<String, Architecture>> archValue = goArchValues.entrySet().stream()
-        .filter(input -> input.getValue() == architecture)
-        .findFirst();
+    Optional<Map.Entry<String, Platform>> osValue =
+        goOsValues.entrySet().stream().filter(input -> input.getValue() == platform).findFirst();
+    Optional<Map.Entry<String, Architecture>> archValue =
+        goArchValues
+            .entrySet()
+            .stream()
+            .filter(input -> input.getValue() == architecture)
+            .findFirst();
 
     if (!osValue.isPresent() || !archValue.isPresent()) {
       return Optional.empty();
     }
 
-    return Optional.of(GoPlatform.builder()
-        .setGoOs(osValue.get().getKey())
-        .setGoArch(archValue.get().getKey())
-        .setCxxPlatform(getCxxPlatform(platform, architecture))
-        .build());
+    return Optional.of(
+        GoPlatform.builder()
+            .setGoOs(osValue.get().getKey())
+            .setGoArch(archValue.get().getKey())
+            .setCxxPlatform(getCxxPlatform(platform, architecture))
+            .build());
   }
 
   // TODO(mikekap): Move this somewhere closer to CxxPlatforms.

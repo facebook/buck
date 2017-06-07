@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -43,7 +44,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -55,10 +55,10 @@ import java.util.Set;
  * each shared library would only export the minimal set of symbols that are used by other libraries
  * in the apk. This would allow the linker to remove any dead code within the library (the linker
  * can strip all code that is unreachable from the set of exported symbols).
- * <p/>
- * The native relinker tries to remedy the situation. When enabled for an apk, the native relinker
- * will take the set of libraries in the apk and relink them in reverse order telling the linker to
- * only export those symbols that are referenced by a higher library.
+ *
+ * <p>The native relinker tries to remedy the situation. When enabled for an apk, the native
+ * relinker will take the set of libraries in the apk and relink them in reverse order telling the
+ * linker to only export those symbols that are referenced by a higher library.
  */
 public class NativeRelinker {
   private final BuildRuleParams buildRuleParams;
@@ -66,19 +66,21 @@ public class NativeRelinker {
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibs;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibsAssets;
-  private ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
-  private ImmutableList<RelinkerRule> rules;
+  private final SourcePathRuleFinder ruleFinder;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ImmutableList<RelinkerRule> rules;
 
   public NativeRelinker(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibs,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibsAssets) {
+    this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(
-        !linkableLibs.isEmpty() ||
-            !linkableLibsAssets.isEmpty(),
+        !linkableLibs.isEmpty() || !linkableLibsAssets.isEmpty(),
         "There should be at least one native library to relink.");
 
     this.buildRuleParams = buildRuleParams;
@@ -105,7 +107,7 @@ public class NativeRelinker {
     for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry :
         Iterables.concat(linkableLibs.entrySet(), linkableLibsAssets.entrySet())) {
       SourcePath source = entry.getValue();
-      Optional<BuildRule> rule = resolver.getRule(source);
+      Optional<BuildRule> rule = ruleFinder.getRule(source);
       if (rule.isPresent()) {
         ruleMapBuilder.put(rule.get(), new Pair<>(entry.getKey().getFirst(), source));
       } else {
@@ -157,7 +159,7 @@ public class NativeRelinker {
     for (Pair<TargetCpuType, SourcePath> p : sortedPaths) {
       TargetCpuType cpuType = p.getFirst();
       SourcePath source = p.getSecond();
-      BuildRule baseRule = resolver.getRuleOrThrow((BuildTargetSourcePath) source);
+      BuildRule baseRule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) source);
       // Relinking this library must keep any of the symbols needed by the libraries from the rules
       // in relinkerDeps.
       ImmutableList<RelinkerRule> relinkerDeps =
@@ -177,10 +179,8 @@ public class NativeRelinker {
 
     Function<SourcePath, SourcePath> pathMapper = Functions.forMap(pathMap.build());
     rules = relinkRules.build();
-    relinkedLibs = ImmutableMap.copyOf(
-        Maps.transformValues(linkableLibs, pathMapper));
-    relinkedLibsAssets = ImmutableMap.copyOf(
-        Maps.transformValues(linkableLibsAssets, pathMapper));
+    relinkedLibs = ImmutableMap.copyOf(Maps.transformValues(linkableLibs, pathMapper));
+    relinkedLibsAssets = ImmutableMap.copyOf(Maps.transformValues(linkableLibsAssets, pathMapper));
   }
 
   private static DirectedAcyclicGraph<BuildRule> getBuildGraph(Set<BuildRule> rules) {
@@ -215,17 +215,17 @@ public class NativeRelinker {
   }
 
   private RelinkerRule makeRelinkerRule(
-      TargetCpuType cpuType,
-      SourcePath source,
-      ImmutableList<RelinkerRule> relinkerDeps) {
+      TargetCpuType cpuType, SourcePath source, ImmutableList<RelinkerRule> relinkerDeps) {
     Function<RelinkerRule, SourcePath> getSymbolsNeeded = RelinkerRule::getSymbolsNeededPath;
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
-    BuildRuleParams relinkerParams = buildRuleParams
-        .withFlavor(ImmutableFlavor.of("xdso-dce"))
-        .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
-        .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
-        .appendExtraDeps(relinkerDeps);
-    BuildRule baseRule = resolver.getRule(source).orElse(null);
+    BuildRuleParams relinkerParams =
+        buildRuleParams
+            .withAppendedFlavor(InternalFlavor.of("xdso-dce"))
+            .withAppendedFlavor(
+                InternalFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
+            .withAppendedFlavor(InternalFlavor.of(Flavor.replaceInvalidCharacters(libname)))
+            .copyAppendingExtraDeps(relinkerDeps);
+    BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
     if (baseRule != null && baseRule instanceof CxxLink) {
@@ -237,12 +237,12 @@ public class NativeRelinker {
     return new RelinkerRule(
         relinkerParams,
         resolver,
+        ruleFinder,
         ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
         cpuType,
-        nativePlatforms.get(cpuType).getObjdump(),
+        Preconditions.checkNotNull(nativePlatforms.get(cpuType)).getObjdump(),
         cxxBuckConfig,
         source,
-        linker != null,
         linker,
         linkerArgs);
   }
@@ -251,8 +251,7 @@ public class NativeRelinker {
     return relinkedLibs;
   }
 
-  public ImmutableMap<Pair<TargetCpuType, String>, SourcePath>
-  getRelinkedLibsAssets() {
+  public ImmutableMap<Pair<TargetCpuType, String>, SourcePath> getRelinkedLibsAssets() {
     return relinkedLibsAssets;
   }
 

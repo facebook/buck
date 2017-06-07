@@ -29,8 +29,10 @@ public class MachoMagicInfo {
   }
 
   public boolean isMachObjectHeaderMagic() {
-    return magic.equals(MachoHeader.MH_MAGIC) || magic.equals(MachoHeader.MH_CIGAM) ||
-        magic.equals(MachoHeader.MH_MAGIC_64) || magic.equals(MachoHeader.MH_CIGAM_64);
+    return magic.equals(MachoHeader.MH_MAGIC)
+        || magic.equals(MachoHeader.MH_CIGAM)
+        || magic.equals(MachoHeader.MH_MAGIC_64)
+        || magic.equals(MachoHeader.MH_CIGAM_64);
   }
 
   public boolean isFatBinaryHeaderMagic() {
@@ -42,8 +44,8 @@ public class MachoMagicInfo {
   }
 
   public boolean isSwapped() {
-    return magic.equals(MachoHeader.MH_CIGAM) ||
-        magic.equals(MachoHeader.MH_CIGAM_64) ||
-        FatHeaderUtils.isLittleEndian(magic);
+    return magic.equals(MachoHeader.MH_CIGAM)
+        || magic.equals(MachoHeader.MH_CIGAM_64)
+        || FatHeaderUtils.isLittleEndian(magic);
   }
 }

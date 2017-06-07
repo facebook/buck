@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,25 +26,25 @@ import java.util.Optional;
 
 public interface OnDiskBuildInfo {
 
-  /**
-   * @return the value associated with the specified key, if it exists.
-   */
+  /** @return the build rule metadata value associated with the specified key, if it exists. */
   Optional<String> getValue(String key);
 
-  /**
-   * @return the sequence of values associated with the specified key, if it exists.
-   */
+  /** @return the build engine metadata value associated with the specified key, if it exists. */
+  Optional<String> getBuildValue(String key);
+
+  /** @return the sequence of values associated with the specified key, if it exists. */
   Optional<ImmutableList<String>> getValues(String key);
 
   /**
    * Tries to read the values and if it fails it logs the attributes of the file it tried to read.
    */
-  ImmutableList<String> getValuesOrThrow(String key);
+  ImmutableList<String> getValuesOrThrow(String key) throws IOException;
 
   /**
-   * @return the map of strings associated with the specified key, if it exists.
+   * @return the map of strings associated with the specified key in the build engine metadata, if
+   *     it exists.
    */
-  Optional<ImmutableMap<String, String>> getMap(String key);
+  Optional<ImmutableMap<String, String>> getBuildMap(String key);
 
   /**
    * @return Assuming the value associated with the specified key is a valid sha1 hash, returns it
@@ -55,13 +54,12 @@ public interface OnDiskBuildInfo {
 
   /**
    * Returns the {@link RuleKey} for the rule whose output is currently stored on disk.
-   * <p>
-   * This value would have been written the last time the rule was built successfully.
+   *
+   * <p>This value would have been written the last time the rule was built successfully.
    */
   Optional<RuleKey> getRuleKey(String key);
 
   List<String> getOutputFileContentsByLine(Path path) throws IOException;
 
   void deleteExistingMetadata() throws IOException;
-
 }

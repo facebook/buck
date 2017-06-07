@@ -37,6 +37,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -47,15 +48,12 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Test;
 
 public class CxxCollectAndLogInferDependenciesStepTest {
 
@@ -69,8 +67,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
       BuildRuleParams buildRuleParams,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem filesystem,
-      InferBuckConfig inferBuckConfig
-  ) {
+      InferBuckConfig inferBuckConfig)
+      throws Exception {
     RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
         new RuleKeyAppendableFunction<FrameworkPath, Path>() {
           @Override
@@ -85,25 +83,22 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         };
 
     SourcePath preprocessor = new PathSourcePath(filesystem, Paths.get("preprocessor"));
-    Tool preprocessorTool =
-        new CommandTool.Builder()
-            .addInput(preprocessor)
-            .build();
+    Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();
 
-    PreprocessorDelegate preprocessorDelegate = new PreprocessorDelegate(
-        sourcePathResolver,
-        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-        CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-        Paths.get("whatever"),
-        new DefaultPreprocessor(preprocessorTool),
-        PreprocessorFlags.builder().build(),
-        defaultFrameworkPathSearchPathFunction,
-        ImmutableList.of(),
-        Optional.empty());
+    PreprocessorDelegate preprocessorDelegate =
+        new PreprocessorDelegate(
+            sourcePathResolver,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
+            Paths.get("whatever"),
+            new GccPreprocessor(preprocessorTool),
+            PreprocessorFlags.builder().build(),
+            defaultFrameworkPathSearchPathFunction,
+            Optional.empty(),
+            /* leadingIncludePaths */ Optional.empty());
 
     return new CxxInferCapture(
         buildRuleParams,
-        sourcePathResolver,
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         new FakeSourcePath("src.c"),
@@ -121,44 +116,29 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
 
-    BuildTarget testBuildTarget = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                filesystem.getRootPath(),
-                Optional.empty(),
-                "//target",
-                "short"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
-        .build();
+    BuildTarget testBuildTarget =
+        BuildTarget.builder()
+            .setUnflavoredBuildTarget(
+                UnflavoredBuildTarget.of(
+                    filesystem.getRootPath(), Optional.empty(), "//target", "short"))
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
+            .build();
 
-    BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget)
-        .setProjectFilesystem(filesystem)
-        .build();
-
-    BuildRuleResolver testBuildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
+    BuildRuleParams testBuildRuleParams =
+        new FakeBuildRuleParamsBuilder(testBuildTarget).setProjectFilesystem(filesystem).build();
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
         new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(),
-            ImmutableSet.<CxxInferAnalyze>of());
+            ImmutableSet.of(), ImmutableSet.<CxxInferAnalyze>of());
 
-    CxxInferAnalyze analyzeRule = new CxxInferAnalyze(
-        testBuildRuleParams,
-        testSourcePathResolver,
-        inferBuckConfig,
-        captureAndAggregatingRules);
+    CxxInferAnalyze analyzeRule =
+        new CxxInferAnalyze(testBuildRuleParams, inferBuckConfig, captureAndAggregatingRules);
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
-            analyzeRule,
-            filesystem,
-            outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
@@ -179,44 +159,29 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     String cellName = "cellname";
 
-    BuildTarget testBuildTarget = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                filesystem.getRootPath(),
-                Optional.of(cellName),
-                "//target",
-                "short"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
-        .build();
+    BuildTarget testBuildTarget =
+        BuildTarget.builder()
+            .setUnflavoredBuildTarget(
+                UnflavoredBuildTarget.of(
+                    filesystem.getRootPath(), Optional.of(cellName), "//target", "short"))
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
+            .build();
 
-    BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget)
-        .setProjectFilesystem(filesystem)
-        .build();
-
-    BuildRuleResolver testBuildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
+    BuildRuleParams testBuildRuleParams =
+        new FakeBuildRuleParamsBuilder(testBuildTarget).setProjectFilesystem(filesystem).build();
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
         new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(),
-            ImmutableSet.<CxxInferAnalyze>of());
+            ImmutableSet.of(), ImmutableSet.<CxxInferAnalyze>of());
 
-    CxxInferAnalyze analyzeRule = new CxxInferAnalyze(
-        testBuildRuleParams,
-        testSourcePathResolver,
-        inferBuckConfig,
-        captureAndAggregatingRules);
+    CxxInferAnalyze analyzeRule =
+        new CxxInferAnalyze(testBuildRuleParams, inferBuckConfig, captureAndAggregatingRules);
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
-            analyzeRule,
-            filesystem,
-            outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
@@ -230,45 +195,43 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   @Test
-  public void testStepWritesTwoCellTokensInFile() throws IOException, InterruptedException {
+  public void testStepWritesTwoCellTokensInFile() throws Exception {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     // filesystem, buildTarget and buildRuleParams for first cell (analysis)
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/cell_one");
-    BuildTarget buildTarget1 = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                filesystem1.getRootPath(),
-                Optional.of("cell1"),
-                "//target/in_cell_one",
-                "short1"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
-        .build();
-    BuildRuleParams buildRuleParams1 = new FakeBuildRuleParamsBuilder(buildTarget1)
-        .setProjectFilesystem(filesystem1)
-        .build();
+    BuildTarget buildTarget1 =
+        BuildTarget.builder()
+            .setUnflavoredBuildTarget(
+                UnflavoredBuildTarget.of(
+                    filesystem1.getRootPath(),
+                    Optional.of("cell1"),
+                    "//target/in_cell_one",
+                    "short1"))
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
+            .build();
+    BuildRuleParams buildRuleParams1 =
+        new FakeBuildRuleParamsBuilder(buildTarget1).setProjectFilesystem(filesystem1).build();
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
-    BuildTarget buildTarget2 = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                filesystem2.getRootPath(),
-                Optional.of("cell2"),
-                "//target/in_cell_two",
-                "short2"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get())
-        .build();
-    BuildRuleParams buildRuleParams2 = new FakeBuildRuleParamsBuilder(buildTarget2)
-        .setProjectFilesystem(filesystem2)
-        .build();
-
+    BuildTarget buildTarget2 =
+        BuildTarget.builder()
+            .setUnflavoredBuildTarget(
+                UnflavoredBuildTarget.of(
+                    filesystem2.getRootPath(),
+                    Optional.of("cell2"),
+                    "//target/in_cell_two",
+                    "short2"))
+            .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
+            .build();
+    BuildRuleParams buildRuleParams2 =
+        new FakeBuildRuleParamsBuilder(buildTarget2).setProjectFilesystem(filesystem2).build();
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
+    SourcePathResolver testSourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
@@ -277,21 +240,14 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
         new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(captureRule),
-            ImmutableSet.<CxxInferAnalyze>of());
+            ImmutableSet.of(captureRule), ImmutableSet.<CxxInferAnalyze>of());
 
-    CxxInferAnalyze analyzeRule = new CxxInferAnalyze(
-        buildRuleParams1,
-        testSourcePathResolver,
-        inferBuckConfig,
-        captureAndAggregatingRules);
+    CxxInferAnalyze analyzeRule =
+        new CxxInferAnalyze(buildRuleParams1, inferBuckConfig, captureAndAggregatingRules);
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
-            analyzeRule,
-            filesystem1,
-            outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem1, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
@@ -299,54 +255,52 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
-            .toString() + "\n" +
-        InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput())
-            .toString();
+                .toString()
+            + "\n"
+            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput())
+                .toString();
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }
 
   @Test
-  public void testStepWritesOneCellTokenInFileWhenOneCellIsAbsent()
-      throws IOException, InterruptedException {
+  public void testStepWritesOneCellTokenInFileWhenOneCellIsAbsent() throws Exception {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     // filesystem, buildTarget and buildRuleParams for first, unnamed cell (analysis)
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/default_cell");
-    BuildTarget buildTarget1 = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                filesystem1.getRootPath(),
-                Optional.empty(),
-                "//target/in_default_cell",
-                "short"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
-        .build();
-    BuildRuleParams buildRuleParams1 = new FakeBuildRuleParamsBuilder(buildTarget1)
-        .setProjectFilesystem(filesystem1)
-        .build();
+    BuildTarget buildTarget1 =
+        BuildTarget.builder()
+            .setUnflavoredBuildTarget(
+                UnflavoredBuildTarget.of(
+                    filesystem1.getRootPath(),
+                    Optional.empty(),
+                    "//target/in_default_cell",
+                    "short"))
+            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
+            .build();
+    BuildRuleParams buildRuleParams1 =
+        new FakeBuildRuleParamsBuilder(buildTarget1).setProjectFilesystem(filesystem1).build();
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
-    BuildTarget buildTarget2 = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                filesystem2.getRootPath(),
-                Optional.of("cell2"),
-                "//target/in_cell_two",
-                "short2"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE.get())
-        .build();
-    BuildRuleParams buildRuleParams2 = new FakeBuildRuleParamsBuilder(buildTarget2)
-        .setProjectFilesystem(filesystem2)
-        .build();
-
+    BuildTarget buildTarget2 =
+        BuildTarget.builder()
+            .setUnflavoredBuildTarget(
+                UnflavoredBuildTarget.of(
+                    filesystem2.getRootPath(),
+                    Optional.of("cell2"),
+                    "//target/in_cell_two",
+                    "short2"))
+            .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
+            .build();
+    BuildRuleParams buildRuleParams2 =
+        new FakeBuildRuleParamsBuilder(buildTarget2).setProjectFilesystem(filesystem2).build();
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
+    SourcePathResolver testSourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
@@ -355,21 +309,14 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
         new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(captureRule),
-            ImmutableSet.<CxxInferAnalyze>of());
+            ImmutableSet.of(captureRule), ImmutableSet.<CxxInferAnalyze>of());
 
-    CxxInferAnalyze analyzeRule = new CxxInferAnalyze(
-        buildRuleParams1,
-        testSourcePathResolver,
-        inferBuckConfig,
-        captureAndAggregatingRules);
+    CxxInferAnalyze analyzeRule =
+        new CxxInferAnalyze(buildRuleParams1, inferBuckConfig, captureAndAggregatingRules);
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
-            analyzeRule,
-            filesystem1,
-            outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem1, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
@@ -377,9 +324,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
-            .toString() + "\n" +
-        InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput())
-            .toString();
+                .toString()
+            + "\n"
+            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput())
+                .toString();
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }

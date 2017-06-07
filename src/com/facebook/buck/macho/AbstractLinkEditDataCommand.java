@@ -19,7 +19,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -33,22 +32,31 @@ abstract class AbstractLinkEditDataCommand implements LoadCommand {
   public static final UnsignedInteger LC_DYLIB_CODE_SIGN_DRS = UnsignedInteger.fromIntBits(0x2B);
   public static final UnsignedInteger LC_LINKER_OPTIMIZATION_HINT =
       UnsignedInteger.fromIntBits(0x2E);
-  public static final ImmutableSet<UnsignedInteger> VALID_CMD_VALUES = ImmutableSet.of(
-      LC_CODE_SIGNATURE, LC_SEGMENT_SPLIT_INFO, LC_FUNCTION_STARTS, LC_DATA_IN_CODE,
-      LC_DYLIB_CODE_SIGN_DRS, LC_LINKER_OPTIMIZATION_HINT);
+  public static final ImmutableSet<UnsignedInteger> VALID_CMD_VALUES =
+      ImmutableSet.of(
+          LC_CODE_SIGNATURE,
+          LC_SEGMENT_SPLIT_INFO,
+          LC_FUNCTION_STARTS,
+          LC_DATA_IN_CODE,
+          LC_DYLIB_CODE_SIGN_DRS,
+          LC_LINKER_OPTIMIZATION_HINT);
 
   public static final int SIZE_IN_BYTES = 16;
 
   @Override
   public abstract LoadCommandCommonFields getLoadCommandCommonFields();
-  public abstract UnsignedInteger getDataoff();       // 32 bit
-  public abstract UnsignedInteger getDatasize();      // 32 bit
+
+  public abstract UnsignedInteger getDataoff(); // 32 bit
+
+  public abstract UnsignedInteger getDatasize(); // 32 bit
 
   @Value.Check
   protected void check() {
     UnsignedInteger cmd = getLoadCommandCommonFields().getCmd();
     Preconditions.checkArgument(VALID_CMD_VALUES.contains(cmd));
-    Preconditions.checkArgument(getLoadCommandCommonFields().getCmdsize().equals(
-        UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
+    Preconditions.checkArgument(
+        getLoadCommandCommonFields()
+            .getCmdsize()
+            .equals(UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
   }
 }

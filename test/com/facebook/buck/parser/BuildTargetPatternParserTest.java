@@ -17,6 +17,8 @@ package com.facebook.buck.parser;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -24,23 +26,30 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.FakeCellPathResolver;
+import com.facebook.buck.rules.CellPathResolverView;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
+import com.google.common.collect.ImmutableSet;
+import java.nio.file.FileSystem;
+import java.util.stream.Stream;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.nio.file.FileSystem;
-
 public class BuildTargetPatternParserTest {
 
-  private final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-  private final FileSystem vfs = filesystem.getRootPath().getFileSystem();
+  private ProjectFilesystem filesystem;
+  private FileSystem vfs;
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
+
+  @Before
+  public void setUp() throws InterruptedException {
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    vfs = filesystem.getRootPath().getFileSystem();
+  }
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
@@ -48,28 +57,22 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     assertEquals(
-        new ImmediateDirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("test/com/facebook/buck/parser/")),
+        ImmediateDirectoryBuildTargetPattern.of(
+            filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
-            "//test/com/facebook/buck/parser:"));
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser:"));
 
     assertEquals(
-        new SingletonBuildTargetPattern(
-            filesystem.getRootPath(),
-            "//test/com/facebook/buck/parser:parser"),
+        SingletonBuildTargetPattern.of(
+            filesystem.getRootPath(), "//test/com/facebook/buck/parser:parser"),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
-            "//test/com/facebook/buck/parser:parser"));
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
 
     assertEquals(
-        new SubdirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("test/com/facebook/buck/parser/")),
+        SubdirectoryBuildTargetPattern.of(
+            filesystem.getRootPath(), vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
-            "//test/com/facebook/buck/parser/..."));
+            createCellRoots(filesystem), "//test/com/facebook/buck/parser/..."));
   }
 
   @Test(expected = BuildTargetParseException.class)
@@ -86,39 +89,97 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     assertEquals(
-        new ImmediateDirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("")),
+        ImmediateDirectoryBuildTargetPattern.of(filesystem.getRootPath(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
 
     assertEquals(
-        new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:parser"),
+        SingletonBuildTargetPattern.of(filesystem.getRootPath(), "//:parser"),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
-        new SubdirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            vfs.getPath("")),
+        SubdirectoryBuildTargetPattern.of(filesystem.getRootPath(), vfs.getPath("")),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
   }
 
   @Test
-  public void visibilityCanContainCrossCellReference() {
+  public void visibilityCanContainCrossCellReference() throws InterruptedException {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument();
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    CellPathResolver cellNames = new FakeCellPathResolver(
-        ImmutableMap.of("other", filesystem.getRootPath()));
+    CellPathResolver cellNames =
+        new DefaultCellPathResolver(
+            filesystem.getPath("foo/root"),
+            ImmutableMap.of("other", filesystem.getPath("foo/other")));
 
     assertEquals(
-        new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:something"),
+        SingletonBuildTargetPattern.of(filesystem.getPath("foo/other"), "//:something"),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
-        new SubdirectoryBuildTargetPattern(
-            filesystem.getRootPath(),
-            filesystem.getRootPath().getFileSystem().getPath("sub")),
+        SubdirectoryBuildTargetPattern.of(
+            filesystem.getPath("foo/other"), filesystem.getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
+  }
+
+  @Test
+  public void visibilityCanMatchCrossCellTargets() throws Exception {
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
+        BuildTargetPatternParser.forVisibilityArgument();
+
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    CellPathResolver rootCellPathResolver =
+        new DefaultCellPathResolver(
+            filesystem.getPath("root").normalize(),
+            ImmutableMap.of(
+                "other", filesystem.getPath("other").normalize(),
+                "root", filesystem.getPath("root").normalize()));
+    CellPathResolver otherCellPathResolver =
+        new CellPathResolverView(
+            rootCellPathResolver, ImmutableSet.of("root"), filesystem.getPath("other").normalize());
+
+    // Root cell visibility from non-root cell
+    Stream.of("other//lib:lib", "other//lib:", "other//lib/...")
+        .forEach(
+            patternString -> {
+              BuildTargetPattern pattern =
+                  buildTargetPatternParser.parse(rootCellPathResolver, patternString);
+              assertTrue(
+                  "from root matching something in non-root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          otherCellPathResolver)));
+              assertFalse(
+                  "from root failing to match something in root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          rootCellPathResolver)));
+            });
+
+    // Non-root cell visibility from root cell.
+    Stream.of("root//lib:lib", "root//lib:", "root//lib/...")
+        .forEach(
+            patternString -> {
+              BuildTargetPattern pattern =
+                  buildTargetPatternParser.parse(otherCellPathResolver, patternString);
+              assertTrue(
+                  "from non-root matching something in root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          rootCellPathResolver)));
+              assertFalse(
+                  "from non-root matching something in non-root: " + pattern,
+                  pattern.matches(
+                      BuildTargetParser.INSTANCE.parse(
+                          "//lib:lib",
+                          BuildTargetPatternParser.fullyQualified(),
+                          otherCellPathResolver)));
+            });
   }
 
   @Test
@@ -128,8 +189,8 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     exception.expect(BuildTargetParseException.class);
-    exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
-        "(found ///facebookorca/...)");
+    exception.expectMessage("absolute");
+    exception.expectMessage("(found ///facebookorca/...)");
     buildTargetPatternParser.parse(createCellRoots(filesystem), "///facebookorca/...");
   }
 }

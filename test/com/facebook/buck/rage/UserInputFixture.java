@@ -17,7 +17,6 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.util.CapturingPrintStream;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -31,9 +30,7 @@ public class UserInputFixture {
     outputStream = new CapturingPrintStream();
     InputStream inputStream = new ByteArrayInputStream((cannedAnswer + "\n").getBytes("UTF-8"));
 
-    userInput = new UserInput(
-        outputStream,
-        new BufferedReader(new InputStreamReader(inputStream)));
+    userInput = new UserInput(outputStream, new BufferedReader(new InputStreamReader(inputStream)));
   }
 
   public CapturingPrintStream getOutputStream() {
@@ -44,4 +41,3 @@ public class UserInputFixture {
     return userInput;
   }
 }
-

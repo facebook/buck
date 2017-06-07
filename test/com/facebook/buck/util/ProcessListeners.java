@@ -32,8 +32,7 @@ public interface ProcessListeners {
     }
 
     @Override
-    public void onExit(int exitCode) {
-    }
+    public void onExit(int exitCode) {}
 
     @Override
     public void onStdout(ByteBuffer buffer, boolean closed) {

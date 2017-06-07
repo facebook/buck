@@ -17,31 +17,26 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AuditOwnerCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testOwnerOneFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_owner", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_owner", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "owner",
-        "example/1.txt");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("audit", "owner", "example/1.txt");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-one"), result.getStdout());
   }
@@ -49,18 +44,18 @@ public class AuditOwnerCommandIntegrationTest {
   @Test
   public void testTwoFilesJSON() throws IOException {
     boolean isPlatformWindows = Platform.detect() == Platform.WINDOWS;
-    String expectedJson = isPlatformWindows ?
-        "stdout-one-two-windows.json" : "stdout-one-two.json";
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_owner", tmp);
+    String expectedJson = isPlatformWindows ? "stdout-one-two-windows.json" : "stdout-one-two.json";
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_owner", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "owner",
-        "--json",
-        isPlatformWindows ? "example\\1.txt" : "example/1.txt",
-        isPlatformWindows ? "example\\lib\\2.txt" : "example/lib/2.txt");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "owner",
+            "--json",
+            isPlatformWindows ? "example\\1.txt" : "example/1.txt",
+            isPlatformWindows ? "example\\lib\\2.txt" : "example/lib/2.txt");
     result.assertSuccess();
     assertEquals(workspace.getFileContents(expectedJson), result.getStdout());
   }

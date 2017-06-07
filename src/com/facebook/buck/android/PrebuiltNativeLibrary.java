@@ -23,20 +23,17 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
-
 
 /**
  * An object that represents the resources prebuilt native library.
- * <p>
- * Suppose this were a rule defined in <code>src/com/facebook/feed/BUILD</code>:
+ *
+ * <p>Suppose this were a rule defined in <code>src/com/facebook/feed/BUILD</code>:
+ *
  * <pre>
  * prebuilt_native_library(
  *   name = 'face_dot_com',
@@ -44,24 +41,22 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-
 public class PrebuiltNativeLibrary extends AbstractBuildRule
     implements NativeLibraryBuildRule, AndroidPackageable {
 
-  @AddToRuleKey
-  private final boolean isAsset;
+  @AddToRuleKey private final boolean isAsset;
   private final Path libraryPath;
+
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> librarySources;
+  private final ImmutableSortedSet<? extends SourcePath> librarySources;
 
   protected PrebuiltNativeLibrary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Path nativeLibsDirectory,
       boolean isAsset,
-      ImmutableSortedSet<SourcePath> librarySources) {
-    super(params, resolver);
+      ImmutableSortedSet<? extends SourcePath> librarySources) {
+    super(params);
     this.isAsset = isAsset;
     this.libraryPath = nativeLibsDirectory;
     this.librarySources = librarySources;
@@ -79,15 +74,14 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     // A prebuilt_native_library does not have a "primary output" at this time.
     return null;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     // We're checking in prebuilt libraries for now, so this is a noop.
     return ImmutableList.of();
   }
@@ -101,12 +95,10 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   public void addToCollector(AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
-          getBuildTarget(),
-          new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
     } else {
       collector.addNativeLibsDirectory(
-          getBuildTarget(),
-          new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
     }
   }
 }

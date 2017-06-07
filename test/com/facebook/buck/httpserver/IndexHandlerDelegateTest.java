@@ -20,12 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.template.soy.data.SoyMapData;
-
+import java.io.IOException;
 import org.easymock.EasyMock;
 import org.eclipse.jetty.server.Request;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class IndexHandlerDelegateTest {
 

@@ -19,22 +19,19 @@ package com.facebook.buck.go;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class GoTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
@@ -44,8 +41,7 @@ public class GoTestIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "go_test", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "go_test", tmp);
     workspace.setUp();
   }
 
@@ -80,15 +76,15 @@ public class GoTestIntegrationTest {
   @Ignore
   @Test
   public void testGoInternalTest() throws IOException {
-    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
-        "test", "//:test-success-internal");
+    ProjectWorkspace.ProcessResult result1 =
+        workspace.runBuckCommand("test", "//:test-success-internal");
     result1.assertSuccess();
   }
 
   @Test
   public void testWithResources() throws IOException {
-    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
-        "test", "//:test-with-resources");
+    ProjectWorkspace.ProcessResult result1 =
+        workspace.runBuckCommand("test", "//:test-with-resources");
     result1.assertSuccess();
   }
 

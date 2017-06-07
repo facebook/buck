@@ -16,149 +16,97 @@
 
 package com.facebook.buck.jvm.scala;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
-import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
+import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
+public class ScalaLibraryDescription
+    implements Description<ScalaLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<
+            ScalaLibraryDescription.AbstractScalaLibraryDescriptionArg> {
 
   private final ScalaBuckConfig scalaBuckConfig;
 
-  public ScalaLibraryDescription(
-      ScalaBuckConfig scalaBuckConfig) {
+  public ScalaLibraryDescription(ScalaBuckConfig scalaBuckConfig) {
     this.scalaBuckConfig = scalaBuckConfig;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<ScalaLibraryDescriptionArg> getConstructorArgType() {
+    return ScalaLibraryDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      CellPathResolver cellRoots,
+      ScalaLibraryDescriptionArg args)
+      throws NoSuchBuildTargetException {
+    ScalaLibraryBuilder scalaLibraryBuilder =
+        new ScalaLibraryBuilder(targetGraph, rawParams, resolver, cellRoots, scalaBuckConfig)
+            .setArgs(args);
 
-    if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
-      BuildTarget libraryTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
-      resolver.requireRule(libraryTarget);
-      return CalculateAbi.of(
-          rawParams.getBuildTarget(),
-          pathResolver,
-          rawParams,
-          new BuildTargetSourcePath(libraryTarget));
-    }
-
-    Tool scalac = scalaBuckConfig.getScalac(resolver);
-
-    final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyWithDeps(
-        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(rawParams.getDeclaredDeps().get())
-            .add(scalaLibrary)
-            .build(),
-        rawParams.getExtraDeps());
-
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
-
-    BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))),
-                scalac.getDeps(pathResolver)));
-    return new DefaultJavaLibrary(
-        javaLibraryParams,
-        pathResolver,
-        args.srcs,
-        validateResources(
-            pathResolver,
-            params.getProjectFilesystem(),
-            args.resources),
-        /* generatedSourceFolder */ Optional.empty(),
-        /* proguardConfig */ Optional.empty(),
-        /* postprocessClassesCommands */ ImmutableList.of(),
-        params.getDeclaredDeps().get(),
-        resolver.getAllRules(args.providedDeps),
-        abiJarTarget,
-        JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-        /* trackClassUsage */ false,
-        /* additionalClasspathEntries */ ImmutableSet.of(),
-        new ScalacToJarStepFactory(
-            scalac,
-            ScalacToJarStepFactory.collectScalacArguments(
-                scalaBuckConfig,
-                resolver,
-                args.extraArguments)),
-        args.resourcesRoot,
-        args.manifestFile,
-        args.mavenCoords,
-        args.tests,
-        /* classesToRemoveFromJar */ ImmutableSet.of());
+    return HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())
+        ? scalaLibraryBuilder.buildAbi()
+        : scalaLibraryBuilder.build();
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    return ImmutableList.<BuildTarget>builder()
+      AbstractScalaLibraryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    extraDepsBuilder
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()))
-        .build();
+        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
-    public ImmutableList<String> extraArguments = ImmutableList.of();
-    // Note: scala does not have a exported_deps because scala needs the transitive closure of
-    // dependencies to compile. deps is effectively exported_deps.
-    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  // Note: scala does not have a exported_deps because scala needs the transitive closure of
+  // dependencies to compile. deps is effectively exported_deps.
+  interface CoreArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getResources();
+
+    ImmutableList<String> getExtraArguments();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getProvidedDeps();
 
     @Hint(isInput = false)
-    public Optional<Path> resourcesRoot;
-    public Optional<SourcePath> manifestFile;
-    public Optional<String> mavenCoords;
+    Optional<Path> getResourcesRoot();
 
-    @Hint(isDep = false)
-    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+    Optional<SourcePath> getManifestFile();
+
+    Optional<String> getMavenCoords();
   }
 
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractScalaLibraryDescriptionArg extends CoreArg {}
 }

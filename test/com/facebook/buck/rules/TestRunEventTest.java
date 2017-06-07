@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import org.junit.Test;
 
 public class TestRunEventTest {
@@ -31,10 +30,9 @@ public class TestRunEventTest {
   public void startAndStopShouldRelateProperlyBasedOnHash() {
     ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
 
-    TestRunEvent.Started started = TestRunEvent.started(
-        false, TestSelectorList.empty(), false, tests);
-    TestRunEvent.Finished finished = TestRunEvent.finished(
-        tests, ImmutableList.of());
+    TestRunEvent.Started started =
+        TestRunEvent.started(false, TestSelectorList.empty(), false, tests);
+    TestRunEvent.Finished finished = TestRunEvent.finished(tests, ImmutableList.of());
 
     assertTrue(started.isRelatedTo(finished));
     assertTrue(finished.isRelatedTo(started));
@@ -45,13 +43,11 @@ public class TestRunEventTest {
     ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
     ImmutableSet<String> otherTests = ImmutableSet.of("//example:test");
 
-    TestRunEvent.Started started = TestRunEvent.started(
-        false, TestSelectorList.empty(), false, tests);
-    TestRunEvent.Finished finished = TestRunEvent.finished(
-        otherTests, ImmutableList.of());
+    TestRunEvent.Started started =
+        TestRunEvent.started(false, TestSelectorList.empty(), false, tests);
+    TestRunEvent.Finished finished = TestRunEvent.finished(otherTests, ImmutableList.of());
 
     assertFalse(started.isRelatedTo(finished));
     assertFalse(finished.isRelatedTo(started));
   }
-
 }

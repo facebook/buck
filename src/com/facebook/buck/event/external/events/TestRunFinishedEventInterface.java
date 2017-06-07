@@ -19,17 +19,16 @@ package com.facebook.buck.event.external.events;
 import java.util.List;
 
 /**
- * Describes the results of the tests on all the targets.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes the results of the tests on all the targets. This type is intended to be used by
+ * external applications (like the Intellij Buck plugin) to deserialize events coming from the
+ * webserver.
  */
 public interface TestRunFinishedEventInterface<T> extends BuckEventExternalInterface {
   // Sent when the test run has finished
   String RUN_COMPLETE = "RunComplete";
   /**
-   * @return a list all the test results available after running buck test.
-   * For buck it returns a list of TestResults and
-   * for external a list of TestResultsExternalInterface.
+   * @return a list all the test results available after running buck test. For buck it returns a
+   *     list of TestResults and for external a list of TestResultsExternalInterface.
    * @see com.facebook.buck.event.external.elements.TestResultsExternalInterface
    */
   List<T> getResults();

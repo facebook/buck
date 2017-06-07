@@ -20,12 +20,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
-
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import org.junit.Rule;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -35,20 +38,14 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-
 public class RunWithAnnotationIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testSimpleSuiteRun2TestCases() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "runwith", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder);
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:SimpleSuiteTest");
@@ -58,8 +55,8 @@ public class RunWithAnnotationIntegrationTest {
 
   @Test
   public void testFailingSuiteRun3TestCasesWith1Failure() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "runwith", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder);
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:FailingSuiteTest");
@@ -70,18 +67,19 @@ public class RunWithAnnotationIntegrationTest {
 
   @Test
   public void testParametrizedTestRun4Cases() throws IOException, SAXException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "runwith", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder);
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:ParametrizedTest");
     suiteTestResult.assertSuccess("Test should pass");
     assertThat(suiteTestResult.getStderr(), containsString("4 Passed"));
 
-    Reader reader = Files.newBufferedReader(
-        workspace.getPath(
-            "buck-out/gen/__java_test_ParametrizedTest_output__/com.example.ParametrizedTest.xml"),
-        Charset.defaultCharset());
+    Reader reader =
+        Files.newBufferedReader(
+            workspace.getPath(
+                "buck-out/gen/__java_test_ParametrizedTest_output__/com.example.ParametrizedTest.xml"),
+            Charset.defaultCharset());
     Document doc = XmlDomParser.parse(new InputSource(reader), false);
 
     NodeList testNodes = doc.getElementsByTagName("test");
@@ -98,7 +96,5 @@ public class RunWithAnnotationIntegrationTest {
           expectedStdout,
           ((Element) testNode).getElementsByTagName("stdout").item(0).getTextContent());
     }
-
   }
-
 }

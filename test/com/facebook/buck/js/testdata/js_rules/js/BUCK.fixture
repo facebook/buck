@@ -1,0 +1,104 @@
+sh_binary(
+  name = 'packager_worker_exe',
+  main = 'packager_worker.sh',
+  resources = ['pixel.gif'],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+worker_tool(
+    name = 'packager_worker',
+    exe = ':packager_worker_exe',
+    visibility = ['PUBLIC'],
+)
+
+js_library(
+    name = 'fruit',
+    srcs = ['apple.js', 'banana.js', 'pear.js'],
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'extras',
+    srcs = glob(['extras/*.js']),
+    extra_args = '--arbitrary extra --flags',
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'fruit-salad',
+    srcs = ['fruit-salad.js'],
+    libs = [':fruit', ':extras'],
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'build-target-output',
+    srcs = ['//external:exported.js'],
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'replace-build-target-prefix',
+    srcs = ['//external:exported.js'],
+    base_path = 'node_modules/exported.js',
+    worker = ':packager_worker',
+)
+
+js_library(
+    name = 'node_modules',
+    srcs = [
+        ('//external:node-modules-installation', 'a.js'),
+        ('//external:node-modules-installation', 'b/index.js'),
+        ('//external:node-modules-installation', 'c/c.js'),
+        ('//external:node-modules-installation', 'c/package.json'),
+    ],
+    base_path = 'node_modules',
+    worker = ':packager_worker',
+)
+
+js_bundle(
+    name = 'fruit-salad-in-a-bundle',
+    deps = [':fruit-salad'],
+    entry = 'fruit-salad',
+    android_package = 'com.sample',
+    worker = ':packager_worker',
+    visibility = ['PUBLIC'],
+)
+
+js_bundle(
+    name = 'fruit-with-extras',
+    bundle_name = 'some-fruit-with-delicious-extras.js',
+    entry = ['yoghurt', 'banana', 'apple'],
+    deps = [':extras', ':fruit'],
+    worker = ':packager_worker',
+)
+
+genrule(
+    name = 'a-genrule',
+    cmd = 'echo',
+    out = 'arbitrary',
+)
+
+js_bundle(
+    name = 'bundle-with-genrule-dep',
+    deps = [':a-genrule'],
+    entry = 'arbitrary',
+    worker = ':packager_worker',
+)
+
+android_library(
+    name = 'the-android-lib',
+    deps = [':fruit-salad'],
+)
+
+js_bundle(
+    name = 'bundle-with-android-lib',
+    deps = [':the-android-lib'],
+    entry = 'fruit-salad',
+    android_package = 'com.sample',
+    worker = ':packager_worker',
+    visibility = ['PUBLIC'],
+)
+

@@ -18,11 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-
 import java.nio.file.Path;
 
 public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
@@ -30,8 +29,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
   private final TypeCoercer<Path> pathTypeCoercer;
 
   SourcePathTypeCoercer(
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<Path> pathTypeCoercer) {
+      TypeCoercer<BuildTarget> buildTargetTypeCoercer, TypeCoercer<Path> pathTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;
   }
@@ -48,27 +46,16 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    if ((object instanceof String) &&
-        (((String) object).contains("//") ||
-         ((String) object).startsWith(":"))) {
+    if ((object instanceof String)
+        && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
       BuildTarget buildTarget =
-          buildTargetTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object);
-      return new BuildTargetSourcePath(buildTarget);
+          buildTargetTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      return new DefaultBuildTargetSourcePath(buildTarget);
     } else {
-      Path path = pathTypeCoercer.coerce(
-          cellRoots,
-          filesystem,
-          pathRelativeToProjectRoot,
-          object);
+      Path path = pathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
       if (path.isAbsolute()) {
         throw CoerceFailedException.simple(
-            object,
-            getOutputClass(),
-            "SourcePath cannot contain an absolute path");
+            object, getOutputClass(), "SourcePath cannot contain an absolute path");
       }
       return new PathSourcePath(filesystem, path);
     }

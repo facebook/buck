@@ -19,8 +19,7 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import com.facebook.buck.apple.FakeAppleRuleDescriptions;
-import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -28,14 +27,11 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class SwiftDescriptionsTest {
 
@@ -43,30 +39,31 @@ public class SwiftDescriptionsTest {
   public void testPopulateSwiftLibraryDescriptionArg() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
-    SwiftLibraryDescription.Arg output =
-        FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createUnpopulatedConstructorArg();
+    SwiftLibraryDescriptionArg.Builder outputBuilder =
+        SwiftLibraryDescriptionArg.builder().setName("bar");
 
-    CxxLibraryDescription.Arg args = CxxLibraryDescription.createEmptyConstructorArg();
+    CxxLibraryDescriptionArg.Builder args = CxxLibraryDescriptionArg.builder().setName("bar");
 
     FakeSourcePath swiftSrc = new FakeSourcePath("foo/bar.swift");
 
-    args.srcs = ImmutableSortedSet.of(
-        SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")),
-        SourceWithFlags.of(swiftSrc));
-    args.compilerFlags = ImmutableList.of();
-    args.supportedPlatformsRegex = Optional.empty();
+    args.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")), SourceWithFlags.of(swiftSrc)));
 
-    SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
-    assertThat(output.moduleName.get(), equalTo("bar"));
-    assertThat(output.srcs, equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        pathResolver, outputBuilder, args.build(), buildTarget);
+    SwiftLibraryDescriptionArg output = outputBuilder.build();
+    assertThat(output.getModuleName().get(), equalTo("bar"));
+    assertThat(output.getSrcs(), equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
 
-    args.moduleName = Optional.of("baz");
+    args.setModuleName("baz");
 
-    SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
-    assertThat(output.moduleName.get(), equalTo("baz"));
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        pathResolver, outputBuilder, args.build(), buildTarget);
+    output = outputBuilder.build();
+    assertThat(output.getModuleName().get(), equalTo("baz"));
   }
-
 }

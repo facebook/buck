@@ -16,22 +16,20 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.google.common.collect.ImmutableList;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 
+import com.google.common.collect.ImmutableList;
 import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-
 @RunWith(EasyMockRunner.class)
 public class TracingTaskListenerCleanerTest {
 
-  @Mock
-  private JavacPhaseTracer mockTracer;
+  @Mock private JavacPhaseTracer mockTracer;
   private TracingTaskListener.TraceCleaner traceCleaner;
 
   @Before

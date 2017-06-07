@@ -19,7 +19,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -27,5 +26,4 @@ import org.immutables.value.Value;
 abstract class AbstractVersionInfo {
 
   public abstract ImmutableMap<BuildTarget, ImmutableSet<Version>> getVersionDomain();
-
 }

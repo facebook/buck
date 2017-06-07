@@ -21,49 +21,46 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 /**
- * Description for a core_data_model rule, which identifies a model file
- * for use with Apple's Core Data.
+ * Description for a core_data_model rule, which identifies a model file for use with Apple's Core
+ * Data.
  */
-public class CoreDataModelDescription implements
-    Description<AppleWrapperResourceArg>,
-    Flavored {
+public class CoreDataModelDescription implements Description<AppleWrapperResourceArg>, Flavored {
 
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
 
   @Override
-  public AppleWrapperResourceArg createUnpopulatedConstructorArg() {
-    return new AppleWrapperResourceArg();
+  public Class<AppleWrapperResourceArg> getConstructorArgType() {
+    return AppleWrapperResourceArg.class;
   }
 
   @Override
-  public <A extends AppleWrapperResourceArg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
-    String extension = Files.getFileExtension(args.path.getFileName().toString());
+      CellPathResolver cellRoots,
+      AppleWrapperResourceArg args) {
+    String extension = Files.getFileExtension(args.getPath().getFileName().toString());
     Preconditions.checkArgument(
-        CORE_DATA_MODEL_EXTENSION.equals(extension) ||
-            VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
+        CORE_DATA_MODEL_EXTENSION.equals(extension)
+            || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
 
-    return new NoopBuildRule(
-        params,
-        new SourcePathResolver(resolver));
+    return new NoopBuildRule(params);
   }
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {
     return VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(
-        Files.getFileExtension(arg.path.getFileName().toString()));
+        Files.getFileExtension(arg.getPath().getFileName().toString()));
   }
 
   @Override

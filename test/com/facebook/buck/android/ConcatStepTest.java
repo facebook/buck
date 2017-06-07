@@ -16,30 +16,28 @@
 
 package com.facebook.buck.android;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Path;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.nio.file.Path;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ConcatStepTest {
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
-  public void testConcatFiles() throws IOException {
+  public void testConcatFiles() throws InterruptedException, IOException {
     // Create three files containing "foo", "bar", and "baz"
     // and see if they are correctly concatenated.
     File dest = temp.newFile();
@@ -62,7 +60,5 @@ public class ConcatStepTest {
     assertEquals(reader.readLine(), "foobarbaz");
 
     reader.close();
-
   }
-
 }

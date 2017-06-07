@@ -17,67 +17,41 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
-import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ParamInfoException;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import java.nio.file.Paths;
+import java.util.Optional;
+import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
 public class JvmLibraryArgInterpreterTest {
   private JavacOptions defaults;
-  private JvmLibraryArg arg;
   private BuildRuleResolver ruleResolver;
-  private SourcePathResolver resolver;
 
   @Before
-  public void createHelpers() {
-    defaults = JavacOptions.builder()
-        .setSourceLevel("8")
-        .setTargetLevel("8")
-        .build();
-
-    arg = new JvmLibraryArg();
-    populateWithDefaultValues(arg);
+  public void createHelpers() throws Exception {
+    defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
 
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(ruleResolver);
   }
 
   @Test
   public void javaVersionSetsBothSourceAndTargetLevels() {
-    arg.source = Optional.empty();
-    arg.target = Optional.empty();
-    arg.javaVersion = Optional.of("1.4");  // Set in the past, so if we ever bump the default....
+    // Set in the past, so if we ever bump the default....
+    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").setJavaVersion("1.4").build();
 
     JavacOptions options = createJavacOptions(arg);
 
@@ -87,9 +61,12 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void settingJavaVersionAndSourceLevelIsAnError() {
-    arg.source = Optional.of("1.4");
-    arg.target = Optional.empty();
-    arg.javaVersion = Optional.of("1.4");
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setSource("1.4")
+            .setJavaVersion("1.4")
+            .build();
 
     try {
       createJavacOptions(arg);
@@ -103,9 +80,12 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void settingJavaVersionAndTargetLevelIsAnError() {
-    arg.source = Optional.empty();
-    arg.target = Optional.of("1.4");
-    arg.javaVersion = Optional.of("1.4");
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setTarget("1.4")
+            .setJavaVersion("1.4")
+            .build();
 
     try {
       createJavacOptions(arg);
@@ -118,133 +98,80 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   @Test
-  public void compilerArgWithDefaultValueReturnsJsr199Javac() {
-    Either<BuiltInJavac, SourcePath> either = Either.ofLeft(DEFAULT);
-    arg.compiler = Optional.of(either);
-    JavacOptions options = createJavacOptions(arg);
+  public void compilerArgIsSet() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setCompiler(Either.ofLeft(DEFAULT)).build();
 
-    Javac javac = options.getJavac();
-
-    assertEquals(Optional.empty(), options.getJavacJarPath());
-    assertEquals(Optional.empty(), options.getJavacPath());
-    assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
+    assertEquals(arg.getCompiler(), arg.getJavacSpec().getCompiler());
   }
 
   @Test
-  public void compilerArgWithPrebuiltJarValueReturnsJsr199Javac() throws Exception {
-    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
-    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJarBuilder.createBuilder(target)
-        .setBinaryJar(javacJarPath)
-        .build(ruleResolver);
-    SourcePath sourcePath = new BuildTargetSourcePath(target);
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+  public void javacArgIsSet() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setJavac(Paths.get("does-not-exist")).build();
 
-    arg.compiler = Optional.of(either);
-    JavacOptions options = createJavacOptions(arg);
-
-    Javac javac = options.getJavac();
-
-    assertEquals(Optional.of(sourcePath), options.getJavacJarPath());
-    assertEquals(Optional.empty(), options.getJavacPath());
-    assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
+    assertEquals(
+        Optional.of(Either.ofLeft(arg.getJavac().get())), arg.getJavacSpec().getJavacPath());
   }
 
   @Test
-  public void compilerArgWithPathReturnsExternalJavac() {
-    Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
-    SourcePath sourcePath = new FakeSourcePath(externalJavac.toString());
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+  public void testJavacJarArgIsSet() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setJavacJar(new FakeSourcePath("does-not-exist"))
+            .build();
 
-    arg.compiler = Optional.of(either);
-    JavacOptions options = createJavacOptions(arg);
-
-    Javac javac = options.getJavac();
-
-    assertEquals(Optional.empty(), options.getJavacJarPath());
-    assertEquals(sourcePath, options.getJavacPath().get().getRight());
-    assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
+    assertEquals(arg.getJavacJar(), arg.getJavacSpec().getJavacJarPath());
   }
 
   @Test
-  public void compilerArgTakesPrecedenceOverJavacPathArg() {
-    Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
-    SourcePath sourcePath = new FakeSourcePath(externalJavac.toString());
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+  public void testCompilerClassNameArgIsSet() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setJavacJar(new FakeSourcePath("does-not-exist"))
+            .setCompilerClassName("compiler")
+            .build();
 
-    arg.compiler = Optional.of(either);
-    arg.javac = Optional.of(Paths.get("does-not-exist"));
-    JavacOptions options = createJavacOptions(arg);
-
-    Javac javac = options.getJavac();
-
-    assertEquals(Optional.empty(), options.getJavacJarPath());
-    assertEquals(sourcePath, options.getJavacPath().get().getRight());
-    assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
+    assertEquals(arg.getCompilerClassName(), arg.getJavacSpec().getCompilerClassName());
   }
 
   @Test
-  public void compilerArgTakesPrecedenceOverJavacJarArg() throws Exception {
-    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
-    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJarBuilder.createBuilder(target)
-        .setBinaryJar(javacJarPath)
-        .build(ruleResolver);
-    SourcePath sourcePath = new BuildTargetSourcePath(target);
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
-
-    arg.compiler = Optional.of(either);
-    arg.javacJar = Optional.of(
-        new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
-    JavacOptions options = createJavacOptions(arg);
-
-    Javac javac = options.getJavac();
-
-    assertEquals(Optional.of(sourcePath), options.getJavacJarPath());
-    assertEquals(Optional.empty(), options.getJavacPath());
-    assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
+  public void testNoJavacSpecIfNoJavacArg() {
+    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").build();
+    assertNull(arg.getJavacSpec());
   }
 
   @Test
-  public void omittingTheCompilerArgMeansThatExistingBehaviourIsMaintained() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path expected = Paths.get("does-not-exist");
+  public void sourceAbiGenerationCanBeDisabledPerTarget() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(false).build();
+    defaults = defaults.withCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
 
-    arg.compiler = Optional.empty();
-    arg.javacJar = Optional.of(
-        new PathSourcePath(new FakeProjectFilesystem(), expected));
     JavacOptions options = createJavacOptions(arg);
 
-    Javac javac = options.getJavac();
+    assertEquals(options.getCompilationMode(), JavacCompilationMode.FULL);
+  }
 
-    assertEquals(Optional.of(new PathSourcePath(filesystem, expected)), options.getJavacJarPath());
-    assertEquals(Optional.empty(), options.getJavacPath());
-    assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
+  @Test
+  public void sourceAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
+    assertEquals(defaults.getCompilationMode(), JavacCompilationMode.FULL);
+
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(true).build();
+
+    JavacOptions options = createJavacOptions(arg);
+
+    assertEquals(options.getCompilationMode(), JavacCompilationMode.FULL);
   }
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
     return JavacOptionsFactory.create(
-        defaults,
-        new FakeBuildRuleParamsBuilder("//not:real").build(),
-        ruleResolver,
-        resolver,
-        arg);
+        defaults, new FakeBuildRuleParamsBuilder("//not:real").build(), ruleResolver, arg);
   }
 
-  private void populateWithDefaultValues(Object arg) {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    try {
-      new ConstructorArgMarshaller(
-          new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())).populate(
-          createCellRoots(filesystem),
-          filesystem,
-          BuildTargetFactory.newInstance("//example:target"),
-          arg,
-          ImmutableSet.builder(),
-          ImmutableSet.builder(),
-          ImmutableMap.of());
-    } catch (ParamInfoException error) {
-      throw Throwables.propagate(error);
-    }
-  }
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractExampleJvmLibraryArg extends JvmLibraryArg {}
 }

@@ -18,13 +18,10 @@ package com.facebook.buck.event;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
-
 import java.util.IllegalFormatException;
 import java.util.logging.Level;
 
-/**
- * Event for tracking {@link Throwable}
- */
+/** Event for tracking {@link Throwable} */
 public class ThrowableConsoleEvent extends ConsoleEvent {
 
   protected ThrowableConsoleEvent(Throwable throwable, String message) {
@@ -33,9 +30,7 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
 
   protected ThrowableConsoleEvent(Throwable throwable, Level level, String message) {
     super(
-        level,
-        /* containsAnsiEscapeCodes */ false,
-        combineThrowableAndMessage(throwable, message));
+        level, /* containsAnsiEscapeCodes */ false, combineThrowableAndMessage(throwable, message));
   }
 
   private static String combineThrowableAndMessage(Throwable throwable, String message) {

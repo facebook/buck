@@ -19,12 +19,9 @@ package com.facebook.buck.intellij.ideabuck.file;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.intellij.openapi.fileTypes.LanguageFileType;
-
 import javax.swing.Icon;
 
-/**
- * Buck language type
- */
+/** Buck language type */
 public class BuckFileType extends LanguageFileType {
 
   public static final BuckFileType INSTANCE = new BuckFileType();

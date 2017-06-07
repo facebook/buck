@@ -16,104 +16,74 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.empty;
-
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
-
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Paths;
-
 import java.util.Optional;
-
 import org.junit.Test;
 
 public class JavacStepTest {
-
-  @Test
-  public void findFailedImports() throws Exception {
-    String lineSeperator = System.getProperty("line.separator");
-
-    String stderrOutput = Joiner.on(lineSeperator).join(
-        ImmutableList.of(
-            "java/com/foo/bar.java:5: package javax.annotation.concurrent does not exist",
-            "java/com/foo/bar.java:99: error: cannot access com.facebook.Raz",
-            "java/com/foo/bar.java:142: cannot find symbol: class ImmutableSet",
-            "java/com/foo/bar.java:999: you are a clown"));
-
-    ImmutableSet<String> missingImports =
-        JavacStep.findFailedImports(stderrOutput);
-    assertEquals(
-        ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
-        missingImports);
-  }
 
   @Test
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    JavacOptions javacOptions = JavacOptions.builder()
-        .setSourceLevel("8.0")
-        .setTargetLevel("8.0")
-        .build();
-    ClasspathChecker classpathChecker = new ClasspathChecker(
-        "/",
-        ":",
-        Paths::get,
-        dir -> false,
-        file -> false,
-        (path, glob) -> ImmutableSet.of());
+    JavacOptions javacOptions =
+        JavacOptions.builder().setSourceLevel("8.0").setTargetLevel("8.0").build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    JavacStep step = new JavacStep(
-        Paths.get("output"),
-        NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
-        ImmutableSortedSet.of(),
-        Paths.get("pathToSrcsList"),
-        ImmutableSortedSet.of(),
-        fakeJavac,
-        javacOptions,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
-        sourcePathResolver,
-        fakeFilesystem,
-        classpathChecker,
-        Optional.empty());
+    JavacStep step =
+        new JavacStep(
+            Paths.get("output"),
+            NoOpClassUsageFileWriter.instance(),
+            Optional.empty(),
+            ImmutableSortedSet.of(),
+            Paths.get("pathToSrcsList"),
+            ImmutableSortedSet.of(),
+            fakeJavac,
+            javacOptions,
+            BuildTargetFactory.newInstance("//foo:bar"),
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProcessExecutor(
-            new FakeProcessExecutor(
-                Functions.constant(fakeJavacProcess),
-                new TestConsole()))
-        .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
@@ -127,53 +97,47 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    JavacOptions javacOptions = JavacOptions.builder()
-        .setSourceLevel("8.0")
-        .setTargetLevel("8.0")
-        .build();
-    ClasspathChecker classpathChecker = new ClasspathChecker(
-        "/",
-        ":",
-        Paths::get,
-        dir -> false,
-        file -> false,
-        (path, glob) -> ImmutableSet.of());
+    JavacOptions javacOptions =
+        JavacOptions.builder().setSourceLevel("8.0").setTargetLevel("8.0").build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    JavacStep step = new JavacStep(
-        Paths.get("output"),
-        NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
-        ImmutableSortedSet.of(),
-        Paths.get("pathToSrcsList"),
-        ImmutableSortedSet.of(),
-        fakeJavac,
-        javacOptions,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
-        sourcePathResolver,
-        fakeFilesystem,
-        classpathChecker,
-        Optional.empty());
+    JavacStep step =
+        new JavacStep(
+            Paths.get("output"),
+            NoOpClassUsageFileWriter.instance(),
+            Optional.empty(),
+            ImmutableSortedSet.of(),
+            Paths.get("pathToSrcsList"),
+            ImmutableSortedSet.of(),
+            fakeJavac,
+            javacOptions,
+            BuildTargetFactory.newInstance("//foo:bar"),
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProcessExecutor(
-            new FakeProcessExecutor(
-                Functions.constant(fakeJavacProcess),
-                new TestConsole()))
-        .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
+    // JavacStep itself writes stdout to the console on error; we expect the Build class to write
+    // the stderr stream returned in the StepExecutionResult
     assertThat(result, equalTo(StepExecutionResult.of(1, Optional.of("javac stderr\n"))));
-    assertThat(
-        listener.getLogMessages(),
-        equalTo(ImmutableList.of("javac stdout\n", "javac stderr\n")));
+    assertThat(listener.getLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
   }
 
   @Test
@@ -181,54 +145,49 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    JavacOptions javacOptions = JavacOptions.builder()
-        .setSourceLevel("8.0")
-        .setTargetLevel("8.0")
-        .setBootclasspath("/this-totally-exists")
-        .build();
-    ClasspathChecker classpathChecker = new ClasspathChecker(
-        "/",
-        ":",
-        Paths::get,
-        dir -> true,
-        file -> false,
-        (path, glob) -> ImmutableSet.of());
+    JavacOptions javacOptions =
+        JavacOptions.builder()
+            .setSourceLevel("8.0")
+            .setTargetLevel("8.0")
+            .setBootclasspath("/this-totally-exists")
+            .build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
-    JavacStep step = new JavacStep(
-        Paths.get("output"),
-        NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
-        ImmutableSortedSet.of(),
-        Paths.get("pathToSrcsList"),
-        ImmutableSortedSet.of(),
-        fakeJavac,
-        javacOptions,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
-        sourcePathResolver,
-        fakeFilesystem,
-        classpathChecker,
-        Optional.empty());
+    JavacStep step =
+        new JavacStep(
+            Paths.get("output"),
+            NoOpClassUsageFileWriter.instance(),
+            Optional.empty(),
+            ImmutableSortedSet.of(),
+            Paths.get("pathToSrcsList"),
+            ImmutableSortedSet.of(),
+            fakeJavac,
+            javacOptions,
+            BuildTargetFactory.newInstance("//foo:bar"),
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProcessExecutor(
-            new FakeProcessExecutor(
-                Functions.constant(fakeJavacProcess),
-                new TestConsole()))
-        .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
     assertThat(result, equalTo(StepExecutionResult.SUCCESS));
-    assertThat(
-        listener.getLogMessages(),
-        empty());
+    assertThat(listener.getLogMessages(), empty());
   }
 
   @Test
@@ -236,47 +195,44 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    JavacOptions javacOptions = JavacOptions.builder()
-        .setSourceLevel("8.0")
-        .setTargetLevel("8.0")
-        .setBootclasspath("/no-such-dir")
-        .build();
-    ClasspathChecker classpathChecker = new ClasspathChecker(
-        "/",
-        ":",
-        Paths::get,
-        dir -> false,
-        file -> false,
-        (path, glob) -> ImmutableSet.of());
+    JavacOptions javacOptions =
+        JavacOptions.builder()
+            .setSourceLevel("8.0")
+            .setTargetLevel("8.0")
+            .setBootclasspath("/no-such-dir")
+            .build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    JavacStep step = new JavacStep(
-        Paths.get("output"),
-        NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
-        ImmutableSortedSet.of(),
-        Paths.get("pathToSrcsList"),
-        ImmutableSortedSet.of(),
-        fakeJavac,
-        javacOptions,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        Optional.empty(),
-        sourcePathResolver,
-        fakeFilesystem,
-        classpathChecker,
-        Optional.empty());
+    JavacStep step =
+        new JavacStep(
+            Paths.get("output"),
+            NoOpClassUsageFileWriter.instance(),
+            Optional.empty(),
+            ImmutableSortedSet.of(),
+            Paths.get("pathToSrcsList"),
+            ImmutableSortedSet.of(),
+            fakeJavac,
+            javacOptions,
+            BuildTargetFactory.newInstance("//foo:bar"),
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProcessExecutor(
-            new FakeProcessExecutor(
-                Functions.constant(fakeJavacProcess),
-                new TestConsole()))
-        .build();
-    BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
@@ -285,7 +241,7 @@ public class JavacStepTest {
         listener.getLogMessages(),
         equalTo(
             ImmutableList.of(
-                "Invalid Java compiler options: Bootstrap classpath /no-such-dir " +
-                "contains no valid entries")));
+                "Invalid Java compiler options: Bootstrap classpath /no-such-dir "
+                    + "contains no valid entries")));
   }
 }

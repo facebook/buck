@@ -20,17 +20,17 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class AppleBundleBuilder
-    extends AbstractNodeBuilder<AppleBundleDescription.Arg, AppleBundleDescription> {
+    extends AbstractNodeBuilder<
+        AppleBundleDescriptionArg.Builder, AppleBundleDescriptionArg, AppleBundleDescription,
+        AppleBundle> {
 
   protected AppleBundleBuilder(BuildTarget target) {
-    super(
-        FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION,
-        target);
+    super(FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION, target);
   }
 
   public static AppleBundleBuilder createBuilder(BuildTarget target) {
@@ -38,38 +38,43 @@ public class AppleBundleBuilder
   }
 
   public AppleBundleBuilder setExtension(Either<AppleBundleExtension, String> extension) {
-    arg.extension = extension;
+    getArgForPopulating().setExtension(extension);
     return this;
   }
 
   public AppleBundleBuilder setProductName(Optional<String> productName) {
-    arg.productName = productName;
+    getArgForPopulating().setProductName(productName);
     return this;
   }
 
   public AppleBundleBuilder setXcodeProductType(Optional<String> xcodeProductType) {
-    arg.xcodeProductType = xcodeProductType;
+    getArgForPopulating().setXcodeProductType(xcodeProductType);
     return this;
   }
 
   public AppleBundleBuilder setBinary(BuildTarget binary) {
-    arg.binary = binary;
+    getArgForPopulating().setBinary(binary);
     return this;
   }
 
   public AppleBundleBuilder setInfoPlist(SourcePath infoPlist) {
-    arg.infoPlist = infoPlist;
+    getArgForPopulating().setInfoPlist(infoPlist);
     return this;
   }
 
   public AppleBundleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public AppleBundleBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
-    arg.tests = tests;
+    getArgForPopulating().setTests(tests);
     return this;
   }
 
+  public AppleBundleBuilder setInfoPlistSubstitutions(
+      ImmutableMap<String, String> infoPlistSubstitutions) {
+    getArgForPopulating().setInfoPlistSubstitutions(infoPlistSubstitutions);
+    return this;
+  }
 }

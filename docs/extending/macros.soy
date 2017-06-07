@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'Macros' /}
+    {param navid: 'extending_macros' /}
     {param prettify: true /}
     {param description}
       Macros let you define custom rules that map to Buck's built-in build
@@ -16,6 +17,11 @@
 Because build files accept valid Python code, it is possible to define
 Python functions that have the side-effect of creating build rules.
 Such functions are called <strong>macros</strong>.
+
+<p>
+
+Macros can be written in build files or in separate files referenced in
+build files using {call buck.fn_include_defs /} or {call buckconfig.buildfile_includes /}.
 
 <p>
 

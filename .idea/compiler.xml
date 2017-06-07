@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <option name="DEFAULT_COMPILER" value="Javac" />
+    <option name="BUILD_PROCESS_HEAP_SIZE" value="2048" />
     <excludeFromCompile>
       <directory url="file://$PROJECT_DIR$/buck-out/android" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/bin" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/gen" includeSubdirectories="true" />
     </excludeFromCompile>
-    <resourceExtensions />
     <wildcardResourcePatterns>
       <entry name="?*.properties" />
       <entry name="?*.xml" />
@@ -23,6 +22,7 @@
       <entry name="?*.py" />
       <entry name="?*.st" />
       <entry name="?*.stg" />
+      <entry name="?*.jar" />
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
@@ -30,7 +30,7 @@
         <sourceTestOutputDir name="build-ij/immutables-test" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.3.8.jar" />
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.4.6.jar" />
         </processorPath>
       </profile>
     </annotationProcessing>

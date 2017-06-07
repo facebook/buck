@@ -24,13 +24,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
 /**
@@ -44,8 +44,8 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return tool.getDeps(ruleFinder);
   }
 
   @Override
@@ -59,8 +59,8 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override
@@ -107,7 +107,7 @@ public class WindowsLinker implements Linker {
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles) {
     throw new UnsupportedOperationException();
@@ -125,7 +125,7 @@ public class WindowsLinker implements Linker {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.of(new StringArg("/DLL"));
+    return ImmutableList.of(StringArg.of("/DLL"));
   }
 
   @Override
@@ -134,8 +134,8 @@ public class WindowsLinker implements Linker {
   }
 
   /**
-   * https://msdn.microsoft.com/en-us/library/ts7eyw4s.aspx -
-   * LNK1104 error if Path for filename expands to more than 260 characters.
+   * https://msdn.microsoft.com/en-us/library/ts7eyw4s.aspx - LNK1104 error if Path for filename
+   * expands to more than 260 characters.
    */
   @Override
   public boolean hasFilePathSizeLimitations() {
@@ -144,9 +144,6 @@ public class WindowsLinker implements Linker {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
-
 }

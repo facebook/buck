@@ -16,45 +16,32 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Throwables;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import java.util.concurrent.ExecutionException;
-
-/**
- * A "loading cache" of rule deps futures.
- *
- * Not a mere LoadingCache since the key is a build target but the loader uses a build rule.
- */
+/** A cache of rule deps. */
 public class RuleDepsCache {
-  private final ListeningExecutorService service;
-  private final Cache<BuildTarget, ListenableFuture<ImmutableSortedSet<BuildRule>>> cache;
+  private final Map<BuildRule, ImmutableSortedSet<BuildRule>> cache;
+  private BuildRuleResolver resolver;
 
-  public RuleDepsCache(ListeningExecutorService service) {
-    this.service = service;
-    this.cache = CacheBuilder.newBuilder().build();
+  public RuleDepsCache(BuildRuleResolver resolver) {
+    this.resolver = resolver;
+    this.cache = new ConcurrentHashMap<>();
   }
 
-  public ListenableFuture<ImmutableSortedSet<BuildRule>> get(final BuildRule rule) {
-    try {
-      return cache.get(
-          rule.getBuildTarget(),
-          () -> service.submit(() -> {
-            ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-            deps.addAll(rule.getDeps());
-            if (rule instanceof HasRuntimeDeps) {
-              deps.addAll(((HasRuntimeDeps) rule).getRuntimeDeps());
-            }
-            return deps.build();
-          }));
-    } catch (ExecutionException e) {
-      // service.submit doesn't throw any checked exceptions, so this should be fine.
-      throw Throwables.propagate(e.getCause());
+  public ImmutableSortedSet<BuildRule> get(final BuildRule rule) {
+    return cache.computeIfAbsent(rule, this::computeDeps);
+  }
+
+  private ImmutableSortedSet<BuildRule> computeDeps(final BuildRule rule) {
+    if (!(rule instanceof HasRuntimeDeps)) {
+      return rule.getBuildDeps();
     }
+    return RichStream.from(rule.getBuildDeps())
+        .concat(resolver.getAllRules(((HasRuntimeDeps) rule).getRuntimeDeps()::iterator).stream())
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 }

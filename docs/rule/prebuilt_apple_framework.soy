@@ -1,0 +1,71 @@
+{namespace prebuilt_apple_framework}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_apple_framework()' /}
+    {param navid: 'rule_prebuilt_apple_framework' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_apple_framework() rule represents an Apple framework that has
+      already been compiled and exports a set of headers.
+    {/param}
+    {param content}
+      {call buck.rule}
+        {param status: 'FROZEN' /}
+        {param overview}
+          A <code>prebuilt_apple_framework()</code> rule represents a set of
+          Objective-C/C++ source files and is very similar to a <a href="{ROOT}rule/prebuilt_cxx_library.html">
+            <code>prebuilt_cxx_library()</code>
+          </a> rule.
+        {/param}
+
+        {param args}
+          {call buck.arg}
+            {param name: 'name' /}
+            {param desc}
+              The name of the rule.
+            {/param}
+          {/call}
+        {/param}
+
+        {param args}
+          {call buck.arg}
+            {param name: 'framework' /}
+            {param desc}
+              The path to the precompiled framework.
+            {/param}
+          {/call}
+        {/param}
+
+        {param args}
+          {call buck.arg}
+            {param name: 'preferred_linkage' /}
+            {param desc}
+              How to link to a binary: use <code>dynamic</code> for a dynamic
+              framework, and <code>static</code> for old universal static
+              frameworks manually lipo-ed together. <code>dynamic</code> will
+              copy the frameworks into the <code>Frameworks</code> directory
+              of an Apple bundle, and configure framework search paths and linker flags.
+              <code>static</code> will copy the resources of the framework into
+              an Apple bundle.
+            {/param}
+          {/call}
+        {/param}
+
+        {param examples}
+          {literal}<pre class="prettyprint lang-py">
+prebuilt_apple_framework(
+  name = 'MyPrebuiltFramework',
+  framework = 'myPrebuiltFramework.framework',
+  preferred_linkage = 'static',
+  visibility: [
+    'PUBLIC'
+  ]
+)
+          </pre>{/literal}
+        {/param}
+      {/call}
+    {/param}
+  {/call}
+{/template}

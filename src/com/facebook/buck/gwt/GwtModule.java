@@ -16,6 +16,7 @@
 
 package com.facebook.buck.gwt;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
@@ -25,13 +26,13 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 /**
@@ -42,31 +43,35 @@ import java.nio.file.Path;
 public class GwtModule extends AbstractBuildRule {
 
   private final Path outputFile;
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> filesForGwtModule;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> filesForGwtModule;
+  private final SourcePathRuleFinder ruleFinder;
 
   GwtModule(
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> filesForGwtModule) {
-    super(params, resolver);
+    super(params);
+    this.ruleFinder = ruleFinder;
     BuildTarget target = params.getBuildTarget();
-    this.outputFile = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        target,
-        "__gwt_module_%s__/" + target.getShortNameAndFlavorPostfix() + ".jar");
+    this.outputFile =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            target,
+            "__gwt_module_%s__/" + target.getShortNameAndFlavorPostfix() + ".jar");
     this.filesForGwtModule = filesForGwtModule;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path workingDirectory = outputFile.getParent();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
     // A CopyResourcesStep is needed so that a file that is at java/com/example/resource.txt in the
     // repository will be added as com/example/resource.txt in the resulting JAR (assuming that
@@ -75,7 +80,8 @@ public class GwtModule extends AbstractBuildRule {
     steps.add(
         new CopyResourcesStep(
             getProjectFilesystem(),
-            getResolver(),
+            context,
+            ruleFinder,
             getBuildTarget(),
             filesForGwtModule,
             tempJarFolder,
@@ -95,7 +101,7 @@ public class GwtModule extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
   }
 }

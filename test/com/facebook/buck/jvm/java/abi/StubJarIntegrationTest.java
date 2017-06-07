@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -24,12 +25,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -38,16 +33,19 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class StubJarIntegrationTest {
 
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
   private Path testDataDir;
   private ProjectFilesystem filesystem;
 
   @Before
-  public void createWorkspace() throws IOException {
+  public void createWorkspace() throws InterruptedException, IOException {
     Path dir = TestDataHelper.getTestDataDirectory(this);
     testDataDir = dir.resolve("sample").toAbsolutePath();
 
@@ -113,6 +111,9 @@ public class StubJarIntegrationTest {
         JarEntry entry = entries.nextElement();
         if (JarFile.MANIFEST_NAME.equals(entry.getName())) {
           continue;
+        } else if (entry.getName().endsWith("/")) {
+          assertNull(manifest.getAttributes(entry.getName()));
+          continue;
         }
 
         String seenDigest = manifest.getAttributes(entry.getName()).getValue("Murmur3-128-Digest");
@@ -124,9 +125,7 @@ public class StubJarIntegrationTest {
         }
 
         assertEquals(
-            String.format("Digest mismatch for %s", entry.getName()),
-            expectedDigest,
-            seenDigest);
+            String.format("Digest mismatch for %s", entry.getName()), expectedDigest, seenDigest);
       }
     }
   }

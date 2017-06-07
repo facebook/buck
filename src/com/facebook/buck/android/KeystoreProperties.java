@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Strings;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -55,16 +54,15 @@ public class KeystoreProperties {
   }
 
   public static KeystoreProperties createFromPropertiesFile(
-      Path pathToStore,
-      Path pathToKeystorePropertiesFile,
-      ProjectFilesystem projectFilesystem) throws IOException {
+      Path pathToStore, Path pathToKeystorePropertiesFile, ProjectFilesystem projectFilesystem)
+      throws IOException {
     Properties properties = projectFilesystem.readPropertiesFile(pathToKeystorePropertiesFile);
 
-    String keystorePassword = getOrThrowException(
-        properties, "key.store.password", pathToKeystorePropertiesFile);
+    String keystorePassword =
+        getOrThrowException(properties, "key.store.password", pathToKeystorePropertiesFile);
     String alias = getOrThrowException(properties, "key.alias", pathToKeystorePropertiesFile);
-    String aliasPassword = getOrThrowException(
-        properties, "key.alias.password", pathToKeystorePropertiesFile);
+    String aliasPassword =
+        getOrThrowException(properties, "key.alias.password", pathToKeystorePropertiesFile);
 
     return new KeystoreProperties(pathToStore, keystorePassword, aliasPassword, alias);
   }
@@ -73,18 +71,15 @@ public class KeystoreProperties {
    * @return a non-null, non-empty value for the specified property
    * @throws HumanReadableException if there is no value for the specified property
    */
-  private static String getOrThrowException(Properties properties,
-      String propertyName,
-      Path pathToKeystorePropertiesFile) {
+  private static String getOrThrowException(
+      Properties properties, String propertyName, Path pathToKeystorePropertiesFile) {
     String value = Strings.nullToEmpty(properties.getProperty(propertyName)).trim();
     if (value.isEmpty()) {
       throw new HumanReadableException(
           "properties file %s did not contain a value for the property %s",
-          pathToKeystorePropertiesFile,
-          propertyName);
+          pathToKeystorePropertiesFile, propertyName);
     } else {
       return value;
     }
   }
-
 }

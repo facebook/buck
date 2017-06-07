@@ -31,5 +31,4 @@ public enum TestType {
   public String getDefaultTestRunner() {
     return defaultRunner;
   }
-
 }

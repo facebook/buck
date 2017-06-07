@@ -19,13 +19,13 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.MoreCollectors;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -42,8 +42,11 @@ public class MultiArtifactCache implements ArtifactCache {
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;
-    this.writableArtifactCaches = ImmutableList.copyOf(
-        Iterables.filter(artifactCaches, ArtifactCache::isStoreSupported));
+    this.writableArtifactCaches =
+        artifactCaches
+            .stream()
+            .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
+            .collect(MoreCollectors.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
 
@@ -61,7 +64,7 @@ public class MultiArtifactCache implements ArtifactCache {
       if (cacheResult.getType().isSuccess()) {
         break;
       }
-      if (artifactCache.isStoreSupported()) {
+      if (artifactCache.getCacheReadMode().isWritable()) {
         priorCaches.add(artifactCache);
       }
     }
@@ -80,39 +83,29 @@ public class MultiArtifactCache implements ArtifactCache {
   }
 
   private static ListenableFuture<Void> storeToCaches(
-      ImmutableList<ArtifactCache> caches,
-      ArtifactInfo info,
-      BorrowablePath output) {
+      ImmutableList<ArtifactCache> caches, ArtifactInfo info, BorrowablePath output) {
     // TODO(cjhopman): support BorrowablePath with multiple writable caches.
     if (caches.size() != 1) {
       output = BorrowablePath.notBorrowablePath(output.getPath());
     }
-    List<ListenableFuture<Void>> storeFutures =
-        Lists.newArrayListWithExpectedSize(caches.size());
+    List<ListenableFuture<Void>> storeFutures = Lists.newArrayListWithExpectedSize(caches.size());
     for (ArtifactCache artifactCache : caches) {
       storeFutures.add(artifactCache.store(info, output));
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(
-        Futures.allAsList(storeFutures),
-        Functions.<Void>constant(null));
+    return Futures.transform(Futures.allAsList(storeFutures), Functions.<Void>constant(null));
   }
 
-  /**
-   * Store the artifact to all encapsulated ArtifactCaches.
-   */
+  /** Store the artifact to all encapsulated ArtifactCaches. */
   @Override
-  public ListenableFuture<Void> store(
-      ArtifactInfo info,
-      BorrowablePath output) {
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
   }
 
-  /** @return {@code true} if there is at least one ArtifactCache that supports storing. */
   @Override
-  public boolean isStoreSupported() {
-    return isStoreSupported;
+  public CacheReadMode getCacheReadMode() {
+    return isStoreSupported ? CacheReadMode.READWRITE : CacheReadMode.READONLY;
   }
 
   @Override
@@ -128,5 +121,10 @@ public class MultiArtifactCache implements ArtifactCache {
     if (throwable.isPresent()) {
       throw throwable.get();
     }
+  }
+
+  @VisibleForTesting
+  ImmutableList<ArtifactCache> getArtifactCaches() {
+    return ImmutableList.copyOf(artifactCaches);
   }
 }

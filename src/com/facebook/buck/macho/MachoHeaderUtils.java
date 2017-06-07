@@ -17,7 +17,6 @@ package com.facebook.buck.macho;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
-
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
@@ -28,9 +27,9 @@ public class MachoHeaderUtils {
   public static final int MAGIC_SIZE = 4;
 
   public static int getHeaderSize(MachoHeader machoHeader) {
-    return machoHeader.getMagic().equals(MachoHeader.MH_MAGIC_64) ?
-        MachoHeader.MACH_HEADER_SIZE_64 :
-        MachoHeader.MACH_HEADER_SIZE_32;
+    return machoHeader.getMagic().equals(MachoHeader.MH_MAGIC_64)
+        ? MachoHeader.MACH_HEADER_SIZE_64
+        : MachoHeader.MACH_HEADER_SIZE_32;
   }
 
   public static MachoHeader create32BitFromBuffer(ByteBuffer buffer) {
@@ -59,6 +58,7 @@ public class MachoHeaderUtils {
 
   /**
    * Reads the Mach Header from the given buffer from current position.
+   *
    * @param buffer Buffer that holds the data of the mach header
    * @return MachoHeader for 32 or 64 bit Mach object.
    */
@@ -67,8 +67,7 @@ public class MachoHeaderUtils {
     UnsignedInteger magic = UnsignedInteger.fromIntBits(buffer.getInt());
     buffer.position(position);
     Preconditions.checkArgument(
-        magic.equals(MachoHeader.MH_MAGIC) ||
-            magic.equals(MachoHeader.MH_MAGIC_64));
+        magic.equals(MachoHeader.MH_MAGIC) || magic.equals(MachoHeader.MH_MAGIC_64));
 
     if (magic.equals(MachoHeader.MH_MAGIC_64)) {
       return create64BitFromBuffer(buffer);

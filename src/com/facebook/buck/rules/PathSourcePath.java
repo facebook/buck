@@ -20,11 +20,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
-
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
+public class PathSourcePath implements SourcePath {
 
   private final ProjectFilesystem filesystem;
 
@@ -35,9 +34,7 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
   private final Supplier<Path> relativePath;
 
   public PathSourcePath(
-      ProjectFilesystem filesystem,
-      String relativePathName,
-      Supplier<Path> relativePath) {
+      ProjectFilesystem filesystem, String relativePathName, Supplier<Path> relativePath) {
     this.filesystem = filesystem;
     this.relativePathName = relativePathName;
     this.relativePath = relativePath;
@@ -61,24 +58,31 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
       return false;
     }
     PathSourcePath that = (PathSourcePath) other;
-    return relativePathName.equals(that.relativePathName) &&
-        filesystem.getRootPath().equals(that.filesystem.getRootPath());
+    return relativePathName.equals(that.relativePathName)
+        && filesystem.getRootPath().equals(that.filesystem.getRootPath());
   }
 
   @Override
-  protected Object asReference() {
+  public String toString() {
     return filesystem.getRootPath().resolve(relativePathName).toString();
   }
 
   @Override
-  protected int compareReferences(PathSourcePath o) {
-    if (o == this) {
+  public int compareTo(SourcePath other) {
+    if (other == this) {
       return 0;
     }
 
+    int classComparison = compareClasses(other);
+    if (classComparison != 0) {
+      return classComparison;
+    }
+
+    PathSourcePath that = (PathSourcePath) other;
+
     return ComparisonChain.start()
-        .compare(filesystem.getRootPath(), o.filesystem.getRootPath())
-        .compare(relativePathName, o.relativePathName)
+        .compare(filesystem.getRootPath(), that.filesystem.getRootPath())
+        .compare(relativePathName, that.relativePathName)
         .result();
   }
 
@@ -89,5 +93,4 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
   public Path getRelativePath() {
     return relativePath.get();
   }
-
 }

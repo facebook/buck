@@ -20,14 +20,11 @@ import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
-
-import org.jetbrains.annotations.NotNull;
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import org.jetbrains.annotations.NotNull;
 
 public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
   private final JBTextField mTarget;
@@ -42,21 +39,31 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
     mTarget = new JBTextField();
     mTarget.getEmptyText().setText("Leave empty to run all tests");
 
-
     final JBLabel testSelectorLabel = new JBLabel();
     testSelectorLabel.setText("Test selectors (--test-selectors)");
     mTestSelectors = new JBTextField();
-    mTestSelectors.getEmptyText().setText("Select tests to run using <class>,#<method> or " +
-        "<class>#<method>.");
+    mTestSelectors
+        .getEmptyText()
+        .setText("Select tests to run using <class>,#<method> or " + "<class>#<method>.");
 
     final JBLabel additionalParamsLabel = new JBLabel();
     additionalParamsLabel.setText("Additional params");
     mAdditionalParams = new JBTextField();
     mAdditionalParams.getEmptyText().setText("May be empty");
 
-
-    final GridBagConstraints constraints = new GridBagConstraints(0, 0, 1, 1, 0, 0,
-        GridBagConstraints.WEST, GridBagConstraints.NONE, JBUI.emptyInsets(), 0, 0);
+    final GridBagConstraints constraints =
+        new GridBagConstraints(
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            GridBagConstraints.WEST,
+            GridBagConstraints.NONE,
+            JBUI.emptyInsets(),
+            0,
+            0);
     constraints.insets = JBUI.insetsRight(8);
     root.add(targetLabel, constraints);
     constraints.gridx = 1;
@@ -76,7 +83,6 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
     constraints.weightx = 1;
     constraints.fill = GridBagConstraints.HORIZONTAL;
     root.add(mTestSelectors, constraints);
-
 
     constraints.gridx = 0;
     constraints.gridy = 2;

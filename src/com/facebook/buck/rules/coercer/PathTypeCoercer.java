@@ -18,10 +18,24 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import java.nio.file.Path;
 
 public class PathTypeCoercer extends LeafTypeCoercer<Path> {
+
+  private final LoadingCache<Path, LoadingCache<String, Path>> pathCache =
+      CacheBuilder.newBuilder()
+          .build(
+              CacheLoader.from(
+                  pathRelativeToProjectRoot -> {
+                    return CacheBuilder.newBuilder()
+                        .weakValues()
+                        .build(
+                            CacheLoader.from(
+                                path -> pathRelativeToProjectRoot.resolve(path).normalize()));
+                  }));
 
   private final PathExistenceVerificationMode pathExistenceVerificationMode;
 
@@ -39,14 +53,15 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
-      String path = (String) object;
-
-      if (path.isEmpty()) {
+      String pathString = (String) object;
+      if (pathString.isEmpty()) {
         throw new CoerceFailedException("invalid path");
       }
-      final Path normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
+      final Path normalizedPath =
+          pathCache.getUnchecked(pathRelativeToProjectRoot).getUnchecked(pathString);
 
       if (pathExistenceVerificationMode.equals(PathExistenceVerificationMode.VERIFY)) {
         // Verify that the path exists
@@ -54,8 +69,7 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
           filesystem.getPathForRelativeExistingPath(normalizedPath);
         } catch (RuntimeException e) {
           throw new CoerceFailedException(
-              String.format("no such file or directory '%s'", normalizedPath),
-              e);
+              String.format("no such file or directory '%s'", normalizedPath), e);
         }
       }
 

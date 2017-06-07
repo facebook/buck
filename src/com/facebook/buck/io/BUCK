@@ -1,120 +1,198 @@
 BUCK_PATHS_SRCS = [
-  'AbstractBuckPaths.java',
+    "AbstractBuckPaths.java",
 ]
+
 java_immutables_library(
-  name = 'BuckPaths',
-  srcs = BUCK_PATHS_SRCS,
-  immutable_types = [
-    'BuckPaths',
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "BuckPaths",
+    srcs = BUCK_PATHS_SRCS,
+    visibility = ["PUBLIC"],
 )
 
 DEFAULT_FILESYSTEM_DELEGATE_SRCS = [
-  'DefaultProjectFilesystemDelegate.java',
+    "DefaultProjectFilesystemDelegate.java",
 ]
+
 java_library(
-  name = 'DefaultProjectFilesystemDelegate',
-  srcs = DEFAULT_FILESYSTEM_DELEGATE_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "DefaultProjectFilesystemDelegate",
+    srcs = DEFAULT_FILESYSTEM_DELEGATE_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":ProjectFilesystemDelegate",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 # This is its own rule that should have limited dependencies
 # because it is meant to have widespread utility.
 MORE_PATHS_SRCS = [
-  'MorePaths.java',
+    "MorePaths.java",
 ]
+
 java_library(
-  name = 'MorePaths.java',
-  srcs = MORE_PATHS_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "MorePaths.java",
+    srcs = MORE_PATHS_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS = [
-  'ProjectFilesystemDelegateFactory.java',
+    "ProjectFilesystemDelegateFactory.java",
 ]
+
 java_library(
-  name = 'ProjectFilesystemDelegateFactory',
-  srcs = PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "ProjectFilesystemDelegateFactory",
+    srcs = PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":DefaultProjectFilesystemDelegate",
+        ":ProjectFilesystemDelegate",
+        "//src/com/facebook/buck/eden:eden",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/autosparse:autosparse",
+        "//src/com/facebook/buck/util/autosparse:autosparse_config",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/eden:eden-thrift-bindings",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+TRANSPORT_SRCS = [
+    "Transport.java",
+]
+
+java_library(
+    name = "transport",
+    srcs = TRANSPORT_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 WATCHMAN_SRCS = [
-  'AbstractWatchmanQuery.java',
-  'Watchman.java',
-  'WatchmanClient.java',
-  'WatchmanDiagnosticEvent.java',
-  'WatchmanDiagnosticEventListener.java',
-  'WatchmanSocketClient.java',
+    "AbstractWatchmanQuery.java",
+    "Watchman.java",
+    "WatchmanClient.java",
+    "WatchmanDiagnosticEvent.java",
+    "WatchmanDiagnosticEventListener.java",
+    "WatchmanTransportClient.java",
 ]
+
 java_immutables_library(
-  name = 'watchman',
-  srcs = WATCHMAN_SRCS,
-  autodeps = True,
-  immutable_types = [
-    'WatchmanDiagnostic',
-    'WatchmanQuery',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/json:json',
-    '//src/com/facebook/buck/parser:parser',
-    '//src/com/facebook/buck/rules:types',
-    '//src/com/facebook/buck/util:watchman',
-    '//test/com/facebook/buck/...',
-  ],
+    name = "watchman",
+    srcs = WATCHMAN_SRCS,
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/json:json",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/rage:rage",
+        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/util:watchman",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        ":executable-finder",
+        ":io",
+        ":transport",
+        "//src/com/facebook/buck/bser:bser",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/io/unixsocket:unixsocket",
+        "//src/com/facebook/buck/io/windowspipe:windowspipe",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/timing:timing",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
+    ],
 )
 
 PROJECT_FILESYSTEM_DELEGATE_SRCS = [
-  'ProjectFilesystemDelegate.java',
+    "ProjectFilesystemDelegate.java",
 ]
+
 java_library(
-  name = 'ProjectFilesystemDelegate',
-  srcs = PROJECT_FILESYSTEM_DELEGATE_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "ProjectFilesystemDelegate",
+    srcs = PROJECT_FILESYSTEM_DELEGATE_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util/sha1:sha1",
+    ],
 )
 
 FINDER_SRCS = [
-  'ExecutableFinder.java',
-  'FileFinder.java',
+    "ExecutableFinder.java",
+    "FileFinder.java",
 ]
+
 java_library(
-  name = 'executable-finder',
-  srcs = FINDER_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "executable-finder",
+    srcs = FINDER_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_immutables_library(
-  name = 'io',
-  srcs = glob(['*.java'], excludes = (
-    BUCK_PATHS_SRCS +
-    DEFAULT_FILESYSTEM_DELEGATE_SRCS +
-    FINDER_SRCS +
-    MORE_PATHS_SRCS +
-    PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS +
-    PROJECT_FILESYSTEM_DELEGATE_SRCS +
-    WATCHMAN_SRCS)
-  ),
-  tests = [
-    '//test/com/facebook/buck/io:io',
-  ],
-  immutable_types = [
-    'ArchiveMemberPath',
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "io",
+    srcs = glob(
+        ["*.java"],
+        excludes = (
+            BUCK_PATHS_SRCS +
+            DEFAULT_FILESYSTEM_DELEGATE_SRCS +
+            FINDER_SRCS +
+            MORE_PATHS_SRCS +
+            PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS +
+            PROJECT_FILESYSTEM_DELEGATE_SRCS +
+            WATCHMAN_SRCS +
+            TRANSPORT_SRCS
+        ),
+    ),
+    tests = [
+        "//test/com/facebook/buck/io:io",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":BuckPaths",
+        ":MorePaths.java",
+        ":ProjectFilesystemDelegate",
+        ":ProjectFilesystemDelegateFactory",
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:constants",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/autosparse:autosparse_config",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/zip:stream",
+    ],
 )

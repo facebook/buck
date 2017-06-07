@@ -17,24 +17,18 @@
 package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-
 import static org.hamcrest.Matchers.is;
-
 import static org.junit.Assert.assertThat;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import org.junit.Test;
 
-/**
- * Unit tests for {@link AsynchronousDirectoryContentsCleaner}.
- */
+/** Unit tests for {@link AsynchronousDirectoryContentsCleaner}. */
 public class AsynchronousDirectoryContentsCleanerTest {
   @Test
   public void contentsOfTrashDirectoryCleanedAsynchronously() throws Exception {
@@ -48,14 +42,14 @@ public class AsynchronousDirectoryContentsCleanerTest {
     Files.write(fooBarBlechTxtFile, "hello world\n".getBytes(UTF_8));
 
     AsynchronousDirectoryContentsCleaner cleaner =
-        new AsynchronousDirectoryContentsCleaner(dirToDelete, MoreExecutors.directExecutor());
+        new AsynchronousDirectoryContentsCleaner(MoreExecutors.directExecutor());
 
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(fooBarDir), is(true));
     assertThat(Files.exists(fooBarBlechTxtFile), is(true));
 
     // This executes synchronously, since we passed in a direct executor above.
-    cleaner.startCleaningDirectory();
+    cleaner.startCleaningDirectory(dirToDelete);
 
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(fooBarDir), is(false));

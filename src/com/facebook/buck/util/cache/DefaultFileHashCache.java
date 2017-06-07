@@ -16,32 +16,26 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
-
-import javax.annotation.Nonnull;
+import java.util.function.Function;
 
 public class DefaultFileHashCache implements ProjectFileHashCache {
 
@@ -51,56 +45,87 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Path> buckOutPath;
 
-  @VisibleForTesting
-  final LoadingCache<Path, HashCodeAndFileType> loadingCache;
-
-  @VisibleForTesting
-  final LoadingCache<Path, Long> sizeCache;
+  @VisibleForTesting FileHashCacheEngine fileHashCacheEngine;
 
   @VisibleForTesting
   DefaultFileHashCache(
       ProjectFilesystem projectFilesystem,
-      Optional<Path> buckOutPath) {
+      Optional<Path> buckOutPath,
+      boolean compareFileHashCacheEngines) {
     this.projectFilesystem = projectFilesystem;
     this.buckOutPath = buckOutPath;
+    final Function<Path, HashCodeAndFileType> hashLoader =
+        path -> {
+          try {
+            return getHashCodeAndFileType(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e.getCause());
+          }
+        };
 
-    this.loadingCache =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<Path, HashCodeAndFileType>() {
-              @Override
-              public HashCodeAndFileType load(@Nonnull Path path) throws Exception {
-                return getHashCodeAndFileType(path);
-              }
-            });
-
-    this.sizeCache =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<Path, Long>() {
-              @Override
-              public Long load(@Nonnull Path path) throws Exception {
-                return getPathSize(path);
-              }
-            });
+    final Function<Path, Long> sizeLoader =
+        path -> {
+          try {
+            return getPathSize(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e.getCause());
+          }
+        };
+    if (compareFileHashCacheEngines) {
+      fileHashCacheEngine = new ComboFileHashCache(hashLoader::apply, sizeLoader::apply);
+    } else {
+      fileHashCacheEngine = new LoadingCacheFileHashCache(hashLoader::apply, sizeLoader::apply);
+    }
   }
 
-  public static FileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem,
-      Path buckOutPath) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.of(buckOutPath));
+  public static DefaultFileHashCache createBuckOutFileHashCache(
+      ProjectFilesystem projectFilesystem, Path buckOutPath, boolean compareFileHashCacheEngines) {
+    return new DefaultFileHashCache(
+        projectFilesystem, Optional.of(buckOutPath), compareFileHashCacheEngines);
   }
 
-  public static FileHashCache createDefaultFileHashCache(ProjectFilesystem projectFilesystem) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.empty());
+  public static DefaultFileHashCache createDefaultFileHashCache(
+      ProjectFilesystem projectFilesystem, boolean compareFileHashCacheEngines) {
+    return new DefaultFileHashCache(
+        projectFilesystem, Optional.empty(), compareFileHashCacheEngines);
   }
 
-  private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
+  public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches()
+      throws InterruptedException {
+    ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
+    for (Path root : FileSystems.getDefault().getRootDirectories()) {
+      if (!root.toFile().exists()) {
+        // On Windows, it is possible that the system will have a
+        // drive for something that does not exist such as a floppy
+        // disk or SD card.  The drive exists, but it does not
+        // contain anything useful, so Buck should not consider it
+        // as a cacheable location.
+        continue;
+      }
+
+      ProjectFilesystem projectFilesystem =
+          ProjectFilesystem.createNewOrThrowHumanReadableException(root);
+      // A cache which caches hashes of absolute paths which my be accessed by certain
+      // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
+      // multiple times in a single run.
+      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false));
+    }
+
+    return allCaches.build();
+  }
+
+  private void checkNotIgnored(Path relativePath) {
+    if (SHOULD_CHECK_IGNORED_PATHS) {
+      Preconditions.checkArgument(!projectFilesystem.isIgnored(relativePath));
+    }
+  }
+
+  // TODO(rvitale): restrict visibility of this method after the file hash cache experiment is over.
+  HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {
-      return HashCodeAndFileType.ofArchive(
-          getFileHashCode(path),
-          projectFilesystem,
-          path);
+      return HashCodeAndFileType.ofArchive(getFileHashCode(path), projectFilesystem, path);
     }
 
     return HashCodeAndFileType.ofFile(getFileHashCode(path));
@@ -120,120 +145,62 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private HashCodeAndFileType getDirHashCode(Path path) throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
-    ImmutableSet<Path> children =
-        PathHashing.hashPath(hasher, this, projectFilesystem, path);
+    ImmutableSet<Path> children = PathHashing.hashPath(hasher, this, projectFilesystem, path);
     return HashCodeAndFileType.ofDirectory(hasher.hash(), children);
   }
 
-  public Path resolvePath(Path path) {
-    Preconditions.checkState(path.isAbsolute());
-    Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
-    if (SHOULD_CHECK_IGNORED_PATHS) {
-      Preconditions.checkState(!isIgnored(relativePath.get()));
-    }
-    return relativePath.get();
-  }
-
   @Override
-  public boolean willGet(Path path) {
-    Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
-    if (!relativePath.isPresent()) {
-      return false;
-    }
-    return loadingCache.getIfPresent(relativePath.get()) != null ||
-        (projectFilesystem.exists(relativePath.get()) &&
-        !isIgnored(relativePath.get()));
+  public boolean willGet(Path relativePath) {
+    Preconditions.checkState(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+    return fileHashCacheEngine.getIfPresent(relativePath) != null
+        || (projectFilesystem.exists(relativePath) && !isIgnored(relativePath));
   }
 
   private boolean isIgnored(Path path) {
     if (buckOutPath.isPresent()) {
-      return path.startsWith(buckOutPath.get());
+      return !path.startsWith(buckOutPath.get());
     }
     return projectFilesystem.isIgnored(path);
   }
 
   @Override
   public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+    Preconditions.checkState(!archiveMemberPath.getArchivePath().isAbsolute());
+    checkNotIgnored(archiveMemberPath.getArchivePath());
     return willGet(archiveMemberPath.getArchivePath());
   }
 
-  private void invalidateImmediate(Path path) {
-    loadingCache.invalidate(path);
-    sizeCache.invalidate(path);
-  }
-
-  void invalidateResolved(Path path) {
-    Preconditions.checkArgument(!path.isAbsolute());
-    HashCodeAndFileType cached = loadingCache.getIfPresent(path);
-    invalidateImmediate(path);
-    if (cached != null) {
-      for (Path child : cached.getChildren()) {
-        invalidateImmediate(path.resolve(child));
-      }
-    }
-  }
-
   @Override
-  public void invalidate(Path rawPath) {
-    Path path = resolvePath(rawPath);
-    invalidateResolved(path);
+  public void invalidate(Path relativePath) {
+    fileHashCacheEngine.invalidate(relativePath);
   }
 
   @Override
   public void invalidateAll() {
-    loadingCache.invalidateAll();
-    sizeCache.invalidateAll();
+    fileHashCacheEngine.invalidateAll();
   }
 
-  /**
-   * @return The {@link com.google.common.hash.HashCode} of the contents of path.
-   */
+  /** @return The {@link com.google.common.hash.HashCode} of the contents of path. */
   @Override
-  public HashCode get(Path rawPath) throws IOException {
-    Path path = resolvePath(rawPath);
-    HashCode sha1;
-    try {
-      sha1 = loadingCache.get(path.normalize()).getHashCode();
-    } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
-    }
-    return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", path);
+  public HashCode get(Path relativePath) throws IOException {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+    return fileHashCacheEngine.get(relativePath);
   }
 
   @Override
-  public long getSize(Path rawPath) throws IOException {
-    Path path = resolvePath(rawPath);
-    try {
-      return sizeCache.get(path.normalize());
-    } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
-    }
+  public long getSize(Path relativePath) throws IOException {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+    return fileHashCacheEngine.getSize(relativePath);
   }
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Preconditions.checkState(archiveMemberPath.isAbsolute());
-
-    Path absoluteFilePath = archiveMemberPath.getArchivePath();
-    Path relativeFilePath = resolvePath(absoluteFilePath).normalize();
-
-    try {
-      HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
-
-      Path memberPath = archiveMemberPath.getMemberPath();
-      HashCodeAndFileType memberHashCodeAndFileType =
-          fileHashCodeAndFileType.getContents().get(memberPath);
-      if (memberHashCodeAndFileType == null) {
-        throw new NoSuchFileException(archiveMemberPath.toString());
-      }
-
-      return memberHashCodeAndFileType.getHashCode();
-    } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw Throwables.propagate(e.getCause());
-    }
+    Preconditions.checkArgument(!archiveMemberPath.isAbsolute());
+    checkNotIgnored(archiveMemberPath.getArchivePath());
+    return fileHashCacheEngine.get(archiveMemberPath);
   }
 
   @Override
@@ -242,34 +209,39 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public void set(Path rawPath, HashCode hashCode) throws IOException {
-    final Path path = resolvePath(rawPath);
+  public void set(Path relativePath, HashCode hashCode) throws IOException {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+
     HashCodeAndFileType value;
 
-    if (projectFilesystem.isDirectory(path)) {
-      value = HashCodeAndFileType.ofDirectory(
-          hashCode,
-          ImmutableSet.copyOf(
-              FluentIterable.from(projectFilesystem.getFilesUnderPath(path))
-                  .transform(
-                      path::relativize)));
-    } else if (rawPath.toString().endsWith(".jar")) {
-      value = HashCodeAndFileType.ofArchive(
-          hashCode,
-          projectFilesystem,
-          projectFilesystem.getPathRelativeToProjectRoot(path).get());
+    if (projectFilesystem.isDirectory(relativePath)) {
+      value =
+          HashCodeAndFileType.ofDirectory(
+              hashCode,
+              projectFilesystem
+                  .getFilesUnderPath(relativePath)
+                  .stream()
+                  .map(relativePath::relativize)
+                  .collect(MoreCollectors.toImmutableSet()));
+    } else if (relativePath.toString().endsWith(".jar")) {
+      value =
+          HashCodeAndFileType.ofArchive(
+              hashCode,
+              projectFilesystem,
+              projectFilesystem.getPathRelativeToProjectRoot(relativePath).get());
 
     } else {
       value = HashCodeAndFileType.ofFile(hashCode);
     }
 
-    loadingCache.put(path, value);
+    fileHashCacheEngine.put(relativePath, value);
   }
 
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {
     List<String> errors = new ArrayList<>();
-    ConcurrentMap<Path, HashCodeAndFileType> cacheMap = loadingCache.asMap();
+    Map<Path, HashCodeAndFileType> cacheMap = fileHashCacheEngine.asMap();
     for (Map.Entry<Path, HashCodeAndFileType> entry : cacheMap.entrySet()) {
       Path path = entry.getKey();
       HashCodeAndFileType cached = entry.getValue();
@@ -283,5 +255,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         .setFilesExamined(cacheMap.size())
         .addAllVerificationErrors(errors)
         .build();
+  }
+
+  public List<AbstractBuckEvent> getStatsEvents() {
+    return fileHashCacheEngine.getStatsEvents();
   }
 }

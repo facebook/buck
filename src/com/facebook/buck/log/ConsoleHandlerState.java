@@ -25,12 +25,16 @@ import java.util.logging.Level;
  */
 public interface ConsoleHandlerState extends ThreadIdToCommandIdMapper {
   Level getLogLevel(String commandId);
+
   Writer getWriter(String commandId);
+
   Iterable<Writer> getAllAvailableWriters();
 
   interface Writer {
     void write(String line) throws IOException;
+
     void flush() throws IOException;
+
     void close() throws IOException;
   }
 }

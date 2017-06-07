@@ -16,40 +16,53 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.jvm.common.ResourceValidator;
-import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-
+import com.google.common.collect.Maps;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.immutables.value.Value;
 
-public class GroovyTestDescription implements Description<GroovyTestDescription.Arg> {
+public class GroovyTestDescription
+    implements Description<GroovyTestDescriptionArg>,
+        ImplicitDepsInferringDescription<GroovyTestDescription.AbstractGroovyTestDescriptionArg> {
+
+  private static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaOptions javaOptions;
@@ -68,119 +81,107 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<GroovyTestDescriptionArg> getConstructorArgType() {
+    return GroovyTestDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
-      BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
-      resolver.requireRule(testTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
-          pathResolver,
-          params,
-          new BuildTargetSourcePath(testTarget));
-    }
-
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
-
-    GroovycToJarStepFactory stepFactory = new GroovycToJarStepFactory(
-        groovyBuckConfig.getGroovyCompiler().get(),
-        Optional.of(args.extraGroovycArguments),
-        JavacOptionsFactory.create(
-            defaultJavacOptions,
-            params,
-            resolver,
-            pathResolver,
-            args
-        ));
+      CellPathResolver cellRoots,
+      GroovyTestDescriptionArg args)
+      throws NoSuchBuildTargetException {
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
 
     BuildRuleParams testsLibraryParams =
-        params.appendExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
-                    Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps))),
-                pathResolver.filterBuildRuleInputs(
-                    defaultJavacOptions.getInputs(pathResolver))))
-            .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-    JavaLibrary testsLibrary =
-        resolver.addToIndex(
-            new DefaultJavaLibrary(
+        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
+        new DefaultGroovyLibraryBuilder(
+                targetGraph,
                 testsLibraryParams,
-                pathResolver,
-                args.srcs,
-                ResourceValidator.validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources),
-                defaultJavacOptions.getGeneratedSourceFolderName(),
-                /* proguardConfig */ Optional.empty(),
-                /* postprocessClassesCommands */ ImmutableList.of(),
-                /* exportDeps */ ImmutableSortedSet.of(),
-                /* providedDeps */ ImmutableSortedSet.of(),
-                abiJarTarget,
-                JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                stepFactory,
-                /* resourcesRoot */ Optional.empty(),
-                /* manifest file */ Optional.empty(),
-                /* mavenCoords */ Optional.empty(),
-                /* tests */ ImmutableSortedSet.of(),
-                /* classesToRemoveFromJar */ ImmutableSet.of()));
+                resolver,
+                cellRoots,
+                javacOptions,
+                groovyBuckConfig)
+            .setArgs(args)
+            .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
 
+    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+      return defaultJavaLibraryBuilder.buildAbi();
+    }
+
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+
+    Function<String, Arg> toMacroArgFunction =
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
-        params.copyWithDeps(
+        params.copyReplacingDeclaredAndExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
-        args.labels,
-        args.contacts,
-        args.testType.orElse(TestType.JUNIT),
+        args.getLabels(),
+        args.getContacts(),
+        args.getTestType().orElse(TestType.JUNIT),
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs,
+        args.getVmArgs(),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-        args.testCaseTimeoutMs,
-        args.env,
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestCaseTimeoutMs(),
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toMacroArgFunction::apply)),
         args.getRunTestSeparately(),
         args.getForkMode(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel);
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends GroovyLibraryDescription.Arg {
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
-    public ImmutableList<String> vmArgs = ImmutableList.of();
-    public Optional<TestType> testType;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<ForkMode> forkMode;
-    public Optional<Level> stdErrLogLevel;
-    public Optional<Level> stdOutLogLevel;
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<Long> testCaseTimeoutMs;
-    public ImmutableMap<String, String> env = ImmutableMap.of();
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractGroovyTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    for (String envValue : constructorArg.getEnv().values()) {
+      try {
+        MACRO_HANDLER.extractParseTimeDeps(
+            buildTarget, cellRoots, envValue, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+      } catch (MacroException e) {
+        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+      }
+    }
+  }
 
-    public boolean getRunTestSeparately() {
-      return runTestSeparately.orElse(false);
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGroovyTestDescriptionArg
+      extends HasContacts, HasTestTimeout, GroovyLibraryDescription.CoreArg {
+    ImmutableList<String> getVmArgs();
+
+    Optional<TestType> getTestType();
+
+    Optional<Level> getStdErrLogLevel();
+
+    Optional<Level> getStdOutLogLevel();
+
+    Optional<Long> getTestCaseTimeoutMs();
+
+    ImmutableMap<String, String> getEnv();
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
     }
 
-    public ForkMode getForkMode() {
-      return forkMode.orElse(ForkMode.NONE);
+    @Value.Default
+    default ForkMode getForkMode() {
+      return ForkMode.NONE;
     }
   }
 }

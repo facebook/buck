@@ -16,16 +16,14 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.rules.Label;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Set;
 
 public class LabelSelector {
   private final boolean isInclusive;
-  private final Set<Label> labels;
+  private final Set<String> labels;
 
   private static final Splitter splitter =
       Splitter.on(TestLabelOptions.LABEL_SEPERATOR).trimResults().omitEmptyStrings();
@@ -39,22 +37,22 @@ public class LabelSelector {
       raw = raw.substring(1);
     }
 
-    ImmutableSet.Builder<Label> labelBuilder = new ImmutableSet.Builder<>();
+    ImmutableSet.Builder<String> labelBuilder = new ImmutableSet.Builder<>();
     Iterable<String> labelStrings = splitter.split(raw);
     for (String labelString : labelStrings) {
       BuckConfig.validateLabelName(labelString);
-      labelBuilder.add(Label.of(labelString));
+      labelBuilder.add(labelString);
     }
 
     return new LabelSelector(isInclusive, labelBuilder.build());
   }
 
-  LabelSelector(boolean isInclusive, Set<Label> labels) {
+  LabelSelector(boolean isInclusive, Set<String> labels) {
     this.isInclusive = isInclusive;
     this.labels = labels;
   }
 
-  public boolean matches(Set<Label> rawLabels) {
+  public boolean matches(Set<String> rawLabels) {
     return rawLabels.containsAll(labels);
   }
 

@@ -20,19 +20,62 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
-public abstract class AbstractMacroExpander<T> implements MacroExpander {
+public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
 
-  /**
-   * @return parse the input arguments into a type that will be used on the interfaces below.
-   */
+  /** @return the class for the parsed macro input type. */
+  public abstract Class<T> getInputClass();
+
+  /** @return the class for the precomputed work type */
+  public abstract Class<P> getPrecomputedWorkClass();
+
+  /** @return parse the input arguments into a type that will be used on the interfaces below. */
   protected abstract T parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
+      throws MacroException;
+
+  @Override
+  public final void extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
+      ImmutableList<String> input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
+      throws MacroException {
+    extractParseTimeDepsFrom(
+        target,
+        cellNames,
+        parse(target, cellNames, input),
+        buildDepsBuilder,
+        targetGraphOnlyDepsBuilder);
+  }
+
+  @SuppressWarnings("unused")
+  public void extractParseTimeDepsFrom(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      T input,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
+      throws MacroException {}
+
+  /** @return the precomputed work that can be re-used between invocations */
+  @Override
+  public final P precomputeWork(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
       ImmutableList<String> input)
+      throws MacroException {
+    return precomputeWorkFrom(target, cellNames, resolver, parse(target, cellNames, input));
+  }
+
+  /** @return the precomputed work that can be re-used between invocations */
+  public abstract P precomputeWorkFrom(
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
       throws MacroException;
 
   @Override
@@ -40,16 +83,23 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      ImmutableList<String> input,
+      Object precomputedWork)
       throws MacroException {
-    return expandFrom(target, cellNames, resolver, parse(target, cellNames, input));
+    return expandFrom(
+        target,
+        cellNames,
+        resolver,
+        parse(target, cellNames, input),
+        getPrecomputedWorkClass().cast(precomputedWork));
   }
 
   public abstract String expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      T input)
+      T input,
+      P precomputedWork)
       throws MacroException;
 
   @Override
@@ -57,8 +107,15 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
-    return extractBuildTimeDepsFrom(target, cellNames, resolver, parse(target, cellNames, input));
+      ImmutableList<String> input,
+      Object precomputedWork)
+      throws MacroException {
+    return extractBuildTimeDepsFrom(
+        target,
+        cellNames,
+        resolver,
+        parse(target, cellNames, input),
+        getPrecomputedWorkClass().cast(precomputedWork));
   }
 
   @SuppressWarnings("unused")
@@ -66,25 +123,9 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      T input)
+      T input,
+      P precomputedWork)
       throws MacroException {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public final ImmutableList<BuildTarget> extractParseTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
-      throws MacroException {
-    return extractParseTimeDepsFrom(target, cellNames, parse(target, cellNames, input));
-  }
-
-  @SuppressWarnings("unused")
-  public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      T input) {
     return ImmutableList.of();
   }
 
@@ -93,12 +134,15 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
+      ImmutableList<String> input,
+      Object precomputedWork)
+      throws MacroException {
     return extractRuleKeyAppendablesFrom(
         target,
         cellNames,
         resolver,
-        parse(target, cellNames, input));
+        parse(target, cellNames, input),
+        getPrecomputedWorkClass().cast(precomputedWork));
   }
 
   @SuppressWarnings("unused")
@@ -106,9 +150,9 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      T input)
+      T input,
+      P precomputedWork)
       throws MacroException {
     return Optional.empty();
   }
-
 }

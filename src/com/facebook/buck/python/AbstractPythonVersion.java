@@ -17,7 +17,6 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -28,11 +27,10 @@ abstract class AbstractPythonVersion {
   public abstract String getInterpreterName();
 
   @Value.Parameter
-  public abstract String getVersionString();  // X.Y
+  public abstract String getVersionString(); // X.Y
 
   @Override
   public String toString() {
     return getInterpreterName() + " " + getVersionString();
   }
-
 }

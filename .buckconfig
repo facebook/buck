@@ -4,16 +4,17 @@
     src_roots = src, test
     source_level = 8
     target_level = 8
+    jar_spool_mode = direct_to_jar
+    abi_generation_mode = source_with_deps
+    source_abi_verification_mode = fail
+    compile_against_abis = True
 [alias]
     buck = //programs:buck
-    buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
+    buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
     eden = //test/com/facebook/buck/eden/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
-[autodeps]
-   include_signature = false
-   java-package-mappings = com.google.caliper => //third-party/java/caliper:caliper
 [buildfile]
     includes = //DEFS
 [log]
@@ -21,31 +22,43 @@
 [cache]
     ; Disable the default directory cache.
     mode =
+[build]
+    metadata_storage = sqlite
 [download]
     maven_repo = https://repo1.maven.org/maven2
 [project]
     ; Directories that do not contain input files.
     ; All of these directories should also appear in the "ignore_dirs" list
     ; in .watchmanconfig, with the exception of ".git".
+    ; Common temp file patterns: vim, emacs, intelliJ
     ignore = \
       .git, \
       .buckd, \
       build, \
-      bin
+      bin, \
+      **/*.swp, \
+      **/*#, \
+      **/*$, \
+      **/*~, \
+      **/*___jb_bak___, \
+      **/*___jb_old___, \
+      **/*___jb_tmp___, \
+      **/.*.swp, \
+      **/.*.swx, \
+      **/.*.swpx, \
+      **/.*.swo, \
+      **/*.pyc, \
+      **/.#*, \
+      **/*~, \
+      **/4913, \
+      **/*.linted, \
+      **/*.iml
 
-    ; Common temp file patterns:
-    ; .*\.swp$ (vim)
-    ; ^#.*#$, .*~$ (emacs)
-    ; .*___jb_bak___$, .*___jb_old___$ (intellij idea)
-    temp_files = \
-      .*\.swp$, \
-      ^#.*#$, .*~$, \
-      .*___jb_bak___$, .*___jb_old___$,
     ; Forbid symlinks for source files so Buck does not have to dump its
     ; cache every time it encounters one.
     allow_symlinks = forbid
-    enable_build_file_sandboxing = true
     watchman_cursor = clock_id
+    glob_handler = watchman
 [test]
     ; Maximum timeout of 1 minute per test.
-    timeout = 60000
+    timeout = 90000

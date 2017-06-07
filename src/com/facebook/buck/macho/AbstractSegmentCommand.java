@@ -20,10 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
-import org.immutables.value.Value;
-
 import java.nio.charset.StandardCharsets;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -42,23 +40,31 @@ abstract class AbstractSegmentCommand implements LoadCommand {
   @Override
   public abstract LoadCommandCommonFields getLoadCommandCommonFields();
 
-  public abstract String getSegname();            // 128 bit / 16 bytes
-  public abstract UnsignedLong getVmaddr();       // 32 bit on 32 bit arch / 64 bit on 64 bit arch
-  public abstract UnsignedLong getVmsize();       // 32 bit on 32 bit arch / 64 bit on 64 bit arch
-  public abstract UnsignedLong getFileoff();      // 32 bit on 32 bit arch / 64 bit on 64 bit arch
-  public abstract UnsignedLong getFilesize();     // 32 bit on 32 bit arch / 64 bit on 64 bit arch
-  public abstract Integer getMaxprot();           // 32 bit
-  public abstract Integer getInitprot();          // 32 bit
-  public abstract UnsignedInteger getNsects();    // 32 bit
-  public abstract UnsignedInteger getFlags();     // 32 bit
+  public abstract String getSegname(); // 128 bit / 16 bytes
+
+  public abstract UnsignedLong getVmaddr(); // 32 bit on 32 bit arch / 64 bit on 64 bit arch
+
+  public abstract UnsignedLong getVmsize(); // 32 bit on 32 bit arch / 64 bit on 64 bit arch
+
+  public abstract UnsignedLong getFileoff(); // 32 bit on 32 bit arch / 64 bit on 64 bit arch
+
+  public abstract UnsignedLong getFilesize(); // 32 bit on 32 bit arch / 64 bit on 64 bit arch
+
+  public abstract Integer getMaxprot(); // 32 bit
+
+  public abstract Integer getInitprot(); // 32 bit
+
+  public abstract UnsignedInteger getNsects(); // 32 bit
+
+  public abstract UnsignedInteger getFlags(); // 32 bit
 
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(
-        (getLoadCommandCommonFields().getCmd().equals(LC_SEGMENT) &&
-            getLoadCommandCommonFields().getCmdsize().intValue() >= SIZE_IN_BYTES_32_BIT) ||
-            (getLoadCommandCommonFields().getCmd().equals(LC_SEGMENT_64) &&
-                getLoadCommandCommonFields().getCmdsize().intValue() >= SIZE_IN_BYTES_64_BIT));
+        (getLoadCommandCommonFields().getCmd().equals(LC_SEGMENT)
+                && getLoadCommandCommonFields().getCmdsize().intValue() >= SIZE_IN_BYTES_32_BIT)
+            || (getLoadCommandCommonFields().getCmd().equals(LC_SEGMENT_64)
+                && getLoadCommandCommonFields().getCmdsize().intValue() >= SIZE_IN_BYTES_64_BIT));
     Preconditions.checkArgument(
         getSegname().getBytes(StandardCharsets.UTF_8).length + 1 <= SEGNAME_SIZE_IN_BYTES);
   }

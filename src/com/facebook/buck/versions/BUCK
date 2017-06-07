@@ -1,30 +1,68 @@
 TYPES_SRCS = [
-  'AbstractVersion.java',
+    "AbstractExactConstraint.java",
+    "AbstractVersion.java",
+    "Constraint.java",
 ]
+
 java_immutables_library(
-  name = 'types',
-  immutable_types = [
-    'Version',
-  ],
-  srcs = TYPES_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "types",
+    srcs = TYPES_SRCS,
+    visibility = ["PUBLIC"],
+)
+
+TRANSLATOR_SRCS = [
+    "TargetNodeTranslator.java",
+    "TargetTranslatable.java",
+    "TargetTranslator.java",
+    "TargetTranslatorOverridingDescription.java",
+]
+
+java_library(
+    name = "translator",
+    srcs = TRANSLATOR_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":types",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_immutables_library(
-  name = 'versions',
-  immutable_types = [
-    'Constraints',
-    'ExactConstraint',
-    'Implication',
-    'VersionedAlias',
-    'VersionInfo',
-    'VersionUniverse',
-  ],
-  srcs = glob(['*.java'], excludes=TYPES_SRCS),
-  tests = [
-    '//test/com/facebook/buck/versions:versions',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "versions",
+    srcs = glob(
+        ["*.java"],
+        excludes = TYPES_SRCS + TRANSLATOR_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/versions:versions",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":translator",
+        ":types",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/query:query",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/rules/query:query",
+        "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/infer-annotations:infer-annotations",
+    ],
 )

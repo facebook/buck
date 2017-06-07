@@ -21,7 +21,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -33,15 +32,12 @@ import java.util.regex.Pattern;
 public class AppleDeviceHelper {
   private static final Logger LOG = Logger.get(AppleDeviceHelper.class);
   private static final Pattern DEVICE_DESCRIPTION_PATTERN =
-      Pattern.compile("([a-f0-9]{40}) : (.*)$");
-
+      Pattern.compile("([a-f0-9]{40}) \\| (.*)");
 
   private final ProcessExecutor processExecutor;
   private final Path deviceHelperPath;
 
-  public AppleDeviceHelper(
-      ProcessExecutor processExecutor,
-      Path deviceHelperPath) {
+  public AppleDeviceHelper(ProcessExecutor processExecutor, Path deviceHelperPath) {
     this.processExecutor = processExecutor;
     this.deviceHelperPath = deviceHelperPath;
   }
@@ -49,25 +45,24 @@ public class AppleDeviceHelper {
   /**
    * Runs the helper program to enumerate all currently-connected devices.
    *
-   * @return A ImmutableMap with entries where the key is the UDID of the device, and the value
-   * is a human readable description (e.g. "iPhone (iPhone 5S) (USB)")
+   * @return A ImmutableMap with entries where the key is the UDID of the device, and the value is a
+   *     human readable description (e.g. "iPhone (iPhone 5S) (USB)")
    * @throws IOException
    * @throws InterruptedException
    */
   public ImmutableMap<String, String> getConnectedDevices() {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .setCommand(
-                ImmutableList.of(
-                    deviceHelperPath.toString(), "-l"))
+            .setCommand(ImmutableList.of(deviceHelperPath.toString(), "list"))
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor.Result result;
     try {
-      result = processExecutor.launchAndExecute(
-          processExecutorParams,
-          options,
+      result =
+          processExecutor.launchAndExecute(
+              processExecutorParams,
+              options,
               /* stdin */ Optional.empty(),
               /* timeOutMs */ Optional.of((long) 5000),
               /* timeOutHandler */ Optional.empty());
@@ -96,27 +91,27 @@ public class AppleDeviceHelper {
   }
 
   /**
-   * Attempts to install a bundle on the device.  The bundle must be code-signed already.
+   * Attempts to install a bundle on the device. The bundle must be code-signed already.
    *
-   * @param udid        The identifier of the device
-   * @param bundlePath  The path to the bundle root (e.g. {@code /path/to/Example.app/})
-   * @return            true if successful, false otherwise.
+   * @param udid The identifier of the device
+   * @param bundlePath The path to the bundle root (e.g. {@code /path/to/Example.app/})
+   * @return true if successful, false otherwise.
    */
   public boolean installBundleOnDevice(String udid, Path bundlePath) {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
-                    deviceHelperPath.toString(), "-d", udid, "-t", bundlePath.toString()))
+                    deviceHelperPath.toString(), "--json", udid, "install", bundlePath.toString()))
             .build();
-    Set<ProcessExecutor.Option> options = EnumSet.of(
-        ProcessExecutor.Option.PRINT_STD_OUT,
-        ProcessExecutor.Option.PRINT_STD_ERR);
+    Set<ProcessExecutor.Option> options =
+        EnumSet.of(ProcessExecutor.Option.PRINT_STD_OUT, ProcessExecutor.Option.PRINT_STD_ERR);
     ProcessExecutor.Result result;
     try {
-      result = processExecutor.launchAndExecute(
-          processExecutorParams,
-          options,
+      result =
+          processExecutor.launchAndExecute(
+              processExecutorParams,
+              options,
               /* stdin */ Optional.empty(),
               /* timeOutMs */ Optional.of((long) 60000),
               /* timeOutHandler */ Optional.empty());
@@ -133,27 +128,26 @@ public class AppleDeviceHelper {
   }
 
   /**
-   * Attempts to run a bundle on the device.  The bundle must be installed already.
+   * Attempts to run a bundle on the device. The bundle must be installed already.
    *
-   * @param udid        The identifier of the device
-   * @param bundleID    The bundle ID (e.g. {@code com.example.DemoApp})
-   * @return            true if successful, false otherwise.
+   * @param udid The identifier of the device
+   * @param bundleID The bundle ID (e.g. {@code com.example.DemoApp})
+   * @return true if successful, false otherwise.
    */
   public boolean runBundleOnDevice(String udid, String bundleID) {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .setCommand(
-                ImmutableList.of(
-                    deviceHelperPath.toString(), "-d", udid, "--run", bundleID))
+                ImmutableList.of(deviceHelperPath.toString(), "--json", udid, "launch", bundleID))
             .build();
-    Set<ProcessExecutor.Option> options = EnumSet.of(
-        ProcessExecutor.Option.PRINT_STD_OUT,
-        ProcessExecutor.Option.PRINT_STD_ERR);
+    Set<ProcessExecutor.Option> options =
+        EnumSet.of(ProcessExecutor.Option.PRINT_STD_OUT, ProcessExecutor.Option.PRINT_STD_ERR);
     ProcessExecutor.Result result;
     try {
-      result = processExecutor.launchAndExecute(
-          processExecutorParams,
-          options,
+      result =
+          processExecutor.launchAndExecute(
+              processExecutorParams,
+              options,
               /* stdin */ Optional.empty(),
               /* timeOutMs */ Optional.of((long) 60000),
               /* timeOutHandler */ Optional.empty());

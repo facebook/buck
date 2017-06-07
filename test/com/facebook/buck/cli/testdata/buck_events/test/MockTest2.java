@@ -21,5 +21,4 @@ public class MockTest2 {
   public void passingTestFour() {
     System.out.println("passed!");
   }
-
 }

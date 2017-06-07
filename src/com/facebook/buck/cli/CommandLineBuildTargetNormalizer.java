@@ -21,9 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.List;
-import java.util.Set;
 
 /**
  * In actual build files, Buck requires that build targets are well-formed, which means that they
@@ -34,25 +32,35 @@ import java.util.Set;
  * do is tab-complete file paths. For this reason, the "//" and ":" are added, when appropriate. For
  * example, if the following argument were specified on the command line when a build target was
  * expected:
+ *
  * <pre>
  * src/com/facebook/orca
  * </pre>
+ *
  * then this normalizer would convert it to:
+ *
  * <pre>
  * //src/com/facebook/orca:orca
  * </pre>
+ *
  * It would also normalize it to the same thing if it contained a trailing slash:
+ *
  * <pre>
  * src/com/facebook/orca
  * </pre>
+ *
  * Similarly, if the argument were:
+ *
  * <pre>
  * src/com/facebook/orca:messenger
  * </pre>
+ *
  * then this normalizer would convert it to:
+ *
  * <pre>
  * //src/com/facebook/orca:messenger
  * </pre>
+ *
  * This makes it easier to tab-complete to the directory with the desired build target, and then
  * append the name of the build target by typing it out. Note that because of how the normalizer
  * works, it makes sense to name the most commonly built target in the package as the same name as
@@ -61,24 +69,25 @@ import java.util.Set;
  */
 class CommandLineBuildTargetNormalizer {
 
-  private final Function<String, Set<String>> normalizer;
+  private final Function<String, ImmutableSet<String>> normalizer;
 
   CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
-    this.normalizer = arg -> {
-      Set<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
-      if (!aliasValues.isEmpty()) {
-        return aliasValues;
-      } else {
-        return ImmutableSet.of(normalizeBuildTargetIdentifier(arg));
-      }
-    };
+    this.normalizer =
+        arg -> {
+          ImmutableSet<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
+          if (!aliasValues.isEmpty()) {
+            return aliasValues;
+          } else {
+            return ImmutableSet.of(normalizeBuildTargetIdentifier(arg));
+          }
+        };
   }
 
-  public Set<String> normalize(String argument) {
+  public ImmutableSet<String> normalize(String argument) {
     return normalizer.apply(argument);
   }
 
-  public List<String> normalizeAll(List<String> arguments) {
+  public ImmutableList<String> normalizeAll(List<String> arguments) {
     // When transforming command-line arguments, first check to see whether it is an alias in the
     // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().
     ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();

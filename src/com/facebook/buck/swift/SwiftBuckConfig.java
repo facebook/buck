@@ -18,12 +18,9 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.google.common.base.Splitter;
-
 import java.util.Optional;
 
-/**
- * A Swift-specific "view" of BuckConfig.
- */
+/** A Swift-specific "view" of BuckConfig. */
 public class SwiftBuckConfig {
   private static final String SECTION_NAME = "swift";
   private static final String COMPILER_FLAGS_NAME = "compiler_flags";

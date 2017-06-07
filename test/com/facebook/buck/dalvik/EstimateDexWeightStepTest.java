@@ -28,29 +28,27 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class EstimateDexWeightStepTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private DexWeightEstimator dexWeightEstimator = new FakeDexWeightEstimator(
-      ImmutableMap.<String, Integer>builder()
-      .put(pathWithPlatformSeparators("com/example/Foo.class"), 100)
-      .put(pathWithPlatformSeparators("com/example/Bar.class"), 250)
-      .put(pathWithPlatformSeparators("com/example/subpackage/Baz.class"), 75)
-      .build());
+  private DexWeightEstimator dexWeightEstimator =
+      new FakeDexWeightEstimator(
+          ImmutableMap.<String, Integer>builder()
+              .put(pathWithPlatformSeparators("com/example/Foo.class"), 100)
+              .put(pathWithPlatformSeparators("com/example/Bar.class"), 250)
+              .put(pathWithPlatformSeparators("com/example/subpackage/Baz.class"), 75)
+              .build());
 
   @Test
-  public void testExecuteEstimateDexWeightStep() throws IOException {
+  public void testExecuteEstimateDexWeightStep() throws InterruptedException, IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);
@@ -68,45 +66,37 @@ public class EstimateDexWeightStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     Path pathToJarOrClassesDirectory = Paths.get(name);
-    EstimateDexWeightStep step = new EstimateDexWeightStep(
-        filesystem,
-        pathToJarOrClassesDirectory,
-        dexWeightEstimator);
+    EstimateDexWeightStep step =
+        new EstimateDexWeightStep(filesystem, pathToJarOrClassesDirectory, dexWeightEstimator);
     int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(Integer.valueOf(425), step.get());
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testGetBeforeExecuteThrowsException() {
+  public void testGetBeforeExecuteThrowsException() throws InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
-    EstimateDexWeightStep step = new EstimateDexWeightStep(
-        filesystem,
-        pathToJarOrClassesDirectory,
-        dexWeightEstimator);
+    EstimateDexWeightStep step =
+        new EstimateDexWeightStep(filesystem, pathToJarOrClassesDirectory, dexWeightEstimator);
     step.get();
   }
 
   @Test
-  public void testGetShortName() {
+  public void testGetShortName() throws InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
-    EstimateDexWeightStep step = new EstimateDexWeightStep(
-        filesystem,
-        pathToJarOrClassesDirectory,
-        dexWeightEstimator);
+    EstimateDexWeightStep step =
+        new EstimateDexWeightStep(filesystem, pathToJarOrClassesDirectory, dexWeightEstimator);
     assertEquals("estimate_dex_weight", step.getShortName());
   }
 
   @Test
-  public void testGetDescription() {
+  public void testGetDescription() throws InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
-    EstimateDexWeightStep step = new EstimateDexWeightStep(
-        filesystem,
-        pathToJarOrClassesDirectory,
-        dexWeightEstimator);
+    EstimateDexWeightStep step =
+        new EstimateDexWeightStep(filesystem, pathToJarOrClassesDirectory, dexWeightEstimator);
     assertEquals("estimate_dex_weight", step.getDescription(TestExecutionContext.newInstance()));
   }
 

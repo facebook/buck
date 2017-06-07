@@ -21,21 +21,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
-
+import java.lang.reflect.Modifier;
 import org.junit.Test;
 
-import java.lang.reflect.Modifier;
-
-/**
- * Unit test for generated {@link Type} class.
- */
+/** Unit test for generated {@link Type} class. */
 public class TypeTest {
   @Test
   public void testBuilder() {
-    Type t = Type.builder()
-        .setName("Jenny")
-        .addPhoneNumbers(8675309L)
-        .build();
+    Type t = Type.builder().setName("Jenny").addPhoneNumbers(8675309L).build();
 
     assertEquals("Jenny", t.getName());
     assertEquals(ImmutableList.of(8675309L), t.getPhoneNumbers());

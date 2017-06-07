@@ -24,10 +24,8 @@ public class InstrumentationMain {
 
   public static void main(String[] args) {
     try {
-      InstrumentationTestRunner
-          .fromArgs(args)
-          .run();
-    } catch (Throwable e){
+      InstrumentationTestRunner.fromArgs(args).run();
+    } catch (Throwable e) {
       e.printStackTrace();
     } finally {
       // Explicitly exit to force the test runner to complete even if tests have sloppily left

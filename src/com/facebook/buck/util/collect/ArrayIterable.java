@@ -19,15 +19,14 @@ package com.facebook.buck.util.collect;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
  * {@link Iterable} of an array object that does not make a copy of the array.
- * <p>
- * Designed to be used when it is too expensive to copy an array to a {@link java.util.List} and use
- * the list as an {@link Iterable} instead.
+ *
+ * <p>Designed to be used when it is too expensive to copy an array to a {@link java.util.List} and
+ * use the list as an {@link Iterable} instead.
  */
 public class ArrayIterable<T> implements Iterable<T> {
 
@@ -98,8 +97,6 @@ public class ArrayIterable<T> implements Iterable<T> {
       public void remove() {
         throw new UnsupportedOperationException();
       }
-
     };
   }
-
 }

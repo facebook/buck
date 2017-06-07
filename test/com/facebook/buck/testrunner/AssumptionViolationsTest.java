@@ -24,24 +24,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class AssumptionViolationsTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
   public void setupWorkspace() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "assumption_violations", temporaryFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "assumption_violations", temporaryFolder);
     workspace.setUp();
   }
 
@@ -56,16 +54,15 @@ public class AssumptionViolationsTest {
   }
 
   private void shouldPassWithASimplePassingTest(String type) throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        "--all",
-        "--filter", "com.example.PassingTest" + type);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "--all", "--filter", "com.example.PassingTest" + type);
     result.assertSuccess();
     String output = result.getStderr();
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "PASS", 1, 0, 0, "com.example.PassingTest" + type)));
-    assertThat(output, containsString(
-        "TESTS PASSED"));
+    assertThat(
+        output,
+        containsRegex(
+            createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.PassingTest" + type)));
+    assertThat(output, containsString("TESTS PASSED"));
   }
 
   @Test
@@ -79,47 +76,61 @@ public class AssumptionViolationsTest {
   }
 
   private void shouldFailIfOneTestFails(String type, int numSkipped) throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        "--all",
-        "--filter", "com.example.FailingTest" + type,
-        "--filter", "com.example.PassingTest" + type);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--all",
+            "--filter",
+            "com.example.FailingTest" + type,
+            "--filter",
+            "com.example.PassingTest" + type);
     result.assertTestFailure();
     String output = result.getStderr();
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "FAIL", 0, numSkipped, 1, "com.example.FailingTest" + type)));
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "PASS", 1, 0, 0, "com.example.PassingTest" + type)));
-    assertThat(output,
-        containsString("TESTS FAILED"));
+    assertThat(
+        output,
+        containsRegex(
+            createBuckTestOutputLineRegex(
+                "FAIL", 0, numSkipped, 1, "com.example.FailingTest" + type)));
+    assertThat(
+        output,
+        containsRegex(
+            createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.PassingTest" + type)));
+    assertThat(output, containsString("TESTS FAILED"));
   }
 
   @Test
   public void shouldIndicateAssumptionViolations() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        "--all",
-        "--filter", "com.example.SomeAssumptionViolationsTestJunit",
-        "--filter", "com.example.PassingTestJunit");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--all",
+            "--filter",
+            "com.example.SomeAssumptionViolationsTestJunit",
+            "--filter",
+            "com.example.PassingTestJunit");
     result.assertSuccess();
     String output = result.getStderr();
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "ASSUME", 1, 2, 0, "com.example.SomeAssumptionViolationsTestJunit")));
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "PASS", 1, 0, 0, "com.example.PassingTestJunit")));
-    assertThat(output, containsString(
-        "TESTS PASSED (with some assumption violations)"));
+    assertThat(
+        output,
+        containsRegex(
+            createBuckTestOutputLineRegex(
+                "ASSUME", 1, 2, 0, "com.example.SomeAssumptionViolationsTestJunit")));
+    assertThat(
+        output,
+        containsRegex(
+            createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.PassingTestJunit")));
+    assertThat(output, containsString("TESTS PASSED (with some assumption violations)"));
   }
 
   @Test
   public void shouldIndicateAssumptionViolationsBeforeClass() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        "//test:tests3");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//test:tests3");
     result.assertSuccess();
     String output = result.getStderr();
-    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
-        "ASSUME", 0, 1, 0, "com.example.AssumptionTestBeforeClassJunit412")));
+    assertThat(
+        output,
+        containsRegex(
+            createBuckTestOutputLineRegex(
+                "ASSUME", 0, 1, 0, "com.example.AssumptionTestBeforeClassJunit412")));
   }
-
 }

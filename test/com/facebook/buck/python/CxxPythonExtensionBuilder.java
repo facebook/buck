@@ -16,22 +16,26 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class CxxPythonExtensionBuilder
-    extends
-    AbstractCxxSourceBuilder<
-        CxxPythonExtensionDescription.Arg,
-        CxxPythonExtensionDescription,
-        CxxPythonExtensionBuilder> {
+    extends AbstractNodeBuilder<
+        CxxPythonExtensionDescriptionArg.Builder, CxxPythonExtensionDescriptionArg,
+        CxxPythonExtensionDescription, CxxPythonExtension> {
 
   public CxxPythonExtensionBuilder(
       BuildTarget target,
@@ -42,24 +46,63 @@ public class CxxPythonExtensionBuilder
   }
 
   public CxxPythonExtensionBuilder setBaseModule(String baseModule) {
-    arg.baseModule = Optional.of(baseModule);
+    getArgForPopulating().setBaseModule(Optional.of(baseModule));
     return this;
   }
 
   public CxxPythonExtensionBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    arg.platformDeps = platformDeps;
+    getArgForPopulating().setPlatformDeps(platformDeps);
     return this;
   }
 
   public CxxPythonExtensionBuilder setModuleName(String moduleName) {
-    arg.moduleName = Optional.of(moduleName);
+    getArgForPopulating().setModuleName(Optional.of(moduleName));
     return this;
   }
 
-  @Override
-  protected CxxPythonExtensionBuilder getThis() {
+  public CxxPythonExtensionBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
+  public CxxPythonExtensionBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    getArgForPopulating().setCompilerFlags(compilerFlags);
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
+    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setLinkerFlags(linkerFlags);
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    getArgForPopulating().setFrameworks(frameworks);
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    getArgForPopulating().setLibraries(libraries);
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
 }

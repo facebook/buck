@@ -26,16 +26,15 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.io.File;
 import java.util.Map;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -48,22 +47,18 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
       BuildTarget target,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       String parameter,
       SourceList sources)
       throws NoSuchBuildTargetException {
     HaskellSources.Builder builder = HaskellSources.builder();
     for (Map.Entry<String, SourcePath> ent :
-         sources.toNameMap(target, pathResolver, parameter).entrySet()) {
+        sources.toNameMap(target, pathResolver, parameter).entrySet()) {
       builder.putModuleMap(
-          ent.getKey()
-              .substring(0, ent.getKey().lastIndexOf('.'))
-              .replace(File.separatorChar, '.'),
+          ent.getKey().substring(0, ent.getKey().lastIndexOf('.')).replace(File.separatorChar, '.'),
           CxxGenruleDescription.fixupSourcePath(
-              ruleResolver,
-              pathResolver,
-              cxxPlatform,
-              ent.getValue()));
+              ruleResolver, ruleFinder, cxxPlatform, ent.getValue()));
     }
     return builder.build();
   }
@@ -81,8 +76,7 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
     sink.setReflectively("modules", getModuleMap());
   }
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver pathResolver) {
-    return pathResolver.filterBuildRuleInputs(getSourcePaths());
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(getSourcePaths());
   }
-
 }

@@ -16,29 +16,31 @@
 
 package com.facebook.buck.util.immutables;
 
-import org.immutables.value.Value;
-
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.immutables.value.Value;
 
 /**
  * Tuple-style objects conforming to {@link BuckStyleImmutable} naming style.
  *
- * Tuple-style objects have all attributes as constructor parameters, and do not have builders.
+ * <p>Tuple-style objects have all attributes as constructor parameters, and do not have builders.
  *
  * @see <a href="http://immutables.github.io/immutable.html#tuples">Immutable user guide</a>
  */
 @Value.Style(
-    typeImmutable = "*",
-    typeAbstract = "Abstract*",
-    get = {"is*", "get*"},
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PUBLIC,
-    allParameters = true,
-    defaults = @Value.Immutable(builder = false),
-    forceJacksonPropertyNames = false)
+  typeImmutable = "*",
+  typeAbstract = "Abstract*",
+  get = {"is*", "get*"},
+  init = "set*",
+  visibility = Value.Style.ImplementationVisibility.PUBLIC,
+  allParameters = true,
+  defaults = @Value.Immutable(builder = false),
+  forceJacksonPropertyNames = false,
+  additionalJsonAnnotations = {JsonNaming.class}
+)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface BuckStyleTuple {}

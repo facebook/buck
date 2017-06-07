@@ -26,27 +26,25 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class AndroidLibraryTest {
 
   @Test
   public void testAndroidAnnotation() throws Exception {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
-    TargetNode<?, ?> processorNode = JavaLibraryBuilder
-        .createBuilder(processorTarget)
-        .addSrc(Paths.get("java/processor/processor.java"))
-        .build();
+    TargetNode<?, ?> processorNode =
+        JavaLibraryBuilder.createBuilder(processorTarget)
+            .addSrc(Paths.get("java/processor/processor.java"))
+            .build();
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
-    TargetNode<?, ?> libraryNode = AndroidLibraryBuilder
-        .createBuilder(libTarget)
-        .addProcessor("MyProcessor")
-        .addProcessorBuildTarget(processorNode.getBuildTarget())
-        .build();
+    TargetNode<?, ?> libraryNode =
+        AndroidLibraryBuilder.createBuilder(libTarget)
+            .addProcessor("MyProcessor")
+            .addProcessorBuildTarget(processorNode.getBuildTarget())
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(processorNode, libraryNode);
     BuildRuleResolver ruleResolver =

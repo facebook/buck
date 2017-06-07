@@ -16,14 +16,13 @@
 
 package com.facebook.buck.testrunner;
 
-import org.junit.runners.model.Statement;
-
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.runners.model.Statement;
 
 class SameThreadFailOnTimeout extends Statement {
   private final ExecutorService executor;
@@ -32,21 +31,19 @@ class SameThreadFailOnTimeout extends Statement {
   private final Callable<Throwable> callable;
 
   public SameThreadFailOnTimeout(
-      ExecutorService executor,
-      long timeout,
-      String testName,
-      final Statement next) {
+      ExecutorService executor, long timeout, String testName, final Statement next) {
     this.executor = executor;
     this.timeout = timeout;
     this.testName = testName;
-    this.callable = () -> {
-      try {
-        next.evaluate();
-        return null;
-      } catch (Throwable throwable) {
-        return throwable;
-      }
-    };
+    this.callable =
+        () -> {
+          try {
+            next.evaluate();
+            return null;
+          } catch (Throwable throwable) {
+            return throwable;
+          }
+        };
   }
 
   @Override
@@ -75,10 +72,7 @@ class SameThreadFailOnTimeout extends Statement {
       submitted.cancel(true);
 
       // The default timeout doesn't indicate which test was running.
-      String message = String.format(
-          "test %s timed out after %d milliseconds",
-          testName,
-          timeout);
+      String message = String.format("test %s timed out after %d milliseconds", testName, timeout);
 
       throw new Exception(message);
     }

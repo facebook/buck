@@ -1,9 +1,0 @@
-#@# GENERATED FILE: DO NOT MODIFY 451cf7518f398403f999062a8f2edabf4a3c682b #@#
-{
-  "app" : {
-    "deps" : [
-      "//lib:lib.Bravo"
-    ],
-    "exported_deps" : [ ]
-  }
-}

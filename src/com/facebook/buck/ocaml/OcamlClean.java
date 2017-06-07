@@ -16,47 +16,38 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-/**
- * A build rule which cleans a target's build output folder.
- */
+/** A build rule which cleans a target's build output folder. */
 public class OcamlClean extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final OcamlBuildContext ocamlContext;
+  @AddToRuleKey private final OcamlBuildContext ocamlContext;
 
   private static final Logger LOG = Logger.get(OcamlClean.class);
 
-  public OcamlClean(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      OcamlBuildContext ocamlContext) {
-    super(params, resolver);
+  public OcamlClean(BuildRuleParams params, OcamlBuildContext ocamlContext) {
+    super(params);
     this.ocamlContext = ocamlContext;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
 
     Path bcDir = ocamlContext.getCompileBytecodeOutputDir();
     Path optDir = ocamlContext.getCompileNativeOutputDir();
@@ -65,29 +56,27 @@ public class OcamlClean extends AbstractBuildRule {
       buildableContext.recordArtifact(bcDir);
       LOG.debug("Adding clean step for bytecode output dir %s", bcDir.toString());
 
-      Step step = new MakeCleanDirectoryStep(
-              getProjectFilesystem(),
-              bcDir);
-
-      steps.add(step);
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), bcDir)));
     }
 
     if (Files.exists(optDir)) {
       buildableContext.recordArtifact(optDir);
       LOG.debug("Adding clean step for native output dir %s", optDir.toString());
 
-      Step step = new MakeCleanDirectoryStep(
-              getProjectFilesystem(),
-              optDir);
-
-      steps.add(step);
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), optDir)));
     }
     return steps.build();
   }
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 

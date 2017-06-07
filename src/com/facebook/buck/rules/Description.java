@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
-
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.CaseFormat;
 import com.google.common.cache.CacheBuilder;
@@ -32,22 +32,22 @@ import com.google.common.cache.LoadingCache;
  *
  * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
- *
  */
 public interface Description<T> {
 
   static final LoadingCache<Class<? extends Description<?>>, BuildRuleType>
-      BUILD_RULE_TYPES_BY_CLASS = CacheBuilder.newBuilder().build(
-        new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
-          @Override
-          public BuildRuleType load(Class<? extends Description<?>> key) throws Exception {
-            return getBuildRuleType(key.getSimpleName());
-          }
-        });
+      BUILD_RULE_TYPES_BY_CLASS =
+          CacheBuilder.newBuilder()
+              .build(
+                  new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
+                    @Override
+                    public BuildRuleType load(Class<? extends Description<?>> key)
+                        throws Exception {
+                      return Description.getBuildRuleType(key.getSimpleName());
+                    }
+                  });
 
-  /**
-   * @return The {@link BuildRuleType} being described.
-   */
+  /** @return The {@link BuildRuleType} being described. */
   static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
     return BUILD_RULE_TYPES_BY_CLASS.getUnchecked(descriptionClass);
   }
@@ -66,25 +66,24 @@ public interface Description<T> {
         CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptionClassName));
   }
 
-  /**
-   * @return An instance of the argument that must later be passed to createBuildRule().
-   * @see ConstructorArgMarshaller
-   *
-   */
-  T createUnpopulatedConstructorArg();
+  /** The class of the argument of this Description uses in createBuildRule(). */
+  Class<T> getConstructorArgType();
 
   /**
-   * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the
-   * {@link com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the
-   * {@link Flavor} to create.
+   * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link
+   * com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the {@link
+   * Flavor} to create.
    *
    * @param resolver For querying for build rules by their targets.
-   * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
+   * @param cellRoots The roots of known cells.
+   * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
-  <A extends T> BuildRule createBuildRule(
+  BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException;
+      CellPathResolver cellRoots,
+      T args)
+      throws NoSuchBuildTargetException;
 }

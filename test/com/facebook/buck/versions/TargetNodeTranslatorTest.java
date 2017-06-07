@@ -20,20 +20,33 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxLibraryBuilder;
-import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.Optional;
-
 public class TargetNodeTranslatorTest {
+
+  private static final CellPathResolver CELL_PATH_RESOLVER =
+      TestCellPathResolver.get(new FakeProjectFilesystem());
+  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
+      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void translate() {
@@ -41,38 +54,32 @@ public class TargetNodeTranslatorTest {
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
     final BuildTarget d = BuildTargetFactory.newInstance("//:d");
-    TargetNode<CxxLibraryDescription.Arg, ?> node =
+    TargetNode<CxxLibraryDescriptionArg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(d);
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
             return Optional.empty();
           }
         };
-    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
+    Optional<TargetNode<CxxLibraryDescriptionArg, ?>> translated = translator.translateNode(node);
+    assertThat(translated.get().getBuildTarget(), Matchers.equalTo(d));
+    assertThat(translated.get().getDeclaredDeps(), Matchers.equalTo(ImmutableSet.of(d)));
+    assertThat(translated.get().getExtraDeps(), Matchers.equalTo(ImmutableSet.of(d)));
     assertThat(
-        translated.get().getBuildTarget(),
-        Matchers.equalTo(d));
+        translated.get().getConstructorArg().getDeps(), Matchers.equalTo(ImmutableSortedSet.of(d)));
     assertThat(
-        translated.get().getDeclaredDeps(),
-        Matchers.equalTo(ImmutableSet.of(d)));
-    assertThat(
-        translated.get().getExtraDeps(),
-        Matchers.equalTo(ImmutableSet.of(d)));
-    assertThat(
-        translated.get().getConstructorArg().deps,
-        Matchers.equalTo(ImmutableSortedSet.of(d)));
-    assertThat(
-        translated.get().getConstructorArg().exportedDeps,
+        translated.get().getConstructorArg().getExportedDeps(),
         Matchers.equalTo(ImmutableSortedSet.of(d)));
   }
 
@@ -81,54 +88,151 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
-    TargetNode<CxxLibraryDescription.Arg, ?> node =
+    TargetNode<CxxLibraryDescriptionArg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
             return Optional.empty();
           }
         };
-    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
+    Optional<TargetNode<CxxLibraryDescriptionArg, ?>> translated = translator.translateNode(node);
     assertFalse(translated.isPresent());
   }
 
   @Test
   public void selectedVersions() {
-    TargetNode<VersionPropagatorBuilder.Arg, ?> node =
-        new VersionPropagatorBuilder("//:a")
-            .build();
+    TargetNode<VersionPropagatorDescriptionArg, ?> node =
+        new VersionPropagatorBuilder("//:a").build();
     final ImmutableMap<BuildTarget, Version> selectedVersions =
-        ImmutableMap.of(
-            BuildTargetFactory.newInstance("//:b"),
-            Version.of("1.0"));
+        ImmutableMap.of(BuildTargetFactory.newInstance("//:b"), Version.of("1.0"));
     TargetNodeTranslator translator =
-        new TargetNodeTranslator() {
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
           }
+
           @Override
           public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
               BuildTarget target) {
             return Optional.of(selectedVersions);
           }
         };
-    Optional<TargetNode<VersionPropagatorBuilder.Arg, ?>> translated =
+    Optional<TargetNode<VersionPropagatorDescriptionArg, ?>> translated =
         translator.translateNode(node);
     assertTrue(translated.isPresent());
     assertThat(
-        translated.get().getSelectedVersions(),
-        Matchers.equalTo(Optional.of(selectedVersions)));
+        translated.get().getSelectedVersions(), Matchers.equalTo(Optional.of(selectedVersions)));
   }
 
+  @Test
+  public void translatePair() {
+    BuildTarget a = BuildTargetFactory.newInstance("//:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//:b");
+    TargetNodeTranslator translator =
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+          @Override
+          public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
+            return Optional.of(b);
+          }
+
+          @Override
+          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+              BuildTarget target) {
+            return Optional.empty();
+          }
+        };
+    assertThat(
+        translator.translatePair(CELL_PATH_RESOLVER, PATTERN, new Pair<>("hello", a)),
+        Matchers.equalTo(Optional.of(new Pair<>("hello", b))));
+  }
+
+  @Test
+  public void translateBuildTargetSourcePath() {
+    BuildTarget a = BuildTargetFactory.newInstance("//:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//:b");
+    TargetNodeTranslator translator =
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+          @Override
+          public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
+            return Optional.of(b);
+          }
+
+          @Override
+          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+              BuildTarget target) {
+            return Optional.empty();
+          }
+        };
+    assertThat(
+        translator.translateBuildTargetSourcePath(
+            CELL_PATH_RESOLVER, PATTERN, new DefaultBuildTargetSourcePath(a)),
+        Matchers.equalTo(Optional.of(new DefaultBuildTargetSourcePath(b))));
+  }
+
+  @Test
+  public void translateSourceWithFlags() {
+    BuildTarget a = BuildTargetFactory.newInstance("//:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//:b");
+    TargetNodeTranslator translator =
+        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+          @Override
+          public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
+            return Optional.of(b);
+          }
+
+          @Override
+          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+              BuildTarget target) {
+            return Optional.empty();
+          }
+        };
+    assertThat(
+        translator.translateSourceWithFlags(
+            CELL_PATH_RESOLVER,
+            PATTERN,
+            SourceWithFlags.of(new DefaultBuildTargetSourcePath(a), ImmutableList.of("-flag"))),
+        Matchers.equalTo(
+            Optional.of(
+                SourceWithFlags.of(
+                    new DefaultBuildTargetSourcePath(b), ImmutableList.of("-flag")))));
+  }
+
+  @Test
+  public void translateTargetTranslator() {
+    TargetTranslator<Integer> integerTranslator =
+        new TargetTranslator<Integer>() {
+          @Override
+          public Class<Integer> getTranslatableClass() {
+            return Integer.class;
+          }
+
+          @Override
+          public Optional<Integer> translateTargets(
+              CellPathResolver cellPathResolver,
+              BuildTargetPatternParser<BuildTargetPattern> pattern,
+              TargetNodeTranslator translator,
+              Integer val) {
+            return Optional.of(0);
+          }
+        };
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(),
+            ImmutableList.of(integerTranslator),
+            ImmutableMap.of());
+    assertThat(
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, 12), Matchers.equalTo(Optional.of(0)));
+  }
 }

@@ -18,9 +18,7 @@ package com.facebook.buck.util.environment;
 
 import com.google.common.collect.ImmutableMap;
 
-/**
- * Represents the CPU architecture of a system.
- */
+/** Represents the CPU architecture of a system. */
 public enum Architecture {
   AARCH64("aarch64"),
   ARM("arm"),
@@ -40,7 +38,7 @@ public enum Architecture {
 
   static {
     // Initialize nameToValueMap
-    ImmutableMap.Builder <String, Architecture> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, Architecture> builder = ImmutableMap.builder();
     for (Architecture arch : Architecture.values()) {
       builder.put(arch.toString(), arch);
     }

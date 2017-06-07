@@ -16,58 +16,52 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
 public class SceneKitAssets extends AbstractBuildRule {
 
-  public static final Flavor FLAVOR = ImmutableFlavor.of("scenekit-assets");
+  public static final Flavor FLAVOR = InternalFlavor.of("scenekit-assets");
 
-  @AddToRuleKey
-  private final Optional<Tool> copySceneKitAssets;
+  @AddToRuleKey private final Optional<Tool> copySceneKitAssets;
 
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> sceneKitAssetsPaths;
+  @AddToRuleKey private final ImmutableSet<SourcePath> sceneKitAssetsPaths;
 
-  @AddToRuleKey
-  private final String sdkName;
+  @AddToRuleKey private final String sdkName;
 
-  @AddToRuleKey
-  private final String minOSVersion;
+  @AddToRuleKey private final String minOSVersion;
 
   private final Path outputDir;
 
   SceneKitAssets(
       BuildRuleParams params,
-      final SourcePathResolver resolver,
       AppleCxxPlatform appleCxxPlatform,
       ImmutableSet<SourcePath> sceneKitAssetsPaths) {
-    super(params, resolver);
+    super(params);
     this.sceneKitAssetsPaths = sceneKitAssetsPaths;
     String outputDirString =
-        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
-            .toString();
+        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s").toString();
     this.outputDir = Paths.get(outputDirString);
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
@@ -78,23 +72,29 @@ public class SceneKitAssets extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    stepsBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
+    stepsBuilder.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath inputPath : sceneKitAssetsPaths) {
-      final Path absoluteInputPath = getResolver().getAbsolutePath(inputPath);
+      final Path absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
 
       if (copySceneKitAssets.isPresent()) {
         stepsBuilder.add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
               @Override
-              protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+              protected ImmutableList<String> getShellCommandInternal(
+                  ExecutionContext executionContext) {
                 ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-                commandBuilder.addAll(copySceneKitAssets.get().getCommandPrefix(getResolver()));
+                commandBuilder.addAll(
+                    copySceneKitAssets.get().getCommandPrefix(context.getSourcePathResolver()));
                 commandBuilder.add(
                     absoluteInputPath.toString(),
                     "-o",
                     getProjectFilesystem()
                         .resolve(outputDir)
-                        .resolve(absoluteInputPath.getFileName()).toString(),
+                        .resolve(absoluteInputPath.getFileName())
+                        .toString(),
                     "--target-platform=" + sdkName,
                     "--target-version=" + minOSVersion);
 
@@ -103,8 +103,8 @@ public class SceneKitAssets extends AbstractBuildRule {
 
               @Override
               public ImmutableMap<String, String> getEnvironmentVariables(
-                  ExecutionContext context) {
-                return copySceneKitAssets.get().getEnvironment();
+                  ExecutionContext executionContext) {
+                return copySceneKitAssets.get().getEnvironment(context.getSourcePathResolver());
               }
 
               @Override
@@ -121,12 +121,13 @@ public class SceneKitAssets extends AbstractBuildRule {
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
     }
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
     return stepsBuilder.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputDir;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDir);
   }
 }

@@ -33,11 +33,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -46,11 +41,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ElfExtractSectionsStepTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final ImmutableSet<String> OBJCOPY_NAMES = ImmutableSet.of("objcopy", "gobjcopy");
 
@@ -61,8 +58,7 @@ public class ElfExtractSectionsStepTest {
     for (String name : OBJCOPY_NAMES) {
       objcopy =
           finder.getOptionalExecutable(
-              tmp.getRoot().getFileSystem().getPath(name),
-              ImmutableMap.copyOf(System.getenv()));
+              tmp.getRoot().getFileSystem().getPath(name), ImmutableMap.copyOf(System.getenv()));
       if (objcopy.isPresent()) {
         break;
       }
@@ -88,13 +84,11 @@ public class ElfExtractSectionsStepTest {
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             tmp.getRoot().getFileSystem().getPath("libfoo.extracted.so"),
             ImmutableSet.of(".dynamic"));
-    step.execute(TestExecutionContext.newInstance());
+    step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
 
     // Verify that the program table section is empty.
     try (FileChannel channel =
-        FileChannel.open(
-            step.getFilesystem().resolve(step.getOutput()),
-            StandardOpenOption.READ)) {
+        FileChannel.open(step.getFilesystem().resolve(step.getOutput()), StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
       List<String> sections = new ArrayList<>();
@@ -108,5 +102,4 @@ public class ElfExtractSectionsStepTest {
       assertThat(sections, Matchers.equalTo(ImmutableList.of(".dynamic")));
     }
   }
-
 }

@@ -16,43 +16,41 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
-
 public class OcamlCCompile extends AbstractBuildRule {
-  @AddToRuleKey
-  private final OcamlCCompileStep.Args args;
+  @AddToRuleKey private final OcamlCCompileStep.Args args;
 
-  public OcamlCCompile(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      OcamlCCompileStep.Args args) {
-    super(params, resolver);
+  public OcamlCCompile(BuildRuleParams params, OcamlCCompileStep.Args args) {
+    super(params);
     this.args = args;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(args.output);
     return ImmutableList.of(
-      new MkdirStep(getProjectFilesystem(), args.output.getParent()),
-      new OcamlCCompileStep(getResolver(), getProjectFilesystem().getRootPath(), args));
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), args.output.getParent())),
+        new OcamlCCompileStep(
+            context.getSourcePathResolver(), getProjectFilesystem().getRootPath(), args));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return args.output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.output);
   }
 
   @Override

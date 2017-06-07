@@ -26,12 +26,10 @@ import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class BuildTargetTest {
 
@@ -59,46 +57,36 @@ public class BuildTargetTest {
 
   @Test
   public void testEqualsNullReturnsFalse() {
-    BuildTarget utilTarget = BuildTarget.builder(
-        ROOT,
-        "//src/com/facebook/buck/util",
-        "util").build();
+    BuildTarget utilTarget =
+        BuildTarget.builder(ROOT, "//src/com/facebook/buck/util", "util").build();
     assertNotNull(utilTarget);
   }
 
   @Test
   public void testEqualsOtherBuildTarget() {
-    BuildTarget utilTarget1 = BuildTarget.builder(
-        ROOT,
-        "//src/com/facebook/buck/util",
-        "util").build();
+    BuildTarget utilTarget1 =
+        BuildTarget.builder(ROOT, "//src/com/facebook/buck/util", "util").build();
     assertEquals(utilTarget1, utilTarget1);
 
-    BuildTarget utilTarget2 = BuildTarget.builder(
-        ROOT,
-        "//src/com/facebook/buck/util",
-        "util").build();
+    BuildTarget utilTarget2 =
+        BuildTarget.builder(ROOT, "//src/com/facebook/buck/util", "util").build();
     assertEquals(utilTarget1, utilTarget2);
   }
 
   @Test
   public void testNotEquals() {
-    BuildTarget utilTarget = BuildTarget.builder(
-        ROOT,
-        "//src/com/facebook/buck/util",
-        "util").build();
+    BuildTarget utilTarget =
+        BuildTarget.builder(ROOT, "//src/com/facebook/buck/util", "util").build();
     BuildTarget ioTarget = BuildTarget.builder(ROOT, "//src/com/facebook/buck/util", "io").build();
     assertFalse(utilTarget.equals(ioTarget));
   }
 
   @Test
   public void testBuildTargetWithFlavor() {
-    BuildTarget target = BuildTarget
-        .builder(ROOT, "//foo/bar", "baz")
-        .addFlavors(ImmutableFlavor.of("dex"))
-        .build();
+    BuildTarget target =
+        BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(InternalFlavor.of("dex")).build();
     assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
-    assertEquals(ImmutableSortedSet.of(ImmutableFlavor.of("dex")), target.getFlavors());
+    assertEquals(ImmutableSortedSet.of(InternalFlavor.of("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
 
@@ -113,7 +101,7 @@ public class BuildTargetTest {
   @Test
   public void testFlavorIsValid() {
     try {
-      BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(ImmutableFlavor.of("d!x")).build();
+      BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(InternalFlavor.of("d!x")).build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid characters in flavor name: d!x", e.getMessage());
@@ -124,7 +112,8 @@ public class BuildTargetTest {
   public void testShortNameCannotContainHashWhenFlavorSet() {
     try {
       BuildTarget.builder(ROOT, "//foo/bar", "baz#dex")
-          .addFlavors(ImmutableFlavor.of("src-jar")).build();
+          .addFlavors(InternalFlavor.of("src-jar"))
+          .build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
@@ -133,7 +122,8 @@ public class BuildTargetTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testShortNamesMustNotContainTheFlavorSeparator() {
-      BuildTarget.builder(ROOT, "//foo/bar", "baz#dex").build();
+    @SuppressWarnings("unused")
+    BuildTarget unused = BuildTarget.builder(ROOT, "//foo/bar", "baz#dex").build();
   }
 
   @Test
@@ -146,31 +136,31 @@ public class BuildTargetTest {
   @Test
   public void testGetUnflavoredTarget() {
     UnflavoredBuildTarget unflavoredTarget =
-        UnflavoredBuildTarget.builder("//foo/bar", "baz").setCellPath(ROOT).build();
+        UnflavoredBuildTarget.builder()
+            .setBaseName("//foo/bar")
+            .setShortName("baz")
+            .setCellPath(ROOT)
+            .build();
 
-    BuildTarget flavoredTarget = BuildTarget
-        .builder(ROOT, "//foo/bar", "baz")
-        .addFlavors(ImmutableFlavor.of("biz"))
-        .build();
+    BuildTarget flavoredTarget =
+        BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(InternalFlavor.of("biz")).build();
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredBuildTarget());
   }
 
   @Test
   public void testNumbersAreValidFlavors() {
-    BuildTarget.builder(ROOT, "//foo", "bar")
-        .addFlavors(ImmutableFlavor.of("1234"))
-        .build();
+    @SuppressWarnings("unused")
+    BuildTarget unused =
+        BuildTarget.builder(ROOT, "//foo", "bar").addFlavors(InternalFlavor.of("1234")).build();
   }
 
   @Test
   public void testAppendingFlavors() {
-    Flavor aaa = ImmutableFlavor.of("aaa");
-    Flavor biz = ImmutableFlavor.of("biz");
+    Flavor aaa = InternalFlavor.of("aaa");
+    Flavor biz = InternalFlavor.of("biz");
 
-    BuildTarget flavoredTarget = BuildTarget
-        .builder(ROOT, "//foo/bar", "baz")
-        .addFlavors(biz)
-        .build();
+    BuildTarget flavoredTarget =
+        BuildTarget.builder(ROOT, "//foo/bar", "baz").addFlavors(biz).build();
     BuildTarget appendedFlavor = flavoredTarget.withAppendedFlavors(aaa);
     assertThat(appendedFlavor, Matchers.not(Matchers.equalTo(flavoredTarget)));
     ImmutableSortedSet<Flavor> expectedFlavors = ImmutableSortedSet.of(biz, aaa);
@@ -179,16 +169,18 @@ public class BuildTargetTest {
 
   @Test
   public void unflavoredBuildTargetsAreInterned() {
-    UnflavoredBuildTarget target1 = UnflavoredBuildTarget.builder()
-        .setCellPath(ROOT)
-        .setBaseName("//foo")
-        .setShortName("bar")
-        .build();
-    UnflavoredBuildTarget target2 = UnflavoredBuildTarget.builder()
-        .setCellPath(ROOT)
-        .setBaseName("//foo")
-        .setShortName("bar")
-        .build();
+    UnflavoredBuildTarget target1 =
+        UnflavoredBuildTarget.builder()
+            .setCellPath(ROOT)
+            .setBaseName("//foo")
+            .setShortName("bar")
+            .build();
+    UnflavoredBuildTarget target2 =
+        UnflavoredBuildTarget.builder()
+            .setCellPath(ROOT)
+            .setBaseName("//foo")
+            .setShortName("bar")
+            .build();
     assertSame(target1, target2);
   }
 }

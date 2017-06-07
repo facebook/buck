@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.util.Optional;
 
@@ -42,10 +41,7 @@ public class LuaUtil {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
       if (input.getUnnamedSources().isPresent()) {
         namesAndSourcePaths =
-            resolver.getSourcePathNames(
-                target,
-                parameter,
-                input.getUnnamedSources().get());
+            resolver.getSourcePathNames(target, parameter, input.getUnnamedSources().get());
       } else {
         namesAndSourcePaths = input.getNamedSources().get();
       }
@@ -66,5 +62,4 @@ public class LuaUtil {
         ? override.get().replace('.', File.separatorChar)
         : target.getBasePath().toString();
   }
-
 }

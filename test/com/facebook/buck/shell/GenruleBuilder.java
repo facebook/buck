@@ -16,48 +16,60 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class GenruleBuilder
-    extends AbstractNodeBuilder<GenruleDescription.Arg, GenruleDescription> {
+    extends AbstractNodeBuilder<
+        GenruleDescriptionArg.Builder, GenruleDescriptionArg, GenruleDescription, Genrule> {
   private GenruleBuilder(BuildTarget target) {
     super(new GenruleDescription(), target);
+  }
+
+  private GenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(new GenruleDescription(), target, filesystem);
   }
 
   public static GenruleBuilder newGenruleBuilder(BuildTarget target) {
     return new GenruleBuilder(target);
   }
 
+  public static GenruleBuilder newGenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    return new GenruleBuilder(target, filesystem);
+  }
+
   public GenruleBuilder setOut(String out) {
-    arg.out = out;
+    getArgForPopulating().setOut(out);
     return this;
   }
 
   public GenruleBuilder setBash(@Nullable String bash) {
-    arg.bash = Optional.ofNullable(bash);
+    getArgForPopulating().setBash(Optional.ofNullable(bash));
     return this;
   }
 
   public GenruleBuilder setCmd(@Nullable String cmd) {
-    arg.cmd = Optional.ofNullable(cmd);
+    getArgForPopulating().setCmd(Optional.ofNullable(cmd));
     return this;
   }
 
   public GenruleBuilder setCmdExe(@Nullable String cmdExe) {
-    arg.cmdExe = Optional.ofNullable(cmdExe);
+    getArgForPopulating().setCmdExe(Optional.ofNullable(cmdExe));
+    return this;
+  }
+
+  public GenruleBuilder setType(@Nullable String type) {
+    getArgForPopulating().setType(Optional.ofNullable(type));
     return this;
   }
 
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
-    arg.srcs = Optional.ofNullable(srcs).orElse(ImmutableList.of());
+    getArgForPopulating().setSrcs(Optional.ofNullable(srcs).orElse(ImmutableList.of()));
     return this;
   }
-
 }

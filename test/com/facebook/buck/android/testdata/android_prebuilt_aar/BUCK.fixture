@@ -85,7 +85,3 @@ android_binary(
     '//android_prebuilt_aar-dep:aar-no-classes-dot-jar',
   ],
 )
-
-project_config(
-  src_target = ':app',
-)

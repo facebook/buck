@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'buckd' /}
+    {param navid: 'command_buckd' /}
     {param description}
       A command that starts a buck daemon process that the client will talk to.
     {/param}
@@ -45,6 +46,19 @@ change overflows when buck daemons are being used to build very large projects.
 </p>
 <p>
 By default, Buck daemon processes ignore changes to editor temporary files.
+</p>
+<p>
+A buckd process will be killed if:
+<ul>
+<li>
+  The buck config (e.g. the contents of .buckconfig) changes unless that change is to a config option whitelisted
+  in <a href="https://github.com/facebook/buck/blob/master/src/com/facebook/buck/cli/BuckConfig.java#L100">this file</a>
+</li>
+<li><code>buck clean</code> is run</li>
+<li>The daemon has been idle for 24 hours</li>
+<li>The .buckd directory in the workspace is deleted</li>
+</ul>
+The buckd process can also be explicitly killed by running <code>buck kill</code>.
 </p>
 <p>
 To disable the daemon from starting, set the environment variable

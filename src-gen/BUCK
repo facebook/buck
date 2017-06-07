@@ -1,12 +1,13 @@
 java_library(
-  name = 'thrift',
-  srcs = glob(['**/*.java']),
-  deps = [
-    '//third-party/java/slf4j:slf4j-api',
-    '//third-party/java/slf4j:slf4j',
-  ],
-  exported_deps = [
-    '//third-party/java/thrift:libthrift',
-  ],
-  visibility = ['PUBLIC'],
+    name = "thrift",
+    srcs = glob(["**/*.java"]),
+    exported_deps = [
+        "//third-party/java/thrift:libthrift",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        # This dep is looked up at runtime by reflection.
+        "//third-party/java/slf4j:slf4j",
+        "//third-party/java/slf4j:slf4j-api",
+    ],
 )

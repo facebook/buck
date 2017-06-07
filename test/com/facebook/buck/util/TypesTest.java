@@ -16,16 +16,12 @@
 
 package com.facebook.buck.util;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Calendar;
@@ -33,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Test;
 
 public class TypesTest {
 
@@ -138,7 +135,6 @@ public class TypesTest {
     Type baseType = Types.getBaseType(field);
 
     assertEquals(Integer.class, baseType);
-
   }
 
   @Test
@@ -218,7 +214,6 @@ public class TypesTest {
     Class<? extends Collection<?>> container = Types.getContainerClass(field);
 
     assertEquals(List.class, container);
-
   }
 
   @Test

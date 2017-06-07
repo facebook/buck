@@ -20,11 +20,8 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.Description;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * A node which is the root of a version sub-graph.
- */
+/** A node which is the root of a version sub-graph. */
 public interface VersionRoot<A> extends Description<A> {
 
   boolean isVersionRoot(ImmutableSet<Flavor> flavors);
-
 }

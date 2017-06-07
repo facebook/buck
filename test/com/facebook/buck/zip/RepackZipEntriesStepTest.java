@@ -24,17 +24,15 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class RepackZipEntriesStepTest {
 
@@ -44,7 +42,7 @@ public class RepackZipEntriesStepTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void buildSampleZipFile() throws IOException {
+  public void buildSampleZipFile() throws InterruptedException, IOException {
     parent = tmp.newFolder("foo");
     filesystem = new ProjectFilesystem(parent);
     zipFile = parent.resolve("example.zip");
@@ -54,7 +52,7 @@ public class RepackZipEntriesStepTest {
     try (ZipOutputStream stream = new ZipOutputStream(Files.newOutputStream(zipFile))) {
       ZipEntry entry = new ZipEntry("file");
       stream.putNextEntry(entry);
-      String packageName = getClass().getPackage().getName().replace(".", "/");
+      String packageName = getClass().getPackage().getName().replace('.', '/');
       URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
       stream.write(Resources.toByteArray(sample));
     }
@@ -63,11 +61,8 @@ public class RepackZipEntriesStepTest {
   @Test
   public void shouldLeaveZipAloneIfEntriesToCompressIsEmpty() throws IOException {
     Path out = parent.resolve("output.zip");
-    RepackZipEntriesStep step = new RepackZipEntriesStep(
-        filesystem,
-        zipFile,
-        out,
-        ImmutableSet.of());
+    RepackZipEntriesStep step =
+        new RepackZipEntriesStep(filesystem, zipFile, out, ImmutableSet.of());
     step.execute(TestExecutionContext.newInstance());
 
     byte[] expected = Files.readAllBytes(zipFile);
@@ -78,11 +73,8 @@ public class RepackZipEntriesStepTest {
   @Test
   public void repackWithHigherCompressionResultsInFewerBytes() throws IOException {
     Path out = parent.resolve("output.zip");
-    RepackZipEntriesStep step = new RepackZipEntriesStep(
-        filesystem,
-        zipFile,
-        out,
-        ImmutableSet.of("file"));
+    RepackZipEntriesStep step =
+        new RepackZipEntriesStep(filesystem, zipFile, out, ImmutableSet.of("file"));
     step.execute(TestExecutionContext.newInstance());
 
     assertTrue(Files.size(out) < Files.size(zipFile));
@@ -91,12 +83,13 @@ public class RepackZipEntriesStepTest {
   @Test
   public void justStoringEntriesLeadsToMoreBytesInOuputZip() throws IOException {
     Path out = parent.resolve("output.zip");
-    RepackZipEntriesStep step = new RepackZipEntriesStep(
-        filesystem,
-        zipFile,
-        out,
-        ImmutableSet.of("file"),
-        ZipCompressionLevel.MIN_COMPRESSION_LEVEL);
+    RepackZipEntriesStep step =
+        new RepackZipEntriesStep(
+            filesystem,
+            zipFile,
+            out,
+            ImmutableSet.of("file"),
+            ZipCompressionLevel.MIN_COMPRESSION_LEVEL);
     step.execute(TestExecutionContext.newInstance());
 
     byte[] expected = Files.readAllBytes(zipFile);

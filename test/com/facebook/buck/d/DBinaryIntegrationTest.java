@@ -22,23 +22,21 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class DBinaryIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
@@ -46,8 +44,7 @@ public class DBinaryIntegrationTest {
   public void cxx() throws Exception {
     Assumptions.assumeDCompilerUsable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cxx", tmp);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cxx", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("-v", "10", "//:test").assertSuccess();
@@ -55,15 +52,16 @@ public class DBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:test");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result = workspace.runCommand(
-        workspace
-            .resolve(
-                BuildTargets.getGenPath(
-                    filesystem,
-                    BuildTargetFactory.newInstance("//:test")
-                        .withFlavors(DBinaryDescription.BINARY_FLAVOR),
-                    "%s/test"))
-            .toString());
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve(
+                    BuildTargets.getGenPath(
+                        filesystem,
+                        BuildTargetFactory.newInstance("//:test")
+                            .withFlavors(DBinaryDescription.BINARY_FLAVOR),
+                        "%s/test"))
+                .toString());
     assertEquals(0, result.getExitCode());
     assertEquals("1 + 1 = 2\n100 + 1 = 5\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
@@ -73,8 +71,8 @@ public class DBinaryIntegrationTest {
   public void xyzzy() throws Exception {
     Assumptions.assumeDCompilerUsable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
     workspace.runBuckBuild("-v", "10", "//:xyzzy").assertSuccess();
@@ -82,15 +80,16 @@ public class DBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:xyzzy");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result = workspace.runCommand(
-        workspace
-            .resolve(
-                BuildTargets.getGenPath(
-                    filesystem,
-                    BuildTargetFactory.newInstance("//:xyzzy")
-                        .withFlavors(DBinaryDescription.BINARY_FLAVOR),
-                    "%s/xyzzy"))
-            .toString());
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve(
+                    BuildTargets.getGenPath(
+                        filesystem,
+                        BuildTargetFactory.newInstance("//:xyzzy")
+                            .withFlavors(DBinaryDescription.BINARY_FLAVOR),
+                        "%s/xyzzy"))
+                .toString());
     assertEquals(0, result.getExitCode());
     assertEquals("Nothing happens.\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());

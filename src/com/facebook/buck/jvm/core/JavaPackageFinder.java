@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.model.BuildTarget;
-
 import java.nio.file.Path;
 
 public interface JavaPackageFinder {
@@ -26,6 +25,7 @@ public interface JavaPackageFinder {
    * Given the relative path to a file under the project root, return the Java package with which
    * the file is associated. For .java files, this is generally obvious, as they contain an explicit
    * "package" statement. For other files, such as resources, other heuristics must be used.
+   *
    * @param pathRelativeToProjectRoot may be a path to either a file or a directory. If a directory,
    *     then it must end in a slash.
    * @return a path that always ends with a slash, or the empty string, indicating the root

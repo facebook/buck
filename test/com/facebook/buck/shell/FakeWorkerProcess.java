@@ -18,43 +18,52 @@ package com.facebook.buck.shell;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 
 public class FakeWorkerProcess extends WorkerProcess {
 
   private ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap;
+  private boolean isAlive;
 
-  public FakeWorkerProcess(
-      ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap) throws IOException {
+  public FakeWorkerProcess(ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap)
+      throws IOException {
     super(
         new FakeProcessExecutor(),
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of())
-            .build(),
+        ProcessExecutorParams.builder().setCommand(ImmutableList.of()).build(),
         new FakeProjectFilesystem(),
         Paths.get("tmp").toAbsolutePath().normalize());
     this.jobArgsToJobResultMap = jobArgsToJobResultMap;
+    this.isAlive = false;
     this.setProtocol(new FakeWorkerProcessProtocol());
   }
 
   @Override
-  public synchronized void ensureLaunchAndHandshake() throws IOException {}
+  public boolean isAlive() {
+    return isAlive;
+  }
+
+  @Override
+  public synchronized void ensureLaunchAndHandshake() throws IOException {
+    isAlive = true;
+  }
 
   @Override
   public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) throws IOException {
     WorkerJobResult result = this.jobArgsToJobResultMap.get(jobArgs);
     if (result == null) {
-      throw new IllegalArgumentException(String.format(
-          "No fake WorkerJobResult found for job arguments '%s'",
-          jobArgs));
+      throw new IllegalArgumentException(
+          String.format("No fake WorkerJobResult found for job arguments '%s'", jobArgs));
     }
     return result;
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    Preconditions.checkState(isAlive, "Closing a dead process?");
+    isAlive = false;
+  }
 }

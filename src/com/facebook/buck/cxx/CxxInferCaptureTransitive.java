@@ -16,22 +16,24 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class CxxInferCaptureTransitive extends AbstractBuildRule
     implements HasRuntimeDeps, HasPostBuildSteps {
@@ -40,10 +42,8 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   private Path outputDirectory;
 
   public CxxInferCaptureTransitive(
-      BuildRuleParams params,
-      SourcePathResolver pathResolver,
-      ImmutableSet<CxxInferCapture> captureRules) {
-    super(params, pathResolver);
+      BuildRuleParams params, ImmutableSet<CxxInferCapture> captureRules) {
+    super(params);
     this.captureRules = captureRules;
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
@@ -54,35 +54,36 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(captureRules)
-        .build();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return captureRules.stream().map(BuildRule::getBuildTarget);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputDirectory;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps() {
+  public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
             CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
-                this,
-                getProjectFilesystem(),
-                this.outputDirectory.resolve("infer-deps.txt"))
-        )
+                this, getProjectFilesystem(), this.outputDirectory.resolve("infer-deps.txt")))
         .build();
   }
 }

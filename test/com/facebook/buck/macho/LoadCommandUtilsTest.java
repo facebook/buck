@@ -24,31 +24,32 @@ import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedInteger;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
 
 public class LoadCommandUtilsTest {
   @Test
   public void testEnumeratingLoadCommands() throws Exception {
     byte[] header = MachoHeaderTestData.getBigEndian64Bit();
-    header[19] = 2;   // ncmds
-    header[23] = 16;  // sizeofcmds
+    header[19] = 2; // ncmds
+    header[23] = 16; // sizeofcmds
 
-    byte[] commandBytes = BaseEncoding.base16().decode(
-        "000000AA00000008" +      // command 1 is AA, size 8
-            "000000BB00000008");      // command 2 is BB, size 8
+    byte[] commandBytes =
+        BaseEncoding.base16()
+            .decode(
+                "000000AA00000008"
+                    + // command 1 is AA, size 8
+                    "000000BB00000008"); // command 2 is BB, size 8
 
-    ByteBuffer buffer = ByteBuffer
-        .allocate(MachoHeaderTestData.getBigEndian64Bit().length + commandBytes.length)
-        .put(header)
-        .put(commandBytes)
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer buffer =
+        ByteBuffer.allocate(MachoHeaderTestData.getBigEndian64Bit().length + commandBytes.length)
+            .put(header)
+            .put(commandBytes)
+            .order(ByteOrder.BIG_ENDIAN);
 
     final List<LoadCommand> result = new ArrayList<>();
     buffer.position(0);
@@ -80,8 +81,8 @@ public class LoadCommandUtilsTest {
   @Test
   public void testFindingLoadCommands() throws Exception {
     byte[] header = MachoHeaderTestData.getBigEndian64Bit();
-    header[19] = 3;   // ncmds
-    header[23] = 16;  // sizeofcmds
+    header[19] = 3; // ncmds
+    header[23] = 16; // sizeofcmds
 
     byte[] symtabBytes = SymTabCommandTestData.getBigEndian();
     byte[] uuid1Bytes = UUIDCommandTestData.getBigEndian();
@@ -89,20 +90,24 @@ public class LoadCommandUtilsTest {
     byte[] uuid2Bytes = UUIDCommandTestData.getBigEndian();
     uuid2Bytes[8] = (byte) 0x22;
 
-    ByteBuffer buffer = ByteBuffer
-        .allocate(MachoHeaderTestData.getBigEndian64Bit().length +
-            symtabBytes.length + uuid1Bytes.length + uuid2Bytes.length)
-        .order(ByteOrder.BIG_ENDIAN)
-        .put(header)
-        .put(uuid1Bytes)
-        .put(symtabBytes)
-        .put(uuid2Bytes);
+    ByteBuffer buffer =
+        ByteBuffer.allocate(
+                MachoHeaderTestData.getBigEndian64Bit().length
+                    + symtabBytes.length
+                    + uuid1Bytes.length
+                    + uuid2Bytes.length)
+            .order(ByteOrder.BIG_ENDIAN)
+            .put(header)
+            .put(uuid1Bytes)
+            .put(symtabBytes)
+            .put(uuid2Bytes);
 
     buffer.position(0);
-    ImmutableList<UUIDCommand> uuidCommands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
-        UUIDCommand.class);
+    ImmutableList<UUIDCommand> uuidCommands =
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
+            UUIDCommand.class);
 
     assertThat(uuidCommands.size(), equalTo(2));
     assertThat(uuidCommands.get(0).getUuid().toString(), startsWith("11"));
@@ -115,10 +120,11 @@ public class LoadCommandUtilsTest {
         equalTo(header.length + 48));
 
     buffer.position(0);
-    ImmutableList<SymTabCommand> symTabCommands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
-        SymTabCommand.class);
+    ImmutableList<SymTabCommand> symTabCommands =
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
+            SymTabCommand.class);
     assertThat(symTabCommands.size(), equalTo(1));
     assertThat(
         symTabCommands.get(0).getLoadCommandCommonFields().getOffsetInBinary(),
@@ -132,18 +138,18 @@ public class LoadCommandUtilsTest {
     byte[] uuidBytes = UUIDCommandTestData.getBigEndian();
     byte[] linkEditBytes = LinkEditCommandTestData.getCodeSignBigEndian();
     byte[] unknownBytes = {
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x99,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x08,
+      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x99,
+      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x08,
     };
 
-    ByteBuffer byteBuffer = ByteBuffer
-        .allocate(
-            segmentBytes.length +
-                symtabBytes.length +
-                uuidBytes.length +
-                linkEditBytes.length +
-                unknownBytes.length)
-        .order(ByteOrder.BIG_ENDIAN);
+    ByteBuffer byteBuffer =
+        ByteBuffer.allocate(
+                segmentBytes.length
+                    + symtabBytes.length
+                    + uuidBytes.length
+                    + linkEditBytes.length
+                    + unknownBytes.length)
+            .order(ByteOrder.BIG_ENDIAN);
     byteBuffer
         .put(segmentBytes)
         .put(symtabBytes)
@@ -154,28 +160,23 @@ public class LoadCommandUtilsTest {
 
     assertThat(
         LoadCommandUtils.createLoadCommandFromBuffer(
-            byteBuffer,
-            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
+            byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(SegmentCommand.class));
     assertThat(
         LoadCommandUtils.createLoadCommandFromBuffer(
-            byteBuffer,
-            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
+            byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(SymTabCommand.class));
     assertThat(
         LoadCommandUtils.createLoadCommandFromBuffer(
-            byteBuffer,
-            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
+            byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(UUIDCommand.class));
     assertThat(
         LoadCommandUtils.createLoadCommandFromBuffer(
-            byteBuffer,
-            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
+            byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(LinkEditDataCommand.class));
     assertThat(
         LoadCommandUtils.createLoadCommandFromBuffer(
-            byteBuffer,
-            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
+            byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(UnknownCommand.class));
   }
 }

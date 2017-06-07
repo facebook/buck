@@ -19,11 +19,12 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-
 import java.util.SortedSet;
 
 public class AppleAssetCatalogBuilder
-    extends AbstractNodeBuilder<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription> {
+    extends AbstractNodeBuilder<
+        AppleAssetCatalogDescriptionArg.Builder, AppleAssetCatalogDescriptionArg,
+        AppleAssetCatalogDescription, AppleAssetCatalog> {
 
   protected AppleAssetCatalogBuilder(BuildTarget target) {
     super(new AppleAssetCatalogDescription(), target);
@@ -34,8 +35,7 @@ public class AppleAssetCatalogBuilder
   }
 
   public AppleAssetCatalogBuilder setDirs(SortedSet<SourcePath> dirs) {
-    arg.dirs = dirs;
+    getArgForPopulating().setDirs(dirs);
     return this;
   }
-
 }

@@ -17,13 +17,13 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import java.io.IOException;
 
 public class DistBuildStatusCommand extends AbstractDistBuildCommand {
@@ -39,20 +39,19 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    BuildId buildId = getBuildId();
+    StampedeId stampedeId = getStampedeId();
     Console console = params.getConsole();
-    ObjectMapper objectMapper = params.getObjectMapper().copy();
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    objectMapper.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+    ObjectMapper objectMapper =
+        ObjectMappers.legacyCreate()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
 
-    try (DistBuildService service =
-             DistBuildFactory.newDistBuildService(params)) {
-      BuildJob buildJob = service.getCurrentBuildJobState(getBuildId());
+    try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
+      BuildJob buildJob = service.getCurrentBuildJobState(getStampedeId());
       objectMapper.writeValue(console.getStdOut(), buildJob);
       console.getStdOut().println();
-      console.printSuccess(String.format(
-          "Successfully fetched the build status for [%s].",
-          buildId));
+      console.printSuccess(
+          String.format("Successfully fetched the build status for [%s].", stampedeId));
       return 0;
     }
   }

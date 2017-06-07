@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -33,8 +32,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * Represents string resources of types string, plural and array for a locale. Also responsible
- * for generating a custom format binary file for the resources.
+ * Represents string resources of types string, plural and array for a locale. Also responsible for
+ * generating a custom format binary file for the resources.
  */
 public class StringResources {
 
@@ -49,8 +48,8 @@ public class StringResources {
   }
   /**
    * Bump this whenever there's a change in the file format. The parser can decide to abort parsing
-   * if the version it finds in the file does not match it's own version, thereby avoiding
-   * potential data corruption issues.
+   * if the version it finds in the file does not match it's own version, thereby avoiding potential
+   * data corruption issues.
    */
   private static final int FORMAT_VERSION = 2;
 
@@ -64,10 +63,9 @@ public class StringResources {
    * These are the 6 fixed plural categories for string resources in Android. This mapping is not
    * expected to change over time. We encode them as integers to optimize space.
    *
-   * <p>For more information, refer to:
-   * <a href="http://developer.android.com/guide/topics/resources/string-resource.html#Plurals">
-   *   String Resources | Android Developers
-   * </a></p>
+   * <p>For more information, refer to: <a
+   * href="http://developer.android.com/guide/topics/resources/string-resource.html#Plurals">String
+   * Resources | Android Developers </a>
    */
   private static final ImmutableMap<String, Integer> PLURAL_CATEGORY_MAP =
       ImmutableMap.<String, Integer>builder()
@@ -107,7 +105,9 @@ public class StringResources {
   /**
    * Returns a byte array that represents the entire set of strings, plurals and string arrays in
    * the following binary file format:
+   *
    * <p>
+   *
    * <pre>
    *   [Int: Version]
    *
@@ -132,10 +132,8 @@ public class StringResources {
    * </pre>
    */
   public byte[] getBinaryFileContent() {
-    try (
-      ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
-      DataOutputStream outputStream = new DataOutputStream(bytesStream)
-    ) {
+    try (ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
+        DataOutputStream outputStream = new DataOutputStream(bytesStream)) {
       outputStream.writeInt(FORMAT_VERSION);
 
       writeStrings(outputStream);
@@ -151,11 +149,11 @@ public class StringResources {
   }
 
   /**
-   * Writes the metadata and strings in the following format to the output stream:
-   * [Int: # of strings]
-   * [Int: Smallest resource id among strings]
-   * [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Short: length of
-   *    the string] [Byte array of the string value]] x #genders] x # of strings
+   * Writes the metadata and strings in the following format to the output stream: [Int: # of
+   * strings] [Int: Smallest resource id among strings] [[Short: resource id delta] [Byte: #genders]
+   * [[Byte: gender enum ordinal] [Short: length of the string] [Byte array of the string value]] x
+   * #genders] x # of strings
+   *
    * @param outputStream
    * @throws IOException
    */
@@ -187,13 +185,12 @@ public class StringResources {
   }
 
   /**
-   * Writes the metadata and strings in the following format to the output stream:
-   * [Int: # of plurals]
-   * [Int: Smallest resource id among plurals]
-   * [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Byte: #categories]
-   *  [[Byte: category] [Short: length of plural value]] x #categories] x # of genders]
-   *  x # of plurals
-   * [Byte array of plural value] x Summation of gedners over plural categories over # of plurals
+   * Writes the metadata and strings in the following format to the output stream: [Int: # of
+   * plurals] [Int: Smallest resource id among plurals] [[Short: resource id delta] [Byte: #genders]
+   * [[Byte: gender enum ordinal] [Byte: #categories] [[Byte: category] [Short: length of plural
+   * value]] x #categories] x # of genders] x # of plurals [Byte array of plural value] x Summation
+   * of gedners over plural categories over # of plurals
+   *
    * @param outputStream
    * @throws IOException
    */
@@ -221,9 +218,7 @@ public class StringResources {
 
           for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
             outputStream.writeByte(
-                Preconditions.checkNotNull(
-                    PLURAL_CATEGORY_MAP.get(cat.getKey()))
-                    .byteValue());
+                Preconditions.checkNotNull(PLURAL_CATEGORY_MAP.get(cat.getKey())).byteValue());
             byte[] pluralValue = getUnescapedStringBytes(cat.getValue());
             writeShort(outputStream, pluralValue.length);
             dataStream.write(pluralValue);
@@ -238,12 +233,12 @@ public class StringResources {
   }
 
   /**
-   * Writes the metadata and strings in the following format to the output stream:
-   * [Int: # of arrays]
-   * [Int: Smallest resource id among arrays]
-   * [[Short: resource id delta] [Byte: #genders] [[Byte: gender enum ordinal] [Int: #elements]
-   *  [[Short: length of element] x # of elements]] x # of genders] x # of arrays
-   * [Byte array of string value] x Summation of genders over array elements over # of arrays
+   * Writes the metadata and strings in the following format to the output stream: [Int: # of
+   * arrays] [Int: Smallest resource id among arrays] [[Short: resource id delta] [Byte: #genders]
+   * [[Byte: gender enum ordinal] [Int: #elements] [[Short: length of element] x # of elements]] x #
+   * of genders] x # of arrays [Byte array of string value] x Summation of genders over array
+   * elements over # of arrays
+   *
    * @param outputStream
    * @throws IOException
    */
@@ -280,8 +275,8 @@ public class StringResources {
   }
 
   private void writeShort(DataOutputStream stream, int number) throws IOException {
-    Preconditions.checkState(number <= Short.MAX_VALUE,
-        "Error attempting to compact a numeral to short: " + number);
+    Preconditions.checkState(
+        number <= Short.MAX_VALUE, "Error attempting to compact a numeral to short: " + number);
     stream.writeShort(number);
   }
 

@@ -17,12 +17,10 @@
 package com.facebook.buck.dalvik.firstorder;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
-
-import java.util.Map;
 
 public class FirstOrderHelper {
 
@@ -31,11 +29,10 @@ public class FirstOrderHelper {
   private final Map<Type, FirstOrderTypeInfo> knownTypes;
 
   private FirstOrderHelper(
-      Iterable<Type> scenarioTypes,
-      ImmutableSet.Builder<String> resultBuilder) {
+      Iterable<Type> scenarioTypes, ImmutableSet.Builder<String> resultBuilder) {
     this.scenarioTypes = scenarioTypes;
     this.resultBuilder = resultBuilder;
-    this.knownTypes = Maps.newHashMap();
+    this.knownTypes = new HashMap<>();
   }
 
   public static void addTypesAndDependencies(
@@ -55,7 +52,7 @@ public class FirstOrderHelper {
       knownTypes.put(info.type, info);
     }
 
-    // TODO(rightparen): consider adding events here that allow developers to track
+    // TODO(mmarucheck): consider adding events here that allow developers to track
     // how many non android.* and java.* classes went unrecognized over time.
     //
     // Not all types will be known.  This includes types from Android, java

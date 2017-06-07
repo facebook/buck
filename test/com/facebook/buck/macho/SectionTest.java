@@ -20,12 +20,10 @@ import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import org.junit.Test;
 
 public class SectionTest {
 
@@ -40,36 +38,44 @@ public class SectionTest {
 
   @Test
   public void testCreatingFromBytesBigEndian64Bit() throws Exception {
-    Section section = SectionUtils.createFromBuffer(
-        createBuffer(SectionTestData.getBigEndian64Bit(), 10, ByteOrder.BIG_ENDIAN), true,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    Section section =
+        SectionUtils.createFromBuffer(
+            createBuffer(SectionTestData.getBigEndian64Bit(), 10, ByteOrder.BIG_ENDIAN),
+            true,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(section.getOffsetInBinary(), equalTo(10));
     checkValues(section);
   }
 
   @Test
   public void testCreatingFromBytesLittleEndian64Bit() throws Exception {
-    Section section = SectionUtils.createFromBuffer(
-        createBuffer(SectionTestData.getLittleEndian64Bit(), 20, ByteOrder.LITTLE_ENDIAN), true,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    Section section =
+        SectionUtils.createFromBuffer(
+            createBuffer(SectionTestData.getLittleEndian64Bit(), 20, ByteOrder.LITTLE_ENDIAN),
+            true,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(section.getOffsetInBinary(), equalTo(20));
     checkValues(section);
   }
 
   @Test
   public void testCreatingFromBytesBigEndian32Bit() throws Exception {
-    Section section = SectionUtils.createFromBuffer(
-        createBuffer(SectionTestData.getBigEndian32Bit(), 30, ByteOrder.BIG_ENDIAN), false,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    Section section =
+        SectionUtils.createFromBuffer(
+            createBuffer(SectionTestData.getBigEndian32Bit(), 30, ByteOrder.BIG_ENDIAN),
+            false,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(section.getOffsetInBinary(), equalTo(30));
     checkValues(section);
   }
 
   @Test
   public void testCreatingFromBytesLittleEndian32Bit() throws Exception {
-    Section section = SectionUtils.createFromBuffer(
-        createBuffer(SectionTestData.getLittleEndian32Bit(), 40, ByteOrder.LITTLE_ENDIAN), false,
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    Section section =
+        SectionUtils.createFromBuffer(
+            createBuffer(SectionTestData.getLittleEndian32Bit(), 40, ByteOrder.LITTLE_ENDIAN),
+            false,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(section.getOffsetInBinary(), equalTo(40));
     checkValues(section);
   }

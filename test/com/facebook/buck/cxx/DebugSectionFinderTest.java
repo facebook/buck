@@ -26,10 +26,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -38,25 +34,24 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class DebugSectionFinderTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private void assertDebugSections(
       Optional<ImmutableMap<String, ImmutableSet<DebugSectionProperty>>> expected,
       Optional<ImmutableMap<String, DebugSection>> actual) {
     assertTrue(
-        (expected.isPresent() && actual.isPresent()) ||
-        (!expected.isPresent() && !actual.isPresent()));
+        (expected.isPresent() && actual.isPresent())
+            || (!expected.isPresent() && !actual.isPresent()));
     if (expected.isPresent()) {
       assertEquals(expected.get().keySet(), actual.get().keySet());
       for (Map.Entry<String, DebugSection> entry : actual.get().entrySet()) {
         assertEquals(
-            entry.getKey(),
-            expected.get().get(entry.getKey()),
-            entry.getValue().properties);
+            entry.getKey(), expected.get().get(entry.getKey()), entry.getValue().properties);
       }
     }
   }
@@ -69,8 +64,7 @@ public class DebugSectionFinderTest {
   }
 
   private void assertDebugSections(
-      Optional<ImmutableMap<String, ImmutableSet<DebugSectionProperty>>> expected,
-      Path path)
+      Optional<ImmutableMap<String, ImmutableSet<DebugSectionProperty>>> expected, Path path)
       throws IOException {
     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
@@ -80,14 +74,12 @@ public class DebugSectionFinderTest {
 
   @Test
   public void testElf() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "debug_sections", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "debug_sections", tmp);
     workspace.setUp();
 
     // No debug sections.
-    assertDebugSections(
-        Optional.of(ImmutableMap.of()),
-        workspace.resolve("elf.o"));
+    assertDebugSections(Optional.of(ImmutableMap.of()), workspace.resolve("elf.o"));
 
     // DWARF
     assertDebugSections(
@@ -135,22 +127,15 @@ public class DebugSectionFinderTest {
 
     // STABS
     assertDebugSections(
-        Optional.of(
-            ImmutableMap.of(
-                ".stabstr", ImmutableSet.of(STRINGS))),
+        Optional.of(ImmutableMap.of(".stabstr", ImmutableSet.of(STRINGS))),
         workspace.resolve("elf-stabs.o"));
     assertDebugSections(
-        Optional.of(
-            ImmutableMap.of(
-                ".stabstr", ImmutableSet.of(STRINGS))),
+        Optional.of(ImmutableMap.of(".stabstr", ImmutableSet.of(STRINGS))),
         workspace.resolve("elf-stabs+.o"));
   }
 
   @Test
   public void testUnrecognizedData() {
-    assertDebugSections(
-        Optional.empty(),
-        ByteBuffer.wrap("some random data".getBytes()));
+    assertDebugSections(Optional.empty(), ByteBuffer.wrap("some random data".getBytes()));
   }
-
 }

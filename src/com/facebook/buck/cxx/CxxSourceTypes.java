@@ -16,48 +16,39 @@
 
 package com.facebook.buck.cxx;
 
-
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 
-/**
- * Utilities for working with C-like source types.
- */
+/** Utilities for working with C-like source types. */
 public class CxxSourceTypes {
   // Utility class; do not instantiate.
-  private CxxSourceTypes() { }
+  private CxxSourceTypes() {}
 
-  /**
-   * Returns true for source types which can be run through the C preprocessor.
-   */
+  /** Returns true for source types which can be run through the C preprocessor. */
   public static boolean isPreprocessableType(CxxSource.Type sourceType) {
-    return
-        sourceType == CxxSource.Type.C ||
-        sourceType == CxxSource.Type.CXX ||
-        sourceType == CxxSource.Type.ASSEMBLER_WITH_CPP ||
-        sourceType == CxxSource.Type.OBJC ||
-        sourceType == CxxSource.Type.OBJCXX ||
-        sourceType == CxxSource.Type.CUDA ||
-        sourceType == CxxSource.Type.ASM_WITH_CPP;
+    return sourceType == CxxSource.Type.C
+        || sourceType == CxxSource.Type.CXX
+        || sourceType == CxxSource.Type.ASSEMBLER_WITH_CPP
+        || sourceType == CxxSource.Type.OBJC
+        || sourceType == CxxSource.Type.OBJCXX
+        || sourceType == CxxSource.Type.CUDA
+        || sourceType == CxxSource.Type.ASM_WITH_CPP;
   }
 
   /**
    * Returns true for source types which can be built with the C compiler without a preprocessor.
    */
   public static boolean isCompilableType(CxxSource.Type sourceType) {
-    return
-        sourceType == CxxSource.Type.C_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.CXX_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.ASSEMBLER ||
-        sourceType == CxxSource.Type.OBJC_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.OBJCXX_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.CUDA_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.ASM;
+    return sourceType == CxxSource.Type.C_CPP_OUTPUT
+        || sourceType == CxxSource.Type.CXX_CPP_OUTPUT
+        || sourceType == CxxSource.Type.ASSEMBLER
+        || sourceType == CxxSource.Type.OBJC_CPP_OUTPUT
+        || sourceType == CxxSource.Type.OBJCXX_CPP_OUTPUT
+        || sourceType == CxxSource.Type.CUDA_CPP_OUTPUT
+        || sourceType == CxxSource.Type.ASM;
   }
 
-  /**
-   * @return the appropriate {@link com.facebook.buck.rules.Tool} representing the preprocessor.
-   */
+  /** @return the appropriate {@link com.facebook.buck.rules.Tool} representing the preprocessor. */
   public static PreprocessorProvider getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
     PreprocessorProvider preprocessor;
 
@@ -89,7 +80,7 @@ public class CxxSourceTypes {
         }
         preprocessor = cxxPlatform.getAsmpp().get();
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -97,12 +88,9 @@ public class CxxSourceTypes {
     return preprocessor;
   }
 
-  /**
-   * @return the platform-specific preprocessor flags for the given {@link CxxPlatform}.
-   */
+  /** @return the platform-specific preprocessor flags for the given {@link CxxPlatform}. */
   public static ImmutableList<String> getPlatformPreprocessFlags(
-      CxxPlatform cxxPlatform,
-      CxxSource.Type type) {
+      CxxPlatform cxxPlatform, CxxSource.Type type) {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
 
@@ -128,7 +116,7 @@ public class CxxSourceTypes {
       case ASM_WITH_CPP:
         flags.addAll(cxxPlatform.getAsmppflags());
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -136,9 +124,7 @@ public class CxxSourceTypes {
     return flags.build();
   }
 
-  /**
-   * @return the type produces from preprocessing the given input source type.
-   */
+  /** @return the type produces from preprocessing the given input source type. */
   public static CxxSource.Type getPreprocessorOutputType(CxxSource.Type type) {
     CxxSource.Type outputType;
 
@@ -164,7 +150,7 @@ public class CxxSourceTypes {
       case ASM_WITH_CPP:
         outputType = CxxSource.Type.ASM;
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -172,9 +158,7 @@ public class CxxSourceTypes {
     return outputType;
   }
 
-  /**
-   * @return the appropriate compiler for the given language type.
-   */
+  /** @return the appropriate compiler for the given language type. */
   public static CompilerProvider getCompiler(CxxPlatform cxxPlatform, CxxSource.Type type) {
     CompilerProvider compiler;
 
@@ -206,7 +190,7 @@ public class CxxSourceTypes {
         }
         compiler = cxxPlatform.getAsm().get();
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -214,12 +198,9 @@ public class CxxSourceTypes {
     return compiler;
   }
 
-  /**
-   * @return the platform-specific compiler flags for the given {@link CxxPlatform}.
-   */
+  /** @return the platform-specific compiler flags for the given {@link CxxPlatform}. */
   public static ImmutableList<String> getPlatformCompilerFlags(
-      CxxPlatform cxxPlatform,
-      CxxSource.Type type) {
+      CxxPlatform cxxPlatform, CxxSource.Type type) {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
 
@@ -245,12 +226,11 @@ public class CxxSourceTypes {
       case ASM:
         flags.addAll(cxxPlatform.getAsmflags());
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
 
     return flags.build();
   }
-
 }

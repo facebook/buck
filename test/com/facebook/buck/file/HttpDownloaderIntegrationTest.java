@@ -19,10 +19,13 @@ package com.facebook.buck.file;
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.google.common.io.Files;
-
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import org.eclipse.jetty.server.handler.MovedContextHandler;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -30,11 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
 
 public class HttpDownloaderIntegrationTest {
 
@@ -69,7 +67,7 @@ public class HttpDownloaderIntegrationTest {
     URI uri = httpd.getUri("/example");
 
     Path output = outputDir.resolve("cheese");
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     assertEquals("cheese", Files.toString(output.toFile(), UTF_16));
   }
@@ -79,7 +77,7 @@ public class HttpDownloaderIntegrationTest {
     URI uri = httpd.getUri("/redirect");
 
     Path output = outputDir.resolve("cheese");
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     assertEquals("cheese", Files.toString(output.toFile(), UTF_16));
   }

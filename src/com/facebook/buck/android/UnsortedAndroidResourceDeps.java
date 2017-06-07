@@ -20,27 +20,26 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 public class UnsortedAndroidResourceDeps {
 
-  @SuppressWarnings("unchecked")
-  private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES = ImmutableSet.of(
-      AndroidBinary.class,
-      AndroidInstrumentationApk.class,
-      AndroidLibrary.class,
-      AndroidResource.class,
-      ApkGenrule.class,
-      JavaLibrary.class,
-      JavaTest.class,
-      RobolectricTest.class);
+  private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES =
+      ImmutableSet.of(
+          AndroidBinary.class,
+          AndroidInstrumentationApk.class,
+          AndroidLibrary.class,
+          AndroidResource.class,
+          ApkGenrule.class,
+          JavaLibrary.class,
+          JavaTest.class,
+          RobolectricTest.class);
 
   public interface Callback {
-    public void onRuleVisited(BuildRule rule, ImmutableSet<BuildRule> depsToVisit);
+    public void onRuleVisited(BuildRule rule, Set<BuildRule> depsToVisit);
   }
 
   private final ImmutableSet<HasAndroidResourceDeps> resourceDeps;
@@ -60,8 +59,7 @@ public class UnsortedAndroidResourceDeps {
    * order the execution of those buildables.
    */
   public static UnsortedAndroidResourceDeps createFrom(
-      Collection<BuildRule> rules,
-      final Optional<Callback> callback) {
+      Collection<BuildRule> rules, final Optional<Callback> callback) {
 
     final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
 
@@ -71,7 +69,7 @@ public class UnsortedAndroidResourceDeps {
         new AbstractBreadthFirstTraversal<BuildRule>(rules) {
 
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+          public Set<BuildRule> visit(BuildRule rule) {
             HasAndroidResourceDeps androidResourceRule = null;
             if (rule instanceof HasAndroidResourceDeps) {
               androidResourceRule = (HasAndroidResourceDeps) rule;
@@ -81,15 +79,23 @@ public class UnsortedAndroidResourceDeps {
             }
 
             // Only certain types of rules should be considered as part of this traversal.
-            ImmutableSet<BuildRule> depsToVisit = BuildRuleDependencyVisitors.maybeVisitAllDeps(
-                rule,
-                TRAVERSABLE_TYPES.contains(rule.getClass()));
+            // For JavaLibrary rules, we need to grab the deps directly from the rule and not from
+            // the BuildRuleParams object. BuildRuleParams may hold ABI rules which don't allow
+            // us to properly traverse and locate the transitive android resource deps
+            Set<BuildRule> depsToVisit;
+            if (rule instanceof JavaLibrary) {
+              depsToVisit = ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries();
+            } else {
+              depsToVisit =
+                  TRAVERSABLE_TYPES.contains(rule.getClass())
+                      ? rule.getBuildDeps()
+                      : ImmutableSet.of();
+            }
             if (callback.isPresent()) {
               callback.get().onRuleVisited(rule, depsToVisit);
             }
             return depsToVisit;
           }
-
         };
     visitor.start();
 

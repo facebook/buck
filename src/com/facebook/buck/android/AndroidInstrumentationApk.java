@@ -19,26 +19,23 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.EnumSet;
 import java.util.Optional;
 
-
 /**
  * Apk that functions as a test package in Android.
- * <p>
- * Android's
- * <a href="http://developer.android.com/tools/testing/testing_android.html">
- *   Testing Fundamentals</a>
- * documentation includes a diagram that shows the relationship between an "application package" and
- * a "test package" when running a test. This corresponds to a test package. Note that a test
- * package has an interesting quirk where it is <em>compiled against</em> an application package,
- * but <em>must not include</em> the resources or Java classes of the application package.
- * Therefore, this class takes responsibility for making sure the appropriate bits are excluded.
- * Failing to do so will generate mysterious runtime errors when running the test.
+ *
+ * <p>Android's <a href="http://developer.android.com/tools/testing/testing_android.html">Testing
+ * Fundamentals</a> documentation includes a diagram that shows the relationship between an
+ * "application package" and a "test package" when running a test. This corresponds to a test
+ * package. Note that a test package has an interesting quirk where it is <em>compiled against</em>
+ * an application package, but <em>must not include</em> the resources or Java classes of the
+ * application package. Therefore, this class takes responsibility for making sure the appropriate
+ * bits are excluded. Failing to do so will generate mysterious runtime errors when running the
+ * test.
  */
 public class AndroidInstrumentationApk extends AndroidBinary {
 
@@ -46,7 +43,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
 
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proGuardJarOverride,
       String proGuardMaxHeapSize,
       Optional<String> proguardAgentPath,
@@ -56,7 +53,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       ListeningExecutorService dxExecutorService) {
     super(
         buildRuleParams,
-        resolver,
+        ruleFinder,
         proGuardJarOverride,
         proGuardMaxHeapSize,
         apkUnderTest.getProguardJvmArgs(),
@@ -69,6 +66,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getSdkProguardConfig(),
         apkUnderTest.getOptimizationPasses(),
         apkUnderTest.getProguardConfig(),
+        apkUnderTest.getSkipProguard(),
+        Optional.empty(), // RedexOptions
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
@@ -78,16 +77,18 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         Optional.empty(),
         rulesToExcludeFromDex,
         enhancementResult,
-        // reordering is not supported in instrumentation. TODO(onomatopoeia): add support
-        Optional.empty(),
+        // reordering is not supported in instrumentation. TODO(dtarjan): add support
+        false,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         dxExecutorService,
-        Optional.empty(),
-        Optional.empty(),
+        false,
+        false,
         apkUnderTest.getManifestEntries(),
-        apkUnderTest.getJavaRuntimeLauncher());
+        apkUnderTest.getJavaRuntimeLauncher(),
+        Optional.empty(),
+        true);
     this.apkUnderTest = apkUnderTest;
   }
 

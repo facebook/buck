@@ -17,59 +17,61 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
+import com.facebook.buck.jvm.java.abi.StubGenerator;
+import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.PluginLoader;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
+import com.facebook.buck.jvm.java.plugin.api.PluginClassLoaderFactory;
+import com.facebook.buck.jvm.java.tracing.JavacPhaseEventLogger;
+import com.facebook.buck.jvm.java.tracing.TracingTaskListener;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.CustomJarOutputStream;
 import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 import javax.annotation.Nullable;
-import javax.annotation.processing.Processor;
+import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 
-/**
- * Command used to compile java libraries with a variety of ways to handle dependencies.
- */
+/** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public abstract class Jsr199Javac implements Javac {
 
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
@@ -104,7 +106,7 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 
@@ -115,69 +117,77 @@ public abstract class Jsr199Javac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<String> safeAnnotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory) {
+      Optional<Path> workingDirectory,
+      JavacCompilationMode compilationMode) {
     JavaCompiler compiler = createCompiler(context);
-    CustomZipOutputStream jarOutputStream = null;
+    CustomJarOutputStream jarOutputStream = null;
     StandardJavaFileManager fileManager = null;
     JavaInMemoryFileManager inMemoryFileManager = null;
+    Path directToJarPath = null;
     try {
       fileManager = compiler.getStandardFileManager(null, null, null);
-      Supplier<ImmutableSet<String>> alreadyAddedFilesAvailableAfterCompilation =
-          Suppliers.ofInstance(ImmutableSet.of());
       if (context.getDirectToJarOutputSettings().isPresent()) {
-        jarOutputStream = ZipOutputStreams.newOutputStream(
-            context.getProjectFilesystem().getPathForRelativePath(
-                context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath()),
-            ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
-        inMemoryFileManager = new JavaInMemoryFileManager(
-            fileManager,
-            jarOutputStream,
-            context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
-        alreadyAddedFilesAvailableAfterCompilation = inMemoryFileManager::getEntries;
+        directToJarPath =
+            context
+                .getProjectFilesystem()
+                .getPathForRelativePath(
+                    context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+        inMemoryFileManager =
+            new JavaInMemoryFileManager(
+                fileManager,
+                directToJarPath,
+                context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
         fileManager = inMemoryFileManager;
       }
 
       Iterable<? extends JavaFileObject> compilationUnits;
       try {
-        compilationUnits = createCompilationUnits(
-            fileManager,
-            context.getProjectFilesystem()::resolve,
-            javaSourceFilePaths);
+        compilationUnits =
+            createCompilationUnits(
+                fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
       } catch (IOException e) {
         LOG.warn(e, "Error building compilation units");
         return 1;
       }
 
       try {
-        int result = buildWithClasspath(
-            context,
-            invokingRule,
-            options,
-            safeAnnotationProcessors,
-            javaSourceFilePaths,
-            pathToSrcsList,
-            compiler,
-            fileManager,
-            compilationUnits);
+        int result =
+            buildWithClasspath(
+                context,
+                invokingRule,
+                options,
+                pluginFields,
+                javaSourceFilePaths,
+                pathToSrcsList,
+                compiler,
+                fileManager,
+                compilationUnits,
+                compilationMode);
         if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
           return result;
         }
 
-        return JarDirectoryStepHelper.createJarFile(
-            context.getProjectFilesystem(),
-            context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
-            jarOutputStream,
-            context.getDirectToJarOutputSettings().get().getEntriesToJar(),
-            alreadyAddedFilesAvailableAfterCompilation.get(),
-            context.getDirectToJarOutputSettings().get().getMainClass(),
-            context.getDirectToJarOutputSettings().get().getManifestFile(),
-            /* mergeManifests */ true,
-            /* blacklist */ ImmutableSet.of(),
-            context.getEventSink(),
-            context.getStdErr());
+        JarBuilder jarBuilder = new JarBuilder();
+        Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+        return jarBuilder
+            .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
+            .setEntriesToJar(
+                context
+                    .getDirectToJarOutputSettings()
+                    .get()
+                    .getEntriesToJar()
+                    .stream()
+                    .map(context.getProjectFilesystem()::resolve))
+            .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
+            .setManifestFile(
+                context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+            .setShouldMergeManifests(true)
+            .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
+            .setEntryPatternBlacklist(ImmutableSet.of())
+            .createJarFile(Preconditions.checkNotNull(directToJarPath));
       } finally {
         close(compilationUnits);
       }
@@ -216,68 +226,120 @@ public abstract class Jsr199Javac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<String> safeAnnotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
       StandardJavaFileManager fileManager,
-      Iterable<? extends JavaFileObject> compilationUnits) {
+      Iterable<? extends JavaFileObject> compilationUnits,
+      JavacCompilationMode compilationMode) {
     // write javaSourceFilePaths to classes file
     // for buck user to have a list of all .java files to be compiled
     // since we do not print them out to console in case of error
     try {
-      context.getProjectFilesystem().writeLinesToPath(
-          FluentIterable.from(javaSourceFilePaths)
-              .transform(Object::toString)
-              .transform(ARGFILES_ESCAPER),
-          pathToSrcsList);
+      context
+          .getProjectFilesystem()
+          .writeLinesToPath(
+              FluentIterable.from(javaSourceFilePaths)
+                  .transform(Object::toString)
+                  .transform(ARGFILES_ESCAPER),
+              pathToSrcsList);
     } catch (IOException e) {
-      context.getEventSink().reportThrowable(
-          e,
-          "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-          pathToSrcsList);
+      context
+          .getEventSink()
+          .reportThrowable(
+              e,
+              "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+              pathToSrcsList);
       return 1;
     }
 
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
-    Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
-    JavaCompiler.CompilationTask compilationTask = compiler.getTask(
-        compilerOutputWriter,
-        context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-        diagnostics,
-        options,
-        classNamesForAnnotationProcessing,
-        compilationUnits);
+    Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
+    PluginClassLoaderFactory loaderFactory = PluginLoader.newFactory(context.getClassLoaderCache());
+    BuckJavacTaskProxy javacTask;
+
+    if (compilationMode != JavacCompilationMode.ABI) {
+      javacTask =
+          BuckJavacTaskProxy.getTask(
+              loaderFactory,
+              compiler,
+              compilerOutputWriter,
+              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+              diagnostics,
+              options,
+              classNamesForAnnotationProcessing,
+              compilationUnits);
+    } else {
+      javacTask =
+          FrontendOnlyJavacTaskProxy.getTask(
+              loaderFactory,
+              compiler,
+              compilerOutputWriter,
+              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+              diagnostics,
+              options,
+              classNamesForAnnotationProcessing,
+              compilationUnits);
+
+      javacTask.addPostEnterCallback(
+          topLevelTypes -> {
+            StubGenerator stubGenerator =
+                new StubGenerator(
+                    getTargetVersion(options),
+                    javacTask.getElements(),
+                    fileManager,
+                    context.getEventSink());
+            stubGenerator.generate(topLevelTypes);
+          });
+    }
+
+    PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
+    BuckJavacTaskListener taskListener = null;
+    if (EnumSet.of(
+            JavacCompilationMode.FULL_CHECKING_REFERENCES,
+            JavacCompilationMode.FULL_ENFORCING_REFERENCES)
+        .contains(compilationMode)) {
+      taskListener =
+          SourceBasedAbiStubber.newValidatingTaskListener(
+              pluginLoader,
+              javacTask,
+              new FileManagerBootClasspathOracle(fileManager),
+              compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
+                  ? Diagnostic.Kind.ERROR
+                  : Diagnostic.Kind.WARNING);
+    }
+
     try {
       try (
-          // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
-          // in some unusual situations
-          TranslatingJavacPhaseTracer tracer = TranslatingJavacPhaseTracer.setupTracing(
-              invokingRule,
-              context.getClassLoaderCache(),
-              context.getEventSink(),
-              compilationTask);
+      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
+      // in some unusual situations
+      TranslatingJavacPhaseTracer tracer =
+              new TranslatingJavacPhaseTracer(
+                  new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
 
           // Ensure annotation processors are loaded from their own classloader. If we don't do
           // this, then the evidence suggests that they get one polluted with Buck's own classpath,
           // which means that libraries that have dependencies on different versions of Buck's deps
           // may choke with novel errors that don't occur on the command line.
-          ProcessorBundle bundle = prepareProcessors(
-              context.getEventSink(),
-              compiler.getClass().getClassLoader(),
-              context.getClassLoaderCache(),
-              safeAnnotationProcessors,
-              invokingRule,
-              options)) {
-        compilationTask.setProcessors(bundle.processors);
+          AnnotationProcessorFactory processorFactory =
+              new AnnotationProcessorFactory(
+                  context.getEventSink(),
+                  compiler.getClass().getClassLoader(),
+                  context.getClassLoaderCache(),
+                  invokingRule)) {
+        taskListener = new TracingTaskListener(tracer, taskListener);
+
+        javacTask.setTaskListener(taskListener);
+        javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
 
         // Invoke the compilation and inspect the result.
-        isSuccess = compilationTask.call();
+        isSuccess = javacTask.call();
       } catch (IOException e) {
         LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
       }
@@ -295,9 +357,9 @@ public abstract class Jsr199Javac implements Javac {
         DiagnosticCleaner.clean(diagnostics.getDiagnostics());
 
     if (isSuccess) {
-      context.getUsedClassesFileWriter().writeFile(
-          context.getProjectFilesystem(),
-          context.getObjectMapper());
+      context
+          .getUsedClassesFileWriter()
+          .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
@@ -307,9 +369,7 @@ public abstract class Jsr199Javac implements Javac {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
-            handleMissingSymbolError(invokingRule, diagnostic, context);
-          } else if (kind == Diagnostic.Kind.WARNING ||
-              kind == Diagnostic.Kind.MANDATORY_WARNING) {
+          } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
           }
 
@@ -324,6 +384,38 @@ public abstract class Jsr199Javac implements Javac {
     }
   }
 
+  private static SourceVersion getTargetVersion(Iterable<String> options) {
+    boolean foundTarget = false;
+    for (String option : options) {
+      if (option.equals("-target")) {
+        foundTarget = true;
+      } else if (foundTarget) {
+        switch (option) {
+          case "1.3":
+            return SourceVersion.RELEASE_3;
+          case "1.4":
+            return SourceVersion.RELEASE_4;
+          case "1.5":
+          case "5":
+            return SourceVersion.RELEASE_5;
+          case "1.6":
+          case "6":
+            return SourceVersion.RELEASE_6;
+          case "1.7":
+          case "7":
+            return SourceVersion.RELEASE_7;
+          case "1.8":
+          case "8":
+            return SourceVersion.RELEASE_8;
+          default:
+            throw new HumanReadableException("target %s not supported", option);
+        }
+      }
+    }
+
+    throw new AssertionError("Unreachable code");
+  }
+
   private void close(Iterable<? extends JavaFileObject> compilationUnits) {
     for (JavaFileObject unit : compilationUnits) {
       if (unit instanceof Closeable) {
@@ -336,146 +428,25 @@ public abstract class Jsr199Javac implements Javac {
     }
   }
 
-  private ProcessorBundle prepareProcessors(
-      JavacEventSink eventSink,
-      ClassLoader compilerClassLoader,
-      ClassLoaderCache classLoaderCache,
-      Set<String> safeAnnotationProcessors,
-      BuildTarget target,
-      List<String> options) {
-    String processorClassPath = null;
-    String processorNames = null;
-
-    Iterator<String> iterator = options.iterator();
-    while (iterator.hasNext()) {
-      String curr = iterator.next();
-      if ("-processorpath".equals(curr) && iterator.hasNext()) {
-        processorClassPath = iterator.next();
-      } else if ("-processor".equals(curr) && iterator.hasNext()) {
-        processorNames = iterator.next();
-      }
-    }
-
-    if (processorClassPath == null || processorNames == null) {
-      return new ProcessorBundle();
-    }
-
-    Iterable<String> rawPaths = Splitter.on(File.pathSeparator)
-        .omitEmptyStrings()
-        .split(processorClassPath);
-    URL[] urls = FluentIterable.from(rawPaths)
-        .transform(
-            pathRelativeToProjectRoot -> {
-              try {
-                return Paths.get(pathRelativeToProjectRoot).toUri().toURL();
-              } catch (MalformedURLException e) {
-                // The paths we're being given should have all been resolved from the file
-                // system already. We'd need to be unfortunate to get here. Bubble up a runtime
-                // exception.
-                throw new RuntimeException(e);
-              }
-            })
-        .toArray(URL.class);
-
-    List<String> names = Splitter.on(",")
-        .trimResults()
-        .omitEmptyStrings()
-        .splitToList(processorNames);
-
-    ProcessorBundle processorBundle = new ProcessorBundle();
-    setProcessorBundleClassLoader(
-        names,
-        urls,
-        compilerClassLoader,
-        classLoaderCache,
-        safeAnnotationProcessors,
-        target,
-        processorBundle);
-
-
-    for (String name : names) {
-      try {
-        LOG.debug("Loading %s from own classloader", name);
-
-        Class<? extends Processor> aClass =
-            Preconditions.checkNotNull(processorBundle.classLoader)
-                .loadClass(name)
-                .asSubclass(Processor.class);
-        processorBundle.processors.add(
-            new TracingProcessorWrapper(
-                eventSink,
-                target,
-                aClass.newInstance()));
-      } catch (ReflectiveOperationException e) {
-        // If this happens, then the build is really in trouble. Better warn the user.
-        throw new HumanReadableException(
-            "%s: javac unable to load annotation processor: %s",
-            target.getFullyQualifiedName(),
-            name);
-      }
-    }
-
-    return processorBundle;
-  }
-
-  @VisibleForTesting
-  void setProcessorBundleClassLoader(
-      List<String> processorNames,
-      URL[] processorClasspath,
-      ClassLoader baseClassLoader,
-      ClassLoaderCache classLoaderCache,
-      Set<String> safeAnnotationProcessors,
-      BuildTarget target,
-      ProcessorBundle processorBundle) {
-    // We can avoid lots of overhead in large builds by reusing the same classloader for annotation
-    // processors. However, some annotation processors use static variables in a way that assumes
-    // there is only one instance running in the process at a time (or at all), and such annotation
-    // processors would break running inside of Buck. So we default to creating a new ClassLoader
-    // for each build rule, with an option to whitelist "safe" processors in .buckconfig.
-    if (safeAnnotationProcessors.containsAll(processorNames)) {
-      LOG.debug("Reusing class loaders for %s.", target);
-      processorBundle.classLoader = (URLClassLoader) classLoaderCache.getClassLoaderForClassPath(
-          baseClassLoader,
-          ImmutableList.copyOf(processorClasspath));
-      processorBundle.closeClassLoader = false;
-    } else {
-      final List<String> unsafeProcessors = new ArrayList<>();
-      for (String name : processorNames) {
-        if (safeAnnotationProcessors.contains(name)) {
-          continue;
-        }
-        unsafeProcessors.add(name);
-      }
-      LOG.debug(
-          "Creating new class loader for %s because the following processors are not marked safe " +
-              "for multiple use in a single process: %s",
-          target,
-          Joiner.on(',').join(unsafeProcessors));
-      processorBundle.classLoader = new URLClassLoader(
-          processorClasspath,
-          baseClassLoader);
-      processorBundle.closeClassLoader = true;
-    }
-  }
-
   private Iterable<? extends JavaFileObject> createCompilationUnits(
       StandardJavaFileManager fileManager,
       Function<Path, Path> absolutifier,
-      Set<Path> javaSourceFilePaths) throws IOException {
-    List<JavaFileObject> compilationUnits = Lists.newArrayList();
+      Set<Path> javaSourceFilePaths)
+      throws IOException {
+    List<JavaFileObject> compilationUnits = new ArrayList<>();
     for (Path path : javaSourceFilePaths) {
       String pathString = path.toString();
       if (pathString.endsWith(".java")) {
         // For an ordinary .java file, create a corresponding JavaFileObject.
-        Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
-            absolutifier.apply(path).toFile());
+        Iterable<? extends JavaFileObject> javaFileObjects =
+            fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
         boolean hasZipFileBeenUsed = false;
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
-             entries.hasMoreElements();
+            entries.hasMoreElements();
             ) {
           ZipEntry entry = entries.nextElement();
           if (!entry.getName().endsWith(".java")) {
@@ -494,35 +465,52 @@ public abstract class Jsr199Javac implements Javac {
     return compilationUnits;
   }
 
-  private void handleMissingSymbolError(
-      BuildTarget invokingRule,
-      Diagnostic<? extends JavaFileObject> diagnostic,
-      JavacExecutionContext context) {
-    JavacErrorParser javacErrorParser = new JavacErrorParser(
-        context.getProjectFilesystem(),
-        context.getJavaPackageFinder());
-    Optional<String> symbol = javacErrorParser.getMissingSymbolFromCompilerError(
-        DiagnosticPrettyPrinter.format(diagnostic));
-    if (!symbol.isPresent()) {
-      // This error wasn't related to a missing symbol, as far as we can tell.
-      return;
-    }
-    context.getEventSink().reportMissingJavaSymbol(invokingRule, symbol.get());
-  }
+  private static class FileManagerBootClasspathOracle implements BootClasspathOracle {
+    private final JavaFileManager fileManager;
+    private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
-  @VisibleForTesting
-  static class ProcessorBundle implements Closeable {
-    @Nullable
-    public URLClassLoader classLoader;
-    public boolean closeClassLoader;
-    public List<Processor> processors = Lists.newArrayList();
+    private FileManagerBootClasspathOracle(JavaFileManager fileManager) {
+      this.fileManager = fileManager;
+    }
 
     @Override
-    public void close() throws IOException {
-      if (closeClassLoader && classLoader != null) {
-        classLoader.close();
-        classLoader = null;
+    public boolean isOnBootClasspath(String binaryName) {
+      String packageName = getPackageName(binaryName);
+      Set<String> packageContents = getPackageContents(packageName);
+      return packageContents.contains(binaryName);
+    }
+
+    private Set<String> getPackageContents(String packageName) {
+      Set<String> packageContents = packagesContents.get(packageName);
+      if (packageContents == null) {
+        packageContents = new HashSet<>();
+
+        try {
+          for (JavaFileObject javaFileObject :
+              this.fileManager.list(
+                  StandardLocation.PLATFORM_CLASS_PATH,
+                  packageName,
+                  EnumSet.of(JavaFileObject.Kind.CLASS),
+                  true)) {
+            packageContents.add(
+                fileManager.inferBinaryName(StandardLocation.PLATFORM_CLASS_PATH, javaFileObject));
+          }
+        } catch (IOException e) {
+          throw new HumanReadableException(e, "Failed to list boot classpath contents.");
+          // Do nothing
+        }
+        packagesContents.put(packageName, packageContents);
       }
+      return packageContents;
+    }
+
+    private String getPackageName(String binaryName) {
+      int lastDot = binaryName.lastIndexOf('.');
+      if (lastDot < 0) {
+        return "";
+      }
+
+      return binaryName.substring(0, lastDot);
     }
   }
 }

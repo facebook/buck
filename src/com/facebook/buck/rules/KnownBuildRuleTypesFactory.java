@@ -16,17 +16,15 @@
 
 package com.facebook.buck.rules;
 
-
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
-
 import java.io.IOException;
 
 /**
- * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all
- * {@link Cell} instances.
+ * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all {@link
+ * Cell} instances.
  */
 public class KnownBuildRuleTypesFactory {
 
@@ -34,20 +32,13 @@ public class KnownBuildRuleTypesFactory {
   private final AndroidDirectoryResolver directoryResolver;
 
   public KnownBuildRuleTypesFactory(
-      ProcessExecutor executor,
-      AndroidDirectoryResolver directoryResolver) {
+      ProcessExecutor executor, AndroidDirectoryResolver directoryResolver) {
     this.executor = executor;
     this.directoryResolver = directoryResolver;
   }
 
-  public KnownBuildRuleTypes create(
-      BuckConfig config,
-      ProjectFilesystem filesystem) throws IOException, InterruptedException {
-    return KnownBuildRuleTypes.createInstance(
-        config,
-        filesystem,
-        executor,
-        directoryResolver);
+  public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
+      throws IOException, InterruptedException {
+    return KnownBuildRuleTypes.createInstance(config, filesystem, executor, directoryResolver);
   }
-
 }

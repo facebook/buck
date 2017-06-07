@@ -34,7 +34,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
     PLUGINS(13),
     JAVA_RESOURCES(15),
     PRODUCTS(16),
-    ;
+    XPC(16);
 
     private int value;
 
@@ -47,9 +47,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
     }
   }
 
-  /**
-   * Spec for the destination folder.
-   */
+  /** Spec for the destination folder. */
   private CopyFilePhaseDestinationSpec dstSubfolderSpec;
 
   public PBXCopyFilesBuildPhase(CopyFilePhaseDestinationSpec dstSubfolderSpec) {

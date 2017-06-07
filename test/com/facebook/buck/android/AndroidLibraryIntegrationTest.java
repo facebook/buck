@@ -18,35 +18,35 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.jvm.kotlin.KotlinTestAssumptions;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
+public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
-public class AndroidLibraryIntegrationTest {
-
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test
-  public void testAndroidLibraryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidLibraryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
@@ -55,7 +55,8 @@ public class AndroidLibraryIntegrationTest {
   }
 
   @Test
-  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable();
     ProcessResult result =
@@ -73,9 +74,9 @@ public class AndroidLibraryIntegrationTest {
     result.assertSuccess();
   }
 
-
   @Test(timeout = (3 * 60 * 1000))
-  public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidScalaLibraryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_using_transitive_empty_res");
@@ -84,7 +85,7 @@ public class AndroidLibraryIntegrationTest {
   }
 
   @Test(timeout = (3 * 60 * 1000))
-  public void testAndroidScalaLibraryCompilation() throws IOException {
+  public void testAndroidScalaLibraryCompilation() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_depending_on_main_lib");
@@ -92,7 +93,8 @@ public class AndroidLibraryIntegrationTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam() throws IOException {
+  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
   }

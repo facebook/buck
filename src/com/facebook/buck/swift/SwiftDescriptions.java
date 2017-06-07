@@ -18,7 +18,6 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.cxx.NativeLinkable.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.MorePaths;
@@ -28,15 +27,16 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
-class SwiftDescriptions {
-  /**
-   * Utility class: do not instantiate.
-   */
-  private SwiftDescriptions() {
-  }
+public class SwiftDescriptions {
+
+  static final String SWIFT_HEADER_SUFFIX = "-Swift";
+  static final String SWIFT_MAIN_FILENAME = "main.swift";
+  public static final String SWIFT_EXTENSION = "swift";
+
+  /** Utility class: do not instantiate. */
+  private SwiftDescriptions() {}
 
   static ImmutableSortedSet<SourcePath> filterSwiftSources(
       SourcePathResolver sourcePathResolver, ImmutableSet<SourceWithFlags> srcs) {
@@ -50,29 +50,34 @@ class SwiftDescriptions {
     return swiftSrcsBuilder.build();
   }
 
-  static <A extends CxxLibraryDescription.Arg> void populateSwiftLibraryDescriptionArg(
+  static void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
-      SwiftLibraryDescription.Arg output,
-      final A args,
+      SwiftLibraryDescriptionArg.Builder output,
+      final CxxLibraryDescription.CommonArg args,
       BuildTarget buildTarget) {
 
-    output.srcs = filterSwiftSources(sourcePathResolver, args.srcs);
+    output.setName(args.getName());
+    output.setSrcs(filterSwiftSources(sourcePathResolver, args.getSrcs()));
     if (args instanceof HasSwiftCompilerFlags) {
-      output.compilerFlags = ((HasSwiftCompilerFlags) args).getSwiftCompilerFlags();
+      output.setCompilerFlags(((HasSwiftCompilerFlags) args).getSwiftCompilerFlags());
     } else {
-      output.compilerFlags = args.compilerFlags;
+      output.setCompilerFlags(args.getCompilerFlags());
     }
-    output.frameworks = args.frameworks;
-    output.libraries = args.libraries;
-    output.deps = args.deps;
-    output.supportedPlatformsRegex = args.supportedPlatformsRegex;
-    output.moduleName =
-        args.moduleName.map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
-    output.enableObjcInterop = Optional.of(true);
-    output.bridgingHeader = args.bridgingHeader;
+    output.setFrameworks(args.getFrameworks());
+    output.setLibraries(args.getLibraries());
+    output.setDeps(args.getDeps());
+    output.setSupportedPlatformsRegex(args.getSupportedPlatformsRegex());
+    output.setModuleName(
+        args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName())));
+    output.setEnableObjcInterop(true);
+    output.setBridgingHeader(args.getBridgingHeader());
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
-    output.preferredLinkage = isCompanionTarget ? Optional.of(STATIC) : args.preferredLinkage;
+    output.setPreferredLinkage(
+        isCompanionTarget ? Optional.of(STATIC) : args.getPreferredLinkage());
   }
 
+  static String toSwiftHeaderName(String moduleName) {
+    return moduleName + SWIFT_HEADER_SUFFIX;
+  }
 }

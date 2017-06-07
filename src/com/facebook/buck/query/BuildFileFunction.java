@@ -19,9 +19,8 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Set;
 
 /**
@@ -34,8 +33,7 @@ public class BuildFileFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION);
 
-  public BuildFileFunction() {
-  }
+  public BuildFileFunction() {}
 
   @Override
   public String getName() {
@@ -53,12 +51,10 @@ public class BuildFileFunction implements QueryFunction {
   }
 
   @Override
-  public Set<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
-    return Sets.newHashSet(env.getBuildFiles(argumentSet));
+    return env.getBuildFiles(argumentSet);
   }
-
 }

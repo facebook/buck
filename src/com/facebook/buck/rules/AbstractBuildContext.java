@@ -21,16 +21,20 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
-
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractBuildContext {
 
-  public abstract ActionGraph getActionGraph();
+  public abstract SourcePathResolver getSourcePathResolver();
+
+  /** @return the absolute path of the cell in which the build was invoked. */
+  public abstract Path getBuildCellRootPath();
 
   public abstract JavaPackageFinder getJavaPackageFinder();
+
   public abstract BuckEventBus getEventBus();
 
   @Value.Default

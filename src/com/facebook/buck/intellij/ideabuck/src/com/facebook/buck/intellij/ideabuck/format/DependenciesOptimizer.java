@@ -27,34 +27,30 @@ import com.google.common.collect.Ordering;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
 import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * A utility class for sorting buck dependencies alphabetically.
- */
+/** A utility class for sorting buck dependencies alphabetically. */
 public class DependenciesOptimizer {
   private static final String DEPENDENCIES_KEYWORD = "deps";
   private static final String PROVIDED_DEPENDENCIES_KEYWORD = "provided_deps";
   private static final String EXPORTED_DEPENDENCIES_KEYWORD = "exported_deps";
 
-  private DependenciesOptimizer() {
-  }
+  private DependenciesOptimizer() {}
 
   public static void optimzeDeps(@NotNull PsiFile file) {
     final PropertyVisitor visitor = new PropertyVisitor();
-    file.accept(new BuckVisitor() {
-      @Override
-      public void visitElement(PsiElement node) {
-        node.acceptChildren(this);
-        node.accept(visitor);
-      }
-    });
+    file.accept(
+        new BuckVisitor() {
+          @Override
+          public void visitElement(PsiElement node) {
+            node.acceptChildren(this);
+            node.accept(visitor);
+          }
+        });
 
     // Commit modifications.
     final PsiDocumentManager manager = PsiDocumentManager.getInstance(file.getProject());
@@ -65,10 +61,10 @@ public class DependenciesOptimizer {
     @Override
     public void visitProperty(@NotNull BuckProperty property) {
       BuckPropertyLvalue lValue = property.getPropertyLvalue();
-      if (lValue == null ||
-          (!DEPENDENCIES_KEYWORD.equals(lValue.getText()) &&
-          !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText()) &&
-          !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
+      if (lValue == null
+          || (!DEPENDENCIES_KEYWORD.equals(lValue.getText())
+              && !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText())
+              && !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
         return;
       }
 
@@ -98,9 +94,9 @@ public class DependenciesOptimizer {
   }
 
   /**
-   * Use our own method to compare 'deps' strings.
-   * 'deps' should be sorted with local references ':' preceding any cross-repo references 'cell//'
-   * e.g :inner, //world:empty, //world/asia:jp, mars//olympus, moon//sea:tranquility
+   * Use our own method to compare 'deps' strings. 'deps' should be sorted with local references ':'
+   * preceding any cross-repo references 'cell//' e.g :inner, //world:empty, //world/asia:jp,
+   * mars//olympus, moon//sea:tranquility
    */
   private static int compareDependencyStrings(String baseString, String anotherString) {
     int endBaseString = baseString.length();
@@ -137,25 +133,25 @@ public class DependenciesOptimizer {
     return baseString.compareTo(anotherString);
   }
 
-  private static final Ordering<String> SORT_ORDER = Ordering.from(
-      new Comparator<String>() {
-        @Override
-        public int compare(String o1, String o2) {
-          return compareDependencyStrings(o1, o2);
-        }
-      });
+  private static final Ordering<String> SORT_ORDER =
+      Ordering.from(
+          new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+              return compareDependencyStrings(o1, o2);
+            }
+          });
 
-  private static final Ordering<PsiElement> PSI_SORT_ORDER = SORT_ORDER.onResultOf(
-      new Function<PsiElement, String>() {
-        @Override
-        public String apply(@Nullable PsiElement psiElement) {
-          return psiElement.getText();
-        }
-      });
+  private static final Ordering<PsiElement> PSI_SORT_ORDER =
+      SORT_ORDER.onResultOf(
+          new Function<PsiElement, String>() {
+            @Override
+            public String apply(@Nullable PsiElement psiElement) {
+              return psiElement.getText();
+            }
+          });
 
-  /**
-   * Returns the preferred sort order of dependencies.
-   */
+  /** Returns the preferred sort order of dependencies. */
   public static Ordering<String> sortOrder() {
     return SORT_ORDER;
   }

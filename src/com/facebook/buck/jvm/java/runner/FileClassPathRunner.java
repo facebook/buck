@@ -37,27 +37,20 @@ import java.util.List;
  * syntax used by javac. <b>WARNING: </b> this class modifies the system classloader. Don't use this
  * in-process. This also modifies the System property {@code java.class.path}.
  *
- * <p>
- *
- * We rely on the fact that you can pass total garbage into the classpath, and it'll be set just
+ * <p>We rely on the fact that you can pass total garbage into the classpath, and it'll be set just
  * fine. Because of this, usage is like so:
+ *
  * <pre>java -classpath @path/to/classpath-file com.example.MainClass arg1 arg2 arg3</pre>
  *
- * <p>
+ * <p>The format of the file used for adding new entries to the classpath is simply one entry per
+ * line. Each entry is checked to see if it resolves to a valid path on the local file system. If it
+ * does then a URL is constructed from that entry and added to the system classloader.
  *
- * The format of the file used for adding new entries to the classpath is simply one entry per line.
- * Each entry is checked to see if it resolves to a valid path on the local file system. If it does
- * then a URL is constructed from that entry and added to the system classloader.
- *
- * <p>
- *
- * It is possible to declare more than one @classpathfile, and ordering and duplicates will be
+ * <p>It is possible to declare more than one @classpathfile, and ordering and duplicates will be
  * honoured.
  *
- * <p>
- *
- * Note: this class only depends on classes present in the JRE, since we don't want to have to push
- * more things on to the classpath when using it.
+ * <p>Note: this class only depends on classes present in the JRE, since we don't want to have to
+ * push more things on to the classpath when using it.
  */
 public class FileClassPathRunner {
 
@@ -84,12 +77,12 @@ public class FileClassPathRunner {
     Method main = getMainClass(args);
     String[] mainArgs = constructArgs(args);
 
-    main.invoke(null, new Object[] { mainArgs });
+    main.invoke(null, new Object[] {mainArgs});
   }
 
   static void modifyClassLoader(
-      URLClassLoader urlClassLoader,
-      boolean modifySystemClasspathProperty) throws IOException, ReflectiveOperationException {
+      URLClassLoader urlClassLoader, boolean modifySystemClasspathProperty)
+      throws IOException, ReflectiveOperationException {
     List<Path> paths = getClasspathFiles(urlClassLoader.getURLs());
     List<URL> readUrls = readUrls(paths, modifySystemClasspathProperty);
     addUrlsToClassLoader(urlClassLoader, readUrls);
@@ -164,11 +157,12 @@ public class FileClassPathRunner {
       }
     }
 
+    String classpathProperty = System.getProperty("java.class.path");
+    if (classpathProperty == null) {
+      throw new NullPointerException("java.class.path system property must not be null");
+    }
     StringBuilder newClassPath = new StringBuilder();
-    constructNewClassPath(
-        newClassPath,
-        Preconditions.checkNotNull(System.getProperty("java.class.path")),
-        classPathEntries);
+    constructNewClassPath(newClassPath, classpathProperty, classPathEntries);
 
     if (modifySystemClassPathProperty) {
       System.setProperty("java.class.path", newClassPath.toString());
@@ -227,22 +221,5 @@ public class FileClassPathRunner {
       System.exit(-4);
     }
     return main;
-  }
-
-  /**
-   * Since FatJar is going to be embedded in many targets, it cannot have external dependencies, but
-   * we'd like to have {@link javax.annotation.Nullable} and
-   * {@link com.google.common.base.Preconditions#checkNotNull} anyway, so we define these here.
-   */
-  @interface Nullable {}
-  private static class Preconditions {
-    private Preconditions() {}
-
-    public static <T> T checkNotNull(@Nullable T value) {
-      if (value == null) {
-        throw new RuntimeException();
-      }
-      return value;
-    }
   }
 }

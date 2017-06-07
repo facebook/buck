@@ -26,36 +26,29 @@ import java.util.Arrays;
 
 /**
  * This class sets up a separate ClassLoader for most of Buck's implementation, leaving only the
- * bare minimum bootstrapping classes (and a few classes for compatibility with library code that
- * is not ClassLoader-aware) in the system ClassLoader. This is done so that annotation processors
- * do not have their classpaths polluted with Buck's dependencies when Buck is compiling Java code
+ * bare minimum bootstrapping classes (and a few classes for compatibility with library code that is
+ * not ClassLoader-aware) in the system ClassLoader. This is done so that annotation processors do
+ * not have their classpaths polluted with Buck's dependencies when Buck is compiling Java code
  * in-process.
  *
- * Under JSR-199, when the Java compiler is run in-process it uses a ClassLoader that is a child
+ * <p>Under JSR-199, when the Java compiler is run in-process it uses a ClassLoader that is a child
  * of the system ClassLoader. In order for annotation processors to access the Compiler Tree API
  * (which lives in tools.jar with the compiler itself), they must be loaded with a ClassLoader
  * descended from the compiler's. If Buck used the system ClassLoader as a normal Java application
- * would, this would result in annotation processors getting Buck's versions of Guava, Jackson,
- * etc. instead of their own.
+ * would, this would result in annotation processors getting Buck's versions of Guava, Jackson, etc.
+ * instead of their own.
  */
 public final class ClassLoaderBootstrapper {
-  private static ClassLoader classLoader;
+  private static final ClassLoader classLoader = createClassLoader();
 
-  private ClassLoaderBootstrapper() {
-  }
+  private ClassLoaderBootstrapper() {}
 
   public static void main(String[] args) throws Exception {
-    String classPath = System.getenv("BUCK_CLASSPATH");
-    if (classPath == null) {
-      throw new RuntimeException("BUCK_CLASSPATH not set");
-    }
+    // Some things (notably Jetty) use the context class loader to load stuff
+    Thread.currentThread().setContextClassLoader(classLoader);
 
     String mainClassName = args[0];
     String[] remainingArgs = Arrays.copyOfRange(args, 1, args.length);
-    classLoader = createClassLoader(classPath);
-
-    // Some things (notably Jetty) use the context class loader to load stuff
-    Thread.currentThread().setContextClassLoader(classLoader);
 
     Class<?> mainClass = classLoader.loadClass(mainClassName);
     Method mainMethod = mainClass.getMethod("main", String[].class);
@@ -70,12 +63,20 @@ public final class ClassLoaderBootstrapper {
     }
   }
 
-  private static ClassLoader createClassLoader(String classPath)
-      throws MalformedURLException {
+  private static ClassLoader createClassLoader() {
+    String classPath = System.getenv("BUCK_CLASSPATH");
+    if (classPath == null) {
+      throw new RuntimeException("BUCK_CLASSPATH not set");
+    }
+
     String[] strings = classPath.split(File.pathSeparator);
     URL[] urls = new URL[strings.length];
     for (int i = 0; i < urls.length; i++) {
-      urls[i] = Paths.get(strings[i]).toUri().toURL();
+      try {
+        urls[i] = Paths.get(strings[i]).toUri().toURL();
+      } catch (MalformedURLException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     return new URLClassLoader(urls);

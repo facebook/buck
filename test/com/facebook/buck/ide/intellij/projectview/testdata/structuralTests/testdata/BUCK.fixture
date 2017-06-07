@@ -1,0 +1,18 @@
+android_binary(
+    name = "testdata",
+    keystore = ":debug_keystore",
+    manifest = "main/AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//testdata/src:src",
+        "//testdata/android_res:android_res",
+    ],
+)
+
+keystore(
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)

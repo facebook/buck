@@ -22,21 +22,19 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 /**
  * A {@link Tool} based on a list of arguments formed by {@link SourcePath}s.
  *
- * Example:
- * <pre>
- * {@code
- *   Tool compiler = new CommandTool.Builder()
- *      .addArg(compilerPath)
- *      .addArg("-I%s", defaultIncludeDir)
- *      .build();
- * }
- * </pre>
+ * <p>Example:
+ *
+ * <pre>{@code
+ * Tool compiler = new CommandTool.Builder()
+ *    .addArg(compilerPath)
+ *    .addArg("-I%s", defaultIncludeDir)
+ *    .build();
+ * }</pre>
  */
 public class CommandTool implements Tool {
 
@@ -73,12 +71,12 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     if (baseTool.isPresent()) {
-      deps.addAll(baseTool.get().getDeps(resolver));
+      deps.addAll(baseTool.get().getDeps(ruleFinder));
     }
-    deps.addAll(resolver.filterBuildRuleInputs(getInputs()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getInputs()));
     deps.addAll(extraDeps);
     return deps.build();
   }
@@ -90,25 +88,24 @@ public class CommandTool implements Tool {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
     }
     for (Arg arg : args) {
-      arg.appendToCommandLine(command);
+      arg.appendToCommandLine(command, resolver);
     }
     return command.build();
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     if (baseTool.isPresent()) {
-      env.putAll(baseTool.get().getEnvironment());
+      env.putAll(baseTool.get().getEnvironment(resolver));
     }
-    env.putAll(Arg.stringify(environment));
+    env.putAll(Arg.stringify(environment, resolver));
     return env.build();
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("baseTool", baseTool)
+    sink.setReflectively("baseTool", baseTool)
         .setReflectively("args", args)
         .setReflectively("extraInputs", extraInputs);
   }
@@ -136,33 +133,27 @@ public class CommandTool implements Tool {
       this(Optional.empty());
     }
 
-    /**
-     * Adds an argument.
-     */
+    /** Adds an argument. */
     public Builder addArg(Arg arg) {
       args.add(arg);
       return this;
     }
 
     public Builder addArg(String arg) {
-      return addArg(new StringArg(arg));
+      return addArg(StringArg.of(arg));
     }
 
-    /**
-     * Adds an environment variable key=arg.
-     */
+    /** Adds an environment variable key=arg. */
     public Builder addEnv(String key, Arg arg) {
       environment.put(key, arg);
       return this;
     }
 
     public Builder addEnv(String key, String val) {
-      return addEnv(key, new StringArg(val));
+      return addEnv(key, StringArg.of(val));
     }
 
-    /**
-     * Adds additional non-argument inputs to the tool.
-     */
+    /** Adds additional non-argument inputs to the tool. */
     public Builder addInputs(Iterable<? extends SourcePath> inputs) {
       extraInputs.addAll(inputs);
       return this;
@@ -172,9 +163,7 @@ public class CommandTool implements Tool {
       return addInputs(ImmutableList.copyOf(inputs));
     }
 
-    /**
-     * Adds additional non-argument deps to the tool.
-     */
+    /** Adds additional non-argument deps to the tool. */
     public Builder addDeps(Iterable<? extends BuildRule> deps) {
       extraDeps.addAll(deps);
       return this;
@@ -186,13 +175,7 @@ public class CommandTool implements Tool {
 
     public CommandTool build() {
       return new CommandTool(
-          baseTool,
-          args.build(),
-          environment.build(),
-          extraInputs.build(),
-          extraDeps.build());
+          baseTool, args.build(), environment.build(), extraInputs.build(), extraDeps.build());
     }
-
   }
-
 }

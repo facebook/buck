@@ -17,16 +17,15 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractTestResultSummaryVerbosity {
   @Value.Parameter
   boolean getIncludeStdErr();
+
   @Value.Parameter
   boolean getIncludeStdOut();
 

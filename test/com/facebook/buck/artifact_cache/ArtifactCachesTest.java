@@ -19,80 +19,131 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.util.concurrent.MoreExecutors;
-
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class ArtifactCachesTest {
   @Test
   public void testCreateHttpCacheOnly() throws Exception {
-    ArtifactCacheBuckConfig cacheConfig = ArtifactCacheBuckConfigTest.createFromText(
-        "[cache]",
-        "mode = http");
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = http");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
-        cacheConfig,
-        buckEventBus,
-        projectFilesystem,
-        Optional.empty(),
-        MoreExecutors.newDirectExecutorService());
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
   }
 
   @Test
   public void testCreateDirCacheOnly() throws Exception {
-    ArtifactCacheBuckConfig cacheConfig = ArtifactCacheBuckConfigTest.createFromText(
-        "[cache]",
-        "mode = dir");
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
-        cacheConfig,
-        buckEventBus,
-        projectFilesystem,
-        Optional.empty(),
-        MoreExecutors.newDirectExecutorService());
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .newInstance();
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 
   @Test
-  public void testCreateBoth() throws Exception {
-    ArtifactCacheBuckConfig cacheConfig = ArtifactCacheBuckConfigTest.createFromText(
-        "[cache]",
-        "mode = dir, http");
+  public void testCreateMultipleDirCaches() throws Exception {
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText(
+            "[cache]",
+            "dir_cache_names = dir1, dir2",
+            "[cache#dir1]",
+            "dir = dir1",
+            "dir_mode = readwrite",
+            "[cache#dir2]",
+            "dir = dir2",
+            "dir_mode = readonly");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
-        cacheConfig,
-        buckEventBus,
-        projectFilesystem,
-        Optional.empty(),
-        MoreExecutors.newDirectExecutorService());
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        stripDecorators(
+            new ArtifactCaches(
+                    cacheConfig,
+                    buckEventBus,
+                    projectFilesystem,
+                    Optional.empty(),
+                    MoreExecutors.newDirectExecutorService(),
+                    Optional.empty())
+                .newInstance());
+
+    assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
+
+    MultiArtifactCache multiArtifactCache = (MultiArtifactCache) artifactCache;
+    assertThat(multiArtifactCache.getArtifactCaches().size(), Matchers.equalTo(2));
+
+    ArtifactCache c1 = stripDecorators(multiArtifactCache.getArtifactCaches().get(0));
+    ArtifactCache c2 = stripDecorators(multiArtifactCache.getArtifactCaches().get(1));
+    assertThat(c1, Matchers.instanceOf(DirArtifactCache.class));
+    assertThat(c2, Matchers.instanceOf(DirArtifactCache.class));
+
+    DirArtifactCache dir1 = (DirArtifactCache) c1;
+    assertThat(dir1.getCacheDir(), Matchers.equalTo(Paths.get("dir1").toAbsolutePath()));
+    assertThat(dir1.getCacheReadMode(), Matchers.equalTo(CacheReadMode.READWRITE));
+
+    DirArtifactCache dir2 = (DirArtifactCache) c2;
+    assertThat(dir2.getCacheDir(), Matchers.equalTo(Paths.get("dir2").toAbsolutePath()));
+    assertThat(dir2.getCacheReadMode(), Matchers.equalTo(CacheReadMode.READONLY));
+  }
+
+  @Test
+  public void testCreateBoth() throws Exception {
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir, http");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
   }
 
   @Test
   public void testCreateDirCacheOnlyWhenOnBlacklistedWifi() throws Exception {
-    ArtifactCacheBuckConfig cacheConfig = ArtifactCacheBuckConfigTest.createFromText(
-        "[cache]",
-        "mode = dir, http",
-        "blacklisted_wifi_ssids = weevil, evilwifi");
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText(
+            "[cache]", "mode = dir, http", "blacklisted_wifi_ssids = weevil, evilwifi");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    ArtifactCache artifactCache = ArtifactCaches.newInstance(
-        cacheConfig,
-        buckEventBus,
-        projectFilesystem,
-        Optional.of("evilwifi"),
-        MoreExecutors.newDirectExecutorService());
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.of("evilwifi"),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 

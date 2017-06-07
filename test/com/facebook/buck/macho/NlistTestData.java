@@ -20,44 +20,77 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
-
 import java.util.Arrays;
 
 public class NlistTestData {
   private NlistTestData() {}
 
   private static final byte[] BIG_ENDIAN_32_BIT = {
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0F,   // strx
-      (byte) 0x10,  // type
-      (byte) 0x20,  // section
-      (byte) 0x00, (byte) 0x30,   // desc
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40,   // value
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x0F, // strx
+    (byte) 0x10, // type
+    (byte) 0x20, // section
+    (byte) 0x00,
+    (byte) 0x30, // desc
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x40, // value
   };
 
   private static final byte[] LITTLE_ENDIAN_32_BIT = {
-      (byte) 0x0F, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // strx
-      (byte) 0x10,  // type
-      (byte) 0x20,  // section
-      (byte) 0x30, (byte) 0x00,   // desc
-      (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // value
+    (byte) 0x0F,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00, // strx
+    (byte) 0x10, // type
+    (byte) 0x20, // section
+    (byte) 0x30,
+    (byte) 0x00, // desc
+    (byte) 0x40,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00, // value
   };
 
   private static final byte[] BIG_ENDIAN_64_BIT = {
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x0F,   // strx
-      (byte) 0x10,  // type
-      (byte) 0x20,  // section
-      (byte) 0x00, (byte) 0x30,   // desc
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40,   // value
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x0F, // strx
+    (byte) 0x10, // type
+    (byte) 0x20, // section
+    (byte) 0x00,
+    (byte) 0x30, // desc
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x40, // value
   };
 
   private static final byte[] LITTLE_ENDIAN_64_BIT = {
-      (byte) 0x0F, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // strx
-      (byte) 0x10,  // type
-      (byte) 0x20,  // section
-      (byte) 0x30, (byte) 0x00,   // desc
-      (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-      (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,   // value
+    (byte) 0x0F,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00, // strx
+    (byte) 0x10, // type
+    (byte) 0x20, // section
+    (byte) 0x30,
+    (byte) 0x00, // desc
+    (byte) 0x40,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00,
+    (byte) 0x00, // value
   };
 
   public static byte[] getBigEndian32Bit() {

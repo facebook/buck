@@ -19,39 +19,32 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.google.common.collect.ImmutableList;
-
-import org.codehaus.plexus.util.StringUtils;
-import org.hamcrest.Matchers;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.codehaus.plexus.util.StringUtils;
+import org.hamcrest.Matchers;
 
 public class AppleDsymTestUtil {
   private static final String MAIN = "main";
+
   private AppleDsymTestUtil() {}
 
-  public static void checkDsymFileHasDebugSymbolForMain(
-      ProjectWorkspace workspace,
-      Path dwarfPath) throws IOException, InterruptedException {
+  public static void checkDsymFileHasDebugSymbolForMain(ProjectWorkspace workspace, Path dwarfPath)
+      throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbol(MAIN, workspace, dwarfPath);
   }
 
   public static void checkDsymFileHasDebugSymbol(
-      String symbolName,
-      ProjectWorkspace workspace,
-      Path dwarfPath) throws IOException, InterruptedException {
+      String symbolName, ProjectWorkspace workspace, Path dwarfPath)
+      throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbolForConcreteArchitectures(
-        symbolName,
-        workspace,
-        dwarfPath,
-        Optional.empty());
+        symbolName, workspace, dwarfPath, Optional.empty());
   }
 
   public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
-      ProjectWorkspace workspace,
-      Path dwarfPath,
-      Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
+      ProjectWorkspace workspace, Path dwarfPath, Optional<ImmutableList<String>> architectures)
+      throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbolForConcreteArchitectures(MAIN, workspace, dwarfPath, architectures);
   }
 
@@ -59,9 +52,13 @@ public class AppleDsymTestUtil {
       String symbolName,
       ProjectWorkspace workspace,
       Path dwarfPath,
-      Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
-    String dwarfdumpMainStdout = workspace
-        .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString()).getStdout().orElse("");
+      Optional<ImmutableList<String>> architectures)
+      throws IOException, InterruptedException {
+    String dwarfdumpMainStdout =
+        workspace
+            .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString())
+            .getStdout()
+            .orElse("");
 
     int expectedMatchCount = 1;
     if (architectures.isPresent()) {

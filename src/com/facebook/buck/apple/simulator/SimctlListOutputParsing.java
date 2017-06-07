@@ -17,19 +17,14 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.log.Logger;
-
 import com.google.common.collect.ImmutableSet;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Utility class to parse the output of `xcrun simctl list`.
- */
+/** Utility class to parse the output of `xcrun simctl list`. */
 public class SimctlListOutputParsing {
   private static final Logger LOG = Logger.get(SimctlListOutputParsing.class);
 
@@ -38,22 +33,30 @@ public class SimctlListOutputParsing {
   private static final String DEVICE_STATE_GROUP = "state";
   private static final String DEVICE_UNAVAILABLE_GROUP = "unavailable";
 
-  private static final Pattern SIMCTL_LIST_DEVICES_PATTERN = Pattern.compile(
-      " *(?<" + DEVICE_NAME_GROUP + ">.+) " +
-      "\\((?<" + DEVICE_UDID_GROUP + ">[0-9A-F-]+)\\) " +
-      "\\((?<" + DEVICE_STATE_GROUP + ">Creating|Booting|Shutting Down|Shutdown|Booted)\\)" +
-      "(?<" + DEVICE_UNAVAILABLE_GROUP + ">\\(unavailable, .*\\))?");
+  private static final Pattern SIMCTL_LIST_DEVICES_PATTERN =
+      Pattern.compile(
+          " *(?<"
+              + DEVICE_NAME_GROUP
+              + ">.+) "
+              + "\\((?<"
+              + DEVICE_UDID_GROUP
+              + ">[0-9A-F-]+)\\) "
+              + "\\((?<"
+              + DEVICE_STATE_GROUP
+              + ">Creating|Booting|Shutting Down|Shutdown|Booted)\\)"
+              + "(?<"
+              + DEVICE_UNAVAILABLE_GROUP
+              + ">\\(unavailable, .*\\))?");
 
   // Utility class; do not instantiate.
-  private SimctlListOutputParsing() { }
+  private SimctlListOutputParsing() {}
 
   /**
-   * Parses each line of input from {@code reader}, adding any available simulators to
-   * {@code simulatorsBuilder}.
+   * Parses each line of input from {@code reader}, adding any available simulators to {@code
+   * simulatorsBuilder}.
    */
   public static void parseOutputFromReader(
-      Reader reader,
-      ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) throws IOException {
+      Reader reader, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) throws IOException {
     try (BufferedReader br = new BufferedReader(reader)) {
       String line;
       while ((line = br.readLine()) != null) {
@@ -63,8 +66,7 @@ public class SimctlListOutputParsing {
   }
 
   private static void parseLine(
-      String line,
-      ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) {
+      String line, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) {
     LOG.debug("Parsing simctl list output line: %s", line);
     Matcher matcher = SIMCTL_LIST_DEVICES_PATTERN.matcher(line);
     if (matcher.matches() && matcher.group(DEVICE_UNAVAILABLE_GROUP) == null) {

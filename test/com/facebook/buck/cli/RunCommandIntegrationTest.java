@@ -20,29 +20,23 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class RunCommandIntegrationTest extends EasyMockSupport {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testRunCommandWithNoArguments()
-      throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "run-command",
-        temporaryFolder);
+  public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("run");
@@ -53,12 +47,9 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandWithNonExistentTarget()
-      throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "run-command",
-        temporaryFolder);
+  public void testRunCommandWithNonExistentTarget() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("run", "//does/not/exist");
@@ -72,17 +63,16 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
 
   @Test
   public void testRunCommandWithArguments() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "run-command",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "run",
-        "//cmd:command",
-        "one_arg",
-        workspace.getPath("output").toAbsolutePath().toString());
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "run",
+            "//cmd:command",
+            "one_arg",
+            workspace.getPath("output").toAbsolutePath().toString());
     result.assertSuccess("buck run should succeed");
     assertEquals("SUCCESS\n", result.getStdout());
     workspace.verify();
@@ -90,18 +80,17 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
 
   @Test
   public void testRunCommandWithDashArguments() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "run-command",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "run",
-        "//cmd:command",
-        "--",
-        "one_arg",
-        workspace.getPath("output").toAbsolutePath().toString());
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "run",
+            "//cmd:command",
+            "--",
+            "one_arg",
+            workspace.getPath("output").toAbsolutePath().toString());
     result.assertSuccess("buck run should succeed");
     assertThat(result.getStdout(), containsString("SUCCESS"));
     workspace.verify();
@@ -109,14 +98,12 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
 
   @Test
   public void testRunCommandFailure() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "run-command-failure",
-        temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "run-command-failure", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("run", "//cmd:command");
     result.assertSpecialExitCode("buck run should propagate failure", 5);
   }
-
 }

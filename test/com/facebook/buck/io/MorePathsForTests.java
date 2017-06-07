@@ -17,7 +17,6 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Preconditions;
-
 import java.io.File;
 import java.nio.file.Path;
 
@@ -27,6 +26,7 @@ public class MorePathsForTests {
 
   /**
    * A cross-platform way to get a root-relative Path.
+   *
    * @param location The path to the file relative to a root.
    * @return Path object representing location.
    */

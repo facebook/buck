@@ -28,10 +28,8 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -39,21 +37,22 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public class PythonRunTestsStep implements Step {
-  private static final CharMatcher PYTHON_RE_REGULAR_CHARACTERS = CharMatcher.anyOf(
-      "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890");
+  private static final CharMatcher PYTHON_RE_REGULAR_CHARACTERS =
+      CharMatcher.anyOf("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890");
   public static final int TEST_FAILURES_EXIT_CODE = 70;
 
   private final Path workingDirectory;
   private final String testName;
   private final ImmutableList<String> commandPrefix;
-  private final Supplier<ImmutableMap<String, String>> environment;
+  private final ImmutableMap<String, String> environment;
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
 
-  private final Consumer<Process> timeoutHandler = input -> {
-    timedOut = true;
-  };
+  private final Consumer<Process> timeoutHandler =
+      input -> {
+        timedOut = true;
+      };
 
   private boolean timedOut;
 
@@ -61,7 +60,7 @@ public class PythonRunTestsStep implements Step {
       Path workingDirectory,
       String testName,
       ImmutableList<String> commandPrefix,
-      Supplier<ImmutableMap<String, String>> environment,
+      ImmutableMap<String, String> environment,
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
       Path resultsOutputPath) {
@@ -82,8 +81,10 @@ public class PythonRunTestsStep implements Step {
     StepExecutionResult result = doExecute(context);
     if (timedOut) {
       throw new HumanReadableException(
-          "Following test case timed out: " + testName + ", with exitCode: " +
-          result.getExitCode());
+          "Following test case timed out: "
+              + testName
+              + ", with exitCode: "
+              + result.getExitCode());
     }
     return result;
   }
@@ -94,21 +95,25 @@ public class PythonRunTestsStep implements Step {
       return getShellStepWithArgs("-o", resultsOutputPath.toString()).execute(context);
     }
 
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(
-            ImmutableList.<String>builder()
-                .addAll(commandPrefix)
-                .add("-l", "-L", "buck")
-                .build())
-        .setDirectory(workingDirectory)
-        .setEnvironment(environment.get())
-        .build();
-    ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(
-        params,
-        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-        Optional.empty(),
-        testRuleTimeoutMs,
-        Optional.of(timeoutHandler));
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.<String>builder()
+                    .addAll(commandPrefix)
+                    .add("-l", "-L", "buck")
+                    .build())
+            .setDirectory(workingDirectory)
+            .setEnvironment(environment)
+            .build();
+    ProcessExecutor.Result result =
+        context
+            .getProcessExecutor()
+            .launchAndExecute(
+                params,
+                EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+                Optional.empty(),
+                testRuleTimeoutMs,
+                Optional.of(timeoutHandler));
 
     if (timedOut) {
       return StepExecutionResult.ERROR;
@@ -120,9 +125,8 @@ public class PythonRunTestsStep implements Step {
     String testsToRunRegex = getTestsToRunRegexFromListOutput(result.getStdout().get());
 
     return getShellStepWithArgs(
-        "--hide-output",
-        "-o", resultsOutputPath.toString(),
-        "-r", testsToRunRegex).execute(context);
+            "--hide-output", "-o", resultsOutputPath.toString(), "-r", testsToRunRegex)
+        .execute(context);
   }
 
   private String getTestsToRunRegexFromListOutput(String listOutput) {
@@ -131,8 +135,8 @@ public class PythonRunTestsStep implements Step {
     for (String strTestCase : CharMatcher.whitespace().trimFrom(listOutput).split("\n")) {
       String[] testCase = CharMatcher.whitespace().trimFrom(strTestCase).split("#", 2);
       if (testCase.length != 2) {
-        throw new RuntimeException(String.format(
-            "Bad test case name from python runner: '%s'", strTestCase));
+        throw new RuntimeException(
+            String.format("Bad test case name from python runner: '%s'", strTestCase));
       }
 
       TestDescription testDescription = new TestDescription(testCase[0], testCase[1]);
@@ -169,8 +173,8 @@ public class PythonRunTestsStep implements Step {
       return getShellStepWithArgs("-o", resultsOutputPath.toString()).getDescription(context);
     }
 
-    return getShellStepWithArgs(
-        "-o", resultsOutputPath.toString(), "-r", "<matching tests>").getDescription(context);
+    return getShellStepWithArgs("-o", resultsOutputPath.toString(), "-r", "<matching tests>")
+        .getDescription(context);
   }
 
   private ShellStep getShellStepWithArgs(final String... args) {
@@ -182,8 +186,8 @@ public class PythonRunTestsStep implements Step {
         // The test runner returns 0 if all tests passed, or
         // TEST_FAILURES_EXIT_CODE if some tests failed.  Either of these
         // return codes indicates that we succeeded in running the tests.
-        if (executionResult.getExitCode() == 0 ||
-            executionResult.getExitCode() == TEST_FAILURES_EXIT_CODE) {
+        if (executionResult.getExitCode() == 0
+            || executionResult.getExitCode() == TEST_FAILURES_EXIT_CODE) {
           return StepExecutionResult.SUCCESS;
         }
         return executionResult;
@@ -201,7 +205,7 @@ public class PythonRunTestsStep implements Step {
 
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-        return environment.get();
+        return environment;
       }
 
       @Override

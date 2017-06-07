@@ -18,14 +18,10 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
 
-/**
- * Error thrown when version selection fails.
- */
+/** Error thrown when version selection fails. */
 public class VersionException extends Exception {
 
-  /**
-   * The root of the version sub-graph that failed.
-   */
+  /** The root of the version sub-graph that failed. */
   private final BuildTarget root;
 
   public VersionException(BuildTarget root, String message) {
@@ -36,5 +32,4 @@ public class VersionException extends Exception {
   public BuildTarget getRoot() {
     return root;
   }
-
 }

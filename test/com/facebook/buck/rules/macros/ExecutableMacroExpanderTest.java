@@ -20,22 +20,23 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -45,22 +46,21 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ExecutableMacroExpanderTest {
 
   private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) throws Exception {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    BuildRule javaLibrary = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
-        .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
-        .build(ruleResolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
+            .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
+            .build(ruleResolver);
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
@@ -81,25 +81,20 @@ public class ExecutableMacroExpanderTest {
 
     // Interpolate the build target in the genrule cmd string.
 
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(
-        target,
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("exe", new ExecutableMacroExpander()));
+    String transformedString =
+        macroHandler.expand(target, createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem.getBuckPaths().getGenDir()
+        filesystem
+            .getBuckPaths()
+            .getGenDir()
             .resolve("java/com/facebook/util/ManifestGenerator.jar")
             .toAbsolutePath();
 
-    String expectedCmd = String.format(
-        "java -jar %s $OUT",
-        expectedClasspath);
+    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -112,24 +107,20 @@ public class ExecutableMacroExpanderTest {
 
     // Interpolate the build target in the genrule cmd string.
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(
-        rule.getBuildTarget(),
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("exe", new ExecutableMacroExpander()));
+    String transformedString =
+        macroHandler.expand(
+            rule.getBuildTarget(), createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem.getBuckPaths().getGenDir()
+        filesystem
+            .getBuckPaths()
+            .getGenDir()
             .resolve("java/com/facebook/util/ManifestGenerator.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format(
-        "java -jar %s $OUT",
-        expectedClasspath);
+    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -143,24 +134,20 @@ public class ExecutableMacroExpanderTest {
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(
-        rule.getBuildTarget(),
-        createCellRoots(filesystem),
-        ruleResolver,
-        originalCmd);
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("exe", new ExecutableMacroExpander()));
+    String transformedString =
+        macroHandler.expand(
+            rule.getBuildTarget(), createCellRoots(filesystem), ruleResolver, originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem.getBuckPaths().getGenDir()
+        filesystem
+            .getBuckPaths()
+            .getGenDir()
             .resolve("java/com/facebook/util/ManifestGenerator.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format(
-        "java -jar %s $OUT",
-        expectedClasspath);
+    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -169,7 +156,8 @@ public class ExecutableMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     final BuildRule dep1 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep1"))
@@ -183,79 +171,71 @@ public class ExecutableMacroExpanderTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ruleResolver.addToIndex(
-        new NoopBinaryBuildRule(params, pathResolver) {
+        new NoopBinaryBuildRule(params) {
           @Override
           public Tool getExecutableCommand() {
             return new CommandTool.Builder()
-                .addArg(
-                    new SourcePathArg(
-                        getResolver(),
-                        new BuildTargetSourcePath(dep1.getBuildTarget())))
-                .addArg(
-                    new SourcePathArg(
-                        getResolver(),
-                        new BuildTargetSourcePath(dep2.getBuildTarget())))
+                .addArg(SourcePathArg.of(dep1.getSourcePathToOutput()))
+                .addArg(SourcePathArg.of(dep2.getSourcePathToOutput()))
                 .build();
           }
         });
 
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    CellPathResolver cellRoots = createCellRoots(filesystem);
     assertThat(
-        expander.extractBuildTimeDeps(
+        expander.extractBuildTimeDepsFrom(
             target,
-            createCellRoots(filesystem),
+            cellRoots,
             ruleResolver,
-            ImmutableList.of("//:rule")),
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
         Matchers.containsInAnyOrder(dep1, dep2));
     assertThat(
-        expander.expand(
+        expander.expandFrom(
             target,
-            createCellRoots(filesystem),
+            cellRoots,
             ruleResolver,
-            ImmutableList.of("//:rule")),
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
         Matchers.equalTo(
             String.format(
                 "%s %s",
-                Preconditions.checkNotNull(dep1.getPathToOutput()).toAbsolutePath(),
-                Preconditions.checkNotNull(dep2.getPathToOutput()).toAbsolutePath())));
+                pathResolver.getAbsolutePath(
+                    Preconditions.checkNotNull(dep1.getSourcePathToOutput())),
+                pathResolver.getAbsolutePath(
+                    Preconditions.checkNotNull(dep2.getSourcePathToOutput())))));
   }
 
   @Test
   public void extractRuleKeyAppendable() throws MacroException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     final Tool tool = new CommandTool.Builder().addArg("command").build();
     ruleResolver.addToIndex(
-        new NoopBinaryBuildRule(params, pathResolver) {
+        new NoopBinaryBuildRule(params) {
           @Override
           public Tool getExecutableCommand() {
             return tool;
           }
         });
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    CellPathResolver cellRoots = createCellRoots(params.getProjectFilesystem());
     assertThat(
-        expander.extractRuleKeyAppendables(
+        expander.extractRuleKeyAppendablesFrom(
             target,
-            createCellRoots(params.getProjectFilesystem()),
+            cellRoots,
             ruleResolver,
-            ImmutableList.of("//:rule")),
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
         Matchers.equalTo(tool));
   }
 
-  private abstract static class NoopBinaryBuildRule
-      extends NoopBuildRule
+  private abstract static class NoopBinaryBuildRule extends NoopBuildRule
       implements BinaryBuildRule {
 
-    public NoopBinaryBuildRule(
-        BuildRuleParams params,
-        SourcePathResolver resolver) {
-      super(params, resolver);
+    public NoopBinaryBuildRule(BuildRuleParams params) {
+      super(params);
     }
-
   }
-
 }

@@ -21,27 +21,26 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -50,55 +49,57 @@ import java.util.regex.Pattern;
 public class Cell {
 
   private final ImmutableSet<Path> knownRoots;
+  private final Optional<String> canonicalName;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
   private final CellProvider cellProvider;
   private final Supplier<KnownBuildRuleTypes> knownBuildRuleTypesSupplier;
 
-  private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
-      new Supplier<Integer>() {
-        @Override
-        public Integer get() {
-          return Objects.hash(filesystem, config);
-        }
-      });
+  private final int hashCode;
 
-  /**
-   * Should only be constructed by {@link CellProvider}.
-   */
+  /** Should only be constructed by {@link CellProvider}. */
   Cell(
-      final ImmutableSet<Path> knownRoots,
-      final ProjectFilesystem filesystem,
-      final Watchman watchman,
-      final BuckConfig config,
-      final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final CellProvider cellProvider) throws IOException, InterruptedException {
+      ImmutableSet<Path> knownRoots,
+      Optional<String> canonicalName,
+      ProjectFilesystem filesystem,
+      Watchman watchman,
+      BuckConfig config,
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      CellProvider cellProvider) {
 
     this.knownRoots = knownRoots;
+    this.canonicalName = canonicalName;
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
+    this.cellProvider = cellProvider;
 
     // Stampede needs the Cell before it can materialize all the files required by
     // knownBuildRuleTypesFactory (specifically java/javac), and as such we need to load this
     // lazily when getKnownBuildRuleTypes() is called.
-    knownBuildRuleTypesSupplier = Suppliers.memoize(() -> {
-      try {
-        return knownBuildRuleTypesFactory.create(config, filesystem);
-      } catch (IOException e) {
-        throw new RuntimeException(String.format(
-            "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
-            filesystem.getRootPath()), e);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new RuntimeException(String.format(
-            "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
-            filesystem.getRootPath()), e);
-      }
-    });
+    knownBuildRuleTypesSupplier =
+        Suppliers.memoize(
+            () -> {
+              try {
+                return knownBuildRuleTypesFactory.create(config, filesystem);
+              } catch (IOException e) {
+                throw new RuntimeException(
+                    String.format(
+                        "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
+                        filesystem.getRootPath()),
+                    e);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(
+                    String.format(
+                        "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
+                        filesystem.getRootPath()),
+                    e);
+              }
+            });
 
-    this.cellProvider = cellProvider;
+    hashCode = Objects.hash(filesystem, config);
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -121,8 +122,13 @@ public class Cell {
     return config.getView(ParserConfig.class).getBuildFileName();
   }
 
+  public Optional<String> getCanonicalName() {
+    return canonicalName;
+  }
+
   /**
    * Whether the cell is enforcing buck package boundaries for the package at the passed path.
+   *
    * @param path Path of package (or file in a package) relative to the cell root.
    */
   public boolean isEnforcingBuckPackageBoundaries(Path path) {
@@ -143,15 +149,14 @@ public class Cell {
   }
 
   public Cell getCellIgnoringVisibilityCheck(Path cellPath) {
-      return cellProvider.getCellByPath(cellPath);
+    return cellProvider.getCellByPath(cellPath);
   }
 
   public Cell getCell(Path cellPath) {
     if (!knownRoots.contains(cellPath)) {
       throw new HumanReadableException(
           "Unable to find repository rooted at %s. Known roots are:\n  %s",
-          cellPath,
-          Joiner.on(",\n  ").join(knownRoots));
+          cellPath, Joiner.on(",\n  ").join(knownRoots));
     }
     return getCellIgnoringVisibilityCheck(cellPath);
   }
@@ -168,8 +173,19 @@ public class Cell {
   }
 
   /**
-   * @return all loaded {@link Cell}s that are children of this {@link Cell}.
+   * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
+   * necessarily return all possible cells that this build may interact with, since the root cell is
+   * required to declare a mapping for all cell names.
    */
+  public ImmutableList<Cell> getAllCells() {
+    return RichStream.from(knownRoots)
+        .concat(RichStream.of(getRoot()))
+        .distinct()
+        .map(cellProvider::getCellByPath)
+        .toImmutableList();
+  }
+
+  /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return cellProvider.getLoadedCells();
   }
@@ -198,14 +214,12 @@ public class Cell {
 
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
 
-    Path buildFile = targetFilesystem
-        .resolve(target.getBasePath())
-        .resolve(targetCell.getBuildFileName());
+    Path buildFile =
+        targetFilesystem.resolve(target.getBasePath()).resolve(targetCell.getBuildFileName());
     return buildFile;
   }
 
-  public Path getAbsolutePathToBuildFile(BuildTarget target)
-      throws MissingBuildFileException {
+  public Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException {
     Path buildFile = getAbsolutePathToBuildFileUnsafe(target);
     Cell cell = getCell(target);
     if (!cell.getFilesystem().isFile(buildFile)) {
@@ -223,44 +237,31 @@ public class Cell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
-      ConstructorArgMarshaller marshaller,
-      Console console,
-      BuckEventBus eventBus,
-      boolean ignoreBuckAutodepsFiles) {
-    ProjectBuildFileParserFactory factory = createBuildFileParserFactory();
-    return factory.createParser(
-        marshaller,
-        console,
-        config.getEnvironment(),
-        eventBus,
-        ignoreBuckAutodepsFiles);
-  }
+      TypeCoercerFactory typeCoercerFactory, Console console, BuckEventBus eventBus) {
 
-  private ProjectBuildFileParserFactory createBuildFileParserFactory() {
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
     boolean useWatchmanGlob =
-        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
-            watchman.hasWildmatchGlob();
+        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN
+            && watchman.hasWildmatchGlob();
     boolean watchmanGlobStatResults =
         parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
-    boolean watchmanUseGlobGenerator = watchman.getCapabilities().contains(
-        Watchman.Capability.GLOB_GENERATOR);
-    boolean useMercurialGlob =
-        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
+    boolean watchmanUseGlobGenerator =
+        watchman.getCapabilities().contains(Watchman.Capability.GLOB_GENERATOR);
+    boolean useMercurialGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new DefaultProjectBuildFileParserFactory(
+    return new ProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
+            .setCellName(getCanonicalName().orElse(""))
             .setPythonInterpreter(pythonInterpreter)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(filesystem.getIgnorePaths())
             .setBuildFileName(getBuildFileName())
-            .setAutodepsFilesHaveSignatures(config.getIncludeAutodepsSignature())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(getAllDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
@@ -270,9 +271,12 @@ public class Cell {
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(getBuckConfig().getRawConfigForParser())
-            .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build());
+            .build(),
+        typeCoercerFactory,
+        config.getEnvironment(),
+        eventBus,
+        new DefaultProcessExecutor(console));
   }
 
   @Override
@@ -281,26 +285,18 @@ public class Cell {
       return false;
     }
     Cell that = (Cell) o;
-    return Objects.equals(filesystem, that.filesystem) &&
-        config.equalsForDaemonRestart(that.config);
+    return Objects.equals(filesystem, that.filesystem)
+        && config.equalsForDaemonRestart(that.config);
   }
 
   @Override
   public String toString() {
-    return String.format(
-        "%s filesystem=%s config=%s",
-        super.toString(),
-        filesystem,
-        config);
+    return String.format("%s filesystem=%s config=%s", super.toString(), filesystem, config);
   }
 
   @Override
   public int hashCode() {
-    return hashCodeSupplier.get();
-  }
-
-  public Iterable<Pattern> getTempFilePatterns() {
-    return config.getView(ParserConfig.class).getTempFilePatterns();
+    return hashCode;
   }
 
   public CellPathResolver getCellPathResolver() {
@@ -318,10 +314,13 @@ public class Cell {
   @SuppressWarnings("serial")
   public static class MissingBuildFileException extends BuildTargetException {
     public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
-      super(String.format("No build file at %s when resolving target %s.",
-          buildTarget.getBasePath().resolve(
-              buckConfig.getView(ParserConfig.class).getBuildFileName()),
-          buildTarget.getFullyQualifiedName()));
+      super(
+          String.format(
+              "No build file at %s when resolving target %s.",
+              buildTarget
+                  .getBasePath()
+                  .resolve(buckConfig.getView(ParserConfig.class).getBuildFileName()),
+              buildTarget.getFullyQualifiedName()));
     }
 
     @Override

@@ -1,0 +1,10 @@
+prebuilt_jar(
+    name = "guava",
+    binary_jar = "guava.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    labels = [
+        "ignore_in_intellij",
+    ],
+)

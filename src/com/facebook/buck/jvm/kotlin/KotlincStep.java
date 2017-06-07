@@ -13,76 +13,158 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-// Copyright 2004-present Facebook. All Rights Reserved.
-
 package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class KotlincStep extends ShellStep {
-
+public class KotlincStep implements Step {
   private static final String CLASSPATH_FLAG = "-cp";
   private static final String DESTINATION_FLAG = "-d";
   private static final String INCLUDE_RUNTIME_FLAG = "-include-runtime";
 
-  private final Tool kotlinc;
-  private final SourcePathResolver resolver;
-  private final ImmutableSortedSet<Path> declaredClassPathEntries;
+  private final Kotlinc kotlinc;
+  private final ImmutableSortedSet<Path> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
   private final ImmutableSortedSet<Path> sourceFilePaths;
+  private final ProjectFilesystem filesystem;
+  private final Path pathToSrcsList;
+  private final BuildTarget invokingRule;
 
   KotlincStep(
-      Tool kotlinc,
-      ImmutableList<String> extraArguments,
-      SourcePathResolver resolver,
+      BuildTarget invokingRule,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
-      ImmutableSortedSet<Path> declaredClassPathEntries,
+      Path pathToSrcsList,
+      ImmutableSortedSet<Path> combinedClassPathEntries,
+      Kotlinc kotlinc,
+      ImmutableList<String> extraArguments,
       ProjectFilesystem filesystem) {
-    super(filesystem.getRootPath());
-    this.kotlinc = kotlinc;
-    this.resolver = resolver;
-    this.declaredClassPathEntries = declaredClassPathEntries;
+    this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
-    this.extraArguments = extraArguments;
     this.sourceFilePaths = sourceFilePaths;
+    this.pathToSrcsList = pathToSrcsList;
+    this.kotlinc = kotlinc;
+    this.combinedClassPathEntries = combinedClassPathEntries;
+    this.extraArguments = extraArguments;
+    this.filesystem = filesystem;
   }
 
   @Override
   public String getShortName() {
-    return Joiner.on(" ").join(kotlinc.getCommandPrefix(resolver));
+    return getKotlinc().getShortName();
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    final ImmutableList.Builder<String> command = ImmutableList.<String>builder()
-        .addAll(kotlinc.getCommandPrefix(resolver));
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    Verbosity verbosity =
+        context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
 
-    String classpath =
-        Joiner.on(File.pathSeparator).join(transform(declaredClassPathEntries, Object::toString));
-    command
-        .add(INCLUDE_RUNTIME_FLAG)
-        .add(CLASSPATH_FLAG)
-        .add(classpath.isEmpty() ? "''" : classpath)
-        .add(DESTINATION_FLAG)
-        .add(outputDirectory.toString());
+    try (CapturingPrintStream stdout = new CapturingPrintStream();
+        CapturingPrintStream stderr = new CapturingPrintStream();
+        ExecutionContext firstOrderContext =
+            context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
 
-    command
-        .addAll(extraArguments)
-        .addAll(transform(sourceFilePaths, Object::toString));
-    return command.build();
+      int declaredDepsBuildResult =
+          kotlinc.buildWithClasspath(
+              firstOrderContext,
+              invokingRule,
+              getOptions(context, combinedClassPathEntries),
+              sourceFilePaths,
+              pathToSrcsList,
+              Optional.empty(),
+              filesystem);
+
+      String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+      Optional<String> returnedStderr;
+      if (declaredDepsBuildResult != 0) {
+        returnedStderr = Optional.of(firstOrderStderr);
+      } else {
+        returnedStderr = Optional.empty();
+      }
+      return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
+    }
+  }
+
+  @VisibleForTesting
+  Kotlinc getKotlinc() {
+    return kotlinc;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return getKotlinc()
+        .getDescription(
+            getOptions(context, getClasspathEntries()), sourceFilePaths, pathToSrcsList);
+  }
+
+  /**
+   * Returns a list of command-line options to pass to javac. These options reflect the
+   * configuration of this javac command.
+   *
+   * @param context the ExecutionContext with in which javac will run
+   * @return list of String command-line options.
+   */
+  @VisibleForTesting
+  ImmutableList<String> getOptions(
+      ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+    return getOptions(filesystem, outputDirectory, buildClasspathEntries);
+  }
+
+  private ImmutableList<String> getOptions(
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
+      ImmutableSortedSet<Path> buildClasspathEntries) {
+
+    final ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.add(INCLUDE_RUNTIME_FLAG);
+
+    if (!buildClasspathEntries.isEmpty()) {
+      builder.add(
+          CLASSPATH_FLAG,
+          Joiner.on(File.pathSeparator)
+              .join(
+                  transform(
+                      buildClasspathEntries,
+                      path -> filesystem.resolve(path).toAbsolutePath().toString())));
+    }
+
+    builder.add(DESTINATION_FLAG, filesystem.resolve(outputDirectory).toString());
+
+    if (!extraArguments.isEmpty()) {
+      builder.addAll(extraArguments);
+    }
+
+    return builder.build();
+  }
+
+  /** @return The classpath entries used to invoke javac. */
+  @VisibleForTesting
+  ImmutableSortedSet<Path> getClasspathEntries() {
+    return combinedClassPathEntries;
+  }
+
+  @VisibleForTesting
+  ImmutableSortedSet<Path> getSrcs() {
+    return sourceFilePaths;
   }
 }

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.tree;
 
-import javax.swing.tree.TreeNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import javax.swing.tree.TreeNode;
 
 public class BuckTreeNodeBuild implements TreeNode {
 

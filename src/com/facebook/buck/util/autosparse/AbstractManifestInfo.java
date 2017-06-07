@@ -17,15 +17,13 @@
 package com.facebook.buck.util.autosparse;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
-import org.immutables.value.Value;
-
 import java.util.EnumSet;
+import org.immutables.value.Value;
 
 /**
  * Track information on a file entry in a version control manifest.
  *
- * Currently only the hash value (opaque hex value, unique per revision of a file) and file flags
+ * <p>Currently only the hash value (opaque hex value, unique per revision of a file) and file flags
  * (is it a link, executable flag set) are tracked.
  */
 @Value.Immutable(copy = false)
@@ -37,6 +35,7 @@ public abstract class AbstractManifestInfo {
   }
 
   public abstract String getHash();
+
   abstract EnumSet<FileFlags> getFlags();
 
   public static ManifestInfo of(String hash, String flagsString) {

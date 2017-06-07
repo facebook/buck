@@ -19,29 +19,21 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
-import javax.annotation.Nullable;
-
-/**
- * Adds Android-specific tools to {@link CxxPlatform}.
- */
+/** Adds Android-specific tools to {@link CxxPlatform}. */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractNdkCxxPlatform {
 
   CxxPlatform getCxxPlatform();
 
-  NdkCxxPlatforms.CxxRuntime getCxxRuntime();
+  NdkCxxRuntime getCxxRuntime();
 
-  @Nullable
   Tool getObjdump();
 
-  /**
-   * @return the {@link Path} to the C/C++ runtime library.
-   */
-  Path getCxxSharedRuntimePath();
+  /** @return the {@link Path} to the C/C++ runtime library, if one is required. */
+  Optional<Path> getCxxSharedRuntimePath();
 }

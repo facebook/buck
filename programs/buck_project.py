@@ -1,12 +1,14 @@
 from __future__ import print_function
+import errno
 import os
-import subprocess
 import tempfile
 import textwrap
 import shutil
 import sys
 
+import file_locks
 from tracing import Tracing
+import hashlib
 
 
 def get_file_contents_if_exists(path, default=None):
@@ -24,25 +26,34 @@ def write_contents_to_file(path, contents):
             output_file.write(str(contents))
 
 
+def makedirs(path):
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        # Potentially the case that multiple processes are running in parallel
+        # (e.g. a series of linters running buck query without buckd), so we
+        # should just swallow the error.
+        # This is mostly equivalent to os.makedirs(path, exist_ok=True) in
+        # Python 3.
+        if e.errno != errno.EEXIST and os.path.isdir(path):
+            raise
+
+
 class BuckProject:
 
     def __init__(self, root):
         self.root = root
         self._buck_out = os.path.join(root, "buck-out")
         buck_out_tmp = os.path.join(self._buck_out, "tmp")
-        if not os.path.exists(buck_out_tmp):
-            os.makedirs(buck_out_tmp)
+        makedirs(buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
-        if not os.path.exists(self._buck_out_log):
-            os.makedirs(self._buck_out_log)
+        makedirs(self._buck_out_log)
         self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=buck_out_tmp)
 
         # Only created if buckd is used.
         self.buckd_tmp_dir = None
 
         self.buckd_dir = os.path.join(root, ".buckd")
-        self.buckd_run_count_file = (os.path.join(
-            self.buckd_dir, "buckd.runcount"))
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
 
         self.has_no_buck_check = (os.path.exists(os.path.join(
@@ -65,11 +76,20 @@ class BuckProject:
         self.buck_javaargs_local = get_file_contents_if_exists(
             buck_javaargs_path_local)
 
-    def get_buckd_run_count(self):
-        return int(get_file_contents_if_exists(self.buckd_run_count_file, -1))
+    def get_root_hash(self):
+        return hashlib.sha256(self.root).hexdigest()
 
-    def get_buckd_socket_path(self):
-        return os.path.join(self.buckd_dir, 'sock')
+    def get_buckd_transport_file_path(self):
+        if os.name == 'nt':
+            return ur'\\.\pipe\buckd_{0}'.format(self.get_root_hash())
+        else:
+            return os.path.join(self.buckd_dir, 'sock')
+
+    def get_buckd_transport_address(self):
+        if os.name == 'nt':
+            return 'local:buckd_{0}'.format(self.get_root_hash())
+        else:
+            return 'local:.buckd/sock'
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
@@ -77,20 +97,16 @@ class BuckProject:
     def get_buck_out_log_dir(self):
         return self._buck_out_log
 
-    def update_buckd_run_count(self, new_run_count):
-        write_contents_to_file(self.buckd_run_count_file, new_run_count)
-
     def clean_up_buckd(self):
         with Tracing('BuckProject.clean_up_buckd'):
             if os.path.exists(self.buckd_dir):
-                shutil.rmtree(self.buckd_dir)
+                file_locks.rmtree_if_can_lock(self.buckd_dir)
 
     def create_buckd_tmp_dir(self):
         if self.buckd_tmp_dir is not None:
             return self.buckd_tmp_dir
         tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
-        if not os.path.exists(tmp_dir_parent):
-            os.makedirs(tmp_dir_parent)
+        makedirs(tmp_dir_parent)
         self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.",
                                               dir=tmp_dir_parent)
         return self.buckd_tmp_dir

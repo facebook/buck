@@ -16,11 +16,13 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -29,46 +31,37 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Builds a Lua executable into a standalone package using a given packager tool.
- */
+/** Builds a Lua executable into a standalone package using a given packager tool. */
 public class LuaStandaloneBinary extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool builder;
+  @AddToRuleKey private final Tool builder;
 
-  @AddToRuleKey
-  private final ImmutableList<String> builderArgs;
+  @AddToRuleKey private final ImmutableList<String> builderArgs;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
 
-  @AddToRuleKey
-  private final Optional<SourcePath> starter;
+  @AddToRuleKey private final Optional<SourcePath> starter;
 
-  @AddToRuleKey
-  private final LuaPackageComponents components;
+  @AddToRuleKey private final LuaPackageComponents components;
 
-  @AddToRuleKey
-  private final String mainModule;
+  @AddToRuleKey private final String mainModule;
 
-  @AddToRuleKey
-  private final Tool lua;
+  @AddToRuleKey private final Tool lua;
 
   private final boolean cache;
 
   public LuaStandaloneBinary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool builder,
       ImmutableList<String> builderArgs,
       Path output,
@@ -77,7 +70,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
       String mainModule,
       Tool lua,
       boolean cache) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.builder = builder;
     this.builderArgs = builderArgs;
     this.output = output;
@@ -90,18 +83,26 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     buildableContext.recordArtifact(output);
 
     // Make sure the parent directory exists.
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
     // Delete any other pex that was there (when switching between pex styles).
-    steps.add(new RmStep(getProjectFilesystem(), output, /* force */ true, /* recurse */ true));
+    steps.add(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output))
+            .withRecursive(true));
+
+    SourcePathResolver resolver = context.getSourcePathResolver();
 
     steps.add(
         new ShellStep(getProjectFilesystem().getRootPath()) {
@@ -110,26 +111,20 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
           protected Optional<String> getStdin(ExecutionContext context) {
             try {
               return Optional.of(
-                  context.getObjectMapper().writeValueAsString(
+                  ObjectMappers.WRITER.writeValueAsString(
                       ImmutableMap.of(
                           "modules",
                           Maps.transformValues(
                               components.getModules(),
-                              Functions.compose(
-                                  Object::toString,
-                                  getResolver()::getAbsolutePath)),
+                              Functions.compose(Object::toString, resolver::getAbsolutePath)),
                           "pythonModules",
                           Maps.transformValues(
                               components.getPythonModules(),
-                              Functions.compose(
-                                  Object::toString,
-                                  getResolver()::getAbsolutePath)),
+                              Functions.compose(Object::toString, resolver::getAbsolutePath)),
                           "nativeLibraries",
                           Maps.transformValues(
                               components.getNativeLibraries(),
-                              Functions.compose(
-                                  Object::toString,
-                                  getResolver()::getAbsolutePath)))));
+                              Functions.compose(Object::toString, resolver::getAbsolutePath)))));
             } catch (IOException e) {
               throw new RuntimeException(e);
             }
@@ -138,14 +133,14 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             ImmutableList.Builder<String> command = ImmutableList.builder();
-            command.addAll(builder.getCommandPrefix(getResolver()));
+            command.addAll(builder.getCommandPrefix(resolver));
             command.addAll(builderArgs);
             command.add("--entry-point", mainModule);
             command.add("--interpreter");
             if (starter.isPresent()) {
-              command.add(getResolver().getAbsolutePath(starter.get()).toString());
+              command.add(resolver.getAbsolutePath(starter.get()).toString());
             } else {
-              command.add(lua.getCommandPrefix(getResolver()).get(0));
+              command.add(lua.getCommandPrefix(resolver).get(0));
             }
             command.add(getProjectFilesystem().resolve(output).toString());
             return command.build();
@@ -155,21 +150,18 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
           public String getShortName() {
             return "lua_package";
           }
-
         });
-
 
     return steps.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override
   public boolean isCacheable() {
     return cache;
   }
-
 }

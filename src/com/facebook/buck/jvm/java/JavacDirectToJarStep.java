@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -26,7 +25,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -42,10 +40,10 @@ public class JavacDirectToJarStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
   private final Path outputDirectory;
+  private final Javac javac;
   private final JavacOptions buildTimeOptions;
   private final Optional<Path> workingDirectory;
   private final Path pathToSrcsList;
-  private final Optional<SuggestBuildRules> suggestBuildRules;
   private final ImmutableSortedSet<Path> entriesToJar;
   private final Optional<String> mainClass;
   private final Optional<Path> manifestFile;
@@ -58,11 +56,11 @@ public class JavacDirectToJarStep implements Step {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
+      Javac javac,
       JavacOptions buildTimeOptions,
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
@@ -73,11 +71,11 @@ public class JavacDirectToJarStep implements Step {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.declaredClasspathEntries = declaredClasspathEntries;
+    this.javac = javac;
     this.buildTimeOptions = buildTimeOptions;
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.pathToSrcsList = pathToSrcsList;
-    this.suggestBuildRules = suggestBuildRules;
     this.entriesToJar = entriesToJar;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
@@ -93,27 +91,31 @@ public class JavacDirectToJarStep implements Step {
 
   @Override
   public String getShortName() {
-    return "javac_jar";
+    return buildTimeOptions.getCompilationMode() != JavacCompilationMode.ABI
+        ? "javac_jar"
+        : "calculate_abi_from_source";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList<String> javacStepOptions = JavacStep.getOptions(
-        buildTimeOptions,
-        filesystem,
-        outputDirectory,
-        context,
-        declaredClasspathEntries);
-    String javacDescription = buildTimeOptions.getJavac().getDescription(
-        javacStepOptions,
-        sourceFilePaths,
-        pathToSrcsList);
+    ImmutableList<String> javacStepOptions =
+        JavacStep.getOptions(
+            buildTimeOptions,
+            filesystem,
+            resolver,
+            outputDirectory,
+            context,
+            declaredClasspathEntries);
+    String javacDescription =
+        javac.getDescription(javacStepOptions, sourceFilePaths, pathToSrcsList);
 
-    String jarDescription = String.format("jar %s %s %s %s",
-        getJarArgs(),
-        outputJar,
-        manifestFile.isPresent() ? manifestFile.get() : "",
-        Joiner.on(' ').join(entriesToJar));
+    String jarDescription =
+        String.format(
+            "jar %s %s %s %s",
+            getJarArgs(),
+            outputJar,
+            manifestFile.isPresent() ? manifestFile.get() : "",
+            Joiner.on(' ').join(entriesToJar));
 
     return javacDescription + "; " + jarDescription;
   }
@@ -127,12 +129,13 @@ public class JavacDirectToJarStep implements Step {
   }
 
   private JavacStep createJavacStep() {
-    DirectToJarOutputSettings directToJarOutputSettings = DirectToJarOutputSettings.of(
-        outputJar,
-        buildTimeOptions.getClassesToRemoveFromJar(),
-        entriesToJar,
-        mainClass,
-        manifestFile);
+    DirectToJarOutputSettings directToJarOutputSettings =
+        DirectToJarOutputSettings.of(
+            outputJar,
+            buildTimeOptions.getClassesToRemoveFromJar(),
+            entriesToJar,
+            mainClass,
+            manifestFile);
     return new JavacStep(
         outputDirectory,
         usedClassesFileWriter,
@@ -140,10 +143,9 @@ public class JavacDirectToJarStep implements Step {
         sourceFilePaths,
         pathToSrcsList,
         declaredClasspathEntries,
-        buildTimeOptions.getJavac(),
+        javac,
         buildTimeOptions,
         invokingRule,
-        suggestBuildRules,
         resolver,
         filesystem,
         new ClasspathChecker(),

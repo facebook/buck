@@ -18,27 +18,18 @@ package com.facebook.buck.util.environment;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableMap;
 import com.sun.management.OperatingSystemMXBean;
-
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Optional;
 import java.util.Properties;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
-  // Buck's own integration tests will run with this system property
-  // set to false.
-  //
-  // Otherwise, we would need to add libjcocoa.dylib to
-  // java.library.path, which could interfere with external Java
-  // tests' own C library dependencies.
-  private static final boolean ENABLE_OBJC = Boolean.getBoolean("buck.enable_objc");
   private final Platform platform;
   private final ImmutableMap<String, String> environment;
   private final Properties properties;
 
   public DefaultExecutionEnvironment(
-      ImmutableMap<String, String> environment,
-      Properties properties) {
+      ImmutableMap<String, String> environment, Properties properties) {
     this.platform = Platform.detect();
     this.environment = environment;
     this.properties = properties;
@@ -78,12 +69,13 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   }
 
   @Override
-  public Optional<String> getWifiSsid() throws InterruptedException {
-    // TODO(rowillia): Support Linux and Windows.
-    if (ENABLE_OBJC) {
-      return MacWifiSsidFinder.findCurrentSsid();
-    }
-    return Optional.empty();
+  public Network getLikelyActiveNetwork() {
+    return NetworkInfo.getLikelyActiveNetwork();
+  }
+
+  @Override
+  public Optional<String> getWifiSsid() {
+    return NetworkInfo.getWifiSsid();
   }
 
   @Override

@@ -22,7 +22,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Objects;
 
 /**
@@ -35,19 +34,18 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
-  private final SourcePathResolver resolver;
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDeps;
+  private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
 
-  private final Supplier<String> typeSupplier = Suppliers.memoize(
-      this::getTypeForClass);
+  private final Supplier<String> typeSupplier = Suppliers.memoize(this::getTypeForClass);
 
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
+  protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
-    this.deps = buildRuleParams.getTotalDeps();
-    this.resolver = resolver;
+    this.buildDeps = buildRuleParams.getTotalBuildDeps();
+    this.targetGraphOnlyDeps = buildRuleParams.getTargetGraphOnlyDeps();
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
 
@@ -62,13 +60,8 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final String getFullyQualifiedName() {
-    return buildTarget.getFullyQualifiedName();
-  }
-
-  @Override
-  public final ImmutableSortedSet<BuildRule> getDeps() {
-    return deps.get();
+  public final ImmutableSortedSet<BuildRule> getBuildDeps() {
+    return buildDeps.get();
   }
 
   public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
@@ -77,6 +70,11 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   public final ImmutableSortedSet<BuildRule> deprecatedGetExtraDeps() {
     return extraDeps.get();
+  }
+
+  /** See {@link TargetNode#getTargetGraphOnlyDeps}. */
+  public final ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
+    return targetGraphOnlyDeps;
   }
 
   @Override
@@ -89,14 +87,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     if (clazz.isAnonymousClass()) {
       clazz = clazz.getSuperclass();
     }
-    return CaseFormat
-        .UPPER_CAMEL
-        .to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName())
-        .intern();
-  }
-
-  public final SourcePathResolver getResolver() {
-    return resolver;
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName()).intern();
   }
 
   @Override
@@ -105,22 +96,13 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final int compareTo(BuildRule that) {
-    if (this == that) {
-      return 0;
-    }
-
-    return this.getBuildTarget().compareTo(that.getBuildTarget());
-  }
-
-  @Override
   public final boolean equals(Object obj) {
     if (!(obj instanceof AbstractBuildRule)) {
       return false;
     }
     AbstractBuildRule that = (AbstractBuildRule) obj;
-    return Objects.equals(this.buildTarget, that.buildTarget) &&
-        Objects.equals(this.getType(), that.getType());
+    return Objects.equals(this.buildTarget, that.buildTarget)
+        && Objects.equals(this.getType(), that.getType());
   }
 
   @Override
@@ -137,5 +119,4 @@ public abstract class AbstractBuildRule implements BuildRule {
   public boolean isCacheable() {
     return true;
   }
-
 }

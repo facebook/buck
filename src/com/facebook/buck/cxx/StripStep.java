@@ -20,12 +20,9 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
-/**
- * Run strip on a binary.
- */
+/** Run strip on a binary. */
 public class StripStep extends ShellStep {
 
   private final ImmutableMap<String, String> environment;
@@ -69,5 +66,4 @@ public class StripStep extends ShellStep {
   public String getShortName() {
     return "strip";
   }
-
 }

@@ -16,81 +16,40 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
-/***
- * Provides meta-data about the version control repository the project being built is using.
- */
+/** * Provides meta-data about the version control repository the project being built is using. */
 public interface VersionControlCmdLineInterface {
-  /**
-   *
-   * @return true if project is using version control, and we support it (i.e. hg)
-   */
-  boolean isSupportedVersionControlSystem();
+  /** @return true if project is using version control, and we support it (i.e. hg) */
+  boolean isSupportedVersionControlSystem() throws InterruptedException;
 
   /**
-   * @param name Bookmark name, e.g. master
-   * @return Global revision ID for given name
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  String revisionId(String name) throws VersionControlCommandFailedException, InterruptedException;
-
-  /**
-   * @param name Bookmark name, e.g master
-   * @return Global revision ID for given name or {@link Optional#empty} if the bookmark doesn't
-   * exist or an error was encountered. If you want to handle the exception use
-   * {@link #revisionId(String)}
-   * @throws InterruptedException
-   */
-  Optional<String> revisionIdOrAbsent(String name) throws InterruptedException;
-
-  /**
-   *
-   * @return Revision ID for current tip
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  String currentRevisionId() throws VersionControlCommandFailedException, InterruptedException;
-
-  /**
-   *
-   * @param revisionIdOne
-   * @param revisionIdTwo
-   * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  String commonAncestor(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException;
-
-  /**
-   * @param revisionIdOne
-   * @param revisionIdTwo
-   * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo or
-   * {@link Optional#empty()} is there is no common ancestor or an error was encountered. If you
-   * want to handle the error use {@link #commonAncestor(String, String)}
-   * @throws InterruptedException
-   */
-  Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
-      throws InterruptedException;
-
-  /**
-   *
-   * @param revisionIdOne
-   * @param revisionIdTwo
+   * @param baseRevision
+   * @param tipRevision
    * @return the produced diff between two revisions
    * @throws VersionControlCommandFailedException
    * @throws InterruptedException
    */
-  String diffBetweenRevisions(String revisionIdOne, String revisionIdTwo)
+  String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException;
 
   /**
-   *
+   * @param baseRevision
+   * @param tipRevision
+   * @return the produced diff between two revisions or {@link Optional#empty}
+   * @throws InterruptedException
+   */
+  default Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
+      throws InterruptedException {
+    try {
+      return Optional.of(diffBetweenRevisions(baseRevision, tipRevision));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
+
+  /**
    * @param fromRevisionId
    * @return files changed from the given revision.
    * @throws VersionControlCommandFailedException
@@ -99,23 +58,6 @@ public interface VersionControlCmdLineInterface {
   ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException;
 
-  /**
-   *
-   * @param revisionId
-   * @return Unix timestamp of given revisionId (in seconds)
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException;
-
-  /**
-   * It receives a list of bookmarks and returns a map of bookmarks to revision ids.
-   * @return a map of bookmark to revision id.
-   * @throws InterruptedException
-   * @throws VersionControlCommandFailedException
-   */
-  ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
+  FastVersionControlStats fastVersionControlStats()
       throws InterruptedException, VersionControlCommandFailedException;
-
 }

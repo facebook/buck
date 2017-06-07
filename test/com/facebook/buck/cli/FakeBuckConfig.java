@@ -27,10 +27,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Implementation of {@link BuckConfig} with no data, or only the data specified by
- * {@link FakeBuckConfig.Builder#setSections(ImmutableMap)}}. This makes it possible to get an
- * instance of a {@link BuckConfig} without reading {@code .buckconfig} files from disk. Designed
- * exclusively for testing.
+ * Implementation of {@link BuckConfig} with no data, or only the data specified by {@link
+ * FakeBuckConfig.Builder#setSections(ImmutableMap)}}. This makes it possible to get an instance of
+ * a {@link BuckConfig} without reading {@code .buckconfig} files from disk. Designed exclusively
+ * for testing.
  */
 public class FakeBuckConfig {
 

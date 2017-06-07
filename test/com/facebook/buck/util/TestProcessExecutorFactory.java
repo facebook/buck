@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.testutil.TestConsole;
-
 import java.io.PrintStream;
 
 public class TestProcessExecutorFactory implements ProcessExecutorFactory {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -23,10 +24,10 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -37,52 +38,41 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Responsible for running the React Native JS packager in order to generate a single {@code .js}
  * bundle along with resources referenced by the javascript code.
  */
-public class ReactNativeBundle
-    extends AbstractBuildRule
+public class ReactNativeBundle extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   public static final String JS_BUNDLE_OUTPUT_DIR_FORMAT = "__%s_js__/";
   public static final String RESOURCES_OUTPUT_DIR_FORMAT = "__%s_res__/";
   public static final String SOURCE_MAP_OUTPUT_FORMAT = "__%s_source_map__/source.map";
 
-  @AddToRuleKey
-  private final SourcePath entryPath;
+  @AddToRuleKey private final SourcePath entryPath;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
-  @AddToRuleKey
-  private final boolean isUnbundle;
+  @AddToRuleKey private final boolean isUnbundle;
 
-  @AddToRuleKey
-  private final boolean isIndexedUnbundle;
+  @AddToRuleKey private final boolean isIndexedUnbundle;
 
-  @AddToRuleKey
-  private final boolean isDevMode;
+  @AddToRuleKey private final boolean isDevMode;
 
-  @AddToRuleKey
-  private final boolean exposeSourceMap;
+  @AddToRuleKey private final boolean exposeSourceMap;
 
-  @AddToRuleKey
-  private final Tool jsPackager;
+  @AddToRuleKey private final Tool jsPackager;
 
-  @AddToRuleKey
-  private final ReactNativePlatform platform;
+  @AddToRuleKey private final ReactNativePlatform platform;
 
-  @AddToRuleKey
-  private final String bundleName;
+  @AddToRuleKey private final String bundleName;
 
-  @AddToRuleKey
-  private final Optional<String> packagerFlags;
+  @AddToRuleKey private final Optional<String> packagerFlags;
 
   private final Path jsOutputDir;
   private final Path resource;
@@ -90,7 +80,6 @@ public class ReactNativeBundle
 
   protected ReactNativeBundle(
       BuildRuleParams ruleParams,
-      SourcePathResolver resolver,
       SourcePath entryPath,
       ImmutableSortedSet<SourcePath> srcs,
       boolean isUnbundle,
@@ -101,7 +90,7 @@ public class ReactNativeBundle
       Optional<String> packagerFlags,
       Tool jsPackager,
       ReactNativePlatform platform) {
-    super(ruleParams, resolver);
+    super(ruleParams);
     this.entryPath = entryPath;
     this.srcs = srcs;
     this.isUnbundle = isUnbundle;
@@ -120,20 +109,36 @@ public class ReactNativeBundle
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Generate the normal outputs.
     final Path jsOutput = jsOutputDir.resolve(bundleName);
     final Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), jsOutput.getParent()));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resource));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutputPath.getParent()));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), depFile.getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), jsOutput.getParent())));
 
-    appendWorkerSteps(steps, jsOutput, sourceMapOutputPath, depFile);
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), resource)));
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                sourceMapOutputPath.getParent())));
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), depFile.getParent())));
+
+    appendWorkerSteps(steps, context, jsOutput, sourceMapOutputPath, depFile);
 
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
@@ -143,6 +148,7 @@ public class ReactNativeBundle
 
   private void appendWorkerSteps(
       ImmutableList.Builder<Step> stepBuilder,
+      BuildContext context,
       Path outputFile,
       Path sourceMapOutputPath,
       Path depFile) {
@@ -150,19 +156,23 @@ public class ReactNativeBundle
     // Setup the temp dir.
     final Path tmpDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
-    stepBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDir));
+    stepBuilder.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), tmpDir)));
 
     // Run the bundler.
     ReactNativeBundleWorkerStep workerStep =
         new ReactNativeBundleWorkerStep(
             getProjectFilesystem(),
             tmpDir,
-            jsPackager.getCommandPrefix(getResolver()),
+            jsPackager.getCommandPrefix(context.getSourcePathResolver()),
             packagerFlags,
             platform,
             isUnbundle,
             isIndexedUnbundle,
-            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+            getProjectFilesystem()
+                .resolve(context.getSourcePathResolver().getAbsolutePath(entryPath)),
             isDevMode,
             getProjectFilesystem().resolve(outputFile),
             getProjectFilesystem().resolve(resource),
@@ -174,16 +184,17 @@ public class ReactNativeBundle
         new ReactNativeDepsWorkerStep(
             getProjectFilesystem(),
             tmpDir,
-            jsPackager.getCommandPrefix(getResolver()),
+            jsPackager.getCommandPrefix(context.getSourcePathResolver()),
             packagerFlags,
             platform,
-            getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
+            getProjectFilesystem()
+                .resolve(context.getSourcePathResolver().getAbsolutePath(entryPath)),
             getProjectFilesystem().resolve(depFile));
     stepBuilder.add(depsWorkerStep);
   }
 
   public SourcePath getJSBundleDir() {
-    return new BuildTargetSourcePath(getBuildTarget(), jsOutputDir);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), jsOutputDir);
   }
 
   public Path getResources() {
@@ -212,28 +223,33 @@ public class ReactNativeBundle
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-    return Optional.of(srcs);
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    // note, sorted set is intentionally converted to a hash set to achieve constant time look-up
+    return ImmutableSet.copyOf(srcs)::contains;
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return (SourcePath path) -> false;
+  }
+
+  @Override
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // Use the generated depfile to determinate which sources ended up being used.
     ImmutableMap<Path, SourcePath> pathToSourceMap =
-        Maps.uniqueIndex(srcs, getResolver()::getAbsolutePath);
+        Maps.uniqueIndex(srcs, context.getSourcePathResolver()::getAbsolutePath);
     Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
     for (String line : getProjectFilesystem().readLines(depFile)) {
-      Path path = getProjectFilesystem().getRootPath().getFileSystem().getPath(line);
+      Path path = getProjectFilesystem().getPath(line);
       SourcePath sourcePath = pathToSourceMap.get(path);
       if (sourcePath == null) {
         throw new IOException(
             String.format(
                 "%s: entry path '%s' transitively uses source file not preset in `srcs`: %s",
-                getBuildTarget(),
-                entryPath,
-                path));
+                getBuildTarget(), entryPath, path));
       }
       inputs.add(sourcePath);
     }
@@ -242,10 +258,8 @@ public class ReactNativeBundle
   }
 
   @Override
-  public Path getPathToOutput() {
-    return exposeSourceMap
-      ? sourceMapOutputPath
-      : jsOutputDir;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(), exposeSourceMap ? sourceMapOutputPath : jsOutputDir);
   }
-
 }

@@ -17,24 +17,22 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 /**
- * Utility class to iterate over the lines present in one or more input
- * strings, buffers, or arrays given a {@link LineHandler} callback.
- * <p>
- * Whenever possible, the input buffer is directly passed back to your
- * {@code LineHandler} callback (with adjusted {@link Buffer#position() position}
- * and {@link Buffer#limit() limit}), to avoid copies and allocations.
- * <p>
- * If a line spans more than one input buffer or string, this class
- * will handle concatenating data until an end-of-line is reached
- * (or the {@code LineHandler} is closed).
- * <p>
- * Supports Unix end-of-line ({@code \n}), Windows end-of-line ({@code \r\n}), and Mac
+ * Utility class to iterate over the lines present in one or more input strings, buffers, or arrays
+ * given a {@link LineHandler} callback.
+ *
+ * <p>Whenever possible, the input buffer is directly passed back to your {@code LineHandler}
+ * callback (with adjusted {@link Buffer#position() position} and {@link Buffer#limit() limit}), to
+ * avoid copies and allocations.
+ *
+ * <p>If a line spans more than one input buffer or string, this class will handle concatenating
+ * data until an end-of-line is reached (or the {@code LineHandler} is closed).
+ *
+ * <p>Supports Unix end-of-line ({@code \n}), Windows end-of-line ({@code \r\n}), and Mac
  * end-of-line ({@code \r}).
  *
  * @see CharLineHandler
@@ -44,92 +42,94 @@ public final class LineIterating {
   private static final int INITIAL_BUFFER_CAPACITY = 256;
 
   private enum ScanResult {
-      NEWLINE,
-      CARRIAGE_RETURN,
-      OTHER
+    NEWLINE,
+    CARRIAGE_RETURN,
+    OTHER
   }
 
   private interface BufferOperations<T extends Buffer> {
     T createBuffer(int initialBufferCapacity);
+
     T createSubBuffer(T buffer, int fromIndex, int toIndex);
+
     ScanResult scanAt(T buffer, int index);
+
     void appendBuffers(T buffer, T bufferToAppend);
   }
 
   private static final BufferOperations<CharBuffer> CHAR_BUFFER_OPERATIONS =
-    new BufferOperations<CharBuffer>() {
-      @Override
-      public CharBuffer createBuffer(int initialBufferCapacity) {
-        return CharBuffer.allocate(initialBufferCapacity);
-      }
-
-      @Override
-      public CharBuffer createSubBuffer(CharBuffer buffer, int fromIndex, int toIndex) {
-        CharBuffer subBuffer = buffer.duplicate();
-        subBuffer.position(fromIndex).limit(toIndex);
-        return subBuffer;
-      }
-
-      @Override
-      public ScanResult scanAt(CharBuffer buffer, int index) {
-        switch (buffer.get(index)) {
-          case '\n':
-            return ScanResult.NEWLINE;
-          case '\r':
-            return ScanResult.CARRIAGE_RETURN;
-          default:
-            return ScanResult.OTHER;
+      new BufferOperations<CharBuffer>() {
+        @Override
+        public CharBuffer createBuffer(int initialBufferCapacity) {
+          return CharBuffer.allocate(initialBufferCapacity);
         }
-      }
 
-      @Override
-      public void appendBuffers(CharBuffer buffer, CharBuffer bufferToAppend) {
-        buffer.put(bufferToAppend);
-      }
-    };
+        @Override
+        public CharBuffer createSubBuffer(CharBuffer buffer, int fromIndex, int toIndex) {
+          CharBuffer subBuffer = buffer.duplicate();
+          subBuffer.position(fromIndex).limit(toIndex);
+          return subBuffer;
+        }
+
+        @Override
+        public ScanResult scanAt(CharBuffer buffer, int index) {
+          switch (buffer.get(index)) {
+            case '\n':
+              return ScanResult.NEWLINE;
+            case '\r':
+              return ScanResult.CARRIAGE_RETURN;
+            default:
+              return ScanResult.OTHER;
+          }
+        }
+
+        @Override
+        public void appendBuffers(CharBuffer buffer, CharBuffer bufferToAppend) {
+          buffer.put(bufferToAppend);
+        }
+      };
 
   private static final BufferOperations<ByteBuffer> BYTE_BUFFER_OPERATIONS =
-    new BufferOperations<ByteBuffer>() {
-      @Override
-      public ByteBuffer createBuffer(int initialBufferCapacity) {
-        return ByteBuffer.allocate(initialBufferCapacity);
-      }
-
-      @Override
-      public ByteBuffer createSubBuffer(ByteBuffer buffer, int fromIndex, int toIndex) {
-        ByteBuffer subBuffer = buffer.duplicate();
-        subBuffer.position(fromIndex).limit(toIndex);
-        return subBuffer;
-      }
-
-      @Override
-      public ScanResult scanAt(ByteBuffer buffer, int index) {
-        switch (buffer.get(index)) {
-          case 0x0A:
-            return ScanResult.NEWLINE;
-          case 0x0D:
-            return ScanResult.CARRIAGE_RETURN;
-          default:
-            return ScanResult.OTHER;
+      new BufferOperations<ByteBuffer>() {
+        @Override
+        public ByteBuffer createBuffer(int initialBufferCapacity) {
+          return ByteBuffer.allocate(initialBufferCapacity);
         }
-      }
 
-      @Override
-      public void appendBuffers(ByteBuffer buffer, ByteBuffer bufferToAppend) {
-        buffer.put(bufferToAppend);
-      }
-    };
+        @Override
+        public ByteBuffer createSubBuffer(ByteBuffer buffer, int fromIndex, int toIndex) {
+          ByteBuffer subBuffer = buffer.duplicate();
+          subBuffer.position(fromIndex).limit(toIndex);
+          return subBuffer;
+        }
+
+        @Override
+        public ScanResult scanAt(ByteBuffer buffer, int index) {
+          switch (buffer.get(index)) {
+            case 0x0A:
+              return ScanResult.NEWLINE;
+            case 0x0D:
+              return ScanResult.CARRIAGE_RETURN;
+            default:
+              return ScanResult.OTHER;
+          }
+        }
+
+        @Override
+        public void appendBuffers(ByteBuffer buffer, ByteBuffer bufferToAppend) {
+          buffer.put(bufferToAppend);
+        }
+      };
 
   // Utility class, do not instantiate.
-  private LineIterating() { }
+  private LineIterating() {}
 
   private abstract static class LineHandler<T extends Buffer> implements AutoCloseable {
     private T buffer;
     private boolean sawCarriageReturn;
 
     /**
-     * Callback handler invoked once per line (not including any
-     * end-of-line sequences).
+     * Callback handler invoked once per line (not including any end-of-line sequences).
      *
      * @return true to continue iterating over lines, false to stop.
      */
@@ -155,22 +155,21 @@ public final class LineIterating {
   }
 
   /**
-   * Stateful callback handler passed to
-   * {@link LineIterating#iterateByLines(CharSequence, CharLineHandler)} and
-   * {@link LineIterating#iterateByLines(CharBuffer, CharLineHandler)}.
-   * <p>
-   * Subclass this and provide a {@link LineHandler#handleLine(Buffer)} callback
-   * to receive each line of input.
-   * <p>
-   * This class is <i>not</i> thread-safe.
-   * <p>
-   * The method {@link LineHandler#handleLine(Buffer)} will be invoked once per line
-   * (not including any end-of-line sequences -- note that this means
-   * a line can be empty if there's a sequence of EOLs.)
-   * <p>
-   * You <i>must</i> call {@link #close()} after the last chunk of input has
-   * been provided to this object, at which point the last line (if
-   * any) will be passed back to {@link LineHandler#handleLine(Buffer)}.
+   * Stateful callback handler passed to {@link LineIterating#iterateByLines(CharSequence,
+   * CharLineHandler)} and {@link LineIterating#iterateByLines(CharBuffer, CharLineHandler)}.
+   *
+   * <p>Subclass this and provide a {@link LineHandler#handleLine(Buffer)} callback to receive each
+   * line of input.
+   *
+   * <p>This class is <i>not</i> thread-safe.
+   *
+   * <p>The method {@link LineHandler#handleLine(Buffer)} will be invoked once per line (not
+   * including any end-of-line sequences -- note that this means a line can be empty if there's a
+   * sequence of EOLs.)
+   *
+   * <p>You <i>must</i> call {@link #close()} after the last chunk of input has been provided to
+   * this object, at which point the last line (if any) will be passed back to {@link
+   * LineHandler#handleLine(Buffer)}.
    */
   public abstract static class CharLineHandler extends LineHandler<CharBuffer> {
     public CharLineHandler() {
@@ -183,22 +182,21 @@ public final class LineIterating {
   }
 
   /**
-   * Stateful callback handler passed to
-   * {@link LineIterating#iterateByLines(byte[], ByteLineHandler)} and
-   * {@link LineIterating#iterateByLines(ByteBuffer, ByteLineHandler)}.
-   * <p>
-   * Subclass this and provide a {@link LineHandler#handleLine(Buffer)} callback
-   * to receive each line of input.
-   * <p>
-   * This class is <i>not</i> thread-safe.
-   * <p>
-   * The method {@link LineHandler#handleLine(Buffer)} will be invoked once per line
-   * (not including any end-of-line sequences -- note that this means
-   * a line can be empty if there's a sequence of EOLs.)
-   * <p>
-   * You <i>must</i> call {@link #close()} after the last chunk of input has
-   * been provided to this object, at which point the last line (if
-   * any) will be passed back to {@link LineHandler#handleLine(Buffer)}.
+   * Stateful callback handler passed to {@link LineIterating#iterateByLines(byte[],
+   * ByteLineHandler)} and {@link LineIterating#iterateByLines(ByteBuffer, ByteLineHandler)}.
+   *
+   * <p>Subclass this and provide a {@link LineHandler#handleLine(Buffer)} callback to receive each
+   * line of input.
+   *
+   * <p>This class is <i>not</i> thread-safe.
+   *
+   * <p>The method {@link LineHandler#handleLine(Buffer)} will be invoked once per line (not
+   * including any end-of-line sequences -- note that this means a line can be empty if there's a
+   * sequence of EOLs.)
+   *
+   * <p>You <i>must</i> call {@link #close()} after the last chunk of input has been provided to
+   * this object, at which point the last line (if any) will be passed back to {@link
+   * LineHandler#handleLine(Buffer)}.
    */
   public abstract static class ByteLineHandler extends LineHandler<ByteBuffer> {
     public ByteLineHandler() {
@@ -211,12 +209,11 @@ public final class LineIterating {
   }
 
   /**
-   * Iterates over an input {@link CharSequence string} by lines,
-   * invoking your implementation of {@link LineHandler#handleLine(Buffer)}
-   * once for each line in the input.
-   * <p>
-   * If your input contains long lines split across multiple strings, you can call this method more
-   * than once, passing the same {@link CharLineHandler} to each invocation.
+   * Iterates over an input {@link CharSequence string} by lines, invoking your implementation of
+   * {@link LineHandler#handleLine(Buffer)} once for each line in the input.
+   *
+   * <p>If your input contains long lines split across multiple strings, you can call this method
+   * more than once, passing the same {@link CharLineHandler} to each invocation.
    *
    * @param str Input string containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code str}.
@@ -226,15 +223,14 @@ public final class LineIterating {
   }
 
   /**
-   * Iterates over an input {@link CharBuffer} by lines, invoking your implementation of
-   * {@link LineHandler#handleLine(Buffer)} once for each line in
-   * the input.
-   * <p>
-   * If your input contains long lines split across multiple buffers, you can call this method more
-   * than once, passing the same {@link CharLineHandler} to each invocation.
-   * <p>
-   * Consumes the entire {@code buffer}, starting at its current
-   * position. After returning, its position is set to its limit.
+   * Iterates over an input {@link CharBuffer} by lines, invoking your implementation of {@link
+   * LineHandler#handleLine(Buffer)} once for each line in the input.
+   *
+   * <p>If your input contains long lines split across multiple buffers, you can call this method
+   * more than once, passing the same {@link CharLineHandler} to each invocation.
+   *
+   * <p>Consumes the entire {@code buffer}, starting at its current position. After returning, its
+   * position is set to its limit.
    *
    * @param buffer Input character buffer containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code buffer}.
@@ -244,13 +240,11 @@ public final class LineIterating {
   }
 
   /**
-   * Iterates over an input byte array by lines, invoking your implementation of
-   * {@link ByteLineHandler#handleLine(Buffer)} once for each line in
-   * the input.
+   * Iterates over an input byte array by lines, invoking your implementation of {@link
+   * ByteLineHandler#handleLine(Buffer)} once for each line in the input.
    *
-   * If your input contains long lines split across multiple byte
-   * arrays, you can call this method more than once, passing the same
-   * {@link ByteLineHandler} to each invocation.
+   * <p>If your input contains long lines split across multiple byte arrays, you can call this
+   * method more than once, passing the same {@link ByteLineHandler} to each invocation.
    *
    * @param bytes Input byte array containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code bytes}.
@@ -261,16 +255,14 @@ public final class LineIterating {
   }
 
   /**
-   * Iterates over an input {@link ByteBuffer} by lines, invoking
-   * {@link ByteLineHandler#handleLine(Buffer)} once for each line in
-   * the input.
-   * <p>
-   * If your input contains long lines split across multiple byte
-   * arrays, you can call this method more than once, passing the same
-   * {@link ByteLineHandler} to each invocation.
-   * <p>
-   * Consumes the entire {@code buffer}, starting at its current
-   * position. After returning, its position is set to its limit.
+   * Iterates over an input {@link ByteBuffer} by lines, invoking {@link
+   * ByteLineHandler#handleLine(Buffer)} once for each line in the input.
+   *
+   * <p>If your input contains long lines split across multiple byte arrays, you can call this
+   * method more than once, passing the same {@link ByteLineHandler} to each invocation.
+   *
+   * <p>Consumes the entire {@code buffer}, starting at its current position. After returning, its
+   * position is set to its limit.
    *
    * @param buffer Input byte buffer containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code bytes}.
@@ -289,14 +281,15 @@ public final class LineIterating {
     for (lineEndPos = 0; shouldContinue && lineEndPos < lineBuffer.limit(); lineEndPos++) {
       switch (bufferOperations.scanAt(lineBuffer, lineEndPos)) {
         case NEWLINE:
-          shouldContinue = dispatchHandler(
-              lineBuffer, lineHandler, bufferOperations, lineStartPos, lineEndPos);
+          shouldContinue =
+              dispatchHandler(lineBuffer, lineHandler, bufferOperations, lineStartPos, lineEndPos);
           lineStartPos = lineEndPos + 1;
           break;
         case CARRIAGE_RETURN:
           if (lineHandler.sawCarriageReturn) {
-            shouldContinue = dispatchHandler(
-                lineBuffer, lineHandler, bufferOperations, lineStartPos, lineEndPos);
+            shouldContinue =
+                dispatchHandler(
+                    lineBuffer, lineHandler, bufferOperations, lineStartPos, lineEndPos);
             // We don't add 1 here because this is the "previous" line's carriage return
             // and the carriage return we're on is the start of the "next" line.
             lineStartPos = lineEndPos;
@@ -305,8 +298,9 @@ public final class LineIterating {
           break;
         case OTHER:
           if (lineHandler.sawCarriageReturn) {
-            shouldContinue = dispatchHandler(
-                lineBuffer, lineHandler, bufferOperations, lineStartPos, lineEndPos);
+            shouldContinue =
+                dispatchHandler(
+                    lineBuffer, lineHandler, bufferOperations, lineStartPos, lineEndPos);
             lineStartPos = lineEndPos;
           }
           break;
@@ -358,9 +352,7 @@ public final class LineIterating {
   }
 
   private static <T extends Buffer> void appendToLineHandlerBuffer(
-      LineHandler<T> lineHandler,
-      BufferOperations<T> bufferOperations,
-      T buffer) {
+      LineHandler<T> lineHandler, BufferOperations<T> bufferOperations, T buffer) {
     // We had a partial line left over from the last time we were invoked.
     // Concatenate the two chunks of data and send them together.
     int neededCapacity = lineHandler.buffer.remaining() + buffer.remaining();

@@ -24,25 +24,22 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public class IosReactNativeLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -54,7 +51,7 @@ public class IosReactNativeLibraryIntegrationTest {
   }
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
@@ -64,24 +61,22 @@ public class IosReactNativeLibraryIntegrationTest {
   public void testBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
-        workspace.getPath(
-            BuildTargets.getGenPath(
-                filesystem,
-                BuildTargetFactory.newInstance(
-                    "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-                "%s")));
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+            "%s"));
   }
 
   @Test
   public void testUnbundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
-        workspace.getPath(
-            BuildTargets.getGenPath(
-                filesystem,
-                BuildTargetFactory.newInstance(
-                    "//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-                "%s")));
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+            "%s"));
   }
 
   @Test
@@ -90,12 +85,13 @@ public class IosReactNativeLibraryIntegrationTest {
         .runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle,no-debug")
         .assertSuccess();
 
-    Path appDir = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            BuildTargetFactory.newInstance(
-                "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-            "%s/DemoApp.app"));
+    Path appDir =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem,
+                BuildTargetFactory.newInstance(
+                    "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
+                "%s/DemoApp.app"));
     assertTrue(Files.isDirectory(appDir));
 
     Path bundle = appDir.resolve("Apps/DemoApp/DemoApp.bundle");
@@ -105,30 +101,28 @@ public class IosReactNativeLibraryIntegrationTest {
   @Test
   public void testShowOutputReturnsPathToJSBundleFile() throws IOException {
     String target = "//js:DemoAppJS";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "targets", "--show-output", target);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-output", target);
     result.assertSuccess();
-    Path path = BuildTargets.getGenPath(
-        filesystem,
-        BuildTargetFactory.newInstance(target),
-        ReactNativeBundle.JS_BUNDLE_OUTPUT_DIR_FORMAT);
-    assertThat(
-        result.getStdout().trim().split(" ")[1],
-        Matchers.equalTo(path.toString()));
+    Path path =
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            ReactNativeBundle.JS_BUNDLE_OUTPUT_DIR_FORMAT);
+    assertThat(result.getStdout().trim().split(" ")[1], Matchers.equalTo(path.toString()));
   }
 
   @Test
   public void testShowOutputReturnsSourceMapWithSourceMapFlavor() throws IOException {
     String target = "//js:DemoAppJS#source_map";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "targets", "--show-output", target);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-output", target);
     result.assertSuccess();
-    Path path = BuildTargets.getGenPath(
-        filesystem,
-        BuildTargetFactory.newInstance(target),
-        ReactNativeBundle.SOURCE_MAP_OUTPUT_FORMAT);
-    assertThat(
-        result.getStdout().trim().split(" ")[1],
-        Matchers.equalTo(path.toString()));
+    Path path =
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            ReactNativeBundle.SOURCE_MAP_OUTPUT_FORMAT);
+    assertThat(result.getStdout().trim().split(" ")[1], Matchers.equalTo(path.toString()));
   }
 }

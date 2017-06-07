@@ -18,14 +18,10 @@ package com.facebook.buck.httpserver;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
-
+import java.io.IOException;
 import org.eclipse.jetty.server.Request;
 
-import java.io.IOException;
-
-/**
- * Handles requests to the root URI, {@code /}.
- */
+/** Handles requests to the root URI, {@code /}. */
 class IndexHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   IndexHandlerDelegate() {

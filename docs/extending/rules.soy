@@ -5,6 +5,7 @@
 
 {call buck.header}
   {param title: 'Adding Custom Rules to Buck' /}
+  {param navid: 'extending_rules' /}
   {param description}
     This isn't currently possible at this time unless you fork
     Buck. If you do fork Buck, this is how you can add new rules. Once
@@ -17,7 +18,9 @@
 As of the writing of this document, the only official way to add rules
 to Buck is to fork the project and modify the source. We will, at some
 point, construct a beautiful and elegant extensions API. Until
-then....
+then, you'll want to have the documentation of our internal{sp}
+<a href='{ROOT}javadoc/'>API</a> handy, and then...
+
 
 <p>
 
@@ -158,6 +161,8 @@ more about what you can do within Buck:
 
 </div> // close overview
 
-{call buck.footer /}
+{call buck.footer}
+  {param navid: 'extending_rules' /}
+{/call}
 
 {/template}

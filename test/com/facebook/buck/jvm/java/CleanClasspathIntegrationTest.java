@@ -22,19 +22,17 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Integration test to verify that when a {@code java_library} rule is built, the classpath that is
@@ -42,13 +40,14 @@ import java.nio.file.Path;
  */
 public class CleanClasspathIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testJavaLibraryRuleDoesNotIncludeItsOwnOldOutputOnTheClasspath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "classpath_corruption_regression", tmp);
+  public void testJavaLibraryRuleDoesNotIncludeItsOwnOldOutputOnTheClasspath()
+      throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "classpath_corruption_regression", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
@@ -66,11 +65,9 @@ public class CleanClasspathIntegrationTest {
     // Overwrite the existing BUCK file, redefining the java_library rule to exclude Bar.java from
     // its srcs.
     Path buildFile = workspace.getPath("BUCK");
-    String newBuildFileContents = Joiner.on('\n').join(
-        "java_library(",
-        "  name = 'example',",
-        "  srcs = [ 'Foo.java' ], ",
-        ")");
+    String newBuildFileContents =
+        Joiner.on('\n')
+            .join("java_library(", "  name = 'example',", "  srcs = [ 'Foo.java' ], ", ")");
     Files.write(buildFile, newBuildFileContents.getBytes(StandardCharsets.UTF_8));
 
     // Rebuilding //:example should fail even though Bar.class is in

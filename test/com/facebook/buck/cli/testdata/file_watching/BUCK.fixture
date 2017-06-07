@@ -4,7 +4,3 @@ java_binary(
     '//java/com/example/activity:activity',
   ],
 )
-
-project_config(
-  src_target = ':app',
-)

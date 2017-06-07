@@ -22,17 +22,14 @@ public class BuildableProperties {
   public static final BuildableProperties NONE = new BuildableProperties();
 
   public static enum Kind {
-    /**
-     * Whether this rule exists only in an Android project.
-     */
+    /** Whether this rule exists only in an Android project. */
     ANDROID,
 
     LIBRARY,
 
     /**
-     * Whether or not this rule is considered a packaging rule.  Packaging rules
-     *   (like java_binary) are rules that package up all of their transitive dependencies in their
-     *   final output.
+     * Whether or not this rule is considered a packaging rule. Packaging rules (like java_binary)
+     * are rules that package up all of their transitive dependencies in their final output.
      */
     PACKAGING,
 

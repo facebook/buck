@@ -16,19 +16,22 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 import java.nio.file.Path;
 
@@ -40,29 +43,33 @@ import java.nio.file.Path;
 public class RemoteFile extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final URI uri;
+
   @AddToRuleKey(stringify = true)
   private final HashCode sha1;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
+
   private final Downloader downloader;
+
+  @AddToRuleKey(stringify = true)
+  private final Type type;
 
   public RemoteFile(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Downloader downloader,
       URI uri,
       HashCode sha1,
-      String out) {
-    super(params, resolver);
+      String out,
+      Type type) {
+    super(params);
 
     this.uri = uri;
     this.sha1 = sha1;
     this.downloader = downloader;
+    this.type = type;
 
-    output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        params.getBuildTarget(),
-        "%s/" + out);
+    output = BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s/" + out);
   }
 
   @Override
@@ -70,16 +77,33 @@ public class RemoteFile extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path tempFile = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/" + output.getFileName());
+    Path tempFile =
+        BuildTargets.getScratchPath(
+            getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tempFile.getParent()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent())));
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
-    steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+    if (type == Type.EXPLODED_ZIP) {
+
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output)));
+      steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output));
+    } else {
+      steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+    }
+    if (type == Type.EXECUTABLE) {
+      steps.add(new MakeExecutableStep(getProjectFilesystem(), output));
+    }
 
     buildableContext.recordArtifact(output);
 
@@ -87,7 +111,13 @@ public class RemoteFile extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+  }
+
+  enum Type {
+    DATA,
+    EXECUTABLE,
+    EXPLODED_ZIP,
   }
 }

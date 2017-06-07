@@ -16,10 +16,10 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.tree;
 
-import javax.swing.tree.TreeNode;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import javax.swing.tree.TreeNode;
 
 public class BuckTreeNodeTarget implements TreeNode {
 
@@ -71,6 +71,7 @@ public class BuckTreeNodeTarget implements TreeNode {
   public Enumeration children() {
     return new Enumeration<TreeNode>() {
       private int currentIndex = 0;
+
       @Override
       public boolean hasMoreElements() {
         if (currentIndex >= BuckTreeNodeTarget.this.mFileError.size()) {

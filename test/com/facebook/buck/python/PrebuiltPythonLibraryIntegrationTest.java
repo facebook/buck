@@ -25,36 +25,31 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class PrebuiltPythonLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_package", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_package", tmp);
     workspace.setUp();
-
 
     // EGGs are versioned to the version of Python they were built it, but the EGG for this test
     // doesn't actually matter.
-    String version = new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
-        .getPythonEnvironment(new DefaultProcessExecutor(new TestConsole(Verbosity.SILENT)))
-        .getPythonVersion()
-        .getVersionString();
+    String version =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPythonEnvironment(new DefaultProcessExecutor(new TestConsole(Verbosity.SILENT)))
+            .getPythonVersion()
+            .getVersionString();
     if (!version.startsWith("2.6")) {
       workspace.move(
-          "dist/package-0.1-py2.6.egg",
-          "dist/package-0.1-py" + version.substring(0, 3) + ".egg");
+          "dist/package-0.1-py2.6.egg", "dist/package-0.1-py" + version.substring(0, 3) + ".egg");
     }
   }
 
@@ -66,5 +61,4 @@ public class PrebuiltPythonLibraryIntegrationTest {
     ProcessResult whlResults = workspace.runBuckCommand("run", "//:main_whl");
     whlResults.assertSuccess();
   }
-
 }

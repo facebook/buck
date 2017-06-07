@@ -18,22 +18,21 @@ package com.facebook.buck.hashing;
 
 import com.google.common.hash.Hasher;
 
-import java.nio.charset.StandardCharsets;
-
 public class StringHashing {
   // Utility class, do not instantiate.
-  private StringHashing() { }
+  private StringHashing() {}
 
   /**
-   * Encodes the string in UTF-8, then hashes the length of the encoded
-   * UTF-8 bytes followed by the bytes themselves.
+   * Encodes the length of the string in UTF-16 code units, then the UTF-16 code units of the
+   * string.
    *
-   * Useful to ensure hash codes are different when multiple strings
-   * are hashed in order ("foo" then "bar" should hash differently from "foobar").
+   * <p>Useful to ensure hash codes are different when multiple strings are hashed in order ("foo"
+   * then "bar" should hash differently from "foobar").
    */
   public static void hashStringAndLength(Hasher hasher, String string) {
-    byte[] utf8Bytes = string.getBytes(StandardCharsets.UTF_8);
-    hasher.putInt(utf8Bytes.length);
-    hasher.putBytes(utf8Bytes);
+    // We used to hash the UTF-8 bytes of the string, but it takes
+    // a lot of unnecessary CPU and memory to do so.
+    hasher.putInt(string.length());
+    hasher.putUnencodedChars(string);
   }
 }

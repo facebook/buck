@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class DefaultBuildableContext implements BuildableContext {
@@ -42,5 +41,4 @@ public class DefaultBuildableContext implements BuildableContext {
   public void recordArtifact(Path pathToArtifact) {
     recorder.recordArtifact(pathToArtifact);
   }
-
 }

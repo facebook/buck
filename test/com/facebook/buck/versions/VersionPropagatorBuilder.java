@@ -23,25 +23,27 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-class VersionPropagatorBuilder
-    extends
-    AbstractNodeBuilder<
-        VersionPropagatorBuilder.Arg,
-        VersionPropagatorBuilder.VersionPropagatorDescription> {
+public class VersionPropagatorBuilder
+    extends AbstractNodeBuilder<
+        VersionPropagatorDescriptionArg.Builder, VersionPropagatorDescriptionArg,
+        VersionPropagatorBuilder.VersionPropagatorDescription, BuildRule> {
 
   public VersionPropagatorBuilder(BuildTarget target) {
-    super(
-        new VersionPropagatorDescription(),
-        target);
+    super(new VersionPropagatorDescription(), target);
   }
 
   public VersionPropagatorBuilder(String target) {
@@ -49,7 +51,7 @@ class VersionPropagatorBuilder
   }
 
   public VersionPropagatorBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
@@ -63,7 +65,7 @@ class VersionPropagatorBuilder
 
   public VersionPropagatorBuilder setVersionedDeps(
       ImmutableSortedMap<BuildTarget, Optional<Constraint>> deps) {
-    arg.versionedDeps = deps;
+    getArgForPopulating().setVersionedDeps(deps);
     return this;
   }
 
@@ -76,32 +78,39 @@ class VersionPropagatorBuilder
   public VersionPropagatorBuilder setVersionedDeps(String target, Constraint constraint) {
     return setVersionedDeps(
         new AbstractMap.SimpleEntry<>(
-            BuildTargetFactory.newInstance(target),
-            Optional.of(constraint)));
+            BuildTargetFactory.newInstance(target), Optional.of(constraint)));
   }
 
-  public static class Arg {
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableSortedMap<BuildTarget, Optional<Constraint>> versionedDeps =
-        ImmutableSortedMap.of();
+  public VersionPropagatorBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
+    getArgForPopulating().setTests(tests);
+    return this;
   }
 
-  public static class VersionPropagatorDescription implements VersionPropagator<Arg> {
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractVersionPropagatorDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+    @Value.NaturalOrder
+    ImmutableSortedMap<BuildTarget, Optional<Constraint>> getVersionedDeps();
+  }
+
+  public static class VersionPropagatorDescription
+      implements VersionPropagator<VersionPropagatorDescriptionArg> {
 
     @Override
-    public Arg createUnpopulatedConstructorArg() {
-      return new Arg();
+    public Class<VersionPropagatorDescriptionArg> getConstructorArgType() {
+      return VersionPropagatorDescriptionArg.class;
     }
 
     @Override
-    public <A extends Arg> BuildRule createBuildRule(
+    public BuildRule createBuildRule(
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
-        A args) throws NoSuchBuildTargetException {
+        CellPathResolver cellRoots,
+        VersionPropagatorDescriptionArg args)
+        throws NoSuchBuildTargetException {
       throw new IllegalStateException();
     }
-
   }
-
 }

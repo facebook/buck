@@ -55,8 +55,7 @@ public class AppendableLogRecord extends LogRecord {
     } catch (ConcurrentModificationException originalException) {
       // This way we may be at least able to figure out where offending log was created.
       throw new ConcurrentModificationException(
-          "Concurrent modification when logging for message " + getMessage(),
-          originalException);
+          "Concurrent modification when logging for message " + getMessage(), originalException);
     }
   }
 }

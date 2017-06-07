@@ -1,5 +1,20 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/eden:eden',
-  ],
+java_library(
+    name = "eden",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/eden:eden",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
+        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
+        "//src/com/facebook/buck/io:transport",
+        "//src/com/facebook/buck/io/unixsocket:unixsocket",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//third-party/java/eden:eden-thrift-bindings",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

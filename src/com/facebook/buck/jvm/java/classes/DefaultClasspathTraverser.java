@@ -18,16 +18,13 @@ package com.facebook.buck.jvm.java.classes;
 
 import java.io.IOException;
 
-/**
- * @see ClasspathTraversal
- */
+/** @see ClasspathTraversal */
 public class DefaultClasspathTraverser implements ClasspathTraverser {
 
-  public DefaultClasspathTraverser() { }
+  public DefaultClasspathTraverser() {}
 
   @Override
   public void traverse(ClasspathTraversal traversal) throws IOException {
     traversal.traverse();
   }
-
 }

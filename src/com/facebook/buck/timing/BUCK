@@ -1,1 +1,9 @@
-standard_java_library()
+java_library(
+    name = "timing",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/log/views:views",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)

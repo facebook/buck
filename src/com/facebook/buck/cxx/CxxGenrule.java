@@ -18,25 +18,19 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.shell.Genrule;
 
 public class CxxGenrule extends NoopBuildRule implements HasOutputName {
 
   private final BuildRuleResolver resolver;
   private final String output;
 
-  public CxxGenrule(
-      BuildRuleParams params,
-      SourcePathResolver pathResolver,
-      BuildRuleResolver resolver,
-      String output) {
-    super(params, pathResolver);
+  public CxxGenrule(BuildRuleParams params, BuildRuleResolver resolver, String output) {
+    super(params);
     this.resolver = resolver;
     this.output = output;
   }
@@ -47,9 +41,9 @@ public class CxxGenrule extends NoopBuildRule implements HasOutputName {
   }
 
   public SourcePath getGenrule(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    BuildRule rule =
-        resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
-    return new BuildTargetSourcePath(rule.getBuildTarget());
+    Genrule rule =
+        (Genrule)
+            resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
+    return rule.getSourcePathToOutput();
   }
-
 }

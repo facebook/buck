@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'rust_test()' /}
+    {param navid: 'rule_rust_test' /}
     {param prettify: true /}
     {param description}
       A rust_test() rule runs Rust tests.
@@ -14,8 +15,8 @@
 {param status: 'UNFROZEN' /}
 {param overview}
 <p>
-  A rust_test() rule builds a Rust test native executable from the supplied set of Rust source files
-  and dependencies and runs this test.
+  A rust_test() rule builds a Rust test native executable from the supplied set of Rust source
+  files and dependencies and runs this test.
 </p>
 <p>
   {call rust_common.supported_language_version /}
@@ -28,6 +29,16 @@
   {param name: 'name' /}
   {param desc}
   The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'framework' /}
+  {param default : true /}
+  {param desc}
+  Use the standard test framework. If this is set to false, then the result is a normal
+  executable which requires a <code>main()</code>, etc. It is still expected to accept the
+  same command-line parameters and produce the same output as the test framework.
   {/param}
 {/call}
 

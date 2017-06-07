@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,22 +29,26 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 
 /**
- * Tracks which classes are actually read by the compiler by providing a special
- * {@link JavaFileManager}.
+ * Tracks which classes are actually read by the compiler by providing a special {@link
+ * JavaFileManager}.
  */
 class ClassUsageTracker {
   private static final String FILE_SCHEME = "file";
   private static final String JAR_SCHEME = "jar";
-  private static final String JIMFS_SCHEME = "jimfs";  // Used in tests
+  private static final String JIMFS_SCHEME = "jimfs"; // Used in tests
+
+  // Examples: First anonymous class is Foo$1.class. First local class named Bar is Foo$1Bar.class.
+  private static final Pattern LOCAL_OR_ANONYMOUS_CLASS = Pattern.compile("^.*\\$\\d.*.class$");
 
   private final ImmutableSetMultimap.Builder<Path, Path> resultBuilder =
       ImmutableSetMultimap.builder();
@@ -53,8 +56,8 @@ class ClassUsageTracker {
   @Nullable private ImmutableSetMultimap<Path, Path> result;
 
   /**
-   * Returns a {@link JavaFileManager} that tracks which files are opened. Provide this to
-   * {@code JavaCompiler.getTask} anytime file usage tracking is desired.
+   * Returns a {@link JavaFileManager} that tracks which files are opened. Provide this to {@code
+   * JavaCompiler.getTask} anytime file usage tracking is desired.
    */
   public StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner) {
     return new UsageTrackingFileManager(inner);
@@ -73,7 +76,7 @@ class ClassUsageTracker {
   }
 
   private void addReadFile(FileObject fileObject) {
-    Preconditions.checkState(result == null);  // Can't add after having built
+    Preconditions.checkState(result == null); // Can't add after having built
 
     if (!(fileObject instanceof JavaFileObject)) {
       return;
@@ -93,9 +96,17 @@ class ClassUsageTracker {
     final String[] split = jarUriSchemeSpecificPart.split("!/");
     Preconditions.checkState(split.length == 2);
 
+    if (isLocalOrAnonymousClass(split[1])) {
+      // The compiler reads local and anonymous classes because of the naive way in which it
+      // completes the enclosing class, but changes to them can't affect compilation of dependent
+      // classes so we don't need to consider them "used".
+      return;
+    }
+
     URI jarFileUri = URI.create(split[0]);
-    Preconditions.checkState(jarFileUri.getScheme().equals(FILE_SCHEME) ||
-        jarFileUri.getScheme().equals(JIMFS_SCHEME));  // jimfs is used in tests
+    Preconditions.checkState(
+        jarFileUri.getScheme().equals(FILE_SCHEME)
+            || jarFileUri.getScheme().equals(JIMFS_SCHEME)); // jimfs is used in tests
     Path jarFilePath = Paths.get(jarFileUri);
 
     // Using URI.create here for de-escaping
@@ -104,6 +115,10 @@ class ClassUsageTracker {
     Preconditions.checkState(jarFilePath.isAbsolute());
     Preconditions.checkState(!classPath.isAbsolute());
     resultBuilder.put(jarFilePath, classPath);
+  }
+
+  private boolean isLocalOrAnonymousClass(String className) {
+    return LOCAL_OR_ANONYMOUS_CLASS.matcher(className).matches();
   }
 
   private class UsageTrackingFileManager extends ForwardingStandardJavaFileManager {
@@ -165,53 +180,61 @@ class ClassUsageTracker {
 
     @Override
     public Iterable<JavaFileObject> list(
-        Location location,
-        String packageName,
-        Set<JavaFileObject.Kind> kinds,
-        boolean recurse) throws IOException {
-      return new TrackingIterable(super.list(location, packageName, kinds, recurse));
+        Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse)
+        throws IOException {
+      Iterable<JavaFileObject> listIterator = super.list(location, packageName, kinds, recurse);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return listIterator;
+      } else {
+        return new TrackingIterable(listIterator);
+      }
     }
 
     @Override
     public JavaFileObject getJavaFileForInput(
-        Location location,
-        String className,
-        JavaFileObject.Kind kind) throws IOException {
-      return fileTracker.wrap(super.getJavaFileForInput(location, className, kind));
+        Location location, String className, JavaFileObject.Kind kind) throws IOException {
+      JavaFileObject javaFileObject = super.getJavaFileForInput(location, className, kind);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return javaFileObject;
+      } else {
+        return fileTracker.wrap(javaFileObject);
+      }
     }
 
     @Override
     public JavaFileObject getJavaFileForOutput(
-        Location location,
-        String className,
-        JavaFileObject.Kind kind,
-        FileObject sibling) throws IOException {
-      return fileTracker.wrap(super.getJavaFileForOutput(
-          location,
-          className,
-          kind,
-          sibling));
+        Location location, String className, JavaFileObject.Kind kind, FileObject sibling)
+        throws IOException {
+      JavaFileObject javaFileObject =
+          super.getJavaFileForOutput(location, className, kind, sibling);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return javaFileObject;
+      } else {
+        return fileTracker.wrap(javaFileObject);
+      }
     }
 
     @Override
-    public FileObject getFileForInput(
-        Location location,
-        String packageName,
-        String relativeName) throws IOException {
-      return fileTracker.wrap(super.getFileForInput(location, packageName, relativeName));
+    public FileObject getFileForInput(Location location, String packageName, String relativeName)
+        throws IOException {
+      FileObject fileObject = super.getFileForInput(location, packageName, relativeName);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return fileObject;
+      } else {
+        return fileTracker.wrap(fileObject);
+      }
     }
 
     @Override
     public FileObject getFileForOutput(
-        Location location,
-        String packageName,
-        String relativeName,
-        FileObject sibling) throws IOException {
-      return fileTracker.wrap(super.getFileForOutput(
-          location,
-          packageName,
-          relativeName,
-          sibling));
+        Location location, String packageName, String relativeName, FileObject sibling)
+        throws IOException {
+      FileObject fileObject = super.getFileForOutput(location, packageName, relativeName, sibling);
+      if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
+        return fileObject;
+      } else {
+        return fileTracker.wrap(fileObject);
+      }
     }
 
     private class TrackingIterable implements Iterable<JavaFileObject> {
@@ -242,8 +265,7 @@ class ClassUsageTracker {
 
       @Override
       public JavaFileObject next() {
-        JavaFileObject result = fileTracker.wrap(inner.next());
-        return result;
+        return fileTracker.wrap(inner.next());
       }
 
       @Override

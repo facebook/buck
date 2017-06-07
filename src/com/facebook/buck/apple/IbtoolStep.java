@@ -21,13 +21,12 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.List;
 
 /**
- * {@link ShellStep} implementation which invokes Apple's {@code ibtool}
- * utility to compile {@code XIB} files to {@code NIB} files.
+ * {@link ShellStep} implementation which invokes Apple's {@code ibtool} utility to compile {@code
+ * XIB} files to {@code NIB} files.
  */
 class IbtoolStep extends ShellStep {
 
@@ -60,14 +59,9 @@ class IbtoolStep extends ShellStep {
 
     commandBuilder.addAll(ibtoolCommand);
     commandBuilder.add(
-        "--output-format", "human-readable-text",
-        "--notices",
-        "--warnings",
-        "--errors");
+        "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
     commandBuilder.addAll(additionalParams);
-    commandBuilder.add(
-        filesystem.resolve(output).toString(),
-        filesystem.resolve(input).toString());
+    commandBuilder.add(filesystem.resolve(output).toString(), filesystem.resolve(input).toString());
 
     return commandBuilder.build();
   }

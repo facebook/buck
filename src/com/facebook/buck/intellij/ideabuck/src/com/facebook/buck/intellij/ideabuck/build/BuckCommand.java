@@ -16,9 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.build;
 
-/**
- * The descriptor of buck command.
- */
+/** The descriptor of buck command. */
 public class BuckCommand {
   private static final String VERBOSITY_TAG = "-v";
   private static final String VERBOSITY_LEVEL = "0";
@@ -26,10 +24,8 @@ public class BuckCommand {
   public static final BuckCommand BUILD = new BuckCommand("build", VERBOSITY_TAG, VERBOSITY_LEVEL);
   public static final BuckCommand INSTALL =
       new BuckCommand("install", VERBOSITY_TAG, VERBOSITY_LEVEL);
-  public static final BuckCommand KILL =
-      new BuckCommand("kill");
-  public static final BuckCommand TEST =
-      new BuckCommand("test", VERBOSITY_TAG, VERBOSITY_LEVEL);
+  public static final BuckCommand KILL = new BuckCommand("kill");
+  public static final BuckCommand TEST = new BuckCommand("test", VERBOSITY_TAG, VERBOSITY_LEVEL);
   public static final BuckCommand UNINSTALL =
       new BuckCommand("uninstall", VERBOSITY_TAG, VERBOSITY_LEVEL);
   public static final BuckCommand PROJECT =
@@ -38,10 +34,9 @@ public class BuckCommand {
   public static final BuckCommand QUERY = new BuckCommand("query", "--json");
   public static final BuckCommand AUDIT_OWNER = new BuckCommand("audit", "owner", "--json");
 
-  /**
-   * Command name passed to buck.
-   */
+  /** Command name passed to buck. */
   private final String name;
+
   private final String[] parameters;
 
   private BuckCommand(String name, String... parameters) {

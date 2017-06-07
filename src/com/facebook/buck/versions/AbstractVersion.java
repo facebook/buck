@@ -17,7 +17,6 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -27,5 +26,4 @@ abstract class AbstractVersion {
   public static final Version DEFAULT = Version.of("default");
 
   abstract String getName();
-
 }

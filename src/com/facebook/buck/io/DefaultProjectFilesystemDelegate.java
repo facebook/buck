@@ -16,12 +16,11 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.event.EventBus;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -41,7 +40,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   }
 
   @Override
-  public void ensureConcreteFilesExist(EventBus eventBus) {
+  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     return;
   }
 

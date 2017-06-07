@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -34,8 +33,7 @@ import java.util.Arrays;
 public class UnixArchive {
   private static final byte[] EXPECTED_GLOBAL_HEADER =
       "!<arch>\n".getBytes(StandardCharsets.US_ASCII);
-  private static final byte[] ENTRY_MARKER =
-      "#1/".getBytes(StandardCharsets.US_ASCII);
+  private static final byte[] ENTRY_MARKER = "#1/".getBytes(StandardCharsets.US_ASCII);
   private static final byte[] END_OF_HEADER_MAGIC = {0x60, 0x0A};
 
   private static final int LENGTH_OF_FILENAME_SIZE = 13;
@@ -52,8 +50,8 @@ public class UnixArchive {
   private final NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder;
 
   public UnixArchive(
-      FileChannel fileChannel,
-      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
+      FileChannel fileChannel, NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder)
+      throws IOException {
     this.fileChannel = fileChannel;
     this.buffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileChannel.size());
     if (!checkHeader(buffer)) {
@@ -84,7 +82,7 @@ public class UnixArchive {
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
-  private ImmutableList<UnixArchiveEntry> loadEntries()  {
+  private ImmutableList<UnixArchiveEntry> loadEntries() {
     int offset = EXPECTED_GLOBAL_HEADER.length;
     int headerOffset = offset;
 
@@ -121,8 +119,8 @@ public class UnixArchive {
       try {
         filename = nulTerminatedCharsetDecoder.decodeString(buffer);
       } catch (CharacterCodingException e) {
-        throw new HumanReadableException(e,
-            "Unable to read filename from buffer starting at %d", offset);
+        throw new HumanReadableException(
+            e, "Unable to read filename from buffer starting at %d", offset);
       }
       offset += filenameLength;
 
@@ -149,10 +147,8 @@ public class UnixArchive {
   }
 
   @VisibleForTesting
-  static String readStringWithLength(
-      ByteBuffer buffer,
-      int length,
-      CharsetDecoder charsetDecoder) throws CharacterCodingException {
+  static String readStringWithLength(ByteBuffer buffer, int length, CharsetDecoder charsetDecoder)
+      throws CharacterCodingException {
     int oldLimit = buffer.limit();
 
     buffer.limit(buffer.position() + length);
@@ -163,14 +159,14 @@ public class UnixArchive {
     return result;
   }
 
-  private int getIntFromStringAtRange(int len, CharsetDecoder decoder)  {
+  private int getIntFromStringAtRange(int len, CharsetDecoder decoder) {
     String filenameLengthString;
     int offset = buffer.position();
     try {
       filenameLengthString = readStringWithLength(buffer, len, decoder);
     } catch (CharacterCodingException e) {
-      throw new HumanReadableException(e,
-          "Unable to read int from buffer (range %d..%d)", offset, offset + len);
+      throw new HumanReadableException(
+          e, "Unable to read int from buffer (range %d..%d)", offset, offset + len);
     }
     return Integer.parseInt(filenameLengthString.trim());
   }
@@ -181,8 +177,8 @@ public class UnixArchive {
     try {
       filenameLengthString = readStringWithLength(buffer, len, decoder);
     } catch (CharacterCodingException e) {
-      throw new HumanReadableException(e,
-          "Unable to read long from buffer (range %d..%d)", offset, offset + len);
+      throw new HumanReadableException(
+          e, "Unable to read long from buffer (range %d..%d)", offset, offset + len);
     }
     return Long.parseLong(filenameLengthString.trim());
   }

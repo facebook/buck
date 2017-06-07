@@ -1,0 +1,3 @@
+[java]
+  abi_generation_mode = source_with_deps
+  source_abi_verification_mode = fail

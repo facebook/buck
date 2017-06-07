@@ -22,21 +22,19 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ContentAgnosticRuleKeyFactoryTest {
 
@@ -62,32 +60,28 @@ public class ContentAgnosticRuleKeyFactoryTest {
     assertThat(ruleKey1, Matchers.not(Matchers.equalTo(ruleKey2)));
   }
 
-  private RuleKey createRuleKey (
-      ProjectFilesystem fileSystem,
-      String filename,
-      String fileContents
-  ) throws Exception {
-
+  private RuleKey createRuleKey(ProjectFilesystem fileSystem, String filename, String fileContents)
+      throws Exception {
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Path depOutput = Paths.get(filename);
     FakeBuildRule dep =
         resolver.addToIndex(
-            new FakeBuildRule(
-                BuildTargetFactory.newInstance("//:dep"),
-                fileSystem,
-                pathResolver));
+            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), fileSystem, pathResolver));
     dep.setOutputFile(depOutput.toString());
-    fileSystem.writeContentsToPath(fileContents, dep.getPathToOutput());
+    fileSystem.writeContentsToPath(
+        fileContents, pathResolver.getRelativePath(dep.getSourcePathToOutput()));
 
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut(filename)
-            .setSrcs(ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
+            .setSrcs(ImmutableList.of(dep.getSourcePathToOutput()))
             .build(resolver, fileSystem);
 
-    return new ContentAgnosticRuleKeyFactory(0, pathResolver).build(rule);
+    return new ContentAgnosticRuleKeyFactory(fieldLoader, pathResolver, ruleFinder).build(rule);
   }
 }

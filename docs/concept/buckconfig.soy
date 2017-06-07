@@ -12,6 +12,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: '.buckconfig' /}
+    {param navid: 'concept_buckconfig' /}
     {param description}
       An optional file that contains configuration information for Buck.
     {/param}
@@ -70,6 +71,18 @@ interpreted as a list of strings separated by
 spaces, <code>flags=-foo "-bar \u0429"</code> will result in two
 strings: <q>foo</q> and <q>-bar &#1065;</q>.
 
+<p>
+Finally, other fields' values can be interpolated by including <code>$(config &lt;section&gt;.&lt;field&gt;)</code> inside of a value. For example, if you want to use the go vendor path in a custom setting, you can use:
+</p>
+
+<p>
+{literal}<pre class="prettyprint lang-ini">
+[custom_section]
+custom_value = $(config go.vendor_path)
+</pre>
+{/literal}
+</p>
+
 <h2>.buckconfig.local</h2>
 
 The root of your project may also contain a second configuration file
@@ -103,6 +116,7 @@ The following sections are recognized by Buck:
     'build',
     'buildfile',
     'cache',
+    'client',
     'color',
     'credentials',
     'cxx',
@@ -296,6 +310,16 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'apple' /}
+  {param name: 'codesign' /}
+  {param example_value: '//path/to/target/that/creates:codesign' /}
+  {param description}
+    To override a default path to <code>codesign</code>, set this setting to either a file path or
+    buck target.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
   {param name: 'test_log' /}
   {param description}
     When running Apple tests via <code>xctool</code>, Buck can set environment variables to
@@ -372,10 +396,10 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'apple' /}
   {param name: 'device_helper_path' /}
-  {param example_value: 'third-party/iOSConsole/iOSConsole' /}
+  {param example_value: 'third-party/fbsimctl/fbsimctl' /}
   {param description}
     If you want to have Buck be able to install to devices, you need to provide the path to the{sp}
-    <a href="https://github.com/samdmarshall/SDMMobileDevice"><code>iOSConsole</code></a> binary.
+    <a href="https://github.com/facebook/FBSimulatorControl/"><code>fbsimctl</code></a> binary.
   {/param}
 {/call}
 
@@ -639,6 +663,15 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'rule_key_caching' /}
+  {param example_value: 'true' /}
+  {param description}
+    Enables caching of rule key calculations between builds when using the Buck daemon.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'buildfile' /}
   {param description}
@@ -653,6 +686,15 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     This sets a list of paths to files that will be automatically included by every build file.
     This is equivalent to calling {call buck.fn_include_defs /} in every build file.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'buildfile' /}
+  {param name: 'name' /}
+  {param example_value: 'TARGETS' /}
+  {param description}
+    The name of {call buck.build_file /}s within a project. This defaults to <code>BUCK</code>.
   {/param}
 {/call}
 
@@ -709,8 +751,38 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'dir_mode' /}
   {param example_value: 'readwrite' /}
   {param description}
-    Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
-    directory-based caching ({call buckconfig.cache_mode /} must contain <code>dir</code>).
+    Dictates if the cache is <code>readonly</code>, <code>passthrough</code> or
+    {sp}<code>readwrite</code> (default) when using directory-based caching
+    {sp}({call buckconfig.cache_mode /} must contain <code>dir</code>).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir_cache_names' /}
+  {param description}
+    A comma-separated list of names used to configure multiple dir caches.  The caches will be used{sp}
+    <b>serially</b> in the order in which their names are specified here.  If an artifact is found
+    further along in the list, an attempt to store it in the caches earlier in the list will be
+    made.  In the following example, if the artifact is found in the <code>warm</code> cache, it
+    will not be stored in the <code>local</code> cache. Note: if <code>[cache] dir</code> or <code>[cache] dir_mode</code>{sp}
+    are found, then Buck will fall back to single dir cache more and <code>[cache] dir_cache_names</code>{sp}
+    will be completely ignored.
+  {/param}
+  {param raw_example}
+{literal}<pre class="prettyprint lang-ini">
+[cache]
+    mode = dir
+    dir_cache_names = warm, local
+
+[cache#warm]
+    dir = ~/prefetched_cache
+    dir_mode = readonly
+
+[cache#local]
+    dir = ~/buck_cache
+    dir_mode = readwrite
+</pre>{/literal}
   {/param}
 {/call}
 
@@ -800,9 +872,8 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
   {param description}
     This setting allows for the customization of how http cache errors appear to the user.  If the
-    text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache
-    when using {call buckconfig.cache_http_cache_names /}, or just <code>http</code>.  If the text
-    {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
+    text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache.
+    If the text {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
   {/param}
 {/call}
 
@@ -833,39 +904,6 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     Dictates if the cache is <code>readonly</code> (default) or <code>readwrite</code> when{sp}
     {call buckconfig.cache_serve_local_cache /} is enabled.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'http_cache_names' /}
-  {param description}
-    A comma-separated list of names used to configure multiple caches.  The caches will be used{sp}
-    <b>serially</b> in the order in which their names are specified here.  If an artifact is found
-    further along in the list, an attempt to store it in the caches earlier in the list will be
-    made.  In the following example, if the artifact is found in the <code>global</code> cache, it
-    will be stored in the <code>local</code> cache, but not <code>regional-ro</code> cache (as that
-    one is <code>readonly</code>.
-  {/param}
-  {param raw_example}
-{literal}<pre class="prettyprint lang-ini">
-[cache]
-    mode = http
-    http_cache_names = local, regional-ro, global
-
-[cache#regional-ro]
-    http_url = http://region.com/
-    http_timeout_seconds = 5
-    http_mode = readonly
-
-[cache#local]
-    http_url = http://local.co.uk/
-    http_timeout_seconds = 1
-
-[cache#global]
-    http_url = http://global.com/
-    http_timeout_seconds = 42
-</pre>{/literal}
   {/param}
 {/call}
 
@@ -1043,6 +1081,69 @@ $ buck targets --resolve-alias app#src_jar
 {/call}
 
 {call buckconfig.section}
+  {param name: 'client' /}
+  {param description}
+    This section includes settings that provide information about the caller.
+    Although these can be specified in <code>.buckconfig</code>, in practice,
+    they are specified exclusively on the command line:
+    <pre class="prettyprint lang-sh">
+$ buck --config client.id=tool-making-this-buck-invocation build buck
+    </pre>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'client' /}
+  {param name: 'id' /}
+  {param description}
+  It is good practice for tools that call Buck to identify themselves via{sp}
+  <code>--config client.id=&lt;toolname></code>. This makes it easier for
+  developers to audit the source of Buck invocations that they did not make
+  directly.
+  <p>
+  Note that the value of <code>client.id</code> is not factored into a build
+  rule's cache key. It is purely for auditing purposes.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'client' /}
+  {param name: 'skip-action-graph-cache' /}
+  {param description}
+  When Buck is run as a daemon, it caches the last Action Graph it used for a
+  build so that if the next build identifies the same set of targets, the
+  [possibly expensive] Action Graph construction step can be avoided. Because
+  only the last Action Graph is cached, it may be costly to interleave a small
+  build job among a series of incremental builds of an expensive rule:
+  {literal}<pre class="prettyprint lang-sh">
+$ buck build //big:expensive-rule            # Initial Action Graph.
+$ buck build //big:expensive-rule            # Action Graph is reused.
+$ buck build //library#compilation-database  # Evicts costly Action Graph.
+$ buck build //big:expensive-rule            # Action Graph is rebuilt.</pre>
+  {/literal}
+  <p>
+  Although this scenario may sound contrived, it is very common when other tools
+  may also be running <code>buck build</code> in the background. Work done by
+  IDEs and linters frequently fall into this category. In this case, the best
+  practice is to add <code>--config
+  client.skip-action-graph-cache=true</code> for any sort of "one-off" build
+  for which the cost of caching the Action Graph for the new build likely
+  outweights the benefit of evicting the Action Graph from the previous build.
+  As this is commonly the case for tools, this flag is frequently used in
+  concert with <code>--config client.id</code>:
+  {literal}<pre class="prettyprint lang-sh">
+$ buck build //big:expensive-rule            # Initial Action Graph.
+$ buck build //big:expensive-rule            # Action Graph is reused.
+$ buck build \                               # Cached Graph is unaffected.
+    --config client.skip-action-graph-cache=true \
+    --config client.id=nuclide \
+    //library#compilation-database
+$ buck build //big:expensive-rule            # Action Graph is reused.</pre>
+  {/literal}
+  {/param}
+{/call}
+
+{call buckconfig.section}
   {param name: 'color' /}
   {param description}
     This section configures colored output of Buck.
@@ -1146,6 +1247,16 @@ $ buck targets --resolve-alias app#src_jar
     If a remote file's URL starts with <code>mvn:</code>, that file (usually a jar) is supposed to
     come from a maven repo.  You can specify the repo to download from here, or by setting one or
     more repositories in {call buckconfig.maven_repositories /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'max_number_of_retries' /}
+  {param example_value: '3' /}
+  {param description}
+    In case buck is unable to download a file, it will retry specified number of times before
+    giving up.
   {/param}
 {/call}
 
@@ -1339,6 +1450,50 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '--plugin someplugin' /}
   {param description}
     The flags to pass to the archive indexer.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'gtest_dep' /}
+  {param example_value: '//third-party/gtest:gtest' /}
+  {param description}
+    The {call buck.build_rule /} to compile the <a href="https://github.com/google/googletest" target="_blank">Google Test</a> framework.
+  {/param}
+  {param raw_example}
+    <p>
+      If you had your Google Test code in <code>third-party/gtest/</code>, the {call buck.build_file /} in that directory would look something like this:
+    </p>
+    <pre class="prettyprint lang-py">
+{literal}
+cxx_library(
+  name = 'gtest',
+  srcs = subdir_glob([
+    'googletest/src/gtest-all.cc',
+    'googlemock/src/gmock-all.cc',
+    'googlemock/src/gmock_main.cc',
+  ]),
+  header_namespace = '',
+  exported_headers = subdir_glob([
+    ('googletest/include', '**/*.h'),
+    ('googlemock/include', '**/*.h'),
+  ]),
+  headers = subdir_glob([
+    ('googletest', 'src/*.cc'),
+    ('googletest', 'src/*.h'),
+    ('googlemock', 'src/*.cc'),
+    ('googlemock', 'src/*.h'),
+  ]),
+  platform_linker_flags = [
+    ('android', []),
+    ('', ['-lpthread']),
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+{/literal}
+    </pre>
   {/param}
 {/call}
 
@@ -1662,10 +1817,36 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
+  {param name: 'generated_sources_label_map' /}
+  {param example_value: 'generated_code_1 => __%name%_target1__, \n                       generated_code2 => __%name%_target2__' /}
+  {param description}
+    Allows adding folders with generated source code to IntelliJ project. These folders are added
+    when a target has a label specified in this option. In the example below, if
+    target <code>//app/target</code> has
+    label <code>generated_code1</code> folder <code>buck-out/gen/app/lib/__lib_target1__</code> will
+    be added to IntelliJ project.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
   {param name: 'remove_unused_libraries' /}
   {param example_value: 'true' /}
   {param description}
     Removes unused libraries from .idea/libraries.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'aggregate_android_resource_modules' /}
+  {param example_value: 'true' /}
+  {param description}
+    Forces <code>buck project</code> to aggregate modules with Android resources. This aggregation
+    is performed only if aggregation mode is not <code>none</code>.
+    <p/>
+    <b>Note:</b> using this type of aggregation disables Android layout editor provided by Android
+    plugin. The layout files can still be edited using the XML editor.
   {/param}
 {/call}
 
@@ -1750,13 +1931,30 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+
+{call buckconfig.section}
+  {param name: 'dx' /}
+  {param description}
+    This section controls how Buck invokes the dx tool.
+  {/param}
+{/call}
+
 {call buckconfig.entry}
-  {param section: 'java' /}
-  {param name: 'dx_threads' /}
+  {param section: 'dx' /}
+  {param name: 'max_threads' /}
   {param example_value: '8' /}
   {param description}
     The number of thread that will run the dexing steps. Since the dexing steps can use a lot of
     memory, it might be useful to set this to a lower value to avoid out-of-memory errors.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'dx' /}
+  {param name: 'max_heap_size' /}
+  {param example_value: '2g' /}
+  {param description}
+    This option specifies how much memory is available when running dx out of process.
   {/param}
 {/call}
 
@@ -2099,10 +2297,10 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'default_android_manifest' /}
   {param example_value: '//shared/AndroidManifest.xml' /}
   {param description}
-    The default manifest file that should be used when the <code>src_target</code> of a{sp}
-    {call buck.project_config /} rule is an Android rule (like {call buck.android_library /}), but
+    The default manifest file that should be used when a project is being generated for an Android
+    rule (like {call buck.android_library /}), but
     there is no <code>AndroidManifest.xml</code> file in the same directory as the{sp}
-    {call buck.build_file /} the {call buck.project_config /} is defined in.  IDEs for Android
+    {call buck.build_file /} the rule is defined in.  IDEs for Android
     projects need a manifest file, and this setting provides a convenient fallback without having
     boilerplate manifest files all over your project.
   {/param}
@@ -2138,7 +2336,7 @@ your <code>.buckjavaargs</code> file</a>:
     will silently ignore symlinks.
     </p>
     <p>
-    The default value is <code>allow</code>.
+    The default value is <code>warn</code>.
     </p>
   {/param}
 {/call}
@@ -2204,18 +2402,6 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'project' /}
-  {param name: 'temp_files' /}
-  {param example_value}{literal}^#.*#$, .*~$, .*\.swp${/literal}{/param}
-  {param description}
-    A comma-separated list of <code>java.util.regex.Pattern</code> regular expressions which match
-    temporary and backup files which should be ignored by Buck daemon filesystem monitoring.
-    Setting this property to match any temporary files created by your IDE or editor will avoid
-    unnecessary cache invalidation when using the Buck daemon.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'project' /}
   {param name: 'pre_process' /}
   {param example_value: 'scripts/pre_process_buck_project.py' /}
   {param description}
@@ -2252,28 +2438,10 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'project' /}
-  {param name: 'enable_build_file_sandboxing' /}
-  {param example_value: 'true' /}
-  {param description}
-    When set to <code>true</code> (the default is <code>false</code>), Buck will put restrictions
-    on importing arbitrary Python modules in {call buck.build_file /}s to make it harder to
-    accidentally violate assumptions about determinism of BUCK files and build rules. It will be
-    possible to import only whitelisted or sanitized modules, unrestricted import
-    behavior can be restored in a context by using
-    <a href="{ROOT}function/allow_unsafe_import.html"> <code>allow_unsafe_import()</code> </a>
-    function.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'project' /}
   {param name: 'build_file_import_whitelist' /}
   {param example_value: 'math, Foo' /}
   {param description}
-    A comma-separated list that configures which Python modules will be added to the build file
-    import whitelist in this project when
-    <a href="{ROOT}concept/buckconfig.html#project.enable_build_file_sandboxing"> build file sandboxing </a>
-    is enabled.
+    A comma-separated list that configures which Python modules can be imported in build files.
   {/param}
 {/call}
 
@@ -2570,6 +2738,17 @@ your <code>.buckjavaargs</code> file</a>:
   {param description}
     Default command-line flags passed to invocations of the rust compiler in{sp}
     <code>rust_library</code> rules, in addition to options set in <code>rustc_flags</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'unflavored_binaries' /}
+  {param example_value: 'true' /}
+  {param description}
+    Controls whether the output from <code>rust_binary</code> or <code>rust_test</code> rules
+    include a flavor from the platform in the path or not. Even unflavored, the path includes{sp}
+    <code>#binary</code>.
   {/param}
 {/call}
 

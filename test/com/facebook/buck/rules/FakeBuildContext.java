@@ -16,23 +16,28 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.google.common.collect.ImmutableList;
+import static org.easymock.EasyMock.createMock;
 
-/**
- * Facilitates creating a fake {@link BuildContext} for unit tests.
- */
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+
+/** Facilitates creating a fake {@link BuildContext} for unit tests. */
 public class FakeBuildContext {
 
   /** Utility class: do not instantiate. */
   private FakeBuildContext() {}
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
-  public static final BuildContext NOOP_CONTEXT = BuildContext.builder()
-      .setActionGraph(new ActionGraph(ImmutableList.of()))
-      .setJavaPackageFinder(new FakeJavaPackageFinder())
-      .setEventBus(BuckEventBusFactory.newInstance())
-      .build();
+  public static final BuildContext NOOP_CONTEXT =
+      withSourcePathResolver(createMock(SourcePathResolver.class));
 
+  public static BuildContext withSourcePathResolver(SourcePathResolver pathResolver) {
+    return BuildContext.builder()
+        .setSourcePathResolver(pathResolver)
+        .setJavaPackageFinder(new FakeJavaPackageFinder())
+        .setEventBus(BuckEventBusForTests.newInstance())
+        .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
+        .build();
+  }
 }

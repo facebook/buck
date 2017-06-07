@@ -17,30 +17,25 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.model.BuildTarget;
-
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
-/**
- * Test utility to build TestResults objects for use in test cases.
- */
+/** Test utility to build TestResults objects for use in test cases. */
 public class FakeTestResults {
   // Utility class, do not instantiate.
-  private FakeTestResults() { }
+  private FakeTestResults() {}
 
   private static final BuildTarget DUMMY_TARGET_FOR_TESTING =
-        BuildTarget.builder(Paths.get("/does/not/exist"), "//foo/bar", "baz").build();
+      BuildTarget.builder(Paths.get("/does/not/exist"), "//foo/bar", "baz").build();
 
   public static TestResults of(Iterable<? extends TestCaseSummary> testCases) {
     return withTestLogs(testCases, ImmutableList.of());
   }
 
   public static TestResults withTestLogs(
-      Iterable<? extends TestCaseSummary> testCases,
-      Iterable<Path> testLogs) {
+      Iterable<? extends TestCaseSummary> testCases, Iterable<Path> testLogs) {
     return TestResults.builder()
         .setBuildTarget(DUMMY_TARGET_FOR_TESTING)
         .setTestCases(testCases)
@@ -50,10 +45,10 @@ public class FakeTestResults {
 
   public static TestResults newFailedInstance(String name) {
     String testCaseName = name;
-    TestResultSummary testResultSummary = new TestResultSummary(
-        testCaseName, null, ResultType.FAILURE, 0, null, null, null, null);
-    TestCaseSummary testCase = new TestCaseSummary(testCaseName,
-        ImmutableList.of(testResultSummary));
+    TestResultSummary testResultSummary =
+        new TestResultSummary(testCaseName, null, ResultType.FAILURE, 0, null, null, null, null);
+    TestCaseSummary testCase =
+        new TestCaseSummary(testCaseName, ImmutableList.of(testResultSummary));
     ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
     return FakeTestResults.of(testCases);
   }

@@ -24,15 +24,13 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Predicate;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
 public class LineIteratingTest {
   private TestLineHandler lineHandler;
@@ -228,13 +226,14 @@ public class LineIteratingTest {
   @Test
   public void inputBufferReusedForCallbacksIfNothingLeft() {
     final CharBuffer buf = CharBuffer.wrap("foo\nbar\nbaz\n");
-    LineIterating.CharLineHandler reuseLineHandler = new LineIterating.CharLineHandler(20) {
-        @Override
-        public boolean handleLine(CharBuffer line) {
-          assertThat(line, is(buf));
-          return true;
-        }
-      };
+    LineIterating.CharLineHandler reuseLineHandler =
+        new LineIterating.CharLineHandler(20) {
+          @Override
+          public boolean handleLine(CharBuffer line) {
+            assertThat(line, is(buf));
+            return true;
+          }
+        };
 
     LineIterating.iterateByLines(buf, reuseLineHandler);
   }
@@ -242,13 +241,14 @@ public class LineIteratingTest {
   @Test
   public void inputBufferNotReusedForCallbacksIfDataLeftInLineHandler() {
     final CharBuffer buf = CharBuffer.wrap("bar\n");
-    LineIterating.CharLineHandler reuseLineHandler = new LineIterating.CharLineHandler(20) {
-        @Override
-        public boolean handleLine(CharBuffer line) {
-          assertThat(line, not(is(buf)));
-          return true;
-        }
-      };
+    LineIterating.CharLineHandler reuseLineHandler =
+        new LineIterating.CharLineHandler(20) {
+          @Override
+          public boolean handleLine(CharBuffer line) {
+            assertThat(line, not(is(buf)));
+            return true;
+          }
+        };
 
     LineIterating.iterateByLines("no-newline-yet", reuseLineHandler);
     LineIterating.iterateByLines(buf, reuseLineHandler);

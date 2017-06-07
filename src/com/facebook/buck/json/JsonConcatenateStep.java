@@ -24,10 +24,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.io.IOException;
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 public class JsonConcatenateStep implements Step {
@@ -65,13 +63,8 @@ public class JsonConcatenateStep implements Step {
                   }
                 })
             .toSortedSet(Ordering.natural());
-    Path destination =
-        filesystem.getRootPath().resolve(output);
-    new JsonConcatenator(
-        filesToConcatenate,
-        destination,
-        filesystem)
-        .concatenate();
+    Path destination = filesystem.getRootPath().resolve(output);
+    new JsonConcatenator(filesToConcatenate, destination, filesystem).concatenate();
     return StepExecutionResult.SUCCESS;
   }
 
@@ -84,5 +77,4 @@ public class JsonConcatenateStep implements Step {
   public String getDescription(ExecutionContext context) {
     return description;
   }
-
 }

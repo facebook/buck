@@ -20,19 +20,20 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 public final class DiagnosticCleaner {
 
-  private static final Set<String> RECOVERABLE_ERRORS = new HashSet<String>() {{
-    add("compiler.err.cant.resolve.location");
-    add("compiler.err.doesnt.exist");
-  }};
+  private static final Set<String> RECOVERABLE_ERRORS =
+      new HashSet<String>() {
+        {
+          add("compiler.err.cant.resolve.location");
+          add("compiler.err.doesnt.exist");
+        }
+      };
 
-  private DiagnosticCleaner() {
-  }
+  private DiagnosticCleaner() {}
 
   public static List<Diagnostic<? extends JavaFileObject>> clean(
       List<Diagnostic<? extends JavaFileObject>> diagnostics) {
@@ -44,21 +45,22 @@ public final class DiagnosticCleaner {
   }
 
   private static void sortRecoverableErrorsLast(List<Diagnostic<? extends JavaFileObject>> result) {
-    result.sort((o1, o2) -> {
-      String code1 = o1.getCode();
-      String code2 = o2.getCode();
+    result.sort(
+        (o1, o2) -> {
+          String code1 = o1.getCode();
+          String code2 = o2.getCode();
 
-      if (isRecoverableErrorCode(code1)) {
-        if (isRecoverableErrorCode(code2)) {
+          if (isRecoverableErrorCode(code1)) {
+            if (isRecoverableErrorCode(code2)) {
+              return 0;
+            }
+            return 1;
+          } else if (isRecoverableErrorCode(code2)) {
+            return -1;
+          }
+
           return 0;
-        }
-        return 1;
-      } else if (isRecoverableErrorCode(code2)) {
-        return -1;
-      }
-
-      return 0;
-    });
+        });
   }
 
   private static List<Diagnostic<? extends JavaFileObject>> removeDuplicates(
@@ -77,7 +79,8 @@ public final class DiagnosticCleaner {
   }
 
   static String diagnosticToString(Diagnostic<? extends JavaFileObject> diagnostic) {
-    return String.format("%s %s %d %d %d %d %d %s",
+    return String.format(
+        "%s %s %d %d %d %d %d %s",
         diagnostic.getKind(),
         diagnostic.getSource(),
         diagnostic.getPosition(),

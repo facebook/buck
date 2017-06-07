@@ -1,0 +1,25 @@
+java_library(
+    name = "adapter",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        # Tools.jar is the compiler itself, and will already be present at runtime;
+        # we compile against a stub.
+        "//third-party/java/jdk:compiler-tree-api",
+
+        # api modules are included in the bootstrapper at runtime, so we don't need direct deps on them
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/jvm/java/abi/source:source",
+        "//src/com/facebook/buck/jvm/java/plugin:javac-plugin",
+        "//test/com/facebook/buck/jvm/java/abi/source:",
+        "//test/com/facebook/buck/jvm/java/plugin/adapter:",
+        "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    deps = [
+        # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
+        # internals or large libraries like Guava
+        "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
+    ],
+)

@@ -20,22 +20,29 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
+import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.keys.RuleKeyFactory;
+import com.facebook.buck.timing.ClockDuration;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
-
 import java.util.Optional;
+import javax.annotation.Nullable;
 
-/**
- * Base class for events about build rules.
- */
+/** Base class for events about build rules. */
 public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
+
   private final BuildRule rule;
 
-  protected BuildRuleEvent(BuildRule rule) {
-    super(EventKey.slowValueKey("BuildRuleEvent", rule.getFullyQualifiedName()));
+  /** Accumulated duration of work spent on this rule up until this event occurred. */
+  @Nullable protected ClockDuration duration;
+
+  protected BuildRuleEvent(EventKey eventKey, BuildRule rule) {
+    super(eventKey);
     this.rule = rule;
   }
 
@@ -44,97 +51,184 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     return rule;
   }
 
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public ClockDuration getDuration() {
+    Preconditions.checkState(isConfigured(), "Event was not configured yet.");
+    return Preconditions.checkNotNull(duration);
+  }
+
   @Override
   public String getValueString() {
     return rule.getFullyQualifiedName();
   }
 
-  public static Started started(BuildRule rule) {
-    return new Started(rule);
+  @Override
+  public final String getEventName() {
+    return "BuildRule" + getClass().getSimpleName();
   }
 
   public abstract boolean isRuleRunningAfterThisEvent();
 
+  private static EventKey createEventKey(BuildRule rule) {
+    return EventKey.slowValueKey("BuildRuleEvent", rule.getFullyQualifiedName());
+  }
+
+  public static Started started(BuildRule rule, BuildRuleDurationTracker tracker) {
+    return new Started(createEventKey(rule), rule, tracker);
+  }
+
   public static Finished finished(
-      BuildRule rule,
+      BeginningBuildRuleEvent beginning,
       BuildRuleKeys ruleKeys,
       BuildRuleStatus status,
       CacheResult cacheResult,
+      Optional<BuildId> origin,
       Optional<BuildRuleSuccessType> successType,
+      boolean willTryUploadToCache,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize,
-      Optional<Integer> inputsCount,
-      Optional<Long> inputsSize) {
+      Optional<BuildRuleDiagnosticData> diagnosticData) {
     return new Finished(
-        rule,
+        beginning,
         ruleKeys,
         status,
         cacheResult,
+        origin,
         successType,
+        willTryUploadToCache,
         outputHash,
         outputSize,
-        inputsCount,
-        inputsSize);
+        diagnosticData);
+  }
+
+  public static StartedRuleKeyCalc ruleKeyCalculationStarted(
+      BuildRule rule, BuildRuleDurationTracker tracker) {
+    return new StartedRuleKeyCalc(createEventKey(rule), rule, tracker);
+  }
+
+  public static FinishedRuleKeyCalc ruleKeyCalculationFinished(
+      StartedRuleKeyCalc started, RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    return new FinishedRuleKeyCalc(started, ruleKeyFactory);
   }
 
   public static Suspended suspended(
-      BuildRule rule,
-      RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    return new Suspended(rule, ruleKeyFactory);
+      BeginningBuildRuleEvent beginning, RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    return new Suspended(beginning, ruleKeyFactory);
   }
 
   public static Resumed resumed(
-      BuildRule rule,
-      RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    return new Resumed(rule, ruleKeyFactory);
+      BuildRule rule, BuildRuleDurationTracker tracker, RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    return new Resumed(createEventKey(rule), rule, tracker, ruleKeyFactory);
   }
 
-  public static class Started extends BuildRuleEvent {
-    protected Started(BuildRule rule) {
-      super(rule);
+  public static WillBuildLocally willBuildLocally(BuildRule rule) {
+    return new WillBuildLocally(rule);
+  }
+
+  /**
+   * A {@link BuildRuleEvent} that denotes beginning of computation for a particular {@link
+   * BuildRule}.
+   */
+  public abstract static class BeginningBuildRuleEvent extends BuildRuleEvent {
+
+    @JsonIgnore private final BuildRuleDurationTracker tracker;
+
+    public BeginningBuildRuleEvent(
+        EventKey eventKey, BuildRule rule, BuildRuleDurationTracker tracker) {
+      super(eventKey, rule);
+      this.tracker = tracker;
     }
 
     @Override
-    public boolean isRuleRunningAfterThisEvent() {
+    public void configure(
+        long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
+      super.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+      this.duration = tracker.doBeginning(getBuildRule(), timestamp, nanoTime);
+    }
+
+    @Override
+    public final boolean isRuleRunningAfterThisEvent() {
       return true;
     }
+  }
+
+  /**
+   * A {@link BuildRuleEvent} that denotes ending of computation for a particular {@link BuildRule}.
+   */
+  public abstract static class EndingBuildRuleEvent extends BuildRuleEvent {
+
+    @JsonIgnore private final BeginningBuildRuleEvent beginning;
+
+    public EndingBuildRuleEvent(BeginningBuildRuleEvent beginning) {
+      super(beginning.getEventKey(), beginning.getBuildRule());
+      this.beginning = beginning;
+    }
+
+    @JsonIgnore
+    public BeginningBuildRuleEvent getBeginningEvent() {
+      return beginning;
+    }
 
     @Override
-    public String getEventName() {
-      return "BuildRuleStarted";
+    public void configure(
+        long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
+      super.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+      long threadUserNanoDuration = threadUserNanoTime - beginning.getThreadUserNanoTime();
+      this.duration =
+          beginning.tracker.doEnding(getBuildRule(), timestamp, nanoTime, threadUserNanoDuration);
+    }
+
+    @Override
+    public final boolean isRuleRunningAfterThisEvent() {
+      return false;
     }
   }
 
-  public static class Finished extends BuildRuleEvent {
+  /**
+   * Marks the start of processing a build rule. We keep this as a distinct base class for
+   * subscribers who want to process start/rule-key-calc events separately.
+   */
+  public static class Started extends BeginningBuildRuleEvent {
+
+    private Started(EventKey eventKey, BuildRule rule, BuildRuleDurationTracker tracker) {
+      super(eventKey, rule, tracker);
+    }
+  }
+
+  /** Marks the end of processing a build rule. */
+  public static class Finished extends EndingBuildRuleEvent {
 
     private final BuildRuleStatus status;
     private final CacheResult cacheResult;
+    private final Optional<BuildId> origin;
     private final Optional<BuildRuleSuccessType> successType;
+    private final boolean willTryUploadToCache;
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
-    private final Optional<Integer> inputsCount;
-    private final Optional<Long> inputsSize;
+    Optional<BuildRuleDiagnosticData> diagnosticData;
 
-    protected Finished(
-        BuildRule rule,
+    private Finished(
+        BeginningBuildRuleEvent beginning,
         BuildRuleKeys ruleKeys,
         BuildRuleStatus status,
         CacheResult cacheResult,
+        Optional<BuildId> origin,
         Optional<BuildRuleSuccessType> successType,
+        boolean willTryUploadToCache,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize,
-        Optional<Integer> inputsCount,
-        Optional<Long> inputsSize) {
-      super(rule);
+        Optional<BuildRuleDiagnosticData> diagnosticData) {
+      super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
+      this.origin = origin;
       this.successType = successType;
+      this.willTryUploadToCache = willTryUploadToCache;
       this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
       this.outputSize = outputSize;
-      this.inputsCount = inputsCount;
-      this.inputsSize = inputsSize;
+      this.diagnosticData = diagnosticData;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -147,9 +241,19 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return cacheResult;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public Optional<BuildId> getOrigin() {
+      return origin;
+    }
+
     @JsonIgnore
     public Optional<BuildRuleSuccessType> getSuccessType() {
       return successType;
+    }
+
+    @JsonIgnore
+    public boolean isWillTryUploadToCache() {
+      return willTryUploadToCache;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -168,37 +272,23 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     }
 
     @JsonIgnore
-    public Optional<Integer> getInputsCount() {
-      return inputsCount;
-    }
-
-    @JsonIgnore
-    public Optional<Long> getInputsSize() {
-      return inputsSize;
+    public Optional<BuildRuleDiagnosticData> getDiagnosticData() {
+      return diagnosticData;
     }
 
     @Override
     public String toString() {
       String success = successType.isPresent() ? successType.get().toString() : "MISSING";
-      return String.format("BuildRuleFinished(%s): %s %s %s %s%s",
-          getBuildRule(),
+      return String.format(
+          "BuildRuleFinished(%s): %s %s %s %s%s",
+          getBuildRule().getFullyQualifiedName(),
           getStatus(),
           getCacheResult(),
           success,
           getRuleKeys().getRuleKey().toString(),
-          getRuleKeys().getInputRuleKey().isPresent() ?
-              " I" + getRuleKeys().getInputRuleKey().get().toString() :
-              "");
-    }
-
-    @Override
-    public boolean isRuleRunningAfterThisEvent() {
-      return false;
-    }
-
-    @Override
-    public String getEventName() {
-      return "BuildRuleFinished";
+          getRuleKeys().getInputRuleKey().isPresent()
+              ? " I" + getRuleKeys().getInputRuleKey().get().toString()
+              : "");
     }
 
     @JsonIgnore
@@ -216,12 +306,33 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     }
   }
 
-  public static class Suspended extends BuildRuleEvent {
+  /** Marks a rule is suspended from processing. */
+  public static class Suspended extends EndingBuildRuleEvent {
 
     private final String ruleKey;
 
-    protected Suspended(BuildRule rule, RuleKeyFactory<RuleKey> ruleKeyFactory) {
-      super(rule);
+    private Suspended(BeginningBuildRuleEvent beginning, RuleKeyFactory<RuleKey> ruleKeyFactory) {
+      super(beginning);
+      this.ruleKey = ruleKeyFactory.build(beginning.getBuildRule()).toString();
+    }
+
+    @JsonIgnore
+    public String getRuleKey() {
+      return ruleKey;
+    }
+  }
+
+  /** Marks the continuation of processing a rule. */
+  public static class Resumed extends BeginningBuildRuleEvent {
+
+    private final String ruleKey;
+
+    private Resumed(
+        EventKey eventKey,
+        BuildRule rule,
+        BuildRuleDurationTracker tracker,
+        RuleKeyFactory<RuleKey> ruleKeyFactory) {
+      super(eventKey, rule, tracker);
       this.ruleKey = ruleKeyFactory.build(rule).toString();
     }
 
@@ -229,59 +340,82 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public String getRuleKey() {
       return ruleKey;
     }
+  }
+
+  /**
+   * Marks the start of processing a rule to calculate its rule key. We overload this as both a rule
+   * start and rule key calc start event to generate less events and be more efficient.
+   */
+  private static class StartedRuleKeyCalc extends Started
+      implements RuleKeyCalculationEvent.Started {
+
+    private StartedRuleKeyCalc(
+        EventKey eventKey, BuildRule rule, BuildRuleDurationTracker tracker) {
+      super(eventKey, rule, tracker);
+    }
 
     @Override
-    public boolean isRuleRunningAfterThisEvent() {
-      return false;
+    public Type getType() {
+      return Type.NORMAL;
+    }
+  }
+
+  /**
+   * Marks the completion of processing a rule to calculate its rule key. We overload this as both a
+   * rule suspend and rule key calc finish event to generate less events and be more efficient.
+   */
+  private static class FinishedRuleKeyCalc extends Suspended
+      implements RuleKeyCalculationEvent.Finished {
+
+    private FinishedRuleKeyCalc(
+        StartedRuleKeyCalc started, RuleKeyFactory<RuleKey> ruleKeyFactory) {
+      super(started, ruleKeyFactory);
+    }
+
+    @Override
+    public Type getType() {
+      return Type.NORMAL;
+    }
+  }
+
+  /** Denotes that a particular build rule will be built locally. */
+  public static class WillBuildLocally extends AbstractBuckEvent implements WorkAdvanceEvent {
+
+    private final BuildRule rule;
+
+    public WillBuildLocally(BuildRule rule) {
+      super(EventKey.unique());
+      this.rule = rule;
     }
 
     @Override
     public String getEventName() {
-      return "BuildRuleSuspended";
-    }
-
-  }
-
-  public static class Resumed extends BuildRuleEvent {
-
-    private final String ruleKey;
-
-    protected Resumed(BuildRule rule, RuleKeyFactory<RuleKey> ruleKeyFactory) {
-      super(rule);
-      this.ruleKey = ruleKeyFactory.build(rule).toString();
-    }
-
-    @JsonIgnore
-    public String getRuleKey() {
-      return ruleKey;
+      return "BuildRuleWillBuildLocally";
     }
 
     @Override
-    public boolean isRuleRunningAfterThisEvent() {
-      return true;
-    }
-
-    @Override
-    public String getEventName() {
-      return "BuildRuleResumed";
+    protected String getValueString() {
+      return rule.toString();
     }
   }
 
-  public static Scope startSuspendScope(
+  public static Scope ruleKeyCalculationScope(
       BuckEventBus eventBus,
       BuildRule rule,
+      BuildRuleDurationTracker tracker,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    eventBus.post(BuildRuleEvent.started(rule));
-    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyFactory));
+    StartedRuleKeyCalc started = ruleKeyCalculationStarted(rule, tracker);
+    eventBus.post(started);
+    return () -> eventBus.post(ruleKeyCalculationFinished(started, ruleKeyFactory));
   }
 
   public static Scope resumeSuspendScope(
       BuckEventBus eventBus,
       BuildRule rule,
+      BuildRuleDurationTracker tracker,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyFactory));
-    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyFactory));
+    Resumed resumed = resumed(rule, tracker, ruleKeyFactory);
+    eventBus.post(resumed);
+    return () -> eventBus.post(suspended(resumed, ruleKeyFactory));
   }
-
-
 }

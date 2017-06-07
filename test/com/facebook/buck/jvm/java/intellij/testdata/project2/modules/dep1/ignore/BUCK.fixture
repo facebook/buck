@@ -1,5 +1,0 @@
-java_library(
-  name = 'ignore',
-  srcs = glob(['*.java']),
-  deps = [],
-)

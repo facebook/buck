@@ -16,23 +16,25 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
+import static com.facebook.buck.apple.AppleResources.IS_APPLE_BUNDLE_RESOURCE_NODE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -43,22 +45,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
+import java.util.Collection;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Collection;
-import java.util.Optional;
 
 @RunWith(Parameterized.class)
 public class AppleBuildRulesTest {
 
   @Parameterized.Parameters(name = "useCache: {0}")
   public static Collection<Object[]> data() {
-    return ImmutableList.of(
-        new Object[] {false},
-        new Object[] {true});
+    return ImmutableList.of(new Object[] {false}, new Object[] {true});
   }
 
   @Parameterized.Parameter(0)
@@ -68,70 +66,63 @@ public class AppleBuildRulesTest {
   public void testAppleLibraryIsXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
     BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
-    TargetNode<AppleLibraryDescription.Arg, ?> library = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .setSrcs(ImmutableSortedSet.of())
-        .build();
-    assertTrue(
-        AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
+    TargetNode<AppleLibraryDescriptionArg, ?> library =
+        AppleLibraryBuilder.createBuilder(libraryTarget).setSrcs(ImmutableSortedSet.of()).build();
+    assertTrue(AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
   }
 
   @Test
   public void testIosResourceIsNotXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
     BuildTarget resourceTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "res").build();
-    TargetNode<?, ?> resourceNode = AppleResourceBuilder
-        .createBuilder(resourceTarget)
-        .setFiles(ImmutableSet.of())
-        .setDirs(ImmutableSet.of())
-        .build();
-    assertFalse(
-        AppleBuildRules.isXcodeTargetDescription(resourceNode.getDescription()));
+    TargetNode<?, ?> resourceNode =
+        AppleResourceBuilder.createBuilder(resourceTarget)
+            .setFiles(ImmutableSet.of())
+            .setDirs(ImmutableSet.of())
+            .build();
+    assertFalse(AppleBuildRules.isXcodeTargetDescription(resourceNode.getDescription()));
   }
 
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() throws Exception {
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386")
             .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
     BuildRuleResolver resolver =
         new BuildRuleResolver(
-            TargetGraphFactory.newInstance(new AppleTestBuilder(sandboxTarget).build()),
+            TargetGraphFactory.newInstance(
+                new AppleTestBuilder(sandboxTarget)
+                    .setInfoPlist(new FakeSourcePath("Info.plist"))
+                    .build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
-        target)
-        .setContacts(ImmutableSortedSet.of())
-        .setLabels(ImmutableSortedSet.of())
-        .setDeps(ImmutableSortedSet.of());
+    AppleTestBuilder appleTestBuilder =
+        new AppleTestBuilder(target)
+            .setContacts(ImmutableSortedSet.of())
+            .setLabels(ImmutableSortedSet.of())
+            .setDeps(ImmutableSortedSet.of())
+            .setInfoPlist(new FakeSourcePath("Info.plist"));
 
     TargetNode<?, ?> appleTestNode = appleTestBuilder.build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        ImmutableSet.<TargetNode<?, ?>>of(appleTestNode));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?, ?>>of(appleTestNode));
 
-    BuildRule testRule = appleTestBuilder.build(
-        resolver,
-        new FakeProjectFilesystem(),
-        targetGraph);
+    BuildRule testRule = appleTestBuilder.build(resolver, new FakeProjectFilesystem(), targetGraph);
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 
   @Test
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        BuildTargetFactory.newInstance("//foo:lib"))
-        .build();
-    AppleLibraryDescription.Arg arg =
-        createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
-    BuildRule libraryRule = FakeAppleRuleDescriptions
-        .LIBRARY_DESCRIPTION
-        .createBuildRule(
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//foo:lib")).build();
+    BuildRule libraryRule =
+        FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
             TargetGraph.EMPTY,
             params,
             new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
-            arg);
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            AppleLibraryDescriptionArg.builder().setName("lib").build());
 
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRule(libraryRule));
   }
@@ -144,22 +135,21 @@ public class AppleBuildRulesTest {
   @Test
   public void testRecursiveTargetsIncludesBundleBinaryFromOutsideBundle() throws Exception {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .build();
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder.createBuilder(libraryTarget).build();
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    TargetNode<?, ?> bundleNode = AppleBundleBuilder
-        .createBuilder(bundleTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(libraryTarget)
-        .build();
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
+            .setBinary(libraryTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
-    TargetNode<?, ?> rootNode = AppleLibraryBuilder
-        .createBuilder(rootTarget)
-        .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
-        .build();
+    TargetNode<?, ?> rootNode =
+        AppleLibraryBuilder.createBuilder(rootTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
+            .build();
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode));
@@ -167,12 +157,13 @@ public class AppleBuildRulesTest {
         useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
-      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-          targetGraph,
-          cache,
-          AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-          rootNode,
-          Optional.empty());
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+              rootNode,
+              Optional.empty());
 
       assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
     }
@@ -182,61 +173,154 @@ public class AppleBuildRulesTest {
   public void exportedDepsOfDylibsAreCollectedForLinking() throws Exception {
     BuildTarget fooLibTarget =
         BuildTargetFactory.newInstance("//foo:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder
-        .createBuilder(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework");
-    TargetNode<?, ?> fooFrameworkNode = AppleBundleBuilder
-        .createBuilder(fooFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooFrameworkNode =
+        AppleBundleBuilder.createBuilder(fooFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(fooLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget barLibTarget =
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> barLibNode = AppleLibraryBuilder
-        .createBuilder(barLibTarget)
-        .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
-        .setExportedDeps(ImmutableSortedSet.of(fooFrameworkTarget))
-        .build();
+    TargetNode<?, ?> barLibNode =
+        AppleLibraryBuilder.createBuilder(barLibTarget)
+            .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+            .setExportedDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+            .build();
 
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
-    TargetNode<?, ?> barFrameworkNode = AppleBundleBuilder
-        .createBuilder(barFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(barLibTarget)
-        .build();
+    TargetNode<?, ?> barFrameworkNode =
+        AppleBundleBuilder.createBuilder(barFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
-    TargetNode<?, ?> rootNode = AppleLibraryBuilder
-        .createBuilder(rootTarget)
-        .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
-        .build();
+    TargetNode<?, ?> rootNode =
+        AppleLibraryBuilder.createBuilder(rootTarget)
+            .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(
-        ImmutableSet.of(
-            rootNode,
-            fooLibNode,
-            fooFrameworkNode,
-            barLibNode,
-            barFrameworkNode));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            ImmutableSet.of(rootNode, fooLibNode, fooFrameworkNode, barLibNode, barFrameworkNode));
     Optional<AppleDependenciesCache> cache =
         useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
-      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-          targetGraph,
-          cache,
-          AppleBuildRules.RecursiveDependenciesMode.LINKING,
-          rootNode,
-          Optional.empty());
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.LINKING,
+              rootNode,
+              Optional.empty());
 
       assertEquals(
-          ImmutableSortedSet.of(
-              barFrameworkNode,
-              fooFrameworkNode),
+          ImmutableSortedSet.of(barFrameworkNode, fooFrameworkNode),
           ImmutableSortedSet.copyOf(rules));
+    }
+  }
+
+  @Test
+  public void resourceDepsOfDylibsAreNotIncludedInMainBundle() throws Exception {
+    BuildTarget sharedResourceTarget = BuildTargetFactory.newInstance("//shared:resource");
+    TargetNode<?, ?> sharedResourceNode =
+        AppleResourceBuilder.createBuilder(sharedResourceTarget).build();
+
+    // no preferredLinkage, shared flavor
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance("//foo:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
+    TargetNode<?, ?> fooLibNode =
+        AppleLibraryBuilder.createBuilder(fooLibTarget)
+            .setDeps(ImmutableSortedSet.of(sharedResourceTarget))
+            .build();
+
+    // shared preferredLinkage, no flavor
+    BuildTarget foo2LibTarget = BuildTargetFactory.newInstance("//foo2:lib");
+    TargetNode<?, ?> foo2LibNode =
+        AppleLibraryBuilder.createBuilder(foo2LibTarget)
+            .setDeps(ImmutableSortedSet.of(sharedResourceTarget))
+            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .build();
+
+    BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework#default");
+    TargetNode<?, ?> fooFrameworkNode =
+        AppleBundleBuilder.createBuilder(fooFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(fooLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
+
+    // shared preferredLinkage overriden by static flavor should still propagate dependencies.
+    BuildTarget staticResourceTarget = BuildTargetFactory.newInstance("//static:resource");
+    TargetNode<?, ?> staticResourceNode =
+        AppleResourceBuilder.createBuilder(staticResourceTarget).build();
+
+    BuildTarget bazLibTarget =
+        BuildTargetFactory.newInstance("//baz:lib#" + CxxDescriptionEnhancer.STATIC_FLAVOR);
+    TargetNode<?, ?> bazLibNode =
+        AppleLibraryBuilder.createBuilder(bazLibTarget)
+            .setDeps(ImmutableSortedSet.of(staticResourceTarget))
+            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .build();
+
+    BuildTarget barBinaryTarget = BuildTargetFactory.newInstance("//bar:binary");
+    TargetNode<?, ?> barBinaryNode =
+        AppleBinaryBuilder.createBuilder(barBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(fooLibTarget, foo2LibTarget, bazLibTarget))
+            .build();
+
+    BuildTarget barAppTarget = BuildTargetFactory.newInstance("//bar:app");
+    TargetNode<?, ?> barAppNode =
+        AppleBundleBuilder.createBuilder(barAppTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setBinary(barBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
+
+    ImmutableSet<TargetNode<?, ?>> targetNodes =
+        ImmutableSet.<TargetNode<?, ?>>builder()
+            .add(
+                sharedResourceNode,
+                staticResourceNode,
+                fooLibNode,
+                foo2LibNode,
+                bazLibNode,
+                fooFrameworkNode,
+                barBinaryNode,
+                barAppNode)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
+
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.COPYING,
+              fooFrameworkNode,
+              IS_APPLE_BUNDLE_RESOURCE_NODE);
+
+      assertEquals(ImmutableSortedSet.of(sharedResourceNode), ImmutableSortedSet.copyOf(rules));
+
+      rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.COPYING,
+              barAppNode,
+              IS_APPLE_BUNDLE_RESOURCE_NODE);
+
+      assertEquals(ImmutableSortedSet.of(staticResourceNode), ImmutableSortedSet.copyOf(rules));
     }
   }
 
@@ -244,73 +328,73 @@ public class AppleBuildRulesTest {
   public void exportedDepsAreCollectedForCopying() throws Exception {
     BuildTarget fooLibTarget =
         BuildTargetFactory.newInstance("//foo:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder
-        .createBuilder(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework");
-    TargetNode<?, ?> fooFrameworkNode = AppleBundleBuilder
-        .createBuilder(fooFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooFrameworkNode =
+        AppleBundleBuilder.createBuilder(fooFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(fooLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget barLibTarget =
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> barLibNode = AppleLibraryBuilder
-        .createBuilder(barLibTarget)
-        .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
-        .setExportedDeps(ImmutableSortedSet.of(fooFrameworkTarget))
-        .build();
+    TargetNode<?, ?> barLibNode =
+        AppleLibraryBuilder.createBuilder(barLibTarget)
+            .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+            .setExportedDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+            .build();
 
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
-    TargetNode<?, ?> barFrameworkNode = AppleBundleBuilder
-        .createBuilder(barFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(barLibTarget)
-        .build();
+    TargetNode<?, ?> barFrameworkNode =
+        AppleBundleBuilder.createBuilder(barFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget bazLibTarget =
         BuildTargetFactory.newInstance("//baz:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> bazLibNode = AppleLibraryBuilder
-        .createBuilder(bazLibTarget)
-        .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
-        .build();
+    TargetNode<?, ?> bazLibNode =
+        AppleLibraryBuilder.createBuilder(bazLibTarget)
+            .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
+            .build();
 
     BuildTarget bazFrameworkTarget = BuildTargetFactory.newInstance("//baz:framework");
-    TargetNode<?, ?> bazFrameworkNode = AppleBundleBuilder
-        .createBuilder(bazFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(bazLibTarget)
-        .build();
+    TargetNode<?, ?> bazFrameworkNode =
+        AppleBundleBuilder.createBuilder(bazFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(bazLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
         ImmutableSet.<TargetNode<?, ?>>builder()
-          .add(
-            fooLibNode,
-            fooFrameworkNode,
-            barLibNode,
-            barFrameworkNode,
-            bazLibNode,
-            bazFrameworkNode)
-          .build();
+            .add(
+                fooLibNode,
+                fooFrameworkNode,
+                barLibNode,
+                barFrameworkNode,
+                bazLibNode,
+                bazFrameworkNode)
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
     Optional<AppleDependenciesCache> cache =
         useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
-      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-          targetGraph,
-          cache,
-          AppleBuildRules.RecursiveDependenciesMode.COPYING,
-          bazFrameworkNode,
-          Optional.empty());
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.COPYING,
+              bazFrameworkNode,
+              Optional.empty());
 
       assertEquals(
-          ImmutableSortedSet.of(
-              barFrameworkNode,
-              fooFrameworkNode),
+          ImmutableSortedSet.of(barFrameworkNode, fooFrameworkNode),
           ImmutableSortedSet.copyOf(rules));
     }
   }
@@ -320,55 +404,49 @@ public class AppleBuildRulesTest {
     // Pass a random static lib in a genrule and make sure a framework
     // depending on the genrule doesn't link against or copy in the static lib.
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder
-        .createBuilder(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     BuildTarget fooGenruleTarget = BuildTargetFactory.newInstance("//foo:genrule");
-    TargetNode<?, ?> fooGenruleNode = GenruleBuilder
-        .newGenruleBuilder(fooGenruleTarget)
-        .setOut("foo")
-        .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
-        .build();
+    TargetNode<?, ?> fooGenruleNode =
+        GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
+            .setOut("foo")
+            .setCmd("echo hi > $OUT")
+            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .build();
 
     BuildTarget barLibTarget =
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> barLibNode = AppleLibraryBuilder
-        .createBuilder(barLibTarget)
-        .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
-        .build();
+    TargetNode<?, ?> barLibNode =
+        AppleLibraryBuilder.createBuilder(barLibTarget)
+            .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
+            .build();
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
-    TargetNode<?, ?> barFrameworkNode = AppleBundleBuilder
-        .createBuilder(barFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(barLibTarget)
-        .build();
+    TargetNode<?, ?> barFrameworkNode =
+        AppleBundleBuilder.createBuilder(barFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
         ImmutableSet.<TargetNode<?, ?>>builder()
-          .add(
-            fooLibNode,
-            fooGenruleNode,
-            barLibNode,
-            barFrameworkNode)
-          .build();
+            .add(fooLibNode, fooGenruleNode, barLibNode, barFrameworkNode)
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
     Optional<AppleDependenciesCache> cache =
         useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
-      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-          targetGraph,
-          cache,
-          AppleBuildRules.RecursiveDependenciesMode.LINKING,
-          barFrameworkNode,
-          Optional.empty());
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.LINKING,
+              barFrameworkNode,
+              Optional.empty());
 
-      assertEquals(
-          ImmutableSortedSet.of(fooGenruleNode),
-          ImmutableSortedSet.copyOf(rules));
+      assertEquals(ImmutableSortedSet.of(fooGenruleNode), ImmutableSortedSet.copyOf(rules));
     }
   }
 
@@ -377,55 +455,49 @@ public class AppleBuildRulesTest {
     // Pass a random static lib in a genrule and make sure a framework
     // depending on the genrule doesn't link against or copy in the static lib.
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder
-        .createBuilder(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     BuildTarget fooGenruleTarget = BuildTargetFactory.newInstance("//foo:genrule");
-    TargetNode<?, ?> fooGenruleNode = GenruleBuilder
-        .newGenruleBuilder(fooGenruleTarget)
-        .setOut("foo")
-        .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
-        .build();
+    TargetNode<?, ?> fooGenruleNode =
+        GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
+            .setOut("foo")
+            .setCmd("echo hi > $OUT")
+            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .build();
 
     BuildTarget barLibTarget =
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> barLibNode = AppleLibraryBuilder
-        .createBuilder(barLibTarget)
-        .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
-        .build();
+    TargetNode<?, ?> barLibNode =
+        AppleLibraryBuilder.createBuilder(barLibTarget)
+            .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
+            .build();
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
-    TargetNode<?, ?> barFrameworkNode = AppleBundleBuilder
-        .createBuilder(barFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(barLibTarget)
-        .build();
+    TargetNode<?, ?> barFrameworkNode =
+        AppleBundleBuilder.createBuilder(barFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
         ImmutableSet.<TargetNode<?, ?>>builder()
-          .add(
-            fooLibNode,
-            fooGenruleNode,
-            barLibNode,
-            barFrameworkNode)
-          .build();
+            .add(fooLibNode, fooGenruleNode, barLibNode, barFrameworkNode)
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
     Optional<AppleDependenciesCache> cache =
         useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
-      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-          targetGraph,
-          cache,
-          AppleBuildRules.RecursiveDependenciesMode.COPYING,
-          barFrameworkNode,
-          Optional.empty());
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.COPYING,
+              barFrameworkNode,
+              Optional.empty());
 
-      assertEquals(
-          ImmutableSortedSet.of(fooGenruleNode),
-          ImmutableSortedSet.copyOf(rules));
+      assertEquals(ImmutableSortedSet.of(fooGenruleNode), ImmutableSortedSet.copyOf(rules));
     }
   }
 
@@ -434,43 +506,43 @@ public class AppleBuildRulesTest {
     // Pass a random static lib in a genrule and make sure a framework
     // depending on the genrule doesn't build the dependencies of that genrule.
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder
-        .createBuilder(fooLibTarget)
-        .build();
+    TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     BuildTarget fooGenruleTarget = BuildTargetFactory.newInstance("//foo:genrule");
-    TargetNode<?, ?> fooGenruleNode = GenruleBuilder
-        .newGenruleBuilder(fooGenruleTarget)
-        .setOut("foo")
-        .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
-        .build();
+    TargetNode<?, ?> fooGenruleNode =
+        GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
+            .setOut("foo")
+            .setCmd("echo hi > $OUT")
+            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .build();
 
     BuildTarget barLibTarget =
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> barLibNode = AppleLibraryBuilder
-        .createBuilder(barLibTarget)
-        .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
-        .build();
+    TargetNode<?, ?> barLibNode =
+        AppleLibraryBuilder.createBuilder(barLibTarget)
+            .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
+            .build();
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
-    TargetNode<?, ?> barFrameworkNode = AppleBundleBuilder
-        .createBuilder(barFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(barLibTarget)
-        .build();
+    TargetNode<?, ?> barFrameworkNode =
+        AppleBundleBuilder.createBuilder(barFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(barLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget bazLibTarget =
         BuildTargetFactory.newInstance("//baz:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> bazLibNode = AppleLibraryBuilder
-        .createBuilder(bazLibTarget)
-        .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
-        .build();
+    TargetNode<?, ?> bazLibNode =
+        AppleLibraryBuilder.createBuilder(bazLibTarget)
+            .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
+            .build();
     BuildTarget bazFrameworkTarget = BuildTargetFactory.newInstance("//baz:framework");
-    TargetNode<?, ?> bazFrameworkNode = AppleBundleBuilder
-        .createBuilder(bazFrameworkTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(bazLibTarget)
-        .build();
+    TargetNode<?, ?> bazFrameworkNode =
+        AppleBundleBuilder.createBuilder(bazFrameworkTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setBinary(bazLibTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     ImmutableSet<TargetNode<?, ?>> targetNodes =
         ImmutableSet.<TargetNode<?, ?>>builder()
@@ -488,12 +560,13 @@ public class AppleBuildRulesTest {
         useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
-      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-          targetGraph,
-          cache,
-          AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-          bazFrameworkNode,
-          Optional.empty());
+      Iterable<TargetNode<?, ?>> rules =
+          AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              targetGraph,
+              cache,
+              AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+              bazFrameworkNode,
+              Optional.empty());
 
       assertEquals(
           ImmutableSortedSet.of(barFrameworkNode, fooGenruleNode),
@@ -504,22 +577,21 @@ public class AppleBuildRulesTest {
   @Test
   public void testDependenciesCache() throws Exception {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .build();
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder.createBuilder(libraryTarget).build();
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    TargetNode<?, ?> bundleNode = AppleBundleBuilder
-        .createBuilder(bundleTarget)
-        .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(libraryTarget)
-        .build();
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
+            .setBinary(libraryTarget)
+            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .build();
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
-    TargetNode<?, ?> rootNode = AppleLibraryBuilder
-        .createBuilder(rootTarget)
-        .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
-        .build();
+    TargetNode<?, ?> rootNode =
+        AppleLibraryBuilder.createBuilder(rootTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
+            .build();
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode));
@@ -528,12 +600,8 @@ public class AppleBuildRulesTest {
     ImmutableSortedSet<TargetNode<?, ?>> cachedDefaultDeps = cache.getDefaultDeps(rootNode);
     ImmutableSortedSet<TargetNode<?, ?>> cachedExportedDeps = cache.getExportedDeps(rootNode);
 
-    assertEquals(
-        cachedDefaultDeps,
-        ImmutableSortedSet.of(bundleNode, libraryNode));
-    assertEquals(
-        cachedExportedDeps,
-        ImmutableSortedSet.of());
+    assertEquals(cachedDefaultDeps, ImmutableSortedSet.of(bundleNode, libraryNode));
+    assertEquals(cachedExportedDeps, ImmutableSortedSet.of());
 
     ImmutableSortedSet<TargetNode<?, ?>> defaultDeps = cache.getDefaultDeps(rootNode);
     ImmutableSortedSet<TargetNode<?, ?>> exportedDeps = cache.getExportedDeps(rootNode);

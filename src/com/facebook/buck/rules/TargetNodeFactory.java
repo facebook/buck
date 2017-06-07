@@ -19,13 +19,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -39,10 +39,11 @@ public class TargetNodeFactory {
   /**
    * This factory method lets the wildcard be bound, so the constructor can be casted to it.
    *
-   * This does no checking that the type of {@code constructorArg} is correct, since
-   * {@code Description} does not hold the Class of the constructor arg.
+   * <p>This does no checking that the type of {@code constructorArg} is correct, since {@code
+   * Description} does not hold the Class of the constructor arg.
    *
-   * See <a href="https://docs.oracle.com/javase/tutorial/java/generics/capture.html">Wildcard Capture and Helper Methods</a>.
+   * <p>See <a href="https://docs.oracle.com/javase/tutorial/java/generics/capture.html">Wildcard
+   * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
   public <T, U extends Description<T>> TargetNode<T, U> createFromObject(
@@ -53,6 +54,7 @@ public class TargetNodeFactory {
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
     return create(
@@ -63,6 +65,7 @@ public class TargetNodeFactory {
         buildTarget,
         declaredDeps,
         visibilityPatterns,
+        withinViewPatterns,
         cellRoots);
   }
 
@@ -75,40 +78,39 @@ public class TargetNodeFactory {
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
       throws NoSuchBuildTargetException {
 
     ImmutableSortedSet.Builder<BuildTarget> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder =
+        ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
-    T arg = description.createUnpopulatedConstructorArg();
-    for (Field field : arg.getClass().getFields()) {
-      ParamInfo info = new ParamInfo(typeCoercerFactory, arg.getClass(), field);
-      if (info.isDep() && info.isInput() &&
-          info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
+    for (ParamInfo info :
+        CoercedTypeCache.INSTANCE
+            .getAllParamInfo(typeCoercerFactory, description.getConstructorArgType())
+            .values()) {
+      if (info.isDep()
+          && info.isInput()
+          && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForConstructorArg(
-            extraDepsBuilder,
-            pathsBuilder,
-            info,
-            constructorArg);
+            extraDepsBuilder, pathsBuilder, info, constructorArg);
       }
     }
 
     if (description instanceof ImplicitDepsInferringDescription) {
-      extraDepsBuilder
-          .addAll(
-              ((ImplicitDepsInferringDescription<T>) description)
-                  .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg));
+      ((ImplicitDepsInferringDescription<T>) description)
+          .findDepsForTargetFromConstructorArgs(
+              buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
-      pathsBuilder
-          .addAll(
-              ((ImplicitInputsInferringDescription<T>) description)
-                  .inferInputsFromConstructorArgs(
-                      buildTarget.getUnflavoredBuildTarget(),
-                      constructorArg));
+      pathsBuilder.addAll(
+          ((ImplicitInputsInferringDescription<T>) description)
+              .inferInputsFromConstructorArgs(
+                  buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
     return new TargetNode<>(
@@ -120,7 +122,9 @@ public class TargetNodeFactory {
         buildTarget,
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
+        targetGraphOnlyDepsBuilder.build(),
         visibilityPatterns,
+        withinViewPatterns,
         pathsBuilder.build(),
         cellRoots,
         Optional.empty());
@@ -130,7 +134,8 @@ public class TargetNodeFactory {
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
-      Object constructorArg) throws NoSuchBuildTargetException {
+      Object constructorArg)
+      throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 
     try {
@@ -156,8 +161,7 @@ public class TargetNodeFactory {
 
   @SuppressWarnings("unchecked")
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithDescription(
-      TargetNode<?, ?> originalNode,
-      U description) {
+      TargetNode<?, ?> originalNode, U description) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),
@@ -167,6 +171,7 @@ public class TargetNodeFactory {
           originalNode.getBuildTarget(),
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
+          originalNode.getWithinViewPatterns(),
           originalNode.getCellNames());
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(
@@ -178,8 +183,7 @@ public class TargetNodeFactory {
   }
 
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithFlavors(
-      TargetNode<T, U> originalNode,
-      ImmutableSet<Flavor> flavors) {
+      TargetNode<T, U> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),
@@ -189,6 +193,7 @@ public class TargetNodeFactory {
           originalNode.getBuildTarget().withFlavors(flavors),
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
+          originalNode.getWithinViewPatterns(),
           originalNode.getCellNames());
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(

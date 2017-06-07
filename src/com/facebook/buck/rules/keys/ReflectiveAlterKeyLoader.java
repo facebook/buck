@@ -22,22 +22,21 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-
 import java.lang.reflect.Field;
 import java.util.Comparator;
 
 class ReflectiveAlterKeyLoader
     extends CacheLoader<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>> {
 
-  private static final Comparator<ValueExtractor> COMPARATOR = (o1, o2) -> {
-    String name1 = o1.getFullyQualifiedName();
-    String name2 = o2.getFullyQualifiedName();
-    return name1.compareTo(name2);
-  };
+  private static final Comparator<ValueExtractor> COMPARATOR =
+      (o1, o2) -> {
+        String name1 = o1.getFullyQualifiedName();
+        String name2 = o2.getFullyQualifiedName();
+        return name1.compareTo(name2);
+      };
 
   @Override
-  public ImmutableCollection<AlterRuleKey> load(Class<? extends BuildRule> key)
-      throws Exception {
+  public ImmutableCollection<AlterRuleKey> load(Class<? extends BuildRule> key) throws Exception {
     ImmutableList.Builder<AlterRuleKey> builder = ImmutableList.builder();
     for (Class<?> current = key; !Object.class.equals(current); current = current.getSuperclass()) {
       ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors =

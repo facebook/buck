@@ -14,33 +14,37 @@
  * under the License.
  */
 
-
 package com.facebook.buck.android;
 
+import static org.junit.Assert.fail;
 
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
-/**
- * Tests for AndroidLibraryDescription
- */
-public class AndroidLibraryDescriptionIntegrationTest {
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+/** Tests for AndroidLibraryDescription */
+public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationModeTest {
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_library_dynamic_deps", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_library_dynamic_deps", tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test
@@ -76,6 +80,11 @@ public class AndroidLibraryDescriptionIntegrationTest {
 
     // Now, add lib_a to the 'top_level' library and build again
     workspace.replaceFileContents("BUCK", "#placeholder", "':lib_a',");
+
+    // Have the src for the 'top_level' rule actually use its dependency
+    workspace.replaceFileContents("TopLevel.java", "// placeholder", "public A a;");
+
+    // Build again
     workspace.runBuckCommand("build", "//:android_libraries");
 
     // Now we should rebuild top_level, re-run the query, and rebuild android_libraries
@@ -108,5 +117,72 @@ public class AndroidLibraryDescriptionIntegrationTest {
     workspace.replaceFileContents("BUCK", "#annotation_placeholder", "'example.foo=True',");
     workspace.runBuckCommand("build", "//:has_proc_params").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:has_proc_params");
+  }
+
+  @Test
+  public void testDepQueryResultsCanTakeAdvantageOfDepFileRuleKey() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Build once to warm cache
+    workspace.runBuckCommand("build", "//:java_libraries").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:java_libraries");
+
+    // Now, edit lib_c, which is part of the query result, and assert the query is invalidated
+    workspace.replaceFileContents("D.java", "// method", "public static void foo() {}");
+    workspace.runBuckCommand("build", "//:java_libraries").assertSuccess();
+    // But the libs above get a dep file hit
+    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:java_libraries");
+  }
+
+  @Test
+  public void testDepQueryCanApplyToResources() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Build once to warm cache
+    workspace.runBuckCommand("build", "//:resources_from_query").assertSuccess();
+  }
+
+  @Test
+  public void testDepQueryWithClasspathDoesNotTraverseProvidedDeps() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Should succeed because lib_c is a provided dep
+    workspace.runBuckBuild("build", "//:provided_only");
+
+    // Should fail becuase 'C.class' is not added to the classpath because it's a provided dep
+    workspace.runBuckCommand("build", "//:no_provided_deps").assertFailure();
+  }
+
+  @Test
+  public void testProvidedDepsQuery() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Should succeed because required dep (lib_c) will be added as provided
+    workspace.runBuckBuild("//:has_lib_c_from_provided_query").assertSuccess();
+  }
+
+  @Test
+  public void testProvidedDepsQueryDoesNotAffectPackaging() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    workspace.runBuckCommand("build", "//:check_output_of_does_not_package_lib_c").assertSuccess();
+    String[] outputs =
+        workspace
+            .getFileContents(getOutputFile("//:check_output_of_does_not_package_lib_c"))
+            .split("\\s");
+    // There should be a class entry for UsesC.java
+    Assert.assertThat(outputs, Matchers.hasItemInArray("com/facebook/example/UsesC.class"));
+    // But not one for C.java
+    Assert.assertThat(
+        outputs, Matchers.not(Matchers.hasItemInArray("com/facebook/example/C.class")));
+  }
+
+  private Path getOutputFile(String targetName) {
+    try {
+      ProjectWorkspace.ProcessResult buildResult =
+          workspace.runBuckCommand("targets", targetName, "--show-output", "--json");
+      buildResult.assertSuccess();
+      JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
+      assert jsonNode.has("buck.outputPath");
+      return Paths.get(jsonNode.get("buck.outputPath").asText());
+    } catch (Exception e) {
+      fail(e.getMessage());
+      return Paths.get("");
+    }
   }
 }

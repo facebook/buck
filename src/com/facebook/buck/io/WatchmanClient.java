@@ -20,13 +20,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Testable interface for a Watchman client.
- */
+/** Testable interface for a Watchman client. */
 public interface WatchmanClient extends AutoCloseable {
   Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
-      long timeoutNanos,
-      Object... query) throws IOException, InterruptedException;
+      long timeoutNanos, Object... query) throws IOException, InterruptedException;
 
   @Override
   public void close() throws IOException;

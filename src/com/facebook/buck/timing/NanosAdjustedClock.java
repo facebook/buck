@@ -17,13 +17,18 @@
 package com.facebook.buck.timing;
 
 /**
- * {@link Clock} implementation that invokes the {@link System} calls,
- * adjusted to use the given nanos epoch.
+ * {@link Clock} implementation that invokes the {@link System} calls, adjusted to use the given
+ * nanos epoch.
  */
 public class NanosAdjustedClock extends DefaultClock {
   private final long nanosEpoch;
 
   public NanosAdjustedClock(long nanosEpoch) {
+    this(nanosEpoch, true);
+  }
+
+  public NanosAdjustedClock(long nanosEpoch, boolean enableThreadCpuTime) {
+    super(enableThreadCpuTime);
     this.nanosEpoch = nanosEpoch - System.nanoTime();
   }
 

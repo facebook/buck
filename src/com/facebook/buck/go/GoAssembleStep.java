@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 
 public class GoAssembleStep extends ShellStep {
@@ -54,13 +53,14 @@ public class GoAssembleStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
-        .addAll(asmCommandPrefix)
-        .add("-trimpath", workingDirectory.toString())
-        .addAll(flags)
-        .add("-D", "GOOS_" + platform.getGoOs())
-        .add("-D", "GOARCH_" + platform.getGoArch())
-        .add("-o", output.toString());
+    ImmutableList.Builder<String> commandBuilder =
+        ImmutableList.<String>builder()
+            .addAll(asmCommandPrefix)
+            .add("-trimpath", workingDirectory.toString())
+            .addAll(flags)
+            .add("-D", "GOOS_" + platform.getGoOs())
+            .add("-D", "GOARCH_" + platform.getGoArch())
+            .add("-o", output.toString());
 
     for (Path dir : includeDirectories) {
       commandBuilder.add("-I", dir.toString());

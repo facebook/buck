@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
@@ -25,11 +25,13 @@ import com.google.common.collect.ImmutableMap;
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
  * contribute to the top-level link of a native binary (e.g. C++ binary).
  */
-public interface NativeLinkable extends HasBuildTarget {
+public interface NativeLinkable {
+
+  BuildTarget getBuildTarget();
 
   /**
-   * @return All native linkable dependencies that are required by this linkable
-   * on a specific platform.
+   * @return All native linkable dependencies that are required by this linkable on a specific
+   *     platform.
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
@@ -38,8 +40,8 @@ public interface NativeLinkable extends HasBuildTarget {
   }
 
   /**
-   * @return All native linkable exported dependencies that are required by this linkable
-   * on a specific platform.
+   * @return All native linkable exported dependencies that are required by this linkable on a
+   *     specific platform.
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
@@ -48,20 +50,20 @@ public interface NativeLinkable extends HasBuildTarget {
   }
 
   /**
-   * @return All native linkable dependencies that might be required by this linkable
-   * on any platform.
+   * @return All native linkable dependencies that might be required by this linkable on any
+   *     platform.
    */
   Iterable<? extends NativeLinkable> getNativeLinkableDeps();
 
   /**
-   * @return All native linkable exported dependencies that might be required by this linkable
-   * on any platform.
+   * @return All native linkable exported dependencies that might be required by this linkable on
+   *     any platform.
    */
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps();
 
   /**
-   * Return input that *dependents* should put on their link line
-   * when linking against this linkable.
+   * Return input that *dependents* should put on their link line when linking against this
+   * linkable.
    */
   NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
       throws NoSuchBuildTargetException;
@@ -69,8 +71,8 @@ public interface NativeLinkable extends HasBuildTarget {
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 
   /**
-   * @return a map of shared library SONAME to shared library path for the given
-   *     {@link CxxPlatform}.
+   * @return a map of shared library SONAME to shared library path for the given {@link
+   *     CxxPlatform}.
    */
   ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
@@ -80,5 +82,4 @@ public interface NativeLinkable extends HasBuildTarget {
     STATIC,
     SHARED,
   }
-
 }

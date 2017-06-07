@@ -18,22 +18,21 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class BuckBuildLogTest {
 
   @Test
   public void testBuildLogParsing() {
-    ImmutableList<String> buildLogLines = ImmutableList.of(
-        "735 INFO  BuildRuleFinished(//example/base:one): " +
-            "SUCCESS MISS BUILT_LOCALLY 489e1b85f804dc0f66545f2ce06f57ee85204747",
-        "735 INFO  BuildRuleFinished(//example/base:two): " +
-            "FAIL MISS MISSING 489e1b85f804dc0f66545f2ce06f57ee85204747",
-        "735 INFO  BuildRuleFinished(//example/base:three): " +
-            "SUCCESS MISS MATCHING_RULE_KEY 489e1b85f804dc0f66545f2ce06f57ee85204747");
+    ImmutableList<String> buildLogLines =
+        ImmutableList.of(
+            "735 INFO  BuildRuleFinished(//example/base:one): "
+                + "SUCCESS MISS BUILT_LOCALLY 489e1b85f804dc0f66545f2ce06f57ee85204747",
+            "735 INFO  BuildRuleFinished(//example/base:two): "
+                + "FAIL MISS MISSING 489e1b85f804dc0f66545f2ce06f57ee85204747",
+            "735 INFO  BuildRuleFinished(//example/base:three): "
+                + "SUCCESS MISS MATCHING_RULE_KEY 489e1b85f804dc0f66545f2ce06f57ee85204747");
 
     BuckBuildLog buildLog = BuckBuildLog.fromLogContents(Paths.get("/spoof"), buildLogLines);
     buildLog.assertTargetBuiltLocally("//example/base:one");

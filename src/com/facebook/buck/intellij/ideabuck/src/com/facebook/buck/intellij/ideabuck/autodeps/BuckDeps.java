@@ -19,12 +19,11 @@ package com.facebook.buck.intellij.ideabuck.autodeps;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD not in core Buck
 import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,17 +32,14 @@ public class BuckDeps {
   private static final Logger LOG = Logger.getInstance(BuckDeps.class);
 
   // Patterns to search within a BUCK file for known rule
-  private static final Pattern autodepsPattern =
-      Pattern.compile("autodeps\\s*=\\s*True");
-  private static final Pattern depsPattern =
-      Pattern.compile("deps\\s*=\\s*\\[([^\\]]+)\\]");
+  private static final Pattern autodepsPattern = Pattern.compile("autodeps\\s*=\\s*True");
+  private static final Pattern depsPattern = Pattern.compile("deps\\s*=\\s*\\[([^\\]]+)\\]");
   private static final Pattern exportedDepsPattern =
       Pattern.compile("exported_deps\\s*=\\s*\\[([^\\]]+)\\]");
   private static final Pattern visibilityPattern =
       Pattern.compile("visibility\\s*=\\s*\\[([^\\]]+)\\]");
 
-  private BuckDeps() {
-  }
+  private BuckDeps() {}
 
   public static void addDeps(
       Project project,
@@ -76,9 +72,8 @@ public class BuckDeps {
   }
 
   /**
-   * Given the contents of a buckfile and a target name, returns an array of
-   * indices into the content [start, end] of a guess where that target def
-   * in the given BUCK file.
+   * Given the contents of a buckfile and a target name, returns an array of indices into the
+   * content [start, end] of a guess where that target def in the given BUCK file.
    */
   @VisibleForTesting
   static int[] findTargetInBuckFileContents(String contents, String target) {
@@ -92,7 +87,7 @@ public class BuckDeps {
     while (depth > 0) {
       targetStart -= 1;
       if (targetStart <= 0) {
-        return null;  // marched back to beginning of file...this ain't it.
+        return null; // marched back to beginning of file...this ain't it.
       }
       char ch = contents.charAt(targetStart);
       if (ch == '(') {
@@ -100,14 +95,13 @@ public class BuckDeps {
       } else if (ch == ')') {
         depth += 1;
       }
-
     }
     // March forwards to figure out where the rule ends
     int targetEnd = nameOffset + target.length();
     depth = 1;
     while (depth > 0) {
       if (targetEnd >= contents.length()) {
-        return null;  // marched past end of file...didn't find it.
+        return null; // marched past end of file...didn't find it.
       }
       char ch = contents.charAt(targetEnd);
       if (ch == '(') {
@@ -117,13 +111,12 @@ public class BuckDeps {
       }
       targetEnd += 1;
     }
-    return new int[]{targetStart, targetEnd};
+    return new int[] {targetStart, targetEnd};
   }
 
   /**
-   * Given the contents of a BUCK file, try to modify the
-   * contents to add the given dependency to the given
-   * target.
+   * Given the contents of a BUCK file, try to modify the contents to add the given dependency to
+   * the given target.
    */
   @VisibleForTesting
   static String maybeAddDepToTarget(String buckContents, String dependency, String target) {
@@ -152,10 +145,11 @@ public class BuckDeps {
 
     Matcher depsMatcher = depsPattern.matcher(targetDef);
     if (!depsMatcher.find()) {
-      LOG.warn("Couldn't figure out where to add new dependency on " +
-          dependency +
-          " in definition for " +
-          target);
+      LOG.warn(
+          "Couldn't figure out where to add new dependency on "
+              + dependency
+              + " in definition for "
+              + target);
       return buckContents;
     }
     if (depsMatcher.group(1).contains(dependency)) {
@@ -163,14 +157,15 @@ public class BuckDeps {
       return buckContents;
     }
     int offset = targetOffset[0] + depsMatcher.start(1);
-    return buckContents.substring(0, offset) +
-        "\n\t\t'" + dependency + "'," +
-        buckContents.substring(offset);
+    return buckContents.substring(0, offset)
+        + "\n\t\t'"
+        + dependency
+        + "',"
+        + buckContents.substring(offset);
   }
 
   @VisibleForTesting
-  static String maybeAddVisibilityToTarget(
-      String buckContents, String visibility, String target) {
+  static String maybeAddVisibilityToTarget(String buckContents, String visibility, String target) {
 
     int[] targetOffset = findTargetInBuckFileContents(buckContents, target);
     if (targetOffset == null) {
@@ -183,10 +178,11 @@ public class BuckDeps {
 
     Matcher visibilityMatcher = visibilityPattern.matcher(targetDef);
     if (!visibilityMatcher.find()) {
-      LOG.warn("Couldn't figure out where to increase visibility for " +
-          target +
-          " to include " +
-          visibility);
+      LOG.warn(
+          "Couldn't figure out where to increase visibility for "
+              + target
+              + " to include "
+              + visibility);
       // TODO(ideabuck):  try harder to figure out where to add the visibility
       return buckContents;
     }
@@ -195,13 +191,16 @@ public class BuckDeps {
       return buckContents; // already visibile to this caller
     }
     int offset = targetOffset[0] + visibilityMatcher.start(1);
-    buckContents = buckContents.substring(0, offset) +
-        "\n\t\t'" + visibility + "'," +
-        buckContents.substring(offset);
+    buckContents =
+        buckContents.substring(0, offset)
+            + "\n\t\t'"
+            + visibility
+            + "',"
+            + buckContents.substring(offset);
     return buckContents;
   }
 
-  private static String readBuckFile (String buckFilePath) {
+  private static String readBuckFile(String buckFilePath) {
     String str = "";
     File file = new File(buckFilePath);
     try (FileInputStream fis = new FileInputStream(file)) {
@@ -220,9 +219,9 @@ public class BuckDeps {
     return str;
   }
 
-  private static void writeBuckFile (String buckFilePath, String text) {
+  private static void writeBuckFile(String buckFilePath, String text) {
 
-    try (PrintWriter out = new PrintWriter(buckFilePath)) {
+    try (PrintWriter out = new PrintWriter(buckFilePath)) { // NOPMD not in core Buck
       out.write(text);
     } catch (FileNotFoundException e) {
       LOG.error(e.toString());

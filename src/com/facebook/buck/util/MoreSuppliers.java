@@ -17,9 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Supplier;
-
 import java.lang.ref.WeakReference;
-
 import javax.annotation.Nullable;
 
 public final class MoreSuppliers {
@@ -56,5 +54,4 @@ public final class MoreSuppliers {
       return value;
     }
   }
-
 }

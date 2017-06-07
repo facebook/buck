@@ -27,9 +27,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Test;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -40,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
+import org.junit.Test;
 
 public class XctoolOutputParsingTest {
 
@@ -48,56 +46,56 @@ public class XctoolOutputParsingTest {
   private static XctoolOutputParsing.XctoolEventCallback eventCallbackAddingEventsToList(
       final List<Object> streamedObjects) {
     return new XctoolOutputParsing.XctoolEventCallback() {
-        @Override
-        public void handleBeginOcunitEvent(XctoolOutputParsing.BeginOcunitEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginOcunitEvent(XctoolOutputParsing.BeginOcunitEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
-          streamedObjects.add(event);
-        }
+      @Override
+      public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
+        streamedObjects.add(event);
+      }
 
-        @Override
-        public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
-          streamedObjects.add(event);
-        }};
+      @Override
+      public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
+        streamedObjects.add(event);
+      }
+    };
   }
 
   @Test
   public void streamingSimpleSuccess() throws Exception {
-    Path jsonPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctool-output/simple-success.json");
+    Path jsonPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/simple-success.json");
     final List<Object> streamedObjects = new ArrayList<>();
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
       XctoolOutputParsing.streamOutputFromReader(
-          jsonReader,
-          eventCallbackAddingEventsToList(streamedObjects));
+          jsonReader, eventCallbackAddingEventsToList(streamedObjects));
     }
     assertThat(streamedObjects, hasSize(8));
 
@@ -106,24 +104,24 @@ public class XctoolOutputParsingTest {
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.StatusEvent.class));
-    XctoolOutputParsing.StatusEvent beginStatusEvent = (XctoolOutputParsing.StatusEvent)
-        nextStreamedObject;
+    XctoolOutputParsing.StatusEvent beginStatusEvent =
+        (XctoolOutputParsing.StatusEvent) nextStreamedObject;
     assertThat(beginStatusEvent.timestamp, closeTo(1432065853.406129, EPSILON));
     assertThat(beginStatusEvent.message, equalTo("Collecting info for testables..."));
     assertThat(beginStatusEvent.level, equalTo("Info"));
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.StatusEvent.class));
-    XctoolOutputParsing.StatusEvent endStatusEvent = (XctoolOutputParsing.StatusEvent)
-        nextStreamedObject;
+    XctoolOutputParsing.StatusEvent endStatusEvent =
+        (XctoolOutputParsing.StatusEvent) nextStreamedObject;
     assertThat(endStatusEvent.timestamp, closeTo(1432065854.077704, EPSILON));
     assertThat(endStatusEvent.message, equalTo("Collecting info for testables..."));
     assertThat(endStatusEvent.level, equalTo("Info"));
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.BeginOcunitEvent.class));
-    XctoolOutputParsing.BeginOcunitEvent beginOcunitEvent = (XctoolOutputParsing.BeginOcunitEvent)
-        nextStreamedObject;
+    XctoolOutputParsing.BeginOcunitEvent beginOcunitEvent =
+        (XctoolOutputParsing.BeginOcunitEvent) nextStreamedObject;
     assertThat(beginOcunitEvent.timestamp, closeTo(1432065854.07812, EPSILON));
 
     nextStreamedObject = iter.next();
@@ -176,13 +174,12 @@ public class XctoolOutputParsingTest {
 
   @Test
   public void streamingSimpleFailure() throws Exception {
-    Path jsonPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctool-output/simple-failure.json");
+    Path jsonPath =
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/simple-failure.json");
     final List<Object> streamedObjects = new ArrayList<>();
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
       XctoolOutputParsing.streamOutputFromReader(
-          jsonReader,
-          eventCallbackAddingEventsToList(streamedObjects));
+          jsonReader, eventCallbackAddingEventsToList(streamedObjects));
     }
     assertThat(streamedObjects, hasSize(8));
 
@@ -190,24 +187,24 @@ public class XctoolOutputParsingTest {
     Object nextStreamedObject;
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.StatusEvent.class));
-    XctoolOutputParsing.StatusEvent beginStatusEvent = (XctoolOutputParsing.StatusEvent)
-        nextStreamedObject;
+    XctoolOutputParsing.StatusEvent beginStatusEvent =
+        (XctoolOutputParsing.StatusEvent) nextStreamedObject;
     assertThat(beginStatusEvent.timestamp, closeTo(1432065858.258645, EPSILON));
     assertThat(beginStatusEvent.message, equalTo("Collecting info for testables..."));
     assertThat(beginStatusEvent.level, equalTo("Info"));
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.StatusEvent.class));
-    XctoolOutputParsing.StatusEvent endStatusEvent = (XctoolOutputParsing.StatusEvent)
-        nextStreamedObject;
+    XctoolOutputParsing.StatusEvent endStatusEvent =
+        (XctoolOutputParsing.StatusEvent) nextStreamedObject;
     assertThat(endStatusEvent.timestamp, closeTo(1432065859.00568, EPSILON));
     assertThat(endStatusEvent.message, equalTo("Collecting info for testables..."));
     assertThat(endStatusEvent.level, equalTo("Info"));
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.BeginOcunitEvent.class));
-    XctoolOutputParsing.BeginOcunitEvent beginOcunitEvent = (XctoolOutputParsing.BeginOcunitEvent)
-        nextStreamedObject;
+    XctoolOutputParsing.BeginOcunitEvent beginOcunitEvent =
+        (XctoolOutputParsing.BeginOcunitEvent) nextStreamedObject;
     assertThat(beginOcunitEvent.timestamp, closeTo(1432065859.006029, EPSILON));
 
     nextStreamedObject = iter.next();
@@ -245,8 +242,8 @@ public class XctoolOutputParsingTest {
     assertThat(
         testException.reason,
         equalTo(
-            "((2 + 2) equal to (5)) failed: (\"4\") is not equal to (\"5\") - Two plus two " +
-            "equals five"));
+            "((2 + 2) equal to (5)) failed: (\"4\") is not equal to (\"5\") - Two plus two "
+                + "equals five"));
 
     assertThat(nextStreamedObject, instanceOf(XctoolOutputParsing.EndTestSuiteEvent.class));
     XctoolOutputParsing.EndTestSuiteEvent endTestSuiteEvent =
@@ -271,8 +268,7 @@ public class XctoolOutputParsingTest {
   public void streamingEmptyReaderDoesNotCauseFailure() {
     final List<Object> streamedObjects = new ArrayList<>();
     XctoolOutputParsing.streamOutputFromReader(
-        new StringReader(""),
-        eventCallbackAddingEventsToList(streamedObjects));
+        new StringReader(""), eventCallbackAddingEventsToList(streamedObjects));
     assertThat(streamedObjects, is(empty()));
   }
 
@@ -299,9 +295,7 @@ public class XctoolOutputParsingTest {
 
     Optional<TestStatusMessage> testStatusMessage =
         XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
-    assertThat(
-        testStatusMessage,
-        equalTo(Optional.empty()));
+    assertThat(testStatusMessage, equalTo(Optional.empty()));
   }
 
   @Test
@@ -313,8 +307,6 @@ public class XctoolOutputParsingTest {
 
     Optional<TestStatusMessage> testStatusMessage =
         XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
-    assertThat(
-        testStatusMessage,
-        equalTo(Optional.empty()));
+    assertThat(testStatusMessage, equalTo(Optional.empty()));
   }
 }

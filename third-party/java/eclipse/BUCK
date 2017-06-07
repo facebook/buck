@@ -1,81 +1,81 @@
 java_library(
-    name = 'eclipse_jdt',
+    name = "eclipse_jdt",
     exported_deps = [
-        ':contenttype',
-        ':jdt',
-        ':jobs',
-        ':resources',
-        ':runtime',
-        ':equinox-common',
-        ':equinox-preferences',
-        ':osgi',
+        ":contenttype",
+        ":equinox-common",
+        ":equinox-preferences",
+        ":jdt",
+        ":jobs",
+        ":osgi",
+        ":resources",
+        ":runtime",
     ],
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
-    visibility = ['//src/com/facebook/buck/jvm/java:autodeps']
+    visibility = ["//src/com/facebook/buck/jvm/java:autodeps"],
 )
 
 prebuilt_jar(
-    name = 'contenttype',
-    binary_jar = 'org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar',
+    name = "contenttype",
+    binary_jar = "org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar",
     licenses = [
-      'LICENSE.html',
-    ],
-)
-
-prebuilt_jar(
-    name = 'jobs',
-    binary_jar = 'org.eclipse.core.jobs_3.8.0.v20160319-0610.jar',
-    licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
 )
 
 prebuilt_jar(
-    name = 'resources',
-    binary_jar = 'org.eclipse.core.resources_3.11.0.v20160422-0304.jar',
+    name = "jobs",
+    binary_jar = "org.eclipse.core.jobs_3.8.0.v20160319-0610.jar",
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
 )
 
 prebuilt_jar(
-    name = 'runtime',
-    binary_jar = 'org.eclipse.core.runtime_3.12.0.v20160427-1901.jar',
+    name = "resources",
+    binary_jar = "org.eclipse.core.resources_3.11.0.v20160422-0304.jar",
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
 )
 
 prebuilt_jar(
-    name = 'equinox-common',
-    binary_jar = 'org.eclipse.equinox.common_3.8.0.v20160422-1942.jar',
+    name = "runtime",
+    binary_jar = "org.eclipse.core.runtime_3.12.0.v20160427-1901.jar",
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
 )
 
 prebuilt_jar(
-    name = 'equinox-preferences',
-    binary_jar = 'org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar',
+    name = "equinox-common",
+    binary_jar = "org.eclipse.equinox.common_3.8.0.v20160422-1942.jar",
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
 )
 
 prebuilt_jar(
-    name = 'jdt',
-    binary_jar = 'org.eclipse.jdt.core_3.12.0.v20160426-1326.jar',
+    name = "equinox-preferences",
+    binary_jar = "org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar",
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
     ],
 )
 
 prebuilt_jar(
-    name = 'osgi',
-    binary_jar = 'org.eclipse.osgi_3.11.0.v20160427-2120.jar',
+    name = "jdt",
+    binary_jar = "org.eclipse.jdt.core_3.12.0.v20160426-1326.jar",
     licenses = [
-      'LICENSE.html',
+        "LICENSE.html",
+    ],
+)
+
+prebuilt_jar(
+    name = "osgi",
+    binary_jar = "org.eclipse.osgi_3.11.0.v20160427-2120.jar",
+    licenses = [
+        "LICENSE.html",
     ],
 )

@@ -1,27 +1,27 @@
 {
-  "checkers_whitelist": [
+  "checkers-whitelist-path-regex": [
     "src",
     "ideabuck"
   ],
-  "checkers_blacklist": [
+  "checkers-blacklist-path-regex": [
     "src-gen"
   ],
-  "eradicate_whitelist": [
+  "eradicate-whitelist-path-regex": [
     "src",
     "ideabuck"
   ],
-  "eradicate_blacklist": [
-    "src/com/facebook/buck/junit",
+  "eradicate-blacklist-path-regex": [
+    "src/com/facebook/buck/jvm/java/runner",
+    "src/com/facebook/buck/testrunner",
     "src-gen"
   ],
-  "infer_whitelist": [
+  "infer-whitelist-path-regex": [
     "src",
     "ideabuck"
   ],
-  "infer_blacklist": [
+  "infer-blacklist-path-regex": [
     "src-gen"
   ],
- "enable_checks": [
-      "UNSAFE_GUARDED_BY_ACCESS"
-  ]
+  "resolve-infer-eradicate-conflict": true,
+  "skip-duplicated-types": false
 }

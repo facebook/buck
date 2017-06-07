@@ -17,15 +17,16 @@ package com.facebook.buck.macho;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.primitives.UnsignedInteger;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractLoadCommandCommonFields {
   public int getOffsetInBinary();
-  public UnsignedInteger getCmd();        // 32 bit
-  public UnsignedInteger getCmdsize();    // 32 bit
+
+  public UnsignedInteger getCmd(); // 32 bit
+
+  public UnsignedInteger getCmdsize(); // 32 bit
 
   public static final int CMD_AND_CMDSIZE_SIZE = 8;
 }

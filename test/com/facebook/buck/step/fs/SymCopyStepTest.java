@@ -23,45 +23,44 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class SymCopyStepTest {
 
-  @Rule
-  public final TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   private ExecutionContext context;
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
     context = TestExecutionContext.newInstance();
   }
 
   @Test
   public void testGetShortName() {
-    SymCopyStep symCopyStep = new SymCopyStep(
-        projectFilesystem,
-        ImmutableList.<Path>builder().add(Paths.get("here")).build(),
-        Paths.get("there"));
+    SymCopyStep symCopyStep =
+        new SymCopyStep(
+            projectFilesystem,
+            ImmutableList.<Path>builder().add(Paths.get("here")).build(),
+            Paths.get("there"));
     assertEquals("lns", symCopyStep.getShortName());
   }
 
   @Test
   public void testDescription() {
-    SymCopyStep symCopyStep = new SymCopyStep(
-        projectFilesystem,
-        ImmutableList.<Path>builder().add(Paths.get("here")).build(),
-        Paths.get("there"));
+    SymCopyStep symCopyStep =
+        new SymCopyStep(
+            projectFilesystem,
+            ImmutableList.<Path>builder().add(Paths.get("here")).build(),
+            Paths.get("there"));
     assertEquals("Symlink-Copy step", symCopyStep.getDescription(context));
   }
 
@@ -84,15 +83,11 @@ public class SymCopyStepTest {
     projectFilesystem.writeContentsToPath("foo2", file2);
     projectFilesystem.writeContentsToPath("foo3", file3);
 
-
     Path destRoot = Paths.get("dest-root");
 
-    SymCopyStep symCopyStep = new SymCopyStep(
-        projectFilesystem,
-        ImmutableList.<Path>builder()
-            .add(sourceRoot)
-            .build(),
-        destRoot);
+    SymCopyStep symCopyStep =
+        new SymCopyStep(
+            projectFilesystem, ImmutableList.<Path>builder().add(sourceRoot).build(), destRoot);
 
     symCopyStep.execute(context);
 
@@ -104,15 +99,17 @@ public class SymCopyStepTest {
     assertTrue(projectFilesystem.isSymLink(destRoot.resolve("dir2").resolve("file3")));
 
     // check that the symlinks generated are correct
-    assertTrue(projectFilesystem.readSymLink(destRoot.resolve("file1")).equals(
-        projectFilesystem.resolve(file1)));
-    assertTrue(projectFilesystem.readSymLink(destRoot.resolve("dir1").resolve("file2")).equals(
-        projectFilesystem.resolve(file2)));
-    assertTrue(projectFilesystem.readSymLink(destRoot.resolve("dir2").resolve("file3")).equals(
-        projectFilesystem.resolve(file3)));
-
-
-
+    assertTrue(
+        projectFilesystem
+            .readSymLink(destRoot.resolve("file1"))
+            .equals(projectFilesystem.resolve(file1)));
+    assertTrue(
+        projectFilesystem
+            .readSymLink(destRoot.resolve("dir1").resolve("file2"))
+            .equals(projectFilesystem.resolve(file2)));
+    assertTrue(
+        projectFilesystem
+            .readSymLink(destRoot.resolve("dir2").resolve("file3"))
+            .equals(projectFilesystem.resolve(file3)));
   }
-
 }

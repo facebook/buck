@@ -20,36 +20,35 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
-
 
 public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackagable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  @AddToRuleKey
-  private final SourcePath binarySrc;
+  @AddToRuleKey private final SourcePath binarySrc;
 
-  public PrebuiltPythonLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      SourcePath binarySrc) {
-    super(params, resolver);
+  public PrebuiltPythonLibrary(BuildRuleParams params, SourcePath binarySrc) {
+    super(params);
     this.binarySrc = binarySrc;
   }
 
   @Override
+  public Iterable<BuildRule> getPythonPackageDeps(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
+    return getBuildDeps();
+  }
+
+  @Override
   public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform) {
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return PythonPackageComponents.of(
@@ -64,5 +63,4 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
   }
-
 }

@@ -1,11 +1,11 @@
 prebuilt_jar(
-  name = 'jetty-all',
-  binary_jar = 'jetty-all-9.2.10.v20150310.jar',
-  licenses = [
-    'license-epl.html',
-    'LICENSE-APACHE',
-  ],
-#  source_jar = ':jetty-source',
+    name = "jetty-all",
+    binary_jar = "jetty-all-9.2.10.v20150310.jar",
+    licenses = [
+        "LICENSE-APACHE",
+        "license-epl.html",
+    ],
+    #  source_jar = ':jetty-source',
 )
 
 # Uncomment this to get hold of the source jar.
@@ -17,22 +17,24 @@ prebuilt_jar(
 #)
 
 java_library(
-  name = 'jetty',
-  deps = [],
-  exported_deps = [
-    ':jetty-all',
-    '//third-party/java/servlet-api:servlet-api',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/httpserver:',
-    '//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib',
-    '//test/com/facebook/buck/file:file',
-    '//test/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/event/listener/integration:integration',
-    '//test/com/facebook/buck/httpserver:',
-    '//test/com/facebook/buck/maven:maven',
-    '//test/com/facebook/buck/maven:testutil',
-    '//test/com/facebook/buck/rage:',
-    '//test/com/facebook/buck/testutil/integration:',
-  ],
+    name = "jetty",
+    exported_deps = [
+        ":jetty-all",
+        "//third-party/java/servlet-api:servlet-api",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/httpserver:",
+        "//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib",
+        "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/doctor:",
+        "//test/com/facebook/buck/event/listener:",
+        "//test/com/facebook/buck/event/listener/integration:",
+        "//test/com/facebook/buck/file:file",
+        "//test/com/facebook/buck/httpserver:",
+        "//test/com/facebook/buck/maven:maven",
+        "//test/com/facebook/buck/maven:testutil",
+        "//test/com/facebook/buck/rage:",
+        "//test/com/facebook/buck/testutil/integration:",
+    ],
+    deps = [],
 )

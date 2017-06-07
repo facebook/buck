@@ -21,26 +21,21 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class LoggingIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void logOutputIsOnlyReportedForTestWhichFails() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "test_with_logging",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_logging", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:logging");
@@ -48,8 +43,8 @@ public class LoggingIntegrationTest {
 
     // stdout should get all debug messages and up when a test fails.
     String testOutput = result.getStderr();
-    String[] testOutputBeforeAndAfterDebugLogs = testOutput.split(
-        JUnitRunner.JUL_DEBUG_LOGS_HEADER);
+    String[] testOutputBeforeAndAfterDebugLogs =
+        testOutput.split(JUnitRunner.JUL_DEBUG_LOGS_HEADER);
     assertThat(testOutputBeforeAndAfterDebugLogs, arrayWithSize(2));
     String testOutputAfterDebugLogs = testOutputBeforeAndAfterDebugLogs[1];
     String[] testOutputBeforeAndAfterErrorLogs =

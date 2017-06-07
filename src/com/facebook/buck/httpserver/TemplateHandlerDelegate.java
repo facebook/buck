@@ -18,12 +18,9 @@ package com.facebook.buck.httpserver;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
-
-import org.eclipse.jetty.server.Request;
-
 import java.io.IOException;
-
 import javax.annotation.Nullable;
+import org.eclipse.jetty.server.Request;
 
 public interface TemplateHandlerDelegate {
 
@@ -41,9 +38,9 @@ public interface TemplateHandlerDelegate {
 
   /**
    * @param baseRequest Request that will be served by this handler.
-   * @return A {@link SoyMapData} to populate the template returned by
-   *     {@link #getTemplateForRequest(Request)}. If the request is malformed, then return
-   *     {@code null} in this method to indicate an error.
+   * @return A {@link SoyMapData} to populate the template returned by {@link
+   *     #getTemplateForRequest(Request)}. If the request is malformed, then return {@code null} in
+   *     this method to indicate an error.
    */
   @Nullable
   public SoyMapData getDataForRequest(Request baseRequest) throws IOException;

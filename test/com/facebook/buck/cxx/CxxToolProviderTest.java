@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -30,9 +29,7 @@ public class CxxToolProviderTest {
     assertThat(
         CxxToolProvider.getTypeFromVersionOutput(
             ImmutableList.of(
-                "clang version 3.7.1 ",
-                "Target: x86_64-unknown-linux-gnu",
-                "Thread model: posix")),
+                "clang version 3.7.1 ", "Target: x86_64-unknown-linux-gnu", "Thread model: posix")),
         Matchers.is(CxxToolProvider.Type.CLANG));
     assertThat(
         CxxToolProvider.getTypeFromVersionOutput(
@@ -51,11 +48,7 @@ public class CxxToolProviderTest {
         Matchers.is(CxxToolProvider.Type.GCC));
     assertThat(
         CxxToolProvider.getTypeFromVersionOutput(
-            ImmutableList.of(
-                "Blah blah blah.",
-                "I am a compiler.",
-                "I am not clang though.")),
+            ImmutableList.of("Blah blah blah.", "I am a compiler.", "I am not clang though.")),
         Matchers.is(CxxToolProvider.Type.GCC));
   }
-
 }

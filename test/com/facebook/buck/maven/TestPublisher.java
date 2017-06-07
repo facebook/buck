@@ -18,7 +18,6 @@ package com.facebook.buck.maven;
 
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -26,7 +25,8 @@ import java.util.Optional;
  * A {@link com.facebook.buck.maven.Publisher}, that does not send real PUT requests, instead
  * recording their paths
  *
- * Use {@link #getPutRequestsHandler}.getPutRequestsPaths to get the paths of PUT requests invoked
+ * <p>Use {@link #getPutRequestsHandler}.getPutRequestsPaths to get the paths of PUT requests
+ * invoked
  */
 public class TestPublisher extends Publisher implements AutoCloseable {
 
@@ -37,9 +37,7 @@ public class TestPublisher extends Publisher implements AutoCloseable {
     return create(tmpDir.newFolder());
   }
 
-  /**
-   * @param pseudoLocalRepo typically {@link org.junit.rules.TemporaryFolder#newFolder}
-   */
+  /** @param pseudoLocalRepo typically {@link org.junit.rules.TemporaryFolder#newFolder} */
   public static TestPublisher create(Path pseudoLocalRepo) throws Exception {
     HttpdForTests.DummyPutRequestsHandler putRequestsHandler =
         new HttpdForTests.DummyPutRequestsHandler();
@@ -52,8 +50,10 @@ public class TestPublisher extends Publisher implements AutoCloseable {
   private TestPublisher(
       Path pseudoLocalRepo,
       HttpdForTests httpd,
-      HttpdForTests.DummyPutRequestsHandler putRequestsHandler) throws Exception {
-    super(pseudoLocalRepo,
+      HttpdForTests.DummyPutRequestsHandler putRequestsHandler)
+      throws Exception {
+    super(
+        pseudoLocalRepo,
         Optional.of(httpd.getRootUri().toURL()),
         /* username */ Optional.empty(),
         /* password */ Optional.empty(),

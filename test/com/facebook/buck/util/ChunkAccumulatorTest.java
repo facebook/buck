@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Charsets;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -30,9 +29,7 @@ public class ChunkAccumulatorTest {
     ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 100);
     accumulator.append("hello");
     accumulator.append("world");
-    assertThat(
-        accumulator.getChunks(),
-        Matchers.contains("hello", "world"));
+    assertThat(accumulator.getChunks(), Matchers.contains("hello", "world"));
   }
 
   @Test
@@ -40,9 +37,7 @@ public class ChunkAccumulatorTest {
     ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 8);
     accumulator.append("hello");
     accumulator.append("world");
-    assertThat(
-        accumulator.getChunks(),
-        Matchers.contains("world"));
+    assertThat(accumulator.getChunks(), Matchers.contains("world"));
   }
 
   @Test
@@ -51,18 +46,13 @@ public class ChunkAccumulatorTest {
     accumulator.append("hello");
     accumulator.append("world");
     accumulator.append("big chunk");
-    assertThat(
-        accumulator.getChunks(),
-        Matchers.contains("big chunk"));
+    assertThat(accumulator.getChunks(), Matchers.contains("big chunk"));
   }
 
   @Test
   public void chunkTooBigForAccumulator() {
     ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 10);
     accumulator.append("super big chunk");
-    assertThat(
-        accumulator.getChunks(),
-        Matchers.empty());
+    assertThat(accumulator.getChunks(), Matchers.empty());
   }
-
 }

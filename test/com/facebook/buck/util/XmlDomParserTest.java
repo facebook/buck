@@ -19,13 +19,12 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import org.junit.Test;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class XmlDomParserTest {
 
@@ -48,16 +47,16 @@ public class XmlDomParserTest {
   }
 
   /**
-   * Checks that when creating an {@link InputSource} from a {@link Reader} and passing that
-   * through {@link XmlDomParser#parse(InputSource,boolean)}, it is closed before the method
-   * returns.
+   * Checks that when creating an {@link InputSource} from a {@link Reader} and passing that through
+   * {@link XmlDomParser#parse(InputSource,boolean)}, it is closed before the method returns.
+   *
    * @see <a href="http://fburl.com/8289364">DocumentBuilder.parse(InputStream)</a>
    * @throws IOException
    */
   @Test
   public void testXmlDomParserClosesReader() throws IOException, SAXException {
-    StringReaderForCloseCheck reader = new StringReaderForCloseCheck(
-        "<?xml version='1.0'?> <a><b><c></c></b></a>");
+    StringReaderForCloseCheck reader =
+        new StringReaderForCloseCheck("<?xml version='1.0'?> <a><b><c></c></b></a>");
     assertFalse(reader.isClosed());
     XmlDomParser.parse(new InputSource(reader), false);
     assertTrue(reader.isClosed());

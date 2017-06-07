@@ -19,30 +19,33 @@ package com.facebook.buck.android;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
-/**
- * A container for all configuration settings needed to define a build target.
- */
+/** A container for all configuration settings needed to define a build target. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractNdkCxxPlatformTargetConfiguration {
 
   public abstract NdkCxxPlatforms.Toolchain getToolchain();
+
   public abstract NdkCxxPlatforms.ToolchainTarget getToolchainTarget();
+
   public abstract NdkCxxPlatforms.TargetArch getTargetArch();
+
   public abstract NdkCxxPlatforms.TargetArchAbi getTargetArchAbi();
+
   public abstract String getTargetAppPlatform();
+
   public abstract NdkCxxPlatformCompiler getCompiler();
-  public abstract
-  ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getCompilerFlags();
-  public abstract
-  ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getAssemblerFlags();
-  public abstract
-  ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getLinkerFlags();
+
+  public abstract ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>>
+      getCompilerFlags();
+
+  public abstract ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>>
+      getAssemblerFlags();
+
+  public abstract ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getLinkerFlags();
 
   public ImmutableList<String> getAssemblerFlags(NdkCxxPlatformCompiler.Type type) {
     return Optional.ofNullable(getAssemblerFlags().get(type)).orElse(ImmutableList.of());
@@ -55,5 +58,4 @@ abstract class AbstractNdkCxxPlatformTargetConfiguration {
   public ImmutableList<String> getLinkerFlags(NdkCxxPlatformCompiler.Type type) {
     return Optional.ofNullable(getLinkerFlags().get(type)).orElse(ImmutableList.of());
   }
-
 }

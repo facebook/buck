@@ -24,29 +24,26 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public class FetchCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temp = new TemporaryPaths();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
 
@@ -65,10 +62,8 @@ public class FetchCommandIntegrationTest {
 
   @Test
   public void shouldBuildNothingIfThereAreNoFetchableRules() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "fetch_nothing",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fetch_nothing", temp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("fetch", "//:example");
@@ -78,17 +73,15 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertFalse(allTargets.contains(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//:example")));
+    assertFalse(
+        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:example")));
   }
 
   @Test
   public void shouldFetchARemoteResourceIfThatIsTheExactTargetRequested()
       throws IOException, URISyntaxException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "fetch_concrete",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fetch_concrete", temp);
     workspace.setUp();
 
     // We don't know the URL of the file beforehand. Fix that.
@@ -108,10 +101,8 @@ public class FetchCommandIntegrationTest {
   @Test
   public void shouldNotFetchARemoteResourceIfNotIncludedInTheSetOfTargetsToBuild()
       throws IOException, URISyntaxException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "fetch_concrete",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fetch_concrete", temp);
     workspace.setUp();
 
     // We don't know the URL of the file beforehand. Fix that.
@@ -124,16 +115,14 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertFalse(allTargets.contains(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
+    assertFalse(
+        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
   }
 
   @Test
   public void shouldOnlyExecuteDownloadableTargets() throws IOException, URISyntaxException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "fetch_concrete",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fetch_concrete", temp);
     workspace.setUp();
 
     // We don't know the URL of the file beforehand. Fix that.
@@ -146,9 +135,10 @@ public class FetchCommandIntegrationTest {
     BuckBuildLog log = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allTargets = log.getAllTargets();
 
-    assertTrue(allTargets.contains(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
-    assertFalse(allTargets.contains(
+    assertTrue(
+        allTargets.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:remote")));
+    assertFalse(
+        allTargets.contains(
             BuildTargetFactory.newInstance(workspace.getDestPath(), "//:needs-download")));
   }
 
@@ -160,12 +150,14 @@ public class FetchCommandIntegrationTest {
 
     HashCode expectedHash = Hashing.sha1().hashString("cheese", UTF_16);
 
-    String newRule = Joiner.on("\n").join(
-        "remote_file(name = 'remote',",
-        String.format("  url = '%s',", httpd.getUri("/cheese")),
-        String.format("  sha1 = '%s',", expectedHash.toString()),
-        "  out = 'example.txt',",
-        ")");
+    String newRule =
+        Joiner.on("\n")
+            .join(
+                "remote_file(name = 'remote',",
+                String.format("  url = '%s',", httpd.getUri("/cheese")),
+                String.format("  sha1 = '%s',", expectedHash.toString()),
+                "  out = 'example.txt',",
+                ")");
 
     Files.write(buckFile, (existingBuck + "\n" + newRule).getBytes(UTF_8));
   }

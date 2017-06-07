@@ -16,45 +16,43 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.Optional;
 
-/**
- * Handy way to create new {@link CachingBuildEngine} instances for test purposes.
- */
+/** Handy way to create new {@link CachingBuildEngine} instances for test purposes. */
 public class CachingBuildEngineFactory {
 
   private CachingBuildEngine.BuildMode buildMode = CachingBuildEngine.BuildMode.SHALLOW;
+  private CachingBuildEngine.MetadataStorage metadataStorage =
+      CachingBuildEngine.MetadataStorage.FILESYSTEM;
   private CachingBuildEngine.DepFiles depFiles = CachingBuildEngine.DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();
   private long inputFileSizeLimit = Long.MAX_VALUE;
-  private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-  private Optional<Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>>
-      ruleKeyFactoriesFunction = Optional.empty();
+  private Optional<RuleKeyFactories> ruleKeyFactories = Optional.empty();
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
   private BuildRuleResolver buildRuleResolver;
   private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
+  private boolean logBuildRuleFailuresInline = true;
+  private BuildInfoStoreManager buildInfoStoreManager;
 
-  public CachingBuildEngineFactory(BuildRuleResolver buildRuleResolver) {
-    this.cachingBuildEngineDelegate =
-        new LocalCachingBuildEngineDelegate(new NullFileHashCache());
+  public CachingBuildEngineFactory(
+      BuildRuleResolver buildRuleResolver, BuildInfoStoreManager buildInfoStoreManager) {
+    this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new NullFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
+    this.buildInfoStoreManager = buildInfoStoreManager;
   }
 
   public CachingBuildEngineFactory setBuildMode(CachingBuildEngine.BuildMode buildMode) {
@@ -84,8 +82,7 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
-  public CachingBuildEngineFactory setExecutorService(
-      ListeningExecutorService executorService) {
+  public CachingBuildEngineFactory setExecutorService(ListeningExecutorService executorService) {
     this.executorService = toWeighted(executorService);
     return this;
   }
@@ -96,50 +93,64 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
-  public CachingBuildEngineFactory setRuleKeyFactoriesFunction(
-      Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>
-          ruleKeyFactoriesFunction) {
-    this.ruleKeyFactoriesFunction =
-        Optional.of(
-            ruleKeyFactoriesFunction);
+  public CachingBuildEngineFactory setRuleKeyFactories(RuleKeyFactories ruleKeyFactories) {
+    this.ruleKeyFactories = Optional.of(ruleKeyFactories);
+    return this;
+  }
+
+  public CachingBuildEngineFactory setLogBuildRuleFailuresInline(
+      boolean logBuildRuleFailuresInline) {
+    this.logBuildRuleFailuresInline = logBuildRuleFailuresInline;
     return this;
   }
 
   public CachingBuildEngine build() {
-    if (ruleKeyFactoriesFunction.isPresent()) {
+    if (ruleKeyFactories.isPresent()) {
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       return new CachingBuildEngine(
           cachingBuildEngineDelegate,
           executorService,
           new DefaultStepRunner(),
           buildMode,
+          metadataStorage,
           depFiles,
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
-          new SourcePathResolver(buildRuleResolver),
-          ruleKeyFactoriesFunction.get(),
-          resourceAwareSchedulingInfo);
+          buildRuleResolver,
+          buildInfoStoreManager,
+          ruleFinder,
+          new SourcePathResolver(ruleFinder),
+          ruleKeyFactories.get(),
+          resourceAwareSchedulingInfo,
+          logBuildRuleFailuresInline);
     }
 
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
         executorService,
+        executorService,
         new DefaultStepRunner(),
         buildMode,
+        metadataStorage,
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
-        inputFileSizeLimit,
-        objectMapper,
         buildRuleResolver,
-        0,
-        resourceAwareSchedulingInfo);
+        buildInfoStoreManager,
+        resourceAwareSchedulingInfo,
+        logBuildRuleFailuresInline,
+        RuleKeyFactories.of(
+            0,
+            cachingBuildEngineDelegate.getFileHashCache(),
+            buildRuleResolver,
+            inputFileSizeLimit,
+            new DefaultRuleKeyCache<>()));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
     return new WeightedListeningExecutorService(
         new ListeningMultiSemaphore(
-            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0),
-            ResourceAllocationFairness.FAIR),
+            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0), ResourceAllocationFairness.FAIR),
         /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
         service);
   }

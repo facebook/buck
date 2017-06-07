@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import os
 import re
 import requests  # Install with easy_install or pip install
@@ -11,7 +12,8 @@ from updatecommon import get_release
 from updatecommon import upload_release
 
 
-BOTTLE_TARGET = 'yosemite_or_later'
+TARGET_MACOS_VER = 'yosemite'
+TARGET_MACOS_VER_SPEC = TARGET_MACOS_VER + '_or_later'
 
 
 @contextmanager
@@ -27,11 +29,11 @@ def parse_args(args):
         help='The name of the tag to create a release for')
     parser.add_argument(
         'github_token',
-        type=file,
+        type=argparse.FileType(),
         help='The authentication token to use to talk to GitHub')
     parser.add_argument(
         '--tap-repo-location',
-        default='/usr/local/Library/Taps/facebook/homebrew-fb',
+        default='/usr/local/Homebrew/Library/Taps/facebook/homebrew-fb',
         help='The location of the homebrew-fb tap')
     return parser.parse_args(args)
 
@@ -45,6 +47,7 @@ def build_bottle(version_tag, tap_repo_location):
             'buck',
         ],
         cwd=tap_repo_location)
+
     subprocess.check_call(
         [
             'brew',
@@ -53,29 +56,32 @@ def build_bottle(version_tag, tap_repo_location):
             'buck',
         ],
         cwd=tap_repo_location)
+
     subprocess.check_call(
         [
             'brew',
             'bottle',
+            '--no-rebuild',
+            '--skip-relocation',
             'buck',
         ],
         cwd=tap_repo_location)
-    dest_name = 'buck-{version_name}.{bottle_target}.bottle.tar.gz'.format(
-        version_name=version_tag[1:],
-        bottle_target=BOTTLE_TARGET)
+
+    bottle_filename = 'buck-{ver}.{macos_ver}.bottle.tar.gz'.format(
+        ver=version_tag[1:],
+        macos_ver=TARGET_MACOS_VER)
     subprocess.check_call(
-        [
-            'mv',
-            'buck-{version_name}.el_capitan.bottle.tar.gz'.format(
-                version_name=version_tag[1:]),
-            dest_name,
-        ],
+        'mv buck-{ver}.*.bottle.tar.gz {bottle_filename}'.format(
+            ver=version_tag[1:],
+            bottle_filename=bottle_filename),
+        shell=True,  # for wildcard expansion
         cwd=tap_repo_location)
-    return os.path.join(tap_repo_location, dest_name)
+
+    return os.path.join(tap_repo_location, bottle_filename)
 
 
 def fetch_tarball(url):
-    print('Fetching tarball from `{url}`...'.format(url=url))
+    print('Fetching tarball from `{}`...'.format(url))
     r = requests.get(url, stream=True)
     handle, path = tempfile.mkstemp(suffix='.tar.gz')
     with os_closing(handle) as handle:
@@ -111,16 +117,15 @@ def update_bottle(version_tag, github_token, tap_repo_location):
             for line in orig:
                 line = re.sub(
                     r'@@buck_version = .*$',
-                    '@@buck_version = "{version_name}"'.format(
-                        version_name=version_tag[1:]),
+                    '@@buck_version = "{}"'.format(version_tag[1:]),
                     line)
                 line = re.sub(
                     r'sha256 "[a-z0-9]{64}"$',
-                    'sha256 "{sha}"'.format(sha=tarball_sha256),
+                    'sha256 "{}"'.format(tarball_sha256),
                     line)
                 line = re.sub(
                     r'  url "https://.+"$',
-                    '  url "{url}"'.format(url=release_data['tarball_url']),
+                    '  url "{}"'.format(release_data['tarball_url']),
                     line)
                 os.write(temp_handle, line)
         shutil.copyfile(temp_path, os.path.join(tap_repo_location, 'buck.rb'))
@@ -129,12 +134,10 @@ def update_bottle(version_tag, github_token, tap_repo_location):
     bottle_file = build_bottle(version_tag, tap_repo_location)
     bottle_sha256 = sha256(bottle_file)
     upload_release(
-            bottle_file,
-            release_data['upload_url'],
-            github_token,
-            {
-                'Content-Type': 'application/x-tar',
-            })
+        bottle_file,
+        release_data['upload_url'],
+        github_token,
+        {'Content-Type': 'application/x-tar'})
     os.remove(bottle_file)
 
     temp_handle, temp_path = tempfile.mkstemp(text=True)
@@ -143,9 +146,9 @@ def update_bottle(version_tag, github_token, tap_repo_location):
             for line in orig:
                 line = re.sub(
                     r'sha256 "[a-z0-9]{64}" => :.+$',
-                    'sha256 "{sha}" => :{bottle_target}'.format(
+                    'sha256 "{sha}" => :{macos_version_spec}'.format(
                         sha=bottle_sha256,
-                        bottle_target=BOTTLE_TARGET),
+                        macos_version_spec=TARGET_MACOS_VER_SPEC),
                     line)
                 os.write(temp_handle, line)
         shutil.copyfile(temp_path, os.path.join(tap_repo_location, 'buck.rb'))
@@ -157,8 +160,7 @@ def update_bottle(version_tag, github_token, tap_repo_location):
             'git',
             'commit',
             '-m',
-            'Update `buck.rb` to {version_tag}'.format(
-                version_tag=version_tag),
+            'Update `buck.rb` to {}'.format(version_tag),
             'buck.rb',
         ],
         cwd=tap_repo_location)
@@ -167,12 +169,9 @@ def update_bottle(version_tag, github_token, tap_repo_location):
 
 
 def sha256(file_name):
-    return subprocess.check_output([
-        'shasum',
-        '-a',
-        '256',
-        file_name,
-    ]).split()[0]
+    with open(file_name) as fd:
+        return hashlib.sha256(fd.read()).hexdigest()
+
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1:])

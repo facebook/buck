@@ -21,12 +21,10 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class AbstractBatchingLoggerTest {
 
@@ -53,10 +51,10 @@ public class AbstractBatchingLoggerTest {
   public void testBatchingLogger() {
     String shortData = "data";
     String longData = "datdatdatdatdatdatdataaaaaaadata";
-    AbstractBatchingLogger.BatchEntry shortDataBatch = new AbstractBatchingLogger.BatchEntry(
-        shortData);
-    AbstractBatchingLogger.BatchEntry longDataBatch = new AbstractBatchingLogger.BatchEntry(
-        longData);
+    AbstractBatchingLogger.BatchEntry shortDataBatch =
+        new AbstractBatchingLogger.BatchEntry(shortData);
+    AbstractBatchingLogger.BatchEntry longDataBatch =
+        new AbstractBatchingLogger.BatchEntry(longData);
     TestBatchingLogger testBatchingLogger = new TestBatchingLogger(longData.length() + 1);
 
     testBatchingLogger.log(longData);
@@ -77,7 +75,6 @@ public class AbstractBatchingLoggerTest {
         testBatchingLogger.getUploadedBatches(),
         Matchers.contains(
             Matchers.contains(longDataBatch, shortDataBatch),
-            Matchers.contains(shortDataBatch, shortDataBatch)
-        ));
+            Matchers.contains(shortDataBatch, shortDataBatch)));
   }
 }

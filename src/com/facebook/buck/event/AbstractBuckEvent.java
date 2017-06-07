@@ -22,14 +22,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /**
- * Base class for all build events. Using this makes it easy to add a wildcard listener
- * to the event bus.
+ * Base class for all build events. Using this makes it easy to add a wildcard listener to the event
+ * bus.
  */
 public abstract class AbstractBuckEvent implements BuckEvent {
 
@@ -38,8 +36,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   private long nanoTime;
   private long threadUserNanoTime;
   private long threadId;
-  @Nullable
-  private BuildId buildId;
+  @Nullable private BuildId buildId;
   private final EventKey eventKey;
 
   protected AbstractBuckEvent(EventKey eventKey) {
@@ -48,17 +45,13 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   /**
-   * Method to configure an event before posting it to the {@link BuckEventBus}.  This method should
+   * Method to configure an event before posting it to the {@link BuckEventBus}. This method should
    * only be invoked once per event, and only by the {@link BuckEventBus} in production code.
    */
   @Override
   @VisibleForTesting
   public void configure(
-      long timestamp,
-      long nanoTime,
-      long threadUserNanoTime,
-      long threadId,
-      BuildId buildId) {
+      long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
     Preconditions.checkState(!isConfigured, "Events can only be configured once.");
     this.timestamp = timestamp;
     this.nanoTime = nanoTime;
@@ -128,7 +121,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   /**
    * The default implementation of equals checks to see if two events are related, are on the same
-   * thread, and are the same concrete class.  Subclasses therefore can simply override isRelatedTo,
+   * thread, and are the same concrete class. Subclasses therefore can simply override isRelatedTo,
    * and the equals method will work correctly.
    */
   @Override
@@ -142,8 +135,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
     AbstractBuckEvent that = (AbstractBuckEvent) o;
 
-    return isRelatedTo(that) &&
-        Objects.equals(getClass(), that.getClass());
+    return isRelatedTo(that) && Objects.equals(getClass(), that.getClass());
   }
 
   @Override

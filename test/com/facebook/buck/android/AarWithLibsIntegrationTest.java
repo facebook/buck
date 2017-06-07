@@ -21,27 +21,24 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class AarWithLibsIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testLibsInAarAreIncludedInApk() throws IOException {
+  public void testLibsInAarAreIncludedInApk() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
 
     // More importantly, the content of the libs/ should end up in the .apk of an android_binary()
@@ -50,8 +47,8 @@ public class AarWithLibsIntegrationTest {
     String smali = new String(Files.readAllBytes(output), UTF_8);
 
     String primaryClass = MorePaths.pathWithPlatformSeparators("com/example/PrimaryClass.smali");
-    String dependency = MorePaths.pathWithPlatformSeparators(
-        "com/example/dependency/Dependency.smali");
+    String dependency =
+        MorePaths.pathWithPlatformSeparators("com/example/dependency/Dependency.smali");
 
     assertThat(
         "A class from the classes.jar in the .aar should make it into the APK.",

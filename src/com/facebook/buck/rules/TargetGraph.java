@@ -22,48 +22,29 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
- * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
- * by parsing the build files.
+ * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed by parsing the
+ * build files.
  */
 public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
-  public static final TargetGraph EMPTY = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?, ?>>(),
-      ImmutableMap.of(),
-      ImmutableSet.of());
+  public static final TargetGraph EMPTY =
+      new TargetGraph(new MutableDirectedGraph<>(), ImmutableMap.of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
-  private final ImmutableSetMultimap<BuildTarget, TargetGroup> groupsByBuildTarget;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?, ?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?, ?>> index,
-      ImmutableSet<TargetGroup> groups) {
+      ImmutableMap<BuildTarget, TargetNode<?, ?>> index) {
     super(graph);
     this.targetsToNodes = index;
-
-    ImmutableSetMultimap.Builder<BuildTarget, TargetGroup> builder =
-        ImmutableSetMultimap.builder();
-    for (TargetGroup group : groups) {
-      for (BuildTarget target : group) {
-        if (targetsToNodes.containsKey(target)) {
-          builder.put(target, group);
-        }
-      }
-    }
-    this.groupsByBuildTarget = builder.build();
 
     verifyVisibilityIntegrity();
   }
@@ -71,20 +52,20 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   private void verifyVisibilityIntegrity() {
     for (TargetNode<?, ?> node : getNodes()) {
       for (TargetNode<?, ?> dep : getOutgoingNodesFor(node)) {
-        dep.isVisibleToOrThrow(this, node);
+        dep.isVisibleToOrThrow(node);
       }
     }
   }
 
   @Nullable
-  private TargetNode<?, ?> getInternal(BuildTarget target) {
+  protected TargetNode<?, ?> getInternal(BuildTarget target) {
     TargetNode<?, ?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
       if (node == null) {
         return null;
       }
-      return node.withFlavors(target.getFlavors());
+      return node.copyWithFlavors(target.getFlavors());
     }
     return node;
   }
@@ -102,13 +83,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   }
 
   public Iterable<TargetNode<?, ?>> getAll(Iterable<BuildTarget> targets) {
-    return Iterables.transform(
-        targets,
-        this::get);
-  }
-
-  public ImmutableSet<TargetGroup> getGroupsContainingTarget(BuildTarget target) {
-    return groupsByBuildTarget.get(target);
+    return Iterables.transform(targets, this::get);
   }
 
   @Override
@@ -132,25 +107,22 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
    * @return A subgraph of the current graph.
    */
   public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T, ?>> roots) {
-    final MutableDirectedGraph<TargetNode<?, ?>> subgraph =
-        new MutableDirectedGraph<>();
+    final MutableDirectedGraph<TargetNode<?, ?>> subgraph = new MutableDirectedGraph<>();
     final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
 
     new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(roots) {
       @Override
-      public ImmutableSet<TargetNode<?, ?>>visit(TargetNode<?, ?> node) {
+      public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
         subgraph.addNode(node);
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {
-          BuildTarget unflavoredBuildTarget = BuildTarget.of(
-              node.getBuildTarget().getUnflavoredBuildTarget());
+          BuildTarget unflavoredBuildTarget =
+              BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
           MoreMaps.putCheckEquals(
-              index,
-              unflavoredBuildTarget,
-              targetsToNodes.get(unflavoredBuildTarget));
+              index, unflavoredBuildTarget, targetsToNodes.get(unflavoredBuildTarget));
         }
         ImmutableSet<TargetNode<?, ?>> dependencies =
-            ImmutableSet.copyOf(getAll(node.getDeps()));
+            ImmutableSet.copyOf(getAll(node.getParseDeps()));
         for (TargetNode<?, ?> dependency : dependencies) {
           subgraph.addEdge(node, dependency);
         }
@@ -158,14 +130,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
       }
     }.start();
 
-    return new TargetGraph(
-        subgraph,
-        ImmutableMap.copyOf(index),
-        groupsByBuildTarget.inverse().keySet());
-  }
-
-  public ImmutableCollection<TargetGroup> getGroups() {
-    return groupsByBuildTarget.values();
+    return new TargetGraph(subgraph, ImmutableMap.copyOf(index));
   }
 
   @SuppressWarnings("serial")
@@ -173,7 +138,8 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
       implements ExceptionWithHumanReadableMessage {
 
     public NoSuchNodeException(BuildTarget buildTarget) {
-      super(String.format(
+      super(
+          String.format(
               "Required target for rule '%s' was not found in the target graph.",
               buildTarget.getFullyQualifiedName()));
     }

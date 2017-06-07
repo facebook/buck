@@ -20,7 +20,6 @@ import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.ProgressEventInterface;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 
 public class BuckBuildProgressHandler implements BuckEventHandler {
@@ -29,14 +28,14 @@ public class BuckBuildProgressHandler implements BuckEventHandler {
       String rawMessage,
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
-      ObjectMapper objectMapper) throws IOException {
+      ObjectMapper objectMapper)
+      throws IOException {
     ProgressEventInterface buildProgressEvent =
-        objectMapper.readValue(rawMessage,
-            ProgressEventInterface.class);
+        objectMapper.readValue(rawMessage, ProgressEventInterface.class);
 
-    buckEventsConsumerFactory.getBuckBuildProgressUpdateConsumer()
+    buckEventsConsumerFactory
+        .getBuckBuildProgressUpdateConsumer()
         .consumeBuckBuildProgressUpdate(
-            buildProgressEvent.getTimestamp(),
-            buildProgressEvent.getProgressValue());
+            buildProgressEvent.getTimestamp(), buildProgressEvent.getProgressValue());
   }
 }

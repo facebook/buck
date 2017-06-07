@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -33,88 +34,86 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CxxPrepareForLinkStepTest {
 
   @Test
   public void testCreateCxxPrepareForLinkStep() throws Exception {
     Path dummyPath = Paths.get("dummy");
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        buildRuleResolver);
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
-    ImmutableList<Arg> dummyArgs = ImmutableList.of(
-        FileListableLinkerInputArg.withSourcePathArg(
-            new SourcePathArg(pathResolver, new FakeSourcePath("libb.a"))));
-
-    CxxPrepareForLinkStep cxxPrepareForLinkStepSupportFileList = CxxPrepareForLinkStep.create(
-        dummyPath,
-        dummyPath,
+    ImmutableList<Arg> dummyArgs =
         ImmutableList.of(
-            new StringArg("-filelist"),
-            new StringArg(dummyPath.toString())),
-        dummyPath,
-        dummyArgs,
-        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
-        dummyPath);
+            FileListableLinkerInputArg.withSourcePathArg(
+                SourcePathArg.of(new FakeSourcePath("libb.a"))));
 
-    ImmutableList<Step> containingSteps = ImmutableList.copyOf(
-        cxxPrepareForLinkStepSupportFileList.iterator());
-    assertThat(containingSteps.size(), Matchers.equalTo(2));
-    Step firstStep = containingSteps.get(0);
-    Step secondStep = containingSteps.get(1);
+    ImmutableList<Step> cxxPrepareForLinkStepSupportFileList =
+        CxxPrepareForLinkStep.create(
+            dummyPath,
+            dummyPath,
+            ImmutableList.of(StringArg.of("-filelist"), StringArg.of(dummyPath.toString())),
+            dummyPath,
+            dummyArgs,
+            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            dummyPath,
+            pathResolver);
+
+    assertThat(cxxPrepareForLinkStepSupportFileList.size(), Matchers.equalTo(2));
+    Step firstStep = cxxPrepareForLinkStepSupportFileList.get(0);
+    Step secondStep = cxxPrepareForLinkStepSupportFileList.get(1);
     assertThat(firstStep, Matchers.instanceOf(CxxWriteArgsToFileStep.class));
     assertThat(secondStep, Matchers.instanceOf(CxxWriteArgsToFileStep.class));
     assertThat(firstStep, Matchers.not(secondStep));
 
-    CxxPrepareForLinkStep cxxPrepareForLinkStepNoSupportFileList = CxxPrepareForLinkStep.create(
-        dummyPath,
-        dummyPath,
-        ImmutableList.of(),
-        dummyPath,
-        dummyArgs,
-        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
-        dummyPath);
+    ImmutableList<Step> cxxPrepareForLinkStepNoSupportFileList =
+        CxxPrepareForLinkStep.create(
+            dummyPath,
+            dummyPath,
+            ImmutableList.of(),
+            dummyPath,
+            dummyArgs,
+            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            dummyPath,
+            pathResolver);
 
-    containingSteps = ImmutableList.copyOf(
-        cxxPrepareForLinkStepNoSupportFileList.iterator());
-    assertThat(containingSteps.size(), Matchers.equalTo(1));
-    assertThat(containingSteps.get(0), Matchers.instanceOf(CxxWriteArgsToFileStep.class));
+    assertThat(cxxPrepareForLinkStepNoSupportFileList.size(), Matchers.equalTo(1));
+    assertThat(
+        cxxPrepareForLinkStepNoSupportFileList.get(0),
+        Matchers.instanceOf(CxxWriteArgsToFileStep.class));
   }
 
   @Test
   public void cxxLinkStepPassesLinkerOptionsViaArgFile() throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path argFilePath = projectFilesystem.getRootPath().resolve(
-        "cxxLinkStepPassesLinkerOptionsViaArgFile.txt");
-    Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "cxxLinkStepPassesLinkerOptionsViaFileList.txt");
+    Path argFilePath =
+        projectFilesystem.getRootPath().resolve("cxxLinkStepPassesLinkerOptionsViaArgFile.txt");
+    Path fileListPath =
+        projectFilesystem.getRootPath().resolve("cxxLinkStepPassesLinkerOptionsViaFileList.txt");
     Path output = projectFilesystem.getRootPath().resolve("output");
 
-    runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output,
-        projectFilesystem.getRootPath());
+    runTestForArgFilePathAndOutputPath(
+        argFilePath, fileListPath, output, projectFilesystem.getRootPath());
   }
 
   @Test
   public void cxxLinkStepCreatesDirectoriesIfNeeded() throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path argFilePath = projectFilesystem.getRootPath().resolve(
-        "unexisting_parent_folder/argfile.txt");
-    Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "unexisting_parent_folder/filelist.txt");
+    Path argFilePath =
+        projectFilesystem.getRootPath().resolve("unexisting_parent_folder/argfile.txt");
+    Path fileListPath =
+        projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");
     Path output = projectFilesystem.getRootPath().resolve("output");
 
     Files.deleteIfExists(argFilePath);
@@ -122,8 +121,8 @@ public class CxxPrepareForLinkStepTest {
     Files.deleteIfExists(argFilePath.getParent());
     Files.deleteIfExists(fileListPath.getParent());
 
-    runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output,
-        projectFilesystem.getRootPath());
+    runTestForArgFilePathAndOutputPath(
+        argFilePath, fileListPath, output, projectFilesystem.getRootPath());
 
     // cleanup after test
     Files.deleteIfExists(argFilePath);
@@ -133,62 +132,64 @@ public class CxxPrepareForLinkStepTest {
   }
 
   private void runTestForArgFilePathAndOutputPath(
-      Path argFilePath,
-      Path fileListPath,
-      Path output, Path currentCellPath) throws IOException, InterruptedException {
+      Path argFilePath, Path fileListPath, Path output, Path currentCellPath)
+      throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        buildRuleResolver);
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
-    ImmutableList<Arg> args = ImmutableList.of(
-        new StringArg("-rpath"),
-        new StringArg("hello"),
-        new StringArg("a.o"),
-        FileListableLinkerInputArg.withSourcePathArg(
-            new SourcePathArg(pathResolver, new FakeSourcePath("libb.a"))),
-        new StringArg("-lsysroot"),
-        new StringArg("/Library/Application Support/blabla"),
-        new StringArg("-F/System/Frameworks"),
-        new StringArg("-L/System/libraries"),
-        new StringArg("-lz"));
+    ImmutableList<Arg> args =
+        ImmutableList.of(
+            StringArg.of("-rpath"),
+            StringArg.of("hello"),
+            StringArg.of("a.o"),
+            FileListableLinkerInputArg.withSourcePathArg(
+                SourcePathArg.of(new FakeSourcePath("libb.a"))),
+            StringArg.of("-lsysroot"),
+            StringArg.of("/Library/Application Support/blabla"),
+            StringArg.of("-F/System/Frameworks"),
+            StringArg.of("-L/System/libraries"),
+            StringArg.of("-lz"));
 
     // Create our CxxLinkStep to test.
-    CxxPrepareForLinkStep step = CxxPrepareForLinkStep.create(
-        argFilePath,
-        fileListPath,
-        ImmutableList.of(
-            new StringArg("-filelist"),
-            new StringArg(fileListPath.toString())),
-        output,
-        args,
-        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
-        currentCellPath);
+    ImmutableList<Step> steps =
+        CxxPrepareForLinkStep.create(
+            argFilePath,
+            fileListPath,
+            ImmutableList.of(StringArg.of("-filelist"), StringArg.of(fileListPath.toString())),
+            output,
+            args,
+            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            currentCellPath,
+            pathResolver);
 
-    step.execute(context);
+    for (Step step : steps) {
+      step.execute(context);
+    }
 
     assertThat(Files.exists(argFilePath), Matchers.equalTo(true));
 
-    ImmutableList<String> expectedArgFileContents = ImmutableList.<String>builder()
-        .add("-o", output.toString())
-        .add("-rpath")
-        .add("hello")
-        .add("a.o")
-        .add("-lsysroot")
-        .add("\"/Library/Application Support/blabla\"")
-        .add("-F/System/Frameworks")
-        .add("-L/System/libraries")
-        .add("-lz")
-        .add("-filelist")
-        .add(fileListPath.toString())
-        .build();
+    ImmutableList<String> expectedArgFileContents =
+        ImmutableList.<String>builder()
+            .add("-o", output.toString())
+            .add("-rpath")
+            .add("hello")
+            .add("a.o")
+            .add("-lsysroot")
+            .add("\"/Library/Application Support/blabla\"")
+            .add("-F/System/Frameworks")
+            .add("-L/System/libraries")
+            .add("-lz")
+            .add("-filelist")
+            .add(fileListPath.toString())
+            .build();
 
-    ImmutableList<String> expectedFileListContents = ImmutableList.of(
-        Paths.get("libb.a").toAbsolutePath().toString());
+    ImmutableList<String> expectedFileListContents =
+        ImmutableList.of(Paths.get("libb.a").toAbsolutePath().toString());
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);
     checkContentsOfFile(fileListPath, expectedFileListContents);
@@ -201,6 +202,4 @@ public class CxxPrepareForLinkStepTest {
     List<String> fileContents = Files.readAllLines(file, StandardCharsets.UTF_8);
     assertThat(fileContents, Matchers.equalTo(contents));
   }
-
-
 }

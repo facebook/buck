@@ -1,0 +1,40 @@
+cxx_library(
+  name = 'cxx_library',
+  srcs = ['library.cpp'],
+)
+
+platform = read_config('cxx', 'platform')
+
+genrule(
+  name = 'gen_prebuilt_cxx_library',
+  out = 'gen_prebuilt_cxx_library',
+  bash = ' && '.join([
+    'mkdir -p $OUT',
+    'cp $(location :cxx_library#shared,{}) $OUT/'.format(platform),
+    'cp $(location :cxx_library#static,{}) $OUT/'.format(platform),
+    '(cd $OUT; for f in *; do mv "${f}" "${f/libcxx_library/libprebuilt_cxx_library}"; done)',
+  ]),
+)
+
+prebuilt_cxx_library(
+  name = 'prebuilt_cxx_library',
+  supports_shared_library_interface = True,
+  lib_dir = '$(location :gen_prebuilt_cxx_library)',
+  include_dirs = [],
+)
+
+for library in ('cxx_library', 'prebuilt_cxx_library'):
+
+  cxx_binary(
+    name = 'shared_binary_' + library,
+    deps = [':' + library],
+    srcs = [ 'binary.cpp' ],
+    link_style = 'shared',
+  )
+
+  cxx_binary(
+    name = 'static_binary_' + library,
+    deps = [':' + library],
+    srcs = [ 'binary.cpp' ],
+    link_style = 'static',
+  )

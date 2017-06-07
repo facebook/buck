@@ -17,54 +17,42 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
-/**
- *  Utility class to help match up start and end events
- */
+/** Utility class to help match up start and end events */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractEventPair {
   @Value.Parameter
   public abstract Optional<BuckEventExternalInterface> getStart();
+
   @Value.Parameter
   public abstract Optional<BuckEventExternalInterface> getFinish();
 
-
-  /**
-   * @return true if this event pair has a start and an end, false otherwise.
-   */
+  /** @return true if this event pair has a start and an end, false otherwise. */
   public boolean isComplete() {
     return getStart().isPresent() && getFinish().isPresent();
   }
 
-  /**
-   * @return true if this event pair has been started, but has not yet been finished.
-   */
+  /** @return true if this event pair has been started, but has not yet been finished. */
   public boolean isOngoing() {
     return getStart().isPresent() && !getFinish().isPresent();
   }
 
-  /**
-   * @return the start time of this event or -1 if this pair does not contain a start
-   */
+  /** @return the start time of this event or -1 if this pair does not contain a start */
   public long getStartTime() {
     return getStart().isPresent() ? getStart().get().getTimestamp() : -1;
   }
 
-  /**
-   * @return the end time of this event or -1 if this pair does not contain an end
-   */
+  /** @return the end time of this event or -1 if this pair does not contain an end */
   public long getEndTime() {
     return getFinish().isPresent() ? getFinish().get().getTimestamp() : -1;
   }
 
   /**
-   * @return the difference between the start and end events in ms if this event pair
-   *         is complete, 0 otherwise.
+   * @return the difference between the start and end events in ms if this event pair is complete, 0
+   *     otherwise.
    */
   public long getElapsedTimeMs() {
     if (isComplete()) {
@@ -76,14 +64,12 @@ abstract class AbstractEventPair {
 
   /**
    * Build a proxy event pair from a start and end timestamp
+   *
    * @param start the start time of the resulting pair
    * @param end the end time of the resulting pair
    * @return an event pair made from two proxy (synthetic) events
    */
   public static EventPair proxy(long start, long end) {
-    return EventPair.of(
-        Optional.of(ProxyBuckEvent.of(start)),
-        Optional.of(ProxyBuckEvent.of(end))
-    );
+    return EventPair.of(Optional.of(ProxyBuckEvent.of(start)), Optional.of(ProxyBuckEvent.of(end)));
   }
 }

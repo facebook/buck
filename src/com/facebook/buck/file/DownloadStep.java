@@ -26,14 +26,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
-/**
- * Download a file from a known location.
- */
+/** Download a file from a known location. */
 public class DownloadStep implements Step {
   private final ProjectFilesystem filesystem;
   private final URI url;
@@ -42,11 +39,7 @@ public class DownloadStep implements Step {
   private final Downloader downloader;
 
   public DownloadStep(
-      ProjectFilesystem filesystem,
-      Downloader downloader,
-      URI url,
-      HashCode sha1,
-      Path output) {
+      ProjectFilesystem filesystem, Downloader downloader, URI url, HashCode sha1, Path output) {
     this.filesystem = filesystem;
     this.downloader = downloader;
     this.url = url;
@@ -70,9 +63,7 @@ public class DownloadStep implements Step {
         eventBus.post(
             ConsoleEvent.severe(
                 "Unable to download %s (hashes do not match. Expected %s, saw %s)",
-                url,
-                sha1,
-                readHash));
+                url, sha1, readHash));
         return StepExecutionResult.of(-1);
       }
     } catch (IOException e) {

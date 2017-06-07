@@ -16,15 +16,14 @@
 
 package com.facebook.buck.annotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.annotation.ElementType;
 
 /**
- * Disables the `ant forbidden-checks` check for disallowed API calls in this
- * class / method / etc.
+ * Disables the `ant forbidden-checks` check for disallowed API calls in this class / method / etc.
  */
 @Retention(RetentionPolicy.CLASS)
-@Target({ ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE })
+@Target({ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
 public @interface SuppressForbidden {}

@@ -16,25 +16,37 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.distributed.thrift.BuildId;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.HumanReadableException;
-
-import org.kohsuke.args4j.Option;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Option;
 
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
 
-  @Nullable
-  @Option(name = "--build-id", usage = "Distributed build id.")
-  private String buildId;
+  protected static final String STAMPEDE_ID_ARG_NAME = "--stampede-id";
 
-  public BuildId getBuildId() {
-    if (buildId == null) {
-      throw new HumanReadableException("--build-id argument is missing.");
+  @Nullable
+  @Option(name = STAMPEDE_ID_ARG_NAME, usage = "Stampede distributed build id.")
+  private String stampedeId;
+
+  public Optional<StampedeId> getStampedeIdOptional() {
+    if (stampedeId == null) {
+      return Optional.empty();
     }
-    BuildId buildId = new BuildId();
-    buildId.setId(this.buildId);
-    return buildId;
+
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId(this.stampedeId);
+    return Optional.of(stampedeId);
+  }
+
+  public StampedeId getStampedeId() {
+    Optional<StampedeId> buildId = getStampedeIdOptional();
+    if (!buildId.isPresent()) {
+      throw new HumanReadableException(
+          String.format("%s argument is missing.", STAMPEDE_ID_ARG_NAME));
+    }
+
+    return buildId.get();
   }
 }

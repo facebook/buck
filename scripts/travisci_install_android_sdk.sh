@@ -1,18 +1,26 @@
 #!/bin/bash
 set -x
 
-export ANDROID_TOOL=${ANDROID_HOME}/tools/android
+export SDK_FILENAME="android-sdk_r23-linux.tgz"
+export CACHED_PATH="${HOME}/sdk_cache/$SDK_FILENAME"
 
-# Because we cache ANDROID_HOME in Travis, we cannot test for the existence of
-# the directory; it always gets created before we run.  Instead, check for the
-# tool we care about, and if it doesn't exist, download the SDK.
-if [ ! -x ${ANDROID_TOOL} ]; then
-  wget https://dl.google.com/android/android-sdk_r23-linux.tgz
-  tar -zxf android-sdk_r23-linux.tgz
-  rm android-sdk_r23-linux.tgz
-  rm -rf ${ANDROID_HOME}
-  mv android-sdk-linux ${ANDROID_HOME}
+if [ ! -x "$CACHED_PATH" ]; then
+  echo "Downloading SDK."
+  wget "https://dl.google.com/android/$SDK_FILENAME"
+else
+  echo "Using cached SDK."
+  mv "$CACHED_PATH" .
 fi
+
+# Unzip the sdk.
+tar -zxf "$SDK_FILENAME"
+rm "$SDK_FILENAME"
+
+# Move it into our expected place.
+rm -rf ${ANDROID_HOME}
+mv android-sdk-linux ${ANDROID_HOME}
+
+export ANDROID_TOOL=${ANDROID_HOME}/tools/android
 
 function android_update_sdk() {
   (

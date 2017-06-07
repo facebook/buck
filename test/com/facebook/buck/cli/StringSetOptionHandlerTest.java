@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
-
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -29,13 +28,10 @@ import org.kohsuke.args4j.Option;
 public class StringSetOptionHandlerTest {
 
   private class TestBean {
-    @Option(
-        name = "--option1",
-        handler = StringSetOptionHandler.class)
+    @Option(name = "--option1", handler = StringSetOptionHandler.class)
     private Supplier<ImmutableSet<String>> option1;
-    @Option(
-        name = "--option2",
-        handler = StringSetOptionHandler.class)
+
+    @Option(name = "--option2", handler = StringSetOptionHandler.class)
     private Supplier<ImmutableSet<String>> option2;
 
     public ImmutableSet<String> getOption1() {
@@ -51,8 +47,7 @@ public class StringSetOptionHandlerTest {
   public void testDefaultValues() throws CmdLineException {
     TestBean bean = new TestBean();
     CmdLineParser parser = new CmdLineParser(bean);
-    parser.parseArgument(
-        "--option2", "a", "b");
+    parser.parseArgument("--option2", "a", "b");
     assertEquals(ImmutableSet.of(), bean.getOption1());
     assertEquals(ImmutableSet.of("a", "b"), bean.getOption2());
   }
@@ -62,10 +57,7 @@ public class StringSetOptionHandlerTest {
     TestBean bean = new TestBean();
     CmdLineParser parser = new CmdLineParser(bean);
     parser.parseArgument(
-        "--option1", "a", "b",
-        "--option2", "c", "d",
-        "--option1", "e", "f",
-        "--option2", "g", "h");
+        "--option1", "a", "b", "--option2", "c", "d", "--option1", "e", "f", "--option2", "g", "h");
     assertEquals(ImmutableSet.of("a", "b", "e", "f"), bean.getOption1());
     assertEquals(ImmutableSet.of("c", "d", "g", "h"), bean.getOption2());
   }
@@ -74,29 +66,21 @@ public class StringSetOptionHandlerTest {
   public void testEmptyOption() throws CmdLineException {
     TestBean bean = new TestBean();
     CmdLineParser parser = new CmdLineParser(bean);
-    parser.parseArgument(
-        "--option1",
-        "--option2", "c", "d",
-        "--option2", "f");
+    parser.parseArgument("--option1", "--option2", "c", "d", "--option2", "f");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testOptionSpecifiedWithoutElements() throws CmdLineException {
     TestBean bean = new TestBean();
     CmdLineParser parser = new CmdLineParser(bean);
-    parser.parseArgument(
-        "--option1", "a",
-        "--option2", "c", "d",
-        "--option1",
-        "--option2", "f");
+    parser.parseArgument("--option1", "a", "--option2", "c", "d", "--option1", "--option2", "f");
   }
 
   @Test
   public void testOptionSpecifiedWithEmptyElements() throws CmdLineException {
     TestBean bean = new TestBean();
     CmdLineParser parser = new CmdLineParser(bean);
-    parser.parseArgument(
-        "--option1", "", "a");
+    parser.parseArgument("--option1", "", "a");
     assertEquals(ImmutableSet.of("", "a"), bean.getOption1());
   }
 }

@@ -20,37 +20,52 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractAndroidGraphEnhancementResult {
   AndroidPackageableCollection getPackageableCollection();
-  AaptPackageResources getAaptPackageResources();
+
   Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
+
   Optional<PackageStringAssets> getPackageStringAssets();
+
   Optional<PreDexMerge> getPreDexMerge();
+
   Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
+
+  ImmutableList<SourcePath> getProguardConfigs();
+
   Optional<Boolean> getPackageAssetLibraries();
 
+  SourcePath getPrimaryResourcesApkPath();
+
+  ImmutableList<SourcePath> getPrimaryApkAssetZips();
+
+  ImmutableList<SourcePath> getExoResources();
+
   /**
-   * Compiled R.java for use by ProGuard.  This should go away if/when
-   * we create a separate rule for ProGuard.
+   * Compiled R.java for use by ProGuard. This should go away if/when we create a separate rule for
+   * ProGuard.
    */
   JavaLibrary getCompiledUberRDotJava();
 
   /**
-   * This includes everything from the corresponding
-   * {@link AndroidPackageableCollection#getClasspathEntriesToDex}, and may include additional
-   * entries due to {@link AndroidBuildConfig}s (or R.java, in the future).
+   * This includes everything from the corresponding {@link
+   * AndroidPackageableCollection#getClasspathEntriesToDex}, and may include additional entries due
+   * to {@link AndroidBuildConfig}s (or R.java, in the future).
    */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
+
+  SourcePath getAndroidManifestPath();
+
+  SourcePath getSourcePathToAaptGeneratedProguardConfigFile();
 
   ImmutableSortedSet<BuildRule> getFinalDeps();
 

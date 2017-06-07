@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -30,43 +29,30 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 
-/**
- * Utility class to list files which match a pattern, applying ordering
- * and filtering.
- */
+/** Utility class to list files which match a pattern, applying ordering and filtering. */
 public class PathListing {
   // Utility class, do not instantiate.
-  private PathListing() { }
+  private PathListing() {}
 
-  /**
-   * Whether to include files which match the filter, or exclude them.
-   */
+  /** Whether to include files which match the filter, or exclude them. */
   public enum FilterMode {
-      INCLUDE,
-      EXCLUDE,
+    INCLUDE,
+    EXCLUDE,
   }
 
-  /**
-   * Fetches last-modified time from a path.
-   */
+  /** Fetches last-modified time from a path. */
   public interface PathModifiedTimeFetcher {
     FileTime getLastModifiedTime(Path path) throws IOException;
   }
 
-  /**
-   * Uses {@code Files.getLastModifiedTime()} to get the last modified time
-   * for a Path.
-   */
+  /** Uses {@code Files.getLastModifiedTime()} to get the last modified time for a Path. */
   public static final PathModifiedTimeFetcher GET_PATH_MODIFIED_TIME =
       path -> Files.getLastModifiedTime(path);
 
-  /**
-   * Lists matching paths in descending modified time order.
-   */
+  /** Lists matching paths in descending modified time order. */
   public static ImmutableSortedSet<Path> listMatchingPaths(
-      Path pathToGlob,
-      String globPattern,
-      PathModifiedTimeFetcher pathModifiedTimeFetcher) throws IOException {
+      Path pathToGlob, String globPattern, PathModifiedTimeFetcher pathModifiedTimeFetcher)
+      throws IOException {
     return listMatchingPathsWithFilters(
         pathToGlob,
         globPattern,
@@ -77,9 +63,8 @@ public class PathListing {
   }
 
   /**
-   * Lists paths in descending modified time order,
-   * excluding any paths which bring the number of files over {@code maxNumPaths}
-   * or over {@code totalSizeFilter} bytes in size.
+   * Lists paths in descending modified time order, excluding any paths which bring the number of
+   * files over {@code maxNumPaths} or over {@code totalSizeFilter} bytes in size.
    */
   public static ImmutableSortedSet<Path> listMatchingPathsWithFilters(
       Path pathToGlob,
@@ -105,16 +90,16 @@ public class PathListing {
     }
     ImmutableMap<Path, FileTime> pathFileTimes = pathFileTimesBuilder.build();
 
-    ImmutableSortedSet<Path> paths = ImmutableSortedSet.copyOf(
-        Ordering
-            .natural()
-            // Order the keys of the map (the paths) by their values (the file modification times).
-            .onResultOf(Functions.forMap(pathFileTimes))
-            // If two keys of the map have the same value, fall back to key order.
-            .compound(Ordering.natural())
-            // Use descending order.
-            .reverse(),
-        pathFileTimes.keySet());
+    ImmutableSortedSet<Path> paths =
+        ImmutableSortedSet.copyOf(
+            Ordering.natural()
+                // Order the keys of the map (the paths) by their values (the file modification times).
+                .onResultOf(Functions.forMap(pathFileTimes))
+                // If two keys of the map have the same value, fall back to key order.
+                .compound(Ordering.natural())
+                // Use descending order.
+                .reverse(),
+            pathFileTimes.keySet());
 
     paths = applyNumPathsFilter(paths, filterMode, maxPathsFilter);
     paths = applyTotalSizeFilter(paths, filterMode, totalSizeFilter);
@@ -122,9 +107,7 @@ public class PathListing {
   }
 
   private static ImmutableSortedSet<Path> applyNumPathsFilter(
-      ImmutableSortedSet<Path> paths,
-      FilterMode filterMode,
-      Optional<Integer> maxPathsFilter) {
+      ImmutableSortedSet<Path> paths, FilterMode filterMode, Optional<Integer> maxPathsFilter) {
     if (maxPathsFilter.isPresent()) {
       int limitIndex = Math.min(maxPathsFilter.get(), paths.size());
       paths = subSet(paths, filterMode, limitIndex);
@@ -134,9 +117,7 @@ public class PathListing {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private static ImmutableSortedSet<Path> applyTotalSizeFilter(
-      ImmutableSortedSet<Path> paths,
-      FilterMode filterMode,
-      Optional<Long> totalSizeFilter)
+      ImmutableSortedSet<Path> paths, FilterMode filterMode, Optional<Long> totalSizeFilter)
       throws IOException {
     if (totalSizeFilter.isPresent()) {
       int limitIndex = 0;
@@ -160,9 +141,7 @@ public class PathListing {
   }
 
   private static ImmutableSortedSet<Path> subSet(
-      ImmutableSortedSet<Path> paths,
-      FilterMode filterMode,
-      int limitIndex) {
+      ImmutableSortedSet<Path> paths, FilterMode filterMode, int limitIndex) {
     // This doesn't copy the contents of the ImmutableSortedSet. We use it
     // as a simple way to get O(1) access to the set's contents, as otherwise
     // we would have to iterate to find the Nth element.

@@ -18,16 +18,15 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.fail;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 public class AbiClass {
 
@@ -65,6 +64,9 @@ public class AbiClass {
   public static AbiClass extract(Path pathToJar, String className) throws IOException {
     try (ZipFile zip = new ZipFile(pathToJar.toString())) {
       ZipEntry entry = zip.getEntry(className);
+      if (entry == null) {
+        return null;
+      }
       try (InputStream entryStream = zip.getInputStream(entry)) {
         ClassReader reader = new ClassReader(entryStream);
         ClassNode classNode = new ClassNode();

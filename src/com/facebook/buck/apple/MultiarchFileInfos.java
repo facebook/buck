@@ -26,8 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -37,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -45,35 +43,33 @@ import java.util.SortedSet;
 public class MultiarchFileInfos {
 
   // Utility class, do not instantiate.
-  private MultiarchFileInfos() { }
+  private MultiarchFileInfos() {}
 
   /**
    * Inspect the given build target and return information about it if its a fat binary.
    *
    * @return non-empty when the target represents a fat binary.
-   * @throws com.facebook.buck.util.HumanReadableException
-   *    when the target is a fat binary but has incompatible flavors.
+   * @throws com.facebook.buck.util.HumanReadableException when the target is a fat binary but has
+   *     incompatible flavors.
    */
   public static Optional<MultiarchFileInfo> create(
-      final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
-      BuildTarget target) {
+      final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
-    if (thinFlavorSets.size() <= 1) {  // Actually a thin binary
+    if (thinFlavorSets.size() <= 1) { // Actually a thin binary
       return Optional.empty();
     }
 
     if (!Sets.intersection(target.getFlavors(), FORBIDDEN_BUILD_ACTIONS).isEmpty()) {
       throw new HumanReadableException(
-          "%s: Fat binaries is only supported when building an actual binary.",
-          target);
+          "%s: Fat binaries is only supported when building an actual binary.", target);
     }
 
     AppleCxxPlatform representativePlatform = null;
     AppleSdk sdk = null;
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
-      AppleCxxPlatform platform = Preconditions.checkNotNull(
-          appleCxxPlatforms.getValue(flavorSet).orElse(null));
+      AppleCxxPlatform platform =
+          Preconditions.checkNotNull(appleCxxPlatforms.getValue(flavorSet).orElse(null));
       if (sdk == null) {
         sdk = platform.getAppleSdk();
         representativePlatform = platform;
@@ -100,13 +96,12 @@ public class MultiarchFileInfos {
   /**
    * Expand flavors representing a fat binary into its thin binary equivalents.
    *
-   * Useful when dealing with functions unaware of fat binaries.
+   * <p>Useful when dealing with functions unaware of fat binaries.
    *
-   * This does not actually check that the particular flavor set is valid.
+   * <p>This does not actually check that the particular flavor set is valid.
    */
   public static ImmutableList<ImmutableSortedSet<Flavor>> generateThinFlavors(
-      Set<Flavor> platformFlavors,
-      SortedSet<Flavor> flavors) {
+      Set<Flavor> platformFlavors, SortedSet<Flavor> flavors) {
     Set<Flavor> platformFreeFlavors = Sets.difference(flavors, platformFlavors);
     ImmutableList.Builder<ImmutableSortedSet<Flavor>> thinTargetsBuilder = ImmutableList.builder();
     for (Flavor flavor : flavors) {
@@ -124,7 +119,7 @@ public class MultiarchFileInfos {
   /**
    * Generate a fat rule from thin rules.
    *
-   * Invariant: thinRules contain all the thin rules listed in info.getThinTargets().
+   * <p>Invariant: thinRules contain all the thin rules listed in info.getThinTargets().
    */
   public static BuildRule requireMultiarchRule(
       BuildRuleParams params,
@@ -136,26 +131,32 @@ public class MultiarchFileInfos {
       return existingRule.get();
     }
 
-    ImmutableSortedSet<SourcePath> inputs = FluentIterable
-        .from(thinRules)
-        .transform(SourcePaths.getToBuildTargetSourcePath())
-        .toSortedSet(Ordering.natural());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    MultiarchFile multiarchFile = new MultiarchFile(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
-            Suppliers.ofInstance(thinRules)),
-        pathResolver,
-        info.getRepresentativePlatform().getLipo(),
-        inputs,
-        BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s"));
+    for (BuildRule rule : thinRules) {
+      if (rule.getSourcePathToOutput() == null) {
+        throw new HumanReadableException("%s: no output so it cannot be a multiarch input", rule);
+      }
+    }
+
+    ImmutableSortedSet<SourcePath> inputs =
+        FluentIterable.from(thinRules)
+            .transform(BuildRule::getSourcePathToOutput)
+            .toSortedSet(Ordering.natural());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    MultiarchFile multiarchFile =
+        new MultiarchFile(
+            params.copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(ImmutableSortedSet.of()), Suppliers.ofInstance(thinRules)),
+            ruleFinder,
+            info.getRepresentativePlatform().getLipo(),
+            inputs,
+            BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s"));
     resolver.addToIndex(multiarchFile);
     return multiarchFile;
   }
 
   private static final ImmutableSet<Flavor> FORBIDDEN_BUILD_ACTIONS =
       ImmutableSet.<Flavor>builder()
-          .addAll(CxxInferEnhancer.InferFlavors.getAll())
-          .add(CxxCompilationDatabase.COMPILATION_DATABASE).build();
-
+          .addAll(CxxInferEnhancer.INFER_FLAVOR_DOMAIN.getFlavors())
+          .add(CxxCompilationDatabase.COMPILATION_DATABASE)
+          .build();
 }

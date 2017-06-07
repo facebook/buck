@@ -18,19 +18,17 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * Builder suitable for generating the dependency list of a build rule.
- */
+/** Builder suitable for generating the dependency list of a build rule. */
 public class DepsBuilder {
   private final ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-  private final SourcePathResolver pathResolver;
+  private final SourcePathRuleFinder ruleFinder;
 
-  public DepsBuilder(SourcePathResolver pathResolver) {
-    this.pathResolver = pathResolver;
+  public DepsBuilder(SourcePathRuleFinder ruleFinder) {
+    this.ruleFinder = ruleFinder;
   }
 
   public ImmutableSortedSet<BuildRule> build() {
@@ -38,7 +36,7 @@ public class DepsBuilder {
   }
 
   private DepsBuilder add(Tool tool) {
-    builder.addAll(tool.getDeps(pathResolver));
+    builder.addAll(tool.getDeps(ruleFinder));
     return this;
   }
 
@@ -47,7 +45,7 @@ public class DepsBuilder {
   }
 
   public DepsBuilder add(SourcePath sourcePath) {
-    builder.addAll(pathResolver.filterBuildRuleInputs(sourcePath));
+    builder.addAll(ruleFinder.filterBuildRuleInputs(sourcePath));
     return this;
   }
 

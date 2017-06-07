@@ -20,7 +20,6 @@ import com.facebook.buck.rules.Cell;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -39,12 +38,10 @@ class PipelineNodeCache<K, T> {
    *
    * @param jobSupplier a supplier to use to create the actual job.
    * @return future describing the job. It can either be an immediate future (result cache hit),
-   *         ongoing job (job cache hit) or a new job (miss).
+   *     ongoing job (job cache hit) or a new job (miss).
    */
   protected final ListenableFuture<T> getJobWithCacheLookup(
-      final Cell cell,
-      final K key,
-      JobSupplier<T> jobSupplier) throws BuildTargetException {
+      final Cell cell, final K key, JobSupplier<T> jobSupplier) throws BuildTargetException {
     Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key);
     if (cacheLookupResult.isPresent()) {
       return Futures.immediateFuture(cacheLookupResult.get());
@@ -68,9 +65,11 @@ class PipelineNodeCache<K, T> {
     // to the SettableFuture, so that anyone else waiting on it will get the same result.
     final SettableFuture<T> resultFuture = resultFutureCandidate;
     try {
-      ListenableFuture<T> nodeJob = Futures.transformAsync(
-          jobSupplier.get(),
-          input -> Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input)));
+      ListenableFuture<T> nodeJob =
+          Futures.transformAsync(
+              jobSupplier.get(),
+              input ->
+                  Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input)));
       resultFuture.setFuture(nodeJob);
     } catch (Throwable t) {
       resultFuture.setException(t);
@@ -84,20 +83,16 @@ class PipelineNodeCache<K, T> {
   }
 
   public interface Cache<K, V> {
-    Optional<V> lookupComputedNode(
-        Cell cell,
-        K target) throws BuildTargetException;
+    Optional<V> lookupComputedNode(Cell cell, K target) throws BuildTargetException;
 
     /**
      * Insert item into the cache if it was not already there.
+     *
      * @param cell cell
      * @param target target of the node
      * @param targetNode node to insert
      * @return previous node for the target if the cache contained it, new one otherwise.
      */
-    V putComputedNodeIfNotPresent(
-        Cell cell,
-        K target,
-        V targetNode) throws BuildTargetException;
+    V putComputedNodeIfNotPresent(Cell cell, K target, V targetNode) throws BuildTargetException;
   }
 }

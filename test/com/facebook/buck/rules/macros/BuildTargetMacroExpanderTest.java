@@ -31,40 +31,36 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import org.junit.Test;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Test;
 
 public class BuildTargetMacroExpanderTest {
 
   private static Optional<BuildTarget> match(String blob) throws MacroException {
-    final List<BuildTarget> found = Lists.newArrayList();
+    final List<BuildTarget> found = new ArrayList<>();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     FakeBuildRule rule = new FakeBuildRule("//something:manifest", sourcePathResolver);
     resolver.addToIndex(rule);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    MacroHandler handler = new MacroHandler(
-        ImmutableMap.of(
-            "exe",
-            new BuildTargetMacroExpander() {
-              @Override
-              public String expand(
-                  SourcePathResolver resolver,
-                  BuildRule rule)
-                  throws MacroException {
-                found.add(rule.getBuildTarget());
-                return "";
-              }
-            }));
+    BuildTargetMacroExpander<?> macroExpander =
+        new ExecutableMacroExpander() {
+          @Override
+          public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+            found.add(rule.getBuildTarget());
+            return "";
+          }
+        };
+    MacroHandler handler = new MacroHandler(ImmutableMap.of("exe", macroExpander));
     handler.expand(rule.getBuildTarget(), createCellRoots(filesystem), resolver, blob);
     return Optional.ofNullable(Iterables.getFirst(found, null));
   }
@@ -74,7 +70,8 @@ public class BuildTargetMacroExpanderTest {
     try {
       match(blob);
       fail("expected to throw");
-    } catch (MacroException e) {}
+    } catch (MacroException e) {
+    }
   }
 
   @Test
@@ -90,10 +87,6 @@ public class BuildTargetMacroExpanderTest {
   @Test
   public void extractTargets() throws MacroException {
     Optional<BuildTarget> target = match("$(exe //something:manifest)");
-    assertEquals(
-        Optional.of(
-            BuildTargetFactory.newInstance("//something:manifest")),
-        target);
+    assertEquals(Optional.of(BuildTargetFactory.newInstance("//something:manifest")), target);
   }
-
 }

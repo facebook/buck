@@ -25,8 +25,7 @@ import org.kohsuke.args4j.CmdLineException;
 
 public class RunCommandOptionsTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private String[] testWithArgs(String[] args) throws CmdLineException {
     RunCommand command = new RunCommand();
@@ -37,14 +36,14 @@ public class RunCommandOptionsTest {
 
   @Test
   public void testNormalExecution() throws CmdLineException {
-    String[] args = new String[] { "//some/target", "arg1", "arg2", "arg3" };
-    String[] expectedArgs = new String[] { "//some/target", "arg1", "arg2", "arg3" };
+    String[] args = new String[] {"//some/target", "arg1", "arg2", "arg3"};
+    String[] expectedArgs = new String[] {"//some/target", "arg1", "arg2", "arg3"};
     assertArrayEquals(expectedArgs, testWithArgs(args));
   }
 
   @Test
   public void testInvalidOptions1() throws CmdLineException {
-    String[] args = new String[] { "--invalid", "//some/target", "arg" };
+    String[] args = new String[] {"--invalid", "//some/target", "arg"};
     expectedException.expect(CmdLineException.class);
     expectedException.expectMessage("\"--invalid\" is not a valid option");
     testWithArgs(args);
@@ -52,7 +51,7 @@ public class RunCommandOptionsTest {
 
   @Test
   public void testInvalidOptions2() throws CmdLineException {
-    String[] args = new String[] { "//some/target", "--invalid", "arg" };
+    String[] args = new String[] {"//some/target", "--invalid", "arg"};
     expectedException.expect(CmdLineException.class);
     expectedException.expectMessage("\"--invalid\" is not a valid option");
     testWithArgs(args);
@@ -60,41 +59,38 @@ public class RunCommandOptionsTest {
 
   @Test
   public void testValidOptions() throws CmdLineException {
-    String[] args = new String[] { "--no-cache", "//some/target" };
-    String[] expectedArgs = new String[]{"//some/target"};
+    String[] args = new String[] {"--no-cache", "//some/target"};
+    String[] expectedArgs = new String[] {"//some/target"};
     assertArrayEquals(expectedArgs, testWithArgs(args));
   }
 
   @Test
   public void testDoubleDash1() throws CmdLineException {
-    String[] args = new String[] { "--", "--invalid", "//some/target", "arg" };
-    String[] expectedArgs = new String[] { "--invalid", "//some/target", "arg" };
+    String[] args = new String[] {"--", "--invalid", "//some/target", "arg"};
+    String[] expectedArgs = new String[] {"--invalid", "//some/target", "arg"};
     assertArrayEquals(expectedArgs, testWithArgs(args));
   }
 
   @Test
   public void testDoubleDash2() throws CmdLineException {
-    String[] args = new String[] { "--", "//some/target", "--invalid", "arg" };
-    String[] expectedArgs = new String[] { "//some/target", "--invalid", "arg" };
+    String[] args = new String[] {"--", "//some/target", "--invalid", "arg"};
+    String[] expectedArgs = new String[] {"//some/target", "--invalid", "arg"};
     assertArrayEquals(expectedArgs, testWithArgs(args));
   }
 
   @Test
   public void testDoubleDash3() throws CmdLineException {
-    String[] args = new String[] {
-      "//some/target", "arg1", "--", "--opt1", "something", "--opt2", "something"
-    };
-    String[] expectedArgs = new String[] {
-      "//some/target", "arg1", "--opt1", "something", "--opt2", "something"
-    };
+    String[] args =
+        new String[] {"//some/target", "arg1", "--", "--opt1", "something", "--opt2", "something"};
+    String[] expectedArgs =
+        new String[] {"//some/target", "arg1", "--opt1", "something", "--opt2", "something"};
     assertArrayEquals(expectedArgs, testWithArgs(args));
   }
 
   @Test
   public void testDoubleDash4() throws CmdLineException {
-    String[] args = new String[] {
-      "//some/target", "arg1", "--opt1", "something", "--", "--opt2", "something"
-    };
+    String[] args =
+        new String[] {"//some/target", "arg1", "--opt1", "something", "--", "--opt2", "something"};
     expectedException.expect(CmdLineException.class);
     expectedException.expectMessage("\"--opt1\" is not a valid option");
     testWithArgs(args);

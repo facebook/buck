@@ -25,7 +25,7 @@ import java.util.HashSet;
  * Lengauer-Tarjan method.
  *
  * See A Fast Algorithm for Finding Dominators in a Flowgraph
- * T. Lengauer & R. Tarjan, ACM TOPLAS July 1979, pgs 121-141.
+ * T. Lengauer &amp; R. Tarjan, ACM TOPLAS July 1979, pgs 121-141.
  *
  * This implementation runs in time O(n log n).  The time bound
  * could be changed to O(n * ack(n)) with a small change to the link and eval,
@@ -164,8 +164,6 @@ public final class Dominators {
     /**
      * Performs dominator/post-dominator calculation for the control
      * flow graph.
-     *
-     * @param meth {@code non-null;} method to analyze
      */
     private void run() {
         SsaBasicBlock root = postdom

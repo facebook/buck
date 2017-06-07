@@ -20,7 +20,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
@@ -72,15 +71,12 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
         console);
   }
 
-  public FakeProcessExecutor(
-      Map<ProcessExecutorParams, FakeProcess> processMap,
-      Console console) {
+  public FakeProcessExecutor(Map<ProcessExecutorParams, FakeProcess> processMap, Console console) {
     this(Functions.forMap(processMap), console);
   }
 
   public FakeProcessExecutor(
-      Function<? super ProcessExecutorParams, FakeProcess> processFunction,
-      Console console) {
+      Function<? super ProcessExecutorParams, FakeProcess> processFunction, Console console) {
     this(processFunction, console.getStdOut(), console.getStdErr(), console.getAnsi());
   }
 
@@ -89,12 +85,12 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
       PrintStream stdOutStream,
       PrintStream stdErrStream,
       Ansi ansi) {
-      super(
-          stdOutStream,
-          stdErrStream,
-          ansi,
-          ProcessHelper.getInstance(),
-          ProcessRegistry.getInstance());
+    super(
+        stdOutStream,
+        stdErrStream,
+        ansi,
+        ProcessHelper.getInstance(),
+        ProcessRegistry.getInstance());
     this.processFunction = processFunction;
     this.launchedProcesses = new HashSet<>();
   }
@@ -108,15 +104,13 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
     } catch (IllegalArgumentException e) {
       throw new IOException(
           String.format(
-              "FakeProcessExecutor not configured to run process with params %s",
-              params));
+              "FakeProcessExecutor not configured to run process with params %s", params));
     }
   }
 
   @Override
   public LaunchedProcess launchProcess(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) throws IOException {
+      ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
     return launchProcess(params);
   }
 
@@ -126,12 +120,8 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
 
   @Override
   public ProcessExecutor cloneWithOutputStreams(
-      PrintStream newStdOutStream,
-      PrintStream newStdErrStream) {
+      PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new FakeProcessExecutor(
-        processFunction,
-        newStdOutStream,
-        newStdErrStream,
-        Ansi.withoutTty());
+        processFunction, newStdOutStream, newStdErrStream, Ansi.withoutTty());
   }
 }

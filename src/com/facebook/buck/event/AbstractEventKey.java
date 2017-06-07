@@ -19,10 +19,8 @@ package com.facebook.buck.event;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
-
-import org.immutables.value.Value;
-
 import java.util.concurrent.atomic.AtomicLong;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -43,9 +41,7 @@ abstract class AbstractEventKey {
     SEQUENCE_NUMBER.set(value - 1);
   }
 
-  /**
-   * @return an EventKey unique to the current process.
-   */
+  /** @return an EventKey unique to the current process. */
   public static EventKey unique() {
     return EventKey.of(SEQUENCE_NUMBER.incrementAndGet());
   }
@@ -53,12 +49,12 @@ abstract class AbstractEventKey {
   /**
    * Prefer calling chain(started) in the @{link BuckEvent} over the use of this method.
    *
-   * This variant of the method creates a key based on the set of supplied inputs. This is useful
+   * <p>This variant of the method creates a key based on the set of supplied inputs. This is useful
    * in situations where a key with the same identity must be created multiple times and the
    * corresponding start event is not available.
    *
    * @param objects objects which supply the identity of the key. {@link Object#toString()} will be
-   *                called on every instance and the result will be used to calculate the key.
+   *     called on every instance and the result will be used to calculate the key.
    * @return EventKey with the identity of the supplied objects.
    */
   public static EventKey slowValueKey(Object... objects) {

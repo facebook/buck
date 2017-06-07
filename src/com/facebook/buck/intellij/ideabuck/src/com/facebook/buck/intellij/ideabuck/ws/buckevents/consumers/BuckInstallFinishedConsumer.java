@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface BuckInstallFinishedConsumer {
-  Topic<BuckInstallFinishedConsumer> INSTALL_FINISHED_CONSUMER = Topic.create(
-      "buck.install.finished",
-      BuckInstallFinishedConsumer.class
-  );
+  Topic<BuckInstallFinishedConsumer> INSTALL_FINISHED_CONSUMER =
+      Topic.create("buck.install.finished", BuckInstallFinishedConsumer.class);
+
   void consumeInstallFinished(long timestamp, String packageName);
 }

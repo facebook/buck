@@ -128,10 +128,10 @@
 {/template}
 
 /***/
-{template .cache_http_cache_names}
+{template .buildfile_includes}
 {call .entry_link}
-  {param section: 'cache' /}
-  {param entry: 'http_cache_names' /}
+  {param section: 'buildfile' /}
+  {param entry: 'includes' /}
 {/call}
 {/template}
 
@@ -148,6 +148,14 @@
 {call .entry_link}
   {param section: 'cache' /}
   {param entry: 'serve_local_cache' /}
+{/call}
+{/template}
+
+/***/
+{template .cxx_gtest_dep}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'gtest_dep' /}
 {/call}
 {/template}
 
@@ -228,6 +236,21 @@
 {call buckconfig.entry_link}
   {param section: 'tools' /}
   {param entry: 'java_jar' /}
+{/call}
+{/template}
+
+/***/
+{template .alias}
+{call .section_link}
+  {param section: 'alias' /}
+{/call}
+{/template}
+
+/***/
+{template .java_src_roots}
+{call .entry_link}
+    {param section: 'java' /}
+    {param entry: 'src_roots' /}
 {/call}
 {/template}
 

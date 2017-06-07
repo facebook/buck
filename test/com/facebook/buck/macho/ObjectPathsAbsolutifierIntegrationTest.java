@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.macho;
 
-
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -34,7 +33,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -46,12 +45,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,16 +53,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ObjectPathsAbsolutifierIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
@@ -77,72 +73,64 @@ public class ObjectPathsAbsolutifierIntegrationTest {
   private DebugPathSanitizer getDebugPathSanitizer() {
     // this was stolen from the implementation detail of AppleCxxPlatforms
     return new MungingDebugPathSanitizer(
-        250,
-        File.separatorChar,
-        Paths.get("."),
-        ImmutableBiMap.of());
+        250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
   }
 
   @Test
   public void testAbsolutifyingPathsForIntel64Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-x86_64");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForIntel32Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-i386");
+    Flavor platformFlavor = InternalFlavor.of("iphonesimulator-i386");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForArm64Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-arm64");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-arm64");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForArm32Bit() throws IOException, InterruptedException {
-    Flavor platformFlavor = ImmutableFlavor.of("iphoneos-armv7");
+    Flavor platformFlavor = InternalFlavor.of("iphoneos-armv7");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
-  private void runAndCheckAbsolutificationWithPlatformFlavor(
-      Flavor platformFlavor) throws IOException, InterruptedException {
+  private void runAndCheckAbsolutificationWithPlatformFlavor(Flavor platformFlavor)
+      throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "apple_binary_with_platform", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(platformFlavor);
-    ProjectWorkspace.ProcessResult result = workspace
-        .runBuckCommand(
-            "build",
-            "--config",
-            "cxx.cflags=-g",
-            target.getFullyQualifiedName());
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
+            .withAppendedFlavors(platformFlavor);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.cflags=-g", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path relativeSanitizedObjectFilePath = BuildTargets
-        .getGenPath(
-            filesystem,
-            target.withFlavors(
-                platformFlavor,
-                ImmutableFlavor.of("compile-" + sanitize("main.c.o"))),
-            "%s")
-        .resolve("main.c.o");
+    Path relativeSanitizedObjectFilePath =
+        BuildTargets.getGenPath(
+                filesystem,
+                target.withFlavors(
+                    platformFlavor, InternalFlavor.of("compile-" + sanitize("main.c.o"))),
+                "%s")
+            .resolve("main.c.o");
 
     Path relativeSourceFilePath = Paths.get("Apps/TestApp/main.c");
 
-    Path sanitizedBinaryPath = workspace.getPath(
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(platformFlavor),
-                "%s"));
-    Path unsanizitedBinaryPath = workspace.getPath(
-        filesystem.getBuckPaths().getScratchDir().resolve(sanitizedBinaryPath.getFileName()));
+    Path sanitizedBinaryPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, target.withFlavors(platformFlavor), "%s"));
+    Path unsanizitedBinaryPath =
+        workspace.getPath(
+            filesystem.getBuckPaths().getScratchDir().resolve(sanitizedBinaryPath.getFileName()));
 
     // this was stolen from the implementation detail of AppleCxxPlatforms
     DebugPathSanitizer sanitizer = getDebugPathSanitizer();
@@ -150,17 +138,18 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     String oldCompDirValue = sanitizer.getCompilationDirectory();
     String newCompDirValue = workspace.getDestPath().toString();
 
-    result = workspace.runBuckCommand(
-        "machoutils",
-        "absolutify_object_paths",
-        "--binary",
-        sanitizedBinaryPath.toString(),
-        "--output",
-        unsanizitedBinaryPath.toString(),
-        "--old_compdir",
-        oldCompDirValue,
-        "--new_compdir",
-        newCompDirValue);
+    result =
+        workspace.runBuckCommand(
+            "machoutils",
+            "absolutify_object_paths",
+            "--binary",
+            sanitizedBinaryPath.toString(),
+            "--output",
+            unsanizitedBinaryPath.toString(),
+            "--old_compdir",
+            oldCompDirValue,
+            "--new_compdir",
+            newCompDirValue);
     result.assertSuccess();
 
     ProcessExecutor.Result sanitizedResult =
@@ -189,21 +178,22 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
     // check that absolute path to source file is correct
     assertThat(
-        unsanitizedOutput,
-        containsString("SOL " + newCompDirValue + "/Apps/TestApp/main.c"));
+        unsanitizedOutput, containsString("SOL " + newCompDirValue + "/Apps/TestApp/main.c"));
     // check that absolute path to object file is correct
     assertThat(
         unsanitizedOutput,
-        containsString("OSO " + newCompDirValue + "/buck-out/bin/" +
-            relativeSanitizedObjectFilePath.toString()));
+        containsString(
+            "OSO "
+                + newCompDirValue
+                + "/buck-out/bin/"
+                + relativeSanitizedObjectFilePath.toString()));
     assertThat(
         unsanitizedOutput,
         containsString(
             "SO " + newCompDirValue + "/" + relativeSourceFilePath.getParent().toString()));
     assertThat(
         unsanitizedOutput,
-        containsString(
-            "SOL " + newCompDirValue + "/" + relativeSourceFilePath.toString()));
+        containsString("SOL " + newCompDirValue + "/" + relativeSourceFilePath.toString()));
   }
 
   private boolean checkCodeSigning(Path absoluteBundlePath)
@@ -213,8 +203,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     }
 
     return CodeSigning.hasValidSignature(
-        new DefaultProcessExecutor(new TestConsole()),
-        absoluteBundlePath);
+        new DefaultProcessExecutor(new TestConsole()), absoluteBundlePath);
   }
 
   private boolean checkCodeSignatureMatchesBetweenFiles(Path file1, Path file2)
@@ -228,20 +217,24 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
 
-    ProcessExecutor.Result result1 = processExecutor.launchAndExecute(
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString())).build(),
-        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
-        /* stdin */ Optional.empty(),
-        /* timeOutMs */ Optional.empty(),
-        /* timeOutHandler */ Optional.empty());
-    ProcessExecutor.Result result2 = processExecutor.launchAndExecute(
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString())).build(),
-        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
-        /* stdin */ Optional.empty(),
-        /* timeOutMs */ Optional.empty(),
-        /* timeOutHandler */ Optional.empty());
+    ProcessExecutor.Result result1 =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder()
+                .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString()))
+                .build(),
+            EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
+    ProcessExecutor.Result result2 =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder()
+                .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString()))
+                .build(),
+            EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
 
     String stderr1 = result1.getStderr().orElse("");
     String stderr2 = result2.getStderr().orElse("");
@@ -261,19 +254,15 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "simple_application_bundle_with_codesigning",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
     workspace.setUp();
 
-    BuildTarget target =
-        workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,dwarf");
-    workspace.runBuckCommand(
-        "build",
-        "--config",
-        "cxx.cflags=-g",
-        target.getFullyQualifiedName()).assertSuccess();
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,dwarf");
+    workspace
+        .runBuckCommand("build", "--config", "cxx.cflags=-g", target.getFullyQualifiedName())
+        .assertSuccess();
 
     workspace.verify(
         Paths.get("DemoApp_output.expected"),
@@ -284,25 +273,28 @@ public class ObjectPathsAbsolutifierIntegrationTest {
                 .build(),
             "%s"));
 
-    Path appPath = workspace.getPath(
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                BuildTarget.builder(target)
-                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .build(),
-                "%s")
-            .resolve(target.getShortName() + ".app"));
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    BuildTarget.builder(target)
+                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                        .build(),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
 
     Path sanitizedBinaryPath = appPath.resolve(target.getShortName());
     assertThat(Files.exists(sanitizedBinaryPath), equalTo(true));
     assertThat(checkCodeSigning(sanitizedBinaryPath), equalTo(true));
     assertThat(checkCodeSigning(appPath), equalTo(true));
 
-    Path unsanizitedBinaryPath = workspace.getPath(
-        filesystem.getBuckPaths().getTmpDir()
-            .resolve(sanitizedBinaryPath.getParent().getFileName())
-            .resolve(sanitizedBinaryPath.getFileName()));
+    Path unsanizitedBinaryPath =
+        workspace.getPath(
+            filesystem
+                .getBuckPaths()
+                .getTmpDir()
+                .resolve(sanitizedBinaryPath.getParent().getFileName())
+                .resolve(sanitizedBinaryPath.getFileName()));
 
     filesystem.mkdirs(unsanizitedBinaryPath.getParent());
 
@@ -314,17 +306,18 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     String oldCompDirValue = sanitizer.getCompilationDirectory();
     String newCompDirValue = workspace.getDestPath().toString();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "machoutils",
-        "absolutify_object_paths",
-        "--binary",
-        sanitizedBinaryPath.toString(),
-        "--output",
-        unsanizitedBinaryPath.toString(),
-        "--old_compdir",
-        oldCompDirValue,
-        "--new_compdir",
-        newCompDirValue);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "machoutils",
+            "absolutify_object_paths",
+            "--binary",
+            sanitizedBinaryPath.toString(),
+            "--output",
+            unsanizitedBinaryPath.toString(),
+            "--old_compdir",
+            oldCompDirValue,
+            "--new_compdir",
+            newCompDirValue);
     result.assertSuccess();
 
     assertThat(Files.exists(unsanizitedBinaryPath), equalTo(true));

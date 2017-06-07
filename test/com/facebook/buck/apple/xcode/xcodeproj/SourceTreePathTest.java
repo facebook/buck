@@ -18,25 +18,20 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import static org.junit.Assert.assertNotEquals;
 
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Tests for {@link SourceTreePath}.
- */
+/** Tests for {@link SourceTreePath}. */
 public class SourceTreePathTest {
   @Test
   public void sourceTreePathsWithDifferentPathsAreDifferent() {
-    SourceTreePath path1 = new SourceTreePath(
-        PBXReference.SourceTree.SOURCE_ROOT,
-        Paths.get("foo/bar.c"),
-        Optional.empty());
-    SourceTreePath path2 = new SourceTreePath(
-        PBXReference.SourceTree.SOURCE_ROOT,
-        Paths.get("foo/baz.c"),
-        Optional.empty());
+    SourceTreePath path1 =
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT, Paths.get("foo/bar.c"), Optional.empty());
+    SourceTreePath path2 =
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT, Paths.get("foo/baz.c"), Optional.empty());
     assertNotEquals(path1, path2);
   }
 }

@@ -22,27 +22,27 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
-import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-public class GoBinaryDescription implements
-    Description<GoBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<GoBinaryDescription.Arg>,
-    Flavored {
+public class GoBinaryDescription
+    implements Description<GoBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
+        Flavored {
 
   private final GoBuckConfig goBuckConfig;
 
@@ -51,8 +51,8 @@ public class GoBinaryDescription implements
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<GoBinaryDescriptionArg> getConstructorArgType() {
+    return GoBinaryDescriptionArg.class;
   }
 
   @Override
@@ -61,50 +61,56 @@ public class GoBinaryDescription implements
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    GoPlatform platform = goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget())
-        .orElse(goBuckConfig.getDefaultPlatform());
+      CellPathResolver cellRoots,
+      GoBinaryDescriptionArg args)
+      throws NoSuchBuildTargetException {
+    GoPlatform platform =
+        goBuckConfig
+            .getPlatformFlavorDomain()
+            .getValue(params.getBuildTarget())
+            .orElse(goBuckConfig.getDefaultPlatform());
 
     return GoDescriptors.createGoBinaryRule(
         params,
         resolver,
         goBuckConfig,
-        args.srcs,
-        args.compilerFlags,
-        args.assemblerFlags,
-        args.linkerFlags,
+        args.getSrcs(),
+        args.getCompilerFlags(),
+        args.getAssemblerFlags(),
+        args.getLinkerFlags(),
         platform);
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-
-    ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
-
+      AbstractGoBinaryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    GoPlatform goPlatform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
-        .orElse(goBuckConfig.getDefaultPlatform());
+    GoPlatform goPlatform =
+        goBuckConfig
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget)
+            .orElse(goBuckConfig.getDefaultPlatform());
     Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
     if (cxxPlatform.isPresent()) {
-      targets.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));
+      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));
     }
-
-    return targets.build();
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSet<SourcePath> srcs;
-    public List<String> compilerFlags = ImmutableList.of();
-    public List<String> assemblerFlags = ImmutableList.of();
-    public List<String> linkerFlags = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGoBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    ImmutableList<String> getCompilerFlags();
+
+    ImmutableList<String> getAssemblerFlags();
+
+    ImmutableList<String> getLinkerFlags();
   }
 }

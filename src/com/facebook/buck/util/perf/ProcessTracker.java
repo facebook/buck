@@ -32,25 +32,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
 
 /**
  * A tracker that periodically probes for external processes resource consumption.
  *
- * Resource consumption has to be gathered periodically because it can only be retrieved while
- * the process is still alive and we have no way of knowing or even controlling when the process
- * is going to finish (assuming it finishes execution on its own). Furthermore, for some metrics
- * (such as memory usage) only the current values get reported and we need to keep track of peak
- * usage manually. Gathering only the current values just before the process finishes (assuming
- * this was possible) would likely be highly inaccurate anyways as the process probably released
- * most of its resources by that time.
+ * <p>Resource consumption has to be gathered periodically because it can only be retrieved while
+ * the process is still alive and we have no way of knowing or even controlling when the process is
+ * going to finish (assuming it finishes execution on its own). Furthermore, for some metrics (such
+ * as memory usage) only the current values get reported and we need to keep track of peak usage
+ * manually. Gathering only the current values just before the process finishes (assuming this was
+ * possible) would likely be highly inaccurate anyways as the process probably released most of its
+ * resources by that time.
  */
 public class ProcessTracker extends AbstractScheduledService implements AutoCloseable {
 
@@ -114,9 +112,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   private void registerProcess(
-      Object process,
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context) {
+      Object process, ProcessExecutorParams params, ImmutableMap<String, String> context) {
     Long pid = processHelper.getPid(process);
     LOG.verbose("registerProcess: pid: %s, cmd: %s", pid, params.getCommand());
     if (pid == null) {
@@ -151,9 +147,9 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
   @Override
   protected void runOneIteration() throws Exception {
-    GlobalStateManager.singleton().getThreadToCommandRegister().register(
-        Thread.currentThread().getId(),
-        invocationInfo.getCommandId());
+    GlobalStateManager.singleton()
+        .getThreadToCommandRegister()
+        .register(Thread.currentThread().getId(), invocationInfo.getCommandId());
     refreshProcessesInfo(/* isShuttingDown */ false);
   }
 
@@ -177,7 +173,9 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   @VisibleForTesting
   interface ProcessInfo {
     boolean hasProcessFinished();
+
     void updateResourceConsumption();
+
     void postEvent();
   }
 
@@ -211,9 +209,10 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
     @Override
     public void updateResourceConsumption() {
-      ProcessResourceConsumption res = deepEnabled ?
-          processHelper.getTotalResourceConsumption(pid) :
-          processHelper.getProcessResourceConsumption(pid);
+      ProcessResourceConsumption res =
+          deepEnabled
+              ? processHelper.getTotalResourceConsumption(pid)
+              : processHelper.getProcessResourceConsumption(pid);
       resourceConsumption = ProcessResourceConsumption.getPeak(resourceConsumption, res);
     }
 
@@ -235,9 +234,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     final String name;
     @Nullable ProcessResourceConsumption resourceConsumption;
 
-    ThisProcessInfo(
-        long pid,
-        String name) {
+    ThisProcessInfo(long pid, String name) {
       this.pid = pid;
       this.name = Preconditions.checkNotNull(name);
       updateResourceConsumption();
@@ -251,9 +248,10 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
     @Override
     public void updateResourceConsumption() {
-      ProcessResourceConsumption res = deepEnabled ?
-          processHelper.getTotalResourceConsumption(pid) :
-          processHelper.getProcessResourceConsumption(pid);
+      ProcessResourceConsumption res =
+          deepEnabled
+              ? processHelper.getTotalResourceConsumption(pid)
+              : processHelper.getProcessResourceConsumption(pid);
       resourceConsumption = ProcessResourceConsumption.getPeak(resourceConsumption, res);
     }
 
@@ -262,10 +260,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
       LOG.verbose("Process resource consumption: %s\n%s", name, resourceConsumption);
       eventBus.post(
           new ProcessResourceConsumptionEvent(
-              name,
-              Optional.empty(),
-              Optional.empty(),
-              Optional.ofNullable(resourceConsumption)));
+              name, Optional.empty(), Optional.empty(), Optional.ofNullable(resourceConsumption)));
     }
   }
 

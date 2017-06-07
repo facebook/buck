@@ -33,8 +33,6 @@ public interface VersionSelector {
    * @throws VersionException
    */
   ImmutableMap<BuildTarget, Version> resolve(
-      BuildTarget root,
-      ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
+      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
       throws VersionException;
-
 }

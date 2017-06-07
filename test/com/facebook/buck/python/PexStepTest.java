@@ -32,14 +32,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
 
 public class PexStepTest {
 
@@ -51,14 +49,14 @@ public class PexStepTest {
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
 
-  private static final ImmutableMap<Path, Path> MODULES = ImmutableMap.of(
-      Paths.get("m"), Paths.get("/src/m"));
-  private static final ImmutableMap<Path, Path> RESOURCES = ImmutableMap.of(
-      Paths.get("r"), Paths.get("/src/r"));
-  private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES = ImmutableMap.of(
-      Paths.get("n.so"), Paths.get("/src/n.so"));
-  private static final ImmutableSet<Path> PREBUILT_LIBRARIES = ImmutableSet.of(
-      Paths.get("/src/p.egg"));
+  private static final ImmutableMap<Path, Path> MODULES =
+      ImmutableMap.of(Paths.get("m"), Paths.get("/src/m"));
+  private static final ImmutableMap<Path, Path> RESOURCES =
+      ImmutableMap.of(Paths.get("r"), Paths.get("/src/r"));
+  private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES =
+      ImmutableMap.of(Paths.get("n.so"), Paths.get("/src/n.so"));
+  private static final ImmutableSet<Path> PREBUILT_LIBRARIES =
+      ImmutableSet.of(Paths.get("/src/p.egg"));
   private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
 
   @Test
@@ -79,8 +77,8 @@ public class PexStepTest {
             PREBUILT_LIBRARIES,
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
-    String command = Joiner.on(" ").join(
-        step.getShellCommandInternal(TestExecutionContext.newInstance()));
+    String command =
+        Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
     assertThat(command, startsWith(Joiner.on(" ").join(PEX_COMMAND)));
     assertThat(command, containsString("--python " + PYTHON_PATH));
@@ -107,15 +105,15 @@ public class PexStepTest {
             PREBUILT_LIBRARIES,
             PRELOAD_LIBRARIES,
             /* zipSafe */ false);
-    String command = Joiner.on(" ").join(
-        step.getShellCommandInternal(TestExecutionContext.newInstance()));
+    String command =
+        Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
     assertThat(command, containsString("--no-zip-safe"));
   }
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testCommandStdin() throws IOException {
+  public void testCommandStdin() throws InterruptedException, IOException {
     PexStep step =
         new PexStep(
             new FakeProjectFilesystem(),
@@ -133,9 +131,8 @@ public class PexStepTest {
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
 
-    Map<String, Object> args = ObjectMappers.newDefaultInstance().readValue(
-        step.getStdin(TestExecutionContext.newInstance()).get(),
-        Map.class);
+    Map<String, Object> args =
+        ObjectMappers.readValue(step.getStdin(TestExecutionContext.newInstance()).get(), Map.class);
     assertThat(
         (Map<String, String>) args.get("modules"),
         hasEntry(Paths.get("m").toString(), Paths.get("/src/m").toString()));
@@ -146,8 +143,7 @@ public class PexStepTest {
         (Map<String, String>) args.get("nativeLibraries"),
         hasEntry(Paths.get("n.so").toString(), Paths.get("/src/n.so").toString()));
     assertThat(
-        (List<String>) args.get("prebuiltLibraries"),
-        hasItem(Paths.get("/src/p.egg").toString()));
+        (List<String>) args.get("prebuiltLibraries"), hasItem(Paths.get("/src/p.egg").toString()));
   }
 
   @Test
@@ -156,10 +152,7 @@ public class PexStepTest {
         new PexStep(
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
-            ImmutableList.<String>builder()
-                .add("build")
-                .add("--some", "--args")
-                .build(),
+            ImmutableList.<String>builder().add("build").add("--some", "--args").build(),
             PYTHON_PATH,
             PYTHON_VERSION,
             TEMP_PATH,
@@ -175,5 +168,4 @@ public class PexStepTest {
         step.getShellCommandInternal(TestExecutionContext.newInstance()),
         hasItems("--some", "--args"));
   }
-
 }

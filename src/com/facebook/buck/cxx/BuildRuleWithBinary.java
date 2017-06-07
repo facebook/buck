@@ -17,9 +17,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 
-/**
- * Build rule that holds a binary build rule
- */
+/** Build rule that holds a binary build rule */
 public interface BuildRuleWithBinary extends BuildRule {
   BuildRule getBinaryBuildRule();
 }

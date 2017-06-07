@@ -35,7 +35,7 @@ class FilePathGenerator:
             base_path = target_data['buck.base_path']
             build_file_entries[base_path].add(target_data['name'])
             components = self._split_path_into_components(base_path)
-            # TODO(k21): Targets in the root of the repo are ignored
+            # TODO(jakubzika): Targets in the root of the repo are ignored
             # because _generate_path does not handle depth == 0.
             if components:
                 self._package_depths.update([len(components)])

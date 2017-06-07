@@ -16,36 +16,29 @@
 
 package com.facebook.buck.intellij.ideabuck.actions;
 
-import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
-import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
+import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
+import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
 import com.google.common.base.Function;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
-/**
- * Run buck targets command.
- */
+/** Run buck targets command. */
 public class BuckQueryAction {
   public static final String ACTION_TITLE = "Run buck query";
   private static final Cache<String, List<String>> buckTargetCache =
-      CacheBuilder.newBuilder()
-          .maximumSize(1000)
-          .build();
+      CacheBuilder.newBuilder().maximumSize(1000).build();
   private static final Set<String> ongoingQuery = new HashSet<>();
 
-  private BuckQueryAction() {
-  }
+  private BuckQueryAction() {}
 
   public static synchronized List<String> execute(
       final Project project,
@@ -60,30 +53,32 @@ public class BuckQueryAction {
       return targetsInBuckFile;
     }
 
-    ApplicationManager.getApplication().executeOnPooledThread(
-        new Runnable() {
-          public void run() {
-            ongoingQuery.add(target);
-            BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
+    ApplicationManager.getApplication()
+        .executeOnPooledThread(
+            new Runnable() {
+              public void run() {
+                ongoingQuery.add(target);
+                BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
 
-            BuckCommandHandler handler = new BuckQueryCommandHandler(
-                project,
-                project.getBaseDir(),
-                BuckCommand.QUERY,
-                new Function<List<String>, Void>() {
-                  @Nullable
-                  @Override
-                  public Void apply(@Nullable List<String> strings) {
-                    ongoingQuery.remove(target);
-                    buckTargetCache.put(target, strings);
-                    fillTextResults.apply(strings);
-                    return null;
-                  }
-                });
-            handler.command().addParameter(target);
-            buildManager.runBuckCommand(handler, ACTION_TITLE);
-          }
-        });
+                BuckCommandHandler handler =
+                    new BuckQueryCommandHandler(
+                        project,
+                        project.getBaseDir(),
+                        BuckCommand.QUERY,
+                        new Function<List<String>, Void>() {
+                          @Nullable
+                          @Override
+                          public Void apply(@Nullable List<String> strings) {
+                            ongoingQuery.remove(target);
+                            buckTargetCache.put(target, strings);
+                            fillTextResults.apply(strings);
+                            return null;
+                          }
+                        });
+                handler.command().addParameter(target);
+                buildManager.runBuckCommand(handler, ACTION_TITLE);
+              }
+            });
     return Collections.emptyList();
-    }
+  }
 }

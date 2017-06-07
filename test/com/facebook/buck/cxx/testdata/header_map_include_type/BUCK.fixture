@@ -1,0 +1,46 @@
+prebuilt_cxx_library(
+  name = 'prebuilt',
+  header_only = True,
+  header_namespace = 'prebuilt',
+  exported_headers = [
+    'prebuilt.h',
+  ],
+)
+
+cxx_library(
+  name = 'lib',
+  header_namespace = 'lib',
+  exported_headers = [
+    'lib.h',
+  ],
+)
+
+cxx_binary(
+  name = 'test_prebuilt',
+  header_namespace = 'namespace',
+  compiler_flags = [ '-Wdouble-promotion', '-Werror' ],
+  deps = [ ':prebuilt' ],
+  srcs = [
+    'test_prebuilt.cpp',
+  ],
+)
+
+cxx_binary(
+  name = 'test_lib',
+  header_namespace = 'namespace',
+  compiler_flags = [ '-Wdouble-promotion', '-Werror' ],
+  deps = [ ':lib' ],
+  srcs = [
+    'test_lib.cpp',
+  ],
+)
+
+cxx_binary(
+  name = 'test_both',
+  header_namespace = 'namespace',
+  compiler_flags = [ '-Wdouble-promotion', '-Werror' ],
+  deps = [ ':prebuilt', ':lib' ],
+  srcs = [
+    'test_both.cpp',
+  ],
+)

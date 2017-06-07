@@ -20,16 +20,14 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class WorkerProcessPoolTest {
   @Test
@@ -43,11 +41,11 @@ public class WorkerProcessPoolTest {
       tasks[i] = new Thread(new BorrowWorkerProcessWithoutReturning(pool, createdWorkers));
     }
 
-    for (Thread thread: tasks) {
+    for (Thread thread : tasks) {
       thread.start();
     }
 
-    for (Thread thread: tasks) {
+    for (Thread thread : tasks) {
       thread.join(100);
     }
 
@@ -61,18 +59,18 @@ public class WorkerProcessPoolTest {
     final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = {
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-        new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
+      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
     };
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -94,7 +92,7 @@ public class WorkerProcessPoolTest {
       threads[i].start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -113,7 +111,7 @@ public class WorkerProcessPoolTest {
       threads[i].start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
@@ -122,14 +120,67 @@ public class WorkerProcessPoolTest {
       threads[i].start();
     }
 
-    for (Thread thread: threads) {
+    for (Thread thread : threads) {
       thread.join();
     }
 
     assertThat(
         new HashSet<>(usedWorkers.values()).size(),
         Matchers.allOf(Matchers.greaterThan(0), Matchers.lessThanOrEqualTo(numThreads)));
+  }
 
+  @Test
+  public void destroysProcessOnFailure() throws InterruptedException {
+    final WorkerProcessPool pool = createPool(1);
+    final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
+    Thread t = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
+    t.start();
+    t.join();
+    assertThat(usedWorkers.size(), Matchers.is(1));
+
+    t = new Thread(new BorrowAndKillWorkerProcess(pool, usedWorkers));
+    t.start();
+    t.join();
+
+    t = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
+    t.start();
+    t.join();
+
+    assertThat(usedWorkers.size(), Matchers.is(3));
+    assertThat(new HashSet<>(usedWorkers.values()).size(), Matchers.is(2));
+  }
+
+  @Test
+  public void returnAndDestroyDoNotInterrupt() throws InterruptedException, IOException {
+    final WorkerProcessPool pool = createPool(1);
+    final WorkerProcess process = pool.borrowWorkerProcess();
+    process.ensureLaunchAndHandshake();
+
+    Thread.currentThread().interrupt();
+    pool.returnWorkerProcess(process);
+    assertThat(Thread.interrupted(), Matchers.is(true));
+
+    final WorkerProcess process2 = pool.borrowWorkerProcess();
+    process2.ensureLaunchAndHandshake();
+    assertThat(process2, Matchers.is(process));
+
+    Thread.currentThread().interrupt();
+    pool.destroyWorkerProcess(process2);
+    assertThat(Thread.interrupted(), Matchers.is(true));
+  }
+
+  @Test
+  public void cleansUpDeadProcesses() throws InterruptedException, IOException {
+    final WorkerProcessPool pool = createPool(1);
+    final WorkerProcess process = pool.borrowWorkerProcess();
+    process.ensureLaunchAndHandshake();
+    pool.returnWorkerProcess(process);
+    process.close();
+
+    final WorkerProcess process2 = pool.borrowWorkerProcess();
+    process2.ensureLaunchAndHandshake();
+    assertThat(process2, Matchers.not(process));
+    pool.returnWorkerProcess(process2);
   }
 
   private static WorkerProcessPool createPool(int maxWorkers) {
@@ -163,15 +214,16 @@ public class WorkerProcessPoolTest {
     private final Set<WorkerProcess> createdWorkers;
 
     public BorrowWorkerProcessWithoutReturning(
-        WorkerProcessPool pool,
-        Set<WorkerProcess> createdWorkers) {
+        WorkerProcessPool pool, Set<WorkerProcess> createdWorkers) {
       this.pool = pool;
       this.createdWorkers = createdWorkers;
     }
 
     @Override
     public void runUnsafe() throws Exception {
-      createdWorkers.add(pool.borrowWorkerProcess());
+      WorkerProcess process = pool.borrowWorkerProcess();
+      process.ensureLaunchAndHandshake();
+      createdWorkers.add(process);
     }
   }
 
@@ -180,8 +232,7 @@ public class WorkerProcessPoolTest {
     private final Map<Runnable, WorkerProcess> usedWorkers;
 
     public BorrowAndReturnWorkerProcess(
-        WorkerProcessPool pool,
-        Map<Runnable, WorkerProcess> usedWorkers) {
+        WorkerProcessPool pool, Map<Runnable, WorkerProcess> usedWorkers) {
       this.pool = pool;
       this.usedWorkers = usedWorkers;
     }
@@ -190,7 +241,27 @@ public class WorkerProcessPoolTest {
     public void runUnsafe() throws Exception {
       WorkerProcess workerProcess = pool.borrowWorkerProcess();
       usedWorkers.put(this, workerProcess);
+      workerProcess.ensureLaunchAndHandshake();
       pool.returnWorkerProcess(workerProcess);
+    }
+  }
+
+  class BorrowAndKillWorkerProcess extends Runnable {
+    private final WorkerProcessPool pool;
+    private final Map<Runnable, WorkerProcess> usedWorkers;
+
+    public BorrowAndKillWorkerProcess(
+        WorkerProcessPool pool, Map<Runnable, WorkerProcess> usedWorkers) {
+      this.pool = pool;
+      this.usedWorkers = usedWorkers;
+    }
+
+    @Override
+    public void runUnsafe() throws Exception {
+      WorkerProcess workerProcess = pool.borrowWorkerProcess();
+      usedWorkers.put(this, workerProcess);
+      workerProcess.ensureLaunchAndHandshake();
+      pool.destroyWorkerProcess(workerProcess);
     }
   }
 }

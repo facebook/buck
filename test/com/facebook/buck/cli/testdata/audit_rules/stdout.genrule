@@ -2,21 +2,12 @@
 
 genrule(
   name = "example",
-  autodeps = None,
   bash = "cat $SRCS > $OUT",
-  cmd = None,
-  cmdExe = None,
-  executable = None,
-  licenses = None,
   out = "baz.txt",
   srcs = [
     "foo.txt",
     "bar.txt",
     "//fake:rule",
-  ],
-  tests = None,
-  visibility = [
-    "PUBLIC",
   ],
 )
 

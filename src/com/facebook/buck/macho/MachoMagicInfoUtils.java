@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.google.common.primitives.UnsignedInteger;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -27,14 +26,15 @@ public class MachoMagicInfoUtils {
   /**
    * Reads 4 bytes from the given byte buffer from position 0 and produces the MachoMagicInfo object
    * which describes basic information about Mach Object file.
+   *
    * @param buffer Byte Buffer which holds bytes for the mach header magic number.
    * @return MachoMagicInfo object.
    * @throws IOException
    */
   public static MachoMagicInfo getMachMagicInfo(ByteBuffer buffer) {
     ByteOrder order = buffer.order();
-    UnsignedInteger magic = UnsignedInteger.fromIntBits(
-        buffer.order(ByteOrder.BIG_ENDIAN).getInt());
+    UnsignedInteger magic =
+        UnsignedInteger.fromIntBits(buffer.order(ByteOrder.BIG_ENDIAN).getInt());
     buffer.order(order);
     return new MachoMagicInfo(magic);
   }

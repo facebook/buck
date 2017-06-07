@@ -28,7 +28,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteSource;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,14 +44,9 @@ public class WriteFileStep implements Step {
   private final boolean executable;
 
   public WriteFileStep(
-      ProjectFilesystem filesystem,
-      ByteSource content,
-      Path outputPath,
-      boolean executable) {
+      ProjectFilesystem filesystem, ByteSource content, Path outputPath, boolean executable) {
     Preconditions.checkArgument(
-        !outputPath.isAbsolute(),
-        "Output path must not be absolute: %s",
-        outputPath);
+        !outputPath.isAbsolute(), "Output path must not be absolute: %s", outputPath);
 
     this.source = content;
     this.filesystem = filesystem;
@@ -61,10 +55,7 @@ public class WriteFileStep implements Step {
   }
 
   public WriteFileStep(
-      ProjectFilesystem filesystem,
-      String content,
-      Path outputPath,
-      boolean executable) {
+      ProjectFilesystem filesystem, String content, Path outputPath, boolean executable) {
     this(filesystem, Suppliers.ofInstance(content), outputPath, executable);
   }
 
@@ -74,7 +65,8 @@ public class WriteFileStep implements Step {
       Path outputPath,
       boolean executable) {
     this(
-        filesystem, new ByteSource() {
+        filesystem,
+        new ByteSource() {
           @Override
           public InputStream openStream() throws IOException {
             // echo by default writes a trailing new line and so should we.
@@ -88,10 +80,7 @@ public class WriteFileStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try (InputStream sourceStream = source.openStream()) {
-      filesystem.copyToPath(
-          sourceStream,
-          outputPath,
-          StandardCopyOption.REPLACE_EXISTING);
+      filesystem.copyToPath(sourceStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
       if (executable) {
         Path resolvedPath = filesystem.resolve(outputPath);
         MoreFiles.makeExecutable(resolvedPath);
@@ -111,9 +100,6 @@ public class WriteFileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format(
-        "echo ... > %s",
-        Escaper.escapeAsBashString(outputPath));
+    return String.format("echo ... > %s", Escaper.escapeAsBashString(outputPath));
   }
-
 }

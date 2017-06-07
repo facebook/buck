@@ -20,7 +20,7 @@ import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 
 @SuppressWarnings("serial")
 public abstract class BuildTargetException extends Exception
-    implements ExceptionWithHumanReadableMessage  {
+    implements ExceptionWithHumanReadableMessage {
 
   public BuildTargetException(String message) {
     super(message);

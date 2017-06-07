@@ -20,41 +20,37 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class TestSelectorsJUnitVersionsIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
   public void setupWorkspace() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "test_selectors_junit_versions", temporaryFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "test_selectors_junit_versions", temporaryFolder);
     workspace.setUp();
   }
 
   @Test
   public void shouldRunEveryTest() throws IOException {
-    Set<String> expectedPassingTests = ImmutableSet.of(
-        "com.example.TestA",
-        "com.example.TestB",
-        "com.example.TestC",
-        "com.example.TestD");
+    Set<String> expectedPassingTests =
+        ImmutableSet.of(
+            "com.example.TestA", "com.example.TestB", "com.example.TestC", "com.example.TestD");
     assertPassingTests(expectedPassingTests, ImmutableList.of("test", "--all"));
   }
 
@@ -72,9 +68,8 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
         ImmutableList.of("test", "--all", "--filter", "com.example.TestC"));
   }
 
-  private void assertPassingTests(
-      Set<String> expectedPassingTests,
-      List<String> buckArgs) throws IOException {
+  private void assertPassingTests(Set<String> expectedPassingTests, List<String> buckArgs)
+      throws IOException {
     String[] args = buckArgs.toArray(new String[buckArgs.size()]);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
     String[] lines = result.getStderr().split("\n");

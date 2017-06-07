@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'cxx_binary()' /}
+    {param navid: 'rule_cxx_binary' /}
     {param prettify: true /}
     {param description}
       A cxx_binary() rule builds a native C/C++ executable.
@@ -50,9 +51,17 @@ and link against their static archives (which are *not* built using {sp}
 
 {call cxx_common.platform_linker_flags_arg /}
 
+{call cxx_common.precompiled_header_arg /}
+
 {call native_common.link_style /}
 
+{call buck.deps_query_arg /}
+
 {call buck.tests_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 
@@ -60,13 +69,13 @@ and link against their static archives (which are *not* built using {sp}
   {call buck.arg}
     {param name : '#strip-debug' /}
     {param desc}
-    If appended to the target name, it will strip debugging symbols, but saving local and global symbols. 
+    If appended to the target name, it will strip debugging symbols, but saving local and global symbols.
     {/param}
   {/call}
   {call buck.arg}
     {param name : '#strip-non-global' /}
     {param desc}
-    If appended to the target name, it will strip non-global symbols, but keeping external symbols. 
+    If appended to the target name, it will strip non-global symbols, but keeping external symbols.
     This is preferred for dynamic shared libraries.
     {/param}
   {/call}

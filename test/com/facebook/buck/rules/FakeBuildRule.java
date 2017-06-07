@@ -23,26 +23,17 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import javax.annotation.Nullable;
 
-public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
+public class FakeBuildRule extends AbstractBuildRuleWithResolver implements BuildRule {
 
-
-  @Nullable
-  private Path outputFile;
+  @Nullable private Path outputFile;
 
   public FakeBuildRule(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
-    this(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(deps)
-            .build(), resolver);
+      BuildTarget target, SourcePathResolver resolver, ImmutableSortedSet<BuildRule> deps) {
+    this(new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(deps).build(), resolver);
   }
 
   public FakeBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
@@ -62,39 +53,47 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-            .build(), resolver);
+            .build(),
+        resolver);
   }
 
   public FakeBuildRule(String target, SourcePathResolver resolver, BuildRule... deps) {
     this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), resolver, deps);
   }
 
-  public static FakeBuildRule newEmptyInstance(String name) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(name);
-    return new FakeBuildRule(
-        buildTarget,
-        new SourcePathResolver(
+  public FakeBuildRule(String target, BuildRule... deps) {
+    this(target, newSourcePathResolver(), deps);
+  }
+
+  private static SourcePathResolver newSourcePathResolver() {
+    return new SourcePathResolver(
+        new SourcePathRuleFinder(
             new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        ImmutableSortedSet.of());
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return outputFile;
+  @Nullable
+  public SourcePath getSourcePathToOutput() {
+    if (outputFile == null) {
+      return null;
+    }
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
   }
 
-  public void setOutputFile(@Nullable String outputFile) {
+  public FakeBuildRule setOutputFile(@Nullable String outputFile) {
     this.outputFile = outputFile == null ? null : Paths.get(outputFile);
+    return this;
+  }
+
+  @Nullable
+  public Path getOutputFile() {
+    return outputFile;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
-
 }

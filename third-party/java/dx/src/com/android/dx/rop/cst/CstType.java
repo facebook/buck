@@ -16,18 +16,25 @@
 
 package com.android.dx.rop.cst;
 
+import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.type.Type;
 import com.google.common.collect.MapMaker;
 
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Constants that represent an arbitrary type (reference or primitive).
  */
 public final class CstType extends TypedConstant {
-    /** {@code non-null;} map of interned types */
-    private static final Map<String, CstType> interns =
-        new MapMaker()
+
+    /**
+     * Intern table for instances.
+     *
+     * <p>The initial capacity is based on a medium-size project.
+     */
+    private static final ConcurrentMap<Type, CstType> interns = new MapMaker()
+            .concurrencyLevel(Main.CONCURRENCY_LEVEL)
+            .initialCapacity(1_000)
             .weakValues()
             .makeMap();
 
@@ -126,16 +133,9 @@ public final class CstType extends TypedConstant {
      * @return {@code non-null;} an appropriately-constructed instance
      */
     public static CstType intern(Type type) {
-        synchronized (interns) {
-            CstType cst = interns.get(type.getDescriptor());
-
-            if (cst == null) {
-                cst = new CstType(type);
-                interns.put(type.getDescriptor(), cst);
-            }
-
-            return cst;
-        }
+        CstType cst = new CstType(type);
+        CstType result = interns.putIfAbsent(type, cst);
+        return result != null ? result : cst;
     }
 
     /**
@@ -188,6 +188,7 @@ public final class CstType extends TypedConstant {
     }
 
     /** {@inheritDoc} */
+    @Override
     public Type getType() {
         return Type.CLASS;
     }
@@ -205,6 +206,7 @@ public final class CstType extends TypedConstant {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toHuman() {
         return type.toHuman();
     }

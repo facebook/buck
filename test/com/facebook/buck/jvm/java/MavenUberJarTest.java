@@ -25,18 +25,15 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class MavenUberJarTest {
 
@@ -52,31 +49,25 @@ public class MavenUberJarTest {
     BuildTarget pythonTarget = BuildTargetFactory.newInstance("//:python");
     BuildTarget javaTarget = BuildTargetFactory.newInstance("//:java");
 
-    PythonLibraryBuilder pythonLibraryBuilder =
-        PythonLibraryBuilder
-            .createBuilder(pythonTarget);
+    PythonLibraryBuilder pythonLibraryBuilder = PythonLibraryBuilder.createBuilder(pythonTarget);
     JavaLibraryBuilder javaLibraryBuilder =
-        JavaLibraryBuilder
-            .createBuilder(javaTarget)
-            .addResource(new BuildTargetSourcePath(pythonTarget));
+        JavaLibraryBuilder.createBuilder(javaTarget)
+            .addResource(new DefaultBuildTargetSourcePath(pythonTarget));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), javaLibraryBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    PythonLibrary pythonLibrary =
-        (PythonLibrary) pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
-    JavaLibrary javaLibrary =
-        (JavaLibrary) javaLibraryBuilder.build(resolver, filesystem, targetGraph);
+    PythonLibrary pythonLibrary = pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
+    JavaLibrary javaLibrary = javaLibraryBuilder.build(resolver, filesystem, targetGraph);
 
     MavenUberJar buildRule =
         MavenUberJar.create(
             javaLibrary,
             javaLibraryBuilder.createBuildRuleParams(resolver, filesystem),
-            new SourcePathResolver(resolver),
             Optional.of("com.facebook.buck.jvm.java:java:jar:42"),
             Optional.empty());
-    assertThat(buildRule.getDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
+    assertThat(buildRule.getBuildDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
   }
 }

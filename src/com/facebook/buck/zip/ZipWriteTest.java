@@ -17,7 +17,6 @@
 package com.facebook.buck.zip;
 
 import com.google.common.io.ByteStreams;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,17 +29,17 @@ import java.util.zip.ZipFile;
 /**
  * A small test program to exercize CustomZipOutputStream.
  *
- * I wrote this to investigate a bug.  Feel free to use or modify it for anything.
+ * <p>I wrote this to investigate a bug. Feel free to use or modify it for anything.
  */
 public class ZipWriteTest {
   private ZipWriteTest() {}
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    try (CustomZipOutputStream zipOut = ZipOutputStreams.newOutputStream(
-        Paths.get("/dev/null"), ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP)) {
+    try (CustomZipOutputStream zipOut =
+        ZipOutputStreams.newOutputStream(
+            Paths.get("/dev/null"), ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP)) {
       try (ZipFile zipIn = new ZipFile(new File(args[0]))) {
-        for (
-            Enumeration<? extends ZipEntry> entries = zipIn.entries();
+        for (Enumeration<? extends ZipEntry> entries = zipIn.entries();
             entries.hasMoreElements();
             ) {
           ZipEntry entry = entries.nextElement();

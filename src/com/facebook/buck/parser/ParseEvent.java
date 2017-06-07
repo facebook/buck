@@ -25,12 +25,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
-/**
- * Base class for events about parsing build files..
- */
+/** Base class for events about parsing build files.. */
 public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
   private final ImmutableList<BuildTarget> buildTargets;
@@ -59,9 +56,9 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent,
     return new Started(buildTargets);
   }
 
-  public static Finished finished(Started started,
-      Optional<TargetGraph> graph) {
-    return new Finished(started, graph);
+  public static Finished finished(
+      Started started, long processedBytes, Optional<TargetGraph> graph) {
+    return new Finished(started, processedBytes, graph);
   }
 
   public static class Started extends ParseEvent {
@@ -76,17 +73,23 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent,
   }
 
   public static class Finished extends ParseEvent {
+    private final long processedBytes;
     /** If this is {@link Optional#empty()}, then the parse did not complete successfully. */
     private final Optional<TargetGraph> graph;
 
-    protected Finished(Started started, Optional<TargetGraph> graph) {
+    protected Finished(Started started, long processedBytes, Optional<TargetGraph> graph) {
       super(started.getEventKey(), started.getBuildTargets());
+      this.processedBytes = processedBytes;
       this.graph = graph;
     }
 
     @Override
     public String getEventName() {
       return PARSE_FINISHED;
+    }
+
+    public long getProcessedBytes() {
+      return processedBytes;
     }
 
     @JsonIgnore

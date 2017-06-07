@@ -1,8 +1,0 @@
-{
-  "sha1" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//third-party/java/guava:guava"
-    ]
-  }
-}

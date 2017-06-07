@@ -17,86 +17,82 @@
 package com.facebook.buck.dotnet;
 
 import static com.facebook.buck.dotnet.DotnetAssumptions.assumeCscIsAvailable;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Optional;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-
 public class CsharpLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  // https://msdn.microsoft.com/en-us/library/1700bbwd.aspx
+  private static final String vsvars32bat =
+      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\Tools\\vsvars32.bat";
+
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  private ImmutableMap<String, String> env;
+
+  @Before
+  public void setUp() throws IOException, InterruptedException {
+    env = getEnv();
+    assumeCscIsAvailable(env);
+  }
 
   @Test
   public void shouldCompileLibraryWithSystemProvidedDeps() throws IOException {
-    assumeCscIsAvailable();
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput("//src:simple");
-
-    assertTrue(output.getFileName().toString().endsWith(".dll"));
-    assertTrue("File doesn't seem to have been compiled", Files.size(output) > 0);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(env, "build", "//src:simple");
+    result.assertSuccess();
   }
 
   @Test
   public void shouldCompileLibraryWithAPrebuiltDependency() throws IOException {
-    assumeCscIsAvailable();
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput("//src:prebuilt");
-
-    assertTrue(output.getFileName().toString().endsWith(".dll"));
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(env, "build", "//src:prebuilt");
+    result.assertSuccess();
   }
 
   @Test
   public void shouldBeAbleToEmbedResourcesIntoTheBuiltDll() throws IOException {
-    assumeCscIsAvailable();
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput("//src:embed");
-
-    assertTrue(output.getFileName().toString().endsWith(".dll"));
-    assertTrue("File doesn't seem to have been compiled", Files.size(output) > 0);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(env, "build", "//src:embed");
+    result.assertSuccess();
   }
 
   @Test
   public void shouldBeAbleToDependOnAnotherCsharpLibrary() throws IOException {
-    assumeCscIsAvailable();
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "csc-tests",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//src:dependent");
-
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(env, "build", "//src:dependent");
     result.assertSuccess();
   }
 
@@ -104,5 +100,32 @@ public class CsharpLibraryIntegrationTest {
   @Ignore
   public void shouldBeAbleToAddTheSameResourceToADllTwice() {
     fail("Implement me, please!");
+  }
+
+  private ImmutableMap<String, String> getEnv() throws IOException, InterruptedException {
+    if (Platform.detect() == Platform.WINDOWS && Files.exists(Paths.get(vsvars32bat))) {
+      String vsvar32BatEsc = vsvars32bat.replace(" ", "^ ").replace("(", "^(");
+      ProcessExecutorParams params =
+          ProcessExecutorParams.ofCommand("cmd", "/c", vsvar32BatEsc + " && set");
+      ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+      ProcessExecutor.Result envResult = executor.launchAndExecute(params);
+      Optional<String> envOut = envResult.getStdout();
+      Assert.assertTrue(envOut.isPresent());
+      String envString = envOut.get();
+      String[] envStrings = envString.split("\\r?\\n");
+      ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+      for (String s : envStrings) {
+        int sep = s.indexOf('=');
+        String key = s.substring(0, sep);
+        if ("PATH".equalsIgnoreCase(key)) {
+          key = "PATH";
+        }
+        String val = s.substring(sep + 1, s.length());
+        builder.put(key, val);
+      }
+      return builder.build();
+    } else {
+      return ImmutableMap.copyOf(System.getenv());
+    }
   }
 }

@@ -2,6 +2,7 @@ rust_binary(
     name = "addtest_static",
     srcs = [ "main.rs" ],
     features = [ 'static' ],
+    link_style = 'static',
     deps = [ ":adder_static" ],
 )
 
@@ -9,6 +10,7 @@ rust_binary(
     name = "addtest_shared",
     srcs = [ "main.rs" ],
     features = [ 'shared' ],
+    link_style = 'shared',
     deps = [ ":adder_shared" ],
 )
 
@@ -16,6 +18,7 @@ rust_binary(
     name = "addtest_prebuilt_static",
     srcs = [ "main.rs" ],
     features = [ 'static' ],
+    link_style = 'static',
     deps = [ ":prebuilt_adder_static" ],
 )
 
@@ -23,12 +26,12 @@ rust_binary(
     name = "addtest_prebuilt_shared",
     srcs = [ "main.rs" ],
     features = [ 'shared' ],
+    link_style = 'shared',
     deps = [ ":prebuilt_adder_shared" ],
 )
 
 rust_library(
     name = 'adder_static',
-    link_style = 'static',
     crate = 'adder',
     srcs = [ 'adder.rs' ],
     deps = [ ':simpleadder' ],
@@ -36,7 +39,6 @@ rust_library(
 
 rust_library(
     name = 'adder_shared',
-    link_style = 'shared',
     crate = 'adder',
     srcs = [ 'adder.rs' ],
     deps = [ ':simpleadder' ],

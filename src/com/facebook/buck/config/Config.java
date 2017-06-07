@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,28 +49,29 @@ import java.util.regex.Pattern;
  * override values defined by the previous ones.
  */
 public class Config {
+  /** Used in a string representation of a map; separates pairs of value */
+  public static final String DEFAULT_PAIR_SEPARATOR = ",";
+  /** Used in a string representation of a map; separates keys from values */
+  public static final String DEFAULT_KEY_VALUE_SEPARATOR = "=>";
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   // rawConfig is the flattened configuration relevant to the current cell
   private final RawConfig rawConfig;
 
-  private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
-    new Supplier<Integer>() {
-      @Override
-      public Integer get() {
-        return Objects.hashCode(rawConfig);
-      }
-    });
+  private final Supplier<Integer> hashCodeSupplier =
+      Suppliers.memoize(
+          new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+              return Objects.hashCode(rawConfig);
+            }
+          });
 
-  /**
-   * Caches the expanded value lookups.
-   */
+  /** Caches the expanded value lookups. */
   private final Map<Map.Entry<String, String>, Optional<String>> cache = new ConcurrentHashMap<>();
 
-  /**
-   * Convenience constructor to create an empty config.
-   */
+  /** Convenience constructor to create an empty config. */
   public Config() {
     this(RawConfig.of());
   }
@@ -83,26 +83,23 @@ public class Config {
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
   // macro.  So, add special expanders to preserve these until they get fixed.
   private static MacroReplacer getMacroPreserver(final String name) {
-    return input -> String.format("$(%s %s)", name, Joiner.on(' ').join(input));
+    return input -> String.format("$(%s %s)", name, Joiner.on(' ').join(input.getMacroInput()));
   }
 
-  /**
-   * @return the input after recursively expanding any config references.
-   */
+  /** @return the input after recursively expanding any config references. */
   private String expand(String input, final Stack<String> expandStack) {
     MacroReplacer macroReplacer =
         inputs -> {
-          if (inputs.size() != 1) {
+          if (inputs.getMacroInput().size() != 1) {
             throw new HumanReadableException(
-                "references must have a single argument of the form `<section>.<field>`," +
-                    " but was '%s'",
+                "references must have a single argument of the form `<section>.<field>`,"
+                    + " but was '%s'",
                 inputs);
           }
-          List<String> parts = Splitter.on('.').limit(2).splitToList(inputs.get(0));
+          List<String> parts = Splitter.on('.').limit(2).splitToList(inputs.getMacroInput().get(0));
           if (parts.size() != 2) {
             throw new HumanReadableException(
-                "references must have the form `<section>.<field>`, but was '%s'",
-                parts);
+                "references must have the form `<section>.<field>`, but was '%s'", parts);
           }
           return get(parts.get(0), parts.get(1), expandStack).orElse("");
         };
@@ -112,7 +109,8 @@ public class Config {
               "config", macroReplacer,
               "exe", getMacroPreserver("exe"),
               "location", getMacroPreserver("location")),
-          input);
+          input,
+          true);
     } catch (MacroException e) {
       throw new HumanReadableException(e, e.getMessage());
     }
@@ -181,21 +179,19 @@ public class Config {
 
   public ImmutableList<String> getListWithoutComments(
       String sectionName, String propertyName, char splitChar) {
-    return getOptionalListWithoutComments(
-        sectionName,
-        propertyName,
-        splitChar).orElse(ImmutableList.of());
+    return getOptionalListWithoutComments(sectionName, propertyName, splitChar)
+        .orElse(ImmutableList.of());
   }
 
   /**
-   * ini4j leaves things that look like comments in the values of entries in the file. Generally,
-   * we don't want to include these in our parameters, so filter them out where necessary. In an INI
+   * ini4j leaves things that look like comments in the values of entries in the file. Generally, we
+   * don't want to include these in our parameters, so filter them out where necessary. In an INI
    * file, the comment separator is ";", but some parsers (ini4j included) use "#" too. This method
    * handles both cases.
    *
    * @return an {@link ImmutableList} containing all entries that don't look like comments, the
-   *     empty list if the property is defined but there are no values, or Optional.empty() if
-   *     the property is not defined.
+   *     empty list if the property is defined but there are no values, or Optional.empty() if the
+   *     property is not defined.
    */
   public Optional<ImmutableList<String>> getOptionalListWithoutComments(
       String sectionName, String propertyName) {
@@ -211,16 +207,15 @@ public class Config {
     }
     String value = rawValue.get();
     if (value.isEmpty()) {
-      return Optional.empty();
+      return Optional.of(ImmutableList.of());
     }
 
     // Reject if the first nonspace character is an ini comment char (';' or '#')
     if (Pattern.compile("^\\s*[#;]").matcher(value).find()) {
-      return Optional.empty();
+      return Optional.of(ImmutableList.of());
     }
 
-    return Optional.of(decodeQuotedParts(
-            value, Optional.of(splitChar), sectionName, propertyName));
+    return Optional.of(decodeQuotedParts(value, Optional.of(splitChar), sectionName, propertyName));
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {
@@ -230,9 +225,8 @@ public class Config {
       if (value.isEmpty()) {
         return Optional.empty();
       } else {
-        return Optional.of(decodeQuotedParts(
-                value, Optional.empty(),
-                sectionName, propertyName).get(0));
+        return Optional.of(
+            decodeQuotedParts(value, Optional.empty(), sectionName, propertyName).get(0));
       }
     } else {
       return rawValue;
@@ -241,16 +235,12 @@ public class Config {
 
   public Optional<Long> getLong(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
-    return value.isPresent() ?
-        Optional.of(Long.valueOf(value.get())) :
-        Optional.empty();
+    return value.isPresent() ? Optional.of(Long.valueOf(value.get())) : Optional.empty();
   }
 
   public Optional<Integer> getInteger(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
-    return value.isPresent() ?
-        Optional.of(Integer.valueOf(value.get())) :
-        Optional.empty();
+    return value.isPresent() ? Optional.of(Integer.valueOf(value.get())) : Optional.empty();
   }
 
   public Optional<Float> getFloat(String sectionName, String propertyName) {
@@ -261,9 +251,7 @@ public class Config {
       } catch (NumberFormatException e) {
         throw new HumanReadableException(
             "Malformed value for %s in [%s]: %s; expecting a floating point number.",
-            propertyName,
-            sectionName,
-            value.get());
+            propertyName, sectionName, value.get());
       }
     } else {
       return Optional.empty();
@@ -293,9 +281,7 @@ public class Config {
       default:
         throw new HumanReadableException(
             "Unknown value for %s in [%s]: %s; should be yes/no true/false!",
-            propertyName,
-            sectionName,
-            answer);
+            propertyName, sectionName, answer);
     }
   }
 
@@ -309,10 +295,7 @@ public class Config {
     } catch (IllegalArgumentException e) {
       throw new HumanReadableException(
           ".buckconfig: %s:%s must be one of %s (case insensitive) (was \"%s\")",
-          section,
-          field,
-          Joiner.on(", ").join(clazz.getEnumConstants()),
-          value.get());
+          section, field, Joiner.on(", ").join(clazz.getEnumConstants()), value.get());
     }
   }
 
@@ -328,12 +311,70 @@ public class Config {
       return Optional.of(new URL(value.get()).toURI());
     } catch (URISyntaxException | MalformedURLException e) {
       throw new HumanReadableException(
-          e,
-          "Malformed url [%s]%s: %s",
-          section,
-          field,
-          e.getMessage());
+          e, "Malformed url [%s]%s: %s", section, field, e.getMessage());
     }
+  }
+
+  /**
+   * Convert a string representation of a map to a binary {@code ImmutableMap<String, String>}
+   *
+   * @param section Config file section name
+   * @param field Config file value name
+   * @param pairSeparator String that separates pairs of keys and values
+   * @param keyValueSeparator String that separates keys and values
+   * @return An {@link ImmutableMap}
+   */
+  public ImmutableMap<String, String> getMap(
+      String section, String field, String pairSeparator, String keyValueSeparator) {
+    return getMap(getValue(section, field), pairSeparator, keyValueSeparator);
+  }
+
+  /**
+   * Convert an {@code Optional<String>} representation of a map to a binary {@code
+   * ImmutableMap<String, String>}
+   *
+   * @param value An {@code Optional<String>}, such as you might get from {@link #getValue(String,
+   *     String)}
+   * @param pairSeparator String that separates pairs of keys and values
+   * @param keyValueSeparator String that separates keys and values
+   * @return An {@link ImmutableMap}
+   */
+  public static ImmutableMap<String, String> getMap(
+      Optional<String> value, String pairSeparator, String keyValueSeparator) {
+    if (value.isPresent()) {
+      return ImmutableMap.copyOf(
+          Splitter.on(pairSeparator)
+              .omitEmptyStrings()
+              .withKeyValueSeparator(Splitter.on(keyValueSeparator).trimResults())
+              .split(value.get())
+              .entrySet());
+    } else {
+      return ImmutableMap.of();
+    }
+  }
+
+  /**
+   * Convert a string representation of a map to a binary {@code ImmutableMap<String, String>},
+   * using default separators
+   *
+   * @param section Config file section name
+   * @param field Config file value name
+   * @return An {@link ImmutableMap}
+   */
+  public ImmutableMap<String, String> getMap(String section, String field) {
+    return getMap(section, field, DEFAULT_PAIR_SEPARATOR, DEFAULT_KEY_VALUE_SEPARATOR);
+  }
+
+  /**
+   * Convert a {@code Optional<String>} representation of a map to a binary {@code
+   * ImmutableMap<String, String>}, using default separators
+   *
+   * @param value An {@code Optional<String>}, such as you might get from {@link #getValue(String,
+   *     String)}
+   * @return An {@link ImmutableMap}
+   */
+  public static ImmutableMap<String, String> getMap(Optional<String> value) {
+    return getMap(value, DEFAULT_PAIR_SEPARATOR, DEFAULT_KEY_VALUE_SEPARATOR);
   }
 
   @Override
@@ -348,8 +389,7 @@ public class Config {
   }
 
   public boolean equalsIgnoring(
-      Config other,
-      ImmutableMap<String, ImmutableSet<String>> ignoredFields) {
+      Config other, ImmutableMap<String, ImmutableSet<String>> ignoredFields) {
     if (this == other) {
       return true;
     }
@@ -357,14 +397,12 @@ public class Config {
     ImmutableMap<String, ImmutableMap<String, String>> right = other.getSectionToEntries();
     Sets.SetView<String> sections = Sets.union(left.keySet(), right.keySet());
     for (String section : sections) {
-      ImmutableMap<String, String> leftFields = left.get(section);
-      ImmutableMap<String, String> rightFields = right.get(section);
-      if (leftFields == null || rightFields == null) {
-        return false;
-      }
-      Sets.SetView<String> fields = Sets.difference(
-          Sets.union(leftFields.keySet(), rightFields.keySet()),
-          Optional.ofNullable(ignoredFields.get(section)).orElse(ImmutableSet.of()));
+      ImmutableMap<String, String> leftFields = left.getOrDefault(section, ImmutableMap.of());
+      ImmutableMap<String, String> rightFields = right.getOrDefault(section, ImmutableMap.of());
+      Sets.SetView<String> fields =
+          Sets.difference(
+              Sets.union(leftFields.keySet(), rightFields.keySet()),
+              Optional.ofNullable(ignoredFields.get(section)).orElse(ImmutableSet.of()));
       for (String field : fields) {
         String leftValue = leftFields.get(field);
         String rightValue = rightFields.get(field);
@@ -382,41 +420,31 @@ public class Config {
   }
 
   /**
-   * Decodes from a string to a list of strings, splitting on separators.
-   * The encoded string may contain double quotes. These inhibit the special
-   * meaning of characters inside them, except for backslash and double quote.
-   * Double quote ends the quoted part, and backslash begins an escape
+   * Decodes from a string to a list of strings, splitting on separators. The encoded string may
+   * contain double quotes. These inhibit the special meaning of characters inside them, except for
+   * backslash and double quote. Double quote ends the quoted part, and backslash begins an escape
    * sequence. The following escape sequences are supported:
    *
-   * \          backslash
-   * "          double quote
-   * n          newline
-   * r          carriage return
-   * t          tab
-   * x##        unicode character with code point ## (in hex)
-   * u####      unicode character with code point #### (in hex)
-   * U########  unicode character with code point ######## (in hex)
+   * <p>\ backslash " double quote n newline r carriage return t tab x## unicode character with code
+   * point ## (in hex) u#### unicode character with code point #### (in hex) U######## unicode
+   * character with code point ######## (in hex)
    *
-   * Using this decoding, the resulting strings can contain any unicode
-   * character, even the ones that normally would have special meaning.
+   * <p>Using this decoding, the resulting strings can contain any unicode character, even the ones
+   * that normally would have special meaning.
    *
-   * When the splitting character is absent, no splitting is performed and a
-   * list containing a single string is returned.
+   * <p>When the splitting character is absent, no splitting is performed and a list containing a
+   * single string is returned.
    *
-   * Unquoted whitespace is trimmed from the front of values.
+   * <p>Unquoted whitespace is trimmed from the front of values.
    *
    * @param input string to decode
    * @param splitChar character to split on (if absent, no splitting performed)
    * @param section section in the configuration file
    * @param field field in the configuration file
-   *
    * @return list of decoded parts (single-item list if splitChar is absent)
    */
   private static ImmutableList<String> decodeQuotedParts(
-      String input,
-      Optional<Character> splitChar,
-      String section,
-      String field) {
+      String input, Optional<Character> splitChar, String section, String field) {
     ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
     StringBuilder stringBuilder = new StringBuilder();
     boolean inQuotes = false;
@@ -435,7 +463,7 @@ public class Config {
                 section, field, input.substring(i - 1));
           }
           c = input.charAt(i);
-          switch(c) {
+          switch (c) {
             case 'n':
               stringBuilder.append('\n');
               continue;
@@ -446,19 +474,16 @@ public class Config {
               stringBuilder.append('\t');
               continue;
             case 'U':
-              int codePoint = hexDecode(
-                  input, i + 1, 8, "\\U", section, field);
+              int codePoint = hexDecode(input, i + 1, 8, "\\U", section, field);
               stringBuilder.append(Character.toChars(codePoint));
               i += 8;
               continue;
             case 'u':
-              stringBuilder.append((char) hexDecode(
-                      input, i + 1, 4, "\\u", section, field));
+              stringBuilder.append((char) hexDecode(input, i + 1, 4, "\\u", section, field));
               i += 4;
               continue;
             case 'x':
-              stringBuilder.append((char) hexDecode(
-                      input, i + 1, 2, "\\x", section, field));
+              stringBuilder.append((char) hexDecode(input, i + 1, 2, "\\x", section, field));
               i += 2;
               continue;
             case '\\':
@@ -495,8 +520,7 @@ public class Config {
         lastIndex = input.length();
       }
       throw new HumanReadableException(
-          ".buckconfig: %s:%s: " +
-          "Input ends inside quoted string: %s...",
+          ".buckconfig: %s:%s: " + "Input ends inside quoted string: %s...",
           section, field, input.substring(quoteIndex, lastIndex));
     }
 
@@ -504,30 +528,31 @@ public class Config {
     return listBuilder.build();
   }
 
+  public Config overrideWith(Config other) {
+    RawConfig.Builder builder = RawConfig.builder();
+    builder.putAll(this.rawConfig);
+    builder.putAll(other.rawConfig);
+    return new Config(builder.build());
+  }
+
   /**
    * Decodes hexadecimal digits from a string.
+   *
    * @param string the string to decode the digits from
    * @param begin position to start decoding from
    * @param length number of digits to decode
    * @param prefix characters before the hexadecimal digits (e.g. "\\x")
    * @param section section name in configuration file
    * @param field field name in configuration file
-   *
    * @return the decoded value.
    */
   private static int hexDecode(
-      String string,
-      int begin,
-      int length,
-      String prefix,
-      String section,
-      String field) {
+      String string, int begin, int length, String prefix, String section, String field) {
     int result = 0;
     for (int i = begin; i < begin + length; i++) {
       if (i >= string.length()) {
         throw new HumanReadableException(
-            ".buckconfig: %s:%s: " +
-            "Input ends inside hexadecimal sequence: %s%s",
+            ".buckconfig: %s:%s: " + "Input ends inside hexadecimal sequence: %s%s",
             section, field, prefix, string.substring(begin));
       }
       char c = string.charAt(i);
@@ -555,4 +580,7 @@ public class Config {
     return result;
   }
 
+  public RawConfig getRawConfig() {
+    return rawConfig;
+  }
 }

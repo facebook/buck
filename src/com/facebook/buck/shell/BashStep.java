@@ -19,22 +19,21 @@ package com.facebook.buck.shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 /**
  * Command that makes it possible to run an arbitrary command in Bash. Whenever possible, a more
- * specific subclass of {@link ShellStep} should be preferred. BashCommand should be reserved
- * for cases where the expressiveness of Bash (often in the form of *-shell-expansion) makes the
- * command considerably easier to implement.
+ * specific subclass of {@link ShellStep} should be preferred. BashCommand should be reserved for
+ * cases where the expressiveness of Bash (often in the form of *-shell-expansion) makes the command
+ * considerably easier to implement.
  */
 public class BashStep extends ShellStep {
 
   private final String bashCommand;
 
   /**
-   * @param bashCommand command to execute. For convenience, multiple arguments are supported
-   *     and will be joined with space characters if more than one is present.
+   * @param bashCommand command to execute. For convenience, multiple arguments are supported and
+   *     will be joined with space characters if more than one is present.
    */
   public BashStep(Path workingDirectory, String... bashCommand) {
     super(workingDirectory);
@@ -47,9 +46,7 @@ public class BashStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(
-      ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.of("bash", "-c", bashCommand);
   }
-
 }

@@ -21,7 +21,6 @@ import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
 public class InstrumentationStep extends ShellStep {

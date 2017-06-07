@@ -20,41 +20,45 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.UnmodifiableIterator;
-
+import java.util.NoSuchElementException;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
-
-
 
 /**
  * Replace and extracts macros from input strings.
  *
- * Examples:
- *   $(exe //foo:bar)
- *   $(location :bar)
- *   $(platform)
+ * <p>Examples: $(exe //foo:bar) $(location :bar) $(platform)
  */
 public class MacroFinder {
 
   public Optional<MacroMatchResult> match(ImmutableSet<String> macros, String blob)
       throws MacroException {
 
-    MacroMatchResult result = new MacroFinderAutomaton(blob).next();
-    if (result != null &&
-        !result.isEscaped() &&
-        result.getStartIndex() == 0 &&
-        result.getEndIndex() == blob.length()) {
-      if (!macros.contains(result.getMacroType())) {
-        throw new MacroException(
-            String.format("expanding %s: no such macro \"%s\"", blob, result.getMacroType()));
-      }
-      return Optional.of(result);
+    MacroFinderAutomaton macroFinder = new MacroFinderAutomaton(blob);
+    if (!macroFinder.hasNext()) {
+      return Optional.empty();
     }
-    return Optional.empty();
+    MacroMatchResult result = macroFinder.next();
+    if (!result.isEscaped()
+        && result.getStartIndex() == 0
+        && result.getEndIndex() == blob.length()
+        && !macros.contains(result.getMacroType())) {
+      throw new MacroException(
+          String.format("expanding %s: no such macro \"%s\"", blob, result.getMacroType()));
+    }
+    return Optional.of(result);
   }
 
-  public String replace(ImmutableMap<String, MacroReplacer> replacers, String blob)
+  /**
+   * Expand macros embedded in a string.
+   *
+   * @param replacers a map of macro names to {@link MacroReplacer} objects used to expand them.
+   * @param blob the input string containing macros to be expanded
+   * @param resolveEscaping whether to drop characters used to escape literal uses of `$(...)`
+   * @return a copy of the input string with all macros expanded
+   */
+  public String replace(
+      ImmutableMap<String, MacroReplacer> replacers, String blob, boolean resolveEscaping)
       throws MacroException {
 
     StringBuilder expanded = new StringBuilder();
@@ -69,7 +73,10 @@ public class MacroFinder {
 
       // If the macro is escaped, add the macro text (but omit the escaping backslash)
       if (matchResult.isEscaped()) {
-        expanded.append(blob.substring(matchResult.getStartIndex() + 1, matchResult.getEndIndex()));
+        expanded.append(
+            blob.substring(
+                matchResult.getStartIndex() + (resolveEscaping ? 1 : 0),
+                matchResult.getEndIndex()));
       } else {
         // Call the relevant expander and add the expanded value to the string.
         MacroReplacer replacer = replacers.get(matchResult.getMacroType());
@@ -81,7 +88,7 @@ public class MacroFinder {
                   matchResult.getMacroType()));
         }
         try {
-          expanded.append(replacer.replace(matchResult.getMacroInput()));
+          expanded.append(replacer.replace(matchResult));
         } catch (MacroException e) {
           throw new MacroException(
               String.format(
@@ -118,30 +125,25 @@ public class MacroFinder {
   }
 
   /**
-   * A push-down automaton that searches for occurrences of a macro in linear time with respect
-   * to the search string. The automaton keeps track of 5 pieces of state:
-   * 1) The current automaton state
-   * 2) The position in the input string
-   * 3) The current nested depth of parentheses
-   * 4) The type of quote (if any) which bounds the current sequence
-   * 5) The return state to go back to after an escape sequence ends
+   * A push-down automaton that searches for occurrences of a macro in linear time with respect to
+   * the search string. The automaton keeps track of 5 pieces of state: 1) The current automaton
+   * state 2) The position in the input string 3) The current nested depth of parentheses 4) The
+   * type of quote (if any) which bounds the current sequence 5) The return state to go back to
+   * after an escape sequence ends
    *
-   * The automaton accumulates intermediate values in the string builder and the match result
-   * builder. The <code>find()</code> method will advance the automaton along the input string
-   * until it finds a macro, and returns a match, or until it reaches the end of the string and
-   * returns null.
+   * <p>The automaton accumulates intermediate values in the string builder and the match result
+   * builder. The <code>find()</code> method will advance the automaton along the input string until
+   * it finds a macro, and returns a match, or until it reaches the end of the string and returns
+   * null.
    *
-   * Examples of valid matching patterns:
-   *   $(macro)
-   *   $(macro argument)
-   *   $(macro nested parens(argument))
-   *   $(macro 'ignored paren )')
+   * <p>Examples of valid matching patterns: $(macro) $(macro argument) $(macro nested
+   * parens(argument)) $(macro 'ignored paren )')
    *
-   * If the macro is preceeded by a '\' the match result will be marked as escaped, and the
-   * capture group will include the escaping backslash. Example:
-   *   \$(macro)
+   * <p>If the macro is preceeded by a '\' the match result will be marked as escaped, and the
+   * capture group will include the escaping backslash. Example: \$(macro)
    *
-   * Here are the state transitions in dot format (with glossing over of saved state):
+   * <p>Here are the state transitions in dot format (with glossing over of saved state):
+   *
    * <pre>
    *   digraph G {
    *     "SEARCHING" -> "FOUND_DOLLAR"  [label="'$'"];
@@ -161,10 +163,11 @@ public class MacroFinder {
    *     "READING_QUOTED_ARGS" -> "IN_ESCAPE_ARG_SEQUENCE"  [label="\\"];
    *   }
    * </pre>
+   *
    * Not shown: transitions back from "IN_ESCAPE_SEQUENCE" and "IN_ESCAPE_ARG_SEQUENCE", as they
    * return to the previous state
    */
-  private static class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult> {
+  public static class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult> {
 
     private enum State {
       // Looking for the start of a macro
@@ -197,10 +200,9 @@ public class MacroFinder {
     private MacroMatchResult.Builder currentResultBuilder;
     private StringBuilder buffer;
 
-    @Nullable
-    private MacroMatchResult next;
+    @Nullable private MacroMatchResult next;
 
-    MacroFinderAutomaton(String blob) {
+    public MacroFinderAutomaton(String blob) {
       this.blob = blob;
       this.parenthesesDepth = 0;
       this.state = State.SEARCHING;
@@ -235,6 +237,9 @@ public class MacroFinder {
     public MacroMatchResult next() {
       MacroMatchResult toReturn = this.next;
       next = find();
+      if (toReturn == null) {
+        throw new NoSuchElementException("No more macro matches");
+      }
       return toReturn;
     }
 
@@ -252,9 +257,8 @@ public class MacroFinder {
               returnState = State.SEARCHING;
               return State.IN_ESCAPE_SEQUENCE;
             case '$':
-              currentResultBuilder = MacroMatchResult.builder()
-                  .setStartIndex(index)
-                  .setEscaped(false);
+              currentResultBuilder =
+                  MacroMatchResult.builder().setStartIndex(index).setEscaped(false);
               return State.FOUND_DOLLAR;
             default:
               return State.SEARCHING;
@@ -263,9 +267,8 @@ public class MacroFinder {
           // We want to capture the escaped macro, but mark it as escaped
           switch (c) {
             case '$':
-              currentResultBuilder = MacroMatchResult.builder()
-                  .setStartIndex(index - 1)
-                  .setEscaped(true);
+              currentResultBuilder =
+                  MacroMatchResult.builder().setStartIndex(index - 1).setEscaped(true);
               return State.FOUND_DOLLAR;
             default:
               return returnState;
@@ -279,9 +282,8 @@ public class MacroFinder {
               returnState = State.SEARCHING;
               return State.IN_ESCAPE_SEQUENCE;
             case '$':
-              currentResultBuilder = MacroMatchResult.builder()
-                  .setStartIndex(index)
-                  .setEscaped(false);
+              currentResultBuilder =
+                  MacroMatchResult.builder().setStartIndex(index).setEscaped(false);
               return State.FOUND_DOLLAR;
             default:
               return State.SEARCHING;
@@ -290,7 +292,8 @@ public class MacroFinder {
           switch (c) {
             case ')':
               parenthesesDepth -= 1;
-              currentResultBuilder.setMacroInput(ImmutableList.of())
+              currentResultBuilder
+                  .setMacroInput(ImmutableList.of())
                   .setMacroType(takeBuffer())
                   .setEndIndex(index + 1);
               return State.FOUND_MACRO;
@@ -324,8 +327,7 @@ public class MacroFinder {
             case ')':
               parenthesesDepth -= 1;
               if (parenthesesDepth == 0) {
-                currentResultBuilder.addMacroInput(takeBuffer().trim())
-                    .setEndIndex(index + 1);
+                currentResultBuilder.addMacroInput(takeBuffer().trim()).setEndIndex(index + 1);
                 return State.FOUND_MACRO;
               } else {
                 buffer.append(c);
@@ -363,5 +365,4 @@ public class MacroFinder {
       throw new IllegalStateException("Unknown state " + state);
     }
   }
-
 }

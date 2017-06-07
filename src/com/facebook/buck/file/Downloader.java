@@ -17,7 +17,6 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;

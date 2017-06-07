@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -68,14 +67,15 @@ public class GoCompileStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
-        .addAll(compilerCommandPrefix)
-        .add("-p", packageName.toString())
-        .add("-pack")
-        .add("-trimpath", workingDirectory.toString())
-        .add("-nolocalimports")
-        .addAll(flags)
-        .add("-o", output.toString());
+    ImmutableList.Builder<String> commandBuilder =
+        ImmutableList.<String>builder()
+            .addAll(compilerCommandPrefix)
+            .add("-p", packageName.toString())
+            .add("-pack")
+            .add("-trimpath", workingDirectory.toString())
+            .add("-nolocalimports")
+            .addAll(flags)
+            .add("-o", output.toString());
 
     for (Path dir : includeDirectories) {
       commandBuilder.add("-I", dir.toString());

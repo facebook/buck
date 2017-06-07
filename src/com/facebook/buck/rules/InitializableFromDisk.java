@@ -24,12 +24,12 @@ import java.io.IOException;
  * structures initialized through this interface, regardless of whether it was built locally or read
  * from cache. This ensures that a rule is always in the same state once {@code isRuleBuilt()}
  * returns {@code true}.
- * <p>
- * Objects that implement this interface should create getter methods that delegate to
- * {@link BuildOutputInitializer#getBuildOutput()} to access the in-memory data structures rather
- * than have clients invoke {@link BuildOutputInitializer#getBuildOutput()} directly. This ensures
- * that all getters go through any protections provided by
- * {@link BuildOutputInitializer#getBuildOutput()}.
+ *
+ * <p>Objects that implement this interface should create getter methods that delegate to {@link
+ * BuildOutputInitializer#getBuildOutput()} to access the in-memory data structures rather than have
+ * clients invoke {@link BuildOutputInitializer#getBuildOutput()} directly. This ensures that all
+ * getters go through any protections provided by {@link BuildOutputInitializer#getBuildOutput()}.
+ *
  * <p>
  */
 public interface InitializableFromDisk<T> {

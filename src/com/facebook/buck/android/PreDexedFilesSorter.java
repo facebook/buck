@@ -34,15 +34,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -51,9 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Responsible for bucketing pre-dexed objects into primary and secondary dex files.
- */
+/** Responsible for bucketing pre-dexed objects into primary and secondary dex files. */
 public class PreDexedFilesSorter {
 
   private final Optional<DexWithClasses> rDotJavaDex;
@@ -94,15 +90,11 @@ public class PreDexedFilesSorter {
   }
 
   public ImmutableMap<String, Result> sortIntoPrimaryAndSecondaryDexes(
-      ProjectFilesystem filesystem,
-      ImmutableList.Builder<Step> steps) {
-    Map<APKModule, DexStoreContents> apkModuleDexesContents =
-        new HashMap<>();
+      ProjectFilesystem filesystem, ImmutableList.Builder<Step> steps) {
+    Map<APKModule, DexStoreContents> apkModuleDexesContents = new HashMap<>();
     DexStoreContents rootStoreContents =
         new DexStoreContents(apkModuleGraph.getRootAPKModule(), filesystem, steps);
-    apkModuleDexesContents.put(
-        apkModuleGraph.getRootAPKModule(),
-        rootStoreContents);
+    apkModuleDexesContents.put(apkModuleGraph.getRootAPKModule(), rootStoreContents);
 
     // R.class files should always be in the primary dex.
     if (rDotJavaDex.isPresent()) {
@@ -112,14 +104,14 @@ public class PreDexedFilesSorter {
     for (APKModule module : dexFilesToMerge.keySet()) {
       // Sort dex files so that there's a better chance of the same set of pre-dexed files to end up
       // in a given secondary dex file.
-      ImmutableList<DexWithClasses> sortedDexFilesToMerge = FluentIterable
-          .from(dexFilesToMerge.get(module))
-          .toSortedList(DexWithClasses.DEX_WITH_CLASSES_COMPARATOR);
+      ImmutableList<DexWithClasses> sortedDexFilesToMerge =
+          FluentIterable.from(dexFilesToMerge.get(module))
+              .toSortedList(DexWithClasses.DEX_WITH_CLASSES_COMPARATOR);
 
       // Bucket each DexWithClasses into the appropriate dex file.
       for (DexWithClasses dexWithClasses : sortedDexFilesToMerge) {
-        if (module.equals(apkModuleGraph.getRootAPKModule()) &&
-            mustBeInPrimaryDex(dexWithClasses)) {
+        if (module.equals(apkModuleGraph.getRootAPKModule())
+            && mustBeInPrimaryDex(dexWithClasses)) {
           // Case 1: Entry must be in the primary dex.
           rootStoreContents.addPrimaryDex(dexWithClasses);
         } else {
@@ -136,9 +128,7 @@ public class PreDexedFilesSorter {
     ImmutableMap.Builder<String, Result> resultBuilder = ImmutableMap.builder();
 
     for (DexStoreContents contents : apkModuleDexesContents.values()) {
-      resultBuilder.put(
-            contents.apkModule.getName(),
-            contents.getResult());
+      resultBuilder.put(contents.apkModule.getName(), contents.getResult());
     }
 
     return resultBuilder.build();
@@ -154,7 +144,7 @@ public class PreDexedFilesSorter {
   }
 
   public class DexStoreContents {
-    private List<List<DexWithClasses>> dexesContents;
+    private List<List<DexWithClasses>> dexesContents = new ArrayList<>();
     private int primaryDexSize;
     private List<DexWithClasses> primaryDexContents;
     private int currentDexSize;
@@ -166,17 +156,14 @@ public class PreDexedFilesSorter {
     private final ImmutableMap.Builder<Path, Sha1HashCode> dexInputsHashes = ImmutableMap.builder();
 
     public DexStoreContents(
-        APKModule apkModule,
-        ProjectFilesystem filesystem,
-        ImmutableList.Builder<Step> steps) {
+        APKModule apkModule, ProjectFilesystem filesystem, ImmutableList.Builder<Step> steps) {
       this.filesystem = filesystem;
       this.steps = steps;
       this.apkModule = apkModule;
-      dexesContents = Lists.newArrayList();
       currentDexSize = 0;
-      currentDexContents = Lists.newArrayList();
+      currentDexContents = new ArrayList<>();
       primaryDexSize = 0;
-      primaryDexContents = Lists.newArrayList();
+      primaryDexContents = new ArrayList<>();
     }
 
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
@@ -189,17 +176,15 @@ public class PreDexedFilesSorter {
       // If we're over the size threshold, start writing to a new dex
       if (dexWithClasses.getWeightEstimate() + currentDexSize > dexWeightLimit) {
         currentDexSize = 0;
-        currentDexContents = Lists.newArrayList();
+        currentDexContents = new ArrayList<>();
       }
 
       // If this is the first class in the dex, initialize it with a canary and add it to the set of
       // dexes.
       if (currentDexContents.size() == 0) {
-        DexWithClasses canary = createCanary(
-            filesystem,
-            apkModule.getCanaryClassName(),
-            dexesContents.size() + 1,
-            steps);
+        DexWithClasses canary =
+            createCanary(
+                filesystem, apkModule.getCanaryClassName(), dexesContents.size() + 1, steps);
         currentDexSize += canary.getWeightEstimate();
         currentDexContents.add(canary);
 
@@ -218,32 +203,32 @@ public class PreDexedFilesSorter {
         throwErrorForPrimaryDexExceedsWeightLimit();
       }
 
-      Map<Path, DexWithClasses> metadataTxtEntries = Maps.newHashMap();
+      Map<Path, DexWithClasses> metadataTxtEntries = new HashMap<>();
       ImmutableMultimap.Builder<Path, Path> secondaryOutputToInputs = ImmutableMultimap.builder();
       boolean isRootModule = apkModule.equals(apkModuleGraph.getRootAPKModule());
 
       for (int index = 0; index < dexesContents.size(); index++) {
         Path pathToSecondaryDex;
         if (isRootModule) {
-          pathToSecondaryDex = secondaryDexJarFilesDir
-              .resolve(dexStore.fileNameForSecondary(index));
+          pathToSecondaryDex =
+              secondaryDexJarFilesDir.resolve(dexStore.fileNameForSecondary(index));
         } else {
-          pathToSecondaryDex = additionalDexJarFilesDir
-              .resolve(apkModule.getName())
-              .resolve(dexStore.fileNameForSecondary(apkModule.getName(), index));
+          pathToSecondaryDex =
+              additionalDexJarFilesDir
+                  .resolve(apkModule.getName())
+                  .resolve(dexStore.fileNameForSecondary(apkModule.getName(), index));
         }
-        metadataTxtEntries.put(
-            pathToSecondaryDex,
-            dexesContents.get(index).get(0));
-        Collection<Path> dexContentPaths = Collections2.transform(
-            dexesContents.get(index),
-            DexWithClasses::getPathToDexFile);
+        metadataTxtEntries.put(pathToSecondaryDex, dexesContents.get(index).get(0));
+        Collection<Path> dexContentPaths =
+            Collections2.transform(dexesContents.get(index), DexWithClasses::getPathToDexFile);
         secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
       }
 
-      ImmutableSet<Path> primaryDexInputs = primaryDexContents.stream()
-          .map(DexWithClasses::getPathToDexFile)
-          .collect(MoreCollectors.toImmutableSet());
+      ImmutableSet<Path> primaryDexInputs =
+          primaryDexContents
+              .stream()
+              .map(DexWithClasses::getPathToDexFile)
+              .collect(MoreCollectors.toImmutableSet());
 
       return new Result(
           apkModule,
@@ -253,27 +238,24 @@ public class PreDexedFilesSorter {
           dexInputsHashes.build());
     }
 
-    private void throwErrorForPrimaryDexExceedsWeightLimit(){
+    private void throwErrorForPrimaryDexExceedsWeightLimit() {
       StringBuilder message = new StringBuilder();
-      message.append(String.format(
-          "Primary dex weight %s exceeds limit of %s. It contains...%n",
-          primaryDexSize,
-          dexWeightLimit));
+      message.append(
+          String.format(
+              "Primary dex weight %s exceeds limit of %s. It contains...%n",
+              primaryDexSize, dexWeightLimit));
       message.append(String.format("Weight\tDex file path%n"));
       Comparator<DexWithClasses> bySizeDescending =
           (o1, o2) -> Integer.compare(o2.getWeightEstimate(), o1.getWeightEstimate());
-      ImmutableList<DexWithClasses> sortedBySizeDescending = FluentIterable
-          .from(primaryDexContents)
-          .toSortedList(bySizeDescending);
+      ImmutableList<DexWithClasses> sortedBySizeDescending =
+          FluentIterable.from(primaryDexContents).toSortedList(bySizeDescending);
       for (DexWithClasses dex : sortedBySizeDescending) {
         message.append(String.format("%s\t%s%n", dex.getWeightEstimate(), dex.getPathToDexFile()));
       }
       throw new HumanReadableException(message.toString());
     }
 
-    /**
-     * @see com.facebook.buck.dalvik.CanaryFactory#create(String, int)
-     */
+    /** @see com.facebook.buck.dalvik.CanaryFactory#create(String, int) */
     private DexWithClasses createCanary(
         final ProjectFilesystem filesystem,
         String storeName,
@@ -289,20 +271,21 @@ public class PreDexedFilesSorter {
       final String className = relativePathToClassFile.replaceFirst("\\.class$", "");
 
       // Write out the .class file.
-      steps.add(new AbstractExecutionStep("write_canary_class") {
-        @Override
-        public StepExecutionResult execute(ExecutionContext context) {
-          Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
-          try (InputStream inputStream = fileLike.getInput()) {
-            filesystem.createParentDirs(classFile);
-            filesystem.copyToPath(inputStream, classFile);
-          } catch (IOException e) {
-            context.logError(e,  "Error writing canary class file: %s.",  classFile.toString());
-            return StepExecutionResult.ERROR;
-          }
-          return StepExecutionResult.SUCCESS;
-        }
-      });
+      steps.add(
+          new AbstractExecutionStep("write_canary_class") {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) {
+              Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
+              try (InputStream inputStream = fileLike.getInput()) {
+                filesystem.createParentDirs(classFile);
+                filesystem.copyToPath(inputStream, classFile);
+              } catch (IOException e) {
+                context.logError(e, "Error writing canary class file: %s.", classFile.toString());
+                return StepExecutionResult.ERROR;
+              }
+              return StepExecutionResult.SUCCESS;
+            }
+          });
 
       return new DexWithClasses() {
 

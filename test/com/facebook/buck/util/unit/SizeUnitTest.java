@@ -18,7 +18,6 @@ package com.facebook.buck.util.unit;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.Pair;
-
 import org.junit.Test;
 
 public class SizeUnitTest {
@@ -31,8 +30,7 @@ public class SizeUnitTest {
 
   @Test
   public void testParseBytes() {
-    assertEquals(Long.MAX_VALUE, SizeUnit.parseBytes(
-        Long.toString(Long.MAX_VALUE) + "00 B"));
+    assertEquals(Long.MAX_VALUE, SizeUnit.parseBytes(Long.toString(Long.MAX_VALUE) + "00 B"));
     assertEquals(0L, SizeUnit.parseBytes("0GB"));
     assertEquals(123L, SizeUnit.parseBytes("123 B"));
     assertEquals(123L, SizeUnit.parseBytes("123 Bytes"));
@@ -52,7 +50,7 @@ public class SizeUnitTest {
   }
 
   @Test
-  public void testBytes()  {
+  public void testBytes() {
     assertEquals(4L, SizeUnit.BYTES.toBytes(4L));
     assertEquals(0L, SizeUnit.BYTES.toKilobytes(4L));
     assertEquals(2L, SizeUnit.BYTES.toKilobytes(2048L));

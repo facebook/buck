@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -35,19 +34,18 @@ import java.nio.file.attribute.BasicFileAttributes;
 /**
  * A {@link FileHashLoader} that only hashes the files' paths without reading their contents.
  *
- * If file's hash needs to be changed, for example to reflect changes to the file's contents,
- * the file's path can be specified in a set of modified files. Files specified in this set
- * will get new unique hashes based on their paths distinct from the hashes they would get if
- * they were omitted from the set.
+ * <p>If file's hash needs to be changed, for example to reflect changes to the file's contents, the
+ * file's path can be specified in a set of modified files. Files specified in this set will get new
+ * unique hashes based on their paths distinct from the hashes they would get if they were omitted
+ * from the set.
  */
 public class FilePathHashLoader implements FileHashLoader {
 
   private final Path defaultCellRoot;
   private final ImmutableSet<Path> assumeModifiedFiles;
 
-  public FilePathHashLoader(
-      final Path defaultCellRoot,
-      ImmutableSet<Path> assumeModifiedFiles) throws IOException {
+  public FilePathHashLoader(final Path defaultCellRoot, ImmutableSet<Path> assumeModifiedFiles)
+      throws IOException {
     this.defaultCellRoot = defaultCellRoot;
     ImmutableSet.Builder<Path> modifiedFilesBuilder = ImmutableSet.builder();
     for (Path path : assumeModifiedFiles) {
@@ -96,5 +94,4 @@ public class FilePathHashLoader implements FileHashLoader {
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     throw new UnsupportedOperationException("Not implemented");
   }
-
 }

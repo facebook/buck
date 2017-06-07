@@ -20,36 +20,29 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
-import com.google.common.collect.Maps;
-
+import com.google.common.collect.ImmutableList;
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.Map;
 
 public class WebServerTest {
 
   @Test
   public void testCreateHandlersCoversExpectedContextPaths() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    WebServer webServer = new WebServer(
-    /* port */ 9999,
-        projectFilesystem,
-        "/static/",
-        ObjectMappers.newDefaultInstance());
-    List<ContextHandler> handlers = webServer.createHandlers();
-    final Map<String, ContextHandler> contextPathToHandler = Maps.newHashMap();
+    WebServer webServer = new WebServer(/* port */ 9999, projectFilesystem, "/static/");
+    ImmutableList<ContextHandler> handlers = webServer.createHandlers();
+    final Map<String, ContextHandler> contextPathToHandler = new HashMap<>();
     for (ContextHandler handler : handlers) {
       contextPathToHandler.put(handler.getContextPath(), handler);
     }
 
     Function<String, TemplateHandlerDelegate> getDelegate =
-        contextPath -> ((TemplateHandler) contextPathToHandler.get(contextPath).getHandler())
-            .getDelegate();
+        contextPath ->
+            ((TemplateHandler) contextPathToHandler.get(contextPath).getHandler()).getDelegate();
     assertTrue(getDelegate.apply("/") instanceof IndexHandlerDelegate);
     assertTrue(contextPathToHandler.get("/static").getHandler() instanceof ResourceHandler);
     assertTrue(getDelegate.apply("/trace") instanceof TraceHandlerDelegate);

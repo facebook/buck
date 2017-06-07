@@ -18,7 +18,15 @@ package com.facebook.buck.testrunner;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelector;
-
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.testng.IAnnotationTransformer;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -32,19 +40,7 @@ import org.testng.xml.XmlClass;
 import org.testng.xml.XmlSuite;
 import org.testng.xml.XmlTest;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/**
- * Class that runs a set of TestNG tests and writes the results to a directory.
- */
+/** Class that runs a set of TestNG tests and writes the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
 
   @Override
@@ -80,10 +76,8 @@ public final class TestNGRunner extends BaseRunner {
           System.out.println("TestNGRunner caught an exception");
           e.printStackTrace();
           if (!isDryRun) {
-            results.add(new TestResult(className,
-                "<TestNG failure>", 0,
-                ResultType.FAILURE, e,
-                "", ""));
+            results.add(
+                new TestResult(className, "<TestNG failure>", 0, ResultType.FAILURE, e, "", ""));
           }
         }
         System.out.println("TestNGRunner tested " + className + ", got " + results.size());
@@ -104,16 +98,13 @@ public final class TestNGRunner extends BaseRunner {
     return xmlSuite;
   }
 
-  /**
-   * Guessing whether or not a class is a test class is an imperfect
-   * art form.
-   */
+  /** Guessing whether or not a class is a test class is an imperfect art form. */
   private boolean mightBeATestClass(Class<?> klass) {
     int klassModifiers = klass.getModifiers();
     // Test classes must be public, non-abstract, non-interface
-    if (!Modifier.isPublic(klassModifiers) ||
-        Modifier.isInterface(klassModifiers) ||
-        Modifier.isAbstract(klassModifiers)) {
+    if (!Modifier.isPublic(klassModifiers)
+        || Modifier.isInterface(klassModifiers)
+        || Modifier.isAbstract(klassModifiers)) {
       return false;
     }
     // Test classes must have a public, no-arg constructor.
@@ -146,7 +137,7 @@ public final class TestNGRunner extends BaseRunner {
     /**
      * The built-in setAnnotationTransformer unfortunately does not work with runSuitesLocally()
      *
-     * The alternative would be to use the (much heavier) run() method.
+     * <p>The alternative would be to use the (much heavier) run() method.
      */
     public void setAnnoTransformer(IAnnotationTransformer anno) {
       getConfiguration().setAnnotationFinder(new JDK15AnnotationFinder(anno));
@@ -162,8 +153,11 @@ public final class TestNGRunner extends BaseRunner {
 
     @Override
     @SuppressWarnings("rawtypes")
-    public void transform(ITestAnnotation annotation, Class testClass,
-        Constructor testConstructor, Method testMethod) {
+    public void transform(
+        ITestAnnotation annotation,
+        Class testClass,
+        Constructor testConstructor,
+        Method testMethod) {
       if (testMethod == null) {
         return;
       }
@@ -261,13 +255,8 @@ public final class TestNGRunner extends BaseRunner {
       String className = result.getTestClass().getName();
       String methodName = result.getMethod().getMethodName();
       long runTimeMillis = result.getEndMillis() - result.getStartMillis();
-      results.add(new TestResult(className,
-          methodName,
-          runTimeMillis,
-          type,
-          failure,
-          stdOut,
-          stdErr));
+      results.add(
+          new TestResult(className, methodName, runTimeMillis, type, failure, stdOut, stdErr));
     }
 
     private String streamToString(ByteArrayOutputStream str) {

@@ -16,20 +16,28 @@
 package com.facebook.buck.bsd;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractUnixArchiveEntry {
   public int getFileNameLength();
+
   public long getFileModificationTimestamp();
+
   public int getOwnerId();
+
   public int getGroupId();
+
   public int getFileMode();
+
   public long getFileSize();
+
   public String getFileName();
+
   public long getHeaderOffset();
+
   public long getHeaderSize();
+
   public long getFileOffset();
 }

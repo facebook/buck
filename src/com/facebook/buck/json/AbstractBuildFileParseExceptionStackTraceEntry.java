@@ -17,16 +17,17 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractBuildFileParseExceptionStackTraceEntry {
   Path getFileName();
+
   Number getLineNumber();
+
   String getFunctionName();
+
   String getText();
 }

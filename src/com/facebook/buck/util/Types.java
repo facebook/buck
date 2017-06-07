@@ -19,41 +19,43 @@ package com.facebook.buck.util;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Primitives;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.ExecutionException;
-
 import javax.annotation.Nullable;
 
 public class Types {
 
   private static final LoadingCache<Field, Type> FIRST_NON_OPTIONAL_TYPE_CACHE =
       CacheBuilder.newBuilder()
-                  .weakValues()
-                  .build(new CacheLoader<Field, Type>() {
-                    @Override
-                    public Type load(Field field) throws Exception {
-                      boolean isOptional = Optional.class.isAssignableFrom(field.getType());
-                      if (isOptional) {
-                        Type type = field.getGenericType();
+          .weakValues()
+          .build(
+              new CacheLoader<Field, Type>() {
+                @Override
+                public Type load(Field field) throws Exception {
+                  boolean isOptional = Optional.class.isAssignableFrom(field.getType());
+                  if (isOptional) {
+                    Type type = field.getGenericType();
 
-                        if (type instanceof ParameterizedType) {
-                          return ((ParameterizedType) type).getActualTypeArguments()[0];
-                        } else {
-                          throw new RuntimeException(
-                              "Unexpected type parameter for Optional: " + type);
-                        }
-                      } else {
-                        return field.getGenericType();
-                      }
+                    if (type instanceof ParameterizedType) {
+                      return ((ParameterizedType) type).getActualTypeArguments()[0];
+                    } else {
+                      throw new RuntimeException("Unexpected type parameter for Optional: " + type);
                     }
-                  });
+                  } else {
+                    return field.getGenericType();
+                  }
+                }
+              });
 
   private Types() {
     // Utility class.
@@ -61,6 +63,7 @@ public class Types {
 
   /**
    * Determine the "base type" of a field. That is, the following will be returned:
+   *
    * <ul>
    *   <li>{@code String} -&gt; {@code String.class}
    *   <li>{@code Optional&lt;String&gt;} -&gt; {@code String.class}
@@ -85,7 +88,7 @@ public class Types {
 
   /**
    * @return The raw type of the {@link Collection} a field represents, even if contained in an
-   *    {@link Optional}, but without the ParameterizedType information.
+   *     {@link Optional}, but without the ParameterizedType information.
    */
   @SuppressWarnings("unchecked")
   @Nullable
@@ -126,5 +129,31 @@ public class Types {
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Returns a Set of classes and interfaces inherited or implemented by clazz.
+   *
+   * <p>Result includes clazz itself. Result is ordered closest to furthest, i.e. first entry will
+   * always be clazz and last entry will always be {@link java.lang.Object}.
+   */
+  public static ImmutableSet<Class<?>> getSupertypes(Class<?> clazz) {
+    LinkedHashSet<Class<?>> ret = new LinkedHashSet<>();
+
+    Queue<Class<?>> toExpand = new LinkedList<>();
+    toExpand.add(clazz);
+    while (!toExpand.isEmpty()) {
+      Class<?> current = toExpand.remove();
+      if (!ret.add(current)) {
+        continue;
+      }
+      for (Class<?> i : current.getInterfaces()) {
+        toExpand.add(i);
+      }
+      if (current.getSuperclass() != null) {
+        toExpand.add(current.getSuperclass());
+      }
+    }
+    return ImmutableSet.copyOf(ret);
   }
 }

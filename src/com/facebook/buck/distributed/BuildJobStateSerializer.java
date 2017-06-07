@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

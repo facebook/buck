@@ -19,9 +19,9 @@ package com.facebook.buck.event.external.elements;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Describes the results of a set of tests from a specific target.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes the results of a set of tests from a specific target. This type is intended to be used
+ * by external applications (like the Intellij Buck plugin) to deserialize events coming from the
+ * webserver.
  */
 public interface TestResultsExternalInterface<T> {
   /**
@@ -29,20 +29,12 @@ public interface TestResultsExternalInterface<T> {
    * @see TestCaseSummaryExternalInterface
    */
   ImmutableList<T> getTestCases();
-  /**
-   * @return the status of the dependencies tests.
-   */
+  /** @return the status of the dependencies tests. */
   boolean getDependenciesPassTheirTests();
-  /**
-   * @return the total number of tests that ran
-   */
+  /** @return the total number of tests that ran */
   int getTotalNumberOfTests();
-  /**
-   * @return the status of the tests, success of failure
-   */
+  /** @return the status of the tests, success of failure */
   boolean isSuccess();
-  /**
-   * @return if any of the tests in this batch have an assumption violations.
-   */
+  /** @return if any of the tests in this batch have an assumption violations. */
   boolean hasAssumptionViolations();
 }

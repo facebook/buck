@@ -21,21 +21,17 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
-
 public class BuildThenTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   /**
    * It is possible to build a test without running it. It is important to make sure that even
@@ -44,8 +40,8 @@ public class BuildThenTestIntegrationTest {
    */
   @Test
   public void testBuildThenTest() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "build_then_test", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example");
@@ -53,26 +49,27 @@ public class BuildThenTestIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:example");
     assertEquals("", testResult.getStdout());
-    assertThat("Should contain a line indicating what target it is testing",
+    assertThat(
+        "Should contain a line indicating what target it is testing",
         testResult.getStderr(),
         containsString("TESTING //:example"));
-    assertThat("Should contain results from the target.",
+    assertThat(
+        "Should contain results from the target.",
         testResult.getStderr(),
         containsBuckTestOutputLine("PASS", 1, 0, 0, "com.example.MyTest"));
-    assertThat("Should contain a line indicating that tests passed.",
+    assertThat(
+        "Should contain a line indicating that tests passed.",
         testResult.getStderr(),
         containsString("TESTS PASSED"));
     testResult.assertSuccess("Passing tests should exit with 0.");
     workspace.verify();
   }
 
-  /**
-   * Test should pass even when we run tests on non JUnit test classes
-   */
+  /** Test should pass even when we run tests on non JUnit test classes */
   @Test
   public void testRunningTestOnClassWithoutTestMethods() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "build_then_test", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:nontestclass");
@@ -80,18 +77,16 @@ public class BuildThenTestIntegrationTest {
   }
 
   /**
-   * Test should not be run because the base class is abstract. If the test attempts to run,
-   * it will throw a java.lang.InstantiationException.
+   * Test should not be run because the base class is abstract. If the test attempts to run, it will
+   * throw a java.lang.InstantiationException.
    */
   @Test
   public void testRunningTestInAbstractClass() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "build_then_test", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:abstractclass");
     testResult.assertSuccess("Abstract class with test methods should exit with 0.");
   }
-
-
 }

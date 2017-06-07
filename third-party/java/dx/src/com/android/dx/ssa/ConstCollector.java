@@ -54,13 +54,13 @@ public class ConstCollector {
      * to return false for const-string insns whose exceptions are not
      * caught in the current method.
      */
-    private static boolean COLLECT_STRINGS = false;
+    private static final boolean COLLECT_STRINGS = false;
 
     /**
      * If true, allow one local var to be involved with a collected const.
      * Turned off because it mostly just inserts more moves.
      */
-    private static boolean COLLECT_ONE_LOCAL = false;
+    private static final boolean COLLECT_ONE_LOCAL = false;
 
     /** method we're processing */
     private final SsaMethod ssaMeth;

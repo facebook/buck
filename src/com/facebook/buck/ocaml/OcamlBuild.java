@@ -17,41 +17,35 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.Compiler;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-/**
- * A build rule which preprocesses, compiles, and assembles an OCaml source.
- */
+/** A build rule which preprocesses, compiles, and assembles an OCaml source. */
 public class OcamlBuild extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final OcamlBuildContext ocamlContext;
-  @AddToRuleKey
-  private final Compiler cCompiler;
-  @AddToRuleKey
-  private final Compiler cxxCompiler;
-  @AddToRuleKey
-  private final boolean bytecodeOnly;
+  @AddToRuleKey private final OcamlBuildContext ocamlContext;
+  @AddToRuleKey private final Compiler cCompiler;
+  @AddToRuleKey private final Compiler cxxCompiler;
+  @AddToRuleKey private final boolean bytecodeOnly;
 
   public OcamlBuild(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       OcamlBuildContext ocamlContext,
       Compiler cCompiler,
       Compiler cxxCompiler,
       boolean bytecodeOnly) {
-    super(params, resolver);
+    super(params);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
@@ -62,8 +56,7 @@ public class OcamlBuild extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     Path baseArtifactDir = ocamlContext.getNativeOutput().getParent();
     buildableContext.recordArtifact(baseArtifactDir);
     if (!bytecodeOnly) {
@@ -72,24 +65,31 @@ public class OcamlBuild extends AbstractBuildRule {
     }
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OcamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(
-            getProjectFilesystem(),
-            ocamlContext.getNativeOutput().getParent()),
-        new OcamlBuildStep(
-            getResolver(),
-            getProjectFilesystem(),
-            ocamlContext,
-            cCompiler.getEnvironment(),
-            cCompiler.getCommandPrefix(getResolver()),
-            cxxCompiler.getEnvironment(),
-            cxxCompiler.getCommandPrefix(getResolver()),
-            bytecodeOnly));
+    return new ImmutableList.Builder<Step>()
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    ocamlContext.getNativeOutput().getParent())))
+        .add(
+            new OcamlBuildStep(
+                context,
+                getProjectFilesystem(),
+                ocamlContext,
+                cCompiler.getEnvironment(context.getSourcePathResolver()),
+                cCompiler.getCommandPrefix(context.getSourcePathResolver()),
+                cxxCompiler.getEnvironment(context.getSourcePathResolver()),
+                cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
+                bytecodeOnly))
+        .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return bytecodeOnly ? ocamlContext.getBytecodeOutput() : ocamlContext.getNativeOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        bytecodeOnly ? ocamlContext.getBytecodeOutput() : ocamlContext.getNativeOutput());
   }
 
   @Override

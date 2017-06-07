@@ -18,16 +18,15 @@ package com.facebook.buck.util;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Helper class that keeps a list of compiled patterns and provides a method
- * to check whether a string matches at least one of them.
- * <p/>
- * Note that a string is considered to be matched if there are no patterns.
+ * Helper class that keeps a list of compiled patterns and provides a method to check whether a
+ * string matches at least one of them.
+ *
+ * <p>Note that a string is considered to be matched if there are no patterns.
  */
 public class PatternsMatcher {
 
@@ -44,9 +43,7 @@ public class PatternsMatcher {
     hasPatterns = !compiledPatterns.isEmpty();
   }
 
-  /**
-   * @return true if the given string matches some of the patterns or there are no patterns
-   */
+  /** @return true if the given string matches some of the patterns or there are no patterns */
   public boolean matches(final String string) {
     if (!hasPatterns) {
       return true;
@@ -59,16 +56,12 @@ public class PatternsMatcher {
     return false;
   }
 
-  /**
-   * @return true if there is at least one pattern
-   */
+  /** @return true if there is at least one pattern */
   public boolean hasPatterns() {
     return hasPatterns;
   }
 
-  /**
-   * @return a view of the given map where all non-matching keys are removed.
-   */
+  /** @return a view of the given map where all non-matching keys are removed. */
   public <V> Map<String, V> filterMatchingMapKeys(final Map<String, V> entries) {
     if (!hasPatterns) {
       return entries;
@@ -76,5 +69,4 @@ public class PatternsMatcher {
 
     return Maps.filterEntries(entries, entry -> matches(entry.getKey()));
   }
-
 }

@@ -1,0 +1,3 @@
+[java]
+    abi_generation_mode = source_with_deps
+    jar_spool_mode = direct_to_jar

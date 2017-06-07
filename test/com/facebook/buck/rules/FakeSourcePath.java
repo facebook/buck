@@ -26,6 +26,6 @@ public class FakeSourcePath extends PathSourcePath {
   }
 
   public FakeSourcePath(ProjectFilesystem filesystem, String path) {
-    super(filesystem, filesystem.getRootPath().getFileSystem().getPath(path));
+    super(filesystem, filesystem.getPath(path));
   }
 }

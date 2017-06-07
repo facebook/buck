@@ -22,23 +22,20 @@ import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.autosparse.AbstractAutoSparseFactory;
+import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.autosparse.AutoSparseProjectFilesystemDelegate;
 import com.facebook.buck.util.autosparse.AutoSparseState;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
- * {@link ProjectFilesystemDelegateFactory} mediates the creation of a
- * {@link ProjectFilesystemDelegate} for a {@link ProjectFilesystem} root.
+ * {@link ProjectFilesystemDelegateFactory} mediates the creation of a {@link
+ * ProjectFilesystemDelegate} for a {@link ProjectFilesystem} root.
  */
 public final class ProjectFilesystemDelegateFactory {
 
@@ -47,15 +44,9 @@ public final class ProjectFilesystemDelegateFactory {
   /** Utility class: do not instantiate. */
   private ProjectFilesystemDelegateFactory() {}
 
-  /**
-   * Must always create a new delegate for the specified {@code root}.
-   */
+  /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
-      Path root,
-      String hgCmd,
-      boolean enableAutosparse,
-      ImmutableList<String> autosparseIgnore,
-      Optional<String> autosparseBaseProfile) {
+      Path root, String hgCmd, AutoSparseConfig autoSparseConfig) throws InterruptedException {
     Optional<EdenClient> client = tryToCreateEdenClient();
 
     if (client.isPresent()) {
@@ -71,25 +62,16 @@ public final class ProjectFilesystemDelegateFactory {
       }
     }
 
-    if (enableAutosparse) {
-      // We can't access BuckConfig because that class requires a
-      // ProjectFileSystem, which we are in the process of building
-      // Access the required info from the Config instead
-      HgCmdLineInterface hgCmdLine = new HgCmdLineInterface(
-          new PrintStreamProcessExecutorFactory(),
-          root,
-          hgCmd,
-          ImmutableMap.of()
-      );
-      ImmutableSet.Builder<Path> ignoredPaths = ImmutableSet.builder();
-      for (String path: autosparseIgnore) {
-        ignoredPaths.add(Paths.get(path));
-      }
-      AutoSparseState autoSparseState = AbstractAutoSparseFactory.getAutoSparseState(
-          root,
-          hgCmdLine,
-          ignoredPaths.build(),
-          autosparseBaseProfile);
+    if (autoSparseConfig.enabled()) {
+      // Grab a copy of the current environment; Mercurial sometimes cares (or more specifically,
+      // a remote connection command like ssh cares). We rather not pass in an environment via the
+      // ProjectFilesystem here because that'd make the ProjectFilesystem variant on the env, not
+      // a can of worms you want to go open just to make Mercurial happy.
+      ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
+      HgCmdLineInterface hgCmdLine =
+          new HgCmdLineInterface(new PrintStreamProcessExecutorFactory(), root, hgCmd, environment);
+      AutoSparseState autoSparseState =
+          AbstractAutoSparseFactory.getAutoSparseState(root, hgCmdLine, autoSparseConfig);
       if (autoSparseState != null) {
         LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
         return new AutoSparseProjectFilesystemDelegate(autoSparseState, root);

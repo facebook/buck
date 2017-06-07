@@ -16,15 +16,19 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.shell.ShellStep;
@@ -32,10 +36,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -44,61 +48,56 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * Rule to write the results of library merging to disk
- * and run a user-supplied code generator on it.
+ * Rule to write the results of library merging to disk and run a user-supplied code generator on
+ * it.
  */
 class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
-  @AddToRuleKey
-  private final ImmutableSortedMap<String, String> mergeResult;
-  @AddToRuleKey
-  private final BuildRule codeGenerator;
-
-  private String executableCommand;
+  @AddToRuleKey private final ImmutableSortedMap<String, String> mergeResult;
+  @AddToRuleKey private final BuildRule codeGenerator;
 
   GenerateCodeForMergedLibraryMap(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSortedMap<String, String> mergeResult,
       BuildRule codeGenerator) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.mergeResult = mergeResult;
     this.codeGenerator = codeGenerator;
 
-    try {
-      executableCommand = new ExecutableMacroExpander().expand(getResolver(), this.codeGenerator);
-    } catch (MacroException e) {
-      throw new IllegalArgumentException(String.format(
-          "For build rule %s, code generator %s is not executable.",
-          buildRuleParams.getBuildTarget(),
-          codeGenerator.getBuildTarget()
-      ));
+    if (!(codeGenerator instanceof BinaryBuildRule)) {
+      throw new HumanReadableException(
+          String.format(
+              "For build rule %s, code generator %s is not executable but must be",
+              getBuildTarget(), codeGenerator.getBuildTarget()));
     }
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getPathToOutput());
+    Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    buildableContext.recordArtifact(output);
     buildableContext.recordArtifact(getMappingPath());
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToOutput().getParent()),
-        new WriteMapDataStep(),
-        new RunCodeGenStep());
+    return new ImmutableList.Builder<Step>()
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
+        .add(new WriteMapDataStep())
+        .add(new RunCodeGenStep(context.getSourcePathResolver()))
+        .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
-        "%s/MergedLibraryMapping.java");
+        BuildTargets.getGenPath(
+            getProjectFilesystem(), getBuildTarget(), "%s/MergedLibraryMapping.java"));
   }
 
   private Path getMappingPath() {
     return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "%s/merged_library_map.txt");
+        getProjectFilesystem(), getBuildTarget(), "%s/merged_library_map.txt");
   }
 
   private class WriteMapDataStep implements Step {
@@ -106,10 +105,9 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       final ProjectFilesystem projectFilesystem = getProjectFilesystem();
-      try (Writer out = new BufferedWriter(
-          new OutputStreamWriter(
-              projectFilesystem.newFileOutputStream(
-                  getMappingPath())))) {
+      try (Writer out =
+          new BufferedWriter(
+              new OutputStreamWriter(projectFilesystem.newFileOutputStream(getMappingPath())))) {
         for (Map.Entry<String, String> entry : mergeResult.entrySet()) {
           out.write(entry.getKey());
           out.write(' ');
@@ -128,24 +126,34 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
 
     @Override
     public String getDescription(ExecutionContext context) {
-      return String.format(
-          "%s > %s",
-          getShortName(),
-          getPathToOutput());
+      return String.format("%s > %s", getShortName(), getMappingPath());
     }
   }
 
   private class RunCodeGenStep extends ShellStep {
-    RunCodeGenStep() {
+    private final SourcePathResolver pathResolver;
+
+    RunCodeGenStep(SourcePathResolver pathResolver) {
       super(getProjectFilesystem().getRootPath());
+      this.pathResolver = pathResolver;
     }
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+      String executableCommand;
+      try {
+        executableCommand =
+            new ExecutableMacroExpander()
+                .expand(pathResolver, GenerateCodeForMergedLibraryMap.this.codeGenerator);
+      } catch (MacroException e) {
+        // Should not be possible, as check was performed in constructor.
+        throw new RuntimeException(e);
+      }
+
       return ImmutableList.<String>builder()
           .addAll(Splitter.on(' ').split(executableCommand))
           .add(getMappingPath().toString())
-          .add(getPathToOutput().toString())
+          .add(pathResolver.getRelativePath(getSourcePathToOutput()).toString())
           .build();
     }
 

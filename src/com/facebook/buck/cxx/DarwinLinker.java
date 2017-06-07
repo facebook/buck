@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -32,7 +33,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,7 +44,7 @@ import java.util.Set;
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
-public class DarwinLinker implements Linker, HasLinkerMap {
+public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
 
   private final Tool tool;
 
@@ -53,8 +53,8 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return tool.getDeps(ruleFinder);
   }
 
   @Override
@@ -68,36 +68,42 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
     return ImmutableList.of(
-        new OsoSymbolsContentsScrubber(cellRoots),
-        new LcUuidContentsScrubber());
+        new OsoSymbolsContentsScrubber(cellRoots), new LcUuidContentsScrubber());
   }
 
   @Override
   public Iterable<Arg> linkWhole(Arg input) {
     return ImmutableList.of(
-        new StringArg("-Xlinker"),
-        new StringArg("-force_load"),
-        new StringArg("-Xlinker"),
-        input);
+        StringArg.of("-Xlinker"), StringArg.of("-force_load"), StringArg.of("-Xlinker"), input);
   }
 
   @Override
   public Iterable<Arg> linkerMap(Path output) {
     // Build up the arguments to pass to the linker.
-    return StringArg.from(
-        "-Xlinker", "-map", "-Xlinker", linkerMapPath(output).toString());
+    return StringArg.from("-Xlinker", "-map", "-Xlinker", linkerMapPath(output).toString());
   }
 
   @Override
   public Path linkerMapPath(Path output) {
     return Paths.get(output + "-LinkMap.txt");
+  }
+
+  @Override
+  public Iterable<Arg> thinLTO(Path output) {
+    return StringArg.from(
+        "-flto=thin", "-Xlinker", "-object_path_lto", "-Xlinker", thinLTOPath(output).toString());
+  }
+
+  @Override
+  public Path thinLTOPath(Path output) {
+    return Paths.get(output + "-lto");
   }
 
   @Override
@@ -108,10 +114,10 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   @Override
   public Iterable<Arg> fileList(Path fileListPath) {
     return ImmutableList.of(
-        new StringArg("-Xlinker"),
-        new StringArg("-filelist"),
-        new StringArg("-Xlinker"),
-        new StringArg(fileListPath.toString()));
+        StringArg.of("-Xlinker"),
+        StringArg.of("-filelist"),
+        StringArg.of("-Xlinker"),
+        StringArg.of(fileListPath.toString()));
   }
 
   @Override
@@ -138,10 +144,10 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles) {
-    return ImmutableList.of(new UndefinedSymbolsArg(pathResolver, symbolFiles));
+    return ImmutableList.of(new UndefinedSymbolsArg(symbolFiles));
   }
 
   @Override
@@ -156,7 +162,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.of(new StringArg("-shared"));
+    return ImmutableList.of(StringArg.of("-shared"));
   }
 
   @Override
@@ -171,34 +177,28 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
 
   /**
    * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
    * linker via the `-u` argument.
    *
-   * NOTE: this is prone to overrunning command line argument limits, but it's not clear of another
-   * way to do this (perhaps other than creating a dymmy object file whose symbol table only
+   * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
+   * another way to do this (perhaps other than creating a dummy object file whose symbol table only
    * contains the undefined symbols listed in the symbol files).
    */
-  private static class UndefinedSymbolsArg extends Arg {
+  private static class UndefinedSymbolsArg implements Arg {
 
-    private final SourcePathResolver pathResolver;
     private final Iterable<? extends SourcePath> symbolFiles;
 
-    public UndefinedSymbolsArg(
-        SourcePathResolver pathResolver,
-        Iterable<? extends SourcePath> symbolFiles) {
-      this.pathResolver = pathResolver;
+    public UndefinedSymbolsArg(Iterable<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
     }
 
     @Override
-    public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-      return pathResolver.filterBuildRuleInputs(symbolFiles);
+    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+      return ruleFinder.filterBuildRuleInputs(symbolFiles);
     }
 
     @Override
@@ -209,7 +209,8 @@ public class DarwinLinker implements Linker, HasLinkerMap {
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
     // `-u` command line option.
     @Override
-    public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    public void appendToCommandLine(
+        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {
@@ -237,20 +238,17 @@ public class DarwinLinker implements Linker, HasLinkerMap {
         return false;
       }
       UndefinedSymbolsArg symbolsArg = (UndefinedSymbolsArg) other;
-      return Objects.equals(pathResolver, symbolsArg.pathResolver) &&
-          Objects.equals(symbolFiles, symbolsArg.symbolFiles);
+      return Objects.equals(symbolFiles, symbolsArg.symbolFiles);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(pathResolver, symbolFiles);
+      return Objects.hash(symbolFiles);
     }
 
     @Override
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       sink.setReflectively("symbolFiles", symbolFiles);
     }
-
   }
-
 }

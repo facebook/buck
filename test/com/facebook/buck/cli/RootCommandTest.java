@@ -21,30 +21,27 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.testutil.TestConsole;
-
-import org.junit.Test;
-
 import java.io.IOException;
+import org.junit.Test;
 
 public class RootCommandTest {
 
   @Test
   public void testPrintsProjectRootToStdout() throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
-    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
-        .builder()
-        .setConsole(console)
-        .build();
+    CommandRunnerParams commandRunnerParams =
+        CommandRunnerParamsForTesting.builder().setConsole(console).build();
 
     RootCommand runCommand = new RootCommand();
     int exitCode = runCommand.run(commandRunnerParams);
-    String testRoot = commandRunnerParams
-        .getCell()
-        .getFilesystem()
-        .getRootPath()
-        .normalize()
-        .toAbsolutePath()
-        .toString();
+    String testRoot =
+        commandRunnerParams
+            .getCell()
+            .getFilesystem()
+            .getRootPath()
+            .normalize()
+            .toAbsolutePath()
+            .toString();
 
     assertThat(console.getTextWrittenToStdOut(), containsString(testRoot));
     assertThat(exitCode, equalTo(0));

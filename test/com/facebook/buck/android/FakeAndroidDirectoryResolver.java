@@ -16,7 +16,6 @@
 package com.facebook.buck.android;
 
 import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -90,16 +89,14 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
 
     FakeAndroidDirectoryResolver that = (FakeAndroidDirectoryResolver) o;
 
-    return
-        Objects.equals(androidNdkDir, that.androidNdkDir) &&
-        Objects.equals(androidSdkDir, that.androidSdkDir) &&
-        Objects.equals(androidBuildToolsDir, that.androidBuildToolsDir) &&
-        Objects.equals(ndkVersion, that.ndkVersion);
+    return Objects.equals(androidNdkDir, that.androidNdkDir)
+        && Objects.equals(androidSdkDir, that.androidSdkDir)
+        && Objects.equals(androidBuildToolsDir, that.androidBuildToolsDir)
+        && Objects.equals(ndkVersion, that.ndkVersion);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(androidNdkDir, androidSdkDir, ndkVersion);
   }
-
 }

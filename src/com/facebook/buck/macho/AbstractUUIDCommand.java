@@ -18,10 +18,8 @@ package com.facebook.buck.macho;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
-
-import org.immutables.value.Value;
-
 import java.util.UUID;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -31,12 +29,15 @@ abstract class AbstractUUIDCommand implements LoadCommand {
 
   @Override
   public abstract LoadCommandCommonFields getLoadCommandCommonFields();
+
   public abstract UUID getUuid();
 
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(getLoadCommandCommonFields().getCmd().equals(LC_UUID));
-    Preconditions.checkArgument(getLoadCommandCommonFields().getCmdsize().equals(
-        UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
+    Preconditions.checkArgument(
+        getLoadCommandCommonFields()
+            .getCmdsize()
+            .equals(UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
   }
 }

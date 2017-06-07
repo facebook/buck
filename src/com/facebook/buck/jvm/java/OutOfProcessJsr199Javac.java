@@ -19,16 +19,17 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 public abstract class OutOfProcessJsr199Javac implements Javac {
   private static final JavacVersion VERSION = JavacVersion.of("oop in memory");
 
-  private Connection<OutOfProcessJavacConnectionInterface> connection;
+  @Nullable private Connection<OutOfProcessJavacConnectionInterface> connection;
 
   @Override
   public JavacVersion getVersion() {
@@ -58,7 +59,7 @@ public abstract class OutOfProcessJsr199Javac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     throw new UnsupportedOperationException("In memory javac(oop) may not be used externally");
   }
 
@@ -67,6 +68,7 @@ public abstract class OutOfProcessJsr199Javac implements Javac {
   }
 
   public Connection<OutOfProcessJavacConnectionInterface> getConnection() {
-    return connection;
+    return Preconditions.checkNotNull(
+        connection, "Cannot get connection before calling setConnection");
   }
 }

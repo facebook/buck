@@ -16,9 +16,8 @@
 
 package com.facebook.buck.testutil;
 
-import org.hamcrest.CustomMatcher;
-
 import java.util.function.Predicate;
+import org.hamcrest.CustomMatcher;
 
 public final class PredicateMatcher<T> extends CustomMatcher<T> {
 
@@ -34,5 +33,4 @@ public final class PredicateMatcher<T> extends CustomMatcher<T> {
   public boolean matches(Object o) {
     return predicate.test((T) o);
   }
-
 }

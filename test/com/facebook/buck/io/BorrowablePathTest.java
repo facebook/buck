@@ -18,10 +18,9 @@ package com.facebook.buck.io;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import java.io.File;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.io.File;
 
 public class BorrowablePathTest {
 

@@ -1,31 +1,38 @@
 java_library(
-  name = 'headermap',
-  srcs = ['HeaderMap.java'],
-  tests = [
-    '//test/com/facebook/buck/apple/clang:headermap',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "headermap",
+    srcs = ["HeaderMap.java"],
+    tests = [
+        "//test/com/facebook/buck/apple/clang:headermap",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_library(
-  name = 'printheadermap',
-  srcs = ['PrintHeaderMap.java'],
-  autodeps = True,
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "printheadermap",
+    srcs = ["PrintHeaderMap.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/apple/clang:headermap",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_binary(
-  name = 'hmaptool',
-  deps = [
-    ':printheadermap'
-  ],
-  main_class = 'com.facebook.buck.apple.clang.PrintHeaderMap',
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "hmaptool",
+    main_class = "com.facebook.buck.apple.clang.PrintHeaderMap",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":printheadermap",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

@@ -16,11 +16,9 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,17 +28,17 @@ public final class BuckWSServerPortUtils {
 
   private static final String SEARCH_FOR = "http.port=";
 
-  public static int getPort(String runInPath) throws
-      NumberFormatException, IOException, ExecutionException, HumanReadableException {
+  public static int getPort(String runInPath)
+      throws NumberFormatException, IOException, ExecutionException {
     BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
     if (state == null) {
-      throw new HumanReadableException("Cannot load ideabuck settings.");
+      throw new RuntimeException("Cannot load ideabuck settings.");
     }
 
     String exec = state.buckExecutable;
 
     if (Strings.isNullOrEmpty(exec)) {
-      throw new HumanReadableException("Buck executable is not defined in settings.");
+      throw new RuntimeException("Buck executable is not defined in settings.");
     }
 
     GeneralCommandLine commandLine = new GeneralCommandLine();
@@ -62,20 +60,19 @@ public final class BuckWSServerPortUtils {
         if (port == CONNECTION_FAILED_PORT) {
           // if the buck server is off, and it gives us -1, throw this exception
           String error =
-              "Your buck server may be turned off, since the Buck daemon is on port " +
-                  port +
-                  ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file," +
-                  " if you don't have it already set:\n" +
-                  "[httpserver]\n" +
-                  "    port = 0\n" +
-                  "After that, restart IntelliJ or reopen your project.\n";
-          throw new HumanReadableException(error);
+              "Your buck server may be turned off, since the Buck daemon is on port "
+                  + port
+                  + ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file,"
+                  + " if you don't have it already set:\n"
+                  + "[httpserver]\n"
+                  + "    port = 0\n"
+                  + "After that, restart IntelliJ or reopen your project.\n";
+          throw new RuntimeException(error);
         }
       }
     }
     return port;
   }
 
-  private BuckWSServerPortUtils() {
-  }
+  private BuckWSServerPortUtils() {}
 }

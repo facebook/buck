@@ -30,7 +30,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
-
 import java.io.Reader;
 
 public class BuckParserDefinition implements ParserDefinition {
@@ -38,8 +37,8 @@ public class BuckParserDefinition implements ParserDefinition {
   public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
   public static final TokenSet COMMENTS = TokenSet.create(BuckTypes.LINE_COMMENT);
 
-  public static final IFileElementType FILE = new IFileElementType(
-      Language.<BuckLanguage>findInstance(BuckLanguage.class));
+  public static final IFileElementType FILE =
+      new IFileElementType(Language.<BuckLanguage>findInstance(BuckLanguage.class));
 
   @Override
   public Lexer createLexer(Project project) {

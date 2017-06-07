@@ -16,7 +16,6 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
@@ -41,7 +40,7 @@ public class FileHashEntryMatcher extends BaseMatcher<BuildJobStateFileHashEntry
 
   @Override
   public void describeTo(Description description) {
-    description.appendText(String.format(
-        "%s entry for path [%s]", (isDirectory ? "directory" : "file"), path));
+    description.appendText(
+        String.format("%s entry for path [%s]", (isDirectory ? "directory" : "file"), path));
   }
 }

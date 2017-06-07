@@ -16,18 +16,19 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 /*
@@ -43,19 +44,16 @@ public class JsonConcatenate extends AbstractBuildRule {
 
   public JsonConcatenate(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver sourcePathResolver,
       ImmutableSortedSet<Path> inputs,
       String stepShortName,
       String stepDescription,
       String outputDirectoryPrefix,
       String outputName) {
-    super(buildRuleParams, sourcePathResolver);
+    super(buildRuleParams);
     this.inputs = inputs;
     this.outputDirectory =
         BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            this.getBuildTarget(),
-            outputDirectoryPrefix + "-%s");
+            getProjectFilesystem(), this.getBuildTarget(), outputDirectoryPrefix + "-%s");
     this.output = this.outputDirectory.resolve(outputName);
     this.stepShortName = stepShortName;
     this.stepDescription = stepDescription;
@@ -67,19 +65,18 @@ public class JsonConcatenate extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(projectFilesystem, outputDirectory))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
             new JsonConcatenateStep(
-                projectFilesystem,
-                inputs,
-                output,
-                stepShortName,
-                stepDescription))
+                projectFilesystem, inputs, output, stepShortName, stepDescription))
         .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 }

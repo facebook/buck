@@ -1,0 +1,11 @@
+java_library(
+    name = "external",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        # Don't add deps; this is a very lightweight library that is intended for use by annotation
+        # processors
+    ],
+)

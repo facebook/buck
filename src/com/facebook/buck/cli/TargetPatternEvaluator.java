@@ -37,14 +37,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
@@ -71,22 +69,18 @@ public class TargetPatternEvaluator {
     this.enableProfiling = enableProfiling;
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
-    this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
-        buckConfig,
-        new BuildTargetPatternTargetNodeParser());
+    this.targetNodeSpecParser =
+        new CommandLineTargetNodeSpecParser(buckConfig, new BuildTargetPatternTargetNodeParser());
   }
 
-  /**
-   * Attempts to parse and load the given collection of patterns.
-   */
+  /** Attempts to parse and load the given collection of patterns. */
   public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     resolveTargetPatterns(patterns, executor);
   }
 
   ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(
-      Iterable<String> patterns,
-      ListeningExecutorService executor)
+      Iterable<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     ImmutableMap.Builder<String, ImmutableSet<QueryTarget>> resolved = ImmutableMap.builder();
 
@@ -101,15 +95,14 @@ public class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      Set<BuildTarget> aliasTargets = buckConfig.getBuildTargetsForAlias(pattern);
+      ImmutableSet<BuildTarget> aliasTargets = buckConfig.getBuildTargetsForAlias(pattern);
       if (!aliasTargets.isEmpty()) {
         for (BuildTarget alias : aliasTargets) {
           unresolved.put(alias.getFullyQualifiedName(), pattern);
         }
       } else {
         // Check if the pattern corresponds to a build target or a path.
-        if (pattern.contains("//") ||
-            pattern.startsWith(":")) {
+        if (pattern.contains("//") || pattern.startsWith(":")) {
           unresolved.put(pattern, pattern);
         } else {
           ImmutableSet<QueryTarget> fileTargets = resolveFilePattern(pattern);
@@ -142,8 +135,7 @@ public class TargetPatternEvaluator {
   }
 
   ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
-      List<String> patterns,
-      ListeningExecutorService executor)
+      List<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     // Build up an ordered list of patterns and pass them to the parse to get resolved in one go.

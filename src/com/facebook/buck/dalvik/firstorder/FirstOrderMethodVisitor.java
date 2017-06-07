@@ -74,7 +74,7 @@ class FirstOrderMethodVisitor extends MethodVisitor {
   }
 
   @Override
-  public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object...bsmArgs) {
+  public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
     mBuilder.addDependencyDesc(desc);
     mBuilder.addValue(bsm);
     for (Object bsmArg : bsmArgs) {
@@ -99,12 +99,7 @@ class FirstOrderMethodVisitor extends MethodVisitor {
 
   @Override
   public void visitLocalVariable(
-      String name,
-      String desc,
-      String signature,
-      Label start,
-      Label end,
-      int index) {
+      String name, String desc, String signature, Label start, Label end, int index) {
     mBuilder.addDependencyDesc(desc);
   }
 

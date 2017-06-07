@@ -16,32 +16,19 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 
-import java.util.Optional;
-
-public class WindowsPreprocessor implements Preprocessor {
+public class WindowsPreprocessor extends AbstractPreprocessor {
 
   private static Function<String, String> prependIncludeFlag = "/I"::concat;
 
-  private final Tool tool;
-
   public WindowsPreprocessor(Tool tool) {
-    this.tool = tool;
-  }
-
-  @Override
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.empty();
+    super(tool);
   }
 
   @Override
@@ -51,6 +38,9 @@ public class WindowsPreprocessor implements Preprocessor {
 
   @Override
   public boolean supportsPrecompiledHeaders() {
+    // TODO(steveo) Should be easy to add support; will try @ later time,
+    // when I can test w/ Windows.
+    // https://msdn.microsoft.com/en-us/library/z0atkd6c.aspx
     return false;
   }
 
@@ -65,30 +55,28 @@ public class WindowsPreprocessor implements Preprocessor {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
+  public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
+    return Iterables.transform(includeRoots, prependIncludeFlag);
   }
 
   @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
+  public Iterable<String> prefixHeaderArgs(SourcePathResolver resolver, SourcePath prefixHeader) {
+    throw new UnsupportedOperationException("prefix header not supported by " + getClass());
+    // TODO(steveo) Should be easy to add support; will try @ later time,
+    // when I can test w/ Windows.
+    // "Forced Include": https://msdn.microsoft.com/en-us/library/8c5ztk84.aspx
+    // Space is allowed between flag and its pathname argument.
+    // E.g. something like this (space allowed between flag and its argument):
+    // return ImmutableList.of("/FI", resolver.getAbsolutePath(prefixHeader).toString());
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
+  public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    throw new UnsupportedOperationException("precompiled header not supported by " + getClass());
+    // TODO(steveo) Should be easy to add support; will try @ later time,
+    // when I can test w/ Windows.
+    // https://msdn.microsoft.com/en-us/library/z0atkd6c.aspx
+    // E.g. something like this flag (no space between "/Yu" and its argument):
+    // return ImmutableList.of("/Yu" + pchOutputPath);
   }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
-  }
-
 }

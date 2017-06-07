@@ -28,9 +28,8 @@ import static com.facebook.buck.bser.BserConstants.BSER_REAL;
 import static com.facebook.buck.bser.BserConstants.BSER_STRING;
 import static com.facebook.buck.bser.BserConstants.BSER_TRUE;
 
-import com.google.common.io.BaseEncoding;
 import com.google.common.collect.Iterables;
-
+import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -45,7 +44,7 @@ import java.util.Map;
 /**
  * Encoder for the BSER binary JSON format used by the Watchman service:
  *
- * https://facebook.github.io/watchman/docs/bser.html
+ * <p>https://facebook.github.io/watchman/docs/bser.html
  */
 public class BserSerializer {
   private static final int INITIAL_BUFFER_SIZE = 8192;
@@ -67,18 +66,13 @@ public class BserSerializer {
   private final CharsetEncoder utf8Encoder;
 
   public BserSerializer() {
-    this.utf8Encoder = StandardCharsets.UTF_8
-        .newEncoder()
-        .onMalformedInput(CodingErrorAction.REPORT);
+    this.utf8Encoder =
+        StandardCharsets.UTF_8.newEncoder().onMalformedInput(CodingErrorAction.REPORT);
   }
 
-  /**
-   * Serializes an object using BSER encoding to the stream.
-   */
+  /** Serializes an object using BSER encoding to the stream. */
   public void serializeToStream(Object value, OutputStream outputStream) throws IOException {
-    ByteBuffer buffer = ByteBuffer
-        .allocate(INITIAL_BUFFER_SIZE)
-        .order(ByteOrder.nativeOrder());
+    ByteBuffer buffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE).order(ByteOrder.nativeOrder());
 
     buffer = serializeToBuffer(value, buffer);
     buffer.flip();
@@ -87,11 +81,11 @@ public class BserSerializer {
   }
 
   /**
-   * Serializes an object using BSER encoding. If possible, writes the object
-   * to the provided byte buffer and returns it. If the buffer is not big
-   * enough to hold the object, returns a new buffer.
+   * Serializes an object using BSER encoding. If possible, writes the object to the provided byte
+   * buffer and returns it. If the buffer is not big enough to hold the object, returns a new
+   * buffer.
    *
-   * After returning, buffer.position() is advanced past the last encoded byte.
+   * <p>After returning, buffer.position() is advanced past the last encoded byte.
    */
   public ByteBuffer serializeToBuffer(Object value, ByteBuffer buffer) throws IOException {
     buffer = increaseBufferCapacityIfNeeded(buffer, EMPTY_HEADER.length);
@@ -108,9 +102,7 @@ public class BserSerializer {
 
   @SuppressWarnings("unchecked")
   private static ByteBuffer appendRecursive(
-      ByteBuffer buffer,
-      Object value,
-      CharsetEncoder utf8Encoder) throws IOException {
+      ByteBuffer buffer, Object value, CharsetEncoder utf8Encoder) throws IOException {
     if (value instanceof Boolean) {
       buffer = increaseBufferCapacityIfNeeded(buffer, 1);
       buffer.put(((boolean) value) ? BSER_TRUE : BSER_FALSE);
@@ -142,8 +134,7 @@ public class BserSerializer {
         if (!(entry.getKey() instanceof String)) {
           throw new IOException(
               String.format(
-                  "Unrecognized map key type %s, expected string",
-                  entry.getKey().getClass()));
+                  "Unrecognized map key type %s, expected string", entry.getKey().getClass()));
         }
         buffer = appendString(buffer, (String) entry.getKey(), utf8Encoder);
         buffer = appendRecursive(buffer, entry.getValue(), utf8Encoder);
@@ -166,16 +157,13 @@ public class BserSerializer {
   }
 
   private static ByteBuffer appendString(
-      ByteBuffer buffer,
-      String value,
-      CharsetEncoder utf8Encoder) throws CharacterCodingException {
+      ByteBuffer buffer, String value, CharsetEncoder utf8Encoder) throws CharacterCodingException {
     CharBuffer valueBuffer = CharBuffer.wrap(value);
     ByteBuffer utf8String = utf8Encoder.encode(valueBuffer);
     int utf8StringLenBytes = utf8String.remaining();
     BserIntegralEncodedSize utf8StringLenSize = getEncodedSize(utf8StringLenBytes);
-    buffer = increaseBufferCapacityIfNeeded(
-        buffer,
-        2 + utf8StringLenSize.size + utf8StringLenBytes);
+    buffer =
+        increaseBufferCapacityIfNeeded(buffer, 2 + utf8StringLenSize.size + utf8StringLenBytes);
     buffer.put(BSER_STRING);
     buffer = appendLongWithSize(buffer, utf8StringLenBytes, utf8StringLenSize);
     buffer.put(utf8String);
@@ -204,9 +192,7 @@ public class BserSerializer {
   }
 
   private static ByteBuffer appendLongWithSize(
-      ByteBuffer buffer,
-      long value,
-      BserIntegralEncodedSize encodedSize) {
+      ByteBuffer buffer, long value, BserIntegralEncodedSize encodedSize) {
     // We assume we've already increased the size of the buffer to hold
     // the encoded size.
     switch (encodedSize) {
@@ -245,9 +231,6 @@ public class BserSerializer {
 
   private static ByteBuffer resizeBufferWithCapacity(ByteBuffer buffer, int capacity) {
     buffer.flip();
-    return ByteBuffer
-        .allocate(capacity)
-        .order(buffer.order())
-        .put(buffer);
+    return ByteBuffer.allocate(capacity).order(buffer.order()).put(buffer);
   }
 }

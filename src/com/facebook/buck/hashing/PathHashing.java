@@ -22,50 +22,32 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PathHashing {
   // Utility class, do not instantiate.
-  private PathHashing() { }
+  private PathHashing() {}
 
   private static final Path EMPTY_PATH = Paths.get("");
 
   public static ImmutableSet<Path> hashPath(
       Hasher hasher,
-      FileHashLoader fileHashLoader,
+      ProjectFileHashLoader fileHashLoader,
       ProjectFilesystem projectFilesystem,
-      Path root) throws IOException {
+      Path root)
+      throws IOException {
     Preconditions.checkArgument(
-        !root.equals(EMPTY_PATH),
-        "Path to hash (%s) must not be empty",
-        root);
+        !root.equals(EMPTY_PATH), "Path to hash (%s) must not be empty", root);
     ImmutableSet.Builder<Path> children = ImmutableSet.builder();
     for (Path path : ImmutableSortedSet.copyOf(projectFilesystem.getFilesUnderPath(root))) {
       StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
       if (!root.equals(path)) {
         children.add(root.relativize(path));
       }
-      hasher.putBytes(fileHashLoader.get(projectFilesystem.resolve(path)).asBytes());
+      hasher.putBytes(fileHashLoader.get(path).asBytes());
     }
     return children.build();
   }
-
-  /**
-   * Iterates recursively over all files under {@code paths}, sorts
-   * the filenames, and updates the {@link Hasher} with the names and
-   * contents of all files inside.
-   */
-  public static void hashPaths(
-      Hasher hasher,
-      FileHashLoader fileHashLoader,
-      ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<Path> paths) throws IOException {
-    for (Path path : paths) {
-      hashPath(hasher, fileHashLoader, projectFilesystem, path);
-    }
-  }
-
 }

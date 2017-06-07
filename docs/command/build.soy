@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'buck build' /}
+    {param navid: 'command_build' /}
     {param prettify: true /}
     {param description}
       A command that builds one or more specified targets.
@@ -113,6 +114,15 @@ Buck. To build a rule, pass its target to buck build:
   <p>
   This option is analogous to <code>-k/--keep-going</code> in Make.
  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'out' /}
+  {param desc}
+  Takes the output of the build target and copies it to the specified path.
+  Only works with a single build target, and the corresponding build rule
+  must support this option.
+  {/param}
 {/call}
 
 {call buck.param}

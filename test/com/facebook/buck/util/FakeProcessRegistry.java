@@ -16,9 +16,7 @@
 
 package com.facebook.buck.util;
 
-/**
- * A fake for {@link ProcessRegistry}.
- */
+/** A fake for {@link ProcessRegistry}. */
 public class FakeProcessRegistry extends ProcessRegistry {
   public FakeProcessRegistry() {}
 }

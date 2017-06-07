@@ -1,5 +1,13 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/bser:bser',
-  ],
+java_library(
+    name = "bser",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/bser:bser",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

@@ -16,20 +16,20 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.InstallableApk;
+import com.android.ddmlib.IDevice;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 
-import com.android.ddmlib.IDevice;
-
 public class ApkInstallStep implements Step {
 
-  private final InstallableApk installableApk;
+  private final SourcePathResolver pathResolver;
+  private final HasInstallableApk hasInstallableApk;
 
-  public ApkInstallStep(
-      InstallableApk apk) {
-    this.installableApk = apk;
+  public ApkInstallStep(SourcePathResolver pathResolver, HasInstallableApk apk) {
+    this.pathResolver = pathResolver;
+    this.hasInstallableApk = apk;
   }
 
   @Override
@@ -39,7 +39,7 @@ public class ApkInstallStep implements Step {
       return StepExecutionResult.SUCCESS;
     }
 
-    if (!adbHelper.installApk(installableApk, false, true)) {
+    if (!adbHelper.installApk(pathResolver, hasInstallableApk, false, true)) {
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;
@@ -63,11 +63,10 @@ public class ApkInstallStep implements Step {
         builder.append("adb -s ");
         builder.append(device.getSerialNumber());
         builder.append(" install ");
-        builder.append(installableApk.getApkPath().toString());
+        builder.append(hasInstallableApk.getApkInfo().getApkPath().toString());
       }
     } catch (InterruptedException e) {
     }
     return builder.toString();
   }
-
 }

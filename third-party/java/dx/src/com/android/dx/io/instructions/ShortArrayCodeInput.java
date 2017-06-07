@@ -37,12 +37,12 @@ public final class ShortArrayCodeInput extends BaseCodeCursor
         this.array = array;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public boolean hasMore() {
         return cursor() < array.length;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public int read() throws EOFException {
         try {
             int value = array[cursor()];
@@ -53,7 +53,7 @@ public final class ShortArrayCodeInput extends BaseCodeCursor
         }
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public int readInt() throws EOFException {
         int short0 = read();
         int short1 = read();
@@ -61,7 +61,7 @@ public final class ShortArrayCodeInput extends BaseCodeCursor
         return short0 | (short1 << 16);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public long readLong() throws EOFException {
         long short0 = read();
         long short1 = read();

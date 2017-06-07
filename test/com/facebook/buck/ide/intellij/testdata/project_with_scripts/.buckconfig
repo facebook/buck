@@ -1,0 +1,8 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  pre_process = ./preprocessing-script.sh
+  ide = intellij

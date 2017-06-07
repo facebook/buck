@@ -19,7 +19,6 @@ import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.UnsignedInteger;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -31,13 +30,13 @@ public class LoadCommandUtils {
   /**
    * This is a kind of umbrella method that returns you LoadCommand object depending on the contents
    * of the given bytes array.
-   * @param buffer Buffer which contains at least values for the LoadCommand fields,
-   *               positioned at the first byte of the command (cmd field)
+   *
+   * @param buffer Buffer which contains at least values for the LoadCommand fields, positioned at
+   *     the first byte of the command (cmd field)
    * @return LoadCommandCommonFields that is suitable to handle the given bytes array.
    */
   public static LoadCommand createLoadCommandFromBuffer(
-      ByteBuffer buffer,
-      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) {
+      ByteBuffer buffer, NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) {
     int position = buffer.position();
     UnsignedInteger cmd = UnsignedInteger.fromIntBits(buffer.getInt());
     buffer.position(position);
@@ -56,13 +55,14 @@ public class LoadCommandUtils {
   }
 
   /**
-   * Enumerates the load commands in the given mach binary which is represented by the buffer
-   * by calling the given callback, starting at buffer's position.
+   * Enumerates the load commands in the given mach binary which is represented by the buffer by
+   * calling the given callback, starting at buffer's position.
+   *
    * @param buffer The buffer which holds all data.
    * @param callback The Function object which should be called on each LoadCommand enumeration
-   *                 event. The argument of the function is the LoadCommand object.
-   *                 If Function returns Boolean.TRUE then enumeration will continue;
-   *                 otherwise enumeration will stop and callback will not be called anymore.
+   *     event. The argument of the function is the LoadCommand object. If Function returns
+   *     Boolean.TRUE then enumeration will continue; otherwise enumeration will stop and callback
+   *     will not be called anymore.
    * @throws IOException
    */
   public static void enumerateLoadCommandsInFile(
@@ -74,9 +74,8 @@ public class LoadCommandUtils {
     int relativeCommandOffset = 0;
     for (int i = 0; i < header.getNcmds().intValue(); i++) {
       buffer.position(firstCommandOffset + relativeCommandOffset);
-      LoadCommand command = LoadCommandUtils.createLoadCommandFromBuffer(
-          buffer,
-          nulTerminatedCharsetDecoder);
+      LoadCommand command =
+          LoadCommandUtils.createLoadCommandFromBuffer(buffer, nulTerminatedCharsetDecoder);
       if (!callback.apply(command)) {
         break;
       }
@@ -88,7 +87,8 @@ public class LoadCommandUtils {
    * Finds all load commands with the given type in the buffer starting at the buffer's position.
    * Example usage is:
    *
-   * ImmutableList<MyLoadCommand> results = findLoadCommandsWithClass(buffer, MyLoadCommand.class);
+   * <p>ImmutableList<MyLoadCommand> results = findLoadCommandsWithClass(buffer,
+   * MyLoadCommand.class);
    *
    * @param buffer The buffer which holds all data.
    * @param type Load command's class, like SomeLoadCommand.class.

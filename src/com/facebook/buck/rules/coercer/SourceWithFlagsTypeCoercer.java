@@ -22,13 +22,10 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Collection;
 
-/**
- * A type coercer to handle source entries with a list of flags.
- */
+/** A type coercer to handle source entries with a list of flags. */
 public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> {
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
   private final TypeCoercer<ImmutableList<String>> flagsTypeCoercer;
@@ -50,8 +47,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return sourcePathTypeCoercer.hasElementClass(types) ||
-        flagsTypeCoercer.hasElementClass(types);
+    return sourcePathTypeCoercer.hasElementClass(types) || flagsTypeCoercer.hasElementClass(types);
   }
 
   @Override
@@ -65,7 +61,8 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof SourceWithFlags) {
       return (SourceWithFlags) object;
     }
@@ -73,24 +70,15 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
     // We're expecting one of two types here. They can be differentiated pretty easily.
     if (object instanceof String) {
       return SourceWithFlags.of(
-          sourcePathTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+          sourcePathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
 
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
           sourcePathWithFlagsTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object);
-      return SourceWithFlags.of(
-          sourcePathWithFlags.getFirst(),
-          sourcePathWithFlags.getSecond());
+              cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      return SourceWithFlags.of(sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
     }
 
     throw CoerceFailedException.simple(

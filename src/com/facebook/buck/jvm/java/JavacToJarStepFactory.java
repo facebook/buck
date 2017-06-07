@@ -18,33 +18,62 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
-  private final JavacOptions javacOptions;
+  private final Javac javac;
+  private JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
 
-  public JavacToJarStepFactory(JavacOptions javacOptions, JavacOptionsAmender amender) {
+  public JavacToJarStepFactory(
+      Javac javac, JavacOptions javacOptions, JavacOptionsAmender amender) {
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.amender = amender;
+  }
+
+  public void setCompileAbi() {
+    javacOptions =
+        javacOptions
+            .withCompilationMode(JavacCompilationMode.ABI)
+            .withAnnotationProcessingParams(
+                abiProcessorsOnly(javacOptions.getAnnotationProcessingParams()));
+  }
+
+  private AnnotationProcessingParams abiProcessorsOnly(
+      AnnotationProcessingParams annotationProcessingParams) {
+    Preconditions.checkArgument(annotationProcessingParams.getLegacyProcessors().isEmpty());
+
+    return annotationProcessingParams.withModernProcessors(
+        annotationProcessingParams
+            .getModernProcessors()
+            .stream()
+            .filter(processor -> !processor.getDoesNotAffectAbi())
+            .collect(Collectors.toList()));
   }
 
   @Override
@@ -53,20 +82,22 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ClassUsageFileWriter usedClassesFileWriter,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
 
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
-    // Javac requires that the root directory for generated sources already exist.
-    addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
+      // Javac requires that the root directory for generated sources already exist.
+      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
+    }
 
     steps.add(
         new JavacStep(
@@ -76,14 +107,34 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            buildTimeOptions.getJavac(),
+            javac,
             buildTimeOptions,
             invokingRule,
-            suggestBuildRules,
             resolver,
             filesystem,
             new ClasspathChecker(),
             Optional.empty()));
+  }
+
+  @Override
+  public void createJarStep(
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      ImmutableSet<Pattern> classesToRemoveFromJar,
+      Path outputJar,
+      ImmutableList.Builder<Step> steps) {
+    steps.add(
+        new JarDirectoryStep(
+            filesystem,
+            outputJar,
+            ImmutableSortedSet.of(outputDirectory),
+            mainClass.orElse(null),
+            manifestFile.orElse(null),
+            true,
+            javacOptions.getCompilationMode() == JavacCompilationMode.ABI,
+            classesToRemoveFromJar));
   }
 
   @Override
@@ -93,17 +144,31 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
+  protected Tool getCompiler() {
+    return javac;
+  }
+
+  @Override
+  public Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder) {
+    // If any dep of an annotation processor changes, we need to recompile, so we add those as
+    // extra deps
+    return Iterables.concat(
+        super.getExtraDeps(ruleFinder),
+        ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
+  }
+
+  @Override
   public void createCompileToJarStep(
       BuildContext context,
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
@@ -121,11 +186,12 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     // (2) The target must have 0 postprocessing steps.
     // (3) Tha compile API must be JSR 199.
     boolean isSpoolingToJarEnabled =
-        postprocessClassesCommands.isEmpty() &&
-            javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR &&
-            javacOptions.getJavac() instanceof Jsr199Javac;
+        postprocessClassesCommands.isEmpty()
+            && javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR
+            && javac instanceof Jsr199Javac;
 
-    LOG.info("Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
+    LOG.info(
+        "Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
         invokingRule.getBaseName(),
         (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
         spoolMode,
@@ -134,7 +200,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     if (isSpoolingToJarEnabled) {
       final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
       // Javac requires that the root directory for generated sources already exists.
-      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
 
       steps.add(
           new JavacDirectToJarStep(
@@ -143,11 +209,11 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
               resolver,
               filesystem,
               declaredClasspathEntries,
+              javac,
               buildTimeOptions,
               outputDirectory,
               workingDirectory,
               pathToSrcsList,
-              suggestBuildRules,
               entriesToJar,
               mainClass,
               manifestFile,
@@ -159,12 +225,12 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           sourceFilePaths,
           invokingRule,
           resolver,
+          ruleFinder,
           filesystem,
           declaredClasspathEntries,
           outputDirectory,
           workingDirectory,
           pathToSrcsList,
-          suggestBuildRules,
           postprocessClassesCommands,
           entriesToJar,
           mainClass,
@@ -181,18 +247,27 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       JavacOptions buildTimeOptions,
       ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
-    Optional<Path> annotationGenFolder =
-        buildTimeOptions.getGeneratedSourceFolderName();
+      BuildableContext buildableContext,
+      BuildContext buildContext) {
+    Optional<Path> annotationGenFolder = buildTimeOptions.getGeneratedSourceFolderName();
     if (annotationGenFolder.isPresent()) {
-      steps.add(new MakeCleanDirectoryStep(filesystem, annotationGenFolder.get()));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder.get())));
       buildableContext.recordArtifact(annotationGenFolder.get());
     }
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("javac", javac);
     sink.setReflectively("javacOptions", javacOptions);
     sink.setReflectively("amender", amender);
+  }
+
+  @VisibleForTesting
+  public JavacOptions getJavacOptions() {
+    return javacOptions;
   }
 }

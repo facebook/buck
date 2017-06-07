@@ -16,9 +16,24 @@
 
 package com.facebook.buck.rules;
 
-/**
- * Represents a source that is required to build a rule (typically a file).
- */
-public interface SourcePath extends Comparable<SourcePath>  {
+import com.google.common.base.Preconditions;
 
+/** Represents a source that is required to build a rule (typically a file). */
+public interface SourcePath extends Comparable<SourcePath> {
+  default int compareClasses(SourcePath other) {
+    if (this.getClass() != other.getClass()) {
+      int result = this.getClass().getName().compareTo(other.getClass().getName());
+      if (result != 0) {
+        return result;
+      }
+
+      Preconditions.checkState(
+          this.getClass().equals(other.getClass()),
+          "Classes are different but have the same name: %s %s",
+          this.getClass(),
+          other.getClass());
+    }
+
+    return 0;
+  }
 }

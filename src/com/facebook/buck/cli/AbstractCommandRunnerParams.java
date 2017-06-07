@@ -16,37 +16,40 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.immutables.value.Value;
-
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import org.immutables.value.Value;
 
-@Value.Immutable(copy = false)
+@Value.Immutable()
 @BuckStyleImmutable
 public interface AbstractCommandRunnerParams {
   Console getConsole();
@@ -57,7 +60,9 @@ public interface AbstractCommandRunnerParams {
 
   VersionedTargetGraphCache getVersionedTargetGraphCache();
 
-  ArtifactCache getArtifactCache();
+  ArtifactCacheFactory getArtifactCacheFactory();
+
+  TypeCoercerFactory getTypeCoercerFactory();
 
   Parser getParser();
 
@@ -71,9 +76,9 @@ public interface AbstractCommandRunnerParams {
 
   JavaPackageFinder getJavaPackageFinder();
 
-  ObjectMapper getObjectMapper();
-
   Clock getClock();
+
+  VersionControlStatsGenerator getVersionControlStatsGenerator();
 
   Optional<ProcessManager> getProcessManager();
 
@@ -83,7 +88,7 @@ public interface AbstractCommandRunnerParams {
 
   BuckConfig getBuckConfig();
 
-  FileHashCache getFileHashCache();
+  StackedFileHashCache getFileHashCache();
 
   Map<ExecutorPool, ListeningExecutorService> getExecutors();
 
@@ -92,4 +97,10 @@ public interface AbstractCommandRunnerParams {
   ActionGraphCache getActionGraphCache();
 
   KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory();
+
+  BuildInfoStoreManager getBuildInfoStoreManager();
+
+  Optional<InvocationInfo> getInvocationInfo();
+
+  Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
 }

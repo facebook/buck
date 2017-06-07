@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,56 +16,38 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.Optional;
+public class RustLibraryBuilder
+    extends AbstractNodeBuilder<
+        RustLibraryDescriptionArg.Builder, RustLibraryDescriptionArg, RustLibraryDescription,
+        RustLibrary> {
 
-public class RustLibraryBuilder extends
-    AbstractNodeBuilder<RustLibraryDescription.Arg, RustLibraryDescription> {
-
-  public RustLibraryBuilder(
-      RustLibraryDescription description,
-      BuildTarget target) {
+  private RustLibraryBuilder(RustLibraryDescription description, BuildTarget target) {
     super(description, target);
   }
 
-  public RustLibraryBuilder(
-      BuildTarget target,
-      RustBuckConfig config,
-      CxxPlatform defaultCxxPlatform) {
-    this(new RustLibraryDescription(config, defaultCxxPlatform), target);
-  }
-
-  public RustLibraryBuilder(BuildTarget target, RustBuckConfig config) {
-    this(
-        target,
-        config,
-        CxxPlatformUtils.DEFAULT_PLATFORM);
-  }
-
-  public RustLibraryBuilder(BuildTarget target) {
-    this(target, new FakeRustConfig());
-  }
-
-  public RustLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
-    return this;
+  public static RustLibraryBuilder from(String target) {
+    return new RustLibraryBuilder(
+        new RustLibraryDescription(
+            FakeRustConfig.FAKE_RUST_CONFIG,
+            CxxPlatformUtils.DEFAULT_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM),
+        BuildTargetFactory.newInstance(target));
   }
 
   public RustLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
-  public RustLibraryBuilder setLinkStyle(Optional<Linker.LinkableDepType> linkStyle) {
-    arg.linkStyle = linkStyle;
+  public RustLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 }
-

@@ -18,19 +18,26 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Optional;
+import java.util.OptionalInt;
+import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
-import java.io.PrintStream;
-import java.nio.file.Path;
-import java.util.Optional;
-
 public abstract class AbstractContainerCommand implements Command {
+
+  @Option(
+    name = "--help",
+    aliases = {"-h"},
+    usage = "Shows this screen and exits."
+  )
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private boolean helpScreen;
 
   protected String getSubcommandsFieldName() {
     return "subcommand";
@@ -40,23 +47,49 @@ public abstract class AbstractContainerCommand implements Command {
 
   protected abstract String getContainerCommandPrefix();
 
-  protected void printUsage(PrintStream stream) {
+  @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    if (getSubcommand().isPresent()) {
+      return getSubcommand().get().runHelp(stream);
+    } else if (helpScreen) {
+      printUsage(stream);
+      return OptionalInt.of(1);
+    } else {
+      return OptionalInt.empty();
+    }
+  }
+
+  @Override
+  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
+    Optional<Command> subcommand = getSubcommand();
+    if (subcommand.isPresent()) {
+      return subcommand.get().run(params);
+    } else {
+      printUsage(params.getConsole().getStdErr());
+      return 1;
+    }
+  }
+
+  @Override
+  public void printUsage(PrintStream stream) {
     String prefix = getContainerCommandPrefix();
 
     stream.println("buck build tool");
 
-    stream.println("usage:");
-    stream.println("  " + prefix + " [options]");
-    stream.println("  " + prefix + " command --help");
-    stream.println("  " + prefix + " command [command-options]");
-    stream.println("available commands:");
+    stream.println("Usage:");
+    stream.println("  " + prefix + " [<options>]");
+    stream.println("  " + prefix + " <command> --help");
+    stream.println("  " + prefix + " <command> [<command-options>]");
+    stream.println();
+
+    stream.println("Available commands:");
 
     SubCommands subCommands;
     try {
-      subCommands = this
-          .getClass()
-          .getDeclaredField(getSubcommandsFieldName())
-          .getAnnotation(SubCommands.class);
+      subCommands =
+          this.getClass()
+              .getDeclaredField(getSubcommandsFieldName())
+              .getAnnotation(SubCommands.class);
     } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
     }
@@ -82,25 +115,23 @@ public abstract class AbstractContainerCommand implements Command {
           Strings.repeat(" ", lengthOfLongestCommand - name.length()),
           command.getShortDescription());
     }
+    stream.println();
 
-    stream.println("options:");
+    stream.println("Options:");
     new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    stream.println();
   }
 
   @Override
   public CellConfig getConfigOverrides() {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent()
-        ? cmd.get().getConfigOverrides()
-        : CellConfig.of();
+    return cmd.isPresent() ? cmd.get().getConfigOverrides() : CellConfig.of();
   }
 
   @Override
   public LogConfigSetup getLogConfig() {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent()
-        ? cmd.get().getLogConfig()
-        : LogConfigSetup.DEFAULT_SETUP;
+    return cmd.isPresent() ? cmd.get().getLogConfig() : LogConfigSetup.DEFAULT_SETUP;
   }
 
   @Override
@@ -109,9 +140,10 @@ public abstract class AbstractContainerCommand implements Command {
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem) {
-    return ImmutableList.of();
+  public Iterable<BuckEventListener> getEventListeners() {
+    if (!getSubcommand().isPresent()) {
+      return ImmutableList.of();
+    }
+    return getSubcommand().get().getEventListeners();
   }
 }

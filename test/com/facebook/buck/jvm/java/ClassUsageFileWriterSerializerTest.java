@@ -18,11 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Map;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ClassUsageFileWriterSerializerTest {
   @Test

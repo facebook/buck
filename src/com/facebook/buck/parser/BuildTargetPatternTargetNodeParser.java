@@ -17,11 +17,9 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
-
 import java.nio.file.Path;
 
-public class BuildTargetPatternTargetNodeParser
-    extends BuildTargetPatternParser<TargetNodeSpec> {
+public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser<TargetNodeSpec> {
 
   public BuildTargetPatternTargetNodeParser() {
     super(/* baseName */ "");
@@ -35,15 +33,13 @@ public class BuildTargetPatternTargetNodeParser
   @Override
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
-        x -> true,
-        BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath), cellPath));
+        x -> true, BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override
   public TargetNodeSpec createForChildren(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
-        x -> true,
-        BuildFileSpec.fromPath(cellPath.resolve(basePath), cellPath));
+        x -> true, BuildFileSpec.fromPath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override
@@ -55,5 +51,4 @@ public class BuildTargetPatternTargetNodeParser
   protected boolean isWildCardAllowed() {
     return true;
   }
-
 }

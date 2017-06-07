@@ -1,0 +1,39 @@
+android_library(
+  name = 'dep1',
+  srcs = glob(['src/**/*.java']),
+  deps = [
+    '//libs:guava',
+    '//libs:jsr305',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+genrule(
+  name = 'generated_java',
+  cmd = 'echo class Generated {} > $OUT',
+  out = 'Generated.java',
+)
+
+android_library(
+  name = 'generated',
+  srcs = [':generated_java'],
+  deps = [
+    ':generated_java',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_test(
+  name = 'test',
+  srcs = glob(['test/**/*Test.java']),
+  deps = [
+    ':dep1',
+    ':generated',
+    '//libs:guava',
+    '//libs:junit',
+  ],
+)

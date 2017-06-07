@@ -1,0 +1,47 @@
+cxx_precompiled_header (
+    name = "pch",
+    src = "header.h",
+    deps = [
+        "//some_lib:some_lib",
+    ],
+)
+
+cxx_library (
+    name = "lib1",
+    precompiled_header = ":pch",
+    srcs = [
+        "lib1.cpp",
+    ],
+    compiler_flags = ["-frtti"],
+)
+
+cxx_library (
+    name = "lib2",
+    precompiled_header = ":pch",
+    srcs = [
+        "lib2.cpp",
+    ],
+    compiler_flags = ["-frtti"],
+)
+
+cxx_library (
+    name = "lib3",
+    precompiled_header = ":pch",
+    srcs = [
+        "lib3.cpp",
+    ],
+    compiler_flags = ["-fno-rtti"],
+)
+
+cxx_binary (
+    name = "main",
+    precompiled_header = ":pch",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":lib1",
+        ":lib2",
+        ":lib3",
+    ],
+)

@@ -16,9 +16,7 @@
 
 package com.facebook.buck.apple;
 
-/**
- * Known bundle extensions that have special handling.
- */
+/** Known bundle extensions that have special handling. */
 public enum AppleBundleExtension {
   APP,
   FRAMEWORK,
@@ -26,7 +24,8 @@ public enum AppleBundleExtension {
   PLUGIN,
   BUNDLE,
   XCTEST,
-  DSYM;
+  DSYM,
+  XPC;
 
   public String toFileExtension() {
     switch (this) {
@@ -44,6 +43,8 @@ public enum AppleBundleExtension {
         return "xctest";
       case DSYM:
         return "dSYM";
+      case XPC:
+        return "xpc";
       default:
         throw new IllegalStateException("Invalid bundle extension value: " + this.toString());
     }

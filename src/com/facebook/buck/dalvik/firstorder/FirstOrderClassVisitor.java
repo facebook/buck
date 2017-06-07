@@ -56,11 +56,7 @@ class FirstOrderClassVisitor extends ClassVisitor {
 
   @Override
   public FieldVisitor visitField(
-      int access,
-      String name,
-      String desc,
-      String signature,
-      Object value) {
+      int access, String name, String desc, String signature, Object value) {
     mBuilder.addDependencyDesc(desc);
     mBuilder.addValue(value);
     return mContext.fieldVisitor;
@@ -68,11 +64,7 @@ class FirstOrderClassVisitor extends ClassVisitor {
 
   @Override
   public MethodVisitor visitMethod(
-      int access,
-      String name,
-      String desc,
-      String signature,
-      String[] exceptions) {
+      int access, String name, String desc, String signature, String[] exceptions) {
     mBuilder.addDependencyDesc(desc);
     if (exceptions != null) {
       for (String exception : exceptions) {

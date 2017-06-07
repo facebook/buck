@@ -23,10 +23,6 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +30,8 @@ import java.util.TimeZone;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CustomZipEntryTest {
 
@@ -74,7 +72,7 @@ public class CustomZipEntryTest {
   private HashCode writeSimpleJarAndGetHash() throws Exception {
     Path output = Files.createTempFile("example", ".jar");
     try (FileOutputStream fileOutputStream = new FileOutputStream(output.toFile());
-         ZipOutputStream out = new JarOutputStream(fileOutputStream)) {
+        ZipOutputStream out = new JarOutputStream(fileOutputStream)) {
       ZipEntry entry = new CustomZipEntry("test");
       out.putNextEntry(entry);
       out.write(new byte[0]);

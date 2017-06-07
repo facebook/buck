@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -25,11 +26,12 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -44,7 +46,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,9 +54,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * A specialization of {@link Linker} containing information specific to the GNU implementation.
- */
+/** A specialization of {@link Linker} containing information specific to the GNU implementation. */
 public class GnuLinker implements Linker {
 
   private final Tool tool;
@@ -65,8 +64,8 @@ public class GnuLinker implements Linker {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return tool.getDeps(ruleFinder);
   }
 
   @Override
@@ -80,8 +79,8 @@ public class GnuLinker implements Linker {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override
@@ -92,9 +91,7 @@ public class GnuLinker implements Linker {
   @Override
   public Iterable<Arg> linkWhole(Arg input) {
     return ImmutableList.of(
-        new StringArg("-Wl,--whole-archive"),
-        input,
-        new StringArg("-Wl,--no-whole-archive"));
+        StringArg.of("-Wl,--whole-archive"), input, StringArg.of("-Wl,--no-whole-archive"));
   }
 
   @Override
@@ -133,26 +130,27 @@ public class GnuLinker implements Linker {
    *
    * @param target the name given to the {@link BuildRule} which creates the linker script.
    * @return the list of arguments which pass the linker script containing the undefined symbols to
-   *         link.
+   *     link.
    */
   @Override
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles) {
-    ruleResolver.addToIndex(
-        new UndefinedSymbolsLinkerScript(
-            baseParams.copyWithChanges(
-                target,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(symbolFiles))),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-            pathResolver,
-            symbolFiles));
-    return ImmutableList.of(
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)));
+    UndefinedSymbolsLinkerScript rule =
+        ruleResolver.addToIndex(
+            new UndefinedSymbolsLinkerScript(
+                baseParams
+                    .withBuildTarget(target)
+                    .copyReplacingDeclaredAndExtraDeps(
+                        Suppliers.ofInstance(
+                            ImmutableSortedSet.copyOf(
+                                ruleFinder.filterBuildRuleInputs(symbolFiles))),
+                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                symbolFiles));
+    return ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));
   }
 
   @Override
@@ -165,13 +163,12 @@ public class GnuLinker implements Linker {
     return Linkers.iXlinker(
         // ld.gold doesn't appear to fully implement `--unresolved-symbols=ignore-all` for shared
         // libraries, so also always set `--allow-shlib-undefined`.
-        "--allow-shlib-undefined",
-        "--unresolved-symbols=ignore-all");
+        "--allow-shlib-undefined", "--unresolved-symbols=ignore-all");
   }
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.of(new StringArg("-shared"));
+    return ImmutableList.of(StringArg.of("-shared"));
   }
 
   @Override
@@ -186,41 +183,37 @@ public class GnuLinker implements Linker {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
 
   // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined
   // symbols.
   private static class UndefinedSymbolsLinkerScript extends AbstractBuildRule {
 
-    @AddToRuleKey
-    private final Iterable<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
 
     public UndefinedSymbolsLinkerScript(
-        BuildRuleParams buildRuleParams,
-        SourcePathResolver resolver,
-        Iterable<? extends SourcePath> symbolFiles) {
-      super(buildRuleParams, resolver);
+        BuildRuleParams buildRuleParams, Iterable<? extends SourcePath> symbolFiles) {
+      super(buildRuleParams);
       this.symbolFiles = symbolFiles;
     }
 
     private Path getLinkerScript() {
       return BuildTargets.getGenPath(
-          getProjectFilesystem(),
-          getBuildTarget(),
-          "%s/linker_script.txt");
+          getProjectFilesystem(), getBuildTarget(), "%s/linker_script.txt");
     }
 
     @Override
     public ImmutableList<Step> getBuildSteps(
-        BuildContext context,
-        BuildableContext buildableContext) {
+        BuildContext context, BuildableContext buildableContext) {
       final Path linkerScript = getLinkerScript();
       buildableContext.recordArtifact(linkerScript);
       return ImmutableList.of(
-          new MkdirStep(getProjectFilesystem(), linkerScript.getParent()),
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  linkerScript.getParent())),
           new WriteFileStep(
               getProjectFilesystem(),
               () -> {
@@ -229,8 +222,7 @@ public class GnuLinker implements Linker {
                   try {
                     symbols.addAll(
                         Files.readAllLines(
-                            getResolver().getAbsolutePath(path),
-                            Charsets.UTF_8));
+                            context.getSourcePathResolver().getAbsolutePath(path), Charsets.UTF_8));
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -246,10 +238,8 @@ public class GnuLinker implements Linker {
     }
 
     @Override
-    public Path getPathToOutput() {
-      return getLinkerScript();
+    public SourcePath getSourcePathToOutput() {
+      return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLinkerScript());
     }
-
   }
-
 }

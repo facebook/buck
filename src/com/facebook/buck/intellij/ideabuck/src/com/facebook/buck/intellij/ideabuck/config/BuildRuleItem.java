@@ -19,12 +19,16 @@ package com.facebook.buck.intellij.ideabuck.config;
 import java.math.BigInteger;
 
 public class BuildRuleItem {
-    public enum Status {
-        RUNNING, SUSPENDED, FINISHED, ERROR
-    };
-    public String name;
-    public BigInteger startTimestamp;
-    public BigInteger endTimestamp = BigInteger.ZERO;
-    public String error = "";
-    public Status status;
+  public enum Status {
+    RUNNING,
+    SUSPENDED,
+    FINISHED,
+    ERROR
+  };
+
+  public String name;
+  public BigInteger startTimestamp;
+  public BigInteger endTimestamp = BigInteger.ZERO;
+  public String error = "";
+  public Status status;
 }

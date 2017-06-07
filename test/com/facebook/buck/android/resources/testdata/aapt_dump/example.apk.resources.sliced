@@ -1,0 +1,31 @@
+Package Groups (1)
+Package Group 0 id=0x7f packageCount=1 name=buck.exotest
+  Package 0 id=0x7f name=buck.exotest
+    type 1 configCount=1 entryCount=1
+      spec resource 0x7f020000 buck.exotest:drawable/aaa_image: flags=0x00000000
+      config (unknown):
+        resource 0x7f020000 buck.exotest:drawable/aaa_image: t=0x03 d=0x00000001 (s=0x0008 r=0x00)
+          (string8) "res/drawable/aaa_image.png"
+    type 2 configCount=1 entryCount=1
+      spec resource 0x7f030000 buck.exotest:xml/meta_xml: flags=0x00000000
+      config (unknown):
+        resource 0x7f030000 buck.exotest:xml/meta_xml: t=0x03 d=0x00000002 (s=0x0008 r=0x00)
+          (string8) "res/xml/meta_xml.xml"
+    type 3 configCount=1 entryCount=1
+      spec resource 0x7f040000 buck.exotest:string/aaa_string_other: flags=0x00000000
+      config (unknown):
+        resource 0x7f040000 buck.exotest:string/aaa_string_other: t=0x03 d=0x00000003 (s=0x0008 r=0x00)
+          (string8) "some other string"
+    type 4 configCount=1 entryCount=1
+      spec resource 0x7f050000 buck.exotest:array/aaa_array: flags=0x00000000
+      config (unknown):
+        resource 0x7f050000 buck.exotest:array/aaa_array: <bag>
+          Parent=0x00000000(Resolved=0x7f000000), Count=3
+          #0 (Key=0x02000000): (color) #00000001
+          #1 (Key=0x02000001): (color) #00000002
+          #2 (Key=0x02000002): (color) #00000003
+    type 5 configCount=1 entryCount=1
+      spec resource 0x7f060000 buck.exotest:id/some_id: flags=0x00000000
+      config (unknown):
+        resource 0x7f060000 buck.exotest:id/some_id: t=0x03 d=0x00000000 (s=0x0008 r=0x00)
+          (string8) ""

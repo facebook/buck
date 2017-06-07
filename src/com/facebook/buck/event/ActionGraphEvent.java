@@ -16,12 +16,8 @@
 
 package com.facebook.buck.event;
 
-
-/**
- * Base class for events about building up the action graph from the target graph.
- */
-public abstract class ActionGraphEvent
-    extends AbstractBuckEvent
+/** Base class for events about building up the action graph from the target graph. */
+public abstract class ActionGraphEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
 
   public ActionGraphEvent(EventKey eventKey) {
@@ -42,10 +38,6 @@ public abstract class ActionGraphEvent
     return new Started();
   }
 
-  public static Processed processed(int p, int t) {
-    return new Processed(p, t);
-  }
-
   public static Finished finished(Started started) {
     return new Finished(started);
   }
@@ -59,28 +51,6 @@ public abstract class ActionGraphEvent
     @Override
     public String getEventName() {
       return "BuildActionGraphStarted";
-    }
-  }
-
-  public static class Processed extends ActionGraphEvent {
-
-    private int processed;
-    private int total;
-
-    public Processed(int processed, int total) {
-      super(EventKey.unique());
-      this.processed = processed;
-      this.total = total;
-    }
-
-    @Override
-    public String getEventName() {
-      return "BuildActionGraphProcessed";
-    }
-
-    @Override
-    protected String getValueString() {
-      return processed + " of " + total;
     }
   }
 
@@ -108,8 +78,12 @@ public abstract class ActionGraphEvent
       return new Hit();
     }
 
-    public static Miss miss() {
-      return new Miss();
+    public static Miss miss(boolean cacheWasEmpty) {
+      return new Miss(cacheWasEmpty);
+    }
+
+    public static MissWithTargetGraphHashMatch missWithTargetGraphHashMatch() {
+      return new MissWithTargetGraphHashMatch();
     }
 
     public static class Hit extends Cache {
@@ -119,8 +93,17 @@ public abstract class ActionGraphEvent
     }
 
     public static class Miss extends Cache {
-      public Miss() {
+      public final boolean cacheWasEmpty;
+
+      public Miss(boolean cacheWasEmpty) {
         super("ActionGraphCacheMiss");
+        this.cacheWasEmpty = cacheWasEmpty;
+      }
+    }
+
+    public static class MissWithTargetGraphHashMatch extends Cache {
+      public MissWithTargetGraphHashMatch() {
+        super("ActionGraphCacheMissWithTargetGraphHashMatch");
       }
     }
 

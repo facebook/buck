@@ -1,3 +1,0 @@
-project_config(
-  src_target = '//tests/test1:test1',
-)

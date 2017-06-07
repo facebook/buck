@@ -16,12 +16,11 @@
 
 package com.facebook.buck.message_ipc;
 
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -31,53 +30,46 @@ public class MessageSerializer {
   private static final String NAME = "name";
   private static final String ARGS = "args";
   private static final String VALUE = "value";
-  private final ObjectMapper objectMapper;
-
-  public MessageSerializer(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
 
   public String serializeInvocation(InvocationMessage invocation) throws JsonProcessingException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.put(TYPE, InvocationMessage.class.getSimpleName());
     builder.put(NAME, invocation.getMethodName());
     builder.put(ARGS, invocation.getArguments());
-    return objectMapper.writeValueAsString(builder.build());
+    return ObjectMappers.WRITER.writeValueAsString(builder.build());
   }
 
   @SuppressWarnings("unchecked")
   public InvocationMessage deserializeInvocation(String data) throws IOException {
-    Map<String, Object> rep = objectMapper.readValue(
-        data,
-        new TypeReference<Map<String, Object>>() {});
-    String type = (String) rep.get(TYPE);
-    Preconditions.checkNotNull(
-        type,
-        "Unable to deserialize %s: no field %s in data (%s)",
-        InvocationMessage.class.getSimpleName(), TYPE, data);
+    Map<String, Object> rep =
+        ObjectMappers.readValue(data, new TypeReference<Map<String, Object>>() {});
+    String type = (String) checkHasField(rep, TYPE, data);
     Preconditions.checkArgument(type.equals(InvocationMessage.class.getSimpleName()));
     return new InvocationMessage(
-        (String) rep.get(NAME),
-        (List<Object>) rep.get(ARGS));
+        (String) checkHasField(rep, NAME, data), (List<Object>) checkHasField(rep, ARGS, data));
   }
 
   public String serializeResult(ReturnResultMessage message) throws JsonProcessingException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.put(TYPE, ReturnResultMessage.class.getSimpleName());
     builder.put(VALUE, message.getValue());
-    return objectMapper.writeValueAsString(builder.build());
+    return ObjectMappers.WRITER.writeValueAsString(builder.build());
   }
 
   public ReturnResultMessage deserializeResult(String data) throws IOException {
-    Map<String, Object> rep = objectMapper.readValue(
-        data,
-        new TypeReference<Map<String, Object>>() {});
-    String type = (String) rep.get(TYPE);
-    Preconditions.checkNotNull(
-        type,
-        "Unable to deserialize %s: no field %s in data (%s)",
-        ReturnResultMessage.class.getSimpleName(), TYPE, data);
+    Map<String, Object> rep =
+        ObjectMappers.readValue(data, new TypeReference<Map<String, Object>>() {});
+    String type = (String) checkHasField(rep, TYPE, data);
     Preconditions.checkArgument(type.equals(ReturnResultMessage.class.getSimpleName()));
-    return new ReturnResultMessage(rep.get(VALUE));
+    return new ReturnResultMessage(checkHasField(rep, VALUE, data));
+  }
+
+  private static Object checkHasField(Map<String, Object> rep, String field, String rawInput) {
+    return Preconditions.checkNotNull(
+        rep.get(field),
+        "Unable to deserialize %s: no field %s in raw input (%s)",
+        InvocationMessage.class.getSimpleName(),
+        field,
+        rawInput);
   }
 }

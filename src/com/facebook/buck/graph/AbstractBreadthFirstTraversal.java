@@ -16,9 +16,7 @@
 
 package com.facebook.buck.graph;
 
-/**
- * Performs a breadth-first traversal of dependencies of a graph node.
- */
+/** Performs a breadth-first traversal of dependencies of a graph node. */
 public abstract class AbstractBreadthFirstTraversal<Node>
     extends AbstractBreadthFirstThrowingTraversal<Node, RuntimeException> {
 
@@ -30,4 +28,24 @@ public abstract class AbstractBreadthFirstTraversal<Node>
     super(initialNodes);
   }
 
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(Node initialNode, Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNode, visitor).start();
+  }
+
+  /**
+   * Traverse a graph without explicitly creating a {@code new
+   * AbstractBreadthFirstThrowingTraversal} and overriding {@link #visit(Object)}
+   *
+   * @param visitor Typically a lambda expression
+   */
+  public static <Node> void traverse(
+      Iterable<? extends Node> initialNodes, final Visitor<Node, RuntimeException> visitor) {
+    new StaticBreadthFirstTraversal<>(initialNodes, visitor).start();
+  }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,9 +28,8 @@ public final class DefaultStepRunner implements StepRunner {
 
   @Override
   public void runStepForBuildTarget(
-      ExecutionContext context,
-      Step step,
-      Optional<BuildTarget> buildTarget) throws StepFailedException, InterruptedException {
+      ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
+      throws StepFailedException, InterruptedException {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
     }
@@ -40,22 +38,21 @@ public final class DefaultStepRunner implements StepRunner {
     String stepDescription = step.getDescription(context);
     UUID stepUuid = UUID.randomUUID();
     StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
-    context.getBuckEventBus().logDebugAndPost(
-        LOG, started);
+    LOG.verbose(started.toString());
+    context.getBuckEventBus().post(started);
     StepExecutionResult executionResult = StepExecutionResult.ERROR;
     try {
       executionResult = step.execute(context);
     } catch (IOException | RuntimeException e) {
-      throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
+      throw StepFailedException.createForFailingStepWithException(step, context, e, buildTarget);
     } finally {
-      context.getBuckEventBus().logDebugAndPost(
-          LOG, StepEvent.finished(started, executionResult.getExitCode()));
+      StepEvent.Finished finished = StepEvent.finished(started, executionResult.getExitCode());
+      LOG.verbose(finished.toString());
+      context.getBuckEventBus().post(finished);
     }
     if (!executionResult.isSuccess()) {
-      throw StepFailedException.createForFailingStepWithExitCode(step,
-          context,
-          executionResult,
-          buildTarget);
+      throw StepFailedException.createForFailingStepWithExitCode(
+          step, context, executionResult, buildTarget);
     }
   }
 }

@@ -20,25 +20,22 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class ScalaTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "scala_test", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "scala_test", tmp);
     workspace.setUp();
   }
 
@@ -65,5 +62,4 @@ public class ScalaTestIntegrationTest {
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
   }
-
 }

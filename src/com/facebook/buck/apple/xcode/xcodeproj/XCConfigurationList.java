@@ -20,15 +20,12 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * List of build configurations.
- */
+/** List of build configurations. */
 public class XCConfigurationList extends PBXProjectItem {
   private List<XCBuildConfiguration> buildConfigurations;
   private Optional<String> defaultConfigurationName;
@@ -37,19 +34,21 @@ public class XCConfigurationList extends PBXProjectItem {
   private final LoadingCache<String, XCBuildConfiguration> buildConfigurationsByName;
 
   public XCConfigurationList() {
-    buildConfigurations = Lists.newArrayList();
+    buildConfigurations = new ArrayList<>();
     defaultConfigurationName = Optional.empty();
     defaultConfigurationIsVisible = false;
 
-    buildConfigurationsByName = CacheBuilder.newBuilder().build(
-        new CacheLoader<String, XCBuildConfiguration>() {
-          @Override
-          public XCBuildConfiguration load(String key) throws Exception {
-            XCBuildConfiguration configuration = new XCBuildConfiguration(key);
-            buildConfigurations.add(configuration);
-            return configuration;
-          }
-        });
+    buildConfigurationsByName =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<String, XCBuildConfiguration>() {
+                  @Override
+                  public XCBuildConfiguration load(String key) throws Exception {
+                    XCBuildConfiguration configuration = new XCBuildConfiguration(key);
+                    buildConfigurations.add(configuration);
+                    return configuration;
+                  }
+                });
   }
 
   public LoadingCache<String, XCBuildConfiguration> getBuildConfigurationsByName() {

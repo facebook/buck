@@ -17,12 +17,10 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobState;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class BuildJobStateSerializerTest {
 

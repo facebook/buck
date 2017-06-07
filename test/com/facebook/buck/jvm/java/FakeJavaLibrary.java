@@ -24,12 +24,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -38,9 +38,9 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
@@ -57,9 +57,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   public FakeJavaLibrary(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
+      BuildTarget target, SourcePathResolver resolver, ImmutableSortedSet<BuildRule> deps) {
     super(target, resolver, deps);
   }
 
@@ -73,17 +71,17 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspaths() {
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
     return ImmutableSet.of();
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return getDeps();
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return getBuildDeps();
   }
 
   @Override
-  public ImmutableSet<Path> getTransitiveClasspaths() {
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
     return JavaLibraryClasspathProvider.getClasspathsFromLibraries(
         this.getTransitiveClasspathDeps());
   }
@@ -94,20 +92,25 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSet<Path> getImmediateClasspaths() {
-    return ImmutableSet.of(
-        getResolver().getAbsolutePath(
-            new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())));
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return ImmutableSet.of(getSourcePathToOutput());
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar");
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(
+        getBuildTarget(),
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar"));
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
-    return ImmutableSortedSet.copyOf(getResolver().deprecatedAllPaths(srcs));
+  public ImmutableSortedSet<SourcePath> getJarContents() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
+    return srcs;
   }
 
   @Override
@@ -122,9 +125,10 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
     Preconditions.checkNotNull(srcs);
-    this.srcs = FluentIterable.from(srcs)
-        .transform(SourcePaths.toSourcePath(new FakeProjectFilesystem()))
-        .toSortedSet(Ordering.natural());
+    this.srcs =
+        FluentIterable.from(srcs)
+            .transform(p -> (SourcePath) new PathSourcePath(new FakeProjectFilesystem(), p))
+            .toSortedSet(Ordering.natural());
     return this;
   }
 
@@ -145,12 +149,12 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(getDeps());
+    return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addClasspathEntry(this, new BuildTargetSourcePath(getBuildTarget()));
+    collector.addClasspathEntry(this, getSourcePathToOutput());
   }
 
   @Override

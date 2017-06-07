@@ -20,20 +20,13 @@ import com.facebook.buck.event.external.elements.TestCaseSummaryExternalInterfac
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.Locale;
 
 public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestResultSummary> {
 
-  /**
-   * Transformation to annotate TestCaseSummary marking them as being read from cached results
-   */
-  public static final Function<TestCaseSummary, TestCaseSummary> TO_CACHED_TRANSFORMATION =
-      summary -> new TestCaseSummary(summary, /* isCached */ true);
-  public static final int MAX_STATUS_WIDTH = 7;
+  private static final int MAX_STATUS_WIDTH = 7;
 
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
@@ -43,11 +36,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   private final int passCount;
   private final int failureCount;
   private final long totalTime;
-  private final boolean isCached;
 
-  /**
-   * Creates a TestCaseSummary which is assumed to be not read from cached results
-   */
   public TestCaseSummary(String testCaseName, List<TestResultSummary> testResults) {
     this.testCaseName = testCaseName;
     this.testResults = ImmutableList.copyOf(testResults);
@@ -67,7 +56,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
         case DRY_RUN:
           isDryRun = true;
-          ++passCount;  // "pass" in the sense that it confirms the class can be loaded
+          ++passCount; // "pass" in the sense that it confirms the class can be loaded
           break;
 
         case DISABLED:
@@ -93,20 +82,6 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
     this.failureCount = failureCount;
     this.passCount = passCount;
     this.totalTime = totalTime;
-    this.isCached = false;
-  }
-
-  /** Creates a copy of {@code summary} with the specified value of {@code isCached}. */
-  private TestCaseSummary(TestCaseSummary summary, boolean isCached) {
-    this.testCaseName = summary.testCaseName;
-    this.testResults = summary.testResults;
-    this.isDryRun = summary.isDryRun;
-    this.hasAssumptionViolations = summary.hasAssumptionViolations;
-    this.skippedCount = summary.skippedCount;
-    this.passCount = summary.passCount;
-    this.failureCount = summary.failureCount;
-    this.totalTime = summary.totalTime;
-    this.isCached = isCached;
   }
 
   @JsonIgnore
@@ -177,8 +152,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
         "%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
         status,
         padding,
-        !isCached ? TimeFormat.formatForConsole(locale, totalTime, ansi)
-                  : ansi.asHighlightedStatusText(severityLevel, "CACHED"),
+        TimeFormat.formatForConsole(locale, totalTime, ansi),
         getPassedCount(),
         skippedCount,
         failureCount,
@@ -207,11 +181,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
   @Override
   public String toString() {
-    return String.format(
-        Locale.US,
-        "%s %s",
-        getShortStatusSummaryString(),
-        testCaseName);
+    return String.format(Locale.US, "%s %s", getShortStatusSummaryString(), testCaseName);
   }
 
   private String getShortStatusSummaryString() {

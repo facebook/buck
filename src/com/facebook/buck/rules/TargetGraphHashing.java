@@ -22,7 +22,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.hashing.StringHashing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -35,8 +34,8 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,13 +44,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-
 /**
  * Utility class to calculate hash codes for build targets in a {@link TargetGraph}.
  *
- * A build target's hash code is guaranteed to change if the build
- * target or any of its dependencies change, including the contents of
- * all input files to the target and its dependencies.
+ * <p>A build target's hash code is guaranteed to change if the build target or any of its
+ * dependencies change, including the contents of all input files to the target and its
+ * dependencies.
  */
 public class TargetGraphHashing {
   private static final Logger LOG = Logger.get(TargetGraphHashing.class);
@@ -65,8 +63,7 @@ public class TargetGraphHashing {
       final BuckEventBus eventBus,
       final TargetGraph targetGraph,
       final FileHashLoader fileHashLoader,
-      final Iterable<TargetNode<?, ?>> roots
-  ) {
+      final Iterable<TargetNode<?, ?>> roots) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
     this.fileHashLoader = fileHashLoader;
@@ -74,18 +71,16 @@ public class TargetGraphHashing {
   }
 
   /**
-   * Given a {@link TargetGraph} and any number of root nodes to traverse,
-   * returns a map of {@code (BuildTarget, HashCode)} pairs for all root
-   * build targets and their dependencies.
+   * Given a {@link TargetGraph} and any number of root nodes to traverse, returns a map of {@code
+   * (BuildTarget, HashCode)} pairs for all root build targets and their dependencies.
    */
   public ImmutableMap<BuildTarget, HashCode> hashTargetGraph() throws CycleException {
-    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-            eventBus,
-            PerfEventId.of("ShowTargetHashes"))) {
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus, PerfEventId.of("ShowTargetHashes"))) {
 
       AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
-              node -> targetGraph.getAll(node.getDeps()).iterator());
+              node -> targetGraph.getAll(node.getParseDeps()).iterator());
 
       final Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes = new HashMap<>();
       Queue<ForkJoinTask<HashCode>> tasksToSchedule = new ArrayDeque<>();
@@ -104,9 +99,8 @@ public class TargetGraphHashing {
       }
 
       // Wait for all scheduled tasks to complete
-      return ImmutableMap.copyOf(Maps.transformEntries(
-          buildTargetHashes,
-          (key, value) -> value.join()));
+      return ImmutableMap.copyOf(
+          Maps.transformEntries(buildTargetHashes, (key, value) -> value.join()));
     }
   }
 
@@ -121,8 +115,7 @@ public class TargetGraphHashing {
     private Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes;
 
     HashNodeTask(
-        final TargetNode<?, ?> node,
-        Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes) {
+        final TargetNode<?, ?> node, Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes) {
       this.node = node;
       this.buildTargetHashes = buildTargetHashes;
     }
@@ -145,22 +138,18 @@ public class TargetGraphHashing {
 
       ProjectFilesystem cellFilesystem = node.getFilesystem();
 
-      try {
-        // Hash the contents of all input files and directories.
-        PathHashing.hashPaths(
-            hasher,
-            fileHashLoader,
-            cellFilesystem,
-            ImmutableSortedSet.copyOf(node.getInputs()));
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            e, "Error reading files for rule %s",
-            node.getBuildTarget()
-        );
+      // Hash the contents of all input files and directories.
+      for (Path input : ImmutableSortedSet.copyOf(node.getInputs())) {
+        try {
+          hasher.putBytes(fileHashLoader.get(cellFilesystem.resolve(input)).asBytes());
+        } catch (IOException e) {
+          throw new HumanReadableException(
+              e, "Error reading path %s for rule %s", input, node.getBuildTarget());
+        }
       }
 
       // hash each dependency's build target and that build target's own hash.
-      for (BuildTarget dependency : node.getDeps()) {
+      for (BuildTarget dependency : node.getParseDeps()) {
         ForkJoinTask<HashCode> dependencyHashCodeTask = buildTargetHashes.get(dependency);
         Preconditions.checkState(dependencyHashCodeTask != null);
         HashCode dependencyHashCode = dependencyHashCodeTask.join();
@@ -176,12 +165,8 @@ public class TargetGraphHashing {
   }
 
   private static SimplePerfEvent.Scope getHashNodeEventScope(
-      BuckEventBus eventBus,
-      BuildTarget buildTarget) {
+      BuckEventBus eventBus, BuildTarget buildTarget) {
     return SimplePerfEvent.scope(
-        eventBus,
-        PerfEventId.of("ComputeNodeHash"),
-        "target",
-        buildTarget);
+        eventBus, PerfEventId.of("ComputeNodeHash"), "target", buildTarget);
   }
 }

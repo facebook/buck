@@ -15,28 +15,23 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
-/**
- * Regression test for https://github.com/facebook/buck/issues/286
- */
+/** Regression test for https://github.com/facebook/buck/issues/286 */
 public class CopyResourcesStepMustCorrectlyParseFilepathIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testGeneratedResourceIsAlongsideClassFiles()
       throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "wont_delete", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "wont_delete", temporaryFolder);
     workspace.setUp();
 
     workspace.buildAndReturnOutput("//java/com/example:resources");

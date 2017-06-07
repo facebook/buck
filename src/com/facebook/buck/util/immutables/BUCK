@@ -1,1 +1,9 @@
-standard_java_library()
+java_library(
+    name = "immutables",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+)

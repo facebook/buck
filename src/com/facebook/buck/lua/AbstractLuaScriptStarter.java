@@ -20,12 +20,12 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.WriteStringTemplateRule;
 import com.facebook.buck.util.Escaper;
@@ -35,16 +35,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * {@link Starter} implementation which builds a starter as a Lua script.
- */
+/** {@link Starter} implementation which builds a starter as a Lua script. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractLuaScriptStarter implements Starter {
@@ -52,14 +48,25 @@ abstract class AbstractLuaScriptStarter implements Starter {
   private static final String STARTER = "com/facebook/buck/lua/starter.lua.in";
 
   abstract BuildRuleParams getBaseParams();
+
   abstract BuildRuleResolver getRuleResolver();
+
   abstract SourcePathResolver getPathResolver();
+
+  abstract SourcePathRuleFinder getRuleFinder();
+
   abstract LuaConfig getLuaConfig();
+
   abstract CxxPlatform getCxxPlatform();
+
   abstract BuildTarget getTarget();
+
   abstract Path getOutput();
+
   abstract String getMainModule();
+
   abstract Optional<Path> getRelativeModulesDir();
+
   abstract Optional<Path> getRelativePythonModulesDir();
 
   private String getPureStarterTemplate() {
@@ -74,48 +81,52 @@ abstract class AbstractLuaScriptStarter implements Starter {
   public SourcePath build() {
     BuildTarget templateTarget =
         BuildTarget.builder(getBaseParams().getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("starter-template"))
+            .addFlavors(InternalFlavor.of("starter-template"))
             .build();
-    getRuleResolver().addToIndex(
-        new WriteFile(
-            getBaseParams().copyWithChanges(
-                templateTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-            getPathResolver(),
-            getPureStarterTemplate(),
-            BuildTargets.getGenPath(
-                getBaseParams().getProjectFilesystem(),
-                templateTarget,
-                "%s/starter.lua.in"),
-            /* executable */ false));
+    WriteFile templateRule =
+        getRuleResolver()
+            .addToIndex(
+                new WriteFile(
+                    getBaseParams()
+                        .withBuildTarget(templateTarget)
+                        .copyReplacingDeclaredAndExtraDeps(
+                            Suppliers.ofInstance(ImmutableSortedSet.of()),
+                            Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    getPureStarterTemplate(),
+                    BuildTargets.getGenPath(
+                        getBaseParams().getProjectFilesystem(),
+                        templateTarget,
+                        "%s/starter.lua.in"),
+                    /* executable */ false));
 
     final Tool lua = getLuaConfig().getLua(getRuleResolver());
-    getRuleResolver().addToIndex(
-        WriteStringTemplateRule.from(
-            getBaseParams(),
-            getPathResolver(),
-            getTarget(),
-            getOutput(),
-            new BuildTargetSourcePath(templateTarget),
-            ImmutableMap.of(
-                "SHEBANG",
-                lua.getCommandPrefix(getPathResolver()).get(0),
-                "MAIN_MODULE",
-                Escaper.escapeAsPythonString(getMainModule()),
-                "MODULES_DIR",
-                getRelativeModulesDir().isPresent() ?
-                    Escaper.escapeAsPythonString(getRelativeModulesDir().get().toString()) :
-                    "nil",
-                "PY_MODULES_DIR",
-                getRelativePythonModulesDir().isPresent() ?
-                    Escaper.escapeAsPythonString(getRelativePythonModulesDir().get().toString()) :
-                    "nil",
-                "EXT_SUFFIX",
-                Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
-            /* executable */ true));
+    WriteStringTemplateRule writeStringTemplateRule =
+        getRuleResolver()
+            .addToIndex(
+                WriteStringTemplateRule.from(
+                    getBaseParams(),
+                    getRuleFinder(),
+                    getTarget(),
+                    getOutput(),
+                    templateRule.getSourcePathToOutput(),
+                    ImmutableMap.of(
+                        "SHEBANG",
+                        lua.getCommandPrefix(getPathResolver()).get(0),
+                        "MAIN_MODULE",
+                        Escaper.escapeAsPythonString(getMainModule()),
+                        "MODULES_DIR",
+                        getRelativeModulesDir().isPresent()
+                            ? Escaper.escapeAsPythonString(getRelativeModulesDir().get().toString())
+                            : "nil",
+                        "PY_MODULES_DIR",
+                        getRelativePythonModulesDir().isPresent()
+                            ? Escaper.escapeAsPythonString(
+                                getRelativePythonModulesDir().get().toString())
+                            : "nil",
+                        "EXT_SUFFIX",
+                        Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
+                    /* executable */ true));
 
-    return new BuildTargetSourcePath(getTarget());
+    return writeStringTemplateRule.getSourcePathToOutput();
   }
-
 }

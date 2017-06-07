@@ -1,9 +1,14 @@
 language: java
 jdk:
   - oraclejdk8
+env:
+  - CI_ACTION=build
+  - CI_ACTION=unit
+  - CI_ACTION=integration
+  - CI_ACTION=ant
 
-# Required to update /usr/bin/gcc symlink
-sudo: required
+# Enable container-based architecture.
+sudo: false
 
 addons:
   apt:
@@ -25,9 +30,10 @@ addons:
       - oracle-java8-installer
 
 before_install:
-  - sudo rm -f /usr/bin/gcc /usr/bin/g++
-  - sudo ln -s /usr/bin/gcc-4.7 /usr/bin/gcc
-  - sudo ln -s /usr/bin/g++-4.7 /usr/bin/g++
+  - mkdir travis-cxx
+  - ln -s /usr/bin/gcc-4.7 travis-cxx/gcc
+  - ln -s /usr/bin/g++-4.7 travis-cxx/g++
+  - export PATH=$(pwd)/travis-cxx:$PATH
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
   - export ANT_OPTS='-Xmx500m'
   - export BUCK_EXTRA_JAVA_ARGS='-Xmx500m'
@@ -42,10 +48,12 @@ before_install:
   # Set up the Groovy environment
   - export GROOVY_HOME=/usr/share/groovy/
 
+# https://docs.travis-ci.com/user/caching#Things-not-to-cache
+# https://docs.travis-ci.com/user/caching#Explicitly-disabling-caching
 cache:
   directories:
-    - $HOME/android-ndk-linux
-    - $HOME/android-sdk-linux
+    - $HOME/ndk_cache
+    - $HOME/sdk_cache
 
 notifications:
     slack: buckbuild:TnJN80RxFaSAuCGswsnWLdoj

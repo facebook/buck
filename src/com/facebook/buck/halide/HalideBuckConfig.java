@@ -20,13 +20,10 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Map;
 
-/**
- * A Halide-specific "view" of BuckConfig.
- */
+/** A Halide-specific "view" of BuckConfig. */
 public class HalideBuckConfig {
   public static final String HALIDE_SECTION_NAME = "halide";
   public static final String HALIDE_XCODE_COMPILE_SCRIPT_KEY = "xcode_compile_script";
@@ -43,16 +40,15 @@ public class HalideBuckConfig {
     ImmutableMap<String, String> targetMap = getHalideTargetMap();
     if (!targetMap.containsKey(flavorName)) {
       throw new HumanReadableException(
-          "No halide target found for platform: '%s'\n" +
-              "Add one in .buckconfig in the halide section.\n" +
-              "\n" +
-              "Example:\n" +
-              "\n" +
-              "[halide]" +
-              "\n" +
-              "target_%s = x86-64-osx-user_context",
-          flavorName,
-          flavorName);
+          "No halide target found for platform: '%s'\n"
+              + "Add one in .buckconfig in the halide section.\n"
+              + "\n"
+              + "Example:\n"
+              + "\n"
+              + "[halide]"
+              + "\n"
+              + "target_%s = x86-64-osx-user_context",
+          flavorName, flavorName);
     }
     return targetMap.get(flavorName);
   }
@@ -62,9 +58,7 @@ public class HalideBuckConfig {
     ImmutableMap.Builder<String, String> targets = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
       if (entry.getKey().startsWith(HALIDE_TARGET_KEY_PREFIX)) {
-        targets.put(
-            entry.getKey().substring(HALIDE_TARGET_KEY_PREFIX.length()),
-            entry.getValue());
+        targets.put(entry.getKey().substring(HALIDE_TARGET_KEY_PREFIX.length()), entry.getValue());
       }
     }
     return targets.build();

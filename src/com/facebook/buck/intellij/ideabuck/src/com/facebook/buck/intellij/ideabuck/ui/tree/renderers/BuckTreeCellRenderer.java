@@ -17,33 +17,34 @@
 package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeBuild;
-import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeTarget;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetailError;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
+import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeTarget;
 import com.google.common.collect.ImmutableMap;
 import com.intellij.ui.components.JBLabel;
-
+import java.awt.Component;
 import javax.swing.JTree;
 import javax.swing.tree.TreeCellRenderer;
-import java.awt.Component;
 
 public class BuckTreeCellRenderer implements TreeCellRenderer {
 
   private ImmutableMap<Class<?>, BuildElementRenderer> mRenderers;
 
   public BuckTreeCellRenderer() {
-    mRenderers = new ImmutableMap.Builder<Class<?>, BuildElementRenderer>()
-        .put(BuckTreeNodeBuild.class, new BuildNodeRenderer())
-        .put(BuckTreeNodeTarget.class, new TargetNodeRenderer())
-        .put(BuckTreeNodeFileError.class, new FileErrorNodeRenderer())
-        .put(BuckTreeNodeDetail.class, new DetailNodeRenderer())
-        .put(BuckTreeNodeDetailError.class, new DetailNodeRenderer())
-        .build();
+    mRenderers =
+        new ImmutableMap.Builder<Class<?>, BuildElementRenderer>()
+            .put(BuckTreeNodeBuild.class, new BuildNodeRenderer())
+            .put(BuckTreeNodeTarget.class, new TargetNodeRenderer())
+            .put(BuckTreeNodeFileError.class, new FileErrorNodeRenderer())
+            .put(BuckTreeNodeDetail.class, new DetailNodeRenderer())
+            .put(BuckTreeNodeDetailError.class, new DetailNodeRenderer())
+            .build();
   }
 
   @Override
-  public Component getTreeCellRendererComponent(JTree tree,
+  public Component getTreeCellRendererComponent(
+      JTree tree,
       Object value,
       boolean selected,
       boolean expanded,

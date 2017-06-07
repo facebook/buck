@@ -1,45 +1,45 @@
 java_library(
-  name = 'hamcrest',
-  deps = [],
-  exported_deps = [
-    ':java-hamcrest',
-    ':hamcrest-junit',
-  ],
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/intellij/...',
-    '//test/...',
-    '//third-party/java/junit:junit',
-  ],
+    name = "hamcrest",
+    exported_deps = [
+        ":hamcrest-junit",
+        ":java-hamcrest",
+    ],
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/intellij/...",
+        "//test/...",
+        "//third-party/java/junit:junit",
+    ],
+    deps = [],
 )
 
 prebuilt_jar(
-  name = 'java-hamcrest',
-  binary_jar = 'java-hamcrest-2.0.0.0.jar',
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/intellij/...',
-    '//test/...',
-    '//third-party/java/junit:junit',
-  ],
+    name = "java-hamcrest",
+    binary_jar = "java-hamcrest-2.0.0.0.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/intellij/...",
+        "//test/...",
+        "//third-party/java/junit:junit",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-junit',
-  binary_jar = 'hamcrest-junit-2.0.0.0.jar',
-  deps = [
-    ':java-hamcrest',
-  ],
-  licenses = [
-    'LICENSE.txt',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/intellij/...',
-    '//test/...',
-    '//third-party/java/junit:junit',
-  ],
+    name = "hamcrest-junit",
+    binary_jar = "hamcrest-junit-2.0.0.0.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/intellij/...",
+        "//test/...",
+        "//third-party/java/junit:junit",
+    ],
+    deps = [
+        ":java-hamcrest",
+    ],
 )

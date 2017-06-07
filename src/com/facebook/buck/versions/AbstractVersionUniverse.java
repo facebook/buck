@@ -18,7 +18,6 @@ package com.facebook.buck.versions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -27,5 +26,4 @@ abstract class AbstractVersionUniverse {
 
   @Value.Parameter
   public abstract ImmutableMap<BuildTarget, Version> getVersions();
-
 }

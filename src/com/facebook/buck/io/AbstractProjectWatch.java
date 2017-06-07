@@ -17,10 +17,8 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -29,5 +27,4 @@ interface AbstractProjectWatch {
   String getWatchRoot();
 
   Optional<String> getProjectPrefix();
-
 }

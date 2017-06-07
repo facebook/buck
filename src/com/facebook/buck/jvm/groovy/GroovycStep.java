@@ -34,7 +34,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -77,11 +76,12 @@ class GroovycStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     try {
-      ProcessExecutorParams params = ProcessExecutorParams.builder()
-          .setCommand(createCommand())
-          .setEnvironment(context.getEnvironment())
-          .setDirectory(filesystem.getRootPath().toAbsolutePath())
-          .build();
+      ProcessExecutorParams params =
+          ProcessExecutorParams.builder()
+              .setCommand(createCommand())
+              .setEnvironment(context.getEnvironment())
+              .setDirectory(filesystem.getRootPath().toAbsolutePath())
+              .build();
       writePathToSourcesList(sourceFilePaths);
       ProcessExecutor processExecutor = context.getProcessExecutor();
       return StepExecutionResult.of(processExecutor.launchAndExecute(params));
@@ -133,35 +133,38 @@ class GroovycStep implements Step {
   private void addCrossCompilationOptions(final ImmutableList.Builder<String> command) {
     if (shouldCrossCompile()) {
       command.add("-j");
-      javacOptions.appendOptionsTo(new OptionsConsumer() {
-        @Override
-        public void addOptionValue(String option, String value) {
-          // Explicitly disallow the setting of sourcepath in a cross compilation context.
-          // The implementation of `appendOptionsTo` provides a blank default, which
-          // confuses the cross compilation step's javac (it won't find any class files
-          // compiled by groovyc).
-          if (option.equals("sourcepath")) {
-            return;
-          }
-          command.add("-J" + String.format("%s=%s", option, value));
-        }
-
-        @Override
-        public void addFlag(String flagName) {
-          command.add("-F" + flagName);
-        }
-
-        @Override
-        public void addExtras(Collection<String> extras) {
-          for (String extra : extras) {
-            if (extra.startsWith("-")) {
-              addFlag(extra.substring(1));
-            } else {
-              addFlag(extra);
+      javacOptions.appendOptionsTo(
+          new OptionsConsumer() {
+            @Override
+            public void addOptionValue(String option, String value) {
+              // Explicitly disallow the setting of sourcepath in a cross compilation context.
+              // The implementation of `appendOptionsTo` provides a blank default, which
+              // confuses the cross compilation step's javac (it won't find any class files
+              // compiled by groovyc).
+              if (option.equals("sourcepath")) {
+                return;
+              }
+              command.add("-J" + String.format("%s=%s", option, value));
             }
-          }
-        }
-      }, filesystem::resolve);
+
+            @Override
+            public void addFlag(String flagName) {
+              command.add("-F" + flagName);
+            }
+
+            @Override
+            public void addExtras(Collection<String> extras) {
+              for (String extra : extras) {
+                if (extra.startsWith("-")) {
+                  addFlag(extra.substring(1));
+                } else {
+                  addFlag(extra);
+                }
+              }
+            }
+          },
+          resolver,
+          filesystem);
     }
   }
 

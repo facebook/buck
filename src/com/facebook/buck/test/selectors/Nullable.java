@@ -16,7 +16,8 @@
 
 package com.facebook.buck.test.selectors;
 
-/** Defining @Nullable locally here because we cannot import
- * javax.annotation.Nullable;
- *according to comment in src/com/facebook/buck/test/selectors/BUCK */
+/**
+ * Defining @Nullable locally here because we cannot import javax.annotation.Nullable; according to
+ * comment in src/com/facebook/buck/test/selectors/BUCK
+ */
 public @interface Nullable {}

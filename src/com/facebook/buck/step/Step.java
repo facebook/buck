@@ -15,8 +15,10 @@
  */
 
 package com.facebook.buck.step;
+
 import java.io.IOException;
 
+/** Steps are executed in the same working directory as the root cell. */
 public interface Step {
 
   public StepExecutionResult execute(ExecutionContext context)

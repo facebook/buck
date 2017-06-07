@@ -35,8 +35,8 @@ public class LazyDelegatingTool implements Tool {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return delegate.get().getDeps(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return delegate.get().getDeps(ruleFinder);
   }
 
   @Override
@@ -50,7 +50,7 @@ public class LazyDelegatingTool implements Tool {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return delegate.get().getEnvironment();
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return delegate.get().getEnvironment(resolver);
   }
 }

@@ -37,11 +37,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -49,15 +44,17 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class BuiltinApplePackageIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
@@ -70,18 +67,17 @@ public class BuiltinApplePackageIntegrationTest {
   @Test
   public void packageHasProperStructure() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "simple_application_bundle_no_debug",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
     workspace.enableDirCache();
 
     BuildTarget appTarget =
         BuildTargetFactory.newInstance("//:DemoApp#no-debug,no-include-frameworks");
-    workspace.runBuckCommand(
-        "build",
-        appTarget.getUnflavoredBuildTarget().getFullyQualifiedName()).assertSuccess();
+    workspace
+        .runBuckCommand("build", appTarget.getUnflavoredBuildTarget().getFullyQualifiedName())
+        .assertSuccess();
 
     workspace.getBuildLog().assertTargetBuiltLocally(appTarget.getFullyQualifiedName());
 
@@ -93,12 +89,12 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget.getFullyQualifiedName());
     workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
 
-    Path templateDir = TestDataHelper.getTestDataScenario(
-        this,
-        "simple_application_bundle_no_debug");
+    Path templateDir =
+        TestDataHelper.getTestDataScenario(this, "simple_application_bundle_no_debug");
 
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("Payload/DemoApp.app/DemoApp");
     zipInspector.assertFileDoesNotExist("WatchKitSupport");
     zipInspector.assertFileDoesNotExist("WatchKitSupport2");
@@ -113,10 +109,9 @@ public class BuiltinApplePackageIntegrationTest {
   @Test
   public void packageHasProperStructureForSwift() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-      this,
-      "simple_application_bundle_swift_no_debug",
-      tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_swift_no_debug", tmp);
     workspace.setUp();
     workspace.enableDirCache();
 
@@ -125,18 +120,18 @@ public class BuiltinApplePackageIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
 
-    ZipInspector zipInspector = new ZipInspector(
-      workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("SwiftSupport/iphonesimulator/libswiftCore.dylib");
   }
 
   @Test
   public void swiftSupportIsOnlyAddedIfPackageContainsSwiftCode() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-      this,
-      "simple_application_bundle_no_debug",
-      tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
     workspace.enableDirCache();
 
@@ -145,18 +140,17 @@ public class BuiltinApplePackageIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
 
-    ZipInspector zipInspector = new ZipInspector(
-      workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileDoesNotExist("SwiftSupport");
   }
 
   @Test
   public void packageHasProperStructureForWatch20() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "watch_application_bundle",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "watchsimulator_target_sdk_version", "2.0");
     packageHasProperStructureForWatchHelper(workspace, true);
@@ -165,18 +159,15 @@ public class BuiltinApplePackageIntegrationTest {
   @Test
   public void packageHasProperStructureForWatch21() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "watch_application_bundle",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "watchsimulator_target_sdk_version", "2.1");
     packageHasProperStructureForWatchHelper(workspace, false);
   }
 
   private void packageHasProperStructureForWatchHelper(
-      ProjectWorkspace workspace,
-      boolean shouldHaveStubInsideBundle)
+      ProjectWorkspace workspace, boolean shouldHaveStubInsideBundle)
       throws IOException, InterruptedException {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
@@ -193,8 +184,8 @@ public class BuiltinApplePackageIntegrationTest {
     assertTrue(isDirEmpty(destination.resolve("Symbols")));
 
     if (shouldHaveStubInsideBundle) {
-      Path stubInsideBundle = destination.resolve(
-          "Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK");
+      Path stubInsideBundle =
+          destination.resolve("Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK");
       assertTrue(Files.exists(stubInsideBundle));
       assertEquals(
           new String(Files.readAllBytes(stubInsideBundle)),
@@ -205,10 +196,9 @@ public class BuiltinApplePackageIntegrationTest {
   @Test
   public void packageHasProperStructureForLegacyWatch() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "legacy_watch_application_bundle",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "legacy_watch_application_bundle", tmp);
     workspace.setUp();
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
@@ -224,18 +214,17 @@ public class BuiltinApplePackageIntegrationTest {
     assertFalse(Files.isDirectory(destination.resolve("Symbols")));
   }
 
-
   @Test
   public void packageSupportsFatBinaries() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "simple_application_bundle_no_debug",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
 
-    BuildTarget packageTarget = BuildTargetFactory.newInstance(
-        "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64");
+    BuildTarget packageTarget =
+        BuildTargetFactory.newInstance(
+            "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Unzip.extractZipFile(
@@ -258,12 +247,13 @@ public class BuiltinApplePackageIntegrationTest {
     Set<ProcessExecutor.Option> options =
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT);
 
-    ProcessExecutor.Result result = executor.launchAndExecute(
-        processExecutorParams,
-        options,
-        /* stdin */ Optional.empty(),
-        /* timeOutMs */ Optional.empty(),
-        /* timeOutHandler */ Optional.empty());
+    ProcessExecutor.Result result =
+        executor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
 
     assertEquals(result.getExitCode(), 0);
     assertTrue(result.getStdout().isPresent());
@@ -275,10 +265,9 @@ public class BuiltinApplePackageIntegrationTest {
   @Test
   public void testDisablingPackageCaching() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "simple_application_bundle_no_debug",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
 
     workspace.enableDirCache();

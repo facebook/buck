@@ -21,21 +21,16 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
+import com.facebook.buck.rules.TestCellBuilder;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class WorkerToolDescriptionTest {
   @Test
@@ -57,30 +52,32 @@ public class WorkerToolDescriptionTest {
     assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
   }
 
-  private static WorkerTool createWorkerTool(Integer maxWorkers)
-      throws NoSuchBuildTargetException {
+  private static WorkerTool createWorkerTool(int maxWorkers) throws NoSuchBuildTargetException {
     TargetGraph targetGraph = TargetGraph.EMPTY;
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRule shBinaryRule = new ShBinaryBuilder(
-        BuildTargetFactory.newInstance("//:my_exe"))
-        .setMain(new FakeSourcePath("bin/exe"))
-        .build(resolver);
+    BuildRule shBinaryRule =
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
+            .setMain(new FakeSourcePath("bin/exe"))
+            .build(resolver);
 
-    WorkerToolDescription.Arg args = new WorkerToolDescription.Arg();
-    args.env = ImmutableMap.of();
-    args.exe = shBinaryRule.getBuildTarget();
-    args.args = Either.ofRight(ImmutableList.of());
-    args.maxWorkers = Optional.of(maxWorkers);
-    args.persistent = Optional.empty();
+    WorkerToolDescriptionArg args =
+        WorkerToolDescriptionArg.builder()
+            .setName("target")
+            .setExe(shBinaryRule.getBuildTarget())
+            .setMaxWorkers(maxWorkers)
+            .build();
 
-    Description<WorkerToolDescription.Arg> workerToolDescription = new WorkerToolDescription(
-        FakeBuckConfig.builder().build());
-    return (WorkerTool) workerToolDescription.createBuildRule(
-        targetGraph,
-        new FakeBuildRuleParamsBuilder("//arbitrary:target").build(),
-        resolver,
-        args);
+    WorkerToolDescription workerToolDescription =
+        new WorkerToolDescription(FakeBuckConfig.builder().build());
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//arbitrary:target").build();
+    return (WorkerTool)
+        workerToolDescription.createBuildRule(
+            targetGraph,
+            params,
+            resolver,
+            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            args);
   }
 }

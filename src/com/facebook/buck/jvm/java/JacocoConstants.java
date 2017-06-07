@@ -17,21 +17,17 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-
 import java.nio.file.Path;
 
 public final class JacocoConstants {
   // Utility class, do not instantiate.
-  private JacocoConstants() { }
+  private JacocoConstants() {}
 
   public static final String PATH_TO_JACOCO_AGENT_JAR =
-      System.getProperty(
-          "buck.jacoco_agent_jar",
-          "third-party/java/jacoco/jacocoagent.jar");
+      System.getProperty("buck.jacoco_agent_jar", "third-party/java/jacoco/jacocoagent.jar");
   public static final String JACOCO_EXEC_COVERAGE_FILE = "jacoco.exec";
 
   public static Path getJacocoOutputDir(ProjectFilesystem filesystem) {
     return filesystem.getBuckPaths().getGenDir().resolve("jacoco");
   }
-
 }

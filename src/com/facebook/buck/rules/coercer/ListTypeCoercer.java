@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T> {
@@ -38,14 +37,10 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
-    fill(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        builder,
-        object);
+    fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
   }
 }

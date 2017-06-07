@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'genrule()' /}
+    {param navid: 'rule_genrule' /}
     {param prettify: true /}
     {param description}
       A rule that is used to generate files from a shell command. It must
@@ -34,6 +35,8 @@
 {call genrule_common.bash_arg /}
 
 {call genrule_common.cmd_exe_arg /}
+
+{call genrule_common.type_arg /}
 
 {call genrule_common.out_arg /}
 

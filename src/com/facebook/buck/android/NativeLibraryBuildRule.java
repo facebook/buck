@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
-
 import java.nio.file.Path;
 
 /**
@@ -27,18 +26,20 @@ import java.nio.file.Path;
 public interface NativeLibraryBuildRule {
 
   /**
-   * @return A boolean indicating whether the {@code .so} files in the directory returned by
-   *     {@link #getLibraryPath()} should be included in the {@code assets} folder in the APK.
+   * @return A boolean indicating whether the {@code .so} files in the directory returned by {@link
+   *     #getLibraryPath()} should be included in the {@code assets} folder in the APK.
    */
   public boolean isAsset();
 
   /**
    * Returns the path to the directory containing {@code .so} files organized by target CPU
    * architecture. This often contains subdirectories such as:
+   *
    * <ul>
    *   <li><code>armeabi</code>
    *   <li><code>armeabi-v7a</code>
    * </ul>
+   *
    * @return A path relative to the project root that should does <em>not</em> include a trailing
    *     slash.
    */

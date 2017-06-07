@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
 import org.immutables.value.Value;
 
 @Value.Immutable

@@ -26,9 +26,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRule;
 import com.google.common.collect.ImmutableList;
@@ -36,12 +36,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
-
-import java.util.List;
 
 public class TestCommandTest {
 
@@ -53,91 +51,98 @@ public class TestCommandTest {
 
   @Test
   public void testFilterBuilds() throws CmdLineException {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     TestCommand command = getCommand("--exclude", "linux", "windows");
 
-    TestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
-        BuildTargetFactory.newInstance("//:for"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule1 =
+        new FakeTestRule(
+            ImmutableSet.of("windows", "linux"),
+            BuildTargetFactory.newInstance("//:for"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
-    TestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("android")),
-        BuildTargetFactory.newInstance("//:teh"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule2 =
+        new FakeTestRule(
+            ImmutableSet.of("android"),
+            BuildTargetFactory.newInstance("//:teh"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
-    TestRule rule3 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
-        BuildTargetFactory.newInstance("//:lulz"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule3 =
+        new FakeTestRule(
+            ImmutableSet.of("windows"),
+            BuildTargetFactory.newInstance("//:lulz"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
-    Iterable<TestRule> result = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(),
-        testRules);
+    Iterable<TestRule> result =
+        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
     assertThat(result, contains(rule2));
   }
 
   @Test
   public void testLabelConjunctionsWithInclude() throws CmdLineException {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     TestCommand command = getCommand("--include", "windows+linux");
 
-    TestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
-        BuildTargetFactory.newInstance("//:for"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule1 =
+        new FakeTestRule(
+            ImmutableSet.of("windows", "linux"),
+            BuildTargetFactory.newInstance("//:for"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
-    TestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
-        BuildTargetFactory.newInstance("//:lulz"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule2 =
+        new FakeTestRule(
+            ImmutableSet.of("windows"),
+            BuildTargetFactory.newInstance("//:lulz"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
-    Iterable<TestRule> result = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(),
-        testRules);
+    Iterable<TestRule> result =
+        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(rule1), result);
   }
 
   @Test
   public void testLabelConjunctionsWithExclude() throws CmdLineException {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     TestCommand command = getCommand("--exclude", "windows+linux");
 
-    TestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
-        BuildTargetFactory.newInstance("//:for"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule1 =
+        new FakeTestRule(
+            ImmutableSet.of("windows", "linux"),
+            BuildTargetFactory.newInstance("//:for"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
-    TestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
-        BuildTargetFactory.newInstance("//:lulz"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    TestRule rule2 =
+        new FakeTestRule(
+            ImmutableSet.of("windows"),
+            BuildTargetFactory.newInstance("//:lulz"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
-    Iterable<TestRule> result = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(),
-        testRules);
+    Iterable<TestRule> result =
+        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(rule2), result);
   }
 
@@ -145,25 +150,20 @@ public class TestCommandTest {
   public void testLabelPriority() throws CmdLineException {
     TestCommand command = getCommand("--exclude", "c", "--include", "a+b");
 
-    TestRule rule = new FakeTestRule(
-        ImmutableSet.of(
-            Label.of("a"),
-            Label.of("b"),
-            Label.of("c")),
-        BuildTargetFactory.newInstance("//:for"),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        ImmutableSortedSet.of());
+    TestRule rule =
+        new FakeTestRule(
+            ImmutableSet.of("a", "b", "c"),
+            BuildTargetFactory.newInstance("//:for"),
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
-    Iterable<TestRule> result = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(),
-        testRules);
+    Iterable<TestRule> result =
+        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(), result);
   }
 
@@ -171,149 +171,161 @@ public class TestCommandTest {
   public void testLabelPlingSyntax() throws CmdLineException {
     TestCommand command = getCommand("--labels", "!c", "a+b");
 
-    TestRule rule = new FakeTestRule(
-        ImmutableSet.of(
-            Label.of("a"),
-            Label.of("b"),
-            Label.of("c")),
-        BuildTargetFactory.newInstance("//:for"),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        ImmutableSortedSet.of());
+    TestRule rule =
+        new FakeTestRule(
+            ImmutableSet.of("a", "b", "c"),
+            BuildTargetFactory.newInstance("//:for"),
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
-    Iterable<TestRule> result = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(),
-        testRules);
+    Iterable<TestRule> result =
+        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(), result);
   }
 
   @Test
   public void testNoTransitiveTests() throws CmdLineException {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     TestCommand command = getCommand("--exclude-transitive-tests", "//:wow");
 
-    FakeTestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
-        BuildTargetFactory.newInstance("//:for"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    FakeTestRule rule1 =
+        new FakeTestRule(
+            ImmutableSet.of("windows", "linux"),
+            BuildTargetFactory.newInstance("//:for"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
-    FakeTestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
-        BuildTargetFactory.newInstance("//:lulz"),
-        pathResolver,
-        ImmutableSortedSet.of(rule1));
+    FakeTestRule rule2 =
+        new FakeTestRule(
+            ImmutableSet.of("windows"),
+            BuildTargetFactory.newInstance("//:lulz"),
+            pathResolver,
+            ImmutableSortedSet.of(rule1));
 
-    FakeTestRule rule3 = new FakeTestRule(
-        ImmutableSet.of(Label.of("linux")),
-        BuildTargetFactory.newInstance("//:wow"),
-        pathResolver,
-        ImmutableSortedSet.of(rule2));
+    FakeTestRule rule3 =
+        new FakeTestRule(
+            ImmutableSet.of("linux"),
+            BuildTargetFactory.newInstance("//:wow"),
+            pathResolver,
+            ImmutableSortedSet.of(rule2));
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
-    Iterable<TestRule> filtered = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(BuildTargetFactory.newInstance("//:wow")),
-        testRules);
+    Iterable<TestRule> filtered =
+        command.filterTestRules(
+            FakeBuckConfig.builder().build(),
+            ImmutableSet.of(BuildTargetFactory.newInstance("//:wow")),
+            testRules);
 
     assertEquals(rule3, Iterables.getOnlyElement(filtered));
   }
 
   @Test
   public void testNoTransitiveTestsWhenLabelExcludeWins() throws CmdLineException {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    TestCommand command = getCommand(
-        "--labels", "!linux", "--always-exclude",
-        "--exclude-transitive-tests", "//:for", "//:lulz");
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    TestCommand command =
+        getCommand(
+            "--labels",
+            "!linux",
+            "--always-exclude",
+            "--exclude-transitive-tests",
+            "//:for",
+            "//:lulz");
 
-    FakeTestRule rule1 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows"), Label.of("linux")),
-        BuildTargetFactory.newInstance("//:for"),
-        pathResolver,
-        ImmutableSortedSet.of());
+    FakeTestRule rule1 =
+        new FakeTestRule(
+            ImmutableSet.of("windows", "linux"),
+            BuildTargetFactory.newInstance("//:for"),
+            pathResolver,
+            ImmutableSortedSet.of());
 
-    FakeTestRule rule2 = new FakeTestRule(
-        ImmutableSet.of(Label.of("windows")),
-        BuildTargetFactory.newInstance("//:lulz"),
-        pathResolver,
-        ImmutableSortedSet.of(rule1));
+    FakeTestRule rule2 =
+        new FakeTestRule(
+            ImmutableSet.of("windows"),
+            BuildTargetFactory.newInstance("//:lulz"),
+            pathResolver,
+            ImmutableSortedSet.of(rule1));
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
-    Iterable<TestRule> filtered = command.filterTestRules(
-        FakeBuckConfig.builder().build(),
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance("//:for"),
-            BuildTargetFactory.newInstance("//:lulz")),
-        testRules);
+    Iterable<TestRule> filtered =
+        command.filterTestRules(
+            FakeBuckConfig.builder().build(),
+            ImmutableSet.of(
+                BuildTargetFactory.newInstance("//:for"),
+                BuildTargetFactory.newInstance("//:lulz")),
+            testRules);
 
     assertEquals(rule2, Iterables.getOnlyElement(filtered));
   }
 
   @Test
   public void testIfAGlobalExcludeExcludesALabel() throws CmdLineException {
-    BuckConfig config = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "test",
-            ImmutableMap.of("excluded_labels", "e2e"))).build();
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("test", ImmutableMap.of("excluded_labels", "e2e")))
+            .build();
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommand command = new TestCommand();
 
     new AdditionalOptionsCmdLineParser(command).parseArgument();
 
-    assertFalse(command.isMatchedByLabelOptions(config, ImmutableSet.of(Label.of("e2e"))));
+    assertFalse(command.isMatchedByLabelOptions(config, ImmutableSet.of("e2e")));
   }
 
   @Test
   public void testIfALabelIsIncludedItShouldNotBeExcludedEvenIfTheExcludeIsGlobal()
       throws CmdLineException {
-    BuckConfig config = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "test",
-            ImmutableMap.of("excluded_labels", "e2e"))).build();
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("test", ImmutableMap.of("excluded_labels", "e2e")))
+            .build();
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommand command = new TestCommand();
 
     new AdditionalOptionsCmdLineParser(command).parseArgument("--include", "e2e");
 
-    assertTrue(command.isMatchedByLabelOptions(config, ImmutableSet.of(Label.of("e2e"))));
+    assertTrue(command.isMatchedByLabelOptions(config, ImmutableSet.of("e2e")));
   }
 
   @Test
   public void testIncludingATestOnTheCommandLineMeansYouWouldLikeItRun() throws CmdLineException {
     String excludedLabel = "exclude_me";
-    BuckConfig config = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "test",
-            ImmutableMap.of("excluded_labels", excludedLabel))).build();
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("test", ImmutableMap.of("excluded_labels", excludedLabel)))
+            .build();
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
     TestCommand command = new TestCommand();
 
     new AdditionalOptionsCmdLineParser(command).parseArgument("//example:test");
 
-    FakeTestRule rule = new FakeTestRule(
-        /* labels */ ImmutableSet.of(Label.of(excludedLabel)),
-        BuildTargetFactory.newInstance("//example:test"),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        /* deps */ ImmutableSortedSet.of()
-        /* visibility */);
-    Iterable<TestRule> filtered = command.filterTestRules(
-        config,
-        ImmutableSet.of(BuildTargetFactory.newInstance("//example:test")),
-        ImmutableSet.of(rule));
+    FakeTestRule rule =
+        new FakeTestRule(
+            /* labels */ ImmutableSet.of(excludedLabel),
+            BuildTargetFactory.newInstance("//example:test"),
+            new SourcePathResolver(
+                new SourcePathRuleFinder(
+                    new BuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            /* deps */ ImmutableSortedSet.of()
+            /* visibility */ );
+    Iterable<TestRule> filtered =
+        command.filterTestRules(
+            config,
+            ImmutableSet.of(BuildTargetFactory.newInstance("//example:test")),
+            ImmutableSet.of(rule));
 
     assertEquals(rule, Iterables.getOnlyElement(filtered));
   }
@@ -325,16 +337,20 @@ public class TestCommandTest {
 
     assertThat(
         command.getNumTestThreads(
-            FakeBuckConfig.builder().setSections(
-                command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME)).build()),
+            FakeBuckConfig.builder()
+                .setSections(
+                    command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+                .build()),
         Matchers.equalTo(15));
 
     command = getCommand("-j", "15", "--debug");
 
     assertThat(
         command.getNumTestThreads(
-            FakeBuckConfig.builder().setSections(
-                command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME)).build()),
+            FakeBuckConfig.builder()
+                .setSections(
+                    command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+                .build()),
         Matchers.equalTo(1));
   }
 }

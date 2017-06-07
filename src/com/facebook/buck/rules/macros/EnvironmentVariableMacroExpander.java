@@ -27,7 +27,8 @@ import com.google.common.collect.ImmutableList;
  * expand the value of the environment variable in place. Rather, the intention is for the variable
  * to be interpreted when a shell command is invoked.
  */
-public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<String> {
+public class EnvironmentVariableMacroExpander
+    extends AbstractMacroExpanderWithoutPrecomputedWork<String> {
 
   private final Platform platform;
 
@@ -36,10 +37,13 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
   }
 
   @Override
+  public Class<String> getInputClass() {
+    return String.class;
+  }
+
+  @Override
   protected String parse(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
       throw new MacroException(String.format("expected a single argument: %s", input));
@@ -49,10 +53,7 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
 
   @Override
   public String expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String var)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String var)
       throws MacroException {
     if (platform == Platform.WINDOWS) {
       if ("pwd".equalsIgnoreCase(var)) {
@@ -63,5 +64,4 @@ public class EnvironmentVariableMacroExpander extends AbstractMacroExpander<Stri
       return "${" + var + "}";
     }
   }
-
 }

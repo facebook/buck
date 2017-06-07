@@ -5,6 +5,7 @@
 
 {call buck.header}
   {param title: '.buckversion' /}
+  {param navid: 'concept_buckversion' /}
   {param description}
     An optional file that specifies the version of Buck to use.
   {/param}
@@ -77,6 +78,8 @@ then this scheme should work just as well with the hashes from your forked repo.
 
 </div> // close overview
 
-{call buck.footer /}
+{call buck.footer}
+  {param navid: 'concept_buckversion' /}
+{/call}
 
 {/template}

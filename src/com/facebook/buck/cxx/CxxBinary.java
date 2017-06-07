@@ -25,27 +25,32 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.stream.Stream;
 
-import java.nio.file.Path;
-
-import javax.annotation.Nullable;
-
-public class CxxBinary
-    extends AbstractBuildRule
-    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesLinkedBinaryDeps {
+public class CxxBinary extends AbstractBuildRule
+    implements BinaryBuildRule,
+        NativeTestable,
+        HasRuntimeDeps,
+        ProvidesLinkedBinaryDeps,
+        SupportsInputBasedRuleKey {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
+  private final SourcePathRuleFinder ruleFinder;
+  private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;
   private final Tool executable;
   private final ImmutableSortedSet<BuildTarget> tests;
@@ -55,15 +60,18 @@ public class CxxBinary
   public CxxBinary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      CxxPlatform cxxPlatform,
       BuildRule linkRule,
       Tool executable,
       Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests,
       BuildTarget platformlessTarget) {
-    super(params, resolver);
+    super(params);
     this.params = params;
     this.ruleResolver = ruleResolver;
+    this.ruleFinder = ruleFinder;
+    this.cxxPlatform = cxxPlatform;
     this.linkRule = linkRule;
     this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
@@ -76,18 +84,24 @@ public class CxxBinary
     Preconditions.checkArgument(
         linkRule instanceof CxxLink || linkRule instanceof CxxStrip,
         "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip",
-        this, linkRule);
+        this,
+        linkRule);
     Preconditions.checkArgument(
-        getDeps().contains(linkRule),
+        getBuildDeps().contains(linkRule),
         "CxxBinary (%s) must depend on its link rule (%s) via deps",
-        this, linkRule);
+        this,
+        linkRule);
     Preconditions.checkArgument(
         !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR),
-        "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise " +
-            "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
-        this, CxxStrip.RULE_FLAVOR, this, linkRule);
+        "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise "
+            + "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
+        this,
+        CxxStrip.RULE_FLAVOR,
+        this,
+        linkRule);
     Preconditions.checkArgument(
-        this.platformlessTarget.getUnflavoredBuildTarget()
+        this.platformlessTarget
+            .getUnflavoredBuildTarget()
             .equals(this.params.getBuildTarget().getUnflavoredBuildTarget()));
   }
 
@@ -102,10 +116,10 @@ public class CxxBinary
     return ImmutableList.of();
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return linkRule.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(
+        getBuildTarget(), Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
   }
 
   public BuildRule getLinkRule() {
@@ -118,15 +132,14 @@ public class CxxBinary
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
-        params.copyWithBuildTarget(platformlessTarget),
+        params.withBuildTarget(platformlessTarget),
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,
-        headerVisibility,
+        HeaderVisibility.PRIVATE,
         CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.of(),
         frameworks);
@@ -153,11 +166,12 @@ public class CxxBinary
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getDeclaredDeps())
-        .addAll(executable.getDeps(getResolver()))
-        .build();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return Stream.concat(getDeclaredDeps().stream(), executable.getDeps(ruleFinder).stream())
+        .map(BuildRule::getBuildTarget);
   }
 
+  public CxxPlatform getCxxPlatform() {
+    return cxxPlatform;
+  }
 }

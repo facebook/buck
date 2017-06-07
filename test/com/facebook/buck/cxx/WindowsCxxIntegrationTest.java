@@ -22,135 +22,110 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 public class WindowsCxxIntegrationTest {
-  private static String clExe =
-      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\cl.exe";
 
-  private static String linkExe =
-      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\link.exe";
-
-  private static String libExe =
-      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\lib.exe";
-
-  private static String[] includeDirs = new String[] {
-      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\include",
-      "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.10586.0\\ucrt",
-      "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.10586.0\\um",
-      "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.10586.0\\shared"
-  };
-
-  private static String[] libDirs = new String[] {
-      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\LIB\\amd64",
-      "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.10586.0\\ucrt\\x64",
-      "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.10586.0\\um\\x64",
-  };
-
-
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
+
 
   @Before
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.WINDOWS);
-    checkAssumptions();
+    WindowsUtils.checkAssumptions();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "win_x64", tmp);
     workspace.setUp();
-    Escaper.Quoter quoter = Escaper.Quoter.DOUBLE_WINDOWS_JAVAC;
-    workspace.replaceFileContents(
-        ".buckconfig",
-        "$CL_EXE$",
-        quoter.quote(clExe)
-    );
-    workspace.replaceFileContents(
-        ".buckconfig",
-        "$LIB_EXE$",
-        quoter.quote(libExe)
-    );
-    workspace.replaceFileContents(
-        ".buckconfig",
-        "$LINK_EXE$",
-        quoter.quote(linkExe)
-    );
-    workspace.replaceFileContents(
-        "BUILD_DEFS",
-        "$WINDOWS_COMPILE_FLAGS$",
-        Arrays.stream(includeDirs).map(
-            s -> quoter.quote("/I" + s)).collect(Collectors.joining(", "))
-    );
-    workspace.replaceFileContents(
-        "BUILD_DEFS",
-        "$WINDOWS_LINK_FLAGS$",
-        Arrays.stream(libDirs).map(
-            s -> quoter.quote("/LIBPATH:" + s)).collect(Collectors.joining(", "))
-    );
+    WindowsUtils.setUpWorkspace(workspace, "xplat");
   }
 
   @Test
   public void simpleBinary64() throws IOException {
     ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand(
-            "run",
-            "//app:hello#windows-x86_64");
+        workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
     runResult.assertSuccess();
+    assertThat(runResult.getStdout(), Matchers.containsString("The process is 64bits"));
     assertThat(
-        runResult.getStdout(),
-        Matchers.containsString("The process is 64bits"));
-    assertThat(
-        runResult.getStdout(),
-        Matchers.not(Matchers.containsString("The process is WOW64")));
+        runResult.getStdout(), Matchers.not(Matchers.containsString("The process is WOW64")));
   }
 
   @Test
   public void simpleBinaryWithLib() throws IOException {
     ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand(
-            "run",
-            "//app_lib:app_lib#windows-x86_64");
+        workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        Matchers.containsString("BUCK ON WINDOWS"));
+    assertThat(runResult.getStdout(), Matchers.containsString("BUCK ON WINDOWS"));
   }
 
-  private static void checkAssumptions() {
-    assumeTrue(
-        "cl.exe should exist",
-        Files.isExecutable(Paths.get(clExe)));
+  @Test
+  public void simpleBinaryIsExecutableByCmd() throws IOException {
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand("build", "//app:log");
+    runResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/app/log/log.txt");
+    assertThat(
+        workspace.getFileContents(outputPath), Matchers.containsString("The process is 64bits"));
+  }
 
-    assumeTrue(
-        "link.exe should exist",
-        Files.isExecutable(Paths.get(linkExe)));
 
-    assumeTrue(
-        "lib.exe should exist",
-        Files.isExecutable(Paths.get(libExe)));
+  @Test
+  public void simpleBinaryInDevConsole() throws IOException, InterruptedException {
+    ProjectWorkspace.ProcessResult amd64RunResult =
+        workspace.runBuckCommand(getDevConsoleEnv("amd64"), "run", "d//app:hello#windows-x86_64");
+    amd64RunResult.assertSuccess();
+    assertThat(amd64RunResult.getStdout(), Matchers.containsString("The process is 64bits"));
+    assertThat(
+        amd64RunResult.getStdout(), Matchers.not(Matchers.containsString("The process is WOW64")));
 
-    for (String includeDir : includeDirs) {
-      assumeTrue(
-          String.format("include dir %s should exist", includeDir),
-          Files.isDirectory(Paths.get(includeDir)));
+    ProjectWorkspace.ProcessResult x86RunResult =
+        workspace.runBuckCommand(getDevConsoleEnv("x86"), "run", "d//app:hello#windows-x86_64");
+    x86RunResult.assertSuccess();
+    assertThat(x86RunResult.getStdout(), Matchers.containsString("The process is 64bits"));
+    assertThat(x86RunResult.getStdout(), Matchers.containsString("The process is WOW64"));
+  }
+
+  @Test
+  public void librariesInDevConsole() throws IOException, InterruptedException {
+    ProjectWorkspace.ProcessResult staticLibResult =
+        workspace.runBuckCommand(
+            getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,static");
+    staticLibResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult sharedLibResult =
+        workspace.runBuckCommand(
+            getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,shared");
+    sharedLibResult.assertSuccess();
+  }
+
+  private ImmutableMap<String, String> getDevConsoleEnv(String vcvarsallBatArg)
+      throws IOException, InterruptedException {
+    workspace.writeContentsToPath(
+        "\"" + WindowsUtils.vcvarsallBat + "\" " + vcvarsallBatArg + " & set", "env.bat");
+    ProcessExecutor.Result envResult = workspace.runCommand("cmd", "/Q", "/c", "env.bat");
+    Optional<String> envOut = envResult.getStdout();
+    Assert.assertTrue(envOut.isPresent());
+    String envString = envOut.get();
+    String[] envStrings = envString.split("\\r?\\n");
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (String s : envStrings) {
+      int sep = s.indexOf('=');
+      String key = s.substring(0, sep);
+      if ("PATH".equalsIgnoreCase(key)) {
+        key = "PATH";
+      }
+      String val = s.substring(sep + 1, s.length());
+      builder.put(key, val);
     }
-
-    for (String libDir : libDirs) {
-      assumeTrue(
-          String.format("lib dir %s should exist", libDir),
-          Files.isDirectory(Paths.get(libDir)));
-    }
+    return builder.build();
   }
 }

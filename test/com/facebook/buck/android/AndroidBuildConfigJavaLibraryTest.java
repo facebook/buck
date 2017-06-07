@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
@@ -30,11 +31,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Collections;
 import java.util.Optional;
+import org.junit.Test;
 
 public class AndroidBuildConfigJavaLibraryTest {
 
@@ -44,14 +43,15 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
-        .createBuildRule(
+    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
+        AndroidBuildConfigDescription.createBuildRule(
             params,
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
                 Collections.singleton("String foo = \"bar\"")),
             /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
+            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);
 
@@ -62,25 +62,25 @@ public class AndroidBuildConfigJavaLibraryTest {
         ImmutableMap.of(
             "com.example.buck",
             BuildConfigFields.fromFields(
-                ImmutableList.of(
-                    BuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
+                ImmutableList.of(BuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
         collection.getBuildConfigs());
   }
 
   @Test
   public void testBuildConfigHasCorrectProperties() throws NoSuchBuildTargetException {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
-    BuildConfigFields fields = BuildConfigFields.fromFieldDeclarations(
-        Collections.singleton("String KEY = \"value\""));
+    BuildConfigFields fields =
+        BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
-        .createBuildRule(
+    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
+        AndroidBuildConfigDescription.createBuildRule(
             params,
             "com.example.buck",
             /* values */ fields,
             /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
+            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();

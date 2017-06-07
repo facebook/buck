@@ -32,28 +32,26 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ShBinaryRuleIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testTrivialShBinaryRule() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_trivial", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_trivial", temporaryFolder);
     workspace.setUp();
 
     Path outputFile = workspace.buildAndReturnOutput("//:run_example");
@@ -67,8 +65,9 @@ public class ShBinaryRuleIntegrationTest {
   public void testExecutableFromCache() throws IOException, InterruptedException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_with_caching", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_caching", temporaryFolder);
     workspace.setUp();
 
     // First build only the sh_binary rule itself.
@@ -93,8 +92,7 @@ public class ShBinaryRuleIntegrationTest {
 
     // In addition to running the build, explicitly check that the output file is still executable.
     assertTrue(
-        "Output file must be retrieved from cache at '" + outputPath + ".",
-        Files.exists(output));
+        "Output file must be retrieved from cache at '" + outputPath + ".", Files.exists(output));
     assertTrue("Output file retrieved from cache must be executable.", Files.isExecutable(output));
   }
 
@@ -102,8 +100,9 @@ public class ShBinaryRuleIntegrationTest {
   public void testShBinaryWithResources() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_with_resources", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_resources", temporaryFolder);
     workspace.setUp();
 
     Path outputFile = workspace.buildAndReturnOutput("//app:create_output_using_node");
@@ -112,8 +111,7 @@ public class ShBinaryRuleIntegrationTest {
     List<String> lines = Files.readAllLines(outputFile, US_ASCII);
     ExecutionEnvironment executionEnvironment =
         new DefaultExecutionEnvironment(
-            ImmutableMap.copyOf(System.getenv()),
-            System.getProperties());
+            ImmutableMap.copyOf(System.getenv()), System.getProperties());
     String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));
@@ -123,8 +121,9 @@ public class ShBinaryRuleIntegrationTest {
   public void testShBinaryCannotOverwriteResource() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_with_overwrite_violation", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_overwrite_violation", temporaryFolder);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:overwrite");
@@ -139,10 +138,7 @@ public class ShBinaryRuleIntegrationTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this,
-            "sh_binary_pwd",
-            temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sh_binary_pwd", temporaryFolder);
     workspace.setUp();
 
     String alteredPwd = workspace.getDestPath().toString() + "////////";
@@ -156,5 +152,4 @@ public class ShBinaryRuleIntegrationTest {
     buildResult.assertSuccess();
     assertThat(buildResult.getStdout(), Matchers.equalTo(alteredPwd));
   }
-
 }

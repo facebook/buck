@@ -20,7 +20,6 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.slb.ThriftOverHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
-
 import java.io.IOException;
 
 /**
@@ -32,8 +31,7 @@ public class FrontendService extends ThriftOverHttpService<FrontendRequest, Fron
     super(config);
   }
 
-  public FrontendResponse makeRequest(
-      FrontendRequest request) throws IOException {
+  public FrontendResponse makeRequest(FrontendRequest request) throws IOException {
     FrontendResponse response = new FrontendResponse();
     makeRequest(request, response);
     return response;

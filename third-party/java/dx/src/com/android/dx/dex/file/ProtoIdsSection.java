@@ -86,7 +86,7 @@ public final class ProtoIdsSection extends UniformItemSection {
      * @param prototype {@code non-null;} the prototype to intern
      * @return {@code non-null;} the interned reference
      */
-    public ProtoIdItem intern(Prototype prototype) {
+    public synchronized ProtoIdItem intern(Prototype prototype) {
         if (prototype == null) {
             throw new NullPointerException("prototype == null");
         }

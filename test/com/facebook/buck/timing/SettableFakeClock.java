@@ -17,26 +17,20 @@
 package com.facebook.buck.timing;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Fake implementation of {@link Clock} which returns the last time
- * to which it was set.
- */
+/** Fake implementation of {@link Clock} which returns the last time to which it was set. */
 public class SettableFakeClock implements Clock {
   private final AtomicLong currentTimeMillis;
   private final AtomicLong nanoTime;
   private final Map<Long, Long> threadIdToUserNanoTime;
 
   public SettableFakeClock(
-      long currentTimeMillis,
-      long nanoTime,
-      ImmutableMap<Long, Long> threadIdToUserNanoTime) {
+      long currentTimeMillis, long nanoTime, ImmutableMap<Long, Long> threadIdToUserNanoTime) {
     this.currentTimeMillis = new AtomicLong(currentTimeMillis);
     this.nanoTime = new AtomicLong(nanoTime);
     this.threadIdToUserNanoTime = new HashMap<>(threadIdToUserNanoTime);

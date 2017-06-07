@@ -18,40 +18,29 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Same as a Genrule, but marked as a binary.
- */
+/** Same as a Genrule, but marked as a binary. */
 public class GenruleBinary extends Genrule implements BinaryBuildRule {
   protected GenruleBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
+      Optional<String> type,
       String out) {
-    super(params, resolver, srcs, cmd, bash, cmdExe, out);
+    super(params, srcs, cmd, bash, cmdExe, type, out);
   }
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())))
-        .build();
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
-
 }

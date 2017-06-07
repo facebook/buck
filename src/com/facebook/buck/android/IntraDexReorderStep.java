@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -35,7 +35,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -43,13 +42,13 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Runs a user supplied reordering tool on all dexes.
- * Deals with both jar-ed and non-jar-ed dexes. Jar-ed
- * dexes get unzipped to a temp directory first and re-zipped
- * to the output location after the reorder tool is run.
+ * Runs a user supplied reordering tool on all dexes. Deals with both jar-ed and non-jar-ed dexes.
+ * Jar-ed dexes get unzipped to a temp directory first and re-zipped to the output location after
+ * the reorder tool is run.
  */
 public class IntraDexReorderStep implements Step {
 
+  private final BuildContext context;
   private final ProjectFilesystem filesystem;
   private final Path reorderTool;
   private final Path reorderDataFile;
@@ -61,20 +60,20 @@ public class IntraDexReorderStep implements Step {
   private final String outputSubDir;
 
   IntraDexReorderStep(
+      BuildContext context,
       ProjectFilesystem filesystem,
-      Optional<SourcePath> reorderTool,
-      Optional<SourcePath> reorderDataFile,
-      SourcePathResolver sourcePathResolver,
+      Path reorderTool,
+      Path reorderDataFile,
       BuildTarget buildTarget,
       Path inputPrimaryDexPath,
       Path outputPrimaryDexPath,
       final Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
       String outputSubDir) {
+    this.context = context;
     this.filesystem = filesystem;
-    this.reorderTool = reorderTool.map(sourcePathResolver::deprecatedGetPath).get();
-    this.reorderDataFile =
-        reorderDataFile.map(sourcePathResolver::deprecatedGetPath).get();
+    this.reorderTool = reorderTool;
+    this.reorderDataFile = reorderDataFile;
     this.inputPrimaryDexPath = inputPrimaryDexPath;
     this.outputPrimaryDexPath = outputPrimaryDexPath;
     this.secondaryDexMap = secondaryDexMap;
@@ -111,15 +110,16 @@ public class IntraDexReorderStep implements Step {
   }
 
   private int reorderEntry(
-      Path inputPath,
-      boolean isPrimaryDex,
-      ImmutableList.Builder<Step> steps) {
+      Path inputPath, boolean isPrimaryDex, ImmutableList.Builder<Step> steps) {
 
     if (!isPrimaryDex) {
       String tmpname = "dex-tmp-" + inputPath.getFileName().toString() + "-%s";
       Path temp = BuildTargets.getScratchPath(filesystem, buildTarget, tmpname);
       // Create tmp directory if necessary
-      steps.add(new MakeCleanDirectoryStep(filesystem, temp));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), filesystem, temp)));
       // un-zip
       steps.add(new UnzipStep(filesystem, inputPath, temp));
       // run reorder tool
@@ -139,9 +139,7 @@ public class IntraDexReorderStep implements Step {
               /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
               ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
-              temp
-          )
-      );
+              temp));
     } else {
       // copy dex
       // apply reorder directly on dex
@@ -155,15 +153,15 @@ public class IntraDexReorderStep implements Step {
                   outputPrimaryDexPath.toString())));
     }
     return 0;
-       }
-
-  @Override
-    public String getShortName() {
-      return "intradex reorder";
-    }
-
-  @Override
-    public String getDescription(ExecutionContext context) {
-      return String.format("%s --- intradex reorder using %s", buildTarget, reorderTool);
-    }
   }
+
+  @Override
+  public String getShortName() {
+    return "intradex reorder";
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return String.format("%s --- intradex reorder using %s", buildTarget, reorderTool);
+  }
+}

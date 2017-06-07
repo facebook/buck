@@ -21,39 +21,30 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractFrameworkPath implements
-    Comparable<AbstractFrameworkPath>,
-    RuleKeyAppendable {
+abstract class AbstractFrameworkPath
+    implements Comparable<AbstractFrameworkPath>, RuleKeyAppendable {
 
-  /**
-   * The type of framework entry this object represents.
-   */
+  /** The type of framework entry this object represents. */
   protected enum Type {
-    /**
-     * An Xcode style {@link SourceTreePath}.
-     */
+    /** An Xcode style {@link SourceTreePath}. */
     SOURCE_TREE_PATH,
-    /**
-     * A Buck style {@link SourcePath}.
-     */
+    /** A Buck style {@link SourcePath}. */
     SOURCE_PATH,
   }
 
@@ -66,8 +57,8 @@ abstract class AbstractFrameworkPath implements
   @Value.Parameter
   public abstract Optional<SourcePath> getSourcePath();
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(OptionalCompat.asSet(getSourcePath()));
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getSourcePath()));
   }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {
@@ -75,9 +66,7 @@ abstract class AbstractFrameworkPath implements
       case SOURCE_TREE_PATH:
         return getSourceTreePath().get().getPath().getFileName();
       case SOURCE_PATH:
-        return Preconditions
-            .checkNotNull(resolver.apply(getSourcePath().get()))
-            .getFileName();
+        return Preconditions.checkNotNull(resolver.apply(getSourcePath().get())).getFileName();
       default:
         throw new RuntimeException("Unhandled type: " + getType());
     }
@@ -88,27 +77,26 @@ abstract class AbstractFrameworkPath implements
     return Files.getNameWithoutExtension(fileName);
   }
 
-  public static Function<FrameworkPath, Path> getUnexpandedSearchPathFunction(
-      final Function<SourcePath, Path> resolver,
-      final Function<? super Path, Path> relativizer) {
-    return input -> getConvertToPathFunction(resolver, relativizer).apply(input).getParent();
+  public static Path getUnexpandedSearchPath(
+      Function<SourcePath, Path> resolver,
+      Function<? super Path, Path> relativizer,
+      FrameworkPath input) {
+    return convertToPath(resolver, relativizer, input).getParent();
   }
 
-  public static Function<FrameworkPath, Path> getConvertToPathFunction(
-      final Function<SourcePath, Path> resolver,
-      final Function<? super Path, Path> relativizer) {
-    return input -> {
-      switch (input.getType()) {
-        case SOURCE_TREE_PATH:
-          return Paths.get(input.getSourceTreePath().get().toString());
-        case SOURCE_PATH:
-          return relativizer.apply(
-              Preconditions
-                  .checkNotNull(resolver.apply(input.getSourcePath().get())));
-        default:
-          throw new RuntimeException("Unhandled type: " + input.getType());
-      }
-    };
+  private static Path convertToPath(
+      Function<SourcePath, Path> resolver,
+      Function<? super Path, Path> relativizer,
+      FrameworkPath input) {
+    switch (input.getType()) {
+      case SOURCE_TREE_PATH:
+        return Paths.get(input.getSourceTreePath().get().toString());
+      case SOURCE_PATH:
+        return relativizer.apply(
+            Preconditions.checkNotNull(resolver.apply(input.getSourcePath().get())));
+      default:
+        throw new RuntimeException("Unhandled type: " + input.getType());
+    }
   }
 
   @Value.Check
@@ -150,22 +138,14 @@ abstract class AbstractFrameworkPath implements
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("sourcePath", getSourcePath());
-    sink.setReflectively(
-        "sourceTree",
-        getSourceTreePath().map(Object::toString));
+    sink.setReflectively("sourceTree", getSourceTreePath().map(Object::toString));
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {
-    return FrameworkPath.of(
-        Type.SOURCE_TREE_PATH,
-        Optional.of(sourceTreePath),
-        Optional.empty());
+    return FrameworkPath.of(Type.SOURCE_TREE_PATH, Optional.of(sourceTreePath), Optional.empty());
   }
 
   public static FrameworkPath ofSourcePath(SourcePath sourcePath) {
-    return FrameworkPath.of(
-        Type.SOURCE_PATH,
-        Optional.empty(),
-        Optional.of(sourcePath));
+    return FrameworkPath.of(Type.SOURCE_PATH, Optional.empty(), Optional.of(sourcePath));
   }
 }

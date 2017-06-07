@@ -18,10 +18,8 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 /**
  * A class that holds a pattern and a message related to this pattern. Example usage: if the pattern

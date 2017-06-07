@@ -16,19 +16,17 @@
 
 package com.facebook.buck.log;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-
 public class ReferenceCountedWriterTest {
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private OutputStreamWriter mockWriter;
 
@@ -49,14 +47,14 @@ public class ReferenceCountedWriterTest {
 
   @Test
   public void testWithDoubleReference() throws IOException {
-    mockWriter.close();
-    EasyMock.expectLastCall().andThrow(new RuntimeException("This should not happen."));
+    mockWriter.flush(); // Mock will throw if anything else is called.
     EasyMock.replay(mockWriter);
 
     ReferenceCountedWriter ref1 = new ReferenceCountedWriter(mockWriter);
     ReferenceCountedWriter ref2 = ref1.newReference();
 
     ref1.close();
+    EasyMock.verify(mockWriter);
 
     EasyMock.reset(mockWriter);
     mockWriter.close();

@@ -23,16 +23,14 @@ import static org.junit.Assert.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-
 import org.junit.Test;
 
 public class TagSetCounterTest {
 
   private static final String CATEGORY = "Counter_Category";
   private static final String NAME = "Counter_Name";
-  public static final ImmutableMap<String, String> TAGS = ImmutableMap.of(
-      "My super Tag Key", "And the according value!"
-  );
+  public static final ImmutableMap<String, String> TAGS =
+      ImmutableMap.of("My super Tag Key", "And the according value!");
 
   @Test
   public void snapshotBeforeAddIsEmpty() {
@@ -54,9 +52,7 @@ public class TagSetCounterTest {
     TagSetCounter counter = createCounter();
     counter.add("value1");
     counter.flush();
-    assertThat(
-        counter.flush().isPresent(),
-        is(false));
+    assertThat(counter.flush().isPresent(), is(false));
   }
 
   @Test

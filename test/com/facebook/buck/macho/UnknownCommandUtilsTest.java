@@ -21,11 +21,9 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedInteger;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.junit.Test;
 
 public class UnknownCommandUtilsTest {
 

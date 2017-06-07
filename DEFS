@@ -1,103 +1,61 @@
-# This is a quick hack to make it so that all Java rules build using Java 7.
-# TODO(bolinfest): Find a less hacky way to do this, likely something in .buckconfig.
+with allow_unsafe_import():
+    from sys import platform as os_platform
 
-original_java_library = java_library
-def java_library(
-    name,
-    **kwargs
-    ):
-  original_java_library(
-    name,
-    **kwargs
-    )
+def _add_immutables(**kwargs):
+    kwargs['deps'] = list(set(kwargs.get('deps', [])).union([
+        '//src/com/facebook/buck/util/immutables:immutables',
+        '//third-party/java/errorprone:error-prone-annotations',
+        '//third-party/java/immutables:immutables',
+        '//third-party/java/guava:guava',
+        '//third-party/java/jsr:jsr305',
+    ]))
+    kwargs['exported_deps'] = list(set(kwargs.get('exported_deps', [])).union([
+        '//third-party/java/immutables:immutables',
+    ]))
+    kwargs['plugins'] = list(set(kwargs.get('plugins', [])).union([
+        '//third-party/java/immutables:processor'
+    ]))
+    return kwargs
 
-def java_immutables_library(
-    name,
-    # These must be relative to the package implied by the path to the BUCK file.
-    immutable_types=None,
-    **kwargs
-    ):
-    if not immutable_types:
-        build_target = '//%s:%s' % (get_base_path(), name)
-        raise Exception(('%s is a java_immutables_library(), ' +
-                         'but does not specify any immutable_types.') % build_target)
 
-    generated_symbols = map(fully_qualified_name_for_immutable_type, immutable_types)
-    all_generated_symbols = generated_symbols + kwargs.get('generated_symbols', [])
-
-    deps = kwargs.get('deps', [])
-    needed_deps = [
-      '//src/com/facebook/buck/util/immutables:immutables',
-      '//third-party/java/immutables:processor',
-      '//third-party/java/guava:guava',
-      '//third-party/java/jsr:jsr305',
-    ]
-    for dep in needed_deps:
-      if not dep in deps:
-        deps.append(dep)
-
-    exported_deps = kwargs.get('exported_deps', [])
-    needed_exported_deps = [
-      '//third-party/java/immutables:processor',
-    ]
-    for dep in needed_exported_deps:
-      if not dep in exported_deps:
-        exported_deps.append(dep)
-
-    annotation_processors = kwargs.get('annotation_processors', [])
-    if not 'org.immutables.value.internal.$processor$.$Processor' in annotation_processors:
-      annotation_processors.append('org.immutables.value.internal.$processor$.$Processor')
-    annotation_processor_deps = kwargs.get('annotation_processor_deps', [])
-    if not '//third-party/java/immutables:processor' in annotation_processor_deps:
-      annotation_processor_deps.append('//third-party/java/immutables:processor')
-    keys_to_remove = [
-      'annotation_processors',
-      'annotation_processor_deps',
-      'deps',
-      'exported_deps',
-      'generated_symbols',
-    ]
-    args = {}
-    for k in kwargs:
-      if not k in keys_to_remove:
-        args[k] = kwargs[k]
+def java_immutables_library(name, **kwargs):
     return java_library(
       name,
-      generated_symbols=all_generated_symbols,
-      deps=deps,
-      annotation_processors=annotation_processors,
-      annotation_processor_deps=annotation_processor_deps,
-      exported_deps=exported_deps,
-      **args)
-
-
-def fully_qualified_name_for_immutable_type(immutable_type):
-    base_path = get_base_path()
-
-    # Strip off src/ or test/ prefix, as appropriate, from base_path.
-    if base_path.startswith('src/'):
-        base_path = base_path[len('src/'):]
-    elif base_path.startswith('test/'):
-        base_path = base_path[len('test/'):]
-    else:
-        raise Exception(src + ' must start with src/ or test/')
-
-    package_name = base_path.replace('/', '.')
-    return package_name + '.' + immutable_type
+      **_add_immutables(**kwargs))
 
 
 original_java_test = java_test
 def java_test(
     name,
-    deps=[],
     vm_args=[],
     labels=[],
     run_test_separately=False,
+    has_immutable_types=False,
+    # deps, provided_deps and plugins are handled in kwargs so that immutables can be handled there
     **kwargs
     ):
   extra_labels = ['run_as_bundle']
   if run_test_separately:
     extra_labels.append('serialize')
+
+  if has_immutable_types:
+    kwargs = _add_immutables(**kwargs)
+
+  if 'deps' in kwargs:
+    deps = kwargs['deps']
+    del kwargs['deps']
+  else:
+    deps = []
+
+  if 'env' in kwargs:
+    env = kwargs['env']
+    del kwargs['env']
+  else:
+    env = {}
+
+  if '//src/com/facebook/buck/step/external:external' in deps:
+    env['EXTERNAL_STEP_RUNNER_JAR_FOR_BUCK_TEST'] = (
+      '$(location //src/com/facebook/buck/step/external:executor)')
 
   original_java_test(
     name,
@@ -142,115 +100,33 @@ def java_test(
       # publicly accessible.
       '-Dsun.zip.disableMemoryMapping=true',
     ] + vm_args,
+    env=env,
     run_test_separately=run_test_separately,
     labels = labels + extra_labels,
     **kwargs
   )
 
-def _get_name():
-    base_path = get_base_path()
-    with allow_unsafe_import():
-        import os.path
-    return os.path.basename(base_path)
-
-def standard_java_library(
-    srcs = None,
-    immutable_types = None,
-    tests = None,
-    resources = None,
-
-    # May need to include things `buck autodeps` misses for Java 8.
-    deps = None,
-    exported_deps = None,
-
-    provided_deps = None,
-    visibility = None,
-):
-    '''By default, generates a java_library() with the following args:
-
-    java_library(
-      name = <DIRECTORY_NAME>,
-      srcs = glob(['*.java']),
-      autodeps = True,
-      deps = deps,
-      exported_deps = exported_deps,
-      visibility = [
-        'PUBLIC',
-      ],
-    )
-
-    Some of these fields can be overridden.
-    '''
-    if srcs is None:
-        srcs = glob(['*.java'])
-    if tests is None:
-        tests = []
-    if resources is None:
-        resources = []
-    if provided_deps is None:
-        provided_deps = []
-    if visibility is None:
-        visibility = [ 'PUBLIC' ]
-
-    kwargs = {}
-    if immutable_types:
-        build_rule = java_immutables_library
-        kwargs['immutable_types'] = immutable_types
-    else:
-        build_rule = java_library
-
-    build_rule(
-        name = _get_name(),
-        srcs = srcs,
-        resources = resources,
-        tests = tests,
-        autodeps = True,
-        deps = deps or [],
-        exported_deps = exported_deps or [],
-        provided_deps = provided_deps,
-        visibility = visibility,
-        **kwargs
-    )
-
 def standard_java_test(
+    name,
     run_test_separately = False,
     vm_args = None,
     fork_mode = 'none',
     labels = None,
+    **kwargs
 ):
     if vm_args is None:
         vm_args = ['-Xmx256M']
-    srcs = glob(['*.java'])
-    test_srcs = []
-    testutil_srcs = []
-    for src in srcs:
-        if src.endswith('Test.java'):
-            test_srcs.append(src)
-        else:
-            testutil_srcs.append(src)
 
-    if len(testutil_srcs) > 0:
-        java_library(
-          name = 'testutil',
-          srcs = testutil_srcs,
-          autodeps = True,
-          visibility = [
-            '//test/...',
-          ]
-        )
+    test_srcs = glob(["*Test.java"])
 
     if len(test_srcs) > 0:
-        name = _get_name()
-        if name == 'testutil':
-            # Having a com.facebook.buck.testutil package was probably a bad choice.
-            name = 'testutil_test'
         java_test(
           name = name,
           srcs = test_srcs,
-          autodeps = True,
           resources = glob(['testdata/**'], include_dotfiles=True),
           vm_args = vm_args,
           run_test_separately = run_test_separately,
           fork_mode = fork_mode,
           labels = labels or [],
+	  **kwargs
         )

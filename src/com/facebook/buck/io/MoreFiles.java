@@ -22,15 +22,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -42,6 +41,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class MoreFiles {
 
@@ -56,12 +57,16 @@ public final class MoreFiles {
   // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public static final long S_IFDIR = 0040000;
+
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
+  public static final long S_IFREG = 0100000;
+
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public static final long S_IFLNK = 0120000;
 
   public enum DeleteRecursivelyOptions {
-      IGNORE_NO_SUCH_FILE_EXCEPTION,
-      DELETE_CONTENTS_ONLY,
+    IGNORE_NO_SUCH_FILE_EXCEPTION,
+    DELETE_CONTENTS_ONLY,
   }
 
   // Unix has two illegal characters - '/', and '\0'.  Windows has ten, which includes those two.
@@ -86,9 +91,7 @@ public final class MoreFiles {
     }
   }
 
-  /**
-   * Sorts by the lastAccessTime in descending order (more recently accessed files are first).
-   */
+  /** Sorts by the lastAccessTime in descending order (more recently accessed files are first). */
   private static final Comparator<FileAccessedEntry> SORT_BY_LAST_ACCESSED_TIME_DESC =
       (a, b) -> b.getLastAccessTime().compareTo(a.getLastAccessTime());
 
@@ -97,65 +100,75 @@ public final class MoreFiles {
 
   public static void deleteRecursivelyIfExists(Path path) throws IOException {
     deleteRecursivelyWithOptions(
-        path,
-        EnumSet.of(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
+        path, EnumSet.of(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
   }
 
-  /**
-   * Recursively copies all files under {@code fromPath} to {@code toPath}.
-   */
-  public static void copyRecursively(
-      final Path fromPath,
-      final Path toPath) throws IOException {
+  /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
+  public static void copyRecursively(final Path fromPath, final Path toPath) throws IOException {
     copyRecursively(fromPath, toPath, Functions.identity());
   }
 
+  /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
+  public static void copyRecursivelyWithFilter(
+      final Path fromPath, final Path toPath, final Function<Path, Boolean> filter)
+      throws IOException {
+    copyRecursively(fromPath, toPath, Functions.identity(), filter);
+  }
+
   /**
-   * Recursively copies all files under {@code fromPath} to {@code toPath}.
-   * The {@code transform} will be applied after the destination path for a file has been
-   * relativized.
+   * Recursively copies all files under {@code fromPath} to {@code toPath}. The {@code transform}
+   * will be applied after the destination path for a file has been relativized.
+   *
    * @param fromPath item to copy
    * @param toPath destination of copy
    * @param transform renaming function to apply when copying. If this function returns null, then
    *     the file is not copied.
    */
   public static void copyRecursively(
+      final Path fromPath, final Path toPath, final Function<Path, Path> transform)
+      throws IOException {
+    copyRecursively(fromPath, toPath, transform, input -> true);
+  }
+
+  public static void copyRecursively(
       final Path fromPath,
       final Path toPath,
-      final Function<Path, Path> transform) throws IOException {
+      final Function<Path, Path> transform,
+      final Function<Path, Boolean> filter)
+      throws IOException {
     // Adapted from http://codingjunkie.net/java-7-copy-move/.
-    SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
+    SimpleFileVisitor<Path> copyDirVisitor =
+        new SimpleFileVisitor<Path>() {
 
-      @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-          throws IOException {
-        Path targetPath = toPath.resolve(fromPath.relativize(dir));
-        if (!Files.exists(targetPath)) {
-          Files.createDirectory(targetPath);
-        }
-        return FileVisitResult.CONTINUE;
-      }
-
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        Path destPath = toPath.resolve(fromPath.relativize(file));
-        Path transformedDestPath = transform.apply(destPath);
-        if (transformedDestPath != null) {
-          if (Files.isSymbolicLink(file)) {
-            Files.deleteIfExists(transformedDestPath);
-            Files.createSymbolicLink(
-                transformedDestPath,
-                Files.readSymbolicLink(file));
-          } else {
-            Files.copy(
-                file,
-                transformedDestPath,
-                StandardCopyOption.REPLACE_EXISTING);
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
+            Path targetPath = toPath.resolve(fromPath.relativize(dir));
+            if (!Files.exists(targetPath)) {
+              Files.createDirectory(targetPath);
+            }
+            return FileVisitResult.CONTINUE;
           }
-        }
-        return FileVisitResult.CONTINUE;
-      }
-    };
+
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            if (!filter.apply(file)) {
+              return FileVisitResult.CONTINUE;
+            }
+            Path destPath = toPath.resolve(fromPath.relativize(file));
+            Path transformedDestPath = transform.apply(destPath);
+            if (transformedDestPath != null) {
+              if (Files.isSymbolicLink(file)) {
+                Files.deleteIfExists(transformedDestPath);
+                Files.createSymbolicLink(transformedDestPath, Files.readSymbolicLink(file));
+              } else {
+                Files.copy(file, transformedDestPath, StandardCopyOption.REPLACE_EXISTING);
+              }
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        };
     Files.walkFileTree(fromPath, copyDirVisitor);
   }
 
@@ -164,49 +177,53 @@ public final class MoreFiles {
   }
 
   public static void deleteRecursivelyWithOptions(
-      final Path path,
-      final EnumSet<DeleteRecursivelyOptions> options) throws IOException {
+      final Path path, final EnumSet<DeleteRecursivelyOptions> options) throws IOException {
     try {
-        // Adapted from http://codingjunkie.net/java-7-copy-move/.
-        SimpleFileVisitor<Path> deleteDirVisitor = new SimpleFileVisitor<Path>() {
+      // Adapted from http://codingjunkie.net/java-7-copy-move/.
+      SimpleFileVisitor<Path> deleteDirVisitor =
+          new SimpleFileVisitor<Path>() {
 
-          @Override
-          public FileVisitResult visitFile(
-              Path file,
-              BasicFileAttributes attrs) throws IOException {
-            Files.delete(file);
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-            if (e == null) {
-              // Allow leaving the top-level directory in place (e.g. for deleting the contents of
-              // the trash dir but not the trash dir itself)
-              if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY) &&
-                    dir.equals(path))) {
-                Files.delete(dir);
-              }
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              Files.delete(file);
               return FileVisitResult.CONTINUE;
-            } else {
-              throw e;
             }
-          }
-        };
-        Files.walkFileTree(path, deleteDirVisitor);
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+              if (e == null) {
+                // Allow leaving the top-level directory in place (e.g. for deleting the contents of
+                // the trash dir but not the trash dir itself)
+                if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)
+                    && dir.equals(path))) {
+                  try {
+                    Files.delete(dir);
+                  } catch (DirectoryNotEmptyException notEmpty) {
+                    throw new IOException(
+                        String.format(
+                            "Could not delete non-empty directory %s. Contents:\n%s",
+                            dir,
+                            Files.list(dir).map(Path::toString).collect(Collectors.joining("\n"))),
+                        notEmpty);
+                  }
+                }
+                return FileVisitResult.CONTINUE;
+              } else {
+                throw e;
+              }
+            }
+          };
+      Files.walkFileTree(path, deleteDirVisitor);
     } catch (NoSuchFileException e) {
       if (!options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
         throw e;
       }
     }
-
   }
 
-  /**
-   * Writes the specified lines to the specified file, encoded as UTF-8.
-   */
-  public static void writeLinesToFile(Iterable<String> lines, Path file)
-      throws IOException {
+  /** Writes the specified lines to the specified file, encoded as UTF-8. */
+  public static void writeLinesToFile(Iterable<String> lines, Path file) throws IOException {
     try (BufferedWriter writer = Files.newBufferedWriter(file, Charsets.UTF_8)) {
       for (String line : lines) {
         writer.write(line);
@@ -215,12 +232,10 @@ public final class MoreFiles {
     }
   }
 
-  /**
-   * Log a simplistic diff between lines and the contents of file.
-   */
+  /** Log a simplistic diff between lines and the contents of file. */
   @VisibleForTesting
   static List<String> diffFileContents(Iterable<String> lines, File file) throws IOException {
-    List<String> diffLines = Lists.newArrayList();
+    List<String> diffLines = new ArrayList<>();
     Iterator<String> iter = lines.iterator();
     try (BufferedReader reader = Files.newBufferedReader(file.toPath(), Charsets.UTF_8)) {
       while (iter.hasNext()) {
@@ -248,9 +263,8 @@ public final class MoreFiles {
     for (int i = 0; i < files.length; ++i) {
       FileTime lastAccess;
       try {
-        lastAccess = Files.readAttributes(
-            files[i].toPath(),
-            BasicFileAttributes.class).lastAccessTime();
+        lastAccess =
+            Files.readAttributes(files[i].toPath(), BasicFileAttributes.class).lastAccessTime();
       } catch (IOException e) {
         lastAccess = FileTime.fromMillis(files[i].lastModified());
       }
@@ -268,8 +282,8 @@ public final class MoreFiles {
    * permissions, the executable permission is set for each category of users that already has the
    * read permission.
    *
-   * If the file system does not support the executable permission or the operation fails,
-   * a {@code java.io.IOException} is thrown.
+   * <p>If the file system does not support the executable permission or the operation fails, a
+   * {@code java.io.IOException} is thrown.
    */
   public static void makeExecutable(Path file) throws IOException {
     if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
@@ -295,6 +309,7 @@ public final class MoreFiles {
 
   /**
    * Given a file name, replace any illegal characters from it.
+   *
    * @param name The file name to sanitize
    * @return a properly sanitized filename
    */
@@ -307,7 +322,6 @@ public final class MoreFiles {
    *
    * @param dest The path to which the concatenated files' contents are written.
    * @param pathsToConcatenate The paths whose contents are concatenated to {@code dest}.
-   *
    * @return {@code true} if any data was concatenated to {@code dest}, {@code false} otherwise.
    */
   public static boolean concatenateFiles(Path dest, Iterable<Path> pathsToConcatenate)
@@ -320,11 +334,11 @@ public final class MoreFiles {
     try {
       long bytesCollected = 0;
       try (OutputStream os =
-           Files.newOutputStream(
-               tempPath,
-               StandardOpenOption.CREATE,
-               StandardOpenOption.TRUNCATE_EXISTING,
-               StandardOpenOption.WRITE)) {
+          Files.newOutputStream(
+              tempPath,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.TRUNCATE_EXISTING,
+              StandardOpenOption.WRITE)) {
         for (Path path : pathsToConcatenate) {
           try (InputStream is = Files.newInputStream(path)) {
             bytesCollected += ByteStreams.copy(is, os);
@@ -335,10 +349,7 @@ public final class MoreFiles {
       }
       if (bytesCollected > 0) {
         Files.move(
-            tempPath,
-            dest,
-            StandardCopyOption.REPLACE_EXISTING,
-            StandardCopyOption.ATOMIC_MOVE);
+            tempPath, dest, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         return true;
       } else {
         return false;

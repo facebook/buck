@@ -21,7 +21,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.List;
 
@@ -33,9 +32,8 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
       TypeCoercer<String> stringTypeCoercer,
       TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer) {
     this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
-    this.namedSourcesTypeCoercer = new SortedMapTypeCoercer<>(
-        stringTypeCoercer,
-        sourceWithFlagsTypeCoercer);
+    this.namedSourcesTypeCoercer =
+        new SortedMapTypeCoercer<>(stringTypeCoercer, sourceWithFlagsTypeCoercer);
   }
 
   @Override
@@ -45,8 +43,8 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return unnamedSourcesTypeCoercer.hasElementClass(types) ||
-        namedSourcesTypeCoercer.hasElementClass(types);
+    return unnamedSourcesTypeCoercer.hasElementClass(types)
+        || namedSourcesTypeCoercer.hasElementClass(types);
   }
 
   @Override
@@ -68,21 +66,15 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof List) {
       return SourceWithFlagsList.ofUnnamedSources(
           unnamedSourcesTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
     } else {
       return SourceWithFlagsList.ofNamedSources(
-          namedSourcesTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+          namedSourcesTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
   }
 }

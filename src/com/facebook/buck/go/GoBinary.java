@@ -17,17 +17,18 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -35,20 +36,15 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
-  @AddToRuleKey
-  private final Tool linker;
-  @AddToRuleKey
-  private final ImmutableList<String> linkerFlags;
-  @AddToRuleKey
-  private final Optional<Linker> cxxLinker;
-  @AddToRuleKey
-  private final GoPlatform platform;
+  @AddToRuleKey private final Tool linker;
+  @AddToRuleKey private final ImmutableList<String> linkerFlags;
+  @AddToRuleKey private final Optional<Linker> cxxLinker;
+  @AddToRuleKey private final GoPlatform platform;
 
   private final GoCompile mainObject;
   private final SymlinkTree linkTree;
@@ -57,31 +53,29 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   public GoBinary(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Optional<Linker> cxxLinker,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
       ImmutableList<String> linkerFlags,
       GoPlatform platform) {
-    super(params, resolver);
+    super(params);
     this.cxxLinker = cxxLinker;
     this.linker = linker;
     this.linkTree = linkTree;
     this.mainObject = mainObject;
     this.platform = platform;
-    this.output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        params.getBuildTarget(),
-        "%s/" + params.getBuildTarget().getShortName());
+    this.output =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            params.getBuildTarget(),
+            "%s/" + params.getBuildTarget().getShortName());
     this.linkerFlags = linkerFlags;
   }
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
-        .build();
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 
   @Override
@@ -91,8 +85,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     buildableContext.recordArtifact(output);
 
@@ -101,29 +94,29 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
     ImmutableList<String> cxxLinkerCommand = ImmutableList.of();
     ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
     if (cxxLinker.isPresent()) {
-      environment.putAll(cxxLinker.get().getEnvironment());
-      cxxLinkerCommand = cxxLinker.get().getCommandPrefix(getResolver());
+      environment.putAll(cxxLinker.get().getEnvironment(context.getSourcePathResolver()));
+      cxxLinkerCommand = cxxLinker.get().getCommandPrefix(context.getSourcePathResolver());
     }
-    environment.putAll(linker.getEnvironment());
+    environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
             environment.build(),
             cxxLinkerCommand,
-            linker.getCommandPrefix(getResolver()),
+            linker.getCommandPrefix(context.getSourcePathResolver()),
             linkerFlags,
             ImmutableList.of(linkTree.getRoot()),
             platform,
-            mainObject.getPathToOutput(),
+            context.getSourcePathResolver().getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.LinkMode.EXECUTABLE,
-            output)
-        );
+            output));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
-
 }

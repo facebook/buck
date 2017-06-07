@@ -25,60 +25,58 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.io.ByteSource;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.tukaani.xz.XZ;
-import org.tukaani.xz.XZInputStream;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.tukaani.xz.XZ;
+import org.tukaani.xz.XZInputStream;
 
 public class XzStepTest {
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testXzStepDefaultDestinationFile() {
+  public void testXzStepDefaultDestinationFile() throws InterruptedException {
     final Path sourceFile = Paths.get("/path/to/source.file");
     XzStep step = new XzStep(new ProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
     assertEquals(Paths.get(sourceFile + ".xz"), step.getDestinationFile());
   }
 
   @Test
-  public void testXzStep() throws IOException {
+  public void testXzStep() throws InterruptedException, IOException {
     final Path sourceFile =
         TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
     final File destinationFile = tmp.newFile("xzstep.data.xz");
 
-    XzStep step = new XzStep(
-        new ProjectFilesystem(tmp.getRoot().toPath()),
-        sourceFile,
-        destinationFile.toPath(),
-        /* compressionLevel -- for faster testing */ 1,
-        /* keep */ true,
-        XZ.CHECK_CRC32);
+    XzStep step =
+        new XzStep(
+            new ProjectFilesystem(tmp.getRoot().toPath()),
+            sourceFile,
+            destinationFile.toPath(),
+            /* compressionLevel -- for faster testing */ 1,
+            /* keep */ true,
+            XZ.CHECK_CRC32);
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(0, step.execute(context).getExitCode());
 
     ByteSource original = PathByteSource.asByteSource(sourceFile);
-    ByteSource decompressed = new ByteSource() {
-      @Override
-      public InputStream openStream() throws IOException {
-        return new XZInputStream(new FileInputStream(destinationFile));
-      }
-    };
+    ByteSource decompressed =
+        new ByteSource() {
+          @Override
+          public InputStream openStream() throws IOException {
+            return new XZInputStream(new FileInputStream(destinationFile));
+          }
+        };
 
     assertTrue(
-        "Decompressed file must be identical to original.",
-        original.contentEquals(decompressed));
+        "Decompressed file must be identical to original.", original.contentEquals(decompressed));
   }
 }

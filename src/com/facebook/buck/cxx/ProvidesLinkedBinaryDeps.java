@@ -18,10 +18,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * Rule that can provide all binary dependencies.
- */
+/** Rule that can provide all binary dependencies. */
 public interface ProvidesLinkedBinaryDeps extends BuildRule {
   ImmutableSet<BuildRule> getCompileDeps();
+
   ImmutableSet<BuildRule> getStaticLibraryDeps();
 }

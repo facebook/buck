@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'apple_binary()' /}
+    {param navid: 'rule_apple_binary' /}
     {param prettify: true /}
     {param description}
       An apple_binary() rule builds a native Mac OSX or iOS executable.
@@ -64,6 +65,10 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 {call native_common.link_style /}
 
 {call buck.tests_apple_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

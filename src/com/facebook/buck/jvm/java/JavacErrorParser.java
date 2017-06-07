@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -31,17 +30,17 @@ public class JavacErrorParser {
   private final ProjectFilesystem filesystem;
   private final JavaPackageFinder javaPackageFinder;
 
-  private static ImmutableList<Pattern> onePartPatterns = ImmutableList.of(
-      Pattern.compile(
-          "error: cannot access (?<symbol>\\S+)"),
-      Pattern.compile(
-          "error: package \\S+ does not exist\nimport (?<symbol>\\S+);"),
-      Pattern.compile(
-          "error: package \\S+ does not exist\nimport static (?<symbol>\\S+)\\.[^.]+;"));
+  private static ImmutableList<Pattern> onePartPatterns =
+      ImmutableList.of(
+          Pattern.compile("error: cannot access (?<symbol>\\S+)"),
+          Pattern.compile("error: package \\S+ does not exist\nimport (?<symbol>\\S+);"),
+          Pattern.compile(
+              "error: package \\S+ does not exist\nimport static (?<symbol>\\S+)\\.[^.]+;"));
 
-  private static ImmutableList<Pattern> twoPartPatterns = ImmutableList.of(
-      Pattern.compile(
-          "\\s*symbol:\\s+class (?<class>\\S+)\n\\s*location:\\s+package (?<package>\\S+)"));
+  private static ImmutableList<Pattern> twoPartPatterns =
+      ImmutableList.of(
+          Pattern.compile(
+              "\\s*symbol:\\s+class (?<class>\\S+)\n\\s*location:\\s+package (?<package>\\S+)"));
 
   // These patterns match missing symbols that live in the current package.  Usually, that means one
   // java package that's split up into multiple java_library rules, which depend on each other.
@@ -52,14 +51,14 @@ public class JavacErrorParser {
   // might go looking for an imported symbol in the current package (wrong) in addition to the
   // package it was imported from (right). That's ultimately fine, because the symbol can't exist in
   // both places (without causing another compiler error).
-  private static ImmutableList<Pattern> localPackagePatterns = ImmutableList.of(
-      Pattern.compile(
-          "^(?<file>.+):[0-9]+: error: cannot find symbol\n" +
-          ".*\n" +
-          ".*\n" +
-          "\\s*symbol:\\s+(class|variable) (?<class>\\S+)"),
-      Pattern.compile(
-          "^(?<file>.+):[0-9]+: error: package (?<class>\\S+) does not exist"));
+  private static ImmutableList<Pattern> localPackagePatterns =
+      ImmutableList.of(
+          Pattern.compile(
+              "^(?<file>.+):[0-9]+: error: cannot find symbol\n"
+                  + ".*\n"
+                  + ".*\n"
+                  + "\\s*symbol:\\s+(class|variable) (?<class>\\S+)"),
+          Pattern.compile("^(?<file>.+):[0-9]+: error: package (?<class>\\S+) does not exist"));
 
   public JavacErrorParser(ProjectFilesystem filesystem, JavaPackageFinder javaPackageFinder) {
     this.filesystem = filesystem;
@@ -67,21 +66,21 @@ public class JavacErrorParser {
   }
 
   public Optional<String> getMissingSymbolFromCompilerError(String error) {
-    for (Pattern pattern: onePartPatterns) {
+    for (Pattern pattern : onePartPatterns) {
       Matcher matcher = pattern.matcher(error);
       if (matcher.find()) {
         return Optional.of(matcher.group("symbol"));
       }
     }
 
-    for (Pattern pattern: twoPartPatterns) {
+    for (Pattern pattern : twoPartPatterns) {
       Matcher matcher = pattern.matcher(error);
       if (matcher.find()) {
         return Optional.of(matcher.group("package") + "." + matcher.group("class"));
       }
     }
 
-    for (Pattern pattern: localPackagePatterns) {
+    for (Pattern pattern : localPackagePatterns) {
       Matcher matcher = pattern.matcher(error);
       if (matcher.find()) {
         return getMissingSymbolInLocalPackage(matcher);

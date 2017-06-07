@@ -18,9 +18,7 @@ package com.facebook.buck.cxx.elf;
 
 import java.nio.ByteBuffer;
 
-/**
- * Encapsulates the header information and raw body of an ELF section.
- */
+/** Encapsulates the header information and raw body of an ELF section. */
 // CHECKSTYLE.OFF: LocalVariableName
 // CHECKSTYLE.OFF: ParameterName
 public class ElfSection {
@@ -39,8 +37,8 @@ public class ElfSection {
     // If section is of type SHT_NULL or SHT_NOBITS, it has no body in the file.
     // Otherwise, use the offset and size to bound the body of the section from the input buffer.
     ByteBuffer body;
-    if (header.sh_type == ElfSectionHeader.SHType.SHT_NULL ||
-        header.sh_type == ElfSectionHeader.SHType.SHT_NOBITS) {
+    if (header.sh_type == ElfSectionHeader.SHType.SHT_NULL
+        || header.sh_type == ElfSectionHeader.SHType.SHT_NOBITS) {
       body = ByteBuffer.wrap(new byte[0]);
     } else {
       buffer.position((int) header.sh_off);
@@ -50,12 +48,11 @@ public class ElfSection {
     }
 
     return new ElfSection(header, body);
-
   }
 
   /**
-   * @return the {@link String} found in this section, interpreted as a string table, at the
-   *     given offset.
+   * @return the {@link String} found in this section, interpreted as a string table, at the given
+   *     offset.
    */
   public String lookupString(long offset) {
     body.position((int) offset);
@@ -66,7 +63,6 @@ public class ElfSection {
     }
     return builder.toString();
   }
-
 }
 
 // CHECKSTYLE.ON: ParameterName

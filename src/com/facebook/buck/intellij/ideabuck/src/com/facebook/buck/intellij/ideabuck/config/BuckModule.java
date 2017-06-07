@@ -32,7 +32,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BuckModule implements ProjectComponent {
@@ -44,11 +43,11 @@ public final class BuckModule implements ProjectComponent {
 
   public BuckModule(final Project project) {
     mProject = project;
-    mEventHandler = new BuckEventsHandler(
-        new BuckEventsConsumerFactory(mProject),
-        new ExecuteOnBuckPluginConnect(),
-        new ExecuteOnBuckPluginDisconnect()
-    );
+    mEventHandler =
+        new BuckEventsHandler(
+            new BuckEventsConsumerFactory(mProject),
+            new ExecuteOnBuckPluginConnect(),
+            new ExecuteOnBuckPluginDisconnect());
   }
 
   @Override
@@ -116,19 +115,20 @@ public final class BuckModule implements ProjectComponent {
   private class ExecuteOnBuckPluginDisconnect implements Runnable {
     @Override
     public void run() {
-      ApplicationManager.getApplication().invokeLater(
-          new Runnable() {
-            @Override
-            public void run() {
-              // If we haven't closed the project, then we show the message
-              if (!mProject.isDisposed()) {
-                BuckToolWindowFactory.outputConsoleMessage(
-                    mProject,
-                    "Disconnected from buck!\n",
-                    ConsoleViewContentType.SYSTEM_OUTPUT);
-              }
-            }
-          });
+      ApplicationManager.getApplication()
+          .invokeLater(
+              new Runnable() {
+                @Override
+                public void run() {
+                  // If we haven't closed the project, then we show the message
+                  if (!mProject.isDisposed()) {
+                    BuckToolWindowFactory.outputConsoleMessage(
+                        mProject,
+                        "Disconnected from buck!\n",
+                        ConsoleViewContentType.SYSTEM_OUTPUT);
+                  }
+                }
+              });
       if (!projectClosed.get()) {
         // Tell the client that we got disconnected, but we can retry
         BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithRetry();
@@ -139,20 +139,19 @@ public final class BuckModule implements ProjectComponent {
   private class ExecuteOnBuckPluginConnect implements Runnable {
     @Override
     public void run() {
-      ApplicationManager.getApplication().invokeLater(
-          new Runnable() {
-            @Override
-            public void run() {
-              // If we connected to Buck and then closed the project, before getting
-              // the success message
-              if (!mProject.isDisposed()) {
-                BuckToolWindowFactory.outputConsoleMessage(
-                    mProject,
-                    "Connected to buck!\n",
-                    ConsoleViewContentType.SYSTEM_OUTPUT);
-              }
-            }
-          });
+      ApplicationManager.getApplication()
+          .invokeLater(
+              new Runnable() {
+                @Override
+                public void run() {
+                  // If we connected to Buck and then closed the project, before getting
+                  // the success message
+                  if (!mProject.isDisposed()) {
+                    BuckToolWindowFactory.outputConsoleMessage(
+                        mProject, "Connected to buck!\n", ConsoleViewContentType.SYSTEM_OUTPUT);
+                  }
+                }
+              });
     }
   }
 }

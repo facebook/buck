@@ -263,6 +263,24 @@
 {/template}
 
 /***/
+{template .precompiled_header_arg}
+{call buck.arg}
+  {param name : 'precompiled_header' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a{sp}
+  <a href="{ROOT}rule/cxx_precompiled_header.html"><code>cxx_precompiled_header</code></a>{sp}
+  to use when compiling this rule's sources.  The precompiled header (PCH) is built on-demand, using
+  compiler flags matching those used in this rule's compile jobs.  This is to ensure
+  compatibility between this rule and the PCH.  Also, this rule will inherit additional
+  {sp}<code>deps</code>{sp} from the PCH rule, and as a result, additional include paths as well
+  (e.g. <code>-I</code>, <code>-isystem</code>, <code>-iquote</code> path lists,
+  and framework paths specified with <code>-F</code>).
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .force_static}
 {call buck.arg}
   {param name : 'force_static' /}

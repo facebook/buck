@@ -17,35 +17,27 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.MoreCollectors;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 /**
- * Interface to allow looking up parents and children of build files.
- * E.g. for a directory structure that looks like:
- *   foo/BUCK
- *   foo/bar/baz/BUCK
- *   foo/bar/qux/BUCK
+ * Interface to allow looking up parents and children of build files. E.g. for a directory structure
+ * that looks like: foo/BUCK foo/bar/baz/BUCK foo/bar/qux/BUCK
  *
- * foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
+ * <p>foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
  */
 public abstract class BuildFileTree {
-  /**
-   * No-arg constructor, provided so that subclasses can be constructed.
-   */
+  /** No-arg constructor, provided so that subclasses can be constructed. */
   protected BuildFileTree() {}
 
-  /**
-   * @return paths relative to BuildTarget that contain their own build files. E.g.
-   */
+  /** @return paths relative to BuildTarget that contain their own build files. E.g. */
   public abstract Collection<Path> getChildPaths(BuildTarget target);
 
   /**
-   * Returns the base path for a given path. The base path is the nearest directory at or
-   * above filePath that contains a build file.
+   * Returns the base path for a given path. The base path is the nearest directory at or above
+   * filePath that contains a build file.
    *
    * @param filePath the path whose base path to find.
    * @return the base path if there is one.

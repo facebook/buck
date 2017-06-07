@@ -19,11 +19,11 @@ package com.facebook.buck.rules;
 import static org.easymock.EasyMock.createMock;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
-
+import java.nio.file.Paths;
 import org.junit.Test;
 
 public class BuildContextTest {
@@ -33,9 +33,10 @@ public class BuildContextTest {
     BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
-    builder.setActionGraph(createMock(ActionGraph.class));
+    builder.setSourcePathResolver(createMock(SourcePathResolver.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
-    builder.setEventBus(BuckEventBusFactory.newInstance());
+    builder.setEventBus(BuckEventBusForTests.newInstance());
+    builder.setBuildCellRootPath(Paths.get("."));
 
     BuildContext context = builder.build();
     Supplier<AndroidPlatformTarget> supplier = context.getAndroidPlatformTargetSupplier();

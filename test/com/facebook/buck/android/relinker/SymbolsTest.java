@@ -29,52 +29,45 @@ public class SymbolsTest {
   public void testSymbolExtraction() {
     Symbols.SymbolInfo si;
     // CHECKSTYLE.OFF: LineLength
-    si = Symbols.extractSymbolInfo(
-        "/opt/android_ndk/r12b/sources/third_party/vulkan/src/build-android/jniLibs/armeabi-v7a/libVkLayer_core_validation.so:     file format elf32-littlearm");
+    si =
+        Symbols.extractSymbolInfo(
+            "/opt/android_ndk/r12b/sources/third_party/vulkan/src/build-android/jniLibs/armeabi-v7a/libVkLayer_core_validation.so:     file format elf32-littlearm");
     // CHECKSTYLE.ON: LineLength
     assertNull(si);
-    si = Symbols.extractSymbolInfo(
-        "");
+    si = Symbols.extractSymbolInfo("");
     assertNull(si);
-    si = Symbols.extractSymbolInfo(
-        "DYNAMIC SYMBOL TABLE:");
+    si = Symbols.extractSymbolInfo("DYNAMIC SYMBOL TABLE:");
     assertNull(si);
 
-    si = Symbols.extractSymbolInfo(
-        "00000000      DF *UND*  00000000 __cxa_finalize");
+    si = Symbols.extractSymbolInfo("00000000      DF *UND*  00000000 __cxa_finalize");
     assertNotNull(si);
     assertTrue(si.isUndefined);
     assertFalse(si.isGlobal);
     assertEquals(si.symbol, "__cxa_finalize");
 
-    si = Symbols.extractSymbolInfo(
-        "00000000      DF *UND*  00000000 strlen");
+    si = Symbols.extractSymbolInfo("00000000      DF *UND*  00000000 strlen");
     assertNotNull(si);
     assertTrue(si.isUndefined);
     assertFalse(si.isGlobal);
     assertEquals(si.symbol, "strlen");
 
-    si = Symbols.extractSymbolInfo(
-        "00174a8c g    DF .text  0000000a __aeabi_unwind_cpp_pr0");
+    si = Symbols.extractSymbolInfo("00174a8c g    DF .text  0000000a __aeabi_unwind_cpp_pr0");
     assertNotNull(si);
     assertFalse(si.isUndefined);
     assertTrue(si.isGlobal);
     assertEquals(si.symbol, "__aeabi_unwind_cpp_pr0");
 
-    si = Symbols.extractSymbolInfo(
-        "00000000      DF *UND*  00000000 LIBC   strlen");
+    si = Symbols.extractSymbolInfo("00000000      DF *UND*  00000000 LIBC   strlen");
     assertNotNull(si);
     assertTrue(si.isUndefined);
     assertFalse(si.isGlobal);
     assertEquals(si.symbol, "strlen");
 
-    si = Symbols.extractSymbolInfo(
-        "00174a8c g    DF .text  0000000a BASE   __aeabi_unwind_cpp_pr0");
+    si =
+        Symbols.extractSymbolInfo("00174a8c g    DF .text  0000000a BASE   __aeabi_unwind_cpp_pr0");
     assertNotNull(si);
     assertFalse(si.isUndefined);
     assertTrue(si.isGlobal);
     assertEquals(si.symbol, "__aeabi_unwind_cpp_pr0");
-
-
   }
 }

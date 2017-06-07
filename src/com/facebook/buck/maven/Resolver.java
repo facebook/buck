@@ -40,7 +40,24 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
@@ -89,30 +106,10 @@ import org.kohsuke.args4j.CmdLineException;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroupString;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
-
 public class Resolver {
 
   private static final String TEMPLATE =
-      Resolver.class.getPackage().getName().replace(".", "/") + "/build-file.st";
+      Resolver.class.getPackage().getName().replace('.', '/') + "/build-file.st";
   public static final String ARTIFACT_FILE_NAME_FORMAT = "%s-%s.%s";
   public static final String ARTIFACT_FILE_NAME_REGEX_FORMAT =
       ARTIFACT_FILE_NAME_FORMAT.replace(".", "\\.");
@@ -129,27 +126,31 @@ public class Resolver {
   private final ModelBuilder modelBuilder;
 
   private ImmutableList<RemoteRepository> repos;
-  private ImmutableMap<String, Dependency> specifiedDependencies;
 
   public Resolver(ArtifactConfig config) {
-    this.modelBuilder = new DefaultModelBuilderFactory().newInstance()
-        .setProfileSelector(new DefaultProfileSelector())
-        .setPluginConfigurationExpander(new DefaultPluginConfigurationExpander())
-        .setPluginManagementInjector(new DefaultPluginManagementInjector())
-        .setDependencyManagementImporter(new DefaultDependencyManagementImporter())
-        .setDependencyManagementInjector(new DefaultDependencyManagementInjector());
+    this.modelBuilder =
+        new DefaultModelBuilderFactory()
+            .newInstance()
+            .setProfileSelector(new DefaultProfileSelector())
+            .setPluginConfigurationExpander(new DefaultPluginConfigurationExpander())
+            .setPluginManagementInjector(new DefaultPluginManagementInjector())
+            .setDependencyManagementImporter(new DefaultDependencyManagementImporter())
+            .setDependencyManagementInjector(new DefaultDependencyManagementInjector());
     ServiceLocator locator = AetherUtil.initServiceLocator();
     this.repoSys = locator.getService(RepositorySystem.class);
     this.localRepo = new LocalRepository(Paths.get(config.mavenLocalRepo).toFile());
     this.session = newSession(repoSys, localRepo);
 
-    this.buckRepoRoot = Paths.get(config.buckRepoRoot);
-    this.buckThirdPartyRelativePath = Paths.get(config.thirdParty);
+    this.buckRepoRoot = Paths.get(Preconditions.checkNotNull(config.buckRepoRoot));
+    this.buckThirdPartyRelativePath = Paths.get(Preconditions.checkNotNull(config.thirdParty));
     this.visibility = config.visibility;
 
-    this.repos = config.repositories.stream()
-        .map(AetherUtil::toRemoteRepository)
-        .collect(MoreCollectors.toImmutableList());
+    this.repos =
+        config
+            .repositories
+            .stream()
+            .map(AetherUtil::toRemoteRepository)
+            .collect(MoreCollectors.toImmutableList());
   }
 
   public void resolve(Collection<String> artifacts)
@@ -171,10 +172,10 @@ public class Resolver {
       }
     }
     repos = repoBuilder.build();
-    specifiedDependencies = dependencyBuilder.build();
+    ImmutableMap<String, Dependency> specifiedDependencies = dependencyBuilder.build();
 
-    ImmutableMap<String, Artifact> knownDeps = getRunTimeTransitiveDeps(
-        specifiedDependencies.values());
+    ImmutableMap<String, Artifact> knownDeps =
+        getRunTimeTransitiveDeps(specifiedDependencies.values());
 
     // We now have the complete set of dependencies. Build the graph of dependencies. We'd like
     // aether to do this for us, but it doesn't preserve the complete dependency information we need
@@ -183,25 +184,35 @@ public class Resolver {
 
     // Now we have the graph, grab the sources and jars for each dependency, as well as the relevant
     // checksums (which are download by default. Yay!)
-    ImmutableSetMultimap<Path, Prebuilt> downloadedArtifacts = downloadArtifacts(graph);
+    ImmutableSetMultimap<Path, Prebuilt> downloadedArtifacts =
+        downloadArtifacts(graph, specifiedDependencies);
 
     createBuckFiles(downloadedArtifacts);
   }
 
   private ImmutableSetMultimap<Path, Prebuilt> downloadArtifacts(
-      final MutableDirectedGraph<Artifact> graph) throws ExecutionException, InterruptedException {
-    ListeningExecutorService exec = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors(),
-            new MostExecutors.NamedThreadFactory("artifact download")));
+      final MutableDirectedGraph<Artifact> graph,
+      ImmutableMap<String, Dependency> specifiedDependencies)
+      throws ExecutionException, InterruptedException {
+    ListeningExecutorService exec =
+        MoreExecutors.listeningDecorator(
+            Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors(),
+                new MostExecutors.NamedThreadFactory("artifact download")));
 
     @SuppressWarnings("unchecked")
     List<ListenableFuture<Map.Entry<Path, Prebuilt>>> results =
-        (List<ListenableFuture<Map.Entry<Path, Prebuilt>>>) (List<?>)
-        exec.invokeAll(graph.getNodes().stream()
-            .map(artifact ->
-                (Callable<Map.Entry<Path, Prebuilt>>) () -> downloadArtifact(artifact, graph))
-            .collect(MoreCollectors.toImmutableList()));
+        (List<ListenableFuture<Map.Entry<Path, Prebuilt>>>)
+            (List<?>)
+                exec.invokeAll(
+                    graph
+                        .getNodes()
+                        .stream()
+                        .map(
+                            artifact ->
+                                (Callable<Map.Entry<Path, Prebuilt>>)
+                                    () -> downloadArtifact(artifact, graph, specifiedDependencies))
+                        .collect(MoreCollectors.toImmutableList()));
 
     try {
       return ImmutableSetMultimap.<Path, Prebuilt>builder()
@@ -215,7 +226,8 @@ public class Resolver {
 
   private Map.Entry<Path, Prebuilt> downloadArtifact(
       final Artifact artifactToDownload,
-      TraversableGraph<Artifact> graph)
+      TraversableGraph<Artifact> graph,
+      ImmutableMap<String, Dependency> specifiedDependencies)
       throws IOException, ArtifactResolutionException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
@@ -251,14 +263,11 @@ public class Resolver {
     return Maps.immutableEntry(project, library);
   }
 
-  private Prebuilt resolveLib(
-      Artifact artifact,
-      Path project) throws ArtifactResolutionException, IOException {
-    Artifact jar = new DefaultArtifact(
-        artifact.getGroupId(),
-        artifact.getArtifactId(),
-        "jar",
-        artifact.getVersion());
+  private Prebuilt resolveLib(Artifact artifact, Path project)
+      throws ArtifactResolutionException, IOException {
+    Artifact jar =
+        new DefaultArtifact(
+            artifact.getGroupId(), artifact.getArtifactId(), "jar", artifact.getVersion());
 
     Path relativePath = resolveArtifact(jar, project);
 
@@ -268,32 +277,27 @@ public class Resolver {
     return library;
   }
 
-  /**
-   * @return {@link Path} to the file
-   */
-  private Path resolveArtifact(
-      Artifact artifact,
-      Path project)
+  /** @return {@link Path} to the file */
+  private Path resolveArtifact(Artifact artifact, Path project)
       throws ArtifactResolutionException, IOException {
     Optional<Path> newerVersionFile = getNewerVersionFile(artifact, project);
     if (newerVersionFile.isPresent()) {
       return newerVersionFile.get();
     }
-    ArtifactResult result = repoSys.resolveArtifact(
-        session,
-        new ArtifactRequest(artifact, repos, null));
+    ArtifactResult result =
+        repoSys.resolveArtifact(session, new ArtifactRequest(artifact, repos, null));
     return copy(result, project);
   }
 
   /**
    * @return {@link Path} to the file in {@code project} with filename consistent with the given
-   * {@link Artifact}, but with a newer version. If no such file exists, {@link Optional#empty} is
-   * returned. If multiple such files are present one with the newest version will be returned.
+   *     {@link Artifact}, but with a newer version. If no such file exists, {@link Optional#empty}
+   *     is returned. If multiple such files are present one with the newest version will be
+   *     returned.
    */
   @VisibleForTesting
-  Optional<Path> getNewerVersionFile(
-      final Artifact artifactToDownload,
-      Path project) throws IOException {
+  Optional<Path> getNewerVersionFile(final Artifact artifactToDownload, Path project)
+      throws IOException {
     final Version artifactToDownloadVersion;
     try {
       artifactToDownloadVersion = versionScheme.parseVersion(artifactToDownload.getVersion());
@@ -301,31 +305,33 @@ public class Resolver {
       throw new RuntimeException(e);
     }
 
-    final Pattern versionExtractor = Pattern.compile(
-        String.format(
-            ARTIFACT_FILE_NAME_REGEX_FORMAT,
-            artifactToDownload.getArtifactId(),
-            VERSION_REGEX_GROUP,
-            artifactToDownload.getExtension()));
-    Iterable<Version> versionsPresent = FluentIterable
-        .from(Files.newDirectoryStream(project))
-        .transform(new Function<Path, Version>() {
-          @Nullable
-          @Override
-          public Version apply(Path input) {
-            Matcher matcher = versionExtractor.matcher(input.getFileName().toString());
-            if (matcher.matches()) {
-              try {
-                return versionScheme.parseVersion(matcher.group(1));
-              } catch (InvalidVersionSpecificationException e) {
-                throw new RuntimeException(e);
-              }
-            } else {
-              return null;
-            }
-          }
-        })
-        .filter(Objects::nonNull);
+    final Pattern versionExtractor =
+        Pattern.compile(
+            String.format(
+                ARTIFACT_FILE_NAME_REGEX_FORMAT,
+                artifactToDownload.getArtifactId(),
+                VERSION_REGEX_GROUP,
+                artifactToDownload.getExtension()));
+    Iterable<Version> versionsPresent =
+        FluentIterable.from(Files.newDirectoryStream(project))
+            .transform(
+                new Function<Path, Version>() {
+                  @Nullable
+                  @Override
+                  public Version apply(Path input) {
+                    Matcher matcher = versionExtractor.matcher(input.getFileName().toString());
+                    if (matcher.matches()) {
+                      try {
+                        return versionScheme.parseVersion(matcher.group(1));
+                      } catch (InvalidVersionSpecificationException e) {
+                        throw new RuntimeException(e);
+                      }
+                    } else {
+                      return null;
+                    }
+                  }
+                })
+            .filter(Objects::nonNull);
 
     List<Version> newestPresent = Ordering.natural().greatestOf(versionsPresent, 1);
     if (newestPresent.isEmpty() || newestPresent.get(0).compareTo(artifactToDownloadVersion) <= 0) {
@@ -341,10 +347,8 @@ public class Resolver {
     }
   }
 
-  private void downloadSources(
-      Artifact artifact,
-      Path project,
-      Prebuilt library) throws IOException {
+  private void downloadSources(Artifact artifact, Path project, Prebuilt library)
+      throws IOException {
     Artifact srcs = new SubArtifact(artifact, "sources", "jar");
     try {
       Path relativePath = resolveArtifact(srcs, project);
@@ -354,9 +358,7 @@ public class Resolver {
     }
   }
 
-  /**
-   *  com.example:foo:1.0 -> "example"
-   */
+  /** com.example:foo:1.0 -> "example" */
   private static String getProjectName(Artifact artifact) {
     int index = artifact.getGroupId().lastIndexOf('.');
     String projectName = artifact.getGroupId();
@@ -395,8 +397,8 @@ public class Resolver {
     return sink.getFileName();
   }
 
-  private  MutableDirectedGraph<Artifact> buildDependencyGraph(
-      Map<String, Artifact> knownDeps) throws ArtifactDescriptorException {
+  private MutableDirectedGraph<Artifact> buildDependencyGraph(Map<String, Artifact> knownDeps)
+      throws ArtifactDescriptorException {
     MutableDirectedGraph<Artifact> graph;
     graph = new MutableDirectedGraph<>();
     for (Map.Entry<String, Artifact> entry : knownDeps.entrySet()) {
@@ -423,14 +425,13 @@ public class Resolver {
           continue;
         }
 
-        // TODO(shs96c): Do we always want optional dependencies?
-//        if (dependency.isOptional()) {
-//          continue;
-//        }
+        // TODO(simons): Do we always want optional dependencies?
+        //        if (dependency.isOptional()) {
+        //          continue;
+        //        }
 
         Preconditions.checkNotNull(
-            actualDep,
-            key + " -> " + artifact + " in " + knownDeps.keySet());
+            actualDep, key + " -> " + artifact + " in " + knownDeps.keySet());
         graph.addNode(actualDep);
         graph.addEdge(actualDep, artifact);
       }
@@ -438,8 +439,7 @@ public class Resolver {
     return graph;
   }
 
-  private List<Dependency> getDependenciesOf(
-      Artifact dep) throws ArtifactDescriptorException {
+  private List<Dependency> getDependenciesOf(Artifact dep) throws ArtifactDescriptorException {
     ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
     descriptorRequest.setArtifact(dep);
     descriptorRequest.setRepositories(repos);
@@ -466,12 +466,15 @@ public class Resolver {
   }
 
   private ImmutableList<RemoteRepository> getReposFromPom(Model model) {
-    return model.getRepositories().stream()
-        .map(input ->
-            new RemoteRepository.Builder(input.getId(), input.getLayout(), input.getUrl())
-                .setReleasePolicy(toPolicy(input.getReleases()))
-                .setSnapshotPolicy(toPolicy(input.getSnapshots()))
-                .build())
+    return model
+        .getRepositories()
+        .stream()
+        .map(
+            input ->
+                new RemoteRepository.Builder(input.getId(), input.getLayout(), input.getUrl())
+                    .setReleasePolicy(toPolicy(input.getReleases()))
+                    .setSnapshotPolicy(toPolicy(input.getSnapshots()))
+                    .build())
         .collect(MoreCollectors.toImmutableList());
   }
 
@@ -485,38 +488,49 @@ public class Resolver {
   }
 
   private ImmutableList<Dependency> getDependenciesFromPom(Model model) {
-    return model.getDependencies().stream()
-        .map(dep -> {
-          ArtifactType stereotype = session.getArtifactTypeRegistry().get(dep.getType());
-          if (stereotype == null) {
-            stereotype = new DefaultArtifactType(dep.getType());
-          }
+    return model
+        .getDependencies()
+        .stream()
+        .map(
+            dep -> {
+              ArtifactType stereotype = session.getArtifactTypeRegistry().get(dep.getType());
+              if (stereotype == null) {
+                stereotype = new DefaultArtifactType(dep.getType());
+              }
 
-          Map<String, String> props = null;
-          boolean system = dep.getSystemPath() != null && dep.getSystemPath().length() > 0;
-          if (system) {
-            props = ImmutableMap.of(ArtifactProperties.LOCAL_PATH, dep.getSystemPath());
-          }
+              Map<String, String> props = null;
+              boolean system = dep.getSystemPath() != null && dep.getSystemPath().length() > 0;
+              if (system) {
+                props = ImmutableMap.of(ArtifactProperties.LOCAL_PATH, dep.getSystemPath());
+              }
 
-          @SuppressWarnings("PMD.PrematureDeclaration")
-          DefaultArtifact artifact = new DefaultArtifact(
-              dep.getGroupId(), dep.getArtifactId(),
-              dep.getClassifier(), null, dep.getVersion(),
-              props, stereotype);
+              @SuppressWarnings("PMD.PrematureDeclaration")
+              DefaultArtifact artifact =
+                  new DefaultArtifact(
+                      dep.getGroupId(),
+                      dep.getArtifactId(),
+                      dep.getClassifier(),
+                      null,
+                      dep.getVersion(),
+                      props,
+                      stereotype);
 
-          ImmutableList<Exclusion> exclusions = FluentIterable.from(dep.getExclusions())
-              .transform(input -> {
-                String group = input.getGroupId();
-                String artifact1 = input.getArtifactId();
+              ImmutableList<Exclusion> exclusions =
+                  FluentIterable.from(dep.getExclusions())
+                      .transform(
+                          input -> {
+                            String group = input.getGroupId();
+                            String artifact1 = input.getArtifactId();
 
-                group = (group == null || group.length() == 0) ? "*" : group;
-                artifact1 = (artifact1 == null || artifact1.length() == 0) ? "*" : artifact1;
+                            group = (group == null || group.length() == 0) ? "*" : group;
+                            artifact1 =
+                                (artifact1 == null || artifact1.length() == 0) ? "*" : artifact1;
 
-                return new Exclusion(group, artifact1, "*", "*");
-              })
-              .toList();
-          return new Dependency(artifact, dep.getScope(), dep.isOptional(), exclusions);
-        })
+                            return new Exclusion(group, artifact1, "*", "*");
+                          })
+                      .toList();
+              return new Dependency(artifact, dep.getScope(), dep.isOptional(), exclusions);
+            })
         .collect(MoreCollectors.toImmutableList());
   }
 
@@ -524,8 +538,7 @@ public class Resolver {
     return new Dependency(new DefaultArtifact(artifact), JavaScopes.RUNTIME);
   }
 
-  private ImmutableMap<String, Artifact> getRunTimeTransitiveDeps(
-      Iterable<Dependency> mavenCoords)
+  private ImmutableMap<String, Artifact> getRunTimeTransitiveDeps(Iterable<Dependency> mavenCoords)
       throws RepositoryException {
 
     CollectRequest collectRequest = new CollectRequest();
@@ -559,25 +572,25 @@ public class Resolver {
     return session;
   }
 
-  /**
-   * Construct a key to identify the artifact, less its version
-   */
+  /** Construct a key to identify the artifact, less its version */
   private String buildKey(Artifact artifact) {
-    return artifact.getGroupId() +
-        ':' + artifact.getArtifactId() +
-        ':' + artifact.getExtension() +
-        ':' + artifact.getClassifier();
+    return artifact.getGroupId()
+        + ':'
+        + artifact.getArtifactId()
+        + ':'
+        + artifact.getExtension()
+        + ':'
+        + artifact.getClassifier();
   }
 
-  public static void main(String[] args) throws
-      CmdLineException, RepositoryException, IOException, ExecutionException, InterruptedException {
+  public static void main(String[] args)
+      throws CmdLineException, RepositoryException, IOException, ExecutionException,
+          InterruptedException {
     ArtifactConfig artifactConfig = ArtifactConfig.fromCommandLineArgs(args);
     new Resolver(artifactConfig).resolve(artifactConfig.artifacts);
   }
 
-  /**
-   * Holds data for creation of a BUCK file for a given dependency
-   */
+  /** Holds data for creation of a BUCK file for a given dependency */
   private static class Prebuilt implements Comparable<Prebuilt> {
     private static final String PUBLIC_VISIBILITY = "PUBLIC";
 

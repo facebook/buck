@@ -1,21 +1,51 @@
 PLATFORM_SRCS = [
-  'AbstractSwiftPlatform.java',
-  'SwiftPlatforms.java',
+    "AbstractSwiftPlatform.java",
+    "SwiftPlatforms.java",
 ]
+
 java_immutables_library(
-  name = 'platform',
-  srcs = PLATFORM_SRCS,
-  immutable_types = [
-    'SwiftPlatform',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "platform",
+    srcs = PLATFORM_SRCS,
+    visibility = ["PUBLIC"],
+    deps = ["//src/com/facebook/buck/rules:build_rule"],
 )
 
-standard_java_library(
-  srcs = glob(['*.java',], excludes=PLATFORM_SRCS),
-  tests = [
-    '//test/com/facebook/buck/swift:integration',
-    '//test/com/facebook/buck/swift:unit',
-  ],
+java_immutables_library(
+    name = "swift",
+    srcs = glob(
+        ["*.java"],
+        excludes = PLATFORM_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/swift:integration",
+        "//test/com/facebook/buck/swift:unit",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":platform",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/cxx:platform",
+        "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/args:args",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/versions:versions",
+        "//third-party/java/guava:guava",
+        "//third-party/java/infer-annotations:infer-annotations",
+    ],
 )

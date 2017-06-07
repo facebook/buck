@@ -32,23 +32,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.junit.Test;
 
 public class EdenProjectFilesystemDelegateTest {
   private static final Sha1HashCode DUMMY_SHA1 = Sha1HashCode.of(Strings.repeat("faceb00c", 5));
 
   /**
    * This is the location of the working directory for {@link Configuration#unix()}. Creating
-   * symlinks via
-   * {@link Files#createSymbolicLink(Path, Path, java.nio.file.attribute.FileAttribute[])} in the
-   * working directory of Jimfs does not touch the actual filesystem.
+   * symlinks via {@link Files#createSymbolicLink(Path, Path,
+   * java.nio.file.attribute.FileAttribute[])} in the working directory of Jimfs does not touch the
+   * actual filesystem.
    */
   private static final String JIMFS_WORKING_DIRECTORY = "/work";
 
@@ -82,7 +80,7 @@ public class EdenProjectFilesystemDelegateTest {
     Path path = fs.getPath("buck-out/gen/some-output");
     Files.createDirectories(path.getParent());
     Files.createFile(path);
-    byte[] bytes = new byte[] { 66, 85, 67, 75 };
+    byte[] bytes = new byte[] {66, 85, 67, 75};
     Files.write(path, bytes);
 
     expect(mount.getBindMounts()).andReturn(ImmutableList.of(fs.getPath("buck-out")));
@@ -91,8 +89,8 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
     assertEquals(
-        "EdenProjectFilesystemDelegate.computeSha1() should compute the SHA-1 directly via " +
-            "DefaultProjectFilesystemDelegate because the path is behind a bind mount.",
+        "EdenProjectFilesystemDelegate.computeSha1() should compute the SHA-1 directly via "
+            + "DefaultProjectFilesystemDelegate because the path is behind a bind mount.",
         Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
         edenDelegate.computeSha1(path));
 
@@ -139,7 +137,7 @@ public class EdenProjectFilesystemDelegateTest {
     Path link = fs.getPath("/work/link");
     Path target = fs.getPath("/example");
     Files.createFile(target);
-    byte[] bytes = new byte[] { 66, 85, 67, 75 };
+    byte[] bytes = new byte[] {66, 85, 67, 75};
     Files.write(target, bytes);
     Files.createSymbolicLink(link, target);
 
@@ -154,8 +152,8 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
     assertEquals(
-        "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of the target of " +
-            "the symlink even though the target is outside of the EdenFS root.",
+        "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of the target of "
+            + "the symlink even though the target is outside of the EdenFS root.",
         Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
         edenDelegate.computeSha1(link));
 
@@ -169,7 +167,7 @@ public class EdenProjectFilesystemDelegateTest {
     ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
     Path target = fs.getPath("/example");
     Files.createFile(target);
-    byte[] bytes = new byte[] { 66, 85, 67, 75 };
+    byte[] bytes = new byte[] {66, 85, 67, 75};
     Files.write(target, bytes);
 
     EdenMount mount = createMock(EdenMount.class);
@@ -179,8 +177,8 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
     assertEquals(
-        "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of a file that is " +
-            "outside of the EdenFS root.",
+        "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of a file that is "
+            + "outside of the EdenFS root.",
         Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
         edenDelegate.computeSha1(target));
 

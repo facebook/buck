@@ -19,30 +19,27 @@ package com.facebook.buck.jvm.java;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class GenruleDepsIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testUpdatingJarBuildByGenruleAffectDependentRebuild() throws IOException {
     final Charset charsetForTest = StandardCharsets.UTF_8;
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "genrule_test", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_test", tmp);
     workspace.setUp();
 
     // The test should pass out of the box.
@@ -54,9 +51,9 @@ public class GenruleDepsIntegrationTest {
     Files.write(testFile, "Different text".getBytes(charsetForTest));
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
     result2.assertTestFailure();
-    assertThat("`buck test` should fail because testBasicAssertion() failed.",
+    assertThat(
+        "`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
         containsString("FAILURE com.example.LameTest testBasicAssertion"));
   }
-
 }

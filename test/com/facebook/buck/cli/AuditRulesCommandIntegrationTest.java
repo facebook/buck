@@ -18,26 +18,23 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AuditRulesCommandIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testBuckAuditRules() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_rules", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules", tmp);
     workspace.setUp();
 
     // Print all of the rules in a file.
@@ -49,8 +46,8 @@ public class AuditRulesCommandIntegrationTest {
             workspace.getFileContents("stdout.all")));
 
     // Print all of the rules filtered by type.
-    ProcessResult result2 = workspace.runBuckCommand(
-        "audit", "rules", "--type", "genrule", "example/BUCK");
+    ProcessResult result2 =
+        workspace.runBuckCommand("audit", "rules", "--type", "genrule", "example/BUCK");
     result2.assertSuccess();
     assertThat(
         result2.getStdout(),
@@ -58,8 +55,9 @@ public class AuditRulesCommandIntegrationTest {
             workspace.getFileContents("stdout.genrule")));
 
     // Print all of the rules using multiple filters.
-    ProcessResult result3 = workspace.runBuckCommand(
-        "audit", "rules", "-t", "genrule", "-t", "keystore", "example/BUCK");
+    ProcessResult result3 =
+        workspace.runBuckCommand(
+            "audit", "rules", "-t", "genrule", "-t", "keystore", "example/BUCK");
     result3.assertSuccess();
     assertThat(
         result3.getStdout(),
@@ -69,8 +67,8 @@ public class AuditRulesCommandIntegrationTest {
 
   @Test
   public void testBuckAuditRulesJsonOutput() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_rules", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules", tmp);
     workspace.setUp();
 
     // Print all of the rules in a file.
@@ -82,8 +80,8 @@ public class AuditRulesCommandIntegrationTest {
             workspace.getFileContents("stdout.all.json")));
 
     // Print all of the rules filtered by type.
-    ProcessResult result2 = workspace.runBuckCommand(
-        "audit", "rules", "--type", "genrule", "--json", "example/BUCK");
+    ProcessResult result2 =
+        workspace.runBuckCommand("audit", "rules", "--type", "genrule", "--json", "example/BUCK");
     result2.assertSuccess();
     assertThat(
         result2.getStdout(),
@@ -93,8 +91,8 @@ public class AuditRulesCommandIntegrationTest {
 
   @Test
   public void auditRulesRespectConfigs() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_rules_respect_configs", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules_respect_configs", tmp);
     workspace.setUp();
     ProcessResult result1 =
         workspace.runBuckCommand("audit", "rules", "example/BUCK", "-c", "test.config=bar");

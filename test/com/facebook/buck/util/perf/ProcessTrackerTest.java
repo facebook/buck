@@ -24,7 +24,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.FakeNuProcess;
@@ -38,11 +38,6 @@ import com.facebook.buck.util.ProcessResourceConsumption;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.zaxxer.nuprocess.NuProcess;
-
-import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,15 +45,18 @@ import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nullable;
+import org.hamcrest.CoreMatchers;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ProcessTrackerTest {
 
   private static final ImmutableMap<String, String> CONTEXT = ImmutableMap.of("aaa", "bbb");
 
   private static final long PID = 1337;
-  private static final Map<String, String> ENVIRONMENT = ImmutableMap.of("ProcessTrackerTest", "1");
+  private static final ImmutableMap<String, String> ENVIRONMENT =
+      ImmutableMap.of("ProcessTrackerTest", "1");
 
   private FakeProcessHelper processHelper;
   private FakeProcessRegistry processRegistry;
@@ -194,12 +192,11 @@ public class ProcessTrackerTest {
       String name,
       Optional<ProcessExecutorParams> params,
       @Nullable ProcessResourceConsumption res1,
-      BlockingQueue<ProcessResourceConsumptionEvent> events) throws Exception {
+      BlockingQueue<ProcessResourceConsumptionEvent> events)
+      throws Exception {
     info.postEvent();
     verifyEvents(
-        ImmutableMap.of(name, params),
-        ImmutableMap.of(name, Optional.ofNullable(res1)),
-        events);
+        ImmutableMap.of(name, params), ImmutableMap.of(name, Optional.ofNullable(res1)), events);
 
     ProcessResourceConsumption res2 = createConsumption(5, 10, 40);
     processHelper.setProcessResourceConsumption(pid, res2);
@@ -209,20 +206,14 @@ public class ProcessTrackerTest {
     ProcessResourceConsumption res3 = ProcessResourceConsumption.getPeak(res1, res2);
 
     info.postEvent();
-    verifyEvents(
-        ImmutableMap.of(name, params),
-        ImmutableMap.of(name, Optional.of(res3)),
-        events);
+    verifyEvents(ImmutableMap.of(name, params), ImmutableMap.of(name, Optional.of(res3)), events);
   }
 
   @Test
   public void testEventClass() {
     ProcessResourceConsumptionEvent event1 =
         new ProcessResourceConsumptionEvent(
-            "name42",
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+            "name42", Optional.empty(), Optional.empty(), Optional.empty());
     assertEquals("name42", event1.getExecutableName());
     assertEquals(Optional.empty(), event1.getParams());
     assertEquals(Optional.empty(), event1.getContext());
@@ -232,10 +223,7 @@ public class ProcessTrackerTest {
     ProcessResourceConsumption res = createConsumption(123, 45, 7011);
     ProcessResourceConsumptionEvent event2 =
         new ProcessResourceConsumptionEvent(
-            "name100e",
-            Optional.of(params),
-            Optional.of(CONTEXT),
-            Optional.of(res));
+            "name100e", Optional.of(params), Optional.of(CONTEXT), Optional.of(res));
     assertEquals("name100e", event2.getExecutableName());
     assertEquals(Optional.of(params), event2.getParams());
     assertEquals(Optional.of(CONTEXT), event2.getContext());
@@ -245,7 +233,8 @@ public class ProcessTrackerTest {
   private static void verifyEvents(
       @Nullable Map<String, Optional<ProcessExecutorParams>> expectedParams,
       @Nullable Map<String, Optional<ProcessResourceConsumption>> expectedRes,
-      BlockingQueue<ProcessResourceConsumptionEvent> events) throws Exception {
+      BlockingQueue<ProcessResourceConsumptionEvent> events)
+      throws Exception {
     dumpEvents(events);
     List<ProcessResourceConsumptionEvent> actualEvents = pollEvents(events);
     for (int i = 0; i < actualEvents.size(); i++) {
@@ -287,18 +276,16 @@ public class ProcessTrackerTest {
 
   private ProcessTrackerForTest createProcessTracker(
       final BlockingQueue<ProcessResourceConsumptionEvent> events) {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    eventBus.register(new Object() {
-      @Subscribe
-      public void event(ProcessResourceConsumptionEvent event) {
-        events.add(event);
-      }
-    });
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    eventBus.register(
+        new Object() {
+          @Subscribe
+          public void event(ProcessResourceConsumptionEvent event) {
+            events.add(event);
+          }
+        });
     return new ProcessTrackerForTest(
-        eventBus,
-        FakeInvocationInfoFactory.create(),
-        processHelper,
-        processRegistry);
+        eventBus, FakeInvocationInfoFactory.create(), processHelper, processRegistry);
   }
 
   private static class ProcessTrackerForTest extends ProcessTracker {
@@ -323,16 +310,13 @@ public class ProcessTrackerTest {
     }
 
     @Override
-    protected void startUp() throws Exception {
-    }
+    protected void startUp() throws Exception {}
 
     @Override
-    public void runOneIteration() throws Exception {
-    }
+    public void runOneIteration() throws Exception {}
 
     @Override
-    public void shutDown() throws Exception {
-    }
+    public void shutDown() throws Exception {}
 
     void verifyNoProcessInfo(long pid) throws Exception {
       assertFalse(processesInfo.containsKey(pid));
@@ -345,10 +329,8 @@ public class ProcessTrackerTest {
       assertSame(name, ((ThisProcessInfo) info).name);
     }
 
-    void verifyExternalProcessInfo(
-        long pid,
-        NuProcess process,
-        ProcessExecutorParams params) throws Exception {
+    void verifyExternalProcessInfo(long pid, NuProcess process, ProcessExecutorParams params)
+        throws Exception {
       ProcessInfo info = processesInfo.get(pid);
       assertThat(info, CoreMatchers.instanceOf(ExternalProcessInfo.class));
       assertEquals(pid, ((ExternalProcessInfo) info).pid);

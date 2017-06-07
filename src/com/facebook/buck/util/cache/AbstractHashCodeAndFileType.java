@@ -23,12 +23,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -39,6 +37,8 @@ abstract class AbstractHashCodeAndFileType {
   public abstract HashCode getHashCode();
 
   public abstract ImmutableSet<Path> getChildren();
+
+  public abstract long getTimestamp();
 
   @Value.Auxiliary
   abstract Optional<JarContentHasher> getJarContentHasher();
@@ -60,12 +60,11 @@ abstract class AbstractHashCodeAndFileType {
   }
 
   public static HashCodeAndFileType ofArchive(
-      HashCode hashCode,
-      ProjectFilesystem projectFilesystem,
-      Path archiveRelativePath) {
+      HashCode hashCode, ProjectFilesystem projectFilesystem, Path archiveRelativePath) {
     return HashCodeAndFileType.builder()
         .setType(Type.ARCHIVE)
         .setGetHashCode(hashCode)
+        .setTimestamp(System.nanoTime())
         .setJarContentHasher(new JarContentHasher(projectFilesystem, archiveRelativePath))
         .build();
   }
@@ -74,6 +73,7 @@ abstract class AbstractHashCodeAndFileType {
     return HashCodeAndFileType.builder()
         .setType(Type.DIRECTORY)
         .setGetHashCode(hashCode)
+        .setTimestamp(System.nanoTime())
         .setChildren(children)
         .build();
   }
@@ -81,6 +81,7 @@ abstract class AbstractHashCodeAndFileType {
   public static HashCodeAndFileType ofFile(HashCode hashCode) {
     return HashCodeAndFileType.builder()
         .setType(Type.FILE)
+        .setTimestamp(System.nanoTime())
         .setGetHashCode(hashCode)
         .build();
   }
@@ -90,5 +91,4 @@ abstract class AbstractHashCodeAndFileType {
     FILE,
     DIRECTORY
   };
-
 }

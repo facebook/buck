@@ -19,25 +19,22 @@ package com.facebook.buck.testrunner;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CallFlowIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testCallFlow() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "test_call_flow", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_call_flow", temporaryFolder);
     workspace.setUp();
 
     // ExceedsAnnotationTimeoutTest should fail.
@@ -46,5 +43,4 @@ public class CallFlowIntegrationTest {
         "Test should fail because @AfterClass method is supposed to call exit(42)");
     assertThat(suiteTestResult.getStderr(), containsString("exit code 42"));
   }
-
 }

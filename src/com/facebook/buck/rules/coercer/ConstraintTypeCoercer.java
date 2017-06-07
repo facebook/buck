@@ -21,7 +21,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.versions.Constraint;
 import com.facebook.buck.versions.ExactConstraint;
 import com.facebook.buck.versions.Version;
-
 import java.nio.file.Path;
 
 public class ConstraintTypeCoercer extends LeafTypeCoercer<Constraint> {
@@ -36,11 +35,11 @@ public class ConstraintTypeCoercer extends LeafTypeCoercer<Constraint> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
       return ExactConstraint.of(Version.of((String) object));
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }
-
 }

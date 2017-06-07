@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'java_library()' /}
+    {param navid: 'rule_java_library' /}
     {param prettify: true /}
     {param description}
       A rule that is used to define a set of Java files that can be compiled
@@ -79,51 +80,6 @@ of the compiled class files and resources.
   {param desc}
   Rules (usually other <code>java_library</code> rules) that are used to
   generate the classpath required to compile this <code>java_library</code>.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'autodeps' /}
-  {param default: 'False' /}
-  {param desc}
-  Should be set to <code>True</code> when using {call buck.cmd_autodeps /} to
-  generate the <code>deps</code> for this rule.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'generated_symbols' /}
-  {param default: '[]' /}
-  {param desc}
-  When using {call buck.cmd_autodeps /}, it may be necessary to declare types
-  or symbols that are provided by this rule that cannot be statically inferred
-  from the <code>srcs</code> alone. This is most common when you include
-  generated files among the <code>srcs</code>.
-  <p>
-  For example, when generating a <code>.java</code> file via a{sp}
-  {call buck.genrule /} that is wrapped in a {call buck.java_library /},
-  you would want to declare the type of the generated file in
-  the <code>generated_symbols</code> of the {call buck.java_library /}.
-{literal}<pre class="prettyprint lang-py">
-genrule(
-  name = 'make_java',
-  cmd = 'createJavaClass > $OUT',
-  # Creates this file in the package com.example.
-  out = 'CreatedClass.java',
-)
-
-java_library(
-  name = 'created',
-  srcs = [ ':make_java' ],
-  generated_symbols = [
-    'com.example.CreatedClass',
-  ],
-)
-</pre>{/literal}
-  In this way, if <code>buck autodeps</code> sees a reference to{sp}
-  <code>com.example.CreatedClass</code> in the{sp}
-  <code>srcs</code> of another {call buck.java_library /} rule, it would know
-  to add <code>:created</code> to that rule's <code>deps</code>.
   {/param}
 {/call}
 

@@ -16,109 +16,120 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
-import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
-import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.MavenUberJar;
+import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
-
-
-public class KotlinLibraryDescription implements Description<KotlinLibraryDescription.Arg> {
+public class KotlinLibraryDescription
+    implements Description<KotlinLibraryDescriptionArg>, Flavored {
 
   private final KotlinBuckConfig kotlinBuckConfig;
+
+  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
+      ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   public KotlinLibraryDescription(KotlinBuckConfig kotlinBuckConfig) {
     this.kotlinBuckConfig = kotlinBuckConfig;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public Class<KotlinLibraryDescriptionArg> getConstructorArgType() {
+    return KotlinLibraryDescriptionArg.class;
+  }
+
+  @Override
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      CellPathResolver cellRoots,
+      KotlinLibraryDescriptionArg args)
+      throws NoSuchBuildTargetException {
 
-    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
-      BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
-      resolver.requireRule(libraryTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
-          pathResolver,
-          params,
-          new BuildTargetSourcePath(libraryTarget));
+    BuildTarget target = params.getBuildTarget();
+
+    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+
+    BuildRuleParams paramsWithMavenFlavor = null;
+    if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      paramsWithMavenFlavor = params;
+
+      // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
+      // without the maven flavor to prevent output-path conflict
+      params = params.withoutFlavor(JavaLibrary.MAVEN_JAR);
     }
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    if (flavors.contains(JavaLibrary.SRC_JAR)) {
+      Optional<String> mavenCoords =
+          args.getMavenCoords()
+              .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
-    BuildRuleParams javaLibraryParams =
-        params.appendExtraDeps(
-            BuildRules.getExportedRules(
-                Iterables.concat(
-                    params.getDeclaredDeps().get(),
-                    exportedDeps,
-                    resolver.getAllRules(args.providedDeps))));
-    return new DefaultJavaLibrary(
-        javaLibraryParams,
-        pathResolver,
-        args.srcs,
-        validateResources(
-            pathResolver,
-            params.getProjectFilesystem(),
-            args.resources),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableList.of(),
-        exportedDeps,
-        resolver.getAllRules(args.providedDeps),
-        abiJarTarget,
-        JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-        /* trackClassUsage */ false,
-        /* additionalClasspathEntries */ ImmutableSet.of(),
-        new KotlincToJarStepFactory(
-            kotlinBuckConfig.getKotlinCompiler().get(),
-            args.extraKotlincArguments),
-        Optional.empty(),
-        /* manifest file */ Optional.empty(),
-        Optional.empty(),
-        ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ ImmutableSet.of());
+      if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+        return new JavaSourceJar(params, args.getSrcs(), mavenCoords);
+      } else {
+        return MavenUberJar.SourceJar.create(
+            Preconditions.checkNotNull(paramsWithMavenFlavor),
+            args.getSrcs(),
+            mavenCoords,
+            args.getMavenPomTemplate());
+      }
+    }
+
+    KotlinLibraryBuilder defaultKotlinLibraryBuilder =
+        new KotlinLibraryBuilder(targetGraph, params, resolver, cellRoots, kotlinBuckConfig)
+            .setArgs(args);
+
+    // We know that the flavour we're being asked to create is valid, since the check is done when
+    // creating the action graph from the target graph.
+    if (HasJavaAbi.isAbiTarget(target)) {
+      return defaultKotlinLibraryBuilder.buildAbi();
+    }
+
+    DefaultJavaLibrary defaultKotlinLibrary = defaultKotlinLibraryBuilder.build();
+
+    if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      return defaultKotlinLibrary;
+    } else {
+      resolver.addToIndex(defaultKotlinLibrary);
+      return MavenUberJar.create(
+          defaultKotlinLibrary,
+          Preconditions.checkNotNull(paramsWithMavenFlavor),
+          args.getMavenCoords(),
+          args.getMavenPomTemplate());
+    }
   }
 
-
-  @SuppressFieldNotInitialized
-  public static class Arg extends JvmLibraryArg {
-    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
-    public ImmutableList<String> extraKotlincArguments = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
+    ImmutableList<String> getExtraKotlincArguments();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractKotlinLibraryDescriptionArg extends CoreArg {}
 }

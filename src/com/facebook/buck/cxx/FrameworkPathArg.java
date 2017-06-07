@@ -19,54 +19,35 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.OptionalCompat;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-
 import java.util.Objects;
 
-/**
- * A base class for {@link Arg}s which wrap a {@link FrameworkPath}.
- */
-public abstract class FrameworkPathArg extends Arg {
+/** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
+public abstract class FrameworkPathArg implements Arg {
 
-  protected final SourcePathResolver resolver;
   protected final ImmutableCollection<FrameworkPath> frameworkPaths;
 
-  public FrameworkPathArg(
-      SourcePathResolver resolver,
-      ImmutableCollection<FrameworkPath> frameworkPaths) {
-    this.resolver = resolver;
+  public FrameworkPathArg(ImmutableCollection<FrameworkPath> frameworkPaths) {
     this.frameworkPaths = frameworkPaths;
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(final SourcePathResolver resolver) {
-    FluentIterable<SourcePath> sourcePaths = FluentIterable.from(frameworkPaths)
-        .transformAndConcat(
-            new Function<FrameworkPath, Iterable<SourcePath>>() {
-              @Override
-              public Iterable<SourcePath> apply(FrameworkPath input) {
-                return OptionalCompat.asSet(input.getSourcePath());
-              }
-            });
-    return resolver.filterBuildRuleInputs(sourcePaths);
+  public ImmutableCollection<BuildRule> getDeps(final SourcePathRuleFinder ruleFinder) {
+    FluentIterable<SourcePath> sourcePaths =
+        FluentIterable.from(frameworkPaths)
+            .transformAndConcat(input -> OptionalCompat.asSet(input.getSourcePath()));
+    return ruleFinder.filterBuildRuleInputs(sourcePaths);
   }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
     return FluentIterable.from(frameworkPaths)
-        .transformAndConcat(
-            new Function<FrameworkPath, Iterable<SourcePath>>() {
-              @Override
-              public Iterable<SourcePath> apply(FrameworkPath input) {
-                return OptionalCompat.asSet(input.getSourcePath());
-              }
-            })
+        .transformAndConcat(input -> OptionalCompat.asSet(input.getSourcePath()))
         .toList();
   }
 

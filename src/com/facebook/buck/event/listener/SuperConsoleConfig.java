@@ -18,7 +18,6 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-
 import java.util.Optional;
 
 public class SuperConsoleConfig {
@@ -37,9 +36,8 @@ public class SuperConsoleConfig {
   }
 
   public int getThreadLineLimitOnWarning() {
-    return getPositiveInt(
-        SECTION_NAME,
-        "thread_line_limit_on_warning").orElse(getThreadLineLimit());
+    return getPositiveInt(SECTION_NAME, "thread_line_limit_on_warning")
+        .orElse(getThreadLineLimit());
   }
 
   public int getThreadLineLimitOnError() {
@@ -58,12 +56,8 @@ public class SuperConsoleConfig {
     long value = optional.get();
     if (value <= 0 || value > Integer.MAX_VALUE) {
       throw new HumanReadableException(
-          "Configuration %s:%s contains value out of range: %s.",
-          sectionName,
-          propertyName,
-          value);
+          "Configuration %s:%s contains value out of range: %s.", sectionName, propertyName, value);
     }
     return Optional.of((int) value);
   }
-
 }

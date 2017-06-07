@@ -17,26 +17,21 @@
 import static javax.lang.model.SourceVersion.RELEASE_7;
 
 import com.google.common.io.Closeables;
-
 import java.io.Closeable;
 import java.io.StringReader;
 import java.util.Set;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.TypeElement;
 
-/**
- * Simple annotation processor that does nothing.
- */
+/** Simple annotation processor that does nothing. */
 @SupportedSourceVersion(RELEASE_7)
 @SupportedAnnotationTypes("*")
 public class SimpleProc extends AbstractProcessor {
   @Override
-  public boolean process(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     Closeable closeable = new StringReader("example");
     Closeables.closeQuietly(closeable);
     return false;

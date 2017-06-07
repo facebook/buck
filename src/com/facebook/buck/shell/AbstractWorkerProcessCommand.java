@@ -17,10 +17,8 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -32,14 +30,14 @@ abstract class AbstractWorkerProcessCommand {
   public abstract Path getArgsPath();
 
   /**
-   * Path to file where stdout can be written out. Remote process should output everything into
-   * this file instead of printing out into its own stdout.
+   * Path to file where stdout can be written out. Remote process should output everything into this
+   * file instead of printing out into its own stdout.
    */
   public abstract Path getStdOutPath();
 
   /**
-   * Path to file where stderr can be written out. Remote process should output everything into
-   * this file instead of printing out into its own stderr.
+   * Path to file where stderr can be written out. Remote process should output everything into this
+   * file instead of printing out into its own stderr.
    */
   public abstract Path getStdErrPath();
 }

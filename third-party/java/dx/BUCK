@@ -1,19 +1,17 @@
 java_library(
-  name = 'dx',
-  srcs = glob(['src/**/*.java']),
-  deps = [
-    '//third-party/java/guava:guava',
-  ],
-  licenses = [
-    'NOTICE',
-  ],
-  visibility = ['PUBLIC'],
+    name = "dx",
+    srcs = glob(["src/**/*.java"]),
+    licenses = [
+        "NOTICE",
+    ],
+    visibility = ["PUBLIC"],
+    deps = ["//third-party/java/guava:guava"],
 )
 
 export_file(
-  name = 'etc_dx',
-  src = 'etc/dx',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "etc_dx",
+    src = "etc/dx",
+    visibility = [
+        "PUBLIC",
+    ],
 )

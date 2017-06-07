@@ -26,12 +26,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Base class for a parse pipeline that converts data one item at a time.
+ *
  * @param <F> Type to convert from (raw nodes, for example)
  * @param <T> Type to convert to (TargetNode, for example)
  */
@@ -39,70 +41,63 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   private final PipelineNodeCache<BuildTarget, T> cache;
   protected final ListeningExecutorService executorService;
 
-  public ConvertingPipeline(
-      ListeningExecutorService executorService,
-      Cache<BuildTarget, T> cache) {
+  public ConvertingPipeline(ListeningExecutorService executorService, Cache<BuildTarget, T> cache) {
     this.cache = new PipelineNodeCache<>(cache);
     this.executorService = executorService;
   }
 
   @Override
   public ListenableFuture<ImmutableSet<T>> getAllNodesJob(
-      final Cell cell,
-      final Path buildFile) throws BuildTargetException {
+      final Cell cell, final Path buildFile, AtomicLong processedBytes)
+      throws BuildTargetException {
     // TODO(csarbora): this hits the chained pipeline before hitting the cache
-    ListenableFuture<List<T>> allNodesListJob = Futures.transformAsync(
-        getItemsToConvert(cell, buildFile),
-        allToConvert -> {
-          if (shuttingDown()) {
-            return Futures.immediateCancelledFuture();
-          }
+    ListenableFuture<List<T>> allNodesListJob =
+        Futures.transformAsync(
+            getItemsToConvert(cell, buildFile, processedBytes),
+            allToConvert -> {
+              if (shuttingDown()) {
+                return Futures.immediateCancelledFuture();
+              }
 
-          ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
+              ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
 
-          for (final F from : allToConvert) {
-            if (isValid(from)) {
-              final BuildTarget target = getBuildTarget(cell.getRoot(), buildFile, from);
-              allNodeJobs.add(
-                  cache.getJobWithCacheLookup(
-                      cell,
-                      target,
-                      () -> {
-                        if (shuttingDown()) {
-                          return Futures.immediateCancelledFuture();
-                        }
-                        return dispatchComputeNode(cell, target, from);
-                      }));
-            }
-          }
+              for (final F from : allToConvert) {
+                if (isValid(from)) {
+                  BuildTarget target =
+                      getBuildTarget(cell.getRoot(), cell.getCanonicalName(), buildFile, from);
+                  allNodeJobs.add(
+                      cache.getJobWithCacheLookup(
+                          cell,
+                          target,
+                          () -> {
+                            if (shuttingDown()) {
+                              return Futures.immediateCancelledFuture();
+                            }
+                            return dispatchComputeNode(cell, target, processedBytes, from);
+                          }));
+                }
+              }
 
-          return Futures.allAsList(allNodeJobs.build());
-        },
-        executorService
-    );
+              return Futures.allAsList(allNodeJobs.build());
+            },
+            executorService);
     return Futures.transform(
         allNodesListJob,
-        new Function<List<T>, ImmutableSet<T>>() {
-          @Override
-          public ImmutableSet<T> apply(List<T> input) {
-            return ImmutableSet.copyOf(input);
-          }
-        },
-        executorService
-    );
+        (Function<List<T>, ImmutableSet<T>>) ImmutableSet::copyOf,
+        executorService);
   }
 
   @Override
   public ListenableFuture<T> getNodeJob(
-      final Cell cell,
-      final BuildTarget buildTarget) throws BuildTargetException {
+      final Cell cell, final BuildTarget buildTarget, AtomicLong processedBytes)
+      throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
-        () -> Futures.transformAsync(
-            getItemToConvert(cell, buildTarget),
-            from -> dispatchComputeNode(cell, buildTarget, from)
-        ));
+        () ->
+            Futures.transformAsync(
+                getItemToConvert(cell, buildTarget, processedBytes),
+                from -> dispatchComputeNode(cell, buildTarget, processedBytes, from)));
   }
 
   protected boolean isValid(F from) {
@@ -110,27 +105,21 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   protected abstract BuildTarget getBuildTarget(
-      Path root,
-      Path buildFile,
-      F from);
+      Path root, Optional<String> cellName, Path buildFile, F from);
 
   protected abstract T computeNode(
-      Cell cell,
-      BuildTarget buildTarget,
-      F rawNode) throws BuildTargetException;
+      Cell cell, BuildTarget buildTarget, F rawNode, AtomicLong processedBytes)
+      throws BuildTargetException;
 
   protected abstract ListenableFuture<ImmutableSet<F>> getItemsToConvert(
-      Cell cell,
-      Path buildFile) throws BuildTargetException;
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException;
 
   protected abstract ListenableFuture<F> getItemToConvert(
-      Cell cell,
-      BuildTarget buildTarget) throws BuildTargetException;
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException;
 
   private ListenableFuture<T> dispatchComputeNode(
-      Cell cell,
-      BuildTarget buildTarget,
-      F from) throws BuildTargetException {
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes, F from)
+      throws BuildTargetException {
     // TODO(csarbora): would be nice to have the first half of this function pulled up into base
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -143,13 +132,10 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
     Path pathToCheck = buildTarget.getBasePath();
     if (cell.getFilesystem().isIgnored(pathToCheck)) {
       throw new HumanReadableException(
-          "Content of '%s' cannot be built because" +
-              " it is defined in an ignored directory.",
+          "Content of '%s' cannot be built because" + " it is defined in an ignored directory.",
           pathToCheck);
     }
 
-    return Futures.immediateFuture(
-        computeNode(cell, buildTarget, from));
+    return Futures.immediateFuture(computeNode(cell, buildTarget, from, processedBytes));
   }
-
 }

@@ -18,20 +18,16 @@ package com.facebook.buck.jvm.groovy;
 
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
-
 public class GroovyTestIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -39,8 +35,8 @@ public class GroovyTestIntegrationTest {
   public void setUp() throws IOException {
     assumeTrue(System.getenv("GROOVY_HOME") != null);
 
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "groovy_test_description", tmp);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "groovy_test_description", tmp);
     workspace.setUp();
   }
 

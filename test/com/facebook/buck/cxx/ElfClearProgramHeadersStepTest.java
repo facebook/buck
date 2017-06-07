@@ -25,23 +25,20 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ElfClearProgramHeadersStepTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void test() throws IOException {
+  public void test() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
@@ -53,9 +50,7 @@ public class ElfClearProgramHeadersStepTest {
 
     // Verify that the program table section is empty.
     try (FileChannel channel =
-        FileChannel.open(
-            step.getFilesystem().resolve(step.getPath()),
-            StandardOpenOption.READ)) {
+        FileChannel.open(step.getFilesystem().resolve(step.getPath()), StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
       // Program headers are at the beginning of the file, so truncating to `int` should be ok.
@@ -65,5 +60,4 @@ public class ElfClearProgramHeadersStepTest {
       }
     }
   }
-
 }

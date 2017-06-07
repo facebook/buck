@@ -1,5 +1,9 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/graph:graph',
-  ],
+java_library(
+    name = "graph",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/graph:graph",
+    ],
+    visibility = ["PUBLIC"],
+    deps = ["//third-party/java/guava:guava"],
 )

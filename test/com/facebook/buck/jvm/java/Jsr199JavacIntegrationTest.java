@@ -26,9 +26,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -41,11 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,20 +54,21 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.lang.model.SourceVersion;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class Jsr199JavacIntegrationTest {
 
   public static final ImmutableSortedSet<Path> SOURCE_PATHS =
       ImmutableSortedSet.of(Paths.get("Example.java"));
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private Path pathToSrcsList;
 
@@ -86,20 +83,26 @@ public class Jsr199JavacIntegrationTest {
     String pathToOutputDir = tmp.getRoot().resolve("out").toAbsolutePath().toString();
 
     assertEquals(
-        String.format("javac -source %s -target %s -g " +
-            "-d %s " +
-            "-classpath '' " +
-            "@" + pathToSrcsList.toString(),
+        String.format(
+            "javac -source %s -target %s -g "
+                + "-d %s "
+                + "-classpath '' "
+                + "@"
+                + pathToSrcsList.toString(),
             JavacOptions.TARGETED_JAVA_VERSION,
             JavacOptions.TARGETED_JAVA_VERSION,
             pathToOutputDir),
         javac.getDescription(
             ImmutableList.of(
-                "-source", JavacOptions.TARGETED_JAVA_VERSION,
-                "-target", JavacOptions.TARGETED_JAVA_VERSION,
+                "-source",
+                JavacOptions.TARGETED_JAVA_VERSION,
+                "-target",
+                JavacOptions.TARGETED_JAVA_VERSION,
                 "-g",
-                "-d", pathToOutputDir,
-                "-classpath", "''"),
+                "-d",
+                pathToOutputDir,
+                "-classpath",
+                "''"),
             SOURCE_PATHS,
             pathToSrcsList));
   }
@@ -114,29 +117,31 @@ public class Jsr199JavacIntegrationTest {
   public void testClassesFile() throws IOException, InterruptedException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-        new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
-        executionContext.getStdErr(),
-        executionContext.getClassLoaderCache(),
-        executionContext.getObjectMapper(),
-        executionContext.getVerbosity(),
-        executionContext.getCellPathResolver(),
-        executionContext.getJavaPackageFinder(),
-        createProjectFilesystem(),
-        NoOpClassUsageFileWriter.instance(),
-        executionContext.getEnvironment(),
-        executionContext.getProcessExecutor(),
-        ImmutableList.of(),
-        Optional.empty());
+    JavacExecutionContext javacExecutionContext =
+        JavacExecutionContext.of(
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            executionContext.getStdErr(),
+            executionContext.getClassLoaderCache(),
+            executionContext.getVerbosity(),
+            executionContext.getCellPathResolver(),
+            executionContext.getJavaPackageFinder(),
+            createProjectFilesystem(),
+            NoOpClassUsageFileWriter.instance(),
+            executionContext.getEnvironment(),
+            executionContext.getProcessExecutor(),
+            ImmutableList.of(),
+            Optional.empty());
 
-    int exitCode = javac.buildWithClasspath(
-        javacExecutionContext,
-        BuildTargetFactory.newInstance("//some:example"),
-        ImmutableList.of(),
-        ImmutableSet.of(),
-        SOURCE_PATHS,
-        pathToSrcsList,
-        Optional.empty());
+    int exitCode =
+        javac.buildWithClasspath(
+            javacExecutionContext,
+            BuildTargetFactory.newInstance("//some:example"),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            SOURCE_PATHS,
+            pathToSrcsList,
+            Optional.empty(),
+            JavacCompilationMode.FULL);
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -155,36 +160,37 @@ public class Jsr199JavacIntegrationTest {
       throws IOException, InterruptedException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildRule rule = new FakeBuildRule("//:fake", pathResolver);
     resolver.addToIndex(rule);
 
-    Jsr199Javac javac = createJavac(
-        /* withSyntaxError */ false);
+    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-        new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
-        executionContext.getStdErr(),
-        executionContext.getClassLoaderCache(),
-        executionContext.getObjectMapper(),
-        executionContext.getVerbosity(),
-        executionContext.getCellPathResolver(),
-        executionContext.getJavaPackageFinder(),
-        createProjectFilesystem(),
-        NoOpClassUsageFileWriter.instance(),
-        executionContext.getEnvironment(),
-        executionContext.getProcessExecutor(),
-        ImmutableList.of(),
-        Optional.empty());
+    JavacExecutionContext javacExecutionContext =
+        JavacExecutionContext.of(
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            executionContext.getStdErr(),
+            executionContext.getClassLoaderCache(),
+            executionContext.getVerbosity(),
+            executionContext.getCellPathResolver(),
+            executionContext.getJavaPackageFinder(),
+            createProjectFilesystem(),
+            NoOpClassUsageFileWriter.instance(),
+            executionContext.getEnvironment(),
+            executionContext.getProcessExecutor(),
+            ImmutableList.of(),
+            Optional.empty());
 
-    int exitCode = javac.buildWithClasspath(
-        javacExecutionContext,
-        BuildTargetFactory.newInstance("//some:example"),
-        ImmutableList.of(),
-        ImmutableSet.of(),
-        SOURCE_PATHS,
-        pathToSrcsList,
-        Optional.empty());
+    int exitCode =
+        javac.buildWithClasspath(
+            javacExecutionContext,
+            BuildTargetFactory.newInstance("//some:example"),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            SOURCE_PATHS,
+            pathToSrcsList,
+            Optional.empty(),
+            JavacCompilationMode.FULL);
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -196,8 +202,7 @@ public class Jsr199JavacIntegrationTest {
 
   public static final class MockJavac implements JavaCompiler {
 
-    public MockJavac() {
-    }
+    public MockJavac() {}
 
     @Override
     public Set<SourceVersion> getSourceVersions() {
@@ -205,11 +210,7 @@ public class Jsr199JavacIntegrationTest {
     }
 
     @Override
-    public int run(
-        InputStream in,
-        OutputStream out,
-        OutputStream err,
-        String... arguments) {
+    public int run(InputStream in, OutputStream out, OutputStream err, String... arguments) {
       throw new UnsupportedOperationException("abcdef");
     }
 
@@ -219,8 +220,7 @@ public class Jsr199JavacIntegrationTest {
     }
 
     @Override
-    public StandardJavaFileManager
-    getStandardFileManager(
+    public StandardJavaFileManager getStandardFileManager(
         DiagnosticListener<? super JavaFileObject> diagnosticListener,
         Locale locale,
         Charset charset) {
@@ -243,40 +243,39 @@ public class Jsr199JavacIntegrationTest {
   public void shouldUseSpecifiedJavacJar() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildRule rule = new FakeBuildRule("//:fake", pathResolver);
     resolver.addToIndex(rule);
 
     Path fakeJavacJar = Paths.get("ae036e57-77a7-4356-a79c-0f85b1a3290d", "fakeJavac.jar");
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    MockClassLoader mockClassLoader = new MockClassLoader(
-        ClassLoader.getSystemClassLoader(),
-        ImmutableMap.of(
-            JavacOptions.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
-            MockJavac.class));
-    executionContext.getClassLoaderCache().injectClassLoader(
-        ClassLoader.getSystemClassLoader(),
-        ImmutableList.of(fakeJavacJar.toUri().toURL()),
-        mockClassLoader);
+    MockClassLoader mockClassLoader =
+        new MockClassLoader(
+            ClassLoader.getSystemClassLoader(),
+            ImmutableMap.of(JavacSpec.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, MockJavac.class));
+    executionContext
+        .getClassLoaderCache()
+        .injectClassLoader(
+            ClassLoader.getSystemClassLoader(),
+            ImmutableList.of(fakeJavacJar.toUri().toURL()),
+            mockClassLoader);
 
-    Jsr199Javac javac = createJavac(
-        /* withSyntaxError */ false,
-        Optional.of(fakeJavacJar));
+    Jsr199Javac javac = createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
-    JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-        new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
-        executionContext.getStdErr(),
-        executionContext.getClassLoaderCache(),
-        executionContext.getObjectMapper(),
-        executionContext.getVerbosity(),
-        executionContext.getCellPathResolver(),
-        executionContext.getJavaPackageFinder(),
-        createProjectFilesystem(),
-        NoOpClassUsageFileWriter.instance(),
-        executionContext.getEnvironment(),
-        executionContext.getProcessExecutor(),
-        ImmutableList.of(fakeJavacJar),
-        Optional.empty());
+    JavacExecutionContext javacExecutionContext =
+        JavacExecutionContext.of(
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            executionContext.getStdErr(),
+            executionContext.getClassLoaderCache(),
+            executionContext.getVerbosity(),
+            executionContext.getCellPathResolver(),
+            executionContext.getJavaPackageFinder(),
+            createProjectFilesystem(),
+            NoOpClassUsageFileWriter.instance(),
+            executionContext.getEnvironment(),
+            executionContext.getProcessExecutor(),
+            ImmutableList.of(fakeJavacJar),
+            Optional.empty());
 
     boolean caught = false;
 
@@ -285,10 +284,11 @@ public class Jsr199JavacIntegrationTest {
           javacExecutionContext,
           BuildTargetFactory.newInstance("//some:example"),
           ImmutableList.of(),
-          ImmutableSet.of(),
+          ImmutableList.of(),
           SOURCE_PATHS,
           pathToSrcsList,
-          Optional.empty());
+          Optional.empty(),
+          JavacCompilationMode.FULL);
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {
@@ -299,30 +299,25 @@ public class Jsr199JavacIntegrationTest {
     assertTrue("mock Java compiler should throw", caught);
   }
 
-  private Jsr199Javac createJavac(
-      boolean withSyntaxError,
-      Optional<Path> javacJar) throws IOException {
+  private Jsr199Javac createJavac(boolean withSyntaxError, Optional<Path> javacJar)
+      throws IOException {
 
     Path exampleJava = tmp.newFile("Example.java");
     Files.write(
         exampleJava,
         Joiner.on('\n')
             .join(
-                "package com.example;",
-                "",
-                "public class Example {" +
-                    (withSyntaxError ? "" : "}"))
+                "package com.example;", "", "public class Example {" + (withSyntaxError ? "" : "}"))
             .getBytes(Charsets.UTF_8));
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
 
-    Optional<SourcePath> jar = javacJar.map(
-        SourcePaths.toSourcePath(new FakeProjectFilesystem())::apply);
+    Optional<SourcePath> jar =
+        javacJar.map(p -> new PathSourcePath(new FakeProjectFilesystem(), p));
     if (jar.isPresent()) {
       return new JarBackedJavac(
-          JavacOptions.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
-          ImmutableSet.of(jar.get()));
+          JavacSpec.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()));
     }
 
     return new JdkProvidedInMemoryJavac();
@@ -332,7 +327,7 @@ public class Jsr199JavacIntegrationTest {
     return createJavac(withSyntaxError, Optional.empty());
   }
 
-  private ProjectFilesystem createProjectFilesystem() {
+  private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
     return new ProjectFilesystem(tmp.getRoot());
   }
 }

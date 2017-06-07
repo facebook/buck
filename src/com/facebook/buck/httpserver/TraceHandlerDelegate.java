@@ -16,27 +16,23 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.facebook.buck.util.trace.BuildTraces;
+import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
-
-import org.eclipse.jetty.server.Request;
-
 import java.io.IOException;
 import java.util.regex.Matcher;
-
 import javax.annotation.Nullable;
+import org.eclipse.jetty.server.Request;
 
-/**
- * HTTP handler for requests to the {@code /trace} path.
- */
+/** HTTP handler for requests to the {@code /trace} path. */
 public class TraceHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
-  private final TracesHelper tracesHelper;
+  private final BuildTraces buildTraces;
 
-  TraceHandlerDelegate(TracesHelper tracesHelper) {
+  TraceHandlerDelegate(BuildTraces buildTraces) {
     super(ImmutableSet.of("trace.soy"));
-    this.tracesHelper = tracesHelper;
+    this.buildTraces = buildTraces;
   }
 
   @Override
@@ -59,7 +55,7 @@ public class TraceHandlerDelegate extends AbstractTemplateHandlerDelegate {
     templateData.put("traceId", id);
 
     // Read the args to `buck` out of the Chrome Trace.
-    TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(id);
+    TraceAttributes traceAttributes = buildTraces.getTraceAttributesFor(id);
     templateData.put("dateTime", traceAttributes.getFormattedDateTime());
     if (traceAttributes.getCommand().isPresent()) {
       templateData.put("command", traceAttributes.getCommand().get());

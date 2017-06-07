@@ -16,44 +16,36 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
-
+import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
+import com.facebook.buck.jvm.java.plugin.api.TaskEventMirror;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.tools.JavaCompiler;
+import javax.annotation.Nullable;
 
 /**
- * A {@link TaskListener} that traces all events to a {@link JavacPhaseTracer}. The event stream
- * coming from the compiler is a little dirty, so this class cleans it up minimally before tracing.
+ * A {@link BuckJavacTaskListener} that traces all events to a {@link JavacPhaseTracer}. The event
+ * stream coming from the compiler is a little dirty, so this class cleans it up minimally before
+ * tracing.
  */
-public class TracingTaskListener implements TaskListener {
+public class TracingTaskListener implements BuckJavacTaskListener {
   private final JavacPhaseTracer tracing;
   private final TraceCleaner traceCleaner;
+  @Nullable private final BuckJavacTaskListener inner;
 
-  public static void setupTracing(JavaCompiler.CompilationTask task, JavacPhaseTracer tracing) {
-    if (!(task instanceof JavacTask)) {
-      return;
-    }
-
-    final JavacTask javacTask = (JavacTask) task;
-    javacTask.setTaskListener(new TracingTaskListener(tracing));
-  }
-
-  public TracingTaskListener(JavacPhaseTracer tracing) {
+  public TracingTaskListener(JavacPhaseTracer tracing, @Nullable BuckJavacTaskListener next) {
+    inner = next;
     this.tracing = tracing;
     traceCleaner = new TraceCleaner(tracing);
   }
 
   @Override
-  public synchronized void started(TaskEvent e) {
-    // Because TaskListener, TaskEvent, etc. live in tools.jar, and our build has only a stub for
-    // that, we can't call started() and finished() directly within tests. So we write started()
-    // to extract necessary information from TaskEvent and dispatch any interesting work to helper
-    // methods. Tests can then exercise those methods directly without issue.
+  public synchronized void started(TaskEventMirror e) {
+    // Chain start events before tracing, so that the tracing most closely tracks the actual event
+    // time
+    if (inner != null) {
+      inner.started(e);
+    }
+
     switch (e.getKind()) {
       case PARSE:
         tracing.beginParse(getFileName(e));
@@ -71,6 +63,7 @@ public class TracingTaskListener implements TaskListener {
         tracing.beginGenerate(getFileName(e), getTypeName(e));
         break;
       case ANNOTATION_PROCESSING:
+      case COMPILATION:
       default:
         // The tracing doesn't care about these events
         break;
@@ -78,7 +71,7 @@ public class TracingTaskListener implements TaskListener {
   }
 
   @Override
-  public synchronized void finished(TaskEvent e) {
+  public synchronized void finished(TaskEventMirror e) {
     // See comment in started() about testability.
     switch (e.getKind()) {
       case PARSE:
@@ -97,15 +90,20 @@ public class TracingTaskListener implements TaskListener {
         tracing.endGenerate();
         break;
       case ANNOTATION_PROCESSING:
+      case COMPILATION:
       default:
         // The tracing doesn't care about these events
         break;
     }
+
+    // Chain finished events after tracing, so that the tracing most closely tracks the actual
+    // event time
+    if (inner != null) {
+      inner.finished(e);
+    }
   }
 
-  /**
-   * Cleans up the slightly dirty aspects of the event stream.
-   */
+  /** Cleans up the slightly dirty aspects of the event stream. */
   static class TraceCleaner {
     private final JavacPhaseTracer tracing;
     private int enterCount = 0;
@@ -120,11 +118,13 @@ public class TracingTaskListener implements TaskListener {
      * Generally the compiler enters all compilation units at once. It fires start events for all of
      * them, does the work, then fires finish events for all of them. There are a couple of issues
      * with this from a tracing perspective:
+     *
      * <ul>
-     * <li>It generates a ton of slices</li>
-     * <li>The finish events are in the same order as the start ones (we'd expect them to be in
-     * reverse order if this were true tracing)</li>
+     *   <li>It generates a ton of slices
+     *   <li>The finish events are in the same order as the start ones (we'd expect them to be in
+     *       reverse order if this were true tracing)
      * </ul>
+     *
      * To clean this up into a trace-friendly event stream, we coalesce all the enter events for a
      * given round into one.
      *
@@ -139,9 +139,7 @@ public class TracingTaskListener implements TaskListener {
       enteredFiles.add(filename);
     }
 
-    /**
-     * @see #startEnter(String)
-     */
+    /** @see #startEnter(String) */
     void finishEnter() {
       enterCount -= 1;
 
@@ -163,9 +161,7 @@ public class TracingTaskListener implements TaskListener {
       tracing.beginAnalyze(filename, typename);
     }
 
-    /**
-     * @see #startAnalyze(String, String)
-     */
+    /** @see #startAnalyze(String, String) */
     void finishAnalyze(@Nullable String filename, @Nullable String typename) {
       if (analyzeCount > 0) {
         analyzeCount -= 1;
@@ -178,16 +174,16 @@ public class TracingTaskListener implements TaskListener {
   }
 
   @Nullable
-  private static String getFileName(TaskEvent e) {
+  private static String getFileName(TaskEventMirror e) {
     if (e.getSourceFile() == null) {
       return null;
     }
 
-    return e.getSourceFile().toString();
+    return e.getSourceFile().toUri().toString();
   }
 
   @Nullable
-  private static String getTypeName(TaskEvent e) {
+  private static String getTypeName(TaskEventMirror e) {
     if (e.getTypeElement() == null) {
       return null;
     }

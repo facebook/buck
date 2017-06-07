@@ -35,29 +35,28 @@ import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nonnull;
 
-/**
- * A provide for the {@link Preprocessor} and {@link Compiler} C/C++ drivers.
- */
+/** A provide for the {@link Preprocessor} and {@link Compiler} C/C++ drivers. */
 public abstract class CxxToolProvider<T> {
 
   private static final Logger LOG = Logger.get(CxxToolProvider.class);
   private static final Pattern CLANG_VERSION_PATTERN =
       Pattern.compile(
-          "\\s*(" + // Ignore leading whitespace.
-          "clang version [.0-9]*(\\s*\\(.*\\))?" + // Format used by opensource Clang.
-          "|" +
-          "Apple LLVM version [.0-9]*\\s*\\(clang-[.0-9]*\\)" + // Format used by Apple's clang.
-          ")\\s*"); // Ignore trailing whitespace.
+          "\\s*("
+              + // Ignore leading whitespace.
+              "clang version [.0-9]*(\\s*\\(.*\\))?"
+              + // Format used by opensource Clang.
+              "|"
+              + "Apple LLVM version [.0-9]*\\s*\\(clang-[.0-9]*\\)"
+              + // Format used by Apple's clang.
+              ")\\s*"); // Ignore trailing whitespace.
 
   private final ToolProvider toolProvider;
   private final Supplier<Type> type;
@@ -73,52 +72,41 @@ public abstract class CxxToolProvider<T> {
                 }
               });
 
-  private CxxToolProvider(
-      ToolProvider toolProvider,
-      Supplier<Type> type) {
+  private CxxToolProvider(ToolProvider toolProvider, Supplier<Type> type) {
     this.toolProvider = toolProvider;
     this.type = type;
   }
 
-  /**
-   * Build using a {@link ToolProvider} and a required type.
-   */
-  public CxxToolProvider(
-      ToolProvider toolProvider,
-      Type type) {
+  /** Build using a {@link ToolProvider} and a required type. */
+  public CxxToolProvider(ToolProvider toolProvider, Type type) {
     this(toolProvider, Suppliers.ofInstance(type));
   }
 
   /**
-   * Build using a {@link Path} and an optional type.  If the type is absent, the tool will be
+   * Build using a {@link Path} and an optional type. If the type is absent, the tool will be
    * executed to infer it.
    */
-  public CxxToolProvider(
-      final Path path,
-      Optional<Type> type) {
+  public CxxToolProvider(final Path path, Optional<Type> type) {
     this(
         new ConstantToolProvider(new HashedFileTool(path)),
-        type.isPresent() ?
-            Suppliers.ofInstance(type.get()) :
-            Suppliers.memoize(
-                (Supplier<Type>) () -> getTypeFromPath(path)));
+        type.isPresent()
+            ? Suppliers.ofInstance(type.get())
+            : Suppliers.memoize((Supplier<Type>) () -> getTypeFromPath(path)));
   }
 
   private static Type getTypeFromPath(Path path) {
     ProcessExecutorParams params =
-        ProcessExecutorParams.builder()
-            .addCommand(path.toString())
-            .addCommand("--version")
-            .build();
+        ProcessExecutorParams.builder().addCommand(path.toString()).addCommand("--version").build();
     ProcessExecutor.Result result;
     try {
       ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
-      result = processExecutor.launchAndExecute(
-          params,
-          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-          Optional.empty(),
-          Optional.empty(),
-          Optional.empty());
+      result =
+          processExecutor.launchAndExecute(
+              params,
+              EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
     } catch (InterruptedException | IOException e) {
       throw new RuntimeException(e);
     }
@@ -163,5 +151,4 @@ public abstract class CxxToolProvider<T> {
     GCC,
     WINDOWS
   }
-
 }

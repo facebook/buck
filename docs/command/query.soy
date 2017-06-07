@@ -13,6 +13,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'buck query' /}
+    {param navid: 'command_query' /}
     {param prettify: true /}
     {param description}
       Provide facilities to query information about the target nodes graph.
@@ -146,6 +147,7 @@ expr ::= word
        | buildfile(expr)
        | deps(expr)
        | deps(expr, depth)
+       | deps(expr, depth, expr)
        | filter(word, expr)
        | inputs(expr)
        | kind(word, expr)
@@ -403,6 +405,7 @@ that define these targets, e.g. <code>foo/bar/BUCK</code>.
 {literal}
 expr ::= deps(expr)
        | deps(expr, depth)
+       | deps(expr, depth, expr)
 {/literal}
 </pre></p>
 
@@ -422,6 +425,17 @@ includes the nodes directly reachable from the nodes
 in <code>deps(//foo:bar, 1)</code>, and so on. If the depth parameter is
 omitted, the search is unbounded, i.e. it computes the transitive closure of
 dependencies.
+</p>
+
+<p>
+The <code>deps</code> operator accepts an optional third argument, which is
+an expression that is evaluated for each node and returns the children to
+recurse on when collecting transitive dependencies.
+The filter expression can use the <code>first_order_deps()</code> function
+which evaluates to a set containing the first-order depencencies of the current
+node (e.g. equivalent to <code>deps(<node>, 1)</code>).
+As an example, the query <code>deps(//foo:bar, 1, first_order_deps())</code> is
+equivalent to <code>deps(//foo:bar, 1)</code>.
 </p>
 
 

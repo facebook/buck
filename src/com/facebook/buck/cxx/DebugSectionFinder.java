@@ -23,7 +23,6 @@ import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
@@ -62,8 +61,8 @@ public class DebugSectionFinder {
   }
 
   /**
-   * @return a map of all the debug sections found in executable format represented as
-   *     {@code buffer}, or {@link Optional#empty()} if the format was not recognized.
+   * @return a map of all the debug sections found in executable format represented as {@code
+   *     buffer}, or {@link Optional#empty()} if the format was not recognized.
    */
   public Optional<ImmutableMap<String, DebugSection>> find(ByteBuffer buffer) {
     if (Elf.isElf(buffer)) {
@@ -72,5 +71,4 @@ public class DebugSectionFinder {
       return Optional.empty();
     }
   }
-
 }

@@ -16,31 +16,33 @@
 
 package com.facebook.buck.go;
 
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.io.MorePaths;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import static org.junit.Assert.assertThat;
-
-import java.nio.file.Paths;
 
 public class GoDescriptorsTest {
   private ImmutableMap<String, String> getPackageImportMap(
-      Iterable<String> globalVendorPath,
-      String basePackage, Iterable<String> packages) {
-    return ImmutableMap.copyOf(FluentIterable.from(
-        GoDescriptors.getPackageImportMap(
-            ImmutableList.copyOf(
-              FluentIterable.from(globalVendorPath).transform(Paths::get)),
-            Paths.get(basePackage),
-            FluentIterable.from(packages).transform(Paths::get)).entrySet())
-        .transform(input -> Maps.immutableEntry(
-            MorePaths.pathWithUnixSeparators(input.getKey()),
-            MorePaths.pathWithUnixSeparators(input.getValue()))));
+      Iterable<String> globalVendorPath, String basePackage, Iterable<String> packages) {
+    return ImmutableMap.copyOf(
+        FluentIterable.from(
+                GoDescriptors.getPackageImportMap(
+                        ImmutableList.copyOf(
+                            FluentIterable.from(globalVendorPath).transform(Paths::get)),
+                        Paths.get(basePackage),
+                        FluentIterable.from(packages).transform(Paths::get))
+                    .entrySet())
+            .transform(
+                input ->
+                    Maps.immutableEntry(
+                        MorePaths.pathWithUnixSeparators(input.getKey()),
+                        MorePaths.pathWithUnixSeparators(input.getValue()))));
   }
 
   @Test
@@ -49,11 +51,7 @@ public class GoDescriptorsTest {
         getPackageImportMap(
             ImmutableList.of(""),
             "foo/bar/baz",
-            ImmutableList.of(
-                "foo/bar",
-                "bar",
-                "foo/bar/baz/waffle"
-            )),
+            ImmutableList.of("foo/bar", "bar", "foo/bar/baz/waffle")),
         Matchers.anEmptyMap());
   }
 
@@ -63,14 +61,8 @@ public class GoDescriptorsTest {
         getPackageImportMap(
             ImmutableList.of(""),
             "foo/bar/baz",
-            ImmutableList.of(
-                "foo/bar",
-                "bar",
-                "foo/bar/baz/waffle",
-                "foo/vendor/hello/world"
-            )),
-        Matchers.equalTo(ImmutableMap.of(
-            "hello/world", "foo/vendor/hello/world")));
+            ImmutableList.of("foo/bar", "bar", "foo/bar/baz/waffle", "foo/vendor/hello/world")),
+        Matchers.equalTo(ImmutableMap.of("hello/world", "foo/vendor/hello/world")));
   }
 
   @Test
@@ -79,14 +71,8 @@ public class GoDescriptorsTest {
         getPackageImportMap(
             ImmutableList.of(""),
             "foo/bar/baz",
-            ImmutableList.of(
-                "foo/bar",
-                "bar",
-                "foo/bar/baz/waffle",
-                "foo/bar/vendor/hello/world"
-            )),
-        Matchers.equalTo(ImmutableMap.of(
-            "hello/world", "foo/bar/vendor/hello/world")));
+            ImmutableList.of("foo/bar", "bar", "foo/bar/baz/waffle", "foo/bar/vendor/hello/world")),
+        Matchers.equalTo(ImmutableMap.of("hello/world", "foo/bar/vendor/hello/world")));
   }
 
   @Test
@@ -101,10 +87,8 @@ public class GoDescriptorsTest {
                 "foo/bar/baz/waffle",
                 "qux/hello/world",
                 "vendor/hello/world",
-                "foo/bar/vendor/hello/world"
-            )),
-        Matchers.equalTo(ImmutableMap.of(
-            "hello/world", "foo/bar/vendor/hello/world")));
+                "foo/bar/vendor/hello/world")),
+        Matchers.equalTo(ImmutableMap.of("hello/world", "foo/bar/vendor/hello/world")));
   }
 
   @Test
@@ -113,12 +97,7 @@ public class GoDescriptorsTest {
         getPackageImportMap(
             ImmutableList.of("qux"),
             "foo/bar/baz",
-            ImmutableList.of(
-                "foo/bar",
-                "bar",
-                "qux/hello/world"
-            )),
-        Matchers.equalTo(ImmutableMap.of(
-            "hello/world", "qux/hello/world")));
+            ImmutableList.of("foo/bar", "bar", "qux/hello/world")),
+        Matchers.equalTo(ImmutableMap.of("hello/world", "qux/hello/world")));
   }
 }

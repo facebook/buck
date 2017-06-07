@@ -24,7 +24,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.Path;
@@ -45,23 +44,22 @@ public class AndroidPlatformTarget {
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
 
-  /**
-   * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws a
-   * {@link NoAndroidSdkException}.
-   */
+  /** {@link Supplier} for an {@link AndroidPlatformTarget} that always throws. */
   public static final Supplier<AndroidPlatformTarget> EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER =
       () -> {
-        throw new NoAndroidSdkException();
+        throw new HumanReadableException(
+            "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
       };
 
   @VisibleForTesting
-  static final Pattern PLATFORM_TARGET_PATTERN = Pattern.compile(
-      "(?:Google Inc\\.:Google APIs:|android-)(.+)");
+  static final Pattern PLATFORM_TARGET_PATTERN =
+      Pattern.compile("(?:Google Inc\\.:Google APIs:|android-)(.+)");
 
   private final String name;
   private final Path androidJar;
   private final List<Path> bootclasspathEntries;
   private final Path aaptExecutable;
+  private final Path aapt2Executable;
   private final Path adbExecutable;
   private final Path aidlExecutable;
   private final Path zipalignExecutable;
@@ -72,12 +70,12 @@ public class AndroidPlatformTarget {
   private final Path optimizedProguardConfig;
   private final AndroidDirectoryResolver androidDirectoryResolver;
 
-
   private AndroidPlatformTarget(
       String name,
       Path androidJar,
       List<Path> bootclasspathEntries,
       Path aaptExecutable,
+      Path aapt2Executable,
       Path adbExecutable,
       Path aidlExecutable,
       Path zipalignExecutable,
@@ -91,6 +89,7 @@ public class AndroidPlatformTarget {
     this.androidJar = androidJar;
     this.bootclasspathEntries = ImmutableList.copyOf(bootclasspathEntries);
     this.aaptExecutable = aaptExecutable;
+    this.aapt2Executable = aapt2Executable;
     this.adbExecutable = adbExecutable;
     this.aidlExecutable = aidlExecutable;
     this.zipalignExecutable = zipalignExecutable;
@@ -102,9 +101,7 @@ public class AndroidPlatformTarget {
     this.androidDirectoryResolver = androidDirectoryResolver;
   }
 
-  /**
-   * This is likely something like {@code "Google Inc.:Google APIs:21"}.
-   */
+  /** This is likely something like {@code "Google Inc.:Google APIs:21"}. */
   public String getName() {
     return name;
   }
@@ -118,15 +115,17 @@ public class AndroidPlatformTarget {
     return androidJar;
   }
 
-  /**
-   * @return bootclasspath entries as absolute {@link Path}s
-   */
+  /** @return bootclasspath entries as absolute {@link Path}s */
   public List<Path> getBootclasspathEntries() {
     return bootclasspathEntries;
   }
 
   public Path getAaptExecutable() {
     return aaptExecutable;
+  }
+
+  public Path getAapt2Executable() {
+    return aapt2Executable;
   }
 
   public Path getAdbExecutable() {
@@ -165,56 +164,65 @@ public class AndroidPlatformTarget {
     return androidDirectoryResolver.getNdkOrAbsent();
   }
 
+  public Path checkNdkDirectory() {
+    return androidDirectoryResolver.getNdkOrThrow();
+  }
+
   public Optional<Path> getSdkDirectory() {
     return androidDirectoryResolver.getSdkOrAbsent();
   }
 
-  /**
-   * @param platformId for the platform, such as "Google Inc.:Google APIs:16"
-   */
-  public static Optional<AndroidPlatformTarget> getTargetForId(
+  public Path checkSdkDirectory() {
+    return androidDirectoryResolver.getSdkOrThrow();
+  }
+
+  /** @param platformId for the platform, such as "Google Inc.:Google APIs:16" */
+  public static AndroidPlatformTarget getTargetForId(
       String platformId,
       AndroidDirectoryResolver androidDirectoryResolver,
-      Optional<Path> aaptOverride) {
+      Optional<Path> aaptOverride,
+      Optional<Path> aapt2Override) {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
-      try {
-        String apiLevel = platformMatcher.group(1);
-        Factory platformTargetFactory;
-        if (platformId.contains("Google APIs")) {
-          platformTargetFactory = new AndroidWithGoogleApisFactory();
-        } else {
-          platformTargetFactory = new AndroidWithoutGoogleApisFactory();
-        }
-        return Optional.of(
-            platformTargetFactory.newInstance(androidDirectoryResolver, apiLevel, aaptOverride));
-      } catch (NumberFormatException e) {
-        return Optional.empty();
+      String apiLevel = platformMatcher.group(1);
+      Factory platformTargetFactory;
+      if (platformId.contains("Google APIs")) {
+        platformTargetFactory = new AndroidWithGoogleApisFactory();
+      } else {
+        platformTargetFactory = new AndroidWithoutGoogleApisFactory();
       }
+      return platformTargetFactory.newInstance(
+          androidDirectoryResolver, apiLevel, aaptOverride, aapt2Override);
     } else {
-      return Optional.empty();
+      String messagePrefix =
+          String.format("The Android SDK for '%s' could not be found. ", platformId);
+      throw new HumanReadableException(
+          messagePrefix
+              + "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
     }
   }
 
   public static AndroidPlatformTarget getDefaultPlatformTarget(
       AndroidDirectoryResolver androidDirectoryResolver,
-      Optional<Path> aaptOverride) {
-    return getTargetForId(DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver, aaptOverride)
-        .get();
+      Optional<Path> aaptOverride,
+      Optional<Path> aapt2Override) {
+    return getTargetForId(
+        DEFAULT_ANDROID_PLATFORM_TARGET, androidDirectoryResolver, aaptOverride, aapt2Override);
   }
 
   private interface Factory {
-    public AndroidPlatformTarget newInstance(
+    AndroidPlatformTarget newInstance(
         AndroidDirectoryResolver androidDirectoryResolver,
         String apiLevel,
-        Optional<Path> aaptOverride);
+        Optional<Path> aaptOverride,
+        Optional<Path> aapt2Override);
   }
 
   /**
-   * Given the path to the Android SDK as well as the platform path within the Android SDK,
-   * find all the files needed to create the {@link AndroidPlatformTarget}, assuming that the
-   * organization of the Android SDK conforms to the ordinary directory structure.
+   * Given the path to the Android SDK as well as the platform path within the Android SDK, find all
+   * the files needed to create the {@link AndroidPlatformTarget}, assuming that the organization of
+   * the Android SDK conforms to the ordinary directory structure.
    */
   @VisibleForTesting
   static AndroidPlatformTarget createFromDefaultDirectoryStructure(
@@ -222,12 +230,12 @@ public class AndroidPlatformTarget {
       AndroidDirectoryResolver androidDirectoryResolver,
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
-      Optional<Path> aaptOverride) {
+      Optional<Path> aaptOverride,
+      Optional<Path> aapt2Override) {
     Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
-          "Path to Android SDK must be absolute but was: %s.",
-          androidSdkDir);
+          "Path to Android SDK must be absolute but was: %s.", androidSdkDir);
     }
 
     Path platformDirectory = androidSdkDir.resolve(platformDirectoryPath);
@@ -236,8 +244,7 @@ public class AndroidPlatformTarget {
     // Add any libraries found in the optional directory under the Android SDK directory. These
     // go at the head of the bootclasspath before any additional jars.
     File optionalDirectory = platformDirectory.resolve("optional").toFile();
-    if (optionalDirectory.exists() &&
-        optionalDirectory.isDirectory()) {
+    if (optionalDirectory.exists() && optionalDirectory.isDirectory()) {
       String[] optionalDirList = optionalDirectory.list(new AddonFilter());
       if (optionalDirList != null) {
         Arrays.sort(optionalDirList);
@@ -282,7 +289,7 @@ public class AndroidPlatformTarget {
     Path proguardJar = androidSdkDir.resolve("tools/proguard/lib/proguard.jar");
     Path proguardConfig = androidSdkDir.resolve("tools/proguard/proguard-android.txt");
     Path optimizedProguardConfig =
-       androidSdkDir.resolve("tools/proguard/proguard-android-optimize.txt");
+        androidSdkDir.resolve("tools/proguard/proguard-android-optimize.txt");
 
     return new AndroidPlatformTarget(
         name,
@@ -290,11 +297,14 @@ public class AndroidPlatformTarget {
         bootclasspathEntries,
         aaptOverride.orElse(
             androidSdkDir.resolve(buildToolsBinDir).resolve("aapt").toAbsolutePath()),
+        aapt2Override.orElse(
+            androidSdkDir.resolve(buildToolsBinDir).resolve("aapt2").toAbsolutePath()),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
         androidSdkDir.resolve(buildToolsBinDir).resolve("aidl").toAbsolutePath(),
         zipAlignExecutable,
-        buildToolsDir.resolve(
-            Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx").toAbsolutePath(),
+        buildToolsDir
+            .resolve(Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx")
+            .toAbsolutePath(),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
@@ -302,9 +312,7 @@ public class AndroidPlatformTarget {
         androidDirectoryResolver);
   }
 
-  /**
-   * Factory to build an AndroidPlatformTarget that corresponds to a given Google API level.
-   */
+  /** Factory to build an AndroidPlatformTarget that corresponds to a given Google API level. */
   private static class AndroidWithGoogleApisFactory implements Factory {
 
     private static final String API_DIR_SUFFIX = "(?:-([0-9]+))*";
@@ -313,7 +321,8 @@ public class AndroidPlatformTarget {
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
         final String apiLevel,
-        Optional<Path> aaptOverride) {
+        Optional<Path> aaptOverride,
+        Optional<Path> aapt2Override) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
@@ -321,9 +330,11 @@ public class AndroidPlatformTarget {
       final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
 
       if (addonsParentDir.isDirectory()) {
-        String[] addonsApiDirs = addonsParentDir.list(
-            (dir, name1) -> apiDirPattern.matcher(name1).matches());
-        Arrays.sort(addonsApiDirs, new Comparator<String>() {
+        String[] addonsApiDirs =
+            addonsParentDir.list((dir, name1) -> apiDirPattern.matcher(name1).matches());
+        Arrays.sort(
+            addonsApiDirs,
+            new Comparator<String>() {
               @Override
               public int compare(String o1, String o2) {
                 return getVersion(o1) - getVersion(o2);
@@ -344,9 +355,9 @@ public class AndroidPlatformTarget {
           File libsDir = new File(addonsParentDir, dir + "/libs");
 
           String[] addonFiles;
-          if (libsDir.isDirectory() &&
-              (addonFiles = libsDir.list(new AddonFilter())) != null &&
-              addonFiles.length != 0) {
+          if (libsDir.isDirectory()
+              && (addonFiles = libsDir.list(new AddonFilter())) != null
+              && addonFiles.length != 0) {
             Arrays.sort(addonFiles);
             for (String addonJar : addonFiles) {
               additionalJarPaths.add(libsDir.toPath().resolve(addonJar));
@@ -357,15 +368,16 @@ public class AndroidPlatformTarget {
                 androidDirectoryResolver,
                 "platforms/android-" + apiLevel,
                 additionalJarPaths.build(),
-                aaptOverride);
+                aaptOverride,
+                aapt2Override);
           }
         }
       }
 
       throw new HumanReadableException(
-          "Google APIs not found in %s.\n" +
-          "Please run '%s/tools/android sdk' and select both 'SDK Platform' and " +
-          "'Google APIs' under Android (API %s)",
+          "Google APIs not found in %s.\n"
+              + "Please run '%s/tools/android sdk' and select both 'SDK Platform' and "
+              + "'Google APIs' under Android (API %s)",
           new File(addonsParentDir, apiDirPrefix + "/libs").getAbsolutePath(),
           androidSdkDir,
           apiLevel);
@@ -377,13 +389,15 @@ public class AndroidPlatformTarget {
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
         final String apiLevel,
-        Optional<Path> aaptOverride) {
+        Optional<Path> aaptOverride,
+        Optional<Path> aapt2Override) {
       return createFromDefaultDirectoryStructure(
           "android-" + apiLevel,
           androidDirectoryResolver,
           "platforms/android-" + apiLevel,
           /* additionalJarPaths */ ImmutableSet.of(),
-          aaptOverride);
+          aaptOverride,
+          aapt2Override);
     }
   }
 

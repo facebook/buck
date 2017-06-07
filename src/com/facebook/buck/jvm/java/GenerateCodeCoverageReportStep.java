@@ -18,23 +18,27 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FILE;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.CoverageReportFormat;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -44,7 +48,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final ProjectFilesystem filesystem;
   private final Set<String> sourceDirectories;
-  private final Set<Path> classesDirectories;
+  private final Set<Path> jarFiles;
   private final Path outputDirectory;
   private CoverageReportFormat format;
   private final String title;
@@ -56,7 +60,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       JavaRuntimeLauncher javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       Set<String> sourceDirectories,
-      Set<Path> classesDirectories,
+      Set<Path> jarFiles,
       Path outputDirectory,
       CoverageReportFormat format,
       String title,
@@ -64,10 +68,9 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       Optional<String> coverageExcludes) {
     super(filesystem.getRootPath());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-
     this.filesystem = filesystem;
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
-    this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
+    this.jarFiles = ImmutableSet.copyOf(jarFiles);
     this.outputDirectory = outputDirectory;
     this.format = format;
     this.title = title;
@@ -84,8 +87,34 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())){
-      saveParametersToPropertyStream(filesystem, propertyFileStream);
+    Set<Path> tempDirs = new HashSet<>();
+    Set<Path> extractedClassesDirectories = new HashSet<>();
+    for (Path jarFile : jarFiles) {
+      if (filesystem.isDirectory(jarFile)) {
+        extractedClassesDirectories.add(jarFile);
+      } else {
+        Path extractClassDir = Files.createTempDirectory("extractedClasses");
+        populateClassesDir(jarFile, extractClassDir);
+        extractedClassesDirectories.add(extractClassDir);
+        tempDirs.add(extractClassDir);
+      }
+    }
+
+    try {
+      return executeInternal(context, extractedClassesDirectories);
+    } finally {
+      for (Path tempDir : tempDirs) {
+        MoreFiles.deleteRecursively(tempDir);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  StepExecutionResult executeInternal(
+      ExecutionContext context, Set<Path> extractedClassesDirectories)
+      throws IOException, InterruptedException {
+    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())) {
+      saveParametersToPropertyStream(filesystem, extractedClassesDirectories, propertyFileStream);
     }
 
     return super.execute(context);
@@ -94,20 +123,19 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   @VisibleForTesting
   void saveParametersToPropertyStream(
       ProjectFilesystem filesystem,
-      OutputStream outputStream) throws IOException {
+      Set<Path> extractedClassesDirectories,
+      OutputStream outputStream)
+      throws IOException {
     final Properties properties = new Properties();
 
-    properties.setProperty(
-        "jacoco.output.dir",
-        filesystem.resolve(outputDirectory).toString());
+    properties.setProperty("jacoco.output.dir", filesystem.resolve(outputDirectory).toString());
     properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);
     properties.setProperty("jacoco.format", format.toString().toLowerCase());
     properties.setProperty("jacoco.title", title);
-    properties.setProperty(
-        "classes.dir", Joiner.on(":").join(
-            Iterables.transform(
-                classesDirectories,
-                filesystem::resolve)));
+
+    properties.setProperty("classes.jars", formatPathSet(jarFiles));
+
+    properties.setProperty("classes.dir", formatPathSet(extractedClassesDirectories));
     properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
 
     if (coverageIncludes.isPresent()) {
@@ -123,6 +151,10 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     }
   }
 
+  private String formatPathSet(Set<Path> paths) {
+    return Joiner.on(":").join(Iterables.transform(paths, filesystem::resolve));
+  }
+
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
@@ -136,4 +168,18 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     return args.build();
   }
 
+  /**
+   * ReportGenerator.java needs a class-directory to work with, so if we instead have a jar file we
+   * extract it first.
+   */
+  private void populateClassesDir(Path outputJar, Path classesDir) throws InterruptedException {
+    try {
+      Preconditions.checkState(
+          filesystem.exists(outputJar), String.valueOf(outputJar) + " does not exist");
+      Unzip.extractZipFile(
+          outputJar, classesDir, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

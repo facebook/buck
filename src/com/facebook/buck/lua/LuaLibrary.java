@@ -18,12 +18,9 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 
 public abstract class LuaLibrary extends NoopBuildRule implements LuaPackageable {
-  public LuaLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    super(params, resolver);
+  public LuaLibrary(BuildRuleParams params) {
+    super(params);
   }
 }

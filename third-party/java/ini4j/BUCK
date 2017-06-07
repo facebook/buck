@@ -1,13 +1,13 @@
 prebuilt_jar(
-  name = 'ini4j',
-  binary_jar = 'ini4j-0.5.2.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/config:config',
-    '//test/com/facebook/buck/testutil/integration:util',
-    '//test/com/facebook/buck/util:util',
-  ],
+    name = "ini4j",
+    binary_jar = "ini4j-0.5.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:util",
+    ],
 )
-

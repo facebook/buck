@@ -16,21 +16,23 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import com.facebook.buck.util.HumanReadableException;
+import java.io.IOException;
+import java.nio.file.Files;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-
 public class BuckQueryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -49,13 +51,68 @@ public class BuckQueryIntegrationTest {
 
   /**
    * Tests for a bug where the combination of using instance equality for target nodes and using
-   * multiple separate calls into the parse, each which invalidate the cache nodes with inputs
-   * under symlinks, triggers a crash in `buck query` when it sees two instances of a node with
-   * the same build target.
+   * multiple separate calls into the parse, each which invalidate the cache nodes with inputs under
+   * symlinks, triggers a crash in `buck query` when it sees two instances of a node with the same
+   * build target.
    */
   @Test
   public void testRdepsWithSymlinks() throws IOException {
     workspace.runBuckCommand("query", "rdeps(//symlinks/..., //symlinks/a:a)");
   }
 
+  @Test
+  public void testDependencyCycles() throws IOException {
+    try {
+      workspace.runBuckCommand("query", "deps(//cycles:a)");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(), Matchers.containsString("//cycles:a -> //cycles:a"));
+    }
+
+    try {
+      workspace.runBuckCommand("query", "deps(//cycles:b)");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(), Matchers.containsString("//cycles:a -> //cycles:a"));
+    }
+
+    try {
+      workspace.runBuckCommand("query", "deps(//cycles:c)");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.containsString("//cycles:c -> //cycles:d -> //cycles:c"));
+    }
+
+    try {
+      workspace.runBuckCommand("query", "deps(//cycles:d)");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.containsString("//cycles:d -> //cycles:c -> //cycles:d"));
+    }
+
+    try {
+      workspace.runBuckCommand("query", "deps(//cycles:e)");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.containsString("//cycles:c -> //cycles:d -> //cycles:c"));
+    }
+
+    try {
+      workspace.runBuckCommand("query", "deps(set(//cycles:f //cycles/dir:g))");
+      fail("Should have detected a cycle.");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.containsString(
+              "//cycles:f -> //cycles/dir:g -> //cycles:h -> " + "//cycles/dir:i -> //cycles:f"));
+    }
+  }
 }

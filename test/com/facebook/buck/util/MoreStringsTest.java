@@ -21,10 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.regex.Pattern;
+import org.junit.Test;
 
 public class MoreStringsTest {
 
@@ -74,13 +72,13 @@ public class MoreStringsTest {
         2,
         MoreStrings.getLevenshteinDistance("BIULD", "BUILD"));
     assertEquals(
-        "The distance between 'INSTALL' and 'AUDIT' should be 7 " +
-            "(e.g., 5 substitutions + 2 deletions).",
+        "The distance between 'INSTALL' and 'AUDIT' should be 7 "
+            + "(e.g., 5 substitutions + 2 deletions).",
         7,
         MoreStrings.getLevenshteinDistance("INSTALL", "AUDIT"));
     assertEquals(
-        "The distance between 'aaa' and 'bbbbbb' should be 6 " +
-            "(e.g., 3 substitutions + 3 insertions).",
+        "The distance between 'aaa' and 'bbbbbb' should be 6 "
+            + "(e.g., 3 substitutions + 3 insertions).",
         6,
         MoreStrings.getLevenshteinDistance("aaa", "bbbbbb"));
     assertEquals(
@@ -100,8 +98,8 @@ public class MoreStringsTest {
     assertTrue(varArgTestPattern.matcher("foo").matches());
     assertFalse(varArgTestPattern.matcher("mehfoo").matches());
 
-    Pattern iterabeArgTestPattern = Pattern.compile(
-        ".*" + MoreStrings.regexPatternForAny(ImmutableSet.of("raz", "meh")) + "$");
+    Pattern iterabeArgTestPattern =
+        Pattern.compile(".*" + MoreStrings.regexPatternForAny(ImmutableSet.of("raz", "meh")) + "$");
     assertTrue(iterabeArgTestPattern.matcher("hello raz").matches());
     assertTrue(iterabeArgTestPattern.matcher("hello meh").matches());
     assertFalse(iterabeArgTestPattern.matcher("hello meh hi").matches());

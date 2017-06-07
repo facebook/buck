@@ -26,7 +26,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,9 +47,7 @@ public class PackagedResource implements Supplier<Path> {
   private final Supplier<Path> supplier;
 
   public PackagedResource(
-      ProjectFilesystem filesystem,
-      Class<?> relativeTo,
-      String pathRelativeToClass) {
+      ProjectFilesystem filesystem, Class<?> relativeTo, String pathRelativeToClass) {
     this.filesystem = filesystem;
     this.relativeTo = relativeTo;
 
@@ -69,8 +66,9 @@ public class PackagedResource implements Supplier<Path> {
 
   /**
    * Use this as unique ID for resource when hashing is not enabled
-   * @return Class name followed by relative file path.
-   * E.g. com.facebook.buck.MyClass#some_resource_file.abc
+   *
+   * @return Class name followed by relative file path. E.g.
+   *     com.facebook.buck.MyClass#some_resource_file.abc
    */
   public String getResourceIdentifier() {
     return relativeTo.getName() + "#" + name;
@@ -78,6 +76,7 @@ public class PackagedResource implements Supplier<Path> {
 
   /**
    * Use this combined with file hash as unique ID when hashing is enabled.
+   *
    * @return {@link Path} representing filename of packaged resource
    */
   public Path getFilenamePath() {
@@ -85,14 +84,16 @@ public class PackagedResource implements Supplier<Path> {
   }
 
   private Path unpack() {
-    try (
-        InputStream inner = Preconditions.checkNotNull(
-            Resources.getResource(relativeTo, name),
-            "Unable to find: %s", name).openStream();
+    try (InputStream inner =
+            Preconditions.checkNotNull(
+                    Resources.getResource(relativeTo, name), "Unable to find: %s", name)
+                .openStream();
         BufferedInputStream stream = new BufferedInputStream(inner)) {
 
       Path outputPath =
-          filesystem.getBuckPaths().getResDir()
+          filesystem
+              .getBuckPaths()
+              .getResDir()
               .resolve(relativeTo.getCanonicalName())
               .resolve(filename);
 
@@ -114,8 +115,7 @@ public class PackagedResource implements Supplier<Path> {
         filesystem.createParentDirs(outputPath);
         Path tempFilePath =
             filesystem.createTempFile(
-                outputPath.getParent(),
-                outputPath.getFileName().toString() + ".", ".tmp");
+                outputPath.getParent(), outputPath.getFileName().toString() + ".", ".tmp");
         try (OutputStream outputStream = filesystem.newFileOutputStream(tempFilePath)) {
           ByteStreams.copy(stream, outputStream);
         }
@@ -126,5 +126,4 @@ public class PackagedResource implements Supplier<Path> {
       throw new RuntimeException("Unable to unpack " + name, ioe);
     }
   }
-
 }

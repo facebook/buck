@@ -23,20 +23,16 @@ import static org.junit.Assert.assertThat;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-
 import org.junit.Test;
 
-/**
- * Unit tests for {@link StringHashing}.
- */
+/** Unit tests for {@link StringHashing}. */
 public class StringHashingTest {
   @Test
   public void emptyStringHasExpectedHash() {
     Hasher hasher = Hashing.sha1().newHasher();
     StringHashing.hashStringAndLength(hasher, "");
     assertThat(
-        hasher.hash(),
-        equalTo(HashCode.fromString("9069ca78e7450a285173431b3e52c5c25299e473")));
+        hasher.hash(), equalTo(HashCode.fromString("9069ca78e7450a285173431b3e52c5c25299e473")));
   }
 
   @Test
@@ -46,8 +42,6 @@ public class StringHashingTest {
     StringHashing.hashStringAndLength(separateHasher, "bar");
     Hasher concatenatedHasher = Hashing.sha1().newHasher();
     StringHashing.hashStringAndLength(separateHasher, "foobar");
-    assertThat(
-        separateHasher.hash(),
-        not(equalTo(concatenatedHasher.hash())));
+    assertThat(separateHasher.hash(), not(equalTo(concatenatedHasher.hash())));
   }
 }

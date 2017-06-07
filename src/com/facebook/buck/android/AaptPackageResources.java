@@ -16,113 +16,109 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AaptPackageResources.BuildOutput;
-import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-/**
- * Packages the resources using {@code aapt}.
- */
-public class AaptPackageResources extends AbstractBuildRule
-    implements InitializableFromDisk<BuildOutput> {
+/** Packages the resources using {@code aapt}. */
+public class AaptPackageResources extends AbstractBuildRule {
 
   public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
   public static final String FILTERED_RESOURCE_DIRS_KEY = "filtered_resource_dirs";
+  public static final String RESOURCE_APK_PATH_FORMAT = "%s.unsigned.ap_";
 
-  @AddToRuleKey
-  private final SourcePath manifest;
+  @AddToRuleKey private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final ImmutableSet<SourcePath> assetsDirectories;
-  @AddToRuleKey
-  private final Optional<String> resourceUnionPackage;
-  @AddToRuleKey
-  private final PackageType packageType;
-  private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
-  @AddToRuleKey
-  private final boolean shouldBuildStringSourceMap;
-  @AddToRuleKey
-  private final boolean skipCrunchPngs;
-  @AddToRuleKey
-  private final EnumSet<RType> bannedDuplicateResourceTypes;
-  @AddToRuleKey
-  private final ManifestEntries manifestEntries;
-  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
-  @AddToRuleKey
-  private final boolean includesVectorDrawables;
+  @AddToRuleKey private final boolean skipCrunchPngs;
+  @AddToRuleKey private final ManifestEntries manifestEntries;
+  @AddToRuleKey private final boolean includesVectorDrawables;
+
+  static ImmutableSortedSet<BuildRule> getAllDeps(
+      BuildTarget aaptTarget,
+      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver ruleResolver,
+      SourcePath manifest,
+      FilteredResourcesProvider filteredResourcesProvider,
+      ImmutableList<HasAndroidResourceDeps> resourceDeps) {
+
+    ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+    Stream<BuildTarget> resourceTargets =
+        resourceDeps.stream().map(HasAndroidResourceDeps::getBuildTarget);
+    depsBuilder.addAll(
+        BuildRules.toBuildRulesFor(aaptTarget, ruleResolver, resourceTargets::iterator));
+    Stream<SourcePath> resourceDirs = resourceDeps.stream().map(HasAndroidResourceDeps::getRes);
+    depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(resourceDirs));
+    ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
+    filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
+    return depsBuilder.build();
+  }
 
   AaptPackageResources(
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver ruleResolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      ImmutableSet<SourcePath> assetsDirectories,
-      Optional<String> resourceUnionPackage,
-      PackageType packageType,
-      boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
-      EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
-    super(params, resolver);
+    super(
+        params.copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(
+                getAllDeps(
+                    params.getBuildTarget(),
+                    ruleFinder,
+                    ruleResolver,
+                    manifest,
+                    filteredResourcesProvider,
+                    resourceDeps)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())));
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
-    this.resourceDeps = resourceDeps;
-    this.assetsDirectories = assetsDirectories;
-    this.resourceUnionPackage = resourceUnionPackage;
-    this.packageType = packageType;
-    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
-    this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.manifestEntries = manifestEntries;
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getResourceApkPath();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath());
   }
 
-  public Path getPathToRDotTxtDir() {
+  private Path getPathToRDotTxtDir() {
     return BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__%s_res_symbols__");
+        getProjectFilesystem(), getBuildTarget(), "__%s_res_symbols__");
   }
 
   private Path getPathToRDotTxtFile() {
@@ -131,54 +127,48 @@ public class AaptPackageResources extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      final BuildableContext buildableContext) {
+      BuildContext context, final BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
-    // if needed. Do this before running any other commands to ensure that it is available at the
-    // desired path.
+    prepareManifestForAapt(
+        context,
+        steps,
+        getProjectFilesystem(),
+        getAndroidManifestXml(),
+        context.getSourcePathResolver().getAbsolutePath(manifest),
+        manifestEntries);
+
     steps.add(
-        new MkdirStep(getProjectFilesystem(), getAndroidManifestXml().getParent()));
-
-    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
-    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
-      steps.add(
-          new ReplaceManifestPlaceholdersStep(
-              getProjectFilesystem(),
-              getResolver().getAbsolutePath(manifest),
-              getAndroidManifestXml(),
-              placeholders.get()));
-    } else {
-      steps.add(
-          CopyStep.forFile(
-              getProjectFilesystem(),
-              getResolver().getAbsolutePath(manifest),
-              getAndroidManifestXml()));
-    }
-
-    steps.add(new MkdirStep(getProjectFilesystem(), getResourceApkPath().getParent()));
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getResourceApkPath().getParent())));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));
 
-    Optional<Path> pathToGeneratedProguardConfig = Optional.empty();
-    if (packageType.isBuildWithObfuscation()) {
-      Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), proguardConfigDir));
-      pathToGeneratedProguardConfig = Optional.of(proguardConfigDir.resolve("proguard.txt"));
-      buildableContext.recordArtifact(proguardConfigDir);
-    }
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), rDotTxtDir)));
+
+    Path pathToGeneratedProguardConfig = getPathToGeneratedProguardConfigFile();
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToGeneratedProguardConfig.getParent())));
+    buildableContext.recordArtifact(pathToGeneratedProguardConfig);
 
     steps.add(
         new AaptStep(
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
-            ImmutableSortedSet.copyOf(
-                Ordering.natural(),
-                getResolver().getAllAbsolutePaths(assetsDirectories)),
+            ImmutableSortedSet.of(),
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,
@@ -193,15 +183,13 @@ public class AaptPackageResources extends AbstractBuildRule
              */
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
             includesVectorDrawables,
-            manifestEntries));
+            manifestEntries),
+        ZipScrubberStep.of(
+            context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
 
     // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it
     // always exists.
     steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
-
-    if (hasRDotJava()) {
-      generateRDotJavaFiles(steps, buildableContext);
-    }
 
     // Record the filtered resources dirs, since when we initialize ourselves from disk, we'll
     // need to test whether this is empty or not without requiring the `ResourcesFilter` rule to
@@ -212,6 +200,7 @@ public class AaptPackageResources extends AbstractBuildRule
             .transform(Object::toString)
             .toSortedList(Ordering.natural()));
 
+    buildableContext.recordArtifact(rDotTxtDir);
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
 
@@ -225,153 +214,71 @@ public class AaptPackageResources extends AbstractBuildRule
     return steps.build();
   }
 
-  /**
-   * True iff an app has resources with ids (after filtering (like for display density)).
-   */
-  boolean hasRDotJava() {
-    return !filteredResourcesProvider.getResDirectories().isEmpty();
-  }
+  static void prepareManifestForAapt(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepBuilder,
+      ProjectFilesystem projectFilesystem,
+      Path finalManifestPath,
+      Path rawManifestPath,
+      ManifestEntries manifestEntries) {
+    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
+    // if needed. Do this before running any other commands to ensure that it is available at the
+    // desired path.
 
-  private void generateRDotJavaFiles(
-      ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
-    // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
-    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrc));
+    stepBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), projectFilesystem, finalManifestPath.getParent())));
 
-    Path rDotTxtDir = getPathToRDotTxtDir();
-    MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
-        getProjectFilesystem(),
-        getResolver(),
-        resourceDeps,
-        getPathToRDotTxtFile(),
-        rDotJavaSrc,
-        bannedDuplicateResourceTypes,
-        resourceUnionPackage);
-    steps.add(mergeStep);
-
-    if (shouldBuildStringSourceMap) {
-      // Make sure we have an output directory
-      Path outputDirPath = getPathForNativeStringInfoDirectory();
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirPath));
-
-      // Add the step that parses R.txt and all the strings.xml files, and
-      // produces a JSON with android resource id's and xml paths for each string resource.
-      GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
-          getProjectFilesystem(),
-          rDotTxtDir,
-          filteredResourcesProvider.getResDirectories(),
-          outputDirPath);
-      steps.add(genNativeStringInfo);
-
-      // Cache the generated strings.json file, it will be stored inside outputDirPath
-      buildableContext.recordArtifact(outputDirPath);
+    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
+    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
+      stepBuilder.add(
+          new ReplaceManifestPlaceholdersStep(
+              projectFilesystem, rawManifestPath, finalManifestPath, placeholders.get()));
+    } else {
+      stepBuilder.add(CopyStep.forFile(projectFilesystem, rawManifestPath, finalManifestPath));
     }
-
-    // Ensure the generated R.txt and R.java files are also recorded.
-    buildableContext.recordArtifact(rDotTxtDir);
-    buildableContext.recordArtifact(rDotJavaSrc);
   }
 
   /**
    * Buck does not require the manifest to be named AndroidManifest.xml, but commands such as aapt
-   * do. For this reason, we symlink the path to {@link #manifest} to the path returned by
-   * this method, whose name is always "AndroidManifest.xml".
-   * <p>
-   * Therefore, commands created by this buildable should use this method instead of
-   * {@link #manifest}.
+   * do. For this reason, we symlink the path to {@link #manifest} to the path returned by this
+   * method, whose name is always "AndroidManifest.xml".
+   *
+   * <p>Therefore, commands created by this buildable should use this method instead of {@link
+   * #manifest}.
    */
-  Path getAndroidManifestXml() {
+  private Path getAndroidManifestXml() {
     return BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__manifest_%s__/AndroidManifest.xml");
+        getProjectFilesystem(), getBuildTarget(), "__manifest_%s__/AndroidManifest.xml");
   }
 
   /**
    * @return Path to the unsigned APK generated by this {@link com.facebook.buck.rules.BuildRule}.
    */
-  public Path getResourceApkPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.ap_");
+  private Path getResourceApkPath() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), RESOURCE_APK_PATH_FORMAT);
   }
 
-  public Sha1HashCode getResourcePackageHash() {
-    return buildOutputInitializer.getBuildOutput().resourcePackageHash;
-  }
-
-  static class BuildOutput {
-    private final Sha1HashCode resourcePackageHash;
-
-    BuildOutput(Sha1HashCode resourcePackageHash) {
-      this.resourcePackageHash = resourcePackageHash;
-    }
-  }
-
-  @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    Optional<Sha1HashCode> resourcePackageHash = onDiskBuildInfo.getHash(RESOURCE_PACKAGE_HASH_KEY);
-    Preconditions.checkState(
-        resourcePackageHash.isPresent(),
-        "Should not be initializing %s from disk if the resource hash is not written.",
-        getBuildTarget());
-
-    Optional<ImmutableList<String>> filteredResourceDirs =
-        onDiskBuildInfo.getValues(FILTERED_RESOURCE_DIRS_KEY);
-    Preconditions.checkState(
-        filteredResourceDirs.isPresent(),
-        "Should not be initializing %s from disk if the filtered resources dirs are not written.",
-        getBuildTarget());
-
-    return new BuildOutput(resourcePackageHash.get());
-  }
-
-  @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
-    return buildOutputInitializer;
-  }
-
-  /**
-   * This directory contains both the generated {@code R.java} files under a directory path that
-   * matches the corresponding package structure.
-   */
-  Path getPathToGeneratedRDotJavaSrcFiles() {
-    return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget(), getProjectFilesystem());
-  }
-
-  private Path getPathForNativeStringInfoDirectory() {
-    return BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__%s_string_source_map__");
-  }
-
-  /**
-   * This is the path to the directory for generated files related to ProGuard. Ultimately, it
-   * should include:
-   * <ul>
-   *   <li>proguard.txt
-   *   <li>dump.txt
-   *   <li>seeds.txt
-   *   <li>usage.txt
-   *   <li>mapping.txt
-   *   <li>obfuscated.jar
-   * </ul>
-   * @return path to directory (will not include trailing slash)
-   */
-  public Path getPathToGeneratedProguardConfigDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__proguard__")
-        .resolve(".proguard");
-  }
-
-  @VisibleForTesting
-  static Path getPathToGeneratedRDotJavaSrcFiles(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem) {
-    return BuildTargets.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
+  private Path getPathToGeneratedProguardConfigFile() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/proguard/proguard.txt");
   }
 
   @VisibleForTesting
   FilteredResourcesProvider getFilteredResourcesProvider() {
     return filteredResourcesProvider;
+  }
+
+  public AaptOutputInfo getAaptOutputInfo() {
+    BuildTarget target = getBuildTarget();
+    return AaptOutputInfo.builder()
+        .setPathToRDotTxt(new ExplicitBuildTargetSourcePath(target, getPathToRDotTxtFile()))
+        .setPrimaryResourcesApkPath(new ExplicitBuildTargetSourcePath(target, getResourceApkPath()))
+        .setAndroidManifestXml(new ExplicitBuildTargetSourcePath(target, getAndroidManifestXml()))
+        .setAaptGeneratedProguardConfigFile(
+            new ExplicitBuildTargetSourcePath(target, getPathToGeneratedProguardConfigFile()))
+        .build();
   }
 }

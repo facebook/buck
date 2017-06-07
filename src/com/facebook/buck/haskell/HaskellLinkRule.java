@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -24,7 +25,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
@@ -35,34 +37,28 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 
 public class HaskellLinkRule extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool linker;
+  @AddToRuleKey private final Tool linker;
 
-  @AddToRuleKey
-  private final String name;
+  @AddToRuleKey private final String name;
 
-  @AddToRuleKey
-  private final ImmutableList<Arg> args;
+  @AddToRuleKey private final ImmutableList<Arg> args;
 
-  @AddToRuleKey
-  private final ImmutableList<Arg> linkerArgs;
+  @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
 
   private final boolean cacheable;
 
   public HaskellLinkRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       Tool linker,
       String name,
       ImmutableList<Arg> args,
       ImmutableList<Arg> linkerArgs,
       boolean cacheable) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams);
     this.linker = linker;
     this.name = name;
     this.args = args;
@@ -80,52 +76,55 @@ public class HaskellLinkRule extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext buildContext, BuildableContext buildableContext) {
     buildableContext.recordArtifact(getOutput());
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(
-            getProjectFilesystem(),
-            getOutputDir(getBuildTarget(), getProjectFilesystem())),
-        new ShellStep(getProjectFilesystem().getRootPath()) {
+    return new ImmutableList.Builder<Step>()
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getOutputDir(getBuildTarget(), getProjectFilesystem()))))
+        .add(
+            new ShellStep(getProjectFilesystem().getRootPath()) {
 
-          @Override
-          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-            return ImmutableMap.<String, String>builder()
-                .putAll(super.getEnvironmentVariables(context))
-                .putAll(linker.getEnvironment())
-                .build();
-          }
+              @Override
+              public ImmutableMap<String, String> getEnvironmentVariables(
+                  ExecutionContext context) {
+                return ImmutableMap.<String, String>builder()
+                    .putAll(super.getEnvironmentVariables(context))
+                    .putAll(linker.getEnvironment(buildContext.getSourcePathResolver()))
+                    .build();
+              }
 
-          @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-            return ImmutableList.<String>builder()
-                .addAll(linker.getCommandPrefix(getResolver()))
-                .add("-o", getProjectFilesystem().resolve(getOutput()).toString())
-                .addAll(Arg.stringify(args))
-                .addAll(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-optl"),
-                        Arg.stringify(linkerArgs)))
-                .build();
-          }
+              @Override
+              protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+                return ImmutableList.<String>builder()
+                    .addAll(linker.getCommandPrefix(buildContext.getSourcePathResolver()))
+                    .add("-o", getProjectFilesystem().resolve(getOutput()).toString())
+                    .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
+                    .addAll(
+                        MoreIterables.zipAndConcat(
+                            Iterables.cycle("-optl"),
+                            Arg.stringify(linkerArgs, buildContext.getSourcePathResolver())))
+                    .build();
+              }
 
-          @Override
-          public String getShortName() {
-            return "haskell-link";
-          }
-
-        });
+              @Override
+              public String getShortName() {
+                return "haskell-link";
+              }
+            })
+        .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getOutput();
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutput());
   }
 
   @Override
   public boolean isCacheable() {
     return cacheable;
   }
-
 }

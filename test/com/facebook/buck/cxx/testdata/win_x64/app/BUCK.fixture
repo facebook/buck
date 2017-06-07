@@ -5,3 +5,9 @@ cxx_binary(
     compiler_flags = WINDOWS_COMPILE_FLAGS,
     linker_flags = WINDOWS_LINK_FLAGS,
 )
+
+genrule(
+  name = 'log',
+  cmd_exe = '$(exe //app:hello#windows-x86_64) > %OUT%',
+  out = 'log.txt',
+)

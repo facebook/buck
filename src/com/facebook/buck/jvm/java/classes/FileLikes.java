@@ -16,14 +16,10 @@
 
 package com.facebook.buck.jvm.java.classes;
 
-/**
- * Utilities for common operations when working with {@link FileLike}s.
- */
+/** Utilities for common operations when working with {@link FileLike}s. */
 public class FileLikes {
 
-  /**
-   * {@link FileLike} name suffix that identifies it as a Java class file.
-   */
+  /** {@link FileLike} name suffix that identifies it as a Java class file. */
   private static final String CLASS_NAME_SUFFIX = ".class";
 
   /** Utility class: do not instantiate. */

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.annotator;
 
-import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildUtil;
+import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
@@ -31,9 +31,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 
-/**
- * Annotator for Buck, it helps highlight and annotate any issue in Buck files.
- */
+/** Annotator for Buck, it helps highlight and annotate any issue in Buck files. */
 public class BuckAnnotator implements Annotator {
 
   private static final String ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET =
@@ -66,15 +64,18 @@ public class BuckAnnotator implements Annotator {
     if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
       return;
     }
-    VirtualFile buckDir = project.getBaseDir().findFileByRelativePath(
-        BuckBuildUtil.extractAbsoluteTarget(target));
+    VirtualFile buckDir =
+        project.getBaseDir().findFileByRelativePath(BuckBuildUtil.extractAbsoluteTarget(target));
     VirtualFile targetBuckFile = buckDir != null ? buckDir.findChild("BUCK") : null;
 
     if (targetBuckFile == null) {
-      TextRange range = new TextRange(psiElement.getTextRange().getStartOffset(),
-          psiElement.getTextRange().getEndOffset());
+      TextRange range =
+          new TextRange(
+              psiElement.getTextRange().getStartOffset(), psiElement.getTextRange().getEndOffset());
       annotationHolder.createErrorAnnotation(range, ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
-      project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+      project
+          .getMessageBus()
+          .syncPublisher(IntellijBuckAction.EVENT)
           .consume(this.getClass().toString());
     }
   }

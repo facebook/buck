@@ -21,12 +21,9 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-/**
- * Runs ocamllex to generate .ml files from .mll
- */
+/** Runs ocamllex to generate .ml files from .mll */
 public class OcamlLexStep extends ShellStep {
 
   public static class Args {
@@ -34,10 +31,7 @@ public class OcamlLexStep extends ShellStep {
     public final Path output;
     public final Path input;
 
-    public Args(
-      Tool lexCompiler,
-      Path output,
-      Path input) {
+    public Args(Tool lexCompiler, Path output, Path input) {
       this.lexCompiler = lexCompiler;
       this.output = output;
       this.input = input;
@@ -66,5 +60,4 @@ public class OcamlLexStep extends ShellStep {
         .add(args.input.toString())
         .build();
   }
-
 }

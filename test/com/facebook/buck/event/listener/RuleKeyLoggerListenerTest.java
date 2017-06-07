@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.InvocationInfo;
@@ -26,42 +27,45 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.concurrent.MostExecutors;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-
 public class RuleKeyLoggerListenerTest {
 
-  private TemporaryFolder tempDirectory;
   private ProjectFilesystem projectFilesystem;
   private ExecutorService outputExecutor;
   private InvocationInfo info;
+  private BuildRuleDurationTracker durationTracker;
 
   @Before
-  public void setUp() throws IOException {
-    tempDirectory = new TemporaryFolder();
+  public void setUp() throws InterruptedException, IOException {
+    TemporaryFolder tempDirectory = new TemporaryFolder();
     tempDirectory.create();
     projectFilesystem = new ProjectFilesystem(tempDirectory.getRoot().toPath());
-    outputExecutor = MostExecutors.newSingleThreadExecutor(
-        new CommandThreadFactory(getClass().getName()));
-    info = InvocationInfo.of(
-        new BuildId(),
-        false,
-        false,
-        "topspin",
-        tempDirectory.getRoot().toPath());
+    outputExecutor =
+        MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
+    info =
+        InvocationInfo.of(
+            new BuildId(),
+            false,
+            false,
+            "topspin",
+            new String[0],
+            new String[0],
+            tempDirectory.getRoot().toPath());
+    durationTracker = new BuildRuleDurationTracker();
   }
 
   @Test
@@ -98,36 +102,31 @@ public class RuleKeyLoggerListenerTest {
   }
 
   private BuildRuleEvent.Finished createBuildEvent() {
-    BuildRule rule = new FakeBuildRule(BuildTarget.builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                projectFilesystem.getRootPath(),
-                Optional.empty(),
-                "//topspin",
-                "//downtheline"))
-        .build(), null);
+    BuildRule rule =
+        new FakeBuildRule(
+            BuildTarget.builder()
+                .setUnflavoredBuildTarget(
+                    UnflavoredBuildTarget.of(
+                        projectFilesystem.getRootPath(),
+                        Optional.empty(),
+                        "//topspin",
+                        "//downtheline"))
+                .build(),
+            null);
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
-    return BuildRuleEvent.finished(rule, keys, null, null, null, null, null, null, null);
+    BuildRuleEvent.Started started =
+        TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));
+    return BuildRuleEvent.finished(
+        started, keys, null, null, Optional.empty(), null, false, null, null, Optional.empty());
   }
 
   private HttpArtifactCacheEvent.Finished createArtifactCacheEvent(CacheResultType type) {
-    RuleKey ruleKey = new RuleKey("abababab42");
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ruleKey);
-    HttpArtifactCacheEvent.Finished.Builder builder =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-    builder.getFetchBuilder().setFetchResult(CacheResult.builder()
-        .setType(type)
-        .setCacheSource("random source")
-        .build());
-    return builder.build();
+    return ArtifactCacheTestUtils.newFetchFinishedEvent(
+        ArtifactCacheTestUtils.newFetchStartedEvent(new RuleKey("abababab42")),
+        CacheResult.builder().setType(type).setCacheSource("random source").build());
   }
 
   private RuleKeyLoggerListener newInstance(int minLinesForAutoFlush) {
-    return new RuleKeyLoggerListener(
-        projectFilesystem,
-        info,
-        outputExecutor,
-        minLinesForAutoFlush);
+    return new RuleKeyLoggerListener(projectFilesystem, info, outputExecutor, minLinesForAutoFlush);
   }
 }

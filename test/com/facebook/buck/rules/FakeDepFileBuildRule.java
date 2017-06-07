@@ -16,32 +16,39 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
-
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-/**
- * A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}.
- */
-public class FakeDepFileBuildRule
-    extends AbstractBuildRule
+/** A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}. */
+public class FakeDepFileBuildRule extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey {
 
   private Path outputPath;
-  private Optional<ImmutableSet<SourcePath>> possibleInputPaths = Optional.empty();
+  private Predicate<SourcePath> coveredPredicate = (SourcePath path) -> true;
+  private Predicate<SourcePath> interestingPredicate = (SourcePath path) -> false;
   private ImmutableList<SourcePath> actualInputPaths = ImmutableList.of();
 
-  public FakeDepFileBuildRule(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver) {
-    super(buildRuleParams, resolver);
+  public FakeDepFileBuildRule(String fullyQualifiedName) {
+    this(BuildTargetFactory.newInstance(fullyQualifiedName));
+  }
+
+  public FakeDepFileBuildRule(BuildTarget target) {
+    this(
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(new FakeProjectFilesystem())
+            .build());
+  }
+
+  public FakeDepFileBuildRule(BuildRuleParams buildRuleParams) {
+    super(buildRuleParams);
   }
 
   public FakeDepFileBuildRule setOutputPath(Path outputPath) {
@@ -49,19 +56,27 @@ public class FakeDepFileBuildRule
     return this;
   }
 
-  public FakeDepFileBuildRule setPossibleInputPaths(
-      Optional<ImmutableSet<SourcePath>> possibleInputPaths) {
-    this.possibleInputPaths = possibleInputPaths;
+  public FakeDepFileBuildRule setCoveredByDepFilePredicate(ImmutableSet<SourcePath> coveredPaths) {
+    return setCoveredByDepFilePredicate(coveredPaths::contains);
+  }
+
+  public FakeDepFileBuildRule setCoveredByDepFilePredicate(Predicate<SourcePath> coveredPredicate) {
+    this.coveredPredicate = coveredPredicate;
     return this;
   }
 
-  public FakeDepFileBuildRule setPossibleInputPaths(
-      ImmutableSet<SourcePath> possibleInputPaths) {
-    this.possibleInputPaths = Optional.of(possibleInputPaths);
+  public FakeDepFileBuildRule setExistenceOfInterestPredicate(
+      ImmutableSet<SourcePath> interestingPaths) {
+    return setExistenceOfInterestPredicate(interestingPaths::contains);
+  }
+
+  public FakeDepFileBuildRule setExistenceOfInterestPredicate(
+      Predicate<SourcePath> interestingPredicate) {
+    this.interestingPredicate = interestingPredicate;
     return this;
   }
 
-  public FakeDepFileBuildRule setActualInputPaths(
+  public FakeDepFileBuildRule setInputsAfterBuildingLocally(
       ImmutableList<SourcePath> actualInputPaths) {
     this.actualInputPaths = actualInputPaths;
     return this;
@@ -73,12 +88,18 @@ public class FakeDepFileBuildRule
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-    return possibleInputPaths;
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    return coveredPredicate;
   }
 
   @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return interestingPredicate;
+  }
+
+  @Override
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) {
     return actualInputPaths;
   }
 
@@ -90,7 +111,10 @@ public class FakeDepFileBuildRule
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
-    return outputPath;
+  public SourcePath getSourcePathToOutput() {
+    if (outputPath == null) {
+      return null;
+    }
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
   }
 }

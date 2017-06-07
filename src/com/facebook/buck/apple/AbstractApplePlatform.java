@@ -16,27 +16,27 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform> {
+abstract class AbstractApplePlatform
+    implements Comparable<AbstractApplePlatform>, RuleKeyAppendable {
 
   public static final ApplePlatform IPHONEOS =
       ApplePlatform.builder()
           .setName("iphoneos")
           .setSwiftName("ios")
+          .setProvisioningProfileName("iOS")
           .setArchitectures(ImmutableList.of("armv7", "arm64"))
           .setMinVersionFlagPrefix("-mios-version-min=")
           // only used for legacy watch apps
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform IPHONESIMULATOR =
       ApplePlatform.builder()
@@ -45,25 +45,27 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mios-simulator-version-min=")
           // only used for legacy watch apps
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHOS =
       ApplePlatform.builder()
           .setName("watchos")
+          .setProvisioningProfileName("iOS") // watchOS uses iOS provisioning profiles.
           .setArchitectures(ImmutableList.of("armv7k"))
           .setMinVersionFlagPrefix("-mwatchos-version-min=")
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHSIMULATOR =
       ApplePlatform.builder()
           .setName("watchsimulator")
           .setArchitectures(ImmutableList.of("i386"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
-          .setStubBinaryPath(Optional.of(Paths.get("Library/Application Support/WatchKit/WK")))
+          .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform APPLETVOS =
       ApplePlatform.builder()
           .setName("appletvos")
+          .setProvisioningProfileName("tvOS")
           .setArchitectures(ImmutableList.of("arm64"))
           .setMinVersionFlagPrefix("-mtvos-version-min=")
           .build();
@@ -81,16 +83,21 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setAppIncludesFrameworks(true)
           .build();
 
-  /**
-   * The full name of the platform. For example: {@code macosx}.
-   */
+  /** The full name of the platform. For example: {@code macosx}. */
   public abstract String getName();
 
   /**
-   * The Swift name for the platform. For example: {@code ios}. If absent,
-   * use {@link #getName()} instead.
+   * The Swift name for the platform. For example: {@code ios}. If absent, use {@link #getName()}
+   * instead.
    */
   public abstract Optional<String> getSwiftName();
+
+  /**
+   * The platform name used to match provisioning profiles. For example: {@code iOS}.
+   *
+   * <p>Not all platforms use provisioning profiles; these will return absent.
+   */
+  public abstract Optional<String> getProvisioningProfileName();
 
   @SuppressWarnings("immutables")
   @Value.Default
@@ -103,11 +110,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return "-m" + getName() + "-version-min=";
   }
 
-  @SuppressWarnings("immutables")
-  @Value.Default
-  public Optional<Path> getStubBinaryPath() {
-    return Optional.empty();
-  }
+  public abstract Optional<String> getStubBinaryPath();
 
   @Value.Default
   public boolean getAppIncludesFrameworks() {
@@ -115,20 +118,20 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   public static boolean needsCodeSign(String name) {
-    return name.startsWith(IPHONEOS.getName()) ||
-        name.startsWith(IPHONESIMULATOR.getName()) ||
-        name.startsWith(WATCHOS.getName()) ||
-        name.startsWith(WATCHSIMULATOR.getName()) ||
-        name.startsWith(APPLETVOS.getName()) ||
-        name.startsWith(APPLETVSIMULATOR.getName()) ||
-        name.startsWith(MACOSX.getName());
+    return name.startsWith(IPHONEOS.getName())
+        || name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(WATCHOS.getName())
+        || name.startsWith(WATCHSIMULATOR.getName())
+        || name.startsWith(APPLETVOS.getName())
+        || name.startsWith(APPLETVSIMULATOR.getName())
+        || name.startsWith(MACOSX.getName());
   }
 
   public static boolean adHocCodeSignIsSufficient(String name) {
-    return name.startsWith(IPHONESIMULATOR.getName()) ||
-        name.startsWith(WATCHSIMULATOR.getName()) ||
-        name.startsWith(APPLETVSIMULATOR.getName()) ||
-        name.startsWith(MACOSX.getName());
+    return name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(WATCHSIMULATOR.getName())
+        || name.startsWith(APPLETVSIMULATOR.getName())
+        || name.startsWith(MACOSX.getName());
   }
 
   public static boolean needsInstallHelper(String name) {
@@ -136,21 +139,21 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   public static boolean isSimulator(String name) {
-    return name.startsWith(IPHONESIMULATOR.getName()) ||
-      name.startsWith(WATCHSIMULATOR.getName()) ||
-      name.startsWith(APPLETVSIMULATOR.getName());
+    return name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(WATCHSIMULATOR.getName())
+        || name.startsWith(APPLETVSIMULATOR.getName());
   }
 
   public static ApplePlatform of(String name) {
-    for (ApplePlatform platform : ImmutableList.of(
-      IPHONEOS,
-      IPHONESIMULATOR,
-      WATCHOS,
-      WATCHSIMULATOR,
-      APPLETVOS,
-      APPLETVSIMULATOR,
-      MACOSX
-    )) {
+    for (ApplePlatform platform :
+        ImmutableList.of(
+            IPHONEOS,
+            IPHONESIMULATOR,
+            WATCHOS,
+            WATCHSIMULATOR,
+            APPLETVOS,
+            APPLETVSIMULATOR,
+            MACOSX)) {
       if (name.equals(platform.getName())) {
         return platform;
       }
@@ -165,5 +168,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     }
 
     return getName().compareTo(other.getName());
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("platform-name", getName());
   }
 }

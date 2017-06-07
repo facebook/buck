@@ -25,19 +25,16 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.facebook.buck.util.network.HiveRowFormatter;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Listens to HttpArtifactCacheEvents and logs stats data in Hive row format.
- */
+/** Listens to HttpArtifactCacheEvents and logs stats data in Hive row format. */
 public class HttpArtifactCacheEventListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(HttpArtifactCacheEventListener.class);
 
@@ -49,15 +46,14 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   private final BatchingLogger fetchRequestLogger;
 
   public HttpArtifactCacheEventListener(
-      BatchingLogger storeRequestLogger,
-      BatchingLogger fetchRequestLogger) {
+      BatchingLogger storeRequestLogger, BatchingLogger fetchRequestLogger) {
     this.storeRequestLogger = storeRequestLogger;
     this.fetchRequestLogger = fetchRequestLogger;
   }
 
   @Override
   public void outputTrace(final BuildId buildId) {
-    List<ListenableFuture<Void>> futures = Lists.newArrayList();
+    List<ListenableFuture<Void>> futures = new ArrayList<>();
     futures.add(fetchRequestLogger.forceFlush());
     futures.add(storeRequestLogger.forceFlush());
     try {
@@ -77,33 +73,37 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
 
     if (event.getOperation() == ArtifactCacheEvent.Operation.FETCH) {
       HttpArtifactCacheEventFetchData data = event.getFetchData();
-      String hiveRow = HiveRowFormatter.newFormatter()
-          .appendString(buildIdString)
-          .appendString(event.getRequestDurationMillis())
-          .appendString(data.getRequestedRuleKey())
-          .appendString(data.getFetchResult().isPresent() ?
-              data.getFetchResult().get() : NOT_SET_STRING)
-          .appendString(data.getResponseSizeBytes().orElse(NOT_SET_LONG))
-          .appendString(data.getArtifactContentHash().orElse(NOT_SET_STRING))
-          .appendString(data.getArtifactSizeBytes().orElse(NOT_SET_LONG))
-          .appendString(data.getErrorMessage().orElse(NOT_SET_STRING))
-          .appendString(event.getTarget().orElse(NOT_SET_STRING))
-          .build();
+      String hiveRow =
+          HiveRowFormatter.newFormatter()
+              .appendString(buildIdString)
+              .appendString(event.getRequestDurationMillis())
+              .appendString(data.getRequestedRuleKey())
+              .appendString(
+                  data.getFetchResult().isPresent() ? data.getFetchResult().get() : NOT_SET_STRING)
+              .appendString(data.getResponseSizeBytes().orElse(NOT_SET_LONG))
+              .appendString(data.getArtifactContentHash().orElse(NOT_SET_STRING))
+              .appendString(data.getArtifactSizeBytes().orElse(NOT_SET_LONG))
+              .appendString(data.getErrorMessage().orElse(NOT_SET_STRING))
+              .appendString(event.getTarget().orElse(NOT_SET_STRING))
+              .build();
       fetchRequestLogger.log(hiveRow);
     } else { // ArtifactCacheEvent.Operation.STORE
       HttpArtifactCacheEventStoreData data = event.getStoreData();
-      String hiveRow = HiveRowFormatter.newFormatter()
-          .appendString(buildIdString)
-          .appendString(event.getRequestDurationMillis())
-          .appendStringIterable(data.getRuleKeys())
-          .appendString(data.getRequestSizeBytes().orElse(NOT_SET_LONG))
-          .appendString(data.getArtifactContentHash().orElse(NOT_SET_STRING))
-          .appendString(data.getArtifactSizeBytes().orElse(NOT_SET_LONG))
-          .appendString(data.getErrorMessage().orElse(NOT_SET_STRING))
-          .appendString(data.wasStoreSuccessful().isPresent()
-              ? data.wasStoreSuccessful().get() : NOT_SET_STRING)
-          .appendString(event.getTarget().orElse(NOT_SET_STRING))
-          .build();
+      String hiveRow =
+          HiveRowFormatter.newFormatter()
+              .appendString(buildIdString)
+              .appendString(event.getRequestDurationMillis())
+              .appendStringIterable(data.getRuleKeys())
+              .appendString(data.getRequestSizeBytes().orElse(NOT_SET_LONG))
+              .appendString(data.getArtifactContentHash().orElse(NOT_SET_STRING))
+              .appendString(data.getArtifactSizeBytes().orElse(NOT_SET_LONG))
+              .appendString(data.getErrorMessage().orElse(NOT_SET_STRING))
+              .appendString(
+                  data.wasStoreSuccessful().isPresent()
+                      ? data.wasStoreSuccessful().get()
+                      : NOT_SET_STRING)
+              .appendString(event.getTarget().orElse(NOT_SET_STRING))
+              .build();
       storeRequestLogger.log(hiveRow);
     }
   }

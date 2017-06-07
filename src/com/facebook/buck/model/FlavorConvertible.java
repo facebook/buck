@@ -16,9 +16,7 @@
 
 package com.facebook.buck.model;
 
-/**
- * Values that has a canonical mapping to flavors.
- */
+/** Values that has a canonical mapping to flavors. */
 public interface FlavorConvertible {
   Flavor getFlavor();
 }

@@ -26,15 +26,13 @@ import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class LuaBinaryBuilder
-    extends AbstractNodeBuilder<LuaBinaryDescription.Arg, LuaBinaryDescription> {
+    extends AbstractNodeBuilder<
+        LuaBinaryDescriptionArg.Builder, LuaBinaryDescriptionArg, LuaBinaryDescription, LuaBinary> {
 
-  public LuaBinaryBuilder(
-      LuaBinaryDescription description,
-      BuildTarget target) {
+  public LuaBinaryBuilder(LuaBinaryDescription description, BuildTarget target) {
     super(description, target);
   }
 
@@ -47,11 +45,7 @@ public class LuaBinaryBuilder
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     this(
         new LuaBinaryDescription(
-            config,
-            cxxBuckConfig,
-            defaultCxxPlatform,
-            cxxPlatforms,
-            pythonPlatforms),
+            config, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms),
         target);
   }
 
@@ -70,23 +64,22 @@ public class LuaBinaryBuilder
   }
 
   public LuaBinaryBuilder setMainModule(String mainModule) {
-    arg.mainModule = mainModule;
+    getArgForPopulating().setMainModule(mainModule);
     return this;
   }
 
   public LuaBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public LuaBinaryBuilder setPackageStyle(LuaConfig.PackageStyle packageStyle) {
-    arg.packageStyle = Optional.of(packageStyle);
+    getArgForPopulating().setPackageStyle(Optional.of(packageStyle));
     return this;
   }
 
   public LuaBinaryBuilder setNativeStarterLibrary(BuildTarget target) {
-    arg.nativeStarterLibrary = Optional.of(target);
+    getArgForPopulating().setNativeStarterLibrary(Optional.of(target));
     return this;
   }
-
 }

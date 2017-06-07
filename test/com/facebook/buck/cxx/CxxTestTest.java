@@ -21,13 +21,13 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -43,13 +43,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import org.junit.Test;
 
 public class CxxTestTest {
 
@@ -65,14 +63,11 @@ public class CxxTestTest {
     public FakeCxxTest() {
       super(
           createBuildParams(),
-          new SourcePathResolver(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer())),
+          new CommandTool.Builder().build(),
           ImmutableMap.of(),
-          Suppliers.ofInstance(ImmutableMap.of()),
           Suppliers.ofInstance(ImmutableList.of()),
           ImmutableSortedSet.of(),
+          ImmutableSet.of(),
           Suppliers.ofInstance(ImmutableSortedSet.of()),
           ImmutableSet.of(),
           ImmutableSet.of(),
@@ -81,19 +76,15 @@ public class CxxTestTest {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommand(Path output) {
+    protected ImmutableList<String> getShellCommand(SourcePathResolver resolver, Path output) {
       return ImmutableList.of();
     }
 
     @Override
     protected ImmutableList<TestResultSummary> parseResults(
-        Path exitCode,
-        Path output,
-        Path results)
-        throws Exception {
+        Path exitCode, Path output, Path results) throws Exception {
       return ImmutableList.of();
     }
-
   }
 
   @Test
@@ -104,12 +95,13 @@ public class CxxTestTest {
         new FakeCxxTest() {
 
           @Override
-          public Path getPathToOutput() {
-            return Paths.get("output");
+          public SourcePath getSourcePathToOutput() {
+            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
           }
 
           @Override
-          protected ImmutableList<String> getShellCommand(Path output) {
+          protected ImmutableList<String> getShellCommand(
+              SourcePathResolver resolver, Path output) {
             return command;
           }
 
@@ -119,18 +111,17 @@ public class CxxTestTest {
             command.forEach(builder::addArg);
             return builder.build();
           }
-
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestRunningOptions options =
-        TestRunningOptions.builder()
-            .setTestSelectorList(TestSelectorList.empty())
-            .build();
-    ImmutableList<Step> actualSteps = cxxTest.runTests(
-        executionContext,
-        options,
-        FakeTestRule.NOOP_REPORTING_CALLBACK);
+        TestRunningOptions.builder().setTestSelectorList(TestSelectorList.empty()).build();
+    ImmutableList<Step> actualSteps =
+        cxxTest.runTests(
+            executionContext,
+            options,
+            FakeBuildContext.NOOP_CONTEXT,
+            FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep =
         new CxxTestStep(
@@ -154,8 +145,8 @@ public class CxxTestTest {
         new FakeCxxTest() {
 
           @Override
-          public Path getPathToOutput() {
-            return Paths.get("output");
+          public SourcePath getSourcePathToOutput() {
+            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
           }
 
           @Override
@@ -175,28 +166,17 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<TestResultSummary> parseResults(
-              Path exitCode,
-              Path output,
-              Path results)
-              throws Exception {
+              Path exitCode, Path output, Path results) throws Exception {
             assertEquals(expectedExitCode, exitCode);
             assertEquals(expectedOutput, output);
             assertEquals(expectedResults, results);
             return ImmutableList.of();
           }
-
-          @Override
-          public Tool getExecutableCommand() {
-            return new CommandTool.Builder().build();
-          }
-
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    Callable<TestResults> result = cxxTest.interpretTestResults(
-        executionContext,
-        /* isUsingTestSelectors */ false);
+    Callable<TestResults> result =
+        cxxTest.interpretTestResults(executionContext, /* isUsingTestSelectors */ false);
     result.call();
   }
-
 }

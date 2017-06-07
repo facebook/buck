@@ -14,5 +14,4 @@
  * under the License.
  */
 
-public class Foo {
-}
+public class Foo {}

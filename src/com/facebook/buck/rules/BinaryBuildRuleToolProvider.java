@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
-
 import java.util.Optional;
 
 /**
@@ -52,5 +51,4 @@ public class BinaryBuildRuleToolProvider implements ToolProvider {
   public Iterable<BuildTarget> getParseTimeDeps() {
     return ImmutableList.of(target);
   }
-
 }

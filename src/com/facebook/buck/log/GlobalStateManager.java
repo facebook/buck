@@ -19,15 +19,14 @@ package com.facebook.buck.log;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.Lists;
-
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
-
 import javax.annotation.Nullable;
 
 public class GlobalStateManager {
@@ -49,8 +47,7 @@ public class GlobalStateManager {
   private final ConcurrentMap<Long, String> threadIdToCommandId;
 
   // Global state required by the ConsoleHandler.
-  private final ConcurrentMap<String, ConsoleHandlerState.Writer>
-      commandIdToConsoleHandlerWriter;
+  private final ConcurrentMap<String, ConsoleHandlerState.Writer> commandIdToConsoleHandlerWriter;
   private final ConcurrentMap<String, Level> commandIdToConsoleHandlerLevel;
 
   // Global state required by the LogFileHandler.
@@ -70,14 +67,17 @@ public class GlobalStateManager {
     this.commandIdToIsSuperconsoleEnabled = new ConcurrentHashMap<>();
     this.commandIdToIsDaemon = new ConcurrentHashMap<>();
 
-    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(
-        InvocationInfo.of(
-            new BuildId(),
-            false,
-            false,
-            "launch",
-            LogConfigSetup.DEFAULT_SETUP.getLogDir())
-            .getLogFilePath());
+    ReferenceCountedWriter defaultWriter =
+        createReferenceCountedWriter(
+            InvocationInfo.of(
+                    new BuildId(),
+                    false,
+                    false,
+                    "launch",
+                    new String[0],
+                    new String[0],
+                    LogConfigSetup.DEFAULT_SETUP.getLogDir())
+                .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
   }
 
@@ -89,36 +89,25 @@ public class GlobalStateManager {
     final long threadId = Thread.currentThread().getId();
     final String commandId = info.getCommandId();
 
-    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(info.getLogFilePath());
+    ReferenceCountedWriter defaultWriter = createReferenceCountedWriter(info.getLogFilePath());
     ReferenceCountedWriter newWriter = defaultWriter.newReference();
     // Put defaultWriter to map only after newWriter has been created. Otherwise defaultWriter may
     // get closed before newWriter was created due to concurrency.
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
     putReferenceCountedWriter(commandId, newWriter);
+    createUserFriendlySymLink(info);
 
     // Setup the shared state.
     threadIdToCommandId.putIfAbsent(threadId, commandId);
 
     // Setup the ConsoleHandler state.
     commandIdToConsoleHandlerWriter.put(
-        commandId,
-        ConsoleHandler.utf8OutputStreamWriter(consoleHandlerStream));
+        commandId, ConsoleHandler.utf8OutputStreamWriter(consoleHandlerStream));
     if (Verbosity.ALL.equals(consoleHandlerVerbosity)) {
       commandIdToConsoleHandlerLevel.put(commandId, Level.ALL);
     }
     commandIdToIsSuperconsoleEnabled.put(commandId, info.getSuperConsoleEnabled());
     commandIdToIsDaemon.put(commandId, info.getIsDaemon());
-
-    // Setup the LogFileHandler state.
-    Path logDirectory = info.getLogDirectoryPath();
-    try {
-      Files.createDirectories(logDirectory);
-    } catch (IOException e) {
-      LOG.error(
-          e,
-          "Failed to created 'per command log directory': [%s]",
-          logDirectory.toAbsolutePath());
-    }
 
     return new LoggerIsMappedToThreadScope() {
       @Override
@@ -136,8 +125,7 @@ public class GlobalStateManager {
 
         // Tear down the ConsoleHandler state.
         commandIdToConsoleHandlerWriter.put(
-            commandId,
-            ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
+            commandId, ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
         commandIdToConsoleHandlerLevel.remove(commandId);
         commandIdToIsSuperconsoleEnabled.remove(commandId);
         commandIdToIsDaemon.remove(commandId);
@@ -160,13 +148,16 @@ public class GlobalStateManager {
     };
   }
 
-  private ReferenceCountedWriter newReferenceCountedWriter(String filePath)
-      throws FileNotFoundException {
+  private void createUserFriendlySymLink(final InvocationInfo info) {
     try {
-      return new ReferenceCountedWriter(
-          new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
+      String symlinkName = "last_" + info.getSubCommand();
+      Path symlinkPath = info.getBuckLogDir().resolve(symlinkName);
+      Files.deleteIfExists(symlinkPath);
+      if (Platform.detect() != Platform.WINDOWS) {
+        Files.createSymbolicLink(symlinkPath, info.getLogDirectoryPath().toAbsolutePath());
+      }
+    } catch (IOException e) {
+      LOG.info(e, "Failed to create a user friendly symlink to logs dir for the last command.");
     }
   }
 
@@ -175,8 +166,7 @@ public class GlobalStateManager {
   }
 
   private void putReferenceCountedWriter(
-      String commandId,
-      @Nullable ReferenceCountedWriter newWriter) {
+      String commandId, @Nullable ReferenceCountedWriter newWriter) {
     try {
       java.io.Writer oldWriter;
       if (newWriter == null) {
@@ -185,21 +175,18 @@ public class GlobalStateManager {
         oldWriter = commandIdToLogFileHandlerWriter.put(commandId, newWriter);
       }
       if (oldWriter != null) {
-        if (oldWriter instanceof ReferenceCountedWriter) {
-          ((ReferenceCountedWriter) oldWriter).flushAndClose();
-        } else {
-          oldWriter.close();
-        }
+        oldWriter.close();
       }
     } catch (IOException e) {
       throw new RuntimeException(String.format("Exception closing writer [%s].", commandId), e);
     }
   }
 
-  private ReferenceCountedWriter rotateDefaultLogFileWriter(Path logFilePath) {
+  private ReferenceCountedWriter createReferenceCountedWriter(Path logFilePath) {
     try {
       Files.createDirectories(logFilePath.getParent());
-      return newReferenceCountedWriter(logFilePath.toString());
+      return new ReferenceCountedWriter(
+          new OutputStreamWriter(new FileOutputStream(logFilePath.toString()), "UTF-8"));
     } catch (FileNotFoundException e) {
       throw new RuntimeException(String.format("Could not create file [%s].", logFilePath), e);
     } catch (IOException e) {
@@ -258,8 +245,8 @@ public class GlobalStateManager {
   }
 
   /**
-   * Writers obtained by {@link LogFileHandlerState#getWriters} must not be closed!
-   * This class manages their lifetime.
+   * Writers obtained by {@link LogFileHandlerState#getWriters} must not be closed! This class
+   * manages their lifetime.
    */
   public LogFileHandlerState getLogFileHandlerState() {
     return new LogFileHandlerState() {
@@ -287,7 +274,7 @@ public class GlobalStateManager {
   /**
    * Since this is a Singleton class, make sure it cleans after itself once it's GC'ed.
    *
-   * @exception  IOException  if an I/O error occurs.
+   * @exception IOException if an I/O error occurs.
    */
   @Override
   protected void finalize() throws IOException {

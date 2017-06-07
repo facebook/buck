@@ -19,31 +19,24 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
-import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Optional;
 
 public class JavaLibraryClasspathProvider {
 
-  private JavaLibraryClasspathProvider() {
-  }
+  private JavaLibraryClasspathProvider() {}
 
-  public static ImmutableSet<Path> getOutputClasspathJars(
-      JavaLibrary javaLibraryRule,
-      SourcePathResolver resolver,
-      Optional<SourcePath> outputJar) {
-    ImmutableSet.Builder<Path> outputClasspathBuilder =
-        ImmutableSet.builder();
+  public static ImmutableSet<SourcePath> getOutputClasspathJars(
+      JavaLibrary javaLibraryRule, Optional<SourcePath> outputJar) {
+    ImmutableSet.Builder<SourcePath> outputClasspathBuilder = ImmutableSet.builder();
     Iterable<JavaLibrary> javaExportedLibraryDeps;
     if (javaLibraryRule instanceof ExportDependencies) {
       javaExportedLibraryDeps =
           getJavaLibraryDeps(((ExportDependencies) javaLibraryRule).getExportedDeps());
     } else {
-      javaExportedLibraryDeps = Sets.newHashSet();
+      javaExportedLibraryDeps = new HashSet<>();
     }
 
     for (JavaLibrary rule : javaExportedLibraryDeps) {
@@ -51,7 +44,7 @@ public class JavaLibraryClasspathProvider {
     }
 
     if (outputJar.isPresent()) {
-      outputClasspathBuilder.add(resolver.getAbsolutePath(outputJar.get()));
+      outputClasspathBuilder.add(outputJar.get());
     }
 
     return outputClasspathBuilder.build();
@@ -60,18 +53,16 @@ public class JavaLibraryClasspathProvider {
   public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(JavaLibrary javaLibrary) {
     ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
 
-    classpathDeps.addAll(
-        getClasspathDeps(
-            javaLibrary.getDepsForTransitiveClasspathEntries()));
+    classpathDeps.addAll(getClasspathDeps(javaLibrary.getDepsForTransitiveClasspathEntries()));
 
     // Only add ourselves to the classpath if there's a jar to be built or if we're a maven dep.
-    if (javaLibrary.getPathToOutput() != null || javaLibrary.getMavenCoords().isPresent()) {
+    if (javaLibrary.getSourcePathToOutput() != null || javaLibrary.getMavenCoords().isPresent()) {
       classpathDeps.add(javaLibrary);
     }
 
     // Or if there are exported dependencies, to be consistent with getTransitiveClasspaths.
-    if (javaLibrary instanceof ExportDependencies &&
-        !((ExportDependencies) javaLibrary).getExportedDeps().isEmpty()) {
+    if (javaLibrary instanceof ExportDependencies
+        && !((ExportDependencies) javaLibrary).getExportedDeps().isEmpty()) {
       classpathDeps.add(javaLibrary);
     }
 
@@ -83,20 +74,16 @@ public class JavaLibraryClasspathProvider {
   }
 
   /**
-   * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage
-   * to this rule through other JavaLibraryRules. For example, in the following dependency graph:
+   * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage to
+   * this rule through other JavaLibraryRules. For example, in the following dependency graph:
    *
-   *        A
-   *      /   \
-   *     B     C
-   *    / \   / \
-   *    D E   F G
+   * <p>A / \ B C / \ / \ D E F G
    *
-   * If all of the nodes correspond to BuildRules that implement JavaLibraryRule except for
-   * B (suppose B is a Genrule), then A's classpath will include C, F, and G, but not D and E.
-   * This is because D and E are used to generate B, but do not contribute .class files to things
-   * that depend on B. However, if C depended on E as well as F and G, then E would be included in
-   * A's classpath.
+   * <p>If all of the nodes correspond to BuildRules that implement JavaLibraryRule except for B
+   * (suppose B is a Genrule), then A's classpath will include C, F, and G, but not D and E. This is
+   * because D and E are used to generate B, but do not contribute .class files to things that
+   * depend on B. However, if C depended on E as well as F and G, then E would be included in A's
+   * classpath.
    */
   public static ImmutableSet<JavaLibrary> getClasspathDeps(Iterable<BuildRule> deps) {
     ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
@@ -111,10 +98,12 @@ public class JavaLibraryClasspathProvider {
   /**
    * Given libraries that may contribute classpaths, visit them and collect the classpaths.
    *
-   * This is used to generate transitive classpaths from library discovered in a previous traversal.
+   * <p>This is used to generate transitive classpaths from library discovered in a previous
+   * traversal.
    */
-  public static ImmutableSet<Path> getClasspathsFromLibraries(Iterable<JavaLibrary> libraries) {
-    ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
+  public static ImmutableSet<SourcePath> getClasspathsFromLibraries(
+      Iterable<JavaLibrary> libraries) {
+    ImmutableSet.Builder<SourcePath> classpathEntries = ImmutableSet.builder();
     for (JavaLibrary library : libraries) {
       classpathEntries.addAll(library.getImmediateClasspaths());
     }

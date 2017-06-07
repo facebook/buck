@@ -1,0 +1,65 @@
+Package Groups (1)
+Package Group 0 id=0x7f packageCount=1 name=buck.exotest
+  Package 0 id=0x7f name=buck.exotest
+    type 1 configCount=2 entryCount=4
+      spec resource 0x7f020000 buck.exotest:drawable/aaa_image: flags=0x00000000
+      spec resource 0x7f020001 buck.exotest:drawable/exo_icon: flags=0x00000000
+      spec resource 0x7f020002 buck.exotest:drawable/image: flags=0x00000000
+      spec resource 0x7f020003 buck.exotest:drawable/other_image: flags=0x00000000
+      config nodpi-v4:
+        resource 0x7f020001 buck.exotest:drawable/exo_icon: t=0x03 d=0x00000004 (s=0x0008 r=0x00)
+          (string8) "res/drawable-nodpi-v4/exo_icon.png"
+        resource 0x7f020002 buck.exotest:drawable/image: t=0x03 d=0x00000005 (s=0x0008 r=0x00)
+          (string8) "res/drawable-nodpi-v4/image.png"
+      config (default):
+        resource 0x7f020000 buck.exotest:drawable/aaa_image: t=0x03 d=0x00000001 (s=0x0008 r=0x00)
+          (string8) "res/drawable/aaa_image.png"
+        resource 0x7f020003 buck.exotest:drawable/other_image: t=0x03 d=0x00000002 (s=0x0008 r=0x00)
+          (string8) "res/drawable/other_image.png"
+    type 2 configCount=1 entryCount=1
+      spec resource 0x7f030000 buck.exotest:xml/meta_xml: flags=0x00000000
+      config (default):
+        resource 0x7f030000 buck.exotest:xml/meta_xml: t=0x03 d=0x00000003 (s=0x0008 r=0x00)
+          (string8) "res/xml/meta_xml.xml"
+    type 3 configCount=1 entryCount=4
+      spec resource 0x7f040000 buck.exotest:string/aaa_string_other: flags=0x00000000
+      spec resource 0x7f040001 buck.exotest:string/exo_app_name: flags=0x00000000
+      spec resource 0x7f040002 buck.exotest:string/aaa_string: flags=0x00000000
+      spec resource 0x7f040003 buck.exotest:string/hello: flags=0x00000000
+      config (default):
+        resource 0x7f040000 buck.exotest:string/aaa_string_other: t=0x03 d=0x00000006 (s=0x0008 r=0x00)
+          (string8) "some other string"
+        resource 0x7f040001 buck.exotest:string/exo_app_name: t=0x03 d=0x00000007 (s=0x0008 r=0x00)
+          (string8) "Exo Test App"
+        resource 0x7f040002 buck.exotest:string/aaa_string: t=0x03 d=0x00000000 (s=0x0008 r=0x00)
+          (string8) "some bold string"
+        resource 0x7f040003 buck.exotest:string/hello: t=0x03 d=0x00000008 (s=0x0008 r=0x00)
+          (string8) "res_1a"
+    type 4 configCount=1 entryCount=3
+      spec resource 0x7f050000 buck.exotest:array/aaa_array: flags=0x00000000
+      spec resource 0x7f050001 buck.exotest:array/meta_array: flags=0x00000000
+      spec resource 0x7f050002 buck.exotest:array/meta_array2: flags=0x00000000
+      config (default):
+        resource 0x7f050000 buck.exotest:array/aaa_array: <bag>
+          Parent=0x00000000(Resolved=0x7f000000), Count=3
+          #0 (Key=0x02000000): (color) #00000001
+          #1 (Key=0x02000001): (color) #00000002
+          #2 (Key=0x02000002): (color) #00000003
+        resource 0x7f050001 buck.exotest:array/meta_array: <bag>
+          Parent=0x00000000(Resolved=0x7f000000), Count=3
+          #0 (Key=0x02000000): (string8) "item0"
+          #1 (Key=0x02000001): (string8) "item1"
+          #2 (Key=0x02000002): (string8) "item2"
+        resource 0x7f050002 buck.exotest:array/meta_array2: <bag>
+          Parent=0x00000000(Resolved=0x7f000000), Count=3
+          #0 (Key=0x02000000): (reference) 0x7f060001
+          #1 (Key=0x02000001): (reference) 0x7f060001
+          #2 (Key=0x02000002): (reference) 0x7f060001
+    type 5 configCount=1 entryCount=2
+      spec resource 0x7f060000 buck.exotest:id/some_id: flags=0x00000000
+      spec resource 0x7f060001 buck.exotest:id/meta_array_entry: flags=0x00000000
+      config (default):
+        resource 0x7f060000 buck.exotest:id/some_id: t=0x03 d=0x0000000c (s=0x0008 r=0x00)
+          (string8) ""
+        resource 0x7f060001 buck.exotest:id/meta_array_entry: t=0x03 d=0x0000000c (s=0x0008 r=0x00)
+          (string8) ""

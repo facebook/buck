@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,9 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger; // NOPMD
 
-/**
- * Logs build events to java.util.logging.
- */
+/** Logs build events to java.util.logging. */
 public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
@@ -127,14 +124,16 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   private static class BuildEventFormatter extends Formatter {
 
-    private final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
-      @Override protected SimpleDateFormat initialValue() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        // Normalize all the times.
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return format;
-      }
-    };
+    private final ThreadLocal<SimpleDateFormat> dateFormat =
+        new ThreadLocal<SimpleDateFormat>() {
+          @Override
+          protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            // Normalize all the times.
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format;
+          }
+        };
 
     @Override
     public String format(LogRecord logRecord) {

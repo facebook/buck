@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,12 +37,8 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
   private final BuildRuleResolver buildRuleResolver;
   private final DIncludes includes;
 
-  public DLibrary(
-      BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
-      SourcePathResolver sourcePathResolver,
-      DIncludes includes) {
-    super(params, sourcePathResolver);
+  public DLibrary(BuildRuleParams params, BuildRuleResolver buildRuleResolver, DIncludes includes) {
+    super(params);
     this.buildRuleResolver = buildRuleResolver;
     this.includes = includes;
   }
@@ -55,23 +50,20 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     Archive archive =
-        (Archive) buildRuleResolver.requireRule(
-            getBuildTarget().withAppendedFlavors(
-                cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.STATIC_FLAVOR));
+        (Archive)
+            buildRuleResolver.requireRule(
+                getBuildTarget()
+                    .withAppendedFlavors(
+                        cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_FLAVOR));
     return NativeLinkableInput.of(
-        ImmutableList.of(archive.toArg()),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableList.of(archive.toArg()), ImmutableSet.of(), ImmutableSet.of());
   }
 
   @Override
@@ -89,5 +81,4 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
         getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE));
     return includes;
   }
-
 }

@@ -20,48 +20,34 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Optional;
-
-/**
- * Test for FileFinder.
- */
+/** Test for FileFinder. */
 public class FileFinderTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void combine() {
-    Object[] result = FileFinder.combine(null, "foo", null).toArray();
+    Object[] result = FileFinder.combine(ImmutableSet.of(), "foo", ImmutableSet.of()).toArray();
     Arrays.sort(result);
-    Assert.assertArrayEquals(
-        new String[] { "foo" },
-        result);
+    Assert.assertArrayEquals(new String[] {"foo"}, result);
 
-    result = FileFinder.combine(
-        ImmutableSet.of(),
-        "foo",
-        ImmutableSet.of(".exe", ".com", ".bat")).toArray();
+    result =
+        FileFinder.combine(ImmutableSet.of(), "foo", ImmutableSet.of(".exe", ".com", ".bat"))
+            .toArray();
     Arrays.sort(result);
-    Assert.assertArrayEquals(
-        new String[] { "foo.bat", "foo.com", "foo.exe" },
-        result);
+    Assert.assertArrayEquals(new String[] {"foo.bat", "foo.com", "foo.exe"}, result);
 
-    result = FileFinder.combine(
-        ImmutableSet.of("lib", ""),
-        "foo",
-        null).toArray();
+    result = FileFinder.combine(ImmutableSet.of("lib", ""), "foo", ImmutableSet.of()).toArray();
     Arrays.sort(result);
-    Assert.assertArrayEquals(
-        new String[] { "foo", "libfoo" },
-        result);
+    Assert.assertArrayEquals(new String[] {"foo", "libfoo"}, result);
   }
 
   @Test
@@ -71,7 +57,8 @@ public class FileFinderTest {
     tmp.newFile("fee/foo");
     tmp.newFile("fie/foo");
     ImmutableList<Path> searchPath = ImmutableList.of(fie, fee);
-    Optional<Path> result = FileFinder.getOptionalFile("foo", searchPath);
+    Optional<Path> result =
+        FileFinder.getOptionalFile(ImmutableSet.of("foo"), searchPath, Files::exists);
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals(fie.resolve("foo"), result.get());
   }
@@ -83,20 +70,13 @@ public class FileFinderTest {
     Path fie = tmp.newFolder("fie");
     tmp.newFile("fie/bar");
 
-    ImmutableSet<String> names = ImmutableSet.of(
-        "foo",
-        "bar",
-        "baz");
+    ImmutableSet<String> names = ImmutableSet.of("foo", "bar", "baz");
     Optional<Path> result =
-        FileFinder.getOptionalFile(
-            names,
-            ImmutableSortedSet.of(fee));
+        FileFinder.getOptionalFile(names, ImmutableSortedSet.of(fee), Files::exists);
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals(fee.resolve("foo"), result.get());
 
-    result = FileFinder.getOptionalFile(
-        names,
-        ImmutableSortedSet.of(fie));
+    result = FileFinder.getOptionalFile(names, ImmutableSortedSet.of(fie), Files::exists);
     Assert.assertTrue(result.isPresent());
     Assert.assertEquals(fie.resolve("bar"), result.get());
   }
@@ -110,8 +90,7 @@ public class FileFinderTest {
 
     Optional<Path> result =
         FileFinder.getOptionalFile(
-            "baz",
-            ImmutableSortedSet.of(fee, fie));
+            ImmutableSet.of("baz"), ImmutableSortedSet.of(fee, fie), Files::exists);
     Assert.assertFalse(result.isPresent());
   }
 }

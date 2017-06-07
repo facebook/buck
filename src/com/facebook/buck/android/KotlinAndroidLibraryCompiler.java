@@ -20,9 +20,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
 public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
@@ -41,20 +39,10 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg args,
+      AndroidLibraryDescription.CoreArg args,
       JavacOptions javacOptions,
       BuildRuleResolver resolver) {
     return new KotlincToJarStepFactory(
-        kotlinBuckConfig.getKotlinCompiler().get(),
-        ImmutableList.of(),
-        ANDROID_CLASSPATH_FROM_CONTEXT);
-  }
-
-  @Override
-  public Iterable<BuildRule> getExtraDeps(
-      AndroidLibraryDescription.Arg args,
-      BuildRuleResolver resolver) {
-    return kotlinBuckConfig.getKotlinCompiler().get()
-        .getDeps(new SourcePathResolver(resolver));
+        kotlinBuckConfig.getKotlinc(), ImmutableList.of(), ANDROID_CLASSPATH_FROM_CONTEXT);
   }
 }

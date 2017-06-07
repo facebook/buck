@@ -26,18 +26,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.util.Optional;
-
-/**
- * Event produced for HttpArtifactCache operations containing different stats.
- */
+/** Event produced for HttpArtifactCache operations containing different stats. */
 public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
-  public static final ArtifactCacheEvent.CacheMode CACHE_MODE =
-      ArtifactCacheEvent.CacheMode.http;
+  public static final ArtifactCacheEvent.CacheMode CACHE_MODE = ArtifactCacheEvent.CacheMode.http;
 
   protected HttpArtifactCacheEvent(
       EventKey eventKey,
@@ -45,13 +40,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       Optional<String> target,
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCacheEvent.InvocationType invocationType) {
-    super(
-        eventKey,
-        CACHE_MODE,
-        operation,
-        target,
-        ruleKeys,
-        invocationType);
+    super(eventKey, CACHE_MODE, operation, target, ruleKeys, invocationType);
   }
 
   public static Started newFetchStartedEvent(RuleKey ruleKey) {
@@ -63,8 +52,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   public static Scheduled newStoreScheduledEvent(
-      Optional<String> target,
-      ImmutableSet<RuleKey> ruleKeys) {
+      Optional<String> target, ImmutableSet<RuleKey> ruleKeys) {
     return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys);
   }
 
@@ -141,22 +129,16 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
   public static class Finished extends ArtifactCacheEvent.Finished {
 
-    @JsonIgnore
-    private final Started startedEvent;
+    @JsonIgnore private final Started startedEvent;
 
-    @JsonIgnore
-    private final Optional<HttpArtifactCacheEventFetchData> fetchData;
+    @JsonIgnore private final Optional<HttpArtifactCacheEventFetchData> fetchData;
 
-    @JsonIgnore
-    private final Optional<HttpArtifactCacheEventStoreData> storeData;
+    @JsonIgnore private final Optional<HttpArtifactCacheEventStoreData> storeData;
 
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    public Finished(
-        Started event,
-        Optional<String> target,
-        HttpArtifactCacheEventFetchData data) {
+    public Finished(Started event, Optional<String> target, HttpArtifactCacheEventFetchData data) {
       super(
           event.getEventKey(),
           CACHE_MODE,
@@ -231,14 +213,11 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
       public HttpArtifactCacheEvent.Finished build() {
         if (startedEvent.getOperation() == Operation.FETCH) {
-          RuleKey requestsRuleKey = Preconditions.checkNotNull(Iterables.getFirst(
-              startedEvent.getRuleKeys(),
-              null));
+          RuleKey requestsRuleKey =
+              Preconditions.checkNotNull(Iterables.getFirst(startedEvent.getRuleKeys(), null));
           fetchDataBuilder.setRequestedRuleKey(requestsRuleKey);
           return new HttpArtifactCacheEvent.Finished(
-              startedEvent,
-              target,
-              fetchDataBuilder.build());
+              startedEvent, target, fetchDataBuilder.build());
         } else {
           storeDataBuilder.setRuleKeys(startedEvent.getRuleKeys());
           return new HttpArtifactCacheEvent.Finished(startedEvent, storeDataBuilder.build());
@@ -255,11 +234,6 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
       public Builder setFetchDataBuilder(HttpArtifactCacheEventFetchData.Builder fetchDataBuilder) {
         this.fetchDataBuilder = fetchDataBuilder;
-        return this;
-      }
-
-      public Builder setStoreDataBuilder(HttpArtifactCacheEventStoreData.Builder storeDataBuilder) {
-        this.storeDataBuilder = storeDataBuilder;
         return this;
       }
 

@@ -17,13 +17,12 @@
 package com.facebook.buck.intellij.ideabuck.ws;
 
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandlerInterface;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 // Set the maximum message text size to 24 MB
 @WebSocket(maxTextMessageSize = 24 * 1024 * 1024)

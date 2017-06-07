@@ -20,7 +20,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
 
 public class VersionBuckConfig implements VersionConfig {
@@ -40,15 +39,12 @@ public class VersionBuckConfig implements VersionConfig {
       List<String> parts = Splitter.on('=').limit(2).trimResults().splitToList(val);
       if (parts.size() != 2) {
         throw new HumanReadableException(
-            "`%s:%s`: must specify version selections as a comma-separated list of " +
-                "`//build:target=<version>` pairs: \"%s\"",
-            UNIVERSES_SECTION,
-            name,
-            val);
+            "`%s:%s`: must specify version selections as a comma-separated list of "
+                + "`//build:target=<version>` pairs: \"%s\"",
+            UNIVERSES_SECTION, name, val);
       }
       universe.putVersions(
-          delegate.getBuildTargetForFullyQualifiedTarget(parts.get(0)),
-          Version.of(parts.get(1)));
+          delegate.getBuildTargetForFullyQualifiedTarget(parts.get(0)), Version.of(parts.get(1)));
     }
     return universe.build();
   }
@@ -61,5 +57,4 @@ public class VersionBuckConfig implements VersionConfig {
     }
     return universes.build();
   }
-
 }

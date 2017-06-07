@@ -21,17 +21,14 @@ public class CompilerErrorItem {
     ERROR,
     WARNING
   }
+
   private String mError;
   private String mFilePath;
   private int mColumn;
   private int mLine;
   private Type mType;
 
-  public CompilerErrorItem(
-      String filePath,
-      int line,
-      Type type
-  ) {
+  public CompilerErrorItem(String filePath, int line, Type type) {
     mFilePath = filePath;
     mColumn = -1;
     mLine = line;
@@ -42,6 +39,7 @@ public class CompilerErrorItem {
   public void setError(String error) {
     mError = error;
   }
+
   public void setColumn(int column) {
     mColumn = column;
   }
@@ -49,15 +47,19 @@ public class CompilerErrorItem {
   public String getError() {
     return mError;
   }
+
   public String getFilePath() {
     return mFilePath;
   }
+
   public int getColumn() {
     return mColumn;
   }
+
   public int getLine() {
     return mLine;
   }
+
   public Type getType() {
     return mType;
   }

@@ -28,20 +28,18 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Pseudo linkable for representing Swift runtime library's linker arguments.
- */
+/** Pseudo linkable for representing Swift runtime library's linker arguments. */
 final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
-  private static final BuildTarget PSEUDO_BUILD_TARGET = BuildTarget
-      .builder(Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME)
-      .build();
+  private static final BuildTarget PSEUDO_BUILD_TARGET =
+      BuildTarget.builder(
+              Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME)
+          .build();
   private final SwiftPlatform swiftPlatform;
 
   SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
@@ -68,9 +66,10 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
       CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
-    ImmutableSet<Path> swiftRuntimePaths = type == Linker.LinkableDepType.SHARED ?
-        ImmutableSet.of() :
-        swiftPlatform.getSwiftStaticRuntimePaths();
+    ImmutableSet<Path> swiftRuntimePaths =
+        type == Linker.LinkableDepType.SHARED
+            ? ImmutableSet.of()
+            : swiftPlatform.getSwiftStaticRuntimePaths();
 
     // Fall back to shared if static isn't supported on this platform.
     if (type == Linker.LinkableDepType.SHARED || swiftRuntimePaths.isEmpty()) {
@@ -88,10 +87,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
     } else {
       // Static linking requires force-loading Swift libs, since the dependency
       // discovery mechanism is disabled otherwise.
-      inputBuilder.addAllArgs(
-          StringArg.from(
-              "-Xlinker",
-              "-force_load_swift_libs"));
+      inputBuilder.addAllArgs(StringArg.from("-Xlinker", "-force_load_swift_libs"));
     }
     for (Path swiftRuntimePath : swiftRuntimePaths) {
       inputBuilder.addAllArgs(StringArg.from("-L", swiftRuntimePath.toString()));

@@ -17,31 +17,30 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.string.StringsUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-
-import org.immutables.value.Value;
-
+import com.google.common.primitives.Booleans;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
- * A build target in the form of <pre>cell//path:rule</pre>.
+ * A build target in the form of
+ *
+ * <pre>cell//path:rule</pre>
+ *
+ * .
  */
 @BuckStyleImmutable
 @Value.Immutable(copy = false)
 abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnflavoredBuildTarget> {
 
-  /**
-   * Interner for instances of UnflavoredBuildTarget.
-   */
+  /** Interner for instances of UnflavoredBuildTarget. */
   private static final Interner<UnflavoredBuildTarget> interner = Interners.newWeakInterner();
 
-  /**
-   * Builder for UnflavoredBuildTargets which routes values through BuildTargetInterner.
-   */
+  /** Builder for UnflavoredBuildTargets which routes values through BuildTargetInterner. */
   public static class Builder extends UnflavoredBuildTarget.Builder {
     @Override
     public UnflavoredBuildTarget build() {
@@ -61,8 +60,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
 
     // On Windows, baseName may contain backslashes, which are not permitted.
     Preconditions.checkArgument(
-        !getBaseName().contains("\\"),
-        "baseName may not contain backslashes.");
+        !getBaseName().contains("\\"), "baseName may not contain backslashes.");
 
     Preconditions.checkArgument(
         getShortName().lastIndexOf("#") == -1,
@@ -92,8 +90,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * "//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return (getCell().isPresent() ? getCell().get() : "") +
-        getBaseName() + ":" + getShortName();
+    return (getCell().isPresent() ? getCell().get() : "") + getBaseName() + ":" + getShortName();
   }
 
   /**
@@ -102,20 +99,13 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * appended to a file path.
    */
   public Path getBasePath() {
-    return getCellPath().getFileSystem().getPath(
-        getBaseName().substring(BUILD_TARGET_PREFIX.length()));
+    return getCellPath()
+        .getFileSystem()
+        .getPath(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
   }
 
   public boolean isInCellRoot() {
     return getBaseName().equals("//");
-  }
-
-  public static Builder builder(String baseName, String shortName) {
-    return UnflavoredBuildTarget
-        .builder()
-        .setCell(Optional.empty())
-        .setBaseName(baseName)
-        .setShortName(shortName);
   }
 
   public static Builder builder() {
@@ -123,10 +113,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   }
 
   public static UnflavoredBuildTarget of(
-      Path cellPath,
-      Optional<String> cellName,
-      String baseName,
-      String shortName) {
+      Path cellPath, Optional<String> cellName, String baseName, String shortName) {
     return builder()
         .setCellPath(cellPath)
         .setCell(cellName)
@@ -146,15 +133,20 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
     if (this == o) {
       return 0;
     }
-
-    ComparisonChain comparison = ComparisonChain.start()
-        .compareTrueFirst(getCell().isPresent(), o.getCell().isPresent());
-    if (getCell().isPresent() && o.getCell().isPresent()) {
-      comparison = comparison.compare(getCell().get(), o.getCell().get());
+    int cmp = Booleans.compare(o.getCell().isPresent(), getCell().isPresent());
+    if (cmp != 0) {
+      return cmp;
     }
-    return comparison
-        .compare(getBaseName(), o.getBaseName())
-        .compare(getShortName(), o.getShortName())
-        .result();
+    if (getCell().isPresent() && o.getCell().isPresent()) {
+      cmp = StringsUtils.compareStrings(getCell().get(), o.getCell().get());
+      if (cmp != 0) {
+        return cmp;
+      }
+    }
+    cmp = StringsUtils.compareStrings(getBaseName(), o.getBaseName());
+    if (cmp != 0) {
+      return cmp;
+    }
+    return StringsUtils.compareStrings(getShortName(), o.getShortName());
   }
 }

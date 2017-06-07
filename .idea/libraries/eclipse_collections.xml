@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="eclipse-collections">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/eclipse-collections/eclipse-collections-7.1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/eclipse-collections/eclipse-collections-api-7.1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/eclipse-collections/eclipse-collections-forkjoin-7.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

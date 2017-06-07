@@ -17,10 +17,12 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.slb.SlbBuckConfig;
-
+import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 
 public class DistBuildConfig {
@@ -28,7 +30,23 @@ public class DistBuildConfig {
   public static final String STAMPEDE_SECTION = "stampede";
 
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
-  private static final long DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
+  private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(60);
+
+  private static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
+
+  private static final String ENABLE_SLOW_LOCAL_BUILD_FALLBACK = "enable_slow_local_build_fallback";
+  private static final boolean ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE = false;
+
+  private static final String BUILD_MODE = "build_mode";
+  private static final BuildMode BUILD_MODE_DEFAULT_VALUE = BuildMode.REMOTE_BUILD;
+
+  private static final String NUMBER_OF_MINIONS = "number_of_minions";
+  private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 2;
+
+  private static final String REPOSITORY = "repository";
+  private static final String DEFAULT_REPOSITORY = "";
+  private static final String TENANT_ID = "tenant_id";
+  private static final String DEFAULT_TENANT_ID = "";
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -42,9 +60,49 @@ public class DistBuildConfig {
     return frontendConfig;
   }
 
+  public BuckConfig getBuckConfig() {
+    return buckConfig;
+  }
+
+  public Optional<ImmutableList<Path>> getOptionalPathWhitelist() {
+    return buckConfig.getOptionalPathList(STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST);
+  }
+
   public long getFrontendRequestTimeoutMillis() {
-    return buckConfig.getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS).orElse(
-        DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS);
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS)
+        .orElse(REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
+  }
+
+  public BuildMode getBuildMode() {
+    return buckConfig
+        .getEnum(STAMPEDE_SECTION, BUILD_MODE, BuildMode.class)
+        .orElse(BUILD_MODE_DEFAULT_VALUE);
+  }
+
+  public int getNumberOfMinions() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
+        .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
+  }
+
+  public String getRepository() {
+    return buckConfig.getValue(STAMPEDE_SECTION, REPOSITORY).orElse(DEFAULT_REPOSITORY);
+  }
+
+  public String getTenantId() {
+    return buckConfig.getValue(STAMPEDE_SECTION, TENANT_ID).orElse(DEFAULT_TENANT_ID);
+  }
+
+  /**
+   * Whether buck distributed build should stop building if remote/distributed build fails (true) or
+   * if it should fallback to building locally if remote/distributed build fails (false).
+   */
+  public boolean isSlowLocalBuildFallbackModeEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION,
+        ENABLE_SLOW_LOCAL_BUILD_FALLBACK,
+        ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE);
   }
 
   public OkHttpClient createOkHttpClient() {

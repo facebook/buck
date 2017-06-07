@@ -27,13 +27,11 @@ import com.facebook.thrift.transport.TSocket;
 import com.facebook.thrift.transport.TTransport;
 import com.facebook.thrift.transport.TTransportException;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 /**
@@ -57,43 +55,43 @@ public final class EdenClient {
 
   @VisibleForTesting
   EdenClient(final EdenService.Client client) {
-    this(new ThreadLocal<EdenService.Client>() {
-      @Override
-      protected EdenService.Client initialValue() {
-        return client;
-      }
-    });
+    this(
+        new ThreadLocal<EdenService.Client>() {
+          @Override
+          protected EdenService.Client initialValue() {
+            return client;
+          }
+        });
   }
 
   public static Optional<EdenClient> newInstance() {
     // The default path for the Eden socket is ~/local/.eden/socket.
-    Path socketFile = Paths.get(
-        System.getProperty("user.home"),
-        "local/.eden/socket");
+    Path socketFile = Paths.get(System.getProperty("user.home"), "local/.eden/socket");
     return newInstance(socketFile);
   }
 
   private static Optional<EdenClient> newInstance(final Path socketFile) {
-    ThreadLocal<EdenService.Client> clientFactory = new ThreadLocal<EdenService.Client>() {
-      /**
-       * @return {@code null} if there is no instance of Eden to connect to because this method
-       *     cannot throw checked exceptions to signal a failure.
-       */
-      @Override
-      @Nullable
-      protected EdenService.Client initialValue() {
-        TTransport transport;
-        try {
-          UnixDomainSocket socket = UnixDomainSocket.createSocketWithPath(socketFile);
-          transport = new TSocket(socket);
-        } catch (IOException | TTransportException e) {
-          return null;
-        }
-        // No need to invoke transport.open() because the UnixDomainSocket is already connected.
-        TProtocol protocol = new TBinaryProtocol(transport);
-        return new EdenService.Client(protocol);
-      }
-    };
+    ThreadLocal<EdenService.Client> clientFactory =
+        new ThreadLocal<EdenService.Client>() {
+          /**
+           * @return {@code null} if there is no instance of Eden to connect to because this method
+           *     cannot throw checked exceptions to signal a failure.
+           */
+          @Override
+          @Nullable
+          protected EdenService.Client initialValue() {
+            TTransport transport;
+            try {
+              UnixDomainSocket socket = UnixDomainSocket.createSocketWithPath(socketFile);
+              transport = new TSocket(socket);
+            } catch (IOException | TTransportException e) {
+              return null;
+            }
+            // No need to invoke transport.open() because the UnixDomainSocket is already connected.
+            TProtocol protocol = new TBinaryProtocol(transport);
+            return new EdenService.Client(protocol);
+          }
+        };
 
     // We forcibly try to create an EdenService.Client as a way of verifying that `socketFile` is a
     // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
@@ -110,9 +108,7 @@ public final class EdenClient {
     return clientFactory.get().listMounts();
   }
 
-  /**
-   * @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}.
-   */
+  /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
   @Nullable
   public EdenMount getMountFor(Path projectRoot) throws EdenError, TException {
     for (MountInfo info : getMountInfos()) {

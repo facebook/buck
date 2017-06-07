@@ -40,6 +40,8 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
   private static final org.apache.thrift.protocol.TField VERSION_CONTROL_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("versionControlStats", org.apache.thrift.protocol.TType.STRUCT, (short)2);
   private static final org.apache.thrift.protocol.TField MEMORY_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("memoryStats", org.apache.thrift.protocol.TType.STRUCT, (short)3);
   private static final org.apache.thrift.protocol.TField PROCESS_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("processStats", org.apache.thrift.protocol.TType.STRUCT, (short)4);
+  private static final org.apache.thrift.protocol.TField TIME_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStats", org.apache.thrift.protocol.TType.STRUCT, (short)5);
+  private static final org.apache.thrift.protocol.TField EXPERIMENT_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("experimentStats", org.apache.thrift.protocol.TType.STRUCT, (short)6);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -51,13 +53,17 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
   public VersionControlStatsRemoteLogEntry versionControlStats; // optional
   public MemoryStatsRemoteLogEntry memoryStats; // optional
   public ProcessStatsRemoteLogEntry processStats; // optional
+  public TimeStatsRemoteLogEntry timeStats; // optional
+  public ExperimentStatsRemoteLogEntry experimentStats; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     BUILD_UUID((short)1, "buildUuid"),
     VERSION_CONTROL_STATS((short)2, "versionControlStats"),
     MEMORY_STATS((short)3, "memoryStats"),
-    PROCESS_STATS((short)4, "processStats");
+    PROCESS_STATS((short)4, "processStats"),
+    TIME_STATS((short)5, "timeStats"),
+    EXPERIMENT_STATS((short)6, "experimentStats");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -80,6 +86,10 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
           return MEMORY_STATS;
         case 4: // PROCESS_STATS
           return PROCESS_STATS;
+        case 5: // TIME_STATS
+          return TIME_STATS;
+        case 6: // EXPERIMENT_STATS
+          return EXPERIMENT_STATS;
         default:
           return null;
       }
@@ -120,7 +130,7 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.BUILD_UUID,_Fields.VERSION_CONTROL_STATS,_Fields.MEMORY_STATS,_Fields.PROCESS_STATS};
+  private static final _Fields optionals[] = {_Fields.BUILD_UUID,_Fields.VERSION_CONTROL_STATS,_Fields.MEMORY_STATS,_Fields.PROCESS_STATS,_Fields.TIME_STATS,_Fields.EXPERIMENT_STATS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -132,6 +142,10 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MemoryStatsRemoteLogEntry.class)));
     tmpMap.put(_Fields.PROCESS_STATS, new org.apache.thrift.meta_data.FieldMetaData("processStats", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ProcessStatsRemoteLogEntry.class)));
+    tmpMap.put(_Fields.TIME_STATS, new org.apache.thrift.meta_data.FieldMetaData("timeStats", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, TimeStatsRemoteLogEntry.class)));
+    tmpMap.put(_Fields.EXPERIMENT_STATS, new org.apache.thrift.meta_data.FieldMetaData("experimentStats", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ExperimentStatsRemoteLogEntry.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(RemoteLogEntry.class, metaDataMap);
   }
@@ -155,6 +169,12 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
     if (other.isSetProcessStats()) {
       this.processStats = new ProcessStatsRemoteLogEntry(other.processStats);
     }
+    if (other.isSetTimeStats()) {
+      this.timeStats = new TimeStatsRemoteLogEntry(other.timeStats);
+    }
+    if (other.isSetExperimentStats()) {
+      this.experimentStats = new ExperimentStatsRemoteLogEntry(other.experimentStats);
+    }
   }
 
   public RemoteLogEntry deepCopy() {
@@ -167,6 +187,8 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
     this.versionControlStats = null;
     this.memoryStats = null;
     this.processStats = null;
+    this.timeStats = null;
+    this.experimentStats = null;
   }
 
   public String getBuildUuid() {
@@ -265,6 +287,54 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
     }
   }
 
+  public TimeStatsRemoteLogEntry getTimeStats() {
+    return this.timeStats;
+  }
+
+  public RemoteLogEntry setTimeStats(TimeStatsRemoteLogEntry timeStats) {
+    this.timeStats = timeStats;
+    return this;
+  }
+
+  public void unsetTimeStats() {
+    this.timeStats = null;
+  }
+
+  /** Returns true if field timeStats is set (has been assigned a value) and false otherwise */
+  public boolean isSetTimeStats() {
+    return this.timeStats != null;
+  }
+
+  public void setTimeStatsIsSet(boolean value) {
+    if (!value) {
+      this.timeStats = null;
+    }
+  }
+
+  public ExperimentStatsRemoteLogEntry getExperimentStats() {
+    return this.experimentStats;
+  }
+
+  public RemoteLogEntry setExperimentStats(ExperimentStatsRemoteLogEntry experimentStats) {
+    this.experimentStats = experimentStats;
+    return this;
+  }
+
+  public void unsetExperimentStats() {
+    this.experimentStats = null;
+  }
+
+  /** Returns true if field experimentStats is set (has been assigned a value) and false otherwise */
+  public boolean isSetExperimentStats() {
+    return this.experimentStats != null;
+  }
+
+  public void setExperimentStatsIsSet(boolean value) {
+    if (!value) {
+      this.experimentStats = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case BUILD_UUID:
@@ -299,6 +369,22 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
       }
       break;
 
+    case TIME_STATS:
+      if (value == null) {
+        unsetTimeStats();
+      } else {
+        setTimeStats((TimeStatsRemoteLogEntry)value);
+      }
+      break;
+
+    case EXPERIMENT_STATS:
+      if (value == null) {
+        unsetExperimentStats();
+      } else {
+        setExperimentStats((ExperimentStatsRemoteLogEntry)value);
+      }
+      break;
+
     }
   }
 
@@ -315,6 +401,12 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
 
     case PROCESS_STATS:
       return getProcessStats();
+
+    case TIME_STATS:
+      return getTimeStats();
+
+    case EXPERIMENT_STATS:
+      return getExperimentStats();
 
     }
     throw new IllegalStateException();
@@ -335,6 +427,10 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
       return isSetMemoryStats();
     case PROCESS_STATS:
       return isSetProcessStats();
+    case TIME_STATS:
+      return isSetTimeStats();
+    case EXPERIMENT_STATS:
+      return isSetExperimentStats();
     }
     throw new IllegalStateException();
   }
@@ -388,6 +484,24 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
         return false;
     }
 
+    boolean this_present_timeStats = true && this.isSetTimeStats();
+    boolean that_present_timeStats = true && that.isSetTimeStats();
+    if (this_present_timeStats || that_present_timeStats) {
+      if (!(this_present_timeStats && that_present_timeStats))
+        return false;
+      if (!this.timeStats.equals(that.timeStats))
+        return false;
+    }
+
+    boolean this_present_experimentStats = true && this.isSetExperimentStats();
+    boolean that_present_experimentStats = true && that.isSetExperimentStats();
+    if (this_present_experimentStats || that_present_experimentStats) {
+      if (!(this_present_experimentStats && that_present_experimentStats))
+        return false;
+      if (!this.experimentStats.equals(that.experimentStats))
+        return false;
+    }
+
     return true;
   }
 
@@ -414,6 +528,16 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
     list.add(present_processStats);
     if (present_processStats)
       list.add(processStats);
+
+    boolean present_timeStats = true && (isSetTimeStats());
+    list.add(present_timeStats);
+    if (present_timeStats)
+      list.add(timeStats);
+
+    boolean present_experimentStats = true && (isSetExperimentStats());
+    list.add(present_experimentStats);
+    if (present_experimentStats)
+      list.add(experimentStats);
 
     return list.hashCode();
   }
@@ -462,6 +586,26 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
     }
     if (isSetProcessStats()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.processStats, other.processStats);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetTimeStats()).compareTo(other.isSetTimeStats());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetTimeStats()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.timeStats, other.timeStats);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetExperimentStats()).compareTo(other.isSetExperimentStats());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetExperimentStats()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.experimentStats, other.experimentStats);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -525,6 +669,26 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
       }
       first = false;
     }
+    if (isSetTimeStats()) {
+      if (!first) sb.append(", ");
+      sb.append("timeStats:");
+      if (this.timeStats == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.timeStats);
+      }
+      first = false;
+    }
+    if (isSetExperimentStats()) {
+      if (!first) sb.append(", ");
+      sb.append("experimentStats:");
+      if (this.experimentStats == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.experimentStats);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -540,6 +704,12 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
     }
     if (processStats != null) {
       processStats.validate();
+    }
+    if (timeStats != null) {
+      timeStats.validate();
+    }
+    if (experimentStats != null) {
+      experimentStats.validate();
     }
   }
 
@@ -612,6 +782,24 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 5: // TIME_STATS
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.timeStats = new TimeStatsRemoteLogEntry();
+              struct.timeStats.read(iprot);
+              struct.setTimeStatsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 6: // EXPERIMENT_STATS
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.experimentStats = new ExperimentStatsRemoteLogEntry();
+              struct.experimentStats.read(iprot);
+              struct.setExperimentStatsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -655,6 +843,20 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
           oprot.writeFieldEnd();
         }
       }
+      if (struct.timeStats != null) {
+        if (struct.isSetTimeStats()) {
+          oprot.writeFieldBegin(TIME_STATS_FIELD_DESC);
+          struct.timeStats.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.experimentStats != null) {
+        if (struct.isSetExperimentStats()) {
+          oprot.writeFieldBegin(EXPERIMENT_STATS_FIELD_DESC);
+          struct.experimentStats.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -685,7 +887,13 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
       if (struct.isSetProcessStats()) {
         optionals.set(3);
       }
-      oprot.writeBitSet(optionals, 4);
+      if (struct.isSetTimeStats()) {
+        optionals.set(4);
+      }
+      if (struct.isSetExperimentStats()) {
+        optionals.set(5);
+      }
+      oprot.writeBitSet(optionals, 6);
       if (struct.isSetBuildUuid()) {
         oprot.writeString(struct.buildUuid);
       }
@@ -698,12 +906,18 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
       if (struct.isSetProcessStats()) {
         struct.processStats.write(oprot);
       }
+      if (struct.isSetTimeStats()) {
+        struct.timeStats.write(oprot);
+      }
+      if (struct.isSetExperimentStats()) {
+        struct.experimentStats.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, RemoteLogEntry struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(4);
+      BitSet incoming = iprot.readBitSet(6);
       if (incoming.get(0)) {
         struct.buildUuid = iprot.readString();
         struct.setBuildUuidIsSet(true);
@@ -722,6 +936,16 @@ public class RemoteLogEntry implements org.apache.thrift.TBase<RemoteLogEntry, R
         struct.processStats = new ProcessStatsRemoteLogEntry();
         struct.processStats.read(iprot);
         struct.setProcessStatsIsSet(true);
+      }
+      if (incoming.get(4)) {
+        struct.timeStats = new TimeStatsRemoteLogEntry();
+        struct.timeStats.read(iprot);
+        struct.setTimeStatsIsSet(true);
+      }
+      if (incoming.get(5)) {
+        struct.experimentStats = new ExperimentStatsRemoteLogEntry();
+        struct.experimentStats.read(iprot);
+        struct.setExperimentStatsIsSet(true);
       }
     }
   }

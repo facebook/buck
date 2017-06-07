@@ -22,27 +22,27 @@ import org.jetbrains.annotations.Nullable;
 
 public class BuckFormatterTest extends BuckTestCase {
 
-  public void testSimple1(){
+  public void testSimple1() {
     doTest();
   }
 
-  public void testSimple2(){
+  public void testSimple2() {
     doTest();
   }
 
-  public void testSimple3(){
+  public void testSimple3() {
     doTest();
   }
 
-  public void testSimple4(){
+  public void testSimple4() {
     doTest();
   }
 
-  public void testSimple5(){
+  public void testSimple5() {
     doTest();
   }
 
-  public void testError(){
+  public void testError() {
     doTest();
   }
 
@@ -110,18 +110,21 @@ public class BuckFormatterTest extends BuckTestCase {
     String testName = getTestName(true);
     myFixture.configureByFile("formatter/" + getTestName(false) + "/before.BUCK");
     doTest(c, testName);
-    assertSameLinesWithFile(getTestDataPath() + "/formatter/" + getTestName(true) +
-        "/after.BUCK", myFixture.getFile().getText());
+    assertSameLinesWithFile(
+        getTestDataPath() + "/formatter/" + getTestName(true) + "/after.BUCK",
+        myFixture.getFile().getText());
   }
 
   private String doTest(@Nullable Character c, String testName) {
     if (c == null) {
-      ApplicationManager.getApplication().runWriteAction(new Runnable() {
-        @Override
-        public void run() {
-          CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
-        }
-      });
+      ApplicationManager.getApplication()
+          .runWriteAction(
+              new Runnable() {
+                @Override
+                public void run() {
+                  CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
+                }
+              });
     } else {
       myFixture.type(c);
     }

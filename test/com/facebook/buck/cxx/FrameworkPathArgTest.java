@@ -18,33 +18,33 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class FrameworkPathArgTest {
 
   private static class TestFrameworkPathArg extends FrameworkPathArg {
-    public TestFrameworkPathArg(SourcePathResolver resolver, FrameworkPath frameworkPath) {
-      super(resolver, ImmutableSet.of(frameworkPath));
+    public TestFrameworkPathArg(FrameworkPath frameworkPath) {
+      super(ImmutableSet.of(frameworkPath));
     }
 
     @Override
-    public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    public void appendToCommandLine(
+        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
       throw new UnsupportedOperationException();
     }
   }
@@ -52,24 +52,20 @@ public class FrameworkPathArgTest {
   @Test
   public void testGetDeps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule");
-    BuildRule genrule = GenruleBuilder
-        .newGenruleBuilder(genruleTarget)
-        .setOut("foo/bar.o")
-        .build(ruleResolver, filesystem);
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(genruleTarget)
+            .setOut("foo/bar.o")
+            .build(ruleResolver, filesystem);
 
-    FrameworkPath sourcePathFrameworkPath = FrameworkPath.ofSourcePath(
-        new BuildTargetSourcePath(genruleTarget));
+    FrameworkPath sourcePathFrameworkPath =
+        FrameworkPath.ofSourcePath(genrule.getSourcePathToOutput());
 
-    FrameworkPathArg sourcePathFrameworkPathArg =
-        new TestFrameworkPathArg(resolver, sourcePathFrameworkPath);
-    assertThat(
-        sourcePathFrameworkPathArg.getDeps(resolver),
-        Matchers.contains(genrule));
+    FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
+    assertThat(sourcePathFrameworkPathArg.getDeps(ruleFinder), Matchers.contains(genrule));
   }
 }

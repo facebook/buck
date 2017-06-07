@@ -17,6 +17,7 @@
 package com.android.dx.dex.cf;
 
 import com.android.dx.dex.code.PositionList;
+
 import java.io.PrintStream;
 
 /**
@@ -46,7 +47,4 @@ public class CfOptions {
 
     /** where to issue warnings to */
     public PrintStream warn = System.err;
-
-    /** where to collect statistics */
-    public CodeStatistics codeStatistics;
 }

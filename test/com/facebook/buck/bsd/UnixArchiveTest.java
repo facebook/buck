@@ -16,18 +16,14 @@
 
 package com.facebook.buck.bsd;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.google.common.base.Charsets;
-
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
+import com.google.common.base.Charsets;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import org.junit.Before;
+import org.junit.Test;
 
 public class UnixArchiveTest {
   private Path tmp;
@@ -51,8 +49,7 @@ public class UnixArchiveTest {
   public void testCheckingHeader() throws IOException {
     byte[] bytes = "!<arch>\n..........".getBytes(Charsets.UTF_8);
     assertThat(
-        UnixArchive.checkHeader(ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)),
-        equalTo(true));
+        UnixArchive.checkHeader(ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)), equalTo(true));
 
     bytes = "UNEXPECTED_CONTENTS.......".getBytes(Charsets.UTF_8);
     assertThat(
@@ -65,12 +62,10 @@ public class UnixArchiveTest {
     Path path = tmp.resolve("test_archive.a");
     createArchiveAtPath(path);
 
-    UnixArchive archive = new UnixArchive(
-        FileChannel.open(
-            path,
-            StandardOpenOption.READ,
-            StandardOpenOption.WRITE),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    UnixArchive archive =
+        new UnixArchive(
+            FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(archive.getEntries().size(), equalTo(3));
 
     assertThat(archive.getEntries().get(0).getFileName(), equalToObject("__.SYMDEF SORTED"));
@@ -103,12 +98,10 @@ public class UnixArchiveTest {
     Path path = tmp.resolve("test_archive.a");
     createArchiveAtPath(path);
 
-    UnixArchive archive = new UnixArchive(
-        FileChannel.open(
-            path,
-            StandardOpenOption.READ,
-            StandardOpenOption.WRITE),
-        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    UnixArchive archive =
+        new UnixArchive(
+            FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE),
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
     MappedByteBuffer buffer = archive.getMapForEntry(archive.getEntries().get(1));
     byte[] bytes = new byte[(int) archive.getEntries().get(1).getFileSize()];
@@ -131,8 +124,9 @@ public class UnixArchiveTest {
 
     contents += "#1/20           1463146035  10727 11706 100644  28        ";
     contents += new String(magic);
-    contents += "__.SYMDEF SORTED\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000" +
-        "\u0000\u0000";
+    contents +=
+        "__.SYMDEF SORTED\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+            + "\u0000\u0000";
 
     contents += "#1/20           1463145840  10727 11706 100644  36        ";
     contents += new String(magic);

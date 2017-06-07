@@ -26,13 +26,14 @@ public class CxxInferSourceFilter {
   CxxInferSourceFilter(InferBuckConfig inferConfig) {
     Optional<String> rawFilterRegex = inferConfig.getBlacklistRegex();
 
-    blacklistRegex = rawFilterRegex.isPresent() ?
-        Optional.of(Pattern.compile(rawFilterRegex.get())) : Optional.empty();
+    blacklistRegex =
+        rawFilterRegex.isPresent()
+            ? Optional.of(Pattern.compile(rawFilterRegex.get()))
+            : Optional.empty();
   }
 
   public boolean isBlacklisted(CxxSource source) {
-    return blacklistRegex.isPresent() &&
-        blacklistRegex.get().matcher(source.getPath().toString()).matches();
+    return blacklistRegex.isPresent()
+        && blacklistRegex.get().matcher(source.getPath().toString()).matches();
   }
-
 }

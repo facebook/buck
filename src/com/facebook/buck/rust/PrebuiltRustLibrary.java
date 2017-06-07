@@ -16,79 +16,49 @@
 
 package com.facebook.buck.rust;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-import java.util.Optional;
+/**
+ * A pre-built rust library (ie, typically .rlib). This can't be a NoopBuildRule because we need to
+ * implement getPathToOutput(). Note that the same library file is used for all build modes, so the
+ * library should be a static .rlib compile with PIC relocation so that its compatible with all
+ * other modes. Later we may want to allow per-flavor files.
+ */
+abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithResolver implements RustLinkable {
 
-public class PrebuiltRustLibrary extends AbstractBuildRule
-  implements RustLinkable {
+  public PrebuiltRustLibrary(BuildRuleParams params, SourcePathResolver resolver) {
+    super(params, resolver);
+  }
 
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
+  /**
+   * Get the name of the pre-built Rust library (typically with a .rlib extension)
+   *
+   * @return Path to prebuilt library.
+   */
+  protected abstract SourcePath getRlib();
 
-  @AddToRuleKey
-  private final SourcePath rlib;
-  @AddToRuleKey
-  private final String crate;
-
-  public PrebuiltRustLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      SourcePath rlib,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType linkStyle,
-      Optional<String> crate) {
-    super(
-        RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
-        resolver);
-
-    this.rlib = rlib;
-    this.crate = crate.orElse(getBuildTarget().getShortName());
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(getBuildTarget(), getRlib());
   }
 
   @Override
-  public final ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return getResolver().getRelativePath(rlib);
-  }
-
-  @Override
-  public String getLinkTarget() {
-    return crate;
-  }
-
-  @Override
-  public Path getLinkPath() {
-    return getPathToOutput();
-  }
-
-  @Override
-  public ImmutableSortedSet<Path> getDependencyPaths() {
-    return RustLinkables.getDependencyPaths(this);
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("rlib", getRlib());
   }
 }

@@ -17,13 +17,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import org.kohsuke.args4j.Option;
 
 /**
  * Class-template for Mach O Util commands. As these utils should not modify the buck output,
@@ -38,30 +36,26 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
   private static final String NEW_COMPDIR_OPTION = "--new_compdir";
 
   @Option(
-      name = BINARY_OPTION,
-      required = true,
-      usage = "Mach O binary file which object paths must be updated.")
+    name = BINARY_OPTION,
+    required = true,
+    usage = "Mach O binary file which object paths must be updated."
+  )
   @SuppressFieldNotInitialized
   private Path binary;
 
   @Option(
-      name = OUTPUT_OPTION,
-      required = true,
-      usage = "The destination where the resulting binary should be stored.")
+    name = OUTPUT_OPTION,
+    required = true,
+    usage = "The destination where the resulting binary should be stored."
+  )
   @SuppressFieldNotInitialized
   private Path output;
 
-  @Option(
-      name = OLD_COMPDIR_OPTION,
-      required = true,
-      usage = "Old value for compdir.")
+  @Option(name = OLD_COMPDIR_OPTION, required = true, usage = "Old value for compdir.")
   @SuppressFieldNotInitialized
   private String oldCompDir;
 
-  @Option(
-      name = NEW_COMPDIR_OPTION,
-      required = true,
-      usage = "New value for compdir.")
+  @Option(name = NEW_COMPDIR_OPTION, required = true, usage = "New value for compdir.")
   @SuppressFieldNotInitialized
   private String updatedCompDir;
 
@@ -85,15 +79,13 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
     Preconditions.checkNotNull(oldCompDir, OLD_COMPDIR_OPTION + " must be set");
     Preconditions.checkNotNull(updatedCompDir, NEW_COMPDIR_OPTION + " must be set");
     Preconditions.checkState(
-        !binary.equals(output),
-        BINARY_OPTION + " must be different from " + OUTPUT_OPTION);
+        !binary.equals(output), BINARY_OPTION + " must be different from " + OUTPUT_OPTION);
     Preconditions.checkArgument(
         oldCompDir.length() >= updatedCompDir.length(),
-        "Updated compdir length must be less or equal to old compdir length as replace is " +
-            "performed in place");
+        "Updated compdir length must be less or equal to old compdir length as replace is "
+            + "performed in place");
     Preconditions.checkArgument(
-        !oldCompDir.equals(updatedCompDir),
-        "Updated compdir must be different from old compdir");
+        !oldCompDir.equals(updatedCompDir), "Updated compdir must be different from old compdir");
 
     Files.copy(binary, output, StandardCopyOption.REPLACE_EXISTING);
 
@@ -105,9 +97,6 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
     return true;
   }
 
-  /**
-   * The override point for subclasses.
-   */
+  /** The override point for subclasses. */
   protected abstract int invokeWithParams(CommandRunnerParams params) throws IOException;
-
 }

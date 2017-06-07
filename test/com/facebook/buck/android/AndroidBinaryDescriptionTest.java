@@ -16,31 +16,31 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.jvm.java.KeystoreBuilder;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
+import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Paths;
+import java.util.EnumSet;
+import java.util.Locale;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
-import java.util.Locale;
 
 public class AndroidBinaryDescriptionTest {
 
@@ -75,19 +75,17 @@ public class AndroidBinaryDescriptionTest {
 
     BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
     AndroidBinary androidBinary = (AndroidBinary) ruleResolver.requireRule(target);
-    assertThat(androidBinary.getDeps(), Matchers.hasItem(transitiveDep));
+    assertThat(androidBinary.getBuildDeps(), Matchers.hasItem(transitiveDep));
   }
 
   @Test
   public void turkishCaseRulesDoNotCrashConstructor() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     Keystore keystore =
         ruleResolver.addToIndex(
             new Keystore(
                 new FakeBuildRuleParamsBuilder("//:keystore").build(),
-                pathResolver,
                 new FakeSourcePath("store"),
                 new FakeSourcePath("properties")));
     Locale originalLocale = Locale.getDefault();
@@ -103,5 +101,62 @@ public class AndroidBinaryDescriptionTest {
     } finally {
       Locale.setDefault(originalLocale);
     }
+  }
+
+  @Test
+  public void duplicateResourceBanningDefaultAllow() throws Exception {
+    AndroidBinaryDescriptionArg arg =
+        AndroidBinaryDescriptionArg.builder()
+            .setName("res")
+            .setManifest(new FakeSourcePath("manifest"))
+            .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
+            .setBannedDuplicateResourceTypes(EnumSet.of(RDotTxtEntry.RType.STRING))
+            .build();
+
+    assertEquals(
+        EnumSet.of(RDotTxtEntry.RType.STRING), arg.getEffectiveBannedDuplicateResourceTypes());
+  }
+
+  @Test
+  public void duplicateResourceBanningDefaultBan() throws Exception {
+    AndroidBinaryDescriptionArg arg =
+        AndroidBinaryDescriptionArg.builder()
+            .setName("res")
+            .setManifest(new FakeSourcePath("manifest"))
+            .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
+            .setDuplicateResourceBehavior(
+                AndroidBinaryDescriptionArg.DuplicateResourceBehaviour.BAN_BY_DEFAULT)
+            .setAllowedDuplicateResourceTypes(EnumSet.of(RDotTxtEntry.RType.STRING))
+            .build();
+
+    assertEquals(
+        EnumSet.complementOf(EnumSet.of(RDotTxtEntry.RType.STRING)),
+        arg.getEffectiveBannedDuplicateResourceTypes());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void duplicateResourceBanningBadCombinationBan() throws Exception {
+    AndroidBinaryDescriptionArg.builder()
+        .setName("res")
+        .setManifest(new FakeSourcePath("manifest"))
+        .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
+        .setDuplicateResourceBehavior(
+            AndroidBinaryDescriptionArg.DuplicateResourceBehaviour.BAN_BY_DEFAULT)
+        .setBannedDuplicateResourceTypes(EnumSet.of(RDotTxtEntry.RType.STRING))
+        .build()
+        .getEffectiveBannedDuplicateResourceTypes();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void duplicateResourceBanningBadCombinationAllow() throws Exception {
+    AndroidBinaryDescriptionArg.builder()
+        .setName("res")
+        .setManifest(new FakeSourcePath("manifest"))
+        .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
+        .setDuplicateResourceBehavior(
+            AndroidBinaryDescriptionArg.DuplicateResourceBehaviour.ALLOW_BY_DEFAULT)
+        .setAllowedDuplicateResourceTypes(EnumSet.of(RDotTxtEntry.RType.STRING))
+        .build()
+        .getEffectiveBannedDuplicateResourceTypes();
   }
 }

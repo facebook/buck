@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
 
 final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
@@ -35,41 +34,36 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
   private final JavaFileParser javaFileParser;
 
-  private final boolean shouldRecordRequiredSymbols;
-
-  JavaLibrarySymbolsFinder(
-      ImmutableSortedSet<SourcePath> srcs,
-      JavaFileParser javaFileParser,
-      boolean shouldRecordRequiredSymbols) {
+  JavaLibrarySymbolsFinder(ImmutableSortedSet<SourcePath> srcs, JavaFileParser javaFileParser) {
     // Avoid all the construction in the common case where all srcs are instances of PathSourcePath.
-    this.srcs = Iterables.all(srcs, PathSourcePath.class::isInstance)
-        ? srcs
-        : srcs.stream().filter(PathSourcePath.class::isInstance)
-        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+    this.srcs =
+        Iterables.all(srcs, PathSourcePath.class::isInstance)
+            ? srcs
+            : srcs.stream()
+                .filter(PathSourcePath.class::isInstance)
+                .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     this.javaFileParser = javaFileParser;
-    this.shouldRecordRequiredSymbols = shouldRecordRequiredSymbols;
   }
 
   @Override
   public Symbols extractSymbols() {
-    ImmutableSortedSet<Path> absolutePaths = srcs.stream().map(src -> {
-      // This should be enforced by the constructor.
-      Preconditions.checkState(src instanceof PathSourcePath);
-      PathSourcePath sourcePath = (PathSourcePath) src;
-      ProjectFilesystem filesystem = sourcePath.getFilesystem();
-      Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
-      return absolutePath;
-    }).collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
-    return SymbolExtractor.extractSymbols(
-        javaFileParser,
-        shouldRecordRequiredSymbols,
-        absolutePaths);
+    ImmutableSortedSet<Path> absolutePaths =
+        srcs.stream()
+            .map(
+                src -> {
+                  // This should be enforced by the constructor.
+                  Preconditions.checkState(src instanceof PathSourcePath);
+                  PathSourcePath sourcePath = (PathSourcePath) src;
+                  ProjectFilesystem filesystem = sourcePath.getFilesystem();
+                  Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
+                  return absolutePath;
+                })
+            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+    return SymbolExtractor.extractSymbols(javaFileParser, absolutePaths);
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("srcs", srcs)
-        .setReflectively("recordRequires", shouldRecordRequiredSymbols);
+    sink.setReflectively("srcs", srcs);
   }
 }

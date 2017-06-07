@@ -16,9 +16,8 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
 /**

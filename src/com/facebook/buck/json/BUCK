@@ -1,79 +1,110 @@
 RULES_SRCS = [
-  'JsonConcatenate.java',
+    "JsonConcatenate.java",
 ]
+
+PYTHON_PROD_SRCS = glob(
+    ["buck_parser/**/*.py"],
+    excludes = ["buck_parser/**/*_test.py"],
+)
+
 java_library(
-  name = 'rules',
-  srcs = RULES_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "rules",
+    srcs = RULES_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":steps",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 STEPS_SRCS = [
-  'JsonConcatenateStep.java',
+    "JsonConcatenateStep.java",
 ]
+
 java_library(
-  name = 'steps',
-  srcs = STEPS_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "steps",
+    srcs = STEPS_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":json",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/step:step",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_immutables_library(
-  name = 'json',
-  srcs = glob(['*.java'], excludes = RULES_SRCS + STEPS_SRCS),
-  immutable_types = [
-    'ProjectBuildFileParserOptions',
-    'BuildFileParseExceptionData',
-    'BuildFileParseExceptionStackTraceEntry',
-    'BuildFileSyntaxError',
-  ],
-  tests = [
-    '//test/com/facebook/buck/json:json',
-  ],
-  resources = [
-    '//src/com/facebook/buck/json:python_bundle',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-PYTHON_PROD_SRCS = glob(['buck_parser/**/*.py'], excludes=['buck_parser/**/*_test.py'])
-
-zip_file(
-  name = 'python_bundle',
-  srcs = PYTHON_PROD_SRCS,
+    name = "json",
+    srcs = glob(
+        ["*.java"],
+        excludes = RULES_SRCS + STEPS_SRCS,
+    ),
+    resources = PYTHON_PROD_SRCS,
+    # Place the python package in the JAR root so the jar can be imported by
+    # python's built in zip importer.
+    resources_root = ".",
+    tests = [
+        "//test/com/facebook/buck/json:json",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/hashing:hashing",
+        "//src/com/facebook/buck/io:MorePaths.java",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+    ],
 )
 
 python_library(
-  name = 'buck_parser',
-  srcs = PYTHON_PROD_SRCS,
-  base_module = '',
-  deps = [
-    '//third-party/py/pathlib:pathlib',
-    '//third-party/py/pywatchman:pywatchman',
-    '//third-party/py/scandir:scandir',
-  ],
+    name = "buck_parser",
+    srcs = PYTHON_PROD_SRCS,
+    base_module = "",
+    deps = [
+        "//third-party/py/pathlib:pathlib",
+        "//third-party/py/pywatchman:pywatchman",
+    ],
 )
 
 python_test(
-  name = 'buck_test',
-  srcs = glob(['buck_parser/**/*_test.py']),
-  base_module = '',
-  deps = [
-    ':buck_parser',
-    '//third-party/py/pathlib:pathlib',
-    '//third-party/py/pywatchman:pywatchman',
-  ],
+    name = "buck_test",
+    srcs = glob(["buck_parser/**/*_test.py"]),
+    base_module = "",
+    deps = [
+        ":buck_parser",
+        "//third-party/py:typing",
+        "//third-party/py/pathlib:pathlib",
+        "//third-party/py/pywatchman:pywatchman",
+    ],
 )
 
 # Main binary for testing.
 python_binary(
-  name = 'standalone',
-  base_module = '',
-  main_module = 'buck_parser',
-  deps = [
-    ':buck_parser',
-  ]
+    name = "standalone",
+    base_module = "",
+    main_module = "buck_parser",
+    deps = [
+        ":buck_parser",
+    ],
 )

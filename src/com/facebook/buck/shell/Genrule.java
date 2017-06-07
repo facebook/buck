@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.NoAndroidSdkException;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -27,6 +27,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -36,25 +37,28 @@ import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Lists;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
  * AndroidManifest.xml from the wakizashi AndroidManifest.xml, such a rule could be defined as:
+ *
  * <pre>
  * genrule(
  *   name = 'katana_manifest',
@@ -66,7 +70,9 @@ import java.util.Optional;
  *   out = 'AndroidManifest.xml',
  * )
  * </pre>
+ *
  * The output of this rule would likely be used as follows:
+ *
  * <pre>
  * android_binary(
  *   name = 'katana',
@@ -76,64 +82,63 @@ import java.util.Optional;
  *   ],
  * )
  * </pre>
+ *
  * A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
  * the following environment variable substitutions:
+ *
  * <ul>
  *   <li><code>SRCS</code> will be a space-delimited string expansion of the <code>srcs</code>
  *       attribute where each element of <code>srcs</code> will be translated into an absolute path.
- *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.</li>
+ *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.
  *   <li><code>OUT</code> is the output file for the <code>genrule()</code>. The file specified by
  *       this variable must always be written by this command. If not, the execution of this rule
  *       will be considered a failure, halting the build process.
  * </ul>
- * In the above example, if the {@code katana_manifest} rule were defined in the
- * {@code src/com/facebook/wakizashi} directory, then the command that would be executed would be:
+ *
+ * In the above example, if the {@code katana_manifest} rule were defined in the {@code
+ * src/com/facebook/wakizashi} directory, then the command that would be executed would be:
+ *
  * <pre>
  * python convert_to_katana.py src/com/facebook/wakizashi/AndroidManifest.xml &gt; \
  *     buck-out/gen/src/com/facebook/wakizashi/AndroidManifest.xml
  * </pre>
+ *
  * Note that {@code cmd} could be run on either Mac or Linux, so it should contain logic that works
  * on either platform. If this becomes an issue in the future (or we want to support building on
  * different platforms), then we could introduce a new attribute that is a map of target platforms
  * to the appropriate build command for that platform.
- * <p>
- * Note that the <code>SRCDIR</code> is populated by symlinking the sources.
+ *
+ * <p>Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends AbstractBuildRule
-    implements HasOutputName, SupportsInputBasedRuleKey {
+public class Genrule extends AbstractBuildRule implements HasOutputName, SupportsInputBasedRuleKey {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
-  @AddToRuleKey
-  protected final ImmutableList<SourcePath> srcs;
+  @AddToRuleKey protected final ImmutableList<SourcePath> srcs;
 
-  @AddToRuleKey
-  protected final Optional<Arg> cmd;
-  @AddToRuleKey
-  protected final Optional<Arg> bash;
-  @AddToRuleKey
-  protected final Optional<Arg> cmdExe;
+  @AddToRuleKey protected final Optional<Arg> cmd;
+  @AddToRuleKey protected final Optional<Arg> bash;
+  @AddToRuleKey protected final Optional<Arg> cmdExe;
 
-  @AddToRuleKey
-  private final String out;
+  @AddToRuleKey private final String out;
+  @AddToRuleKey private final String type;
+
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
-  private final Path absolutePathToTmpDirectory;
   private final Path pathToSrcDirectory;
-  private final Path absolutePathToSrcDirectory;
   private final Boolean isWorkerGenrule;
 
   protected Genrule(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
+      Optional<String> type,
       String out) {
-    super(params, resolver);
+    super(params);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;
@@ -141,65 +146,68 @@ public class Genrule extends AbstractBuildRule
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
-    this.pathToOutDirectory = getProjectFilesystem().getBuckPaths().getGenDir()
-        .resolve(target.getBasePath())
-        .resolve(target.getShortName());
+    this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s");
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
-          params.getBuildTarget(),
-          out);
+          params.getBuildTarget(), out);
     }
 
     this.pathToTmpDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
-    this.absolutePathToTmpDirectory = getProjectFilesystem().resolve(pathToTmpDirectory);
 
     this.pathToSrcDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
-    this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
+    this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
   }
 
   /** @return the absolute path to the output file */
-  public String getAbsoluteOutputFilePath() {
-    return getProjectFilesystem().resolve(getPathToOutput()).toString();
+  @VisibleForTesting
+  public String getAbsoluteOutputFilePath(SourcePathResolver pathResolver) {
+    return pathResolver.getAbsolutePath(getSourcePathToOutput()).toString();
   }
 
   @VisibleForTesting
-  public ImmutableCollection<Path> getSrcs() {
-    return getResolver().filterInputsToCompareToOutput(srcs);
+  public ImmutableList<SourcePath> getSrcs() {
+    return srcs;
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutFile);
   }
 
-  protected void addEnvironmentVariables(ExecutionContext context,
+  protected void addEnvironmentVariables(
+      SourcePathResolver pathResolver,
+      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
-        Joiner.on(' ').join(
-            FluentIterable.from(srcs)
-                .transform(getResolver()::getAbsolutePath)
-                .transform(Object::toString)));
-    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
+        Joiner.on(' ')
+            .join(
+                FluentIterable.from(srcs)
+                    .transform(pathResolver::getAbsolutePath)
+                    .transform(Object::toString)));
+    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath(pathResolver));
 
     environmentVariablesBuilder.put(
         "GEN_DIR",
-        getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getGenDir())
+        getProjectFilesystem()
+            .resolve(getProjectFilesystem().getBuckPaths().getGenDir())
             .toString());
-    environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
-    environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
+    environmentVariablesBuilder.put(
+        "SRCDIR", getProjectFilesystem().resolve(pathToSrcDirectory).toString());
+    environmentVariablesBuilder.put(
+        "TMP", getProjectFilesystem().resolve(pathToTmpDirectory).toString());
 
-    // TODO(bolinfest): This entire hack needs to be removed. The [tools] section of .buckconfig
+    // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
     AndroidPlatformTarget android;
     try {
       android = context.getAndroidPlatformTarget();
-    } catch (NoAndroidSdkException e) {
+    } catch (HumanReadableException e) {
       android = null;
     }
 
@@ -221,8 +229,10 @@ public class Genrule extends AbstractBuildRule
     environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
-  private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {
-    return arg.map(Arg::stringifyList).map(input -> Joiner.on(' ').join(input));
+  private static Optional<String> flattenToSpaceSeparatedString(
+      Optional<Arg> arg, SourcePathResolver pathResolver) {
+    return arg.map((input1) -> Arg.stringifyList(input1, pathResolver))
+        .map(input -> Joiner.on(' ').join(input));
   }
 
   @VisibleForTesting
@@ -230,14 +240,15 @@ public class Genrule extends AbstractBuildRule
     Arg cmdArg = cmd.orElse(null);
     Arg bashArg = bash.orElse(null);
     Arg cmdExeArg = cmdExe.orElse(null);
-    if ((cmdArg instanceof WorkerMacroArg) ||
-        (bashArg instanceof WorkerMacroArg) ||
-        (cmdExeArg instanceof WorkerMacroArg)) {
-      if ((cmdArg != null && !(cmdArg instanceof WorkerMacroArg)) ||
-          (bashArg != null && !(bashArg instanceof WorkerMacroArg)) ||
-          (cmdExeArg != null && !(cmdExeArg instanceof WorkerMacroArg))) {
-        throw new HumanReadableException("You cannot use a worker macro in one of the cmd, bash, " +
-            "or cmd_exe properties and not in the others for genrule %s.",
+    if ((cmdArg instanceof WorkerMacroArg)
+        || (bashArg instanceof WorkerMacroArg)
+        || (cmdExeArg instanceof WorkerMacroArg)) {
+      if ((cmdArg != null && !(cmdArg instanceof WorkerMacroArg))
+          || (bashArg != null && !(bashArg instanceof WorkerMacroArg))
+          || (cmdExeArg != null && !(cmdExeArg instanceof WorkerMacroArg))) {
+        throw new HumanReadableException(
+            "You cannot use a worker macro in one of the cmd, bash, "
+                + "or cmd_exe properties and not in the others for genrule %s.",
             getBuildTarget().getFullyQualifiedName());
       }
       return true;
@@ -245,7 +256,12 @@ public class Genrule extends AbstractBuildRule
     return false;
   }
 
-  public AbstractGenruleStep createGenruleStep() {
+  @Override
+  public String getType() {
+    return type;
+  }
+
+  public AbstractGenruleStep createGenruleStep(BuildContext context) {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
@@ -254,85 +270,102 @@ public class Genrule extends AbstractBuildRule
         getProjectFilesystem(),
         getBuildTarget(),
         new CommandString(
-            flattenToSpaceSeparatedString(cmd),
-            flattenToSpaceSeparatedString(bash),
-            flattenToSpaceSeparatedString(cmdExe)),
-        absolutePathToSrcDirectory) {
+            flattenToSpaceSeparatedString(cmd, context.getSourcePathResolver()),
+            flattenToSpaceSeparatedString(bash, context.getSourcePathResolver()),
+            flattenToSpaceSeparatedString(cmdExe, context.getSourcePathResolver())),
+        BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory)
+            .getPathRelativeToBuildCellRoot()) {
       @Override
       protected void addEnvironmentVariables(
-          ExecutionContext context,
+          ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-        Genrule.this.addEnvironmentVariables(context, environmentVariablesBuilder);
+        Genrule.this.addEnvironmentVariables(
+            context.getSourcePathResolver(), executionContext, environmentVariablesBuilder);
       }
     };
   }
 
-  public WorkerShellStep createWorkerShellStep() {
+  public WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
-        getProjectFilesystem(),
-        convertToWorkerJobParams(cmd),
-        convertToWorkerJobParams(bash),
-        convertToWorkerJobParams(cmdExe)) {
+        convertToWorkerJobParams(cmd, context.getSourcePathResolver()),
+        convertToWorkerJobParams(bash, context.getSourcePathResolver()),
+        convertToWorkerJobParams(cmdExe, context.getSourcePathResolver()),
+        new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
-      protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+      protected ImmutableMap<String, String> getEnvironmentVariables(
+          ExecutionContext executionContext) {
         ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
-        Genrule.this.addEnvironmentVariables(context, envVarBuilder);
+        Genrule.this.addEnvironmentVariables(
+            context.getSourcePathResolver(), executionContext, envVarBuilder);
         return envVarBuilder.build();
       }
     };
   }
 
-  private static Optional<WorkerJobParams> convertToWorkerJobParams(Optional<Arg> arg) {
-    return arg.map(arg1 -> {
-      WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
-      return WorkerJobParams.of(
-          workerMacroArg.getTempDir(),
-          workerMacroArg.getStartupCommand(),
-          workerMacroArg.getStartupArgs(),
-          workerMacroArg.getEnvironment(),
-          workerMacroArg.getJobArgs(),
-          workerMacroArg.getMaxWorkers(),
-          workerMacroArg.getPersistentWorkerKey(),
-          Optional.of(workerMacroArg.getWorkerHash()));
-    });
+  private static Optional<WorkerJobParams> convertToWorkerJobParams(
+      Optional<Arg> arg, SourcePathResolver pathResolver) {
+    return arg.map(
+        arg1 -> {
+          WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
+          return WorkerJobParams.of(
+              workerMacroArg.getJobArgs(),
+              WorkerProcessParams.of(
+                  workerMacroArg.getTempDir(),
+                  workerMacroArg.getStartupCommand(),
+                  workerMacroArg.getStartupArgs(pathResolver),
+                  workerMacroArg.getEnvironment(),
+                  workerMacroArg.getMaxWorkers(),
+                  workerMacroArg.getPersistentWorkerKey().isPresent()
+                      ? Optional.of(
+                          WorkerProcessIdentity.of(
+                              workerMacroArg.getPersistentWorkerKey().get(),
+                              workerMacroArg.getWorkerHash()))
+                      : Optional.empty()));
+        });
   }
 
   @Override
   @VisibleForTesting
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    // Delete the old output for this rule, if it exists.
-    commands.add(
-        new RmStep(
-            getProjectFilesystem(),
-            getPathToOutput(),
-            /* shouldForceDeletion */ true,
-            /* shouldRecurse */ true));
+    // Make sure that the directory to contain the output file exists, deleting any pre-existing
+    // ones. Rules get output to a directory named after the base path, so we don't want to nuke
+    // the entire directory.
 
-    // Make sure that the directory to contain the output file exists. Rules get output to a
-    // directory named after the base path, so we don't want to nuke the entire directory.
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutDirectory));
-
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutDirectory)));
     // Delete the old temp directory
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTmpDirectory));
-    // Create a directory to hold all the source files.
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToSrcDirectory));
 
-    addSymlinkCommands(commands);
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToTmpDirectory)));
+    // Create a directory to hold all the source files.
+
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory)));
+
+    addSymlinkCommands(context, commands);
 
     // Create a shell command that corresponds to this.cmd.
     if (this.isWorkerGenrule) {
-      commands.add(createWorkerShellStep());
+      commands.add(createWorkerShellStep(context));
     } else {
-      commands.add(createGenruleStep());
+      commands.add(createGenruleStep(context));
     }
 
-    if (MorePaths.getFileExtension(getPathToOutput()).equals("zip")) {
-      commands.add(new ZipScrubberStep(getProjectFilesystem(), getPathToOutput()));
+    if (MorePaths.getFileExtension(pathToOutFile).equals("zip")) {
+      commands.add(
+          ZipScrubberStep.of(
+              context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
     }
 
     buildableContext.recordArtifact(pathToOutFile);
@@ -340,13 +373,19 @@ public class Genrule extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  void addSymlinkCommands(ImmutableList.Builder<Step> commands) {
+  void addSymlinkCommands(BuildContext context, ImmutableList.Builder<Step> commands) {
+    if (srcs.isEmpty()) {
+      return;
+    }
     Path basePath = getBuildTarget().getBasePath();
 
+    Map<Path, Path> linksBuilder = new HashMap<>();
+    // To preserve legacy behavior, we allow duplicate targets and just ignore all but the last.
+    Set<Path> seenTargets = new HashSet<>();
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    for (SourcePath src : srcs) {
-      Path relativePath = getResolver().getRelativePath(src);
-      Path absolutePath = getResolver().getAbsolutePath(src);
+    for (SourcePath src : Lists.reverse(srcs)) {
+      Path relativePath = context.getSourcePathResolver().getRelativePath(src);
+      Path absolutePath = context.getSourcePathResolver().getAbsolutePath(src);
       Path canonicalPath = absolutePath.normalize();
 
       // By the time we get this far, all source paths (the keys in the map) have been converted
@@ -363,15 +402,18 @@ public class Genrule extends AbstractBuildRule
         localPath = relativePath;
       }
 
-      Path destination = pathToSrcDirectory.resolve(localPath);
-      commands.add(
-          new MkdirAndSymlinkFileStep(getProjectFilesystem(), relativePath, destination));
+      Path target = getProjectFilesystem().relativize(absolutePath);
+      if (!seenTargets.contains(target)) {
+        seenTargets.add(target);
+        linksBuilder.put(localPath, target);
+      }
     }
+    commands.add(
+        new SymlinkTreeStep(
+            getProjectFilesystem(), pathToSrcDirectory, ImmutableSortedMap.copyOf(linksBuilder)));
   }
 
-  /**
-   * Get the output name of the generated file, as listed in the BUCK file.
-   */
+  /** Get the output name of the generated file, as listed in the BUCK file. */
   @Override
   public String getOutputName() {
     return out;
@@ -381,5 +423,4 @@ public class Genrule extends AbstractBuildRule
   public Optional<Arg> getCmd() {
     return cmd;
   }
-
 }

@@ -20,17 +20,16 @@ import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Each set of capture rules is headed by aggregating rules, e.g. analysis rules
- * that run over these captures, or collection rules that are needed only for separate post
- * processing (e.g. transitive capture of all source files)
+ * Each set of capture rules is headed by aggregating rules, e.g. analysis rules that run over these
+ * captures, or collection rules that are needed only for separate post processing (e.g. transitive
+ * capture of all source files)
  */
 class CxxInferCaptureAndAggregatingRules<T extends BuildRule> {
   final ImmutableSet<CxxInferCapture> captureRules;
   final ImmutableSet<T> aggregatingRules;
 
   CxxInferCaptureAndAggregatingRules(
-      ImmutableSet<CxxInferCapture> captureRules,
-      ImmutableSet<T> aggregatingRules) {
+      ImmutableSet<CxxInferCapture> captureRules, ImmutableSet<T> aggregatingRules) {
     this.captureRules = captureRules;
     this.aggregatingRules = aggregatingRules;
   }

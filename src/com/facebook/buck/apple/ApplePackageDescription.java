@@ -23,36 +23,38 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
-
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
-public class ApplePackageDescription implements
-    Description<ApplePackageDescription.Arg>,
-    Flavored,
-    ImplicitDepsInferringDescription<ApplePackageDescription.Arg> {
+public class ApplePackageDescription
+    implements Description<ApplePackageDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<
+            ApplePackageDescription.AbstractApplePackageDescriptionArg> {
 
   private final CxxPlatform defaultCxxPlatform;
   private final AppleConfig config;
@@ -68,14 +70,16 @@ public class ApplePackageDescription implements
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    final BuildRule bundle = resolver.getRule(
-        propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
-    final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+      CellPathResolver cellRoots,
+      ApplePackageDescriptionArg args)
+      throws NoSuchBuildTargetException {
+    final BuildRule bundle =
+        resolver.getRule(propagateFlavorsToTarget(params.getBuildTarget(), args.getBundle()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
@@ -83,51 +87,52 @@ public class ApplePackageDescription implements
             MacroArg.toMacroArgFunction(
                 AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER,
                 params.getBuildTarget(),
-                params.getCellRoots(),
+                cellRoots,
                 resolver));
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
-          params.copyWithExtraDeps(() -> ImmutableSortedSet.<BuildRule>naturalOrder()
-              .add(bundle)
-              .addAll(
-                  applePackageConfigAndPlatformInfo.get().getExpandedArg()
-                      .getDeps(sourcePathResolver))
-              .build()),
-          sourcePathResolver,
+          params.copyReplacingExtraDeps(
+              () ->
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .add(bundle)
+                      .addAll(
+                          applePackageConfigAndPlatformInfo
+                              .get()
+                              .getExpandedArg()
+                              .getDeps(ruleFinder))
+                      .build()),
           applePackageConfigAndPlatformInfo.get(),
-          new BuildTargetSourcePath(bundle.getBuildTarget()),
+          Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable());
     } else {
-      return new BuiltinApplePackage(
-          params,
-          sourcePathResolver,
-          bundle);
+      return new BuiltinApplePackage(params, bundle);
     }
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<ApplePackageDescriptionArg> getConstructorArgType() {
+    return ApplePackageDescriptionArg.class;
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {
-    return BuildTarget.builder(toTarget)
-        .addAllFlavors(fromTarget.getFlavors())
-        .build();
+    return BuildTarget.builder(toTarget).addAllFlavors(fromTarget.getFlavors()).build();
   }
 
-  /**
-   * Propagate the packages's flavors to its dependents.
-   */
+  /** Propagate the packages's flavors to its dependents. */
   @Override
-  public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      ApplePackageDescription.Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
-    builder.add(propagateFlavorsToTarget(buildTarget, constructorArg.bundle));
-    addDepsFromParam(builder, buildTarget, cellRoots);
-    return builder.build();
+      AbstractApplePackageDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
+    addDepsFromParam(extraDepsBuilder, targetGraphOnlyDepsBuilder, buildTarget, cellRoots);
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(ImmutableSet.of(appleCxxPlatformFlavorDomain));
   }
 
   @Override
@@ -135,22 +140,23 @@ public class ApplePackageDescription implements
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    @Hint(isDep = false) public BuildTarget bundle;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractApplePackageDescriptionArg extends CommonDescriptionArg {
+    @Hint(isDep = false)
+    BuildTarget getBundle();
   }
 
   /**
    * Get the correct package configuration based on the platform flavors of this build target.
    *
-   * Validates that all named platforms yields the identical package config.
+   * <p>Validates that all named platforms yields the identical package config.
    *
    * @return If found, a package config for this target.
    * @throws HumanReadableException if there are multiple possible package configs.
    */
   private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
-      BuildTarget target,
-      Function<String, com.facebook.buck.rules.args.Arg> macroExpander) {
+      BuildTarget target, Function<String, com.facebook.buck.rules.args.Arg> macroExpander) {
     Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target);
 
     // Ensure that different platforms generate the same config.
@@ -166,9 +172,7 @@ public class ApplePackageDescription implements
           packageConfig.isPresent()
               ? Optional.of(
                   ApplePackageConfigAndPlatformInfo.of(
-                      packageConfig.get(),
-                      macroExpander,
-                      platform))
+                      packageConfig.get(), macroExpander, platform))
               : Optional.empty(),
           flavor);
     }
@@ -180,18 +184,18 @@ public class ApplePackageDescription implements
     } else {
       throw new HumanReadableException(
           "In target %s: Multi-architecture package has different package configs for targets: %s",
-          target.getFullyQualifiedName(),
-          packageConfigs.asMap().values());
+          target.getFullyQualifiedName(), packageConfigs.asMap().values());
     }
   }
 
   /**
    * Retrieve deps from macros in externally configured rules.
    *
-   * This is used for ImplicitDepsInferringDescription, so it is flavor agnostic.
+   * <p>This is used for ImplicitDepsInferringDescription, so it is flavor agnostic.
    */
   private void addDepsFromParam(
-      ImmutableSet.Builder<BuildTarget> builder,
+      ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
       BuildTarget target,
       CellPathResolver cellNames) {
     // Add all macro expanded dependencies for these platforms.
@@ -202,11 +206,12 @@ public class ApplePackageDescription implements
 
       if (packageConfig.isPresent()) {
         try {
-          builder.addAll(
-            AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
-                target,
-                cellNames,
-                packageConfig.get().getCommand()));
+          AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
+              target,
+              cellNames,
+              packageConfig.get().getCommand(),
+              buildDepsBuilder,
+              targetGraphOnlyDepsBuilder);
         } catch (MacroException e) {
           throw new HumanReadableException(
               e,

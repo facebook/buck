@@ -22,11 +22,9 @@ import com.facebook.buck.android.AndroidManifestReader;
 import com.facebook.buck.android.DefaultAndroidManifestReader;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.Test;
 
 public class AgentUtilTest {
   @Test
@@ -43,11 +41,11 @@ public class AgentUtilTest {
         DefaultAndroidManifestReader.forString(
             new String(
                 ByteStreams.toByteArray(
-                    getClass().getResourceAsStream(
-                        "/com/facebook/buck/android/agent/AndroidManifest.xml"))));
+                    getClass()
+                        .getResourceAsStream(
+                            "/com/facebook/buck/android/agent/AndroidManifest.xml"))));
 
     assertEquals(AgentUtil.AGENT_PACKAGE_NAME, manifest.getPackage());
     assertEquals(AgentUtil.AGENT_VERSION_CODE, manifest.getVersionCode());
-
   }
 }

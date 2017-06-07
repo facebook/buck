@@ -16,31 +16,30 @@
 
 package com.facebook.buck.testutil;
 
-import static org.junit.Assert.fail;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.junit.Test;
 
 public class MoreAssertsTest {
 
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  private void expectFail(Iterable<?> a, Iterable<?> b) {
-    try {
-      MoreAsserts.assertIterablesEquals(a, b);
-      fail("Expected failure from: a=" + a + "; b=" + b);
-    } catch (AssertionError e) {
-      // OK
-    }
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure1() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), ImmutableList.of(1));
   }
 
-  @Test
-  public void testIterablesEqualsFailure() {
-    expectFail(ImmutableList.of(), ImmutableList.of(1));
-    expectFail(ImmutableList.of(1, 2), ImmutableList.of(2, 1));
-    expectFail(ImmutableList.of(1), ImmutableList.of());
-    expectFail(ImmutableList.of(1), null);
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure2() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(1, 2), ImmutableList.of(2, 1));
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure3() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(1), ImmutableList.of());
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testIterablesEqualsFailure4() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(1), null);
   }
 
   @Test
@@ -50,5 +49,4 @@ public class MoreAssertsTest {
     MoreAsserts.assertIterablesEquals(null, null);
     MoreAsserts.assertIterablesEquals(ImmutableList.of(1, 2, 3), ImmutableSortedSet.of(3, 2, 1));
   }
-
 }

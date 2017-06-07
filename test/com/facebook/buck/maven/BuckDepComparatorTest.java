@@ -19,12 +19,10 @@ package com.facebook.buck.maven;
 import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
 
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import org.junit.Test;
 
 public class BuckDepComparatorTest {
 

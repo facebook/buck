@@ -17,8 +17,8 @@
 package com.facebook.buck.util.environment;
 
 public enum CommandMode {
-
-  RELEASE, TEST;
+  RELEASE,
+  TEST;
 
   private boolean loggingEnabled;
 

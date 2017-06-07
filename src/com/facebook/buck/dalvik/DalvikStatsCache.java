@@ -18,14 +18,11 @@ package com.facebook.buck.dalvik;
 
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.google.common.collect.MapMaker;
-
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- * Cache to memoize results from DalvikStatsTool.
- */
+/** Cache to memoize results from DalvikStatsTool. */
 class DalvikStatsCache {
 
   private final ConcurrentMap<FileLike, DalvikStatsTool.Stats> cache;

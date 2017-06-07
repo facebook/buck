@@ -29,29 +29,21 @@ import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.zip.Unzip;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.io.CharStreams;
-
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.archivers.zip.ZipUtil;
-import org.hamcrest.Matchers;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -72,6 +64,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ProjectFilesystemTest {
 
@@ -80,7 +80,7 @@ public class ProjectFilesystemTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
@@ -92,8 +92,7 @@ public class ProjectFilesystemTest {
     assertTrue(filesystem.isFile(Paths.get("foo/bar.txt")));
     assertFalse(filesystem.isFile(Paths.get("i_do_not_exist")));
     assertFalse(
-        "foo/ is a directory, but not an ordinary file",
-        filesystem.isFile(Paths.get("foo")));
+        "foo/ is a directory, but not an ordinary file", filesystem.isFile(Paths.get("foo")));
   }
 
   @Test
@@ -166,20 +165,6 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void getReaderIfFileExists() throws IOException {
-    Path file = tmp.newFile("foo.txt");
-    Files.write(file, "fooooo\nbar\nbaz\n".getBytes(UTF_8));
-    assertEquals(
-        "fooooo\nbar\nbaz\n",
-        CharStreams.toString(filesystem.getReaderIfFileExists(Paths.get("foo.txt")).get()));
-  }
-
-  @Test
-  public void getReaderIfFileExistsNoFile() throws IOException {
-    assertEquals(Optional.empty(), filesystem.getReaderIfFileExists(Paths.get("foo.txt")));
-  }
-
-  @Test
   public void testGetFileSize() throws IOException {
     Path wordsFile = tmp.newFile("words.txt");
     String content = "Here\nare\nsome\nwords.\n";
@@ -208,8 +193,7 @@ public class ProjectFilesystemTest {
     byte[] bytes = content.getBytes(UTF_8);
     filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
     assertEquals(
-        content,
-        new String(Files.readAllBytes(tmp.getRoot().resolve("hello.txt")), UTF_8));
+        content, new String(Files.readAllBytes(tmp.getRoot().resolve("hello.txt")), UTF_8));
   }
 
   @Test
@@ -230,9 +214,7 @@ public class ProjectFilesystemTest {
 
     inputStream = new ByteArrayInputStream("hello again!".getBytes(UTF_8));
     filesystem.copyToPath(
-        inputStream,
-        Paths.get("replace_me.txt"),
-        StandardCopyOption.REPLACE_EXISTING);
+        inputStream, Paths.get("replace_me.txt"), StandardCopyOption.REPLACE_EXISTING);
 
     assertEquals(
         "The bytes on disk should match those from the second InputStream.",
@@ -295,8 +277,7 @@ public class ProjectFilesystemTest {
 
     filesystem.copyFile(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"));
     assertEquals(
-        content,
-        new String(Files.readAllBytes(tmp.getRoot().resolve("foo/baz.txt")), UTF_8));
+        content, new String(Files.readAllBytes(tmp.getRoot().resolve("foo/baz.txt")), UTF_8));
   }
 
   @Test
@@ -318,7 +299,8 @@ public class ProjectFilesystemTest {
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     filesystem.walkRelativeFileTree(
-        Paths.get("dir"), new SimpleFileVisitor<Path>() {
+        Paths.get("dir"),
+        new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             fileNames.add(file.getFileName().toString());
@@ -330,12 +312,13 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testWalkFileTreeWhenProjectRootIsWorkingDir() throws IOException {
+  public void testWalkFileTreeWhenProjectRootIsWorkingDir()
+      throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
-    Path pathRelativeToProjectRoot = Paths.get(
-        "test/com/facebook/buck/io/testdata/directory_traversal_ignore_paths");
+    Path pathRelativeToProjectRoot =
+        Paths.get("test/com/facebook/buck/io/testdata/directory_traversal_ignore_paths");
     projectFilesystem.walkRelativeFileTree(
         pathRelativeToProjectRoot,
         new SimpleFileVisitor<Path>() {
@@ -347,26 +330,20 @@ public class ProjectFilesystemTest {
         });
 
     assertThat(
-        fileNames.build(), containsInAnyOrder(
-            "file",
-            "a_file",
-            "b_file",
-            "b_c_file",
-            "b_d_file"));
+        fileNames.build(), containsInAnyOrder("file", "a_file", "b_file", "b_c_file", "b_d_file"));
   }
 
   @Test
   public void testWalkFileTreeFollowsSymlinks() throws IOException {
     tmp.newFolder("dir");
     tmp.newFile("dir/file.txt");
-    Files.createSymbolicLink(
-        tmp.getRoot().resolve("linkdir"),
-        tmp.getRoot().resolve("dir"));
+    Files.createSymbolicLink(tmp.getRoot().resolve("linkdir"), tmp.getRoot().resolve("dir"));
 
     final ImmutableList.Builder<Path> filePaths = ImmutableList.builder();
 
     filesystem.walkRelativeFileTree(
-        Paths.get(""), new SimpleFileVisitor<Path>() {
+        Paths.get(""),
+        new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             filePaths.add(file);
@@ -389,9 +366,7 @@ public class ProjectFilesystemTest {
 
     assertThat(
         filesystem.getFilesUnderPath(
-            Paths.get("dir1"),
-            x -> true,
-            EnumSet.noneOf(FileVisitOption.class)),
+            Paths.get("dir1"), x -> true, EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
     assertThat(
@@ -406,9 +381,7 @@ public class ProjectFilesystemTest {
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
     assertThat(
-        filesystem.getFilesUnderPath(
-            Paths.get("dir1"),
-            Paths.get("dir1/file2")::equals),
+        filesystem.getFilesUnderPath(Paths.get("dir1"), Paths.get("dir1/file2")::equals),
         containsInAnyOrder(Paths.get("dir1/file2")));
   }
 
@@ -435,7 +408,6 @@ public class ProjectFilesystemTest {
       assertTrue(permissions.contains(PosixFilePermission.OWNER_EXECUTE));
       assertFalse(entries.hasMoreElements());
     }
-
   }
 
   @Test
@@ -446,10 +418,7 @@ public class ProjectFilesystemTest {
 
     // Archive it into a zipfile using `ProjectFileSystem.createZip`.
     Path zipFile = tmp.getRoot().resolve("test.zip");
-    filesystem.createZip(
-        ImmutableList.of(exe),
-        zipFile,
-        ImmutableMap.of(Paths.get("additional"), "info"));
+    filesystem.createZip(ImmutableList.of(exe), zipFile);
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -465,15 +434,13 @@ public class ProjectFilesystemTest {
     Assume.assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
     Path path = Paths.get("hello.txt");
     ImmutableSet<PosixFilePermission> permissions =
-      ImmutableSet.of(
-          PosixFilePermission.OWNER_READ,
-          PosixFilePermission.GROUP_READ,
-          PosixFilePermission.OTHERS_READ);
+        ImmutableSet.of(
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.OTHERS_READ);
 
     filesystem.writeContentsToPath(
-        "hello world",
-        path,
-        PosixFilePermissions.asFileAttribute(permissions));
+        "hello world", path, PosixFilePermissions.asFileAttribute(permissions));
     // The umask may restrict the actual permissions on the filesystem:
     // https://fburl.com/26569549
     // So the best we can do is to check that the actual permissions are a
@@ -481,7 +448,6 @@ public class ProjectFilesystemTest {
     PosixFileAttributes attrs = filesystem.readAttributes(path, PosixFileAttributes.class);
     assertTrue(permissions.containsAll(attrs.permissions()));
   }
-
 
   @Test
   public void testCreateZip() throws IOException {
@@ -492,13 +458,10 @@ public class ProjectFilesystemTest {
     Path output = tmp.newFile("out.zip");
 
     filesystem.createZip(
-        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
-        output);
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
 
     ZipInspector zipInspector = new ZipInspector(output);
-    assertEquals(
-        ImmutableSet.of("foo/bar.txt", "foo/baz.txt"),
-        zipInspector.getZipFileEntries());
+    assertEquals(ImmutableSet.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
   }
 
   @Test
@@ -516,27 +479,7 @@ public class ProjectFilesystemTest {
 
     ZipInspector zipInspector = new ZipInspector(output);
     assertEquals(
-        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "empty/"),
-        zipInspector.getZipFileEntries());
-  }
-
-  @Test
-  public void testCreateZipWithAdditionalFiles() throws IOException {
-    tmp.newFolder("foo");
-    tmp.newFile("foo/bar.txt");
-    tmp.newFile("foo/baz.txt");
-
-    Path output = tmp.newFile("out.zip");
-
-    filesystem.createZip(
-        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
-        output,
-        ImmutableMap.of(Paths.get("log/info.txt"), "hello"));
-
-    ZipInspector zipInspector = new ZipInspector(output);
-    assertEquals(
-        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "log/info.txt"),
-        zipInspector.getZipFileEntries());
+        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "empty/"), zipInspector.getZipFileEntries());
   }
 
   @Test
@@ -548,17 +491,12 @@ public class ProjectFilesystemTest {
     Path output = tmp.newFile("out.zip");
 
     filesystem.createZip(
-        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
-        output,
-        ImmutableMap.of(Paths.get("log/info.txt"), "hello"));
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
 
-    ImmutableCollection<Path> actualContents = filesystem.getZipMembers(output);
+    ImmutableCollection<Path> actualContents =
+        ImmutableSortedSet.copyOf(Unzip.getZipMembers(filesystem.resolve(output)));
     assertEquals(
-        ImmutableList.of(
-            Paths.get("foo/bar.txt"),
-            Paths.get("foo/baz.txt"),
-            Paths.get("log/info.txt")),
-        actualContents);
+        ImmutableSortedSet.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), actualContents);
   }
 
   @Test
@@ -592,22 +530,20 @@ public class ProjectFilesystemTest {
 
     assertEquals(
         ImmutableSet.of(c, b, a),
-        filesystem.getMtimeSortedMatchingDirectoryContents(
-            Paths.get("foo"),
-            "*.txt"));
+        filesystem.getMtimeSortedMatchingDirectoryContents(Paths.get("foo"), "*.txt"));
   }
 
   @Test
-  public void testExtractIgnorePaths() throws IOException {
-    Config config = ConfigBuilder.createFromText(
-        "[project]",
-        "ignore = .git, foo, bar/, baz//, a/b/c");
+  public void testExtractIgnorePaths() throws InterruptedException, IOException {
+    Config config =
+        ConfigBuilder.createFromText("[project]", "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(rootPath, config);
-    ImmutableSet<Path> ignorePaths = FluentIterable.from(filesystem.getIgnorePaths())
-        .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
-        .transform(PathOrGlobMatcher::getPath)
-        .toSet();
+    ImmutableSet<Path> ignorePaths =
+        FluentIterable.from(filesystem.getIgnorePaths())
+            .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
+            .transform(PathOrGlobMatcher::getPath)
+            .toSet();
     assertThat(
         ImmutableSortedSet.copyOf(Ordering.natural(), ignorePaths),
         equalTo(
@@ -625,10 +561,8 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePathsWithCacheDir() throws IOException {
-    Config config = ConfigBuilder.createFromText(
-        "[cache]",
-        "dir = cache_dir");
+  public void testExtractIgnorePathsWithCacheDir() throws InterruptedException, IOException {
+    Config config = ConfigBuilder.createFromText("[cache]", "dir = cache_dir");
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(new ProjectFilesystem(rootPath, config).getIgnorePaths())
@@ -642,10 +576,9 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem() throws IOException {
-    Config config = ConfigBuilder.createFromText(
-        "[project]",
-        "ignore = **/*.orig");
+  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem()
+      throws InterruptedException, IOException {
+    Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
     Files.createDirectories(tmp.getRoot().resolve("foo/bar"));
@@ -654,13 +587,16 @@ public class ProjectFilesystemTest {
 
     final ImmutableSet.Builder<String> allPaths = ImmutableSet.builder();
 
-    filesystem.walkRelativeFileTree(tmp.getRoot(), new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        allPaths.add(file.toString());
-        return FileVisitResult.CONTINUE;
-      }
-    });
+    filesystem.walkRelativeFileTree(
+        tmp.getRoot(),
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            allPaths.add(file.toString());
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     ImmutableSet<String> found = allPaths.build();
     assertTrue(found.contains(Paths.get("foo/bar/cake.txt").toString()));
@@ -668,14 +604,22 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws IOException {
-    Config config = ConfigBuilder.createFromText(
-        "[project]",
-        "ignore = **/*.orig");
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual()
+      throws InterruptedException, IOException {
+    Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
     Path rootPath = tmp.getRoot();
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
         new ProjectFilesystem(rootPath, config),
         equalTo(new ProjectFilesystem(rootPath, config)));
+  }
+
+  @Test
+  public void getPathReturnsPathWithCorrectFilesystem() throws InterruptedException, IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path root = vfs.getPath("/root");
+    Files.createDirectories(root);
+    assertEquals(vfs, new ProjectFilesystem(root).getPath("bar").getFileSystem());
+    assertEquals(vfs.getPath("bar"), new ProjectFilesystem(root).getPath("bar"));
   }
 }

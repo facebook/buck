@@ -1,19 +1,20 @@
 # Code shared between the agent and the host.
 java_library(
-  name = 'util',
-  source = '6',
-  target = '6',
-  srcs = glob(['*.java']),
-  tests = [
-    '//test/com/facebook/buck/android/agent/util:util',
-  ],
-  autodeps = False, # See below.
-  deps = [
-    # Do not add other deps here.  The agent should remain very small.
-  ],
-  visibility = [
-    '//src/com/facebook/buck/android:helpers',
-    '//src/com/facebook/buck/android/agent:agent-lib',
-    '//test/com/facebook/buck/android/agent/util:util',
-  ],
+    name = "util",
+    srcs = glob(["*.java"]),
+    source = "6",
+    target = "6",
+    tests = [
+        "//test/com/facebook/buck/android/agent/util:util",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android/agent:agent-lib",
+        "//test/com/facebook/buck/android:integration1",
+        "//test/com/facebook/buck/android:integration2",
+        "//test/com/facebook/buck/android/agent/util:util",
+    ],
+    deps = [
+        # Do not add other deps here.  The agent should remain very small.
+    ],
 )

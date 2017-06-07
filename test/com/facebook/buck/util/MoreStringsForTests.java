@@ -38,15 +38,13 @@ public class MoreStringsForTests {
     }
   }
 
-  /**
-   * A cross-platform matcher for a string with newlines.
-   */
+  /** A cross-platform matcher for a string with newlines. */
   public static Matcher<String> equalToIgnoringPlatformNewlines(String expectedText) {
     return new IsEqualIgnoringPlatformNewlines(expectedText);
   }
 
   public static String normalizeNewlines(String s) {
     // Windows uses "\r\n", some mac apps use "\r", so standardize on "\n".
-    return s.replace("\r\n", "\n").replace("\r", "\n");
+    return s.replace("\r\n", "\n").replace('\r', '\n');
   }
 }

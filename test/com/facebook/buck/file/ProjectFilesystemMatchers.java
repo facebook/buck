@@ -17,10 +17,8 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.io.ProjectFilesystem;
-
-import org.hamcrest.Matcher;
-
 import java.nio.file.Path;
+import org.hamcrest.Matcher;
 
 public class ProjectFilesystemMatchers {
   private ProjectFilesystemMatchers() {}

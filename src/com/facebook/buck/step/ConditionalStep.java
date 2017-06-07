@@ -17,7 +17,6 @@
 package com.facebook.buck.step;
 
 import com.google.common.base.Supplier;
-
 import java.io.IOException;
 
 /** {@link Step} that is run conditionally based on {@code Supplier&lt;Boolean> shouldRunStep}. */

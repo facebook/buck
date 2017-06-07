@@ -30,7 +30,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -41,18 +40,19 @@ public abstract class AbstractGenruleStep extends ShellStep {
   private final ProjectFilesystem projectFilesystem;
   private final CommandString commandString;
   private final BuildTarget target;
-  private final LoadingCache<Platform, Path> scriptFilePath = CacheBuilder.newBuilder().build(
-      new CacheLoader<Platform, Path>() {
-        @Override
-        public Path load(Platform platform) throws IOException {
-          ExecutionArgsAndCommand executionArgsAndCommand =
-              getExecutionArgsAndCommand(platform);
-          return projectFilesystem.resolve(
-              projectFilesystem.createTempFile(
-                  "genrule-",
-                  "." + executionArgsAndCommand.shellType.extension));
-        }
-      });
+  private final LoadingCache<Platform, Path> scriptFilePath =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Platform, Path>() {
+                @Override
+                public Path load(Platform platform) throws IOException {
+                  ExecutionArgsAndCommand executionArgsAndCommand =
+                      getExecutionArgsAndCommand(platform);
+                  return projectFilesystem.resolve(
+                      projectFilesystem.createTempFile(
+                          "genrule-", "." + executionArgsAndCommand.shellType.extension));
+                }
+              });
 
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem,
@@ -76,8 +76,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     Path scriptFilePath = getScriptFilePath(context);
     String scriptFileContents = getScriptFileContents(context);
     projectFilesystem.writeContentsToPath(
-        scriptFileContents + System.lineSeparator(),
-        scriptFilePath);
+        scriptFileContents + System.lineSeparator(), scriptFilePath);
     return super.execute(context);
   }
 
@@ -125,9 +124,9 @@ public abstract class AbstractGenruleStep extends ShellStep {
     ExecutionArgsAndCommand executionArgsAndCommand =
         getExecutionArgsAndCommand(context.getPlatform());
     if (context.getPlatform() == Platform.WINDOWS) {
-      executionArgsAndCommand = getExpandedCommandAndExecutionArgs(
-          executionArgsAndCommand,
-          getEnvironmentVariables(context));
+      executionArgsAndCommand =
+          getExpandedCommandAndExecutionArgs(
+              executionArgsAndCommand, getEnvironmentVariables(context));
     }
     return executionArgsAndCommand.command;
   }
@@ -147,17 +146,16 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   protected abstract void addEnvironmentVariables(
-      ExecutionContext context,
-      ImmutableMap.Builder<String, String> environmentVariablesBuilder);
+      ExecutionContext context, ImmutableMap.Builder<String, String> environmentVariablesBuilder);
 
   private static ExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
-      ExecutionArgsAndCommand original,
-      ImmutableMap<String, String> environmentVariablesToExpand) {
+      ExecutionArgsAndCommand original, ImmutableMap<String, String> environmentVariablesToExpand) {
     String expandedCommand = original.command;
     for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
-      expandedCommand = expandedCommand
-          .replace("$" + variable.getKey(), variable.getValue())
-          .replace("${" + variable.getKey() + "}", variable.getValue());
+      expandedCommand =
+          expandedCommand
+              .replace("$" + variable.getKey(), variable.getValue())
+              .replace("${" + variable.getKey() + "}", variable.getValue());
     }
     return new ExecutionArgsAndCommand(original.shellType, expandedCommand);
   }
@@ -166,11 +164,11 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
     private final ShellType shellType;
     private final String command;
+
     private ExecutionArgsAndCommand(ShellType shellType, String command) {
       this.shellType = shellType;
       this.command = command;
     }
-
   }
 
   private enum ShellType {
@@ -198,8 +196,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     }
 
     public ExecutionArgsAndCommand getCommandAndExecutionArgs(
-        Platform platform,
-        BuildTarget target) {
+        Platform platform, BuildTarget target) {
       // The priority sequence is
       //   "cmd.exe /c winCommand" (Windows Only)
       //   "/bin/bash -e -c shCommand" (Non-windows Only)
@@ -211,7 +208,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else if (!cmd.orElse("").isEmpty()) {
           command = cmd.get();
         } else {
-          throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
+          throw new HumanReadableException(
+              "You must specify either cmd_exe or cmd for genrule %s.",
               target.getFullyQualifiedName());
         }
         return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
@@ -221,7 +219,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else if (!cmd.orElse("").isEmpty()) {
           command = cmd.get();
         } else {
-          throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
+          throw new HumanReadableException(
+              "You must specify either bash or cmd for genrule %s.",
               target.getFullyQualifiedName());
         }
         return new ExecutionArgsAndCommand(ShellType.BASH, command);

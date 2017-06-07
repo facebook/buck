@@ -16,47 +16,46 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
 public class AssembleDirectories extends AbstractBuildRule {
 
   private final Path destinationDirectory;
-  @AddToRuleKey
-  private final ImmutableCollection<SourcePath> originalDirectories;
+  @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public AssembleDirectories(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      ImmutableCollection<SourcePath> directories) {
-    super(buildRuleParams, resolver);
+      BuildRuleParams buildRuleParams, ImmutableCollection<SourcePath> directories) {
+    super(buildRuleParams);
     this.originalDirectories = directories;
-    this.destinationDirectory = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        buildRuleParams.getBuildTarget(),
-        "__assembled_%s__");
+    this.destinationDirectory =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__assembled_%s__");
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(BuildContext context,
-      BuildableContext buildableContext) {
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destinationDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), destinationDirectory)));
     for (SourcePath directory : originalDirectories) {
-      Path resolvedPath = getResolver().getAbsolutePath(directory);
+      Path resolvedPath = context.getSourcePathResolver().getAbsolutePath(directory);
       steps.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -69,8 +68,7 @@ public class AssembleDirectories extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return destinationDirectory;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), destinationDirectory);
   }
-
 }

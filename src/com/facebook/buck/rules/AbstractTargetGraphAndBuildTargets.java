@@ -19,12 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-
 import org.immutables.value.Value;
 
-/**
- * Holds a TargetGraph and a set of BuildTargets.
- */
+/** Holds a TargetGraph and a set of BuildTargets. */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractTargetGraphAndBuildTargets {

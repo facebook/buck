@@ -18,13 +18,11 @@ package com.facebook.buck.event;
 
 /**
  * LeafEvents represent events that have no logical children and are useful for tracking the time
- * buck is spending logically grouped by categories, such as Parse, Javac, or Dx.  An example of
+ * buck is spending logically grouped by categories, such as Parse, Javac, or Dx. An example of
  * something that wouldn't be a good candidate for a LeafEvent would be a RuleEvent since we're not
  * spending an appreciable amount of time in the rules but in the steps instead.
  */
 public interface LeafEvent extends BuckEvent {
-  /**
-   * @return The category time spent in this event should be accounted under.
-   */
+  /** @return The category time spent in this event should be accounted under. */
   public String getCategory();
 }

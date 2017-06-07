@@ -16,21 +16,16 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.event.external.elements.TestResultsExternalInterface;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import com.facebook.buck.event.external.elements.TestResultsExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
-
 import org.immutables.value.Value;
 
-/**
- * Represents the test results from multiple test cases.
- */
+/** Represents the test results from multiple test cases. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractTestResults implements TestResultsExternalInterface<TestCaseSummary> {

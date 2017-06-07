@@ -17,9 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
-
 import java.util.Set;
-
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
@@ -41,9 +39,7 @@ class TracingProcessorWrapper implements Processor {
   private boolean isLastRound = false;
 
   public TracingProcessorWrapper(
-      JavacEventSink eventSink,
-      BuildTarget buildTarget,
-      Processor processor) {
+      JavacEventSink eventSink, BuildTarget buildTarget, Processor processor) {
     this.eventSink = eventSink;
     this.buildTarget = buildTarget;
     innerProcessor = processor;
@@ -94,8 +90,7 @@ class TracingProcessorWrapper implements Processor {
   }
 
   @Override
-  public boolean process(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     roundNumber += 1;
     isLastRound = roundEnv.processingOver();
     AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.PROCESS);
@@ -119,18 +114,11 @@ class TracingProcessorWrapper implements Processor {
   }
 
   private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
-    AnnotationProcessingEvent.Started started = AnnotationProcessingEvent.started(
-        buildTarget,
-        annotationProcessorName,
-        operation,
-        roundNumber,
-        isLastRound);
+    AnnotationProcessingEvent.Started started =
+        AnnotationProcessingEvent.started(
+            buildTarget, annotationProcessorName, operation, roundNumber, isLastRound);
     eventSink.reportAnnotationProcessingEventStarted(
-        buildTarget,
-        annotationProcessorName,
-        operation.toString(),
-        roundNumber,
-        isLastRound);
+        buildTarget, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
     return started;
   }
 

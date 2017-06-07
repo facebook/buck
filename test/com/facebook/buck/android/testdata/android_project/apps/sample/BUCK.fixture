@@ -20,6 +20,26 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_res_overrides',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  aapt_mode = 'aapt1',  # app_with_res_overrides
+  deps = [
+    '//res/com/sample/override:override',
+  ],
+)
+
+genrule(
+  name = 'strings_dump_overrides',
+  # Using the DX environment variable here is a total hack.
+  # Ideally, we'd have a special genrule that made the Android
+  # tools available.
+  bash = '`dirname $DX`/aapt dump strings $(location :app_with_res_overrides) > $OUT',
+  out = 'dump_overrides_resources.txt',
+)
+
+
+android_binary(
   name = 'app_reorder_dex',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
@@ -133,6 +153,26 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_disguised_exe',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//native/mybinary/jni:mybinary',
+    '//res/com/sample/base:base',
+  ],
+)
+
+android_binary(
+  name = 'app_with_ndk_library',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//native/fakenative/jni:fakenative',
+    '//res/com/sample/base:base',
+  ],
+)
+
+android_binary(
   name = 'app_cxx_lib_dep_modular',
   manifest = 'AndroidManifest.xml',
   application_module_targets = [
@@ -231,6 +271,24 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_native_lib_proguard',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  package_type = 'release',
+  proguard_config = 'dontobfuscate.pro',
+  cpu_filters = [
+    'arm',
+    'armv7',
+    'x86',
+  ],
+  native_library_proguard_config_generator = '//native/proguard_gen:generator',
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:lib',
+  ],
+)
+
+android_binary(
   name = 'app_cxx_lib_asset',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
@@ -316,12 +374,54 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_compress_lib_asset_modular_map',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_configs = {
+    'native.cxx.libasset' : ['//native/cxx:libasset'],
+  },
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = True,
+  compress_asset_libraries = True
+)
+
+android_binary(
   name = 'app_cxx_lib_asset_no_package_modular',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   application_module_targets = [
     '//native/cxx:libasset',
   ],
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = False,
+  compress_asset_libraries = True
+)
+
+android_binary(
+  name = 'app_cxx_lib_asset_no_package_modular_map',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_configs = {
+    'native.cxx.libasset' : ['//native/cxx:libasset'],
+  },
   cpu_filters = [
     'x86',
   ],
@@ -344,6 +444,28 @@ android_binary(
     '//native/cxx:foo1',
     '//native/cxx:libasset',
   ],
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = False,
+  compress_asset_libraries = True
+)
+
+android_binary(
+  name = 'app_cxx_lib_no_package_modular_map',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_configs = {
+    'native.cxx.foo1' : ['//native/cxx:foo1'],
+    'native.cxx.libasset' : ['//native/cxx:libasset'],
+  },
   cpu_filters = [
     'x86',
   ],
@@ -409,6 +531,63 @@ android_binary(
   deps = [
     '//third-party:card-io',
   ],
+)
+
+android_binary(
+  name = 'app_redex',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  proguard_config = 'dontobfuscate.pro',
+  package_type = 'release',
+  redex = True,
+  redex_config = 'redex-config.json',
+  redex_extra_args = [
+    '-Jmy_param_name={"foo": true}',
+    '--redex-binary',
+    'redex-binary',
+    '-j $(location //java/com/sample/lib:lib)',
+    '-S coldstart_classes=$(location //tools/redex:secondary_dex_head.list)',
+  ],
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+)
+
+genrule(
+  # Hackily check for the presence of aapt2 until all of our users have it.
+  name = 'check_for_aapt2',
+  bash = 'test -x `dirname $DX`/aapt2 > $OUT',
+  out = 'does-aapt2-exist',
+)
+
+android_binary(
+  name = 'app_with_aapt2',
+  aapt_mode = 'aapt2',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+)
+
+genrule(
+  name = 'disassemble_app_with_aapt2',
+  bash = ' && '.join([
+      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_aapt2)',
+      'cat $TMP/com/*/R*.smali > $OUT',
+      ]),
+  out = 'disassembled_aapt2.smali',
+)
+
+genrule(
+  name = 'resource_dump_app_with_aapt2',
+  # Using the DX environment variable here is a total hack.
+  # Ideally, we'd have a special genrule that made the Android
+  # tools available.
+  bash = '`dirname $DX`/aapt dump resources $(location :app_with_aapt2) > $OUT',
+  out = 'dump_aapt2_resources.txt',
 )
 
 android_instrumentation_apk(
@@ -540,6 +719,23 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_alternate_merge_glue_and_localized_symbols',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+    '//native/merge:A',
+  ],
+  native_library_merge_map = {
+    'lib1.so': ['.*/merge:[AB]'],
+    'lib2.so': ['.*/merge:[EF]'],
+  },
+  native_library_merge_glue = '//native/merge:glue_2',
+  native_library_merge_localized_symbols = ['glue_2'],
+)
+
+android_binary(
   name = 'app_with_invalid_native_lib_merge_glue',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
@@ -567,8 +763,4 @@ android_binary(
   native_library_merge_map = {
     'lib2e.so': ['.*/merge:[EF]'],
   },
-)
-
-project_config(
-  src_target = ':app',
 )

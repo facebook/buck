@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -30,48 +29,47 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * If we end up creating both an obfuscator function and a deobfuscator function, it would be
- * nice to load the proguard mapping file once.  This class enables sharing that work.
+ * If we end up creating both an obfuscator function and a deobfuscator function, it would be nice
+ * to load the proguard mapping file once. This class enables sharing that work.
  */
 class ProguardTranslatorFactory {
 
-  private final Optional<Map<String, String>> rawMap;
+  private final Optional<ImmutableMap<String, String>> rawMap;
 
-  private ProguardTranslatorFactory(
-      Optional<Map<String, String>> rawMap) {
+  private ProguardTranslatorFactory(Optional<ImmutableMap<String, String>> rawMap) {
     this.rawMap = rawMap;
   }
 
   static ProguardTranslatorFactory create(
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
-      Optional<Path> proguardMappingFile)
+      Optional<Path> proguardMappingFile,
+      boolean skipProguard)
       throws IOException {
     return new ProguardTranslatorFactory(
-        loadOptionalRawMap(filesystem, proguardFullConfigFile, proguardMappingFile));
+        loadOptionalRawMap(filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard));
   }
 
   @VisibleForTesting
-  static ProguardTranslatorFactory createForTest(
-      Optional<Map<String, String>> rawMap) {
+  static ProguardTranslatorFactory createForTest(Optional<ImmutableMap<String, String>> rawMap) {
     return new ProguardTranslatorFactory(rawMap);
   }
 
-  private static Optional<Map<String, String>> loadOptionalRawMap(
+  private static Optional<ImmutableMap<String, String>> loadOptionalRawMap(
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
-      Optional<Path> proguardMappingFile)
+      Optional<Path> proguardMappingFile,
+      boolean skipProguard)
       throws IOException {
-    if (!proguardFullConfigFile.isPresent()) {
+    if (skipProguard || !proguardFullConfigFile.isPresent()) {
       return Optional.empty();
     }
 
     Path pathToProguardConfig = proguardFullConfigFile.get();
 
     // Proguard doesn't print a mapping when obfuscation is disabled.
-    boolean obfuscationSkipped = Iterables.any(
-        filesystem.readLines(pathToProguardConfig),
-        "-dontobfuscate"::equals);
+    boolean obfuscationSkipped =
+        Iterables.any(filesystem.readLines(pathToProguardConfig), "-dontobfuscate"::equals);
     if (obfuscationSkipped) {
       return Optional.empty();
     }
@@ -99,8 +97,7 @@ class ProguardTranslatorFactory {
       String original = entry.getKey().replace('.', '/');
       String obfuscated = entry.getValue().replace('.', '/');
       builder.put(
-          isForObfuscation ? original : obfuscated,
-          isForObfuscation ? obfuscated : original);
+          isForObfuscation ? original : obfuscated, isForObfuscation ? obfuscated : original);
     }
     final Map<String, String> map = builder.build();
 

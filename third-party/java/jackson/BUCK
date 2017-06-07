@@ -1,78 +1,78 @@
 java_library(
-    name = 'jackson',
-    deps = [],
+    name = "jackson",
     exported_deps = [
-      ':jackson-annotations',
-      ':jackson-core',
-      ':jackson-databind',
+        ":jackson-annotations",
+        ":jackson-core",
+        ":jackson-databind",
     ],
     visibility = [
-      '//test/...',
+        "//test/...",
+    ],
+    deps = [],
+)
+
+prebuilt_jar(
+    name = "jackson-annotations",
+    binary_jar = "jackson-annotations-2.7.8.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "jackson-mrbean",
+    binary_jar = "jackson-module-mrbean-2.7.8.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "jackson-core",
+    binary_jar = "jackson-core-2.7.8.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "jackson-datatype-jdk8",
+    binary_jar = "jackson-datatype-jdk8-2.7.8.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/util:object_mapper",
     ],
 )
 
 prebuilt_jar(
-  name = 'jackson-annotations',
-  binary_jar = 'jackson-annotations-2.7.8.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [ 'PUBLIC' ],
-)
-
-prebuilt_jar(
-  name = 'jackson-mrbean',
-  binary_jar = 'jackson-module-mrbean-2.7.8.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [ 'PUBLIC' ],
-)
-
-prebuilt_jar(
-  name = 'jackson-core',
-  binary_jar = 'jackson-core-2.7.8.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [ 'PUBLIC' ],
-)
-
-prebuilt_jar(
-  name = 'jackson-datatype-jdk8',
-  binary_jar = 'jackson-datatype-jdk8-2.7.8.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/util:object_mapper',
-  ],
-)
-
-prebuilt_jar(
-  name = 'jackson-datatype-guava',
-  binary_jar = 'jackson-datatype-guava-2.7.8.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [ 'PUBLIC' ],
+    name = "jackson-datatype-guava",
+    binary_jar = "jackson-datatype-guava-2.7.8.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 java_library(
-  name = 'jackson-databind',
-  exported_deps = [
-    # If ObjectMapper.writeValue() is used, then
-    # com.fasterxml.jackson.core.ObjectCodec needs to be accessible.
-    ':jackson-core',
-    ':jackson-databind-jar',
-  ],
-  visibility = [ 'PUBLIC' ],
+    name = "jackson-databind",
+    exported_deps = [
+        # If ObjectMapper.writeValue() is used, then
+        # com.fasterxml.jackson.core.ObjectCodec needs to be accessible.
+        ":jackson-core",
+        ":jackson-databind-jar",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 prebuilt_jar(
-  name = 'jackson-databind-jar',
-  binary_jar = 'jackson-databind-2.7.8.jar',
-  licenses = [
-    'LICENSE',
-  ],
+    name = "jackson-databind-jar",
+    binary_jar = "jackson-databind-2.7.8.jar",
+    licenses = [
+        "LICENSE",
+    ],
 )

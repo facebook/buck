@@ -22,16 +22,16 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Responsible for collecting resources parsed by {@link MiniAapt} and assigning unique integer ids
- * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where  {@code xx} represents
+ * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx} represents
  * the resource type, and {@code yyyy} represents the id within that resource type.
  */
 public class AaptResourceCollector {
@@ -41,40 +41,42 @@ public class AaptResourceCollector {
   private final Set<RDotTxtEntry> resources;
 
   public AaptResourceCollector() {
-    this.enumerators = Maps.newHashMap();
-    this.resources = Sets.newHashSet();
+    this.enumerators = new HashMap<>();
+    this.resources = new HashSet<>();
     this.currentTypeId = 1;
   }
 
   public void addIntResourceIfNotPresent(RType rType, String name) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      addResource(rType, IdType.INT, name, getNextIdValue(rType));
+      addResource(rType, IdType.INT, name, getNextIdValue(rType), null);
     }
   }
 
   public void addCustomDrawableResourceIfNotPresent(RType rType, String name) {
-    RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name,
-        RDotTxtEntry.CustomDrawableType.CUSTOM);
+    RDotTxtEntry entry =
+        new FakeRDotTxtEntry(IdType.INT, rType, name, RDotTxtEntry.CustomDrawableType.CUSTOM);
     if (!resources.contains(entry)) {
       addCustomResource(rType, IdType.INT, name, getNextCustomIdValue(rType));
     }
   }
 
   public void addGrayscaleImageResourceIfNotPresent(RType rType, String name) {
-    RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name,
-        RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE);
+    RDotTxtEntry entry =
+        new FakeRDotTxtEntry(
+            IdType.INT, rType, name, RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE);
     if (!resources.contains(entry)) {
       addGrayscaleImageResource(rType, IdType.INT, name, getNextGrayscaleImageIdValue(rType));
     }
   }
 
   public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
-    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues));
+    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues), null);
   }
 
-  public void addResource(RType rType, IdType idType, String name, String idValue) {
-    resources.add(new RDotTxtEntry(idType, rType, name, idValue));
+  public void addResource(
+      RType rType, IdType idType, String name, String idValue, @Nullable String parent) {
+    resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 
   public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
@@ -84,13 +86,14 @@ public class AaptResourceCollector {
   }
 
   public void addCustomResource(RType rType, IdType idType, String name, String idValue) {
-    resources.add(new RDotTxtEntry(idType, rType, name, idValue,
-        RDotTxtEntry.CustomDrawableType.CUSTOM));
+    resources.add(
+        new RDotTxtEntry(idType, rType, name, idValue, RDotTxtEntry.CustomDrawableType.CUSTOM));
   }
 
   public void addGrayscaleImageResource(RType rType, IdType idType, String name, String idValue) {
-    resources.add(new RDotTxtEntry(idType, rType, name, idValue,
-        RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE));
+    resources.add(
+        new RDotTxtEntry(
+            idType, rType, name, idValue, RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE));
   }
 
   public Set<RDotTxtEntry> getResources() {
@@ -105,19 +108,19 @@ public class AaptResourceCollector {
   }
 
   String getNextIdValue(RDotTxtEntry rDotTxtEntry) {
-      if (rDotTxtEntry.idType == IdType.INT_ARRAY) {
-        return getNextArrayIdValue(rDotTxtEntry.type, rDotTxtEntry.getNumArrayValues());
-      } else if (rDotTxtEntry.type == RType.STYLEABLE) {
-        // styleable int entries are just incremented ints that receive a value when created as
-        // siblings of a style (non unique within R.txt)
-        return rDotTxtEntry.idValue;
-      } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
-        return getNextCustomIdValue(rDotTxtEntry.type);
-      } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
-        return getNextGrayscaleImageIdValue(rDotTxtEntry.type);
-      } else {
-        return getNextIdValue(rDotTxtEntry.type);
-      }
+    if (rDotTxtEntry.idType == IdType.INT_ARRAY) {
+      return getNextArrayIdValue(rDotTxtEntry.type, rDotTxtEntry.getNumArrayValues());
+    } else if (rDotTxtEntry.type == RType.STYLEABLE) {
+      // styleable int entries are just incremented ints that receive a value when created as
+      // siblings of a style (non unique within R.txt)
+      return rDotTxtEntry.idValue;
+    } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
+      return getNextCustomIdValue(rDotTxtEntry.type);
+    } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
+      return getNextGrayscaleImageIdValue(rDotTxtEntry.type);
+    } else {
+      return getNextIdValue(rDotTxtEntry.type);
+    }
   }
 
   String getNextIdValue(RType rType) {
@@ -126,16 +129,12 @@ public class AaptResourceCollector {
 
   String getNextCustomIdValue(RType rType) {
     return String.format(
-        "0x%08x %s",
-        getEnumerator(rType).next(),
-        RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
+        "0x%08x %s", getEnumerator(rType).next(), RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
   }
 
   String getNextGrayscaleImageIdValue(RType rType) {
     return String.format(
-        "0x%08x %s",
-        getEnumerator(rType).next(),
-        RDotTxtEntry.GRAYSCALE_IMAGE_IDENTIFIER);
+        "0x%08x %s", getEnumerator(rType).next(), RDotTxtEntry.GRAYSCALE_IMAGE_IDENTIFIER);
   }
 
   String getNextArrayIdValue(RType rType, int numValues) {
@@ -147,8 +146,7 @@ public class AaptResourceCollector {
     }
 
     return String.format(
-        "{ %s }",
-        Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR).join(values.build()));
+        "{ %s }", Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR).join(values.build()));
   }
 
   private static class ResourceIdEnumerator {

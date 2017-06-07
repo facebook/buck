@@ -23,145 +23,165 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class AndroidInstrumentationApkDescription
-    implements Description<AndroidInstrumentationApkDescription.Arg> {
+    implements Description<AndroidInstrumentationApkDescriptionArg> {
 
+  private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DxConfig dxConfig;
 
   public AndroidInstrumentationApkDescription(
+      JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      DxConfig dxConfig) {
+    this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.dxConfig = dxConfig;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<AndroidInstrumentationApkDescriptionArg> getConstructorArgType() {
+    return AndroidInstrumentationApkDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    BuildRule installableApk = resolver.getRule(args.apk);
-    if (!(installableApk instanceof InstallableApk)) {
+      CellPathResolver cellRoots,
+      AndroidInstrumentationApkDescriptionArg args)
+      throws NoSuchBuildTargetException {
+    BuildRule installableApk = resolver.getRule(args.getApk());
+    if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
           params.getBuildTarget(),
           installableApk.getFullyQualifiedName(),
           installableApk.getType());
     }
-    AndroidBinary apkUnderTest = getUnderlyingApk((InstallableApk) installableApk);
+    AndroidBinary apkUnderTest =
+        ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
 
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex = ImmutableSortedSet.copyOf(
-        HasBuildTarget.BUILD_TARGET_COMPARATOR,
-        ImmutableSet.<JavaLibrary>builder()
+    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+        new ImmutableSortedSet.Builder<>(Ordering.<JavaLibrary>natural())
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
             .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
-            .build());
+            .build();
 
     // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
     // apk under test.
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         apkUnderTest.getAndroidPackageableCollection().getResourceDetails();
-    ImmutableSet<BuildTarget> resourcesToExclude = ImmutableSet.copyOf(
-        Iterables.concat(
-            resourceDetails.getResourcesWithNonEmptyResDir(),
-            resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
+    ImmutableSet<BuildTarget> resourcesToExclude =
+        ImmutableSet.copyOf(
+            Iterables.concat(
+                resourceDetails.getResourcesWithNonEmptyResDir(),
+                resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
     Path primaryDexPath =
         AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem());
-    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
-        params,
-        resolver,
-        ResourceCompressionMode.DISABLED,
-        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
-        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* resourceUnionPackage */ Optional.empty(),
-        /* locales */ ImmutableSet.of(),
-        args.manifest,
-        PackageType.INSTRUMENTED,
-        apkUnderTest.getCpuFilters(),
-        /* shouldBuildStringSourceMap */ false,
-        /* shouldPreDex */ false,
-        primaryDexPath,
-        DexSplitMode.NO_SPLIT,
-        rulesToExcludeFromDex.stream()
-            .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
-        resourcesToExclude,
-        /* skipCrunchPngs */ false,
-        args.includesVectorDrawables.orElse(false),
-        javacOptions,
-        EnumSet.noneOf(ExopackageMode.class),
-        /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFile */ Optional.empty(),
-        /* xzCompressionLevel */ Optional.empty(),
-        /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.empty(),
-        nativePlatforms,
-        /* nativeLibraryMergeMap */ Optional.empty(),
-        /* nativeLibraryMergeGlue */ Optional.empty(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-        AndroidBinary.RelinkerMode.DISABLED,
-        dxExecutorService,
-        apkUnderTest.getManifestEntries(),
-        cxxBuckConfig,
-        new APKModuleGraph(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    AndroidBinaryGraphEnhancer graphEnhancer =
+        new AndroidBinaryGraphEnhancer(
+            params,
             targetGraph,
-            params.getBuildTarget(),
-            Optional.empty()));
+            resolver,
+            cellRoots,
+            AndroidBinary.AaptMode.AAPT1,
+            ResourceCompressionMode.DISABLED,
+            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            /* resourceUnionPackage */ Optional.empty(),
+            /* locales */ ImmutableSet.of(),
+            args.getManifest(),
+            PackageType.INSTRUMENTED,
+            apkUnderTest.getCpuFilters(),
+            /* shouldBuildStringSourceMap */ false,
+            /* shouldPreDex */ false,
+            primaryDexPath,
+            DexSplitMode.NO_SPLIT,
+            rulesToExcludeFromDex
+                .stream()
+                .map(BuildRule::getBuildTarget)
+                .collect(MoreCollectors.toImmutableSet()),
+            resourcesToExclude,
+            /* skipCrunchPngs */ false,
+            args.getIncludesVectorDrawables(),
+            javaBuckConfig,
+            JavacFactory.create(ruleFinder, javaBuckConfig, null),
+            javacOptions,
+            EnumSet.noneOf(ExopackageMode.class),
+            /* buildConfigValues */ BuildConfigFields.empty(),
+            /* buildConfigValuesFile */ Optional.empty(),
+            /* xzCompressionLevel */ Optional.empty(),
+            /* trimResourceIds */ false,
+            /* keepResourcePattern */ Optional.empty(),
+            nativePlatforms,
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
+            /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
+            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
+            Optional.empty(),
+            AndroidBinary.RelinkerMode.DISABLED,
+            dxExecutorService,
+            apkUnderTest.getManifestEntries(),
+            cxxBuckConfig,
+            new APKModuleGraph(targetGraph, params.getBuildTarget(), Optional.empty()),
+            dxConfig,
+            /* postFilterResourcesCommands */ Optional.empty());
 
-    AndroidGraphEnhancementResult enhancementResult =
-        graphEnhancer.createAdditionalBuildables();
+    AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
 
     return new AndroidInstrumentationApk(
         params
-            .copyWithExtraDeps(Suppliers.ofInstance(enhancementResult.getFinalDeps()))
-            .appendExtraDeps(rulesToExcludeFromDex),
-        new SourcePathResolver(resolver),
+            .copyReplacingExtraDeps(Suppliers.ofInstance(enhancementResult.getFinalDeps()))
+            .copyAppendingExtraDeps(rulesToExcludeFromDex),
+        ruleFinder,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
         proGuardConfig.getProguardAgentPath(),
@@ -169,26 +189,19 @@ public class AndroidInstrumentationApkDescription
         rulesToExcludeFromDex,
         enhancementResult,
         dxExecutorService);
-
   }
 
-  private static AndroidBinary getUnderlyingApk(InstallableApk installable) {
-    if (installable instanceof AndroidBinary) {
-      return (AndroidBinary) installable;
-    } else if (installable instanceof ApkGenrule) {
-      return getUnderlyingApk(((ApkGenrule) installable).getInstallableApk());
-    } else {
-      throw new IllegalStateException(
-          installable.getBuildTarget().getFullyQualifiedName() +
-              " must be backed by either an android_binary() or an apk_genrule()");
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAndroidInstrumentationApkDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getManifest();
+
+    BuildTarget getApk();
+
+    @Value.Default
+    default boolean getIncludesVectorDrawables() {
+      return false;
     }
-  }
-
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath manifest;
-    public BuildTarget apk;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<Boolean> includesVectorDrawables = Optional.empty();
   }
 }

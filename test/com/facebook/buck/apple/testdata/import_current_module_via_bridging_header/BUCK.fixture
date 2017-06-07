@@ -1,0 +1,14 @@
+apple_library(
+    name = 'Greeter',
+    bridging_header = 'bridging-header/bridging-header.h',
+    headers = glob([
+        '*.h',
+    ]),
+    srcs = glob([
+        '*.m',
+        '*.swift',
+    ]),
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework'
+    ],
+)

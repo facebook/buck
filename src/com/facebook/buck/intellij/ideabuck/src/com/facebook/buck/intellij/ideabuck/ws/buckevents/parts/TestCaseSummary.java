@@ -18,5 +18,4 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.parts;
 
 import com.facebook.buck.event.external.elements.TestCaseSummaryExternalInterface;
 
-public interface TestCaseSummary extends TestCaseSummaryExternalInterface<TestResultsSummary> {
-}
+public interface TestCaseSummary extends TestCaseSummaryExternalInterface<TestResultsSummary> {}

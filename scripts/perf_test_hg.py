@@ -13,6 +13,7 @@ import re
 import subprocess
 import os
 import tempfile
+import shutil
 import sys
 
 from collections import defaultdict
@@ -101,10 +102,10 @@ def reset(revision, cwd):
         cwd=cwd)
 
 
-def ant_clean(buck_repo):
-    log('Running ant clean.')
+def ant_clean_build(buck_repo):
+    log('Running ant clean default.')
     subprocess.check_call(
-        ['ant', 'clean'],
+        ['ant', 'clean', 'default'],
         cwd=buck_repo)
 
 
@@ -113,7 +114,6 @@ def buck_clean(args, cwd):
     subprocess.check_call(
         [args.path_to_buck, 'clean'],
         cwd=cwd)
-
 
 BUILD_RESULT_LOG_LINE = re.compile(
     r'BuildRuleFinished\((?P<rule_name>[\w_\-:#\/,]+)\): (?P<result>[A-Z_]+) '
@@ -128,7 +128,7 @@ RULEKEY_LINE = re.compile(
 
 BUCK_LOG_RULEKEY_LINE = re.compile(
     r'.*\[[\w ]+\](?:\[command:[0-9a-f-]+\])?\[tid:\d+\]'
-    r'\[com.facebook.buck.rules.RuleKey[\$\.]?Builder\] '
+    r'\[com.facebook.buck.rules.keys.RuleKey[\$\.]?Builder\] '
     r'RuleKey (?P<rule_key>[0-9a-f]+)='
     r'(?P<rule_key_debug>.*)$')
 
@@ -164,7 +164,16 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
     tmpFile = tempfile.TemporaryFile()
     try:
         subprocess.check_call(
-            [args.path_to_buck, 'build', '--deep'] + targets + ['-v', '5'],
+            [
+                args.path_to_buck,
+                'build',
+                '--deep',
+                # t16296463
+                '--config',
+                'project.glob_handler=',
+                '--config',
+                'cache._exp_propagation=false',
+            ] + targets + ['-v', '5'],
             stdout=tmpFile,
             stderr=tmpFile,
             cwd=cwd,
@@ -176,6 +185,18 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
     tmpFile.seek(0)
     finish = datetime.now()
 
+    (cache_results, rule_key_map) = build_maps(cwd, tmpFile)
+
+    result = BuildResult(finish - start, cache_results, rule_key_map)
+    cache_counts = {}
+    for key, value in result.cache_results.iteritems():
+        cache_counts[key] = len(value)
+    log('Test Build Finished! Elapsed Seconds: %d, Cache Counts: %s' % (
+        timedelta_total_seconds(result.time_delta), repr(cache_counts)))
+    return result
+
+
+def build_maps(cwd, tmpFile):
     java_utils_log_path = os.path.join(
         cwd,
         'buck-out', 'log', 'buck-0.log')
@@ -215,15 +236,7 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
                     'rule_key_debug': rule_debug_map[rule_key]
                 })
                 rule_key_map[match.group('rule_name')] = (rule_key, rule_debug_map[rule_key])
-
-    result = BuildResult(finish - start, cache_results, rule_key_map)
-    cache_counts = {}
-    for key, value in result.cache_results.iteritems():
-        cache_counts[key] = len(value)
-    log('Test Build Finished! Elapsed Seconds: %d, Cache Counts: %s' % (
-        timedelta_total_seconds(result.time_delta), repr(cache_counts)))
-    return result
-
+    return (cache_results, rule_key_map)
 
 def set_cache_settings(
         args,
@@ -235,6 +248,10 @@ def set_cache_settings(
     %s
     dir = buck-cache
     dir_mode = %s
+[build]
+    # Some repositories set this to a lower value, which breaks an assumption
+    # in this test: that all rules with correct rule keys will get hits.
+    artifact_cache_size_limit = 2000000000
   ''' % ('mode = dir' if dir_cache_only else '', cache_mode)
     log(buckconfig_contents)
     buckconfig_path = os.path.join(cwd, '.buckconfig.local')
@@ -297,10 +314,26 @@ def get_buck_repo_root(path):
     return path
 
 
+def move_mount(from_mount, to_mount):
+    subprocess.check_call("sync")
+    subprocess.check_call(["mount", "--move", from_mount, to_mount])
+    for subdir, dirs, files in os.walk(to_mount):
+        for file in files:
+            path = os.path.join(subdir, file)
+            if (os.path.islink(path) and
+               os.path.realpath(path).startswith(from_mount + '/')):
+                new_path = os.path.realpath(path).replace(
+                    from_mount + '/',
+                    to_mount + '/'
+                )
+                os.unlink(path)
+                os.symlink(new_path, path)
+
+
 def main():
     args = createArgParser().parse_args()
     log('Running Performance Test!')
-    ant_clean(get_buck_repo_root(args.path_to_buck))
+    ant_clean_build(get_buck_repo_root(args.path_to_buck))
     clean(args.repo_under_test)
     log('=== Warming up cache ===')
     cwd = os.path.join(args.repo_under_test, args.project_under_test)
@@ -320,7 +353,20 @@ def main():
     cwd = os.path.join(cwd_root, args.project_under_test)
 
     log('Renaming %s to %s' % (args.repo_under_test, cwd_root))
-    os.rename(args.repo_under_test, cwd_root)
+    if not os.path.isfile('/proc/mounts'):
+        is_mounted = False
+    else:
+        with open('/proc/mounts', 'r') as mounts:
+            # grab the second element (mount point) from /proc/mounts
+            lines = [l.strip().split() for l in mounts.read().splitlines()]
+            lines = [l[1] for l in lines if len(l) >= 2]
+            is_mounted = args.repo_under_test in lines
+    if is_mounted:
+        if not os.path.exists(cwd_root):
+            os.makedirs(cwd_root)
+        move_mount(args.repo_under_test, cwd_root)
+    else:
+        os.rename(args.repo_under_test, cwd_root)
 
     try:
         log('== Checking for problems with absolute paths ==')
@@ -346,7 +392,11 @@ def main():
 
     finally:
         log('Renaming %s to %s' % (cwd_root, args.repo_under_test))
-        os.rename(cwd_root, args.repo_under_test)
+        if is_mounted:
+            move_mount(cwd_root, args.repo_under_test)
+            shutil.rmtree(cwd_root)
+        else:
+            os.rename(cwd_root, args.repo_under_test)
 
 
 if __name__ == '__main__':

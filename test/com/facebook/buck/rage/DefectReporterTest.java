@@ -19,7 +19,7 @@ package com.facebook.buck.rage;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
@@ -28,18 +28,15 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class DefectReporterTest {
 
@@ -59,32 +56,29 @@ public class DefectReporterTest {
   private static final UserLocalConfiguration TEST_USER_LOCAL_CONFIGURATION =
       UserLocalConfiguration.of(true, ImmutableMap.of(Paths.get(".buckconfig.local"), "data"));
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testAttachesPaths() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
-    DefectReporter reporter = new DefaultDefectReporter(
-        filesystem,
-        ObjectMappers.newDefaultInstance(),
-        config,
-        BuckEventBusFactory.newInstance(clock),
-        clock);
+    DefectReporter reporter =
+        new DefaultDefectReporter(
+            filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     Path fileToBeIncluded = Paths.get("FileToBeIncluded.txt");
     filesystem.touch(fileToBeIncluded);
     String fileToBeIncludedContent = "testcontentbehere";
     filesystem.writeContentsToPath(fileToBeIncludedContent, fileToBeIncluded);
 
-    DefectSubmitResult defectSubmitResult = reporter.submitReport(
-        DefectReport.builder()
-            .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
-            .setIncludedPaths(fileToBeIncluded)
-            .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
-            .build());
+    DefectSubmitResult defectSubmitResult =
+        reporter.submitReport(
+            DefectReport.builder()
+                .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
+                .setIncludedPaths(fileToBeIncluded)
+                .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
+                .build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     ZipInspector inspector = new ZipInspector(reportPath);
@@ -94,26 +88,23 @@ public class DefectReporterTest {
   @Test
   public void testAttachesReport() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
-    DefectReporter reporter = new DefaultDefectReporter(
-        filesystem,
-        objectMapper,
-        config,
-        BuckEventBusFactory.newInstance(clock),
-        clock);
+    DefectReporter reporter =
+        new DefaultDefectReporter(
+            filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
-    DefectSubmitResult defectSubmitResult = reporter.submitReport(
-        DefectReport.builder()
-            .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
-            .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
-            .build());
+    DefectSubmitResult defectSubmitResult =
+        reporter.submitReport(
+            DefectReport.builder()
+                .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
+                .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
+                .build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
       ZipEntry entry = zipFile.getEntry("report.json");
-      JsonNode reportNode = objectMapper.readTree(zipFile.getInputStream(entry));
+      JsonNode reportNode = ObjectMappers.READER.readTree(zipFile.getInputStream(entry));
       assertThat(
           reportNode.get("buildEnvironmentDescription").get("user").asText(),
           Matchers.equalTo("test_user"));
@@ -122,5 +113,4 @@ public class DefectReporterTest {
           Matchers.equalTo(true));
     }
   }
-
 }

@@ -26,7 +26,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -73,7 +72,8 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
       Path path = Paths.get((String) object);
 
@@ -87,38 +87,30 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
           int nameCount = path.getNameCount();
           if (nameCount < 2) {
             throw new HumanReadableException(
-                "Invalid source tree path: '%s'. Should have at least one path component after" +
-                    "'%s'.",
-                path,
-                firstElement);
+                "Invalid source tree path: '%s'. Should have at least one path component after"
+                    + "'%s'.",
+                path, firstElement);
           }
           return FrameworkPath.ofSourceTreePath(
               new SourceTreePath(
-                  sourceTree.get(),
-                  path.subpath(1, path.getNameCount()),
-                  Optional.empty()));
+                  sourceTree.get(), path.subpath(1, path.getNameCount()), Optional.empty()));
         } else {
           throw new HumanReadableException(
               "Unknown SourceTree: '%s'. Should be one of: %s",
               firstElement,
-              Joiner.on(", ").join(
-                  Iterables.transform(
-                      ImmutableList.copyOf(PBXReference.SourceTree.values()),
-                      input -> "$" + input.toString())));
+              Joiner.on(", ")
+                  .join(
+                      Iterables.transform(
+                          ImmutableList.copyOf(PBXReference.SourceTree.values()),
+                          input -> "$" + input.toString())));
         }
       } else {
         return FrameworkPath.ofSourcePath(
-            sourcePathTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                object));
+            sourcePathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
       }
     }
 
     throw CoerceFailedException.simple(
-        object,
-        getOutputClass(),
-        "input should be either a source tree path or a source path");
+        object, getOutputClass(), "input should be either a source tree path or a source path");
   }
 }

@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableSet;
 public interface ArtifactCacheEventFactory {
   ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys);
 
-  ArtifactCacheEvent.Started newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata);
+  ArtifactCacheEvent.Started newStoreStartedEvent(
+      ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata);
 
   ArtifactCacheEvent.Finished newStoreFinishedEvent(ArtifactCacheEvent.Started started);
 

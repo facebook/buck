@@ -210,40 +210,51 @@ section.content {
   padding: 30px 0;
 }
 
-section.content article img {
+section.content article img,
+section.content landing-page img {
   max-width: 100%;
 }
 
-section.content article h1 {
+section.content article h1,
+section.content landing-page h1 {
   font-weight: bold;
 }
 
-section.content article h2 {
+section.content article h2,
+section.content landing-page h2 {
   color: #888888;
   font-weight: bold;
 }
 
 section.content article ul li,
-section.content article ol li {
+section.content article ol li,
+section.content landing-page ul li,
+section.content landing-page ol li
+ {
   margin: 1em 0;
 }
 
 section.content article ul.tight-list li,
-section.content article ol.tight-list li {
+section.content article ol.tight-list li,
+section.content landing-page ul.tight-list li,
+section.content landing-page ol.tight-list li {
   margin: 0;
 }
 
-section.content article blockquote {
+section.content article blockquote,
+section.content landing-page blockquote {
   padding: 0px 20px;
   margin: 0 0 20px;
   border-left: 5px solid #eee;
 }
 
-section.content article blockquote p {
+section.content article blockquote p,
+section.content landing-page blockquote p {
   font-style: italic;
 }
 
-section.content article blockquote small:before {
+section.content article blockquote small:before,
+section.content landing-page blockquote small:before {
   content: '\2014 \00A0';
 }
 
@@ -269,12 +280,30 @@ section.content nav ul {
    list-style: none;
    margin: 0;
    padding-left: 1em;
-
 }
 
+section.content nav ul li a {
+  margin-left: 1em;
+}
+
+section.content nav ul li.navActiveItem {
+  background-color: black;
+  border-top-right-radius: 10em;
+  border-bottom-right-radius: 10em;
+  font-weight: bold;
+}
+section.content nav ul li.navActiveItem a {
+  color: white;
+}
+
+
 footer {
-  background: #000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 10px 0;
+  background-color: #000;
   color: #fff;
   border-top: 4px solid #fff;
 }
@@ -291,6 +320,12 @@ footer {
 .arg {
   list-style-type: square;
   margin-bottom: 0.5em;
+}
+.arg code.argName {
+  font-weight: bolder;
+}
+.arg span.argDefault {
+  font-size: smaller;
 }
 
 .build_target_ex {
@@ -319,6 +354,28 @@ footer {
 /* For use in a <td> */
 .measurement {
   text-align: right;
+}
+
+.companyShowcase h2,
+.companyShowcase div {
+  text-align: center;
+}
+.itemShowcase {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+.itemShowcase .showcaseItem {
+  text-align: center;
+  display: inline-block;
+  width: 175px;
+  margin: 0;
+  padding: 10px;
+  vertical-align: top;
+}
+.itemShowcase .showcaseItem img {
+  width: 100px;
+  border-radius: 20px;
 }
 
 /* tabletish */
@@ -373,9 +430,58 @@ footer {
     width: 660px;
   }
 
+  section.content landing-page {
+    float: left;
+    width: 660px;
+  }
+
   section.content nav {
     float: left;
     width: 220px;
   }
 
+}
+
+/* Toggler like on getting started */
+
+.toggler a {
+  display: inline-block;
+  padding: 10px 5px;
+  margin: 2px;
+  border: 1px solid #05A5D1;
+  border-radius: 3px;
+  text-decoration: none !important;
+}
+.toggler table {
+  border-collapse: collapse;
+}
+.toggler table, td, th {
+  border: 0;
+}
+.display-os-mac .toggler .button-mac,
+.display-os-linux .toggler .button-linux,
+.display-os-windows .toggler .button-windows,
+.display-platform-ios .toggler .button-ios,
+.display-platform-android .toggler .button-android,
+.display-platform-other .toggler .button-other,
+.display-platform-java .toggler .button-java {
+  background-color: #05A5D1;
+  color: white;
+}
+block {
+  display: none;
+}
+.display-platform-ios.display-os-mac .ios.mac,
+.display-platform-ios.display-os-linux .ios.linux,
+.display-platform-ios.display-os-windows .ios.windows,
+.display-platform-android.display-os-mac .android.mac,
+.display-platform-android.display-os-linux .android.linux,
+.display-platform-android.display-os-windows .android.windows,
+.display-platform-other.display-os-mac .other.mac,
+.display-platform-other.display-os-linux .other.linux,
+.display-platform-other.display-os-windows .other.windows,
+.display-platform-java.display-os-mac .java.mac,
+.display-platform-java.display-os-linux .java.linux,
+.display-platform-java.display-os-windows .java.windows {
+  display: block;
 }

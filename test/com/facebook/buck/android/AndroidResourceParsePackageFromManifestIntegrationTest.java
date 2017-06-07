@@ -16,37 +16,32 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AndroidResourceParsePackageFromManifestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
-   * If {@code res} and {@code manifest} are specified for an {@code android_resource}, but
-   * {@code package} is not, then the package for the generated {@code R.java} file should be
-   * extracted from the {@code AndroidManifest.xml} file.
-   * <p>
-   * We verify this by creating such an {@code android_resource} rule, and then ensure that an
-   * {@code android_library} that depends on it builds successfully. The Java code in the
-   * {@code android_library} contains references to {@code com.example.R} to ensure that the
-   * {@code com.example} package was extracted from the manifest correctly.
+   * If {@code res} and {@code manifest} are specified for an {@code android_resource}, but {@code
+   * package} is not, then the package for the generated {@code R.java} file should be extracted
+   * from the {@code AndroidManifest.xml} file.
+   *
+   * <p>We verify this by creating such an {@code android_resource} rule, and then ensure that an
+   * {@code android_library} that depends on it builds successfully. The Java code in the {@code
+   * android_library} contains references to {@code com.example.R} to ensure that the {@code
+   * com.example} package was extracted from the manifest correctly.
    */
   @Test
-  public void testParsePackageFromManifest() throws IOException {
+  public void testParsePackageFromManifest() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "parse_package_from_manifest",
-        tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "parse_package_from_manifest", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:library").assertSuccess();
 

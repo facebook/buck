@@ -23,6 +23,7 @@ import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -31,14 +32,13 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 public final class CellProvider {
   private final LoadingCache<Path, Cell> cells;
@@ -47,8 +47,8 @@ public final class CellProvider {
    * Create a cell provider with a specific cell loader, and optionally a special factory function
    * for the root cell.
    *
-   * The indirection for passing in CellProvider allows cells to reference the current CellProvider
-   * object.
+   * <p>The indirection for passing in CellProvider allows cells to reference the current
+   * CellProvider object.
    */
   private CellProvider(
       Function<CellProvider, CacheLoader<Path, Cell>> cellCacheLoader,
@@ -70,11 +70,10 @@ public final class CellProvider {
         throw new RuntimeException("Interrupted while loading Cell: " + path, e);
       } else {
         throw new IllegalStateException(
-            "Unexpected checked exception thrown from cell loader.",
-            e.getCause());
+            "Unexpected checked exception thrown from cell loader.", e.getCause());
       }
     } catch (UncheckedExecutionException e) {
-      Throwables.propagateIfPossible(e.getCause());
+      Throwables.throwIfUnchecked(e.getCause());
       throw e;
     }
   }
@@ -83,109 +82,155 @@ public final class CellProvider {
     return ImmutableMap.copyOf(cells.asMap());
   }
 
-  /**
-   * Create a cell provider at a given root.
-   */
+  /** Create a cell provider at a given root. */
   public static CellProvider createForLocalBuild(
       ProjectFilesystem rootFilesystem,
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
+      throws IOException {
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.createWithConfigRepositoriesSection(
-            rootFilesystem.getRootPath(),
-            rootConfig.getEntriesForSection(DefaultCellPathResolver.REPOSITORIES_SECTION));
+        new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
     ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping =
         rootCellCellPathResolver.getTransitivePathMapping();
 
     ImmutableMap<Path, RawConfig> pathToConfigOverrides;
     try {
-      pathToConfigOverrides =
-          rootCellConfigOverrides.getOverridesByPath(transitiveCellPathMapping);
+      pathToConfigOverrides = rootCellConfigOverrides.getOverridesByPath(transitiveCellPathMapping);
     } catch (CellConfig.MalformedOverridesException e) {
       throw new HumanReadableException(e.getMessage());
     }
 
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(transitiveCellPathMapping.values());
     return new CellProvider(
-        cellProvider -> new CacheLoader<Path, Cell>() {
-          @Override
-          public Cell load(Path cellPath) throws IOException, InterruptedException {
-            cellPath = cellPath.toRealPath().normalize();
+        cellProvider ->
+            new CacheLoader<Path, Cell>() {
+              @Override
+              public Cell load(Path cellPath) throws IOException, InterruptedException {
+                Path normalizedCellPath = cellPath.toRealPath().normalize();
 
-            Preconditions.checkState(
-                allRoots.contains(cellPath),
-                "Cell %s outside of transitive closure of root cell (%s).",
-                cellPath,
-                allRoots);
+                Preconditions.checkState(
+                    allRoots.contains(normalizedCellPath),
+                    "Cell %s outside of transitive closure of root cell (%s).",
+                    normalizedCellPath,
+                    allRoots);
 
-            RawConfig configOverrides = Optional.ofNullable(pathToConfigOverrides.get(cellPath))
-                .orElse(RawConfig.of(ImmutableMap.of()));
-            Config config = Configs.createDefaultConfig(cellPath, configOverrides);
-            DefaultCellPathResolver cellPathResolver =
-                new DefaultCellPathResolver(cellPath, config);
-            ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
+                RawConfig configOverrides =
+                    Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath))
+                        .orElse(RawConfig.of(ImmutableMap.of()));
+                Config config = Configs.createDefaultConfig(normalizedCellPath, configOverrides);
 
-            BuckConfig buckConfig = new BuckConfig(
-                config,
-                cellFilesystem,
-                rootConfig.getArchitecture(),
-                rootConfig.getPlatform(),
-                rootConfig.getEnvironment(),
-                cellPathResolver);
+                ImmutableMap<String, Path> cellMapping =
+                    DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
+                        cellPath, config.get(DefaultCellPathResolver.REPOSITORIES_SECTION));
 
-            // TODO(13777679): cells in other watchman roots do not work correctly.
+                // The cell should only contain a subset of cell mappings of the root cell.
+                cellMapping.forEach(
+                    (name, path) -> {
+                      Path pathInRootResolver = rootCellCellPathResolver.getCellPaths().get(name);
+                      if (pathInRootResolver == null) {
+                        throw new HumanReadableException(
+                            "In the config of %s:  %s.%s must exist in the root cell's cell mappings.",
+                            cellPath.toString(),
+                            DefaultCellPathResolver.REPOSITORIES_SECTION,
+                            name);
+                      } else if (!pathInRootResolver.equals(path)) {
+                        throw new HumanReadableException(
+                            "In the config of %s:  %s.%s must point to the same directory as the root "
+                                + "cell's cell mapping: (root) %s != (current) %s",
+                            cellPath.toString(),
+                            DefaultCellPathResolver.REPOSITORIES_SECTION,
+                            name,
+                            pathInRootResolver,
+                            path);
+                      }
+                    });
 
-            return new Cell(
-                cellPathResolver.getKnownRoots(),
-                cellFilesystem,
-                watchman,
-                buckConfig,
-                knownBuildRuleTypesFactory,
-                cellProvider);
-          }
-        },
+                CellPathResolver cellPathResolver =
+                    new CellPathResolverView(
+                        rootCellCellPathResolver, cellMapping.keySet(), cellPath);
+
+                ProjectFilesystem cellFilesystem =
+                    new ProjectFilesystem(normalizedCellPath, config);
+
+                BuckConfig buckConfig =
+                    new BuckConfig(
+                        config,
+                        cellFilesystem,
+                        rootConfig.getArchitecture(),
+                        rootConfig.getPlatform(),
+                        rootConfig.getEnvironment(),
+                        cellPathResolver);
+
+                // TODO(13777679): cells in other watchman roots do not work correctly.
+
+                return new Cell(
+                    getKnownRoots(cellPathResolver),
+                    cellPathResolver.getCanonicalCellName(normalizedCellPath),
+                    cellFilesystem,
+                    watchman,
+                    buckConfig,
+                    knownBuildRuleTypesFactory,
+                    cellProvider);
+              }
+            },
         cellProvider -> {
-          try {
-            return new Cell(
-                rootCellCellPathResolver.getKnownRoots(),
-                rootFilesystem,
-                watchman,
-                rootConfig,
-                knownBuildRuleTypesFactory,
-                cellProvider);
-          } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while loading root cell", e);
-          } catch (IOException e) {
-            throw new HumanReadableException("Failed to load root cell", e);
-          }
+          Preconditions.checkState(
+              !rootCellCellPathResolver
+                  .getCanonicalCellName(rootFilesystem.getRootPath())
+                  .isPresent(),
+              "Root cell should be nameless");
+          return new Cell(
+              getKnownRoots(rootCellCellPathResolver),
+              Optional.empty(),
+              rootFilesystem,
+              watchman,
+              rootConfig,
+              knownBuildRuleTypesFactory,
+              cellProvider);
         });
   }
 
   public static CellProvider createForDistributedBuild(
-      ImmutableMap<Path, BuckConfig> cellConfigs,
-      ImmutableMap<Path, ProjectFilesystem> cellFilesystems,
+      ImmutableMap<Path, DistBuildCellParams> cellParams,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
     return new CellProvider(
-        cellProvider -> new CacheLoader<Path, Cell>() {
-          @Override
-          public Cell load(Path cellPath) throws Exception {
-            ProjectFilesystem cellFilesystem =
-                Preconditions.checkNotNull(cellFilesystems.get(cellPath));
-            BuckConfig buckConfig = Preconditions.checkNotNull(cellConfigs.get(cellPath));
-
-            return new Cell(
-                cellConfigs.keySet(),
-                cellFilesystem,
-                Watchman.NULL_WATCHMAN,
-                buckConfig,
-                knownBuildRuleTypesFactory,
-                cellProvider);
-          }
-        },
+        cellProvider ->
+            CacheLoader.from(
+                cellPath -> {
+                  DistBuildCellParams cellParam =
+                      Preconditions.checkNotNull(cellParams.get(cellPath));
+                  return new Cell(
+                      cellParams.keySet(),
+                      // Distributed builds don't care about cell names, use a sentinel value that will
+                      // show up if it actually does care about them.
+                      cellParam.getCanonicalName(),
+                      cellParam.getFilesystem(),
+                      Watchman.NULL_WATCHMAN,
+                      cellParam.getConfig(),
+                      knownBuildRuleTypesFactory,
+                      cellProvider);
+                }),
         null);
+  }
+
+  @Value.Immutable(copy = false)
+  @BuckStyleTuple
+  interface AbstractDistBuildCellParams {
+    BuckConfig getConfig();
+
+    ProjectFilesystem getFilesystem();
+
+    Optional<String> getCanonicalName();
+  }
+
+  private static ImmutableSet<Path> getKnownRoots(CellPathResolver resolver) {
+    return ImmutableSet.<Path>builder()
+        .addAll(resolver.getCellPaths().values())
+        .add(resolver.getCellPath(Optional.empty()))
+        .build();
   }
 }

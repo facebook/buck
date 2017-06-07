@@ -22,12 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,7 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.Stack;
-
+import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -50,25 +44,24 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-/**
- * Collects file references and generates an xcworkspace.
- */
+/** Collects file references and generates an xcworkspace. */
 class WorkspaceGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final String workspaceName;
   private final Path outputDirectory;
   private final SortedMap<String, WorkspaceNode> children;
 
-  private static class WorkspaceNode {
-
-  }
+  private static class WorkspaceNode {}
 
   private static class WorkspaceGroup extends WorkspaceNode {
     private final SortedMap<String, WorkspaceNode> children;
 
     WorkspaceGroup() {
-      this.children = Maps.newTreeMap();
+      this.children = new TreeMap<>();
     }
 
     public Map<String, WorkspaceNode> getChildren() {
@@ -89,13 +82,11 @@ class WorkspaceGenerator {
   }
 
   public WorkspaceGenerator(
-      ProjectFilesystem projectFilesystem,
-      String workspaceName,
-      Path outputDirectory) {
+      ProjectFilesystem projectFilesystem, String workspaceName, Path outputDirectory) {
     this.projectFilesystem = projectFilesystem;
     this.workspaceName = workspaceName;
     this.outputDirectory = outputDirectory;
-    this.children = Maps.newTreeMap();
+    this.children = new TreeMap<>();
   }
 
   /**
@@ -121,9 +112,8 @@ class WorkspaceGenerator {
    * Adds a reference to a project file to the group hierarchy of the generated workspace.
    *
    * @param path Path to the referenced project file in the repository.
-   * @param groupPath Path in the group hierarchy of the generated workspace where
-   *                  the reference will be placed.
-   *                  If absent, the project reference is placed to the root of the workspace.
+   * @param groupPath Path in the group hierarchy of the generated workspace where the reference
+   *     will be placed. If absent, the project reference is placed to the root of the workspace.
    */
   public void addFilePath(Path path, Optional<Path> groupPath) {
     Map<String, WorkspaceNode> children = this.children;
@@ -152,7 +142,7 @@ class WorkspaceGenerator {
   }
 
   private void walkNodeTree(FileVisitor<Map.Entry<String, WorkspaceNode>> visitor)
-      throws IOException{
+      throws IOException {
     Stack<Iterator<Map.Entry<String, WorkspaceNode>>> iterators = new Stack<>();
     Stack<Map.Entry<String, WorkspaceNode>> groups = new Stack<>();
     iterators.push(this.children.entrySet().iterator());
@@ -182,6 +172,10 @@ class WorkspaceGenerator {
     }
   }
 
+  public Path getWorkspaceDir() {
+    return outputDirectory.resolve(workspaceName + ".xcworkspace");
+  }
+
   public Path writeWorkspace() throws IOException {
     DocumentBuilder docBuilder;
     Transformer transformer;
@@ -193,10 +187,8 @@ class WorkspaceGenerator {
     }
 
     DOMImplementation domImplementation = docBuilder.getDOMImplementation();
-    final Document doc = domImplementation.createDocument(
-        /* namespaceURI */ null,
-        "Workspace",
-        /* docType */ null);
+    final Document doc =
+        domImplementation.createDocument(/* namespaceURI */ null, "Workspace", /* docType */ null);
     doc.setXmlVersion("1.0");
 
     Element rootElem = doc.getDocumentElement();
@@ -209,8 +201,7 @@ class WorkspaceGenerator {
         new FileVisitor<Map.Entry<String, WorkspaceNode>>() {
           @Override
           public FileVisitResult preVisitDirectory(
-              Map.Entry<String, WorkspaceNode> dir,
-              BasicFileAttributes attrs) throws IOException {
+              Map.Entry<String, WorkspaceNode> dir, BasicFileAttributes attrs) throws IOException {
             Preconditions.checkArgument(dir.getValue() instanceof WorkspaceGroup);
             Element element = doc.createElement("Group");
             element.setAttribute("location", "container:");
@@ -222,24 +213,22 @@ class WorkspaceGenerator {
 
           @Override
           public FileVisitResult visitFile(
-              Map.Entry<String, WorkspaceNode> file,
-              BasicFileAttributes attrs) throws IOException {
+              Map.Entry<String, WorkspaceNode> file, BasicFileAttributes attrs) throws IOException {
             Preconditions.checkArgument(file.getValue() instanceof WorkspaceFileRef);
             WorkspaceFileRef fileRef = (WorkspaceFileRef) file.getValue();
             Element element = doc.createElement("FileRef");
             element.setAttribute(
                 "location",
-                "container:" +
-                    MorePaths.relativize(
-                        MorePaths.normalize(outputDirectory), fileRef.getPath()).toString());
+                "container:"
+                    + MorePaths.relativize(MorePaths.normalize(outputDirectory), fileRef.getPath())
+                        .toString());
             groups.peek().appendChild(element);
             return FileVisitResult.CONTINUE;
           }
 
           @Override
           public FileVisitResult visitFileFailed(
-              Map.Entry<String, WorkspaceNode> file,
-              IOException exc) throws IOException {
+              Map.Entry<String, WorkspaceNode> file, IOException exc) throws IOException {
             return FileVisitResult.TERMINATE;
           }
 
@@ -253,7 +242,7 @@ class WorkspaceGenerator {
 
     walkNodeTree(visitor);
 
-    Path projectWorkspaceDir = outputDirectory.resolve(workspaceName + ".xcworkspace");
+    Path projectWorkspaceDir = getWorkspaceDir();
     projectFilesystem.mkdirs(projectWorkspaceDir);
     Path serializedWorkspace = projectWorkspaceDir.resolve("contents.xcworkspacedata");
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -273,15 +262,16 @@ class WorkspaceGenerator {
     Path xcshareddata = projectWorkspaceDir.resolve("xcshareddata");
     projectFilesystem.mkdirs(xcshareddata);
     Path workspaceSettingsPath = xcshareddata.resolve("WorkspaceSettings.xcsettings");
-    String workspaceSettings = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-        "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\"" +
-        " \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-        "<plist version=\"1.0\">\n" +
-        "<dict>\n" +
-        "\t<key>IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded</key>\n" +
-        "\t<false/>\n" +
-        "</dict>\n" +
-        "</plist>";
+    String workspaceSettings =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\""
+            + " \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            + "<plist version=\"1.0\">\n"
+            + "<dict>\n"
+            + "\t<key>IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded</key>\n"
+            + "\t<false/>\n"
+            + "</dict>\n"
+            + "</plist>";
     projectFilesystem.writeContentsToPath(workspaceSettings, workspaceSettingsPath);
     return projectWorkspaceDir;
   }

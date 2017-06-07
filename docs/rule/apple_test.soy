@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'apple_test()' /}
+    {param navid: 'rule_apple_test' /}
     {param prettify: true /}
     {param description}
       A rule that generates an Apple test.
@@ -72,6 +73,10 @@ code contained in other rules. The tests can be executed by running <code>buck t
 {call buck.run_test_separately_arg /}
 
 {call buck.test_label_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // args
 

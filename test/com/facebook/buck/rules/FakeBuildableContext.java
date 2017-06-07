@@ -23,31 +23,26 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Fake implementation of {@link BuildableContext} for testing.
- */
+/** Fake implementation of {@link BuildableContext} for testing. */
 public class FakeBuildableContext implements BuildableContext {
 
-  private final Map<String, Object> metadata = Maps.newHashMap();
+  private final Map<String, Object> metadata = new HashMap<>();
 
-  private final Set<Path> artifacts = Sets.newHashSet();
+  private final Set<Path> artifacts = new HashSet<>();
 
   @Override
   public void addMetadata(String key, String value) {
     Object oldValue = metadata.put(key, value);
     if (oldValue != null) {
-      throw new IllegalStateException(String.format(
-          "Duplicate values for key %s: old is %s and new is %s.",
-          key,
-          oldValue,
-          value));
+      throw new IllegalStateException(
+          String.format(
+              "Duplicate values for key %s: old is %s and new is %s.", key, oldValue, value));
     }
   }
 

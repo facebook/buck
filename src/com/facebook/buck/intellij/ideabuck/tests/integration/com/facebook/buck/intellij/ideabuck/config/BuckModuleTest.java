@@ -36,12 +36,10 @@ import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
-
+import java.lang.reflect.Field;
 import org.easymock.EasyMock;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
 
 public class BuckModuleTest {
   class NotificationsAdapterTester extends NotificationsAdapter {
@@ -56,6 +54,7 @@ public class BuckModuleTest {
       countCalls++;
     }
   }
+
   public Project initBuckModule() {
     Extensions.registerAreaClass("IDEA_PROJECT", null);
     MockDisposable mockDisposable = new MockDisposable();
@@ -67,13 +66,12 @@ public class BuckModuleTest {
     application.registerService(PropertiesComponent.class, new ProjectPropertiesComponentImpl());
     FileTypeManager fileTypeManager = EasyMock.createMock(FileTypeManager.class);
     EasyMock.expect(
-        fileTypeManager.getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension()))
-        .andReturn(BuckFileType.INSTANCE).times(3);
+            fileTypeManager.getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension()))
+        .andReturn(BuckFileType.INSTANCE)
+        .times(3);
     EasyMock.replay(fileTypeManager);
     application.registerService(FileTypeManager.class, fileTypeManager);
-    project.addComponent(
-        PsiDocumentManager.class,
-        EasyMock.createMock(PsiDocumentManager.class));
+    project.addComponent(PsiDocumentManager.class, EasyMock.createMock(PsiDocumentManager.class));
 
     return project;
   }
@@ -109,9 +107,7 @@ public class BuckModuleTest {
     field.setAccessible(true);
 
     NotificationsAdapterTester notificationsAdapterTester = new NotificationsAdapterTester();
-    project.getMessageBus().connect().subscribe(
-        Notifications.TOPIC,
-        notificationsAdapterTester);
+    project.getMessageBus().connect().subscribe(Notifications.TOPIC, notificationsAdapterTester);
 
     new BuckModule(project).projectOpened();
     try {

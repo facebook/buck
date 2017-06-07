@@ -1,0 +1,23 @@
+java_immutables_library(
+    name = "projectview",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/ide/intellij:intellij",
+    ],
+    deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/core:classhash",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules:action_graph_cache",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/util:process_executor",
+        "//third-party/java/jdom:jdom",
+    ],
+)

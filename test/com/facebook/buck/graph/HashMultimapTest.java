@@ -21,16 +21,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.HashMultimap;
-
 import org.junit.Test;
 
 public class HashMultimapTest {
 
   /**
-   * The specification on {@link HashMultimap} is silent on whether
-   * {@link HashMultimap#remove(Object, Object)} removes the key from the Multimap if the key/value
-   * pair is the last entry for the key in the map. This test verifies this behavior as
-   * {@link MutableDirectedGraph} depends on it.
+   * The specification on {@link HashMultimap} is silent on whether {@link
+   * HashMultimap#remove(Object, Object)} removes the key from the Multimap if the key/value pair is
+   * the last entry for the key in the map. This test verifies this behavior as {@link
+   * MutableDirectedGraph} depends on it.
    */
   @Test
   public void testRemoveLastEntryRemovesKey() {

@@ -18,58 +18,49 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BroadcastEvent;
 import com.facebook.buck.event.BuckEventBus;
-
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.concurrent.GuardedBy;
+import javax.annotation.concurrent.ThreadSafe;
 
+@ThreadSafe
 public class BroadcastEventListener {
 
-  private Set<BroadcastEventBusClosable> eventBusesClosable;
+  @GuardedBy("this")
+  private Set<BuckEventBus> eventBuses;
 
   public BroadcastEventListener() {
-    eventBusesClosable = new HashSet<>();
+    eventBuses = new HashSet<>();
   }
 
-  public void broadcast(BroadcastEvent event) {
-    if (eventBusesClosable.isEmpty()) {
-      throw new RuntimeException("No available eventBus to broadcast event: " +
-          event.getEventName());
+  public synchronized void broadcast(BroadcastEvent event) {
+    if (eventBuses.isEmpty()) {
+      throw new RuntimeException(
+          "No available eventBus to broadcast event: " + event.getEventName());
     }
-    postToAllBuses(event);
-  }
-
-  public BroadcastEventBusClosable addEventBus(BuckEventBus eventBus) {
-    BroadcastEventBusClosable eventBusClosable = new BroadcastEventBusClosable(this, eventBus);
-    eventBusesClosable.add(eventBusClosable);
-    return eventBusClosable;
-  }
-
-  private void postToAllBuses(BroadcastEvent event) {
-    for (BroadcastEventBusClosable eventBusClosable : eventBusesClosable) {
+    for (BuckEventBus eventBus : eventBuses) {
       if (event.isConfigured()) {
-        eventBusClosable.getBuckEventBus().postWithoutConfiguring(event);
+        eventBus.postWithoutConfiguring(event);
       } else {
-        eventBusClosable.getBuckEventBus().post(event);
+        eventBus.post(event);
       }
     }
   }
 
-  private void removeEventBus(BuckEventBus eventBus) {
-    for (BroadcastEventBusClosable eventBusClosable : eventBusesClosable) {
-      if (eventBusClosable.getBuckEventBus().equals(eventBus)) {
-        eventBusesClosable.remove(eventBusClosable);
-        return;
-      }
-    }
+  public synchronized BroadcastEventBusClosable addEventBus(BuckEventBus eventBus) {
+    eventBuses.add(eventBus);
+    return new BroadcastEventBusClosable(this, eventBus);
+  }
+
+  private synchronized void removeEventBus(BuckEventBus eventBus) {
+    eventBuses.remove(eventBus);
   }
 
   public class BroadcastEventBusClosable implements AutoCloseable {
     BroadcastEventListener listener;
     BuckEventBus eventBus;
 
-    public BroadcastEventBusClosable (
-        BroadcastEventListener listener,
-        BuckEventBus bus) {
+    public BroadcastEventBusClosable(BroadcastEventListener listener, BuckEventBus bus) {
       this.listener = listener;
       this.eventBus = bus;
     }

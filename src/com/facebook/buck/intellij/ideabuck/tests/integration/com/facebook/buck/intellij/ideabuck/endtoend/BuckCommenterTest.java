@@ -33,5 +33,4 @@ public class BuckCommenterTest extends BuckTestCase {
   public void testLineCommenter2() {
     doTest(IdeActions.ACTION_COMMENT_LINE);
   }
-
 }

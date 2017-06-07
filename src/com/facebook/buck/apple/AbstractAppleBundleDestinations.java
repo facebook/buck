@@ -19,11 +19,9 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -54,8 +52,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("metadata_path", getMetadataPath().toString())
+    sink.setReflectively("metadata_path", getMetadataPath().toString())
         .setReflectively("resources_path", getResourcesPath().toString())
         .setReflectively("executables_path", getExecutablesPath().toString())
         .setReflectively("frameworks_path", getFrameworksPath().toString())
@@ -116,7 +113,6 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setHeadersPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Headers"))
           .setModulesPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Modules"))
           .build();
-
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {
     if (platform.getName().contains("osx")) {

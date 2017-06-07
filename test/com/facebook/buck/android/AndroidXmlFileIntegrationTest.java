@@ -22,30 +22,26 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AndroidXmlFileIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
-  private static final String MAIN_BUILD_TARGET =
-      "//java/com/sample/lib:lib";
+  private static final String MAIN_BUILD_TARGET = "//java/com/sample/lib:lib";
   private static final String PATH_TO_STRINGS_XML = "res/com/sample/base/res/values/strings.xml";
   private static final String PATH_TO_LAYOUT_XML = "res/com/sample/top/res/layout/top_layout.xml";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
 
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
@@ -86,7 +82,8 @@ public class AndroidXmlFileIntegrationTest {
 
   @Test
   public void testAddingAStringToTransitiveDepResultsInAbiMatch() throws IOException {
-    workspace.replaceFileContents(PATH_TO_STRINGS_XML,
+    workspace.replaceFileContents(
+        PATH_TO_STRINGS_XML,
         "</resources>",
         "<string name=\"base_text\">Goodbye!</string></resources>");
 

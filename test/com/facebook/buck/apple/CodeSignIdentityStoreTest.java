@@ -25,43 +25,40 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
+import org.junit.Test;
 
 public class CodeSignIdentityStoreTest {
   @Test
   public void testInvalidIdentitiesAreIgnored() throws Exception {
     ProcessExecutorParams processExecutorParams =
-        ProcessExecutorParams.builder()
-            .addCommand("unused")
-            .build();
-    FakeProcess process = new FakeProcess(
-        0,
-        "  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " +
-            "\"iPhone Developer: Foo Bar (ABCDE12345)\" (CSSMERR_TP_CERT_REVOKED)\n" +
-            "  2) AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB " +
-            "\"iPhone Developer: Foo Bar (12345ABCDE)\" (CSSMERR_TP_CERT_EXPIRED)\n" +
-            "  3) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB " +
-            "\"iPhone Developer: Foo Bar (54321EDCBA)\"\n" +
-            "     3 valid identities found\n",
-        "");
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(processExecutorParams, process));
-    CodeSignIdentityStore store = CodeSignIdentityStore.fromSystem(
-        processExecutor,
-        ImmutableList.of("unused"));
-    ImmutableList<CodeSignIdentity> expected = ImmutableList.of(
-        CodeSignIdentity.builder()
-            .setFingerprint(
-                CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
-            .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
-            .build());
+        ProcessExecutorParams.builder().addCommand("unused").build();
+    FakeProcess process =
+        new FakeProcess(
+            0,
+            "  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "
+                + "\"iPhone Developer: Foo Bar (ABCDE12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
+                + "  2) AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB "
+                + "\"iPhone Developer: Foo Bar (12345ABCDE)\" (CSSMERR_TP_CERT_EXPIRED)\n"
+                + "  3) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "
+                + "\"iPhone Developer: Foo Bar (54321EDCBA)\"\n"
+                + "     3 valid identities found\n",
+            "");
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, process));
+    CodeSignIdentityStore store =
+        CodeSignIdentityStore.fromSystem(processExecutor, ImmutableList.of("unused"));
+    ImmutableList<CodeSignIdentity> expected =
+        ImmutableList.of(
+            CodeSignIdentity.builder()
+                .setFingerprint(
+                    CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
+                .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
+                .build());
     assertThat(store.getIdentities(), equalTo(expected));
   }
 
@@ -71,16 +68,17 @@ public class CodeSignIdentityStoreTest {
     Path testdataDir =
         TestDataHelper.getTestDataDirectory(this).resolve("code_sign_identity_store");
 
-    CodeSignIdentityStore store = CodeSignIdentityStore.fromSystem(
-        executor,
-        ImmutableList.of(testdataDir.resolve("fake_identities.sh").toString()));
+    CodeSignIdentityStore store =
+        CodeSignIdentityStore.fromSystem(
+            executor, ImmutableList.of(testdataDir.resolve("fake_identities.sh").toString()));
 
-    ImmutableList<CodeSignIdentity> expected = ImmutableList.of(
-        CodeSignIdentity.builder()
-            .setFingerprint(
-                CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"))
-            .setSubjectCommonName("iPhone Developer: Fake")
-            .build());
+    ImmutableList<CodeSignIdentity> expected =
+        ImmutableList.of(
+            CodeSignIdentity.builder()
+                .setFingerprint(
+                    CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"))
+                .setSubjectCommonName("iPhone Developer: Fake")
+                .build());
 
     assertThat(store.getIdentities(), is(equalTo(expected)));
   }

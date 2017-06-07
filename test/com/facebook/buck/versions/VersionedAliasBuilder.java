@@ -19,21 +19,18 @@ package com.facebook.buck.versions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.AbstractMap;
 import java.util.Map;
 
-class VersionedAliasBuilder
-    extends
-    AbstractNodeBuilder<
-        AbstractVersionedAliasDescription.Arg,
-        AbstractVersionedAliasDescription> {
+public class VersionedAliasBuilder
+    extends AbstractNodeBuilder<
+        VersionedAliasDescriptionArg.Builder, VersionedAliasDescriptionArg,
+        AbstractVersionedAliasDescription, BuildRule> {
 
-  public VersionedAliasBuilder(
-      AbstractVersionedAliasDescription description,
-      BuildTarget target) {
+  public VersionedAliasBuilder(AbstractVersionedAliasDescription description, BuildTarget target) {
     super(description, target);
   }
 
@@ -46,7 +43,7 @@ class VersionedAliasBuilder
   }
 
   public VersionedAliasBuilder setVersions(ImmutableMap<Version, BuildTarget> versions) {
-    arg.versions = versions;
+    getArgForPopulating().setVersions(versions);
     return this;
   }
 
@@ -59,8 +56,7 @@ class VersionedAliasBuilder
     return setVersions(
         ImmutableList.of(
             new AbstractMap.SimpleEntry<>(
-                Version.of(version),
-                BuildTargetFactory.newInstance(target))));
+                Version.of(version), BuildTargetFactory.newInstance(target))));
   }
 
   public VersionedAliasBuilder setVersions(String v1, String t1, String v2, String t2) {
@@ -69,5 +65,4 @@ class VersionedAliasBuilder
             new AbstractMap.SimpleEntry<>(Version.of(v1), BuildTargetFactory.newInstance(t1)),
             new AbstractMap.SimpleEntry<>(Version.of(v2), BuildTargetFactory.newInstance(t2))));
   }
-
 }

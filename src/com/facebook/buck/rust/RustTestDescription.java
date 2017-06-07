@@ -16,107 +16,147 @@
 
 package com.facebook.buck.rust;
 
-import static com.facebook.buck.rust.RustLinkables.ruleToCrateName;
-
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
+import org.immutables.value.Value;
 
-public class RustTestDescription implements
-    Description<RustTestDescription.Arg>,
-    ImplicitDepsInferringDescription<RustTestDescription.Arg>,
-    VersionRoot<RustTestDescription.Arg> {
+public class RustTestDescription
+    implements Description<RustTestDescriptionArg>,
+        ImplicitDepsInferringDescription<RustTestDescription.AbstractRustTestDescriptionArg>,
+        Flavored,
+        VersionRoot<RustTestDescriptionArg> {
 
   private final RustBuckConfig rustBuckConfig;
-  private final CxxPlatform cxxPlatform;
-
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final CxxPlatform defaultCxxPlatform;
 
   public RustTestDescription(
       RustBuckConfig rustBuckConfig,
-      CxxPlatform cxxPlatform) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxPlatform defaultCxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatform = cxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
+    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<RustTestDescriptionArg> getConstructorArgType() {
+    return RustTestDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    LinkerProvider linker =
-        rustBuckConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType());
+      CellPathResolver cellRoots,
+      RustTestDescriptionArg args)
+      throws NoSuchBuildTargetException {
+    final BuildTarget buildTarget = params.getBuildTarget();
 
-    ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
+    BuildTarget exeTarget =
+        params.getBuildTarget().withAppendedFlavors(InternalFlavor.of("unittest"));
 
-    rustcArgs.addAll(rustBuckConfig.getRustTestFlags());
-    rustcArgs.addAll(args.rustcFlags);
+    Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
+        RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
 
-    return new RustTest(
-        params,
-        new SourcePathResolver(resolver),
-        args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName())),
-        args.crateRoot,
-        ImmutableSortedSet.copyOf(args.srcs),
-        ImmutableSortedSet.copyOf(args.features),
-        rustcArgs.build(),
-        () -> rustBuckConfig.getRustCompiler().resolve(resolver),
-        () -> linker.resolve(resolver),
-        getLinkerArgs(args.linkerFlags),
-        cxxPlatform,
-        args.linkStyle.orElse(Linker.LinkableDepType.STATIC));
-  }
+    boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
-  private ImmutableList<String> getLinkerArgs(ImmutableList<String> args) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    BinaryWrapperRule testExeBuild =
+        resolver.addToIndex(
+            RustCompileUtils.createBinaryBuildRule(
+                params.withBuildTarget(exeTarget),
+                resolver,
+                rustBuckConfig,
+                cxxPlatforms,
+                defaultCxxPlatform,
+                args.getCrate(),
+                args.getFeatures(),
+                Stream.of(
+                        args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
+                        rustBuckConfig.getRustTestFlags().stream(),
+                        args.getRustcFlags().stream())
+                    .flatMap(x -> x)
+                    .iterator(),
+                args.getLinkerFlags().iterator(),
+                RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.getLinkStyle()),
+                args.isRpath(),
+                args.getSrcs(),
+                args.getCrateRoot(),
+                ImmutableSet.of("lib.rs", "main.rs"),
+                isCheck));
 
-    builder.addAll(rustBuckConfig.getLinkerArgs(cxxPlatform));
-    builder.addAll(args);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    return builder.build();
+    Tool testExe = testExeBuild.getExecutableCommand();
+
+    BuildRuleParams testParams = params.copyAppendingExtraDeps(testExe.getDeps(ruleFinder));
+
+    return new RustTest(testParams, ruleFinder, testExeBuild, args.getLabels(), args.getContacts());
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      RustTestDescription.Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-
+      AbstractRustTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
-    deps.addAll(compiler.getParseTimeDeps());
+    extraDepsBuilder.addAll(compiler.getParseTimeDeps());
 
-    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+  }
 
-    return deps.build();
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    if (cxxPlatforms.containsAnyOf(flavors)) {
+      return true;
+    }
+
+    for (RustBinaryDescription.Type type : RustBinaryDescription.Type.values()) {
+      if (flavors.contains(type.getFlavor())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(ImmutableSet.of(cxxPlatforms, RustBinaryDescription.BINARY_TYPE));
   }
 
   @Override
@@ -124,15 +164,32 @@ public class RustTestDescription implements
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSortedSet<SourcePath> srcs;
-    public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
-    public List<String> rustcFlags = ImmutableList.of();
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<Linker.LinkableDepType> linkStyle;
-    public Optional<String> crate;
-    public Optional<SourcePath> crateRoot;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractRustTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    ImmutableSet<String> getContacts();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<String> getFeatures();
+
+    ImmutableList<String> getRustcFlags();
+
+    ImmutableList<String> getLinkerFlags();
+
+    Optional<Linker.LinkableDepType> getLinkStyle();
+
+    @Value.Default
+    default boolean isRpath() {
+      return true;
+    }
+
+    @Value.Default
+    default boolean isFramework() {
+      return true;
+    }
+
+    Optional<String> getCrate();
+
+    Optional<SourcePath> getCrateRoot();
   }
 }

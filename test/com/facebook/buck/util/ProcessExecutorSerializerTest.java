@@ -20,11 +20,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Map;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.util.Map;
 
 public class ProcessExecutorSerializerTest {
   @Test
@@ -47,8 +45,6 @@ public class ProcessExecutorSerializerTest {
     assertThat(outstance, Matchers.instanceOf(ContextualProcessExecutor.class));
     ContextualProcessExecutor contextualProcessExecutor = (ContextualProcessExecutor) outstance;
     assertThat(contextualProcessExecutor.getContext(), Matchers.equalToObject(context));
-    assertThat(
-        contextualProcessExecutor.getDelegate(),
-        Matchers.instanceOf(delegate.getClass()));
+    assertThat(contextualProcessExecutor.getDelegate(), Matchers.instanceOf(delegate.getClass()));
   }
 }

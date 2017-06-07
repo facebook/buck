@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableCollection;
-
 import java.nio.file.Path;
 import java.util.Collection;
 
@@ -44,23 +43,19 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
     }
   }
 
-  /**
-   * Helper method to add coerced elements to the builder.
-   */
+  /** Helper method to add coerced elements to the builder. */
   protected void fill(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       ImmutableCollection.Builder<T> builder,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof Collection) {
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
-        T coercedElement = elementTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            element);
+        T coercedElement =
+            elementTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, element);
         builder.add(coercedElement);
       }
     } else {

@@ -31,20 +31,18 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     super(message);
   }
 
-  /**
-   * @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget}
-   */
+  /** @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget} */
   static NoSuchBuildTargetException createForMissingBuildRule(
       BuildTarget buildTarget,
       BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser,
       String buildFileName,
       String buckFilepath) {
-    String message = String.format(
-        "No rule found when resolving target %s\n%s",
-        buildTargetPatternParser.makeTargetDescription(
-            buildTarget.getFullyQualifiedName(),
-            buildFileName),
-        buckFilepath);
+    String message =
+        String.format(
+            "No rule found when resolving target %s\n%s",
+            buildTargetPatternParser.makeTargetDescription(
+                buildTarget.getFullyQualifiedName(), buildFileName),
+            buckFilepath);
 
     return new NoSuchBuildTargetException(message);
   }
@@ -53,5 +51,4 @@ public class NoSuchBuildTargetException extends BuildTargetException {
   public String getHumanReadableErrorMessage() {
     return getMessage();
   }
-
 }

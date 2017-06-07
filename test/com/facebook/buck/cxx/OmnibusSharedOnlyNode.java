@@ -15,14 +15,10 @@
  */
 package com.facebook.buck.cxx;
 
-/**
- * Created by agallagher on 9/18/16.
- */
+/** Created by agallagher on 9/18/16. */
 class OmnibusSharedOnlyNode extends OmnibusNode {
 
-  public OmnibusSharedOnlyNode(
-      String target,
-      Iterable<? extends NativeLinkable> deps) {
+  public OmnibusSharedOnlyNode(String target, Iterable<? extends NativeLinkable> deps) {
     super(target, deps);
   }
 
@@ -34,5 +30,4 @@ class OmnibusSharedOnlyNode extends OmnibusNode {
   public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return Linkage.SHARED;
   }
-
 }

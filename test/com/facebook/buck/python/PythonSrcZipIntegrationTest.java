@@ -16,27 +16,23 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class PythonSrcZipIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "src_zip", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "src_zip", tmp);
     workspace.setUp();
   }
 
@@ -46,5 +42,4 @@ public class PythonSrcZipIntegrationTest {
     ProcessResult result1 = workspace.runBuckCommand("test", "//:test");
     result1.assertSuccess();
   }
-
 }

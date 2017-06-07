@@ -17,23 +17,21 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public final class AppleTestBuilder
-    extends
-    AbstractAppleNativeTargetBuilder<
-        AppleTestDescription.Arg,
-        AppleTestDescription,
-        AppleTestBuilder> {
-
-  @Override
-  protected AppleTestBuilder getThis() {
-    return this;
-  }
+    extends AbstractNodeBuilder<
+        AppleTestDescriptionArg.Builder, AppleTestDescriptionArg, AppleTestDescription, AppleTest> {
 
   protected AppleTestBuilder(BuildTarget target) {
     super(createDescription(), target);
@@ -44,31 +42,96 @@ public final class AppleTestBuilder
   }
 
   public AppleTestBuilder setContacts(ImmutableSortedSet<String> contacts) {
-    arg.contacts = contacts;
+    getArgForPopulating().setContacts(contacts);
     return this;
   }
 
-  public AppleTestBuilder setLabels(ImmutableSortedSet<Label> labels) {
-    arg.labels = labels;
+  public AppleTestBuilder setLabels(ImmutableSortedSet<String> labels) {
+    getArgForPopulating().setLabels(labels);
     return this;
   }
 
   public AppleTestBuilder setInfoPlist(SourcePath infoPlist) {
-    arg.infoPlist = infoPlist;
+    getArgForPopulating().setInfoPlist(infoPlist);
     return this;
   }
 
-  public AppleTestBuilder isUiTest(Optional<Boolean> value) {
-    arg.isUiTest = value;
+  public AppleTestBuilder isUiTest(boolean value) {
+    getArgForPopulating().setIsUiTest(value);
     return this;
   }
 
   public AppleTestBuilder setTestHostApp(Optional<BuildTarget> testHostApp) {
-    arg.testHostApp = testHostApp;
+    getArgForPopulating().setTestHostApp(testHostApp);
     return this;
   }
 
   private static AppleTestDescription createDescription() {
     return FakeAppleRuleDescriptions.TEST_DESCRIPTION;
+  }
+
+  public AppleTestBuilder setConfigs(
+      ImmutableSortedMap<String, ImmutableMap<String, String>> configs) {
+    getArgForPopulating().setConfigs(configs);
+    return this;
+  }
+
+  public AppleTestBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    getArgForPopulating().setCompilerFlags(compilerFlags);
+    return this;
+  }
+
+  public AppleTestBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setLinkerFlags(linkerFlags);
+    return this;
+  }
+
+  public AppleTestBuilder setExportedLinkerFlags(
+      ImmutableList<StringWithMacros> exportedLinkerFlags) {
+    getArgForPopulating().setExportedLinkerFlags(exportedLinkerFlags);
+    return this;
+  }
+
+  public AppleTestBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    getArgForPopulating().setSrcs(srcs);
+    return this;
+  }
+
+  public AppleTestBuilder setHeaders(SourceList headers) {
+    getArgForPopulating().setHeaders(headers);
+    return this;
+  }
+
+  public AppleTestBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    return setHeaders(SourceList.ofUnnamedSources(headers));
+  }
+
+  public AppleTestBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    return setHeaders(SourceList.ofNamedSources(headers));
+  }
+
+  public AppleTestBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    getArgForPopulating().setFrameworks(frameworks);
+    return this;
+  }
+
+  public AppleTestBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    getArgForPopulating().setLibraries(libraries);
+    return this;
+  }
+
+  public AppleTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
+  public AppleTestBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
+    getArgForPopulating().setExportedDeps(exportedDeps);
+    return this;
+  }
+
+  public AppleTestBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
+    getArgForPopulating().setTests(tests);
+    return this;
   }
 }

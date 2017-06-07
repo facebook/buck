@@ -16,9 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.autodeps;
 
-import static org.junit.Assert.assertEquals;
-
 import static com.facebook.buck.intellij.ideabuck.test.TestUtil.buckFile;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -26,15 +25,15 @@ public class MaybeAddVisibilityToTargetTest {
 
   @Test
   public void doesNothingWhenTargetIsIncluded() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tvisibility = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tvisibility = [",
+            "\t\t'/this',",
+            "\t]",
+            ")");
     String expected = buckInput;
     String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/this", "foo");
     assertEquals(expected, actual);
@@ -42,27 +41,26 @@ public class MaybeAddVisibilityToTargetTest {
 
   @Test
   public void addsVisibilityWhenTargetIsAbsent() {
-    String buckInput = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tvisibility = [",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
-    String expected = buckFile(
-        "# Comment",
-        "rule(",
-        "\tname = 'foo',",
-        "\tvisibility = [",
-        "\t\t'/other:thing',",
-        "\t\t'/this',",
-        "\t]",
-        ")"
-    );
+    String buckInput =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tvisibility = [",
+            "\t\t'/this',",
+            "\t]",
+            ")");
+    String expected =
+        buckFile(
+            "# Comment",
+            "rule(",
+            "\tname = 'foo',",
+            "\tvisibility = [",
+            "\t\t'/other:thing',",
+            "\t\t'/this',",
+            "\t]",
+            ")");
     String actual = BuckDeps.maybeAddVisibilityToTarget(buckInput, "/other:thing", "foo");
     assertEquals(expected, actual);
   }
-
 }

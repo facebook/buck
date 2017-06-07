@@ -1,0 +1,10 @@
+python_test(
+    name = "soy_docs_syntax",
+    srcs = [
+        "soy_syntax_check.py",
+    ],
+    resources = glob([
+        "**/*.soy",
+        "*.jar",
+    ]),
+)

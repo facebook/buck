@@ -16,23 +16,25 @@
 
 package com.facebook.buck.util.shutdown;
 
-
 public class NonReentrantSystemExitDemo {
 
   private static NonReentrantSystemExit nonReentrantSystemExit = new NonReentrantSystemExit();
 
   public static void main(String[] args) {
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        throw new RuntimeException("haha!");
-      }
-    });
-    Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-      // Uncommenting the next line will cause the test to hang.
-      // System.exit(1);
-      nonReentrantSystemExit.shutdownSoon(0);
-    });
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread() {
+              @Override
+              public void run() {
+                throw new RuntimeException("haha!");
+              }
+            });
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+          // Uncommenting the next line will cause the test to hang.
+          // System.exit(1);
+          nonReentrantSystemExit.shutdownSoon(0);
+        });
     System.exit(0);
   }
 

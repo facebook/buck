@@ -22,9 +22,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -33,109 +31,79 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class HalideLibrary
-    extends NoopBuildRule
-    implements CxxPreprocessorDep, NativeLinkable {
+public class HalideLibrary extends NoopBuildRule implements CxxPreprocessorDep, NativeLinkable {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final Optional<Pattern> supportedPlatformsRegex;
 
-  private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>
-        > transitiveCxxPreprocessorInputCache =
-      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      transitiveCxxPreprocessorInputCache =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   protected HalideLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
       Optional<Pattern> supportedPlatformsRegex) {
-    super(params, pathResolver);
+    super(params);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-    return !supportedPlatformsRegex.isPresent() ||
-        supportedPlatformsRegex.get()
-            .matcher(cxxPlatform.getFlavor().toString())
-            .find();
+    return !supportedPlatformsRegex.isPresent()
+        || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
   }
 
   @Override
-  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeps())
-        .filter(CxxPreprocessorDep.class);
+    return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.EMPTY;
     }
-    switch (headerVisibility) {
-      case PUBLIC:
-        return CxxPreprocessables.getCxxPreprocessorInput(
-            params,
-            ruleResolver,
-            /* hasHeaderSymlinkTree */ true,
-            cxxPlatform,
-            headerVisibility,
-            CxxPreprocessables.IncludeType.SYSTEM,
-            ImmutableMultimap.of(),
-            ImmutableList.of());
-      case PRIVATE:
-        return CxxPreprocessorInput.EMPTY;
-    }
-
-    throw new RuntimeException("Invalid header visibility: " + headerVisibility);
-  }
-
-  @Override
-  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-    return Optional.of(
-        CxxPreprocessables.requireHeaderSymlinkTreeForLibraryTarget(
-            ruleResolver,
-            getBuildTarget(),
-            cxxPlatform.getFlavor()));
+    return CxxPreprocessables.getCxxPreprocessorInput(
+        params,
+        ruleResolver,
+        /* hasHeaderSymlinkTree */ true,
+        cxxPlatform,
+        HeaderVisibility.PUBLIC,
+        CxxPreprocessables.IncludeType.SYSTEM,
+        ImmutableMultimap.of(),
+        ImmutableList.of());
   }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      CxxPlatform cxxPlatform) {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps() {
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
@@ -154,22 +122,21 @@ public class HalideLibrary
   private Arg requireLibraryArg(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
       throws NoSuchBuildTargetException {
     BuildRule rule =
-        ruleResolver
-            .requireRule(
-                getBuildTarget().withFlavors(
+        ruleResolver.requireRule(
+            getBuildTarget()
+                .withFlavors(
                     CxxDescriptionEnhancer.flavorForLinkableDepType(type),
                     cxxPlatform.getFlavor()));
     if (rule instanceof Archive) {
       return ((Archive) rule).toArg();
     } else {
-      return new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
+      return SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput()));
     }
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
@@ -188,5 +155,4 @@ public class HalideLibrary
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
-
 }

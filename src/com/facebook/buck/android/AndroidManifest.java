@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -24,21 +25,20 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Set;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
  * skeleton manifest and the library manifests from its dependencies.
+ *
  * <pre>
  * android_manifest(
  *   name = 'my_manifest',
@@ -50,8 +50,10 @@ import java.util.Set;
  *   ],
  * )
  * </pre>
- * This will produce a file under buck-out/gen that will be parameterized by the name of the
- * {@code android_manifest} rule. This can be used as follows:
+ *
+ * This will produce a file under buck-out/gen that will be parameterized by the name of the {@code
+ * android_manifest} rule. This can be used as follows:
+ *
  * <pre>
  * android_binary(
  *   name = 'my_app',
@@ -62,21 +64,16 @@ import java.util.Set;
  */
 public class AndroidManifest extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final SourcePath skeletonFile;
+  @AddToRuleKey private final SourcePath skeletonFile;
 
   /** These must be sorted so the rule key is stable. */
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> manifestFiles;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
 
   private final Path pathToOutputFile;
 
   protected AndroidManifest(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      SourcePath skeletonFile,
-      Set<SourcePath> manifestFiles) {
-    super(params, resolver);
+      BuildRuleParams params, SourcePath skeletonFile, Set<SourcePath> manifestFiles) {
+    super(params);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();
@@ -86,35 +83,37 @@ public class AndroidManifest extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Clear out the old file, if it exists.
     commands.add(
-        new RmStep(
-            getProjectFilesystem(),
-            pathToOutputFile,
-            /* shouldForceDeletion */ true,
-            /* shouldRecurse */ false));
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutputFile)));
 
     // Make sure the directory for the output file exists.
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToOutputFile.getParent())));
 
     commands.add(
         new GenerateManifestStep(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(skeletonFile),
-            ImmutableSet.copyOf(getResolver().getAllAbsolutePaths(manifestFiles)),
-            getPathToOutput()));
+            context.getSourcePathResolver().getAbsolutePath(skeletonFile),
+            context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles),
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
 
     buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutputFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutputFile);
   }
 }

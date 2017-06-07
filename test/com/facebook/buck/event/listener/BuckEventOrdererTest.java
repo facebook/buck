@@ -26,14 +26,11 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
-
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class BuckEventOrdererTest {
 
@@ -43,15 +40,15 @@ public class BuckEventOrdererTest {
 
   private Deque<BuckEvent> serializedEvents = new ArrayDeque<>();
   private java.util.function.Consumer<BuckEvent> addToSerializedEventsFunction =
-    serializedEvents::add;
+      serializedEvents::add;
 
   @Test
   public void testMergesSingleSetOfSerialEvents() {
     BuckEvent first = createUniqueEvent(0, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent second = createUniqueEvent(5, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(first);
       orderer.add(second);
     }
@@ -64,8 +61,8 @@ public class BuckEventOrdererTest {
     BuckEvent first = createUniqueEvent(0, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent second = createUniqueEvent(5, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(second);
       orderer.add(first);
     }
@@ -79,8 +76,8 @@ public class BuckEventOrdererTest {
     BuckEvent second = createUniqueEvent(0, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent third = createUniqueEvent(0, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(first);
       orderer.add(second);
       orderer.add(third);
@@ -96,8 +93,8 @@ public class BuckEventOrdererTest {
     BuckEvent third = createUniqueEvent(2, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent fourth = createUniqueEvent(2, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(second);
       orderer.add(third);
       orderer.add(fourth);
@@ -114,8 +111,8 @@ public class BuckEventOrdererTest {
     BuckEvent third = createUniqueEvent(0, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent fourth = createUniqueEvent(5, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(fourth);
       orderer.add(first);
       orderer.add(second);
@@ -132,8 +129,8 @@ public class BuckEventOrdererTest {
     BuckEvent third = createUniqueEvent(2, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent fourth = createUniqueEvent(3, TimeUnit.MILLISECONDS, THREAD_TWO);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(second);
       orderer.add(fourth);
       orderer.add(first);
@@ -150,8 +147,8 @@ public class BuckEventOrdererTest {
     BuckEvent third = createUniqueEvent(2, TimeUnit.MILLISECONDS, THREAD_ONE);
     BuckEvent fourth = createUniqueEvent(3, TimeUnit.MILLISECONDS, THREAD_TWO);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(second);
       orderer.add(first);
       orderer.add(fourth);
@@ -167,8 +164,8 @@ public class BuckEventOrdererTest {
     BuckEvent second = createUniqueEvent(1, TimeUnit.MILLISECONDS, THREAD_TWO);
     BuckEvent third = createUniqueEvent(2, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(second);
       orderer.add(first);
       orderer.add(third);
@@ -183,8 +180,8 @@ public class BuckEventOrdererTest {
     BuckEvent second = createUniqueEvent(1, TimeUnit.MILLISECONDS, THREAD_TWO);
     BuckEvent third = createUniqueEvent(2, TimeUnit.MILLISECONDS, THREAD_ONE);
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(first);
       orderer.add(third);
       orderer.add(second);
@@ -196,8 +193,8 @@ public class BuckEventOrdererTest {
   @Test
   public void testPutsEventInSinkAsSoonAsPossible() {
 
-    try (BuckEventOrderer<BuckEvent> orderer = new BuckEventOrderer<>(
-        addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
+    try (BuckEventOrderer<BuckEvent> orderer =
+        new BuckEventOrderer<>(addToSerializedEventsFunction, MAX_SKEW, TimeUnit.MILLISECONDS)) {
       orderer.add(createUniqueEvent(0, TimeUnit.MILLISECONDS, THREAD_ONE));
       orderer.add(createUniqueEvent(5, TimeUnit.MILLISECONDS, THREAD_ONE));
       orderer.add(createUniqueEvent(MAX_SKEW + 1, TimeUnit.MILLISECONDS, THREAD_TWO));
@@ -222,12 +219,13 @@ public class BuckEventOrdererTest {
 
   private BuckEvent createUniqueEvent(long timeInMs, TimeUnit timeUnit, long threadId) {
     return configureTestEventAtTime(
-        (AbstractBuckEvent) SimplePerfEvent.started(
-            PerfEventId.of("BuckEventOrdererTest"),
-            ImmutableMap.of(
-            "seqNo", seqNo++,
-            "time", timeInMs,
-            "thread", threadId)),
+        (AbstractBuckEvent)
+            SimplePerfEvent.started(
+                PerfEventId.of("BuckEventOrdererTest"),
+                ImmutableMap.of(
+                    "seqNo", seqNo++,
+                    "time", timeInMs,
+                    "thread", threadId)),
         timeInMs,
         timeUnit,
         threadId);

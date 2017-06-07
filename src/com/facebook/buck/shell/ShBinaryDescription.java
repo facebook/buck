@@ -16,41 +16,42 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-
-public class ShBinaryDescription implements Description<ShBinaryDescription.Arg> {
+public class ShBinaryDescription implements Description<ShBinaryDescriptionArg> {
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<ShBinaryDescriptionArg> getConstructorArgType() {
+    return ShBinaryDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> ShBinary createBuildRule(
+  public ShBinary createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
-    return new ShBinary(params, new SourcePathResolver(resolver), args.main, args.resources);
+      CellPathResolver cellRoots,
+      ShBinaryDescriptionArg args) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    return new ShBinary(params, ruleFinder, args.getMain(), args.getResources());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath main;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractShBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getMain();
 
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-
-    public ImmutableSet<SourcePath> resources = ImmutableSet.of();
+    ImmutableSet<SourcePath> getResources();
   }
 }

@@ -23,62 +23,58 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.Optional;
-
 public class PrebuiltHaskellLibraryBuilder
-    extends
-    AbstractNodeBuilder<HaskellPrebuiltLibraryDescription.Arg, HaskellPrebuiltLibraryDescription> {
+    extends AbstractNodeBuilder<
+        HaskellPrebuiltLibraryDescriptionArg.Builder, HaskellPrebuiltLibraryDescriptionArg,
+        HaskellPrebuiltLibraryDescription, PrebuiltHaskellLibrary> {
 
   public PrebuiltHaskellLibraryBuilder(BuildTarget target) {
-    super(
-        new HaskellPrebuiltLibraryDescription(),
-        target);
+    super(new HaskellPrebuiltLibraryDescription(), target);
   }
 
   public PrebuiltHaskellLibraryBuilder setVersion(String version) {
-    arg.version = version;
+    getArgForPopulating().setVersion(version);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setId(String id) {
-    arg.id = Optional.of(id);
+    getArgForPopulating().setId(id);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setDb(SourcePath path) {
-    arg.db = path;
+    getArgForPopulating().setDb(path);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setImportDirs(ImmutableList<SourcePath> interfaces) {
-    arg.importDirs = interfaces;
+    getArgForPopulating().setImportDirs(interfaces);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setStaticLibs(ImmutableList<SourcePath> libs) {
-    arg.staticLibs = libs;
+    getArgForPopulating().setStaticLibs(libs);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setSharedLibs(ImmutableMap<String, SourcePath> libs) {
-    arg.sharedLibs = libs;
+    getArgForPopulating().setSharedLibs(libs);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setExportedLinkerFlags(ImmutableList<String> flags) {
-    arg.exportedLinkerFlags = flags;
+    getArgForPopulating().setExportedLinkerFlags(flags);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setExportedCompilerFlags(ImmutableList<String> flags) {
-    arg.exportedCompilerFlags = flags;
+    getArgForPopulating().setExportedCompilerFlags(flags);
     return this;
   }
 
   public PrebuiltHaskellLibraryBuilder setCxxHeaderDirs(
       ImmutableSortedSet<SourcePath> cxxHeaderDirs) {
-    arg.cxxHeaderDirs = cxxHeaderDirs;
+    getArgForPopulating().setCxxHeaderDirs(cxxHeaderDirs);
     return this;
   }
-
 }

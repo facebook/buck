@@ -18,16 +18,27 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
 public class CxxBinaryBuilder
-    extends
-    AbstractCxxSourceBuilder<CxxBinaryDescription.Arg, CxxBinaryDescription, CxxBinaryBuilder> {
+    extends AbstractNodeBuilder<
+        CxxBinaryDescriptionArg.Builder, CxxBinaryDescriptionArg, CxxBinaryDescription, CxxBinary> {
 
   public CxxBinaryBuilder(
-      BuildTarget target,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxBinaryDescription(
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -52,16 +63,75 @@ public class CxxBinaryBuilder
   }
 
   public CxxBinaryBuilder(BuildTarget target) {
-    this(target, createDefaultPlatform(), createDefaultPlatforms());
+    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxBinaryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
-    this(target, createDefaultPlatform(), createDefaultPlatforms(), cxxBuckConfig);
+    this(
+        target,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms(),
+        cxxBuckConfig);
   }
 
-  @Override
-  protected CxxBinaryBuilder getThis() {
+  public CxxBinaryBuilder setDepQuery(Query depQuery) {
+    getArgForPopulating().setDepsQuery(Optional.of(depQuery));
     return this;
   }
 
+  public CxxBinaryBuilder setVersionUniverse(String versionUniverse) {
+    getArgForPopulating().setVersionUniverse(Optional.of(versionUniverse));
+    return this;
+  }
+
+  public CxxBinaryBuilder setDefaultPlatform(Flavor flavor) {
+    getArgForPopulating().setDefaultPlatform(Optional.of(flavor));
+    return this;
+  }
+
+  public CxxBinaryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    getArgForPopulating().setSrcs(srcs);
+    return this;
+  }
+
+  public CxxBinaryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
+    return this;
+  }
+
+  public CxxBinaryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
+    return this;
+  }
+
+  public CxxBinaryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    getArgForPopulating().setCompilerFlags(compilerFlags);
+    return this;
+  }
+
+  public CxxBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setLinkerFlags(linkerFlags);
+    return this;
+  }
+
+  public CxxBinaryBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    getArgForPopulating().setPlatformLinkerFlags(platformLinkerFlags);
+    return this;
+  }
+
+  public CxxBinaryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    getArgForPopulating().setFrameworks(frameworks);
+    return this;
+  }
+
+  public CxxBinaryBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    getArgForPopulating().setLibraries(libraries);
+    return this;
+  }
+
+  public CxxBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
 }

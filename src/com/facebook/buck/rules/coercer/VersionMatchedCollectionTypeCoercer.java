@@ -22,7 +22,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -65,38 +64,26 @@ public class VersionMatchedCollectionTypeCoercer<T>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (!(object instanceof List)) {
       throw CoerceFailedException.simple(
-          object,
-          getOutputClass(),
-          "input object should be a list of pairs");
+          object, getOutputClass(), "input object should be a list of pairs");
     }
     VersionMatchedCollection.Builder<T> builder = VersionMatchedCollection.builder();
     List<?> list = (List<?>) object;
     for (Object element : list) {
       if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
         throw CoerceFailedException.simple(
-            object,
-            getOutputClass(),
-            "input object should be a list of pairs");
+            object, getOutputClass(), "input object should be a list of pairs");
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       ImmutableMap<BuildTarget, Version> versionsSelector =
-          versionsTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              pair.next());
+          versionsTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
       T value =
-          valueTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              pair.next());
+          valueTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
       builder.add(versionsSelector, value);
     }
     return builder.build();
   }
-
 }

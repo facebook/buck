@@ -21,13 +21,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.testutil.TestConsole;
-
+import java.io.IOException;
+import java.util.Optional;
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Optional;
 
 public class ServerStatusCommandTest extends EasyMockSupport {
 
@@ -39,10 +37,11 @@ public class ServerStatusCommandTest extends EasyMockSupport {
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     webServer = createStrictMock(WebServer.class);
-    params = CommandRunnerParamsForTesting.builder()
-        .setWebserver(Optional.of(webServer))
-        .setConsole(console)
-        .build();
+    params =
+        CommandRunnerParamsForTesting.builder()
+            .setWebserver(Optional.of(webServer))
+            .setConsole(console)
+            .build();
   }
 
   @Test

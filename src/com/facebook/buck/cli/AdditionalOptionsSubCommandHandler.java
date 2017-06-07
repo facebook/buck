@@ -25,9 +25,7 @@ import org.kohsuke.args4j.spi.SubCommandHandler;
 public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
 
   public AdditionalOptionsSubCommandHandler(
-      CmdLineParser parser,
-      OptionDef option,
-      Setter<Object> setter) {
+      CmdLineParser parser, OptionDef option, Setter<Object> setter) {
     super(parser, option, setter);
   }
 

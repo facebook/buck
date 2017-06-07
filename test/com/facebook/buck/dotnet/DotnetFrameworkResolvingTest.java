@@ -25,14 +25,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DotnetFrameworkResolvingTest {
 
@@ -46,10 +44,12 @@ public class DotnetFrameworkResolvingTest {
 
     programFiles = "c:\\Program Files(x86)";
 
-    baseFrameworkDir = filesystem.getPath(programFiles)
-        .resolve("Reference Assemblies")
-        .resolve("Microsoft")
-        .resolve("Framework");
+    baseFrameworkDir =
+        filesystem
+            .getPath(programFiles)
+            .resolve("Reference Assemblies")
+            .resolve("Microsoft")
+            .resolve("Framework");
     Files.createDirectories(baseFrameworkDir);
   }
 

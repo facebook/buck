@@ -26,9 +26,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.HeaderSymlinkTree;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -40,40 +37,38 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
- * An action graph representation of a Swift library from the target graph, providing the
- * various interfaces to make it consumable by C/C native linkable rules.
+ * An action graph representation of a Swift library from the target graph, providing the various
+ * interfaces to make it consumable by C/C native linkable rules.
  */
-class SwiftLibrary
-    extends NoopBuildRule
+class SwiftLibrary extends NoopBuildRule
     implements HasRuntimeDeps, NativeLinkable, CxxPreprocessorDep {
 
-  private final LoadingCache<
-      CxxPreprocessables.CxxPreprocessorInputCacheKey,
-      ImmutableMap<BuildTarget, CxxPreprocessorInput>
-      > transitiveCxxPreprocessorInputCache =
-      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      transitiveCxxPreprocessorInputCache =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   private final BuildRuleResolver ruleResolver;
 
-  private final Iterable<? extends BuildRule> exportedDeps;
+  private final Collection<? extends BuildRule> exportedDeps;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
   private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
@@ -83,14 +78,13 @@ class SwiftLibrary
   SwiftLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      final SourcePathResolver pathResolver,
-      Iterable<? extends BuildRule> exportedDeps,
+      Collection<? extends BuildRule> exportedDeps,
       FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
-    super(params, pathResolver);
+    super(params);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
@@ -101,27 +95,26 @@ class SwiftLibrary
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-    return !supportedPlatformsRegex.isPresent() ||
-        supportedPlatformsRegex.get()
-            .matcher(cxxPlatform.getFlavor().toString())
-            .find();
+    return !supportedPlatformsRegex.isPresent()
+        || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
   }
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps() {
-    // TODO(bhamiltoncx, ryu2): Use pseudo targets to represent the Swift
+    // TODO(beng, markwang): Use pseudo targets to represent the Swift
     // runtime library's linker args here so NativeLinkables can
     // deduplicate the linker flags on the build target (which would be the same for
     // all libraries).
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return RichStream.from(getDeclaredDeps())
+        .filter(NativeLinkable.class)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
     throw new RuntimeException(
-        "SwiftLibrary does not support getting linkable exported deps " +
-            "without a specific platform.");
+        "SwiftLibrary does not support getting linkable exported deps "
+            + "without a specific platform.");
   }
 
   @Override
@@ -130,22 +123,21 @@ class SwiftLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(exportedDeps)
+    SwiftRuntimeNativeLinkable swiftRuntimeNativeLinkable =
+        new SwiftRuntimeNativeLinkable(swiftPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()));
+    return RichStream.from(exportedDeps)
         .filter(NativeLinkable.class)
-        .append(
-            new SwiftRuntimeNativeLinkable(
-                swiftPlatformFlavorDomain.getValue(
-                    cxxPlatform.getFlavor())));
+        .concat(RichStream.of(swiftRuntimeNativeLinkable))
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder
-        .addAllArgs(rule.getLinkArgs())
+        .addAllArgs(rule.getAstLinkArgs())
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
     boolean isDynamic;
@@ -163,40 +155,41 @@ class SwiftLibrary
       default:
         throw new IllegalStateException("unhandled linkage type: " + preferredLinkage);
     }
+
     if (isDynamic) {
-      inputBuilder.addArgs(new SourcePathArg(getResolver(),
-          new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
-              .getBuildTarget())));
+      CxxLink swiftLinkRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
+      inputBuilder.addArgs(
+          FileListableLinkerInputArg.withSourcePathArg(
+              SourcePathArg.of(swiftLinkRule.getSourcePathToOutput())));
+    } else {
+      inputBuilder.addArgs(rule.getFileListLinkArg());
     }
     return inputBuilder.build();
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableMap.of();
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     BuildRule sharedLibraryBuildRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
-    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        Optional.empty(),
-        sharedLibraryBuildRule.getBuildTarget(),
-        cxxPlatform);
-    libs.put(
-        sharedLibrarySoname,
-        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+    String sharedLibrarySoname =
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            Optional.empty(), sharedLibraryBuildRule.getBuildTarget(), cxxPlatform);
+    libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }
 
-  SwiftCompile requireSwiftCompileRule(Flavor... flavors)
-      throws NoSuchBuildTargetException {
-    BuildTarget requiredBuildTarget = getBuildTarget()
-        .withAppendedFlavors(flavors)
-        .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
-        .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
-        .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
-        .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
+  SwiftCompile requireSwiftCompileRule(Flavor... flavors) throws NoSuchBuildTargetException {
+    BuildTarget requiredBuildTarget =
+        getBuildTarget()
+            .withAppendedFlavors(flavors)
+            .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
+            .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
+            .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
+            .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
     if (!(rule instanceof SwiftCompile)) {
       throw new RuntimeException(
@@ -205,19 +198,18 @@ class SwiftLibrary
     return (SwiftCompile) rule;
   }
 
-  private BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
-    BuildTarget requiredBuildTarget = getBuildTarget()
-        .withoutFlavors(SWIFT_COMPANION_FLAVOR)
-        .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-        .withAppendedFlavors(flavors);
+  private CxxLink requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
+    BuildTarget requiredBuildTarget =
+        getBuildTarget()
+            .withoutFlavors(SWIFT_COMPANION_FLAVOR)
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .withAppendedFlavors(flavors);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
     if (!(rule instanceof CxxLink)) {
       throw new RuntimeException(
-          String.format(
-              "Could not find CxxLink with target %s",
-              requiredBuildTarget));
+          String.format("Could not find CxxLink with target %s", requiredBuildTarget));
     }
-    return rule;
+    return (CxxLink) rule;
   }
 
   @Override
@@ -231,33 +223,28 @@ class SwiftLibrary
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps() {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getDeclaredDeps())
-        .addAll(exportedDeps)
-        .build();
+    return Stream.concat(
+            getDeclaredDeps().stream(), StreamSupport.stream(exportedDeps.spliterator(), false))
+        .map(BuildRule::getBuildTarget);
   }
 
   @Override
-  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
-    return FluentIterable.from(getDeps())
-        .filter(CxxPreprocessorDep.class);
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return getBuildDeps()
+        .stream()
+        .filter(CxxPreprocessorDep.class::isInstance)
+        .map(CxxPreprocessorDep.class::cast)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
-  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(
-      CxxPlatform cxxPlatform) {
-    return Optional.empty();
-  }
-
-  @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.EMPTY;
     }
@@ -266,23 +253,17 @@ class SwiftLibrary
 
     return CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxHeadersDir.of(
-                CxxPreprocessables.IncludeType.LOCAL,
-                new BuildTargetSourcePath(rule.getBuildTarget())))
+            CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, rule.getSourcePathToOutput()))
         .build();
   }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
-      return ImmutableMap.of(
-          getBuildTarget(),
-          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+      return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform));
     } else {
-      return transitiveCxxPreprocessorInputCache.getUnchecked(
-          ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
     }
   }
 }

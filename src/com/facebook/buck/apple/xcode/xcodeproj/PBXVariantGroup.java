@@ -19,9 +19,7 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 public class PBXVariantGroup extends PBXGroup {
@@ -32,22 +30,22 @@ public class PBXVariantGroup extends PBXGroup {
   public PBXVariantGroup(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
 
-    variantFileReferencesByNameAndSourceTreePath = CacheBuilder.newBuilder().build(
-        new CacheLoader<VirtualNameAndSourceTreePath, PBXFileReference>() {
-          @Override
-          public PBXFileReference load(VirtualNameAndSourceTreePath key) throws Exception {
-            PBXFileReference ref = key
-                .getSourceTreePath()
-                .createFileReference(key.getVirtualName());
-            getChildren().add(ref);
-            return ref;
-          }
-        });
+    variantFileReferencesByNameAndSourceTreePath =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<VirtualNameAndSourceTreePath, PBXFileReference>() {
+                  @Override
+                  public PBXFileReference load(VirtualNameAndSourceTreePath key) throws Exception {
+                    PBXFileReference ref =
+                        key.getSourceTreePath().createFileReference(key.getVirtualName());
+                    getChildren().add(ref);
+                    return ref;
+                  }
+                });
   }
 
   public PBXFileReference getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-      String virtualName,
-      SourceTreePath sourceTreePath) {
+      String virtualName, SourceTreePath sourceTreePath) {
     VirtualNameAndSourceTreePath key =
         new VirtualNameAndSourceTreePath(virtualName, sourceTreePath);
     return variantFileReferencesByNameAndSourceTreePath.getUnchecked(key);
@@ -82,8 +80,8 @@ public class PBXVariantGroup extends PBXGroup {
       }
 
       VirtualNameAndSourceTreePath that = (VirtualNameAndSourceTreePath) other;
-      return Objects.equals(this.virtualName, that.virtualName) &&
-          Objects.equals(this.sourceTreePath, that.sourceTreePath);
+      return Objects.equals(this.virtualName, that.virtualName)
+          && Objects.equals(this.sourceTreePath, that.sourceTreePath);
     }
 
     @Override

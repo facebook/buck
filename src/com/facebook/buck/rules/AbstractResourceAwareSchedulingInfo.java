@@ -20,7 +20,6 @@ import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -29,17 +28,13 @@ abstract class AbstractResourceAwareSchedulingInfo {
 
   public static final ResourceAwareSchedulingInfo NON_AWARE_SCHEDULING_INFO =
       ResourceAwareSchedulingInfo.of(
-          false,
-          ResourceAmountsEstimator.DEFAULT_AMOUNTS,
-          ImmutableMap.of());
+          false, ResourceAmountsEstimator.DEFAULT_AMOUNTS, ImmutableMap.of());
 
   public abstract boolean isResourceAwareSchedulingEnabled();
 
   public abstract ResourceAmounts getDefaultResourceAmounts();
 
-  /**
-   * Map from the value of {@link BuildRule#getType()} to the required resources.
-   */
+  /** Map from the value of {@link BuildRule#getType()} to the required resources. */
   public abstract ImmutableMap<String, ResourceAmounts> getAmountsPerRuleType();
 
   public ResourceAmounts getResourceAmountsForRule(BuildRule rule) {

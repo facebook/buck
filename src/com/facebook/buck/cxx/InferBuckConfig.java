@@ -31,7 +31,6 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,39 +56,46 @@ public class InferBuckConfig implements RuleKeyAppendable {
 
   public InferBuckConfig(final BuckConfig delegate) {
     this.delegate = delegate;
-    this.clangCompiler = Suppliers.memoize(
-        () -> new HashedFileTool(Preconditions.checkNotNull(
-            getPathFromConfig(delegate, "clang_compiler").orElse(null),
-            "clang_compiler path not found on the current configuration"))
-    );
+    this.clangCompiler =
+        Suppliers.memoize(
+            () ->
+                new HashedFileTool(
+                    Preconditions.checkNotNull(
+                        getPathFromConfig(delegate, "clang_compiler").orElse(null),
+                        "clang_compiler path not found on the current configuration")));
 
-    this.clangPlugin = Suppliers.memoize(
-        () -> new HashedFileTool(Preconditions.checkNotNull(
-            getPathFromConfig(delegate, "clang_plugin").orElse(null),
-            "clang_plugin path not found on the current configuration"))
-    );
+    this.clangPlugin =
+        Suppliers.memoize(
+            () ->
+                new HashedFileTool(
+                    Preconditions.checkNotNull(
+                        getPathFromConfig(delegate, "clang_plugin").orElse(null),
+                        "clang_plugin path not found on the current configuration")));
 
-    this.inferVersion = Suppliers.memoize(
-        () -> {
-          Path topLevel = InferBuckConfig.this.getInferTopLevel();
-          ProcessExecutorParams params = ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
-              .build();
-          ProcessExecutor.Result result;
-          try  {
-            result =
-                new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
-            if (result.getExitCode() != 0) {
-              throw new RuntimeException(result.getMessageForUnexpectedResult("infer version"));
-            }
-          } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
-          }
-          Optional<String> stderr = result.getStderr();
-          String versionOutput = stderr.orElse("").trim();
-          Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
-          return VersionedTool.of(topLevel, "infer", versionOutput);
-        });
+    this.inferVersion =
+        Suppliers.memoize(
+            () -> {
+              Path topLevel = InferBuckConfig.this.getInferTopLevel();
+              ProcessExecutorParams params =
+                  ProcessExecutorParams.builder()
+                      .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
+                      .build();
+              ProcessExecutor.Result result;
+              try {
+                result =
+                    new DefaultProcessExecutor(Console.createNullConsole())
+                        .launchAndExecute(params);
+                if (result.getExitCode() != 0) {
+                  throw new RuntimeException(result.getMessageForUnexpectedResult("infer version"));
+                }
+              } catch (InterruptedException | IOException e) {
+                throw new RuntimeException(e);
+              }
+              Optional<String> stderr = result.getStderr();
+              String versionOutput = stderr.orElse("").trim();
+              Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
+              return VersionedTool.of(topLevel, "infer", versionOutput);
+            });
   }
 
   public Optional<String> getBlacklistRegex() {
@@ -108,8 +114,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("infer-version", inferVersion.get())
+    sink.setReflectively("infer-version", inferVersion.get())
         .setReflectively("clang-compiler", clangCompiler.get())
         .setReflectively("clang-plugin", clangPlugin.get());
   }

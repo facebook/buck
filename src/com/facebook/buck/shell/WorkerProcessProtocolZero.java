@@ -16,10 +16,9 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +26,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
 
@@ -36,35 +36,40 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   private static final String TYPE_ERROR = "error";
   private static final String PROTOCOL_VERSION = "0";
 
-  private final ProcessExecutor executor;
-  private final ProcessExecutor.LaunchedProcess launchedProcess;
   private final JsonWriter processStdinWriter;
   private final JsonReader processStdoutReader;
-  private final Path stdErr;
+  private final Optional<Path> stdErr;
+  private final Runnable cleanUp;
+  private boolean isClosed = false;
 
-  public WorkerProcessProtocolZero(
-      ProcessExecutor executor,
-      ProcessExecutor.LaunchedProcess launchedProcess,
-      JsonWriter processStdinWriter,
-      JsonReader processStdoutReader,
-      Path stdErr) {
-    this.executor = executor;
-    this.launchedProcess = launchedProcess;
+  public WorkerProcessProtocolZero(JsonWriter processStdinWriter, JsonReader processStdoutReader) {
     this.processStdinWriter = processStdinWriter;
     this.processStdoutReader = processStdoutReader;
-    this.stdErr = stdErr;
+    this.stdErr = Optional.empty();
+    this.cleanUp = () -> {};
+  }
+
+  public WorkerProcessProtocolZero(
+      JsonWriter processStdinWriter,
+      JsonReader processStdoutReader,
+      Path stdErr,
+      Runnable cleanUp) {
+    this.processStdinWriter = processStdinWriter;
+    this.processStdoutReader = processStdoutReader;
+    this.stdErr = Optional.of(stdErr);
+    this.cleanUp = cleanUp;
   }
 
   /*
-    Sends a message that looks like this:
-      [
-        {
-          id: <handshakeID>,
-          type: 'handshake',
-          protocol_version: '0',
-          capabilities: []
-        }
-   */
+   Sends a message that looks like this:
+     [
+       {
+         id: <handshakeID>,
+         type: 'handshake',
+         protocol_version: '0',
+         capabilities: []
+       }
+  */
   @Override
   public void sendHandshake(int handshakeID) throws IOException {
     processStdinWriter.beginArray();
@@ -78,15 +83,15 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   }
 
   /*
-    Expects a message that looks like this:
-      [
-        {
-          id: <handshakeID>,
-          type: 'handshake',
-          protocol_version: '0',
-          capabilities: []
-        }
-   */
+   Expects a message that looks like this:
+     [
+       {
+         id: <handshakeID>,
+         type: 'handshake',
+         protocol_version: '0',
+         capabilities: []
+       }
+  */
   @Override
   public void receiveHandshake(int handshakeID) throws IOException {
     int id = -1;
@@ -110,8 +115,7 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
             processStdoutReader.endArray();
           } catch (IllegalStateException e) {
             throw new HumanReadableException(
-                "Expected handshake response's \"capabilities\" to " +
-                    "be an empty array.");
+                "Expected handshake response's \"capabilities\" to " + "be an empty array.");
           }
         } else {
           processStdoutReader.skipValue();
@@ -119,24 +123,31 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       }
       processStdoutReader.endObject();
     } catch (IOException e) {
-      throw new HumanReadableException(e,
-          "Error receiving handshake response from external process.\n" +
-          "Stderr from external process:\n%s",
+      throw new HumanReadableException(
+          e,
+          "Error receiving handshake response from external process.\n"
+              + "Stderr from external process:\n%s",
           getStdErrorOutput());
     }
 
     if (id != handshakeID) {
-      throw new HumanReadableException(String.format("Expected handshake response's \"id\" value " +
-          "to be \"%d\", got \"%d\" instead.", handshakeID, id));
+      throw new HumanReadableException(
+          String.format(
+              "Expected handshake response's \"id\" value " + "to be \"%d\", got \"%d\" instead.",
+              handshakeID, id));
     }
     if (!type.equals(TYPE_HANDSHAKE)) {
-      throw new HumanReadableException(String.format("Expected handshake response's \"type\" " +
-          "to be \"%s\", got \"%s\" instead.", TYPE_HANDSHAKE, type));
+      throw new HumanReadableException(
+          String.format(
+              "Expected handshake response's \"type\" " + "to be \"%s\", got \"%s\" instead.",
+              TYPE_HANDSHAKE, type));
     }
     if (!protocolVersion.equals(PROTOCOL_VERSION)) {
-      throw new HumanReadableException(String.format("Expected handshake response's " +
-          "\"protocol_version\" to be \"%s\", got \"%s\" instead.",
-          PROTOCOL_VERSION, protocolVersion));
+      throw new HumanReadableException(
+          String.format(
+              "Expected handshake response's "
+                  + "\"protocol_version\" to be \"%s\", got \"%s\" instead.",
+              PROTOCOL_VERSION, protocolVersion));
     }
   }
 
@@ -199,24 +210,27 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       }
       processStdoutReader.endObject();
     } catch (IOException e) {
-      throw new HumanReadableException(e,
+      throw new HumanReadableException(
+          e,
           "Error receiving command from external process.\nStderr from external process:\n%s",
           getStdErrorOutput());
     }
 
     if (id != messageID) {
-      throw new HumanReadableException(String.format("Expected command's \"id\" value to be " +
-          "\"%d\", got \"%d\" instead.", messageID, id));
+      throw new HumanReadableException(
+          String.format(
+              "Expected command's \"id\" value to be " + "\"%d\", got \"%d\" instead.",
+              messageID, id));
     }
     if (!type.equals(TYPE_COMMAND)) {
-      throw new HumanReadableException(String.format("Expected command's \"type\" " +
-          "to be \"%s\", got \"%s\" instead.", TYPE_COMMAND, type));
+      throw new HumanReadableException(
+          String.format(
+              "Expected command's \"type\" " + "to be \"%s\", got \"%s\" instead.",
+              TYPE_COMMAND, type));
     }
 
     return WorkerProcessCommand.of(
-        Paths.get(argsPath),
-        Paths.get(stdoutPath),
-        Paths.get(stderrPath));
+        Paths.get(argsPath), Paths.get(stdoutPath), Paths.get(stderrPath));
   }
 
   /*
@@ -253,12 +267,17 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   @Override
   public void sendCommandResponse(int messageID, String type, int exitCode) throws IOException {
     if (!type.equals(TYPE_RESULT) && !type.equals(TYPE_ERROR)) {
-      throw new HumanReadableException(String.format("Expected response's \"type\" " +
-          "to be one of [\"%s\",\"%s\"], got \"%s\" instead.", TYPE_RESULT, TYPE_ERROR, type));
+      throw new HumanReadableException(
+          String.format(
+              "Expected response's \"type\" " + "to be one of [\"%s\",\"%s\"], got \"%s\" instead.",
+              TYPE_RESULT, TYPE_ERROR, type));
     }
     if (type.equals(TYPE_ERROR) && exitCode != 1 && exitCode != 2) {
-      throw new HumanReadableException(String.format("For response with type " +
-          "\"%s\" exit code is expected to be 1 or 2, got %d instead.", type, exitCode));
+      throw new HumanReadableException(
+          String.format(
+              "For response with type "
+                  + "\"%s\" exit code is expected to be 1 or 2, got %d instead.",
+              type, exitCode));
     }
     processStdinWriter.beginObject();
     processStdinWriter.name("id").value(messageID);
@@ -321,42 +340,56 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       }
       processStdoutReader.endObject();
     } catch (IOException e) {
-      throw new HumanReadableException(e,
-          "Error receiving command response from external process.\n" +
-          "Stderr from external process:\n%s",
+      throw new HumanReadableException(
+          e,
+          "Error receiving command response from external process.\n"
+              + "Stderr from external process:\n%s",
           getStdErrorOutput());
     }
 
     if (id != messageID) {
-      throw new HumanReadableException(String.format("Expected response's \"id\" value to be " +
-          "\"%d\", got \"%d\" instead.", messageID, id));
+      throw new HumanReadableException(
+          String.format(
+              "Expected response's \"id\" value to be " + "\"%d\", got \"%d\" instead.",
+              messageID, id));
     }
     if (!type.equals(TYPE_RESULT) && !type.equals(TYPE_ERROR)) {
-      throw new HumanReadableException(String.format("Expected response's \"type\" " +
-          "to be one of [\"%s\",\"%s\"], got \"%s\" instead.", TYPE_RESULT, TYPE_ERROR, type));
+      throw new HumanReadableException(
+          String.format(
+              "Expected response's \"type\" " + "to be one of [\"%s\",\"%s\"], got \"%s\" instead.",
+              TYPE_RESULT, TYPE_ERROR, type));
     }
     return exitCode;
   }
 
   /*
-    Sends the closing bracket for the JSON array and expects a response containing a closing
-    bracket as well. Closes the input and output streams and destroys the process.
-   */
+   Sends the closing bracket for the JSON array and expects a response containing a closing
+   bracket as well. Closes the input and output streams and destroys the process.
+  */
   @Override
   public void close() throws IOException {
+    Preconditions.checkArgument(
+        !isClosed,
+        "%s (%d) has been already closed",
+        getClass().getSimpleName(),
+        System.identityHashCode(this));
     try {
       processStdinWriter.endArray();
       processStdinWriter.close();
       processStdoutReader.endArray();
       processStdoutReader.close();
     } finally {
-      executor.destroyLaunchedProcess(launchedProcess);
+      cleanUp.run();
+      isClosed = true;
     }
   }
 
   private String getStdErrorOutput() throws IOException {
+    if (!stdErr.isPresent()) {
+      return "";
+    }
     StringBuilder sb = new StringBuilder();
-    try (InputStream inputStream = Files.newInputStream(stdErr)) {
+    try (InputStream inputStream = Files.newInputStream(stdErr.get())) {
       BufferedReader errorReader = new BufferedReader(new InputStreamReader(inputStream));
       while (errorReader.ready()) {
         sb.append("\t").append(errorReader.readLine()).append("\n");

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
@@ -33,7 +33,7 @@ import java.util.stream.StreamSupport;
 /**
  * Java 8 streams with "rich" API (convenience methods).
  *
- * The default Java 8 Stream implementation is deliberately spartan in API methods in order to
+ * <p>The default Java 8 Stream implementation is deliberately spartan in API methods in order to
  * avoid dependencies on Collections, and to focus on parallelism. This wrapper adds common
  * operations to the Stream API, mostly inspired by Guava's {@code FluentIterable}.
  *
@@ -65,8 +65,12 @@ public interface RichStream<T> extends Stream<T> {
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false));
   }
 
-  static <T> RichStream<T> from(Optional<T> optional) {
+  static <T> RichStream<T> from(Optional<? extends T> optional) {
     return optional.isPresent() ? of(optional.get()) : empty();
+  }
+
+  static <T> RichStream<T> fromSupplierOfIterable(Supplier<? extends Iterable<T>> supplier) {
+    return new RichStreamImpl<>(StreamSupport.stream(() -> supplier.get().spliterator(), 0, false));
   }
 
   static <T> RichStream<T> from(Stream<T> stream) {
@@ -82,7 +86,7 @@ public interface RichStream<T> extends Stream<T> {
   /**
    * @param other Stream to concatenate into the current one.
    * @return Stream containing the elements of the current stream followed by that of the given
-   *  stream.
+   *     stream.
    */
   default RichStream<T> concat(Stream<T> other) {
     return new RichStreamImpl<>(Stream.concat(this, other));
@@ -110,6 +114,10 @@ public interface RichStream<T> extends Stream<T> {
 
   default ImmutableSortedSet<T> toImmutableSortedSet(Comparator<? super T> ordering) {
     return collect(MoreCollectors.toImmutableSortedSet(ordering));
+  }
+
+  default Iterable<T> toOnceIterable() {
+    return this::iterator;
   }
 
   // More specific return types for Stream methods that return Streams.

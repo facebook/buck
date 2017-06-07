@@ -16,33 +16,32 @@
 
 package com.facebook.buck.util.immutables;
 
-import org.immutables.value.Value;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.immutables.value.Value;
 
 /**
- * <p>Style for code-generated Immutables.org immutable value types which:</p>
+ * Style for code-generated Immutables.org immutable value types which:
  *
  * <ol>
- * <li>Does not add the Immutable prefix on generated classes</li>
- * <li>Strips off the Abstract name prefix when processing the parent interface or abstract
- * class</li>
- * <li>Supports isFoo() / getFoo() getters in the parent interface or abstract class</li>
- * <li>Supports setFoo() setters in the parent interface or abstract class</li>
- * <li>Ensures the generated class is public (even if the parent interface or abstract class
- * is package private)</li>
+ *   <li>Does not add the Immutable prefix on generated classes
+ *   <li>Strips off the Abstract name prefix when processing the parent interface or abstract class
+ *   <li>Supports isFoo() / getFoo() getters in the parent interface or abstract class
+ *   <li>Supports setFoo() setters in the parent interface or abstract class
+ *   <li>Ensures the generated class is public (even if the parent interface or abstract class is
+ *       package private)
  * </ol>
  */
 @Value.Style(
-    typeImmutable = "*",
-    typeAbstract = "Abstract*",
-    get = {"is*", "get*"},
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PUBLIC,
-    forceJacksonPropertyNames = false)
+  typeImmutable = "*",
+  typeAbstract = "Abstract*",
+  get = {"is*", "get*"},
+  init = "set*",
+  visibility = Value.Style.ImplementationVisibility.PUBLIC,
+  forceJacksonPropertyNames = false
+)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface BuckStyleImmutable {}

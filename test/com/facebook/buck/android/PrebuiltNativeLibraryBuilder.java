@@ -20,15 +20,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import java.nio.file.Path;
-import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
-    extends
-    AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg, PrebuiltNativeLibraryDescription> {
+    extends AbstractNodeBuilder<
+        PrebuiltNativeLibraryDescriptionArg.Builder, PrebuiltNativeLibraryDescriptionArg,
+        PrebuiltNativeLibraryDescription, PrebuiltNativeLibrary> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
     this(target, new FakeProjectFilesystem());
@@ -43,18 +41,17 @@ public class PrebuiltNativeLibraryBuilder
   }
 
   public static PrebuiltNativeLibraryBuilder newBuilder(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem) {
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return new PrebuiltNativeLibraryBuilder(buildTarget, filesystem);
   }
 
-  public PrebuiltNativeLibraryBuilder setIsAsset(@Nullable Boolean isAsset) {
-    arg.isAsset = Optional.ofNullable(isAsset);
+  public PrebuiltNativeLibraryBuilder setIsAsset(boolean isAsset) {
+    getArgForPopulating().setIsAsset(isAsset);
     return this;
   }
 
   public PrebuiltNativeLibraryBuilder setNativeLibs(@Nullable Path nativeLibs) {
-    arg.nativeLibs = nativeLibs;
+    getArgForPopulating().setNativeLibs(nativeLibs);
     return this;
   }
 }

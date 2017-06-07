@@ -35,9 +35,8 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A filter(pattern, argument) expression, evaluates its argument and filters
- * the resulting targets by applying the given regular expression pattern to
- * the targets' names.
+ * A filter(pattern, argument) expression, evaluates its argument and filters the resulting targets
+ * by applying the given regular expression pattern to the targets' names.
  *
  * <pre>expr ::= FILTER '(' WORD ',' expr ')'</pre>
  */
@@ -46,8 +45,7 @@ public class FilterFunction extends RegexFilterFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
 
-  public FilterFunction() {
-  }
+  public FilterFunction() {}
 
   @Override
   public String getName() {
@@ -76,9 +74,7 @@ public class FilterFunction extends RegexFilterFunction {
 
   @Override
   protected String getStringToFilter(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      QueryTarget target) {
+      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) {
     return target.toString();
   }
 }

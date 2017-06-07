@@ -1,0 +1,34 @@
+{namespace buck.get_cell_name}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'get_cell_name()' /}
+    {param navid: 'function_get_cell_name' /}
+    {param prettify: true /}
+    {param description}
+      The get_cell_name() function is used to get the canonical cell name of the build file.
+    {/param}
+    {param content}
+
+{call buck.function}
+{param status: 'FROZEN' /}
+{param overview}
+The <code>get_cell_name()</code> function is used the canonical cell name of the build file
+from within a build file.
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  No arguments.
+  {/param}
+{/call}
+
+{/param}
+
+{/call} // buck.function
+    {/param} // content
+  {/call}
+{/template}

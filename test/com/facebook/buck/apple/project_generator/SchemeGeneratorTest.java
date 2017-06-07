@@ -36,27 +36,25 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class SchemeGeneratorTest {
 
@@ -77,40 +75,28 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget leftTarget = new PBXNativeTarget("leftRule");
     leftTarget.setGlobalID("leftGID");
     leftTarget.setProductReference(
         new PBXFileReference(
-            "left.a",
-            "left.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "left.a", "left.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     leftTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget rightTarget = new PBXNativeTarget("rightRule");
     rightTarget.setGlobalID("rightGID");
     rightTarget.setProductReference(
         new PBXFileReference(
-            "right.a",
-            "right.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "right.a", "right.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rightTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget childTarget = new PBXNativeTarget("childRule");
     childTarget.setGlobalID("childGID");
     childTarget.setProductReference(
         new PBXFileReference(
-            "child.a",
-            "child.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "child.a", "child.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     childTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -119,21 +105,21 @@ public class SchemeGeneratorTest {
     targetToProjectPathMapBuilder.put(rightTarget, pbxprojectPath);
     targetToProjectPathMapBuilder.put(childTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(childTarget),
-        ImmutableSet.of(rootTarget, leftTarget, rightTarget, childTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(childTarget),
+            ImmutableSet.of(rootTarget, leftTarget, rightTarget, childTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -145,17 +131,12 @@ public class SchemeGeneratorTest {
 
     XPathFactory xpathFactory = XPathFactory.newInstance();
     XPath xpath = xpathFactory.newXPath();
-    XPathExpression expr =
-        xpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
+    XPathExpression expr = xpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
     NodeList nodes = (NodeList) expr.evaluate(scheme, XPathConstants.NODESET);
 
-    List<String> expectedOrdering = ImmutableList.of(
-        "rootGID",
-        "leftGID",
-        "rightGID",
-        "childGID");
+    List<String> expectedOrdering = ImmutableList.of("rootGID", "leftGID", "rightGID", "childGID");
 
-    List<String> actualOrdering = Lists.newArrayList();
+    List<String> actualOrdering = new ArrayList<>();
     for (int i = 0; i < nodes.getLength(); i++) {
       actualOrdering.add(nodes.item(i).getNodeValue());
     }
@@ -170,21 +151,14 @@ public class SchemeGeneratorTest {
     testDepTarget.setGlobalID("testDepGID");
     testDepTarget.setProductReference(
         new PBXFileReference(
-            "libDep.a",
-            "libDep.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "libDep.a", "libDep.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     testDepTarget.setProductType(ProductType.STATIC_LIBRARY);
 
-    PBXTarget testLibraryTarget =
-        new PBXNativeTarget("testLibrary");
+    PBXTarget testLibraryTarget = new PBXNativeTarget("testLibrary");
     testLibraryTarget.setGlobalID("testLibraryGID");
     testLibraryTarget.setProductReference(
         new PBXFileReference(
-            "lib.a",
-            "lib.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     testLibraryTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testTarget = new PBXNativeTarget("test");
@@ -201,10 +175,7 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path projectPath = Paths.get("foo/test.xcodeproj/project.pbxproj");
@@ -213,21 +184,21 @@ public class SchemeGeneratorTest {
     targetToProjectPathMapBuilder.put(testLibraryTarget, projectPath);
     targetToProjectPathMapBuilder.put(rootTarget, projectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(testDepTarget, testTarget),
-        ImmutableSet.of(testTarget),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(testDepTarget, testTarget),
+            ImmutableSet.of(testTarget),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -246,20 +217,21 @@ public class SchemeGeneratorTest {
 
     List<String> expectedBuildOrdering = ImmutableList.of("rootGID", "testDepGID", "testGID");
 
-    List<String> actualBuildOrdering = Lists.newArrayList();
+    List<String> actualBuildOrdering = new ArrayList<>();
     for (int i = 0; i < buildNodes.getLength(); i++) {
       actualBuildOrdering.add(buildNodes.item(i).getNodeValue());
     }
     assertThat(actualBuildOrdering, equalTo(expectedBuildOrdering));
 
     XPath textXpath = xpathFactory.newXPath();
-    XPathExpression testExpr = textXpath.compile(
-      "//TestAction//TestableReference/BuildableReference/@BlueprintIdentifier");
+    XPathExpression testExpr =
+        textXpath.compile(
+            "//TestAction//TestableReference/BuildableReference/@BlueprintIdentifier");
     NodeList testNodes = (NodeList) testExpr.evaluate(scheme, XPathConstants.NODESET);
 
     List<String> expectedTestOrdering = ImmutableList.of("testGID");
 
-    List<String> actualTestOrdering = Lists.newArrayList();
+    List<String> actualTestOrdering = new ArrayList<>();
     for (int i = 0; i < testNodes.getLength(); i++) {
       actualTestOrdering.add(testNodes.item(i).getNodeValue());
     }
@@ -274,24 +246,17 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testTarget = new PBXNativeTarget("testRule");
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
-            "test.a",
-            "test.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     testTarget.setProductType(ProductType.STATIC_LIBRARY);
 
-    PBXTarget testBundleTarget =
-        new PBXNativeTarget("testBundleRule");
+    PBXTarget testBundleTarget = new PBXNativeTarget("testBundleRule");
     testBundleTarget.setGlobalID("testBundleGID");
     testBundleTarget.setProductReference(
         new PBXFileReference(
@@ -306,21 +271,21 @@ public class SchemeGeneratorTest {
     targetToProjectPathMapBuilder.put(testTarget, pbxprojectPath);
     targetToProjectPathMapBuilder.put(testBundleTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(testBundleTarget),
-        ImmutableSet.of(testBundleTarget),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(testBundleTarget),
+            ImmutableSet.of(testBundleTarget),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -337,11 +302,9 @@ public class SchemeGeneratorTest {
         buildActionXpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
     NodeList buildActionNodes = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
 
-    List<String> expectedOrdering = ImmutableList.of(
-        "rootGID",
-        "testBundleGID");
+    List<String> expectedOrdering = ImmutableList.of("rootGID", "testBundleGID");
 
-    List<String> actualOrdering = Lists.newArrayList();
+    List<String> actualOrdering = new ArrayList<>();
     for (int i = 0; i < buildActionNodes.getLength(); i++) {
       actualOrdering.add(buildActionNodes.item(i).getNodeValue());
     }
@@ -377,30 +340,27 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -413,8 +373,8 @@ public class SchemeGeneratorTest {
     XPath buildableReferenceXPath = xpathFactory.newXPath();
     XPathExpression buildableReferenceExpr =
         buildableReferenceXPath.compile("//BuildableReference");
-    NodeList buildableReferences = (NodeList) buildableReferenceExpr.evaluate(
-        scheme, XPathConstants.NODESET);
+    NodeList buildableReferences =
+        (NodeList) buildableReferenceExpr.evaluate(scheme, XPathConstants.NODESET);
 
     assertThat(buildableReferences.getLength(), greaterThan(0));
 
@@ -437,30 +397,27 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -471,17 +428,14 @@ public class SchemeGeneratorTest {
     XPathFactory xpathFactory = XPathFactory.newInstance();
 
     XPath schemeChildrenXPath = xpathFactory.newXPath();
-    XPathExpression schemeChildrenExpr =
-        schemeChildrenXPath.compile("/Scheme/node()");
+    XPathExpression schemeChildrenExpr = schemeChildrenXPath.compile("/Scheme/node()");
     NodeList actions = (NodeList) schemeChildrenExpr.evaluate(scheme, XPathConstants.NODESET);
 
     assertThat(actions.getLength(), equalTo(6));
 
     Node buildAction = actions.item(0);
     assertThat(buildAction.getNodeName(), equalTo("BuildAction"));
-    assertThat(
-        buildAction.getAttributes().getNamedItem("buildConfiguration"),
-        nullValue());
+    assertThat(buildAction.getAttributes().getNamedItem("buildConfiguration"), nullValue());
 
     Node testAction = actions.item(1);
     assertThat(testAction.getNodeName(), equalTo("TestAction"));
@@ -523,34 +477,32 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root.a",
-              "root.a",
-              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-              Optional.empty()));
+              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
       targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
 
       clock.setCurrentTimeMillis(49152);
-      SchemeGenerator schemeGenerator = new SchemeGenerator(
-          projectFilesystem,
-          Optional.of(rootTarget),
-          ImmutableSet.of(rootTarget),
-          ImmutableSet.of(),
-          ImmutableSet.of(),
-          "TestScheme",
-          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
-          false /* parallelizeBuild */,
-          Optional.empty() /* runnablePath */,
-          Optional.empty() /* remoteRunnablePath */,
-          SchemeActionType.DEFAULT_CONFIG_NAMES,
-          targetToProjectPathMapBuilder.build(),
-          XCScheme.LaunchAction.LaunchStyle.AUTO);
+      SchemeGenerator schemeGenerator =
+          new SchemeGenerator(
+              projectFilesystem,
+              Optional.of(rootTarget),
+              ImmutableSet.of(rootTarget),
+              ImmutableSet.of(),
+              ImmutableSet.of(),
+              "TestScheme",
+              Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+              false /* parallelizeBuild */,
+              Optional.empty() /* runnablePath */,
+              Optional.empty() /* remoteRunnablePath */,
+              SchemeActionType.DEFAULT_CONFIG_NAMES,
+              targetToProjectPathMapBuilder.build(),
+              XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(49152L)));
     }
 
     {
@@ -558,33 +510,31 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("root2GID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root2.a",
-              "root2.a",
-              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-              Optional.empty()));
+              "root2.a", "root2.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
 
       clock.setCurrentTimeMillis(64738);
-      SchemeGenerator schemeGenerator = new SchemeGenerator(
-          projectFilesystem,
-          Optional.of(rootTarget),
-          ImmutableSet.of(rootTarget),
-          ImmutableSet.of(),
-          ImmutableSet.of(),
-          "TestScheme",
-          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
-          false /* parallelizeBuild */,
-          Optional.empty() /* runnablePath */,
-          Optional.empty() /* remoteRunnablePath */,
-          SchemeActionType.DEFAULT_CONFIG_NAMES,
-          ImmutableMap.of(rootTarget, pbxprojectPath),
-          XCScheme.LaunchAction.LaunchStyle.AUTO);
+      SchemeGenerator schemeGenerator =
+          new SchemeGenerator(
+              projectFilesystem,
+              Optional.of(rootTarget),
+              ImmutableSet.of(rootTarget),
+              ImmutableSet.of(),
+              ImmutableSet.of(),
+              "TestScheme",
+              Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+              false /* parallelizeBuild */,
+              Optional.empty() /* runnablePath */,
+              Optional.empty() /* remoteRunnablePath */,
+              SchemeActionType.DEFAULT_CONFIG_NAMES,
+              ImmutableMap.of(rootTarget, pbxprojectPath),
+              XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(64738L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(64738L)));
     }
   }
 
@@ -595,33 +545,31 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root.a",
-              "root.a",
-              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-              Optional.empty()));
+              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
 
       clock.setCurrentTimeMillis(49152);
-      SchemeGenerator schemeGenerator = new SchemeGenerator(
-          projectFilesystem,
-          Optional.of(rootTarget),
-          ImmutableSet.of(rootTarget),
-          ImmutableSet.of(),
-          ImmutableSet.of(),
-          "TestScheme",
-          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
-          false /* parallelizeBuild */,
-          Optional.empty() /* runnablePath */,
-          Optional.empty() /* remoteRunnablePath */,
-          SchemeActionType.DEFAULT_CONFIG_NAMES,
-          ImmutableMap.of(rootTarget, pbxprojectPath),
-          XCScheme.LaunchAction.LaunchStyle.AUTO);
+      SchemeGenerator schemeGenerator =
+          new SchemeGenerator(
+              projectFilesystem,
+              Optional.of(rootTarget),
+              ImmutableSet.of(rootTarget),
+              ImmutableSet.of(),
+              ImmutableSet.of(),
+              "TestScheme",
+              Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+              false /* parallelizeBuild */,
+              Optional.empty() /* runnablePath */,
+              Optional.empty() /* remoteRunnablePath */,
+              SchemeActionType.DEFAULT_CONFIG_NAMES,
+              ImmutableMap.of(rootTarget, pbxprojectPath),
+              XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(49152L)));
     }
 
     {
@@ -629,57 +577,49 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root.a",
-              "root.a",
-              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-              Optional.empty()));
+              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
 
       clock.setCurrentTimeMillis(64738);
-      SchemeGenerator schemeGenerator = new SchemeGenerator(
-          projectFilesystem,
-          Optional.of(rootTarget),
-          ImmutableSet.of(rootTarget),
-          ImmutableSet.of(),
-          ImmutableSet.of(),
-          "TestScheme",
-          Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-          false /* primaryTargetIsBuildWithBuck */,
-          false /* parallelizeBuild */,
-          Optional.empty() /* runnablePath */,
-          Optional.empty() /* remoteRunnablePath */,
-          SchemeActionType.DEFAULT_CONFIG_NAMES,
-          ImmutableMap.of(rootTarget, pbxprojectPath),
-          XCScheme.LaunchAction.LaunchStyle.AUTO);
+      SchemeGenerator schemeGenerator =
+          new SchemeGenerator(
+              projectFilesystem,
+              Optional.of(rootTarget),
+              ImmutableSet.of(rootTarget),
+              ImmutableSet.of(),
+              ImmutableSet.of(),
+              "TestScheme",
+              Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+              false /* parallelizeBuild */,
+              Optional.empty() /* runnablePath */,
+              Optional.empty() /* remoteRunnablePath */,
+              SchemeActionType.DEFAULT_CONFIG_NAMES,
+              ImmutableMap.of(rootTarget, pbxprojectPath),
+              XCScheme.LaunchAction.LaunchStyle.AUTO);
       Path schemePath = schemeGenerator.writeScheme();
-      assertThat(projectFilesystem.getLastModifiedTime(schemePath), equalTo(49152L));
+      assertThat(
+          projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(49152L)));
     }
   }
 
   @Test
-  public void schemeWithNoPrimaryRuleCanIncludeTests() throws Exception{
+  public void schemeWithNoPrimaryRuleCanIncludeTests() throws Exception {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
 
     PBXTarget testLibraryTarget = new PBXNativeTarget("testLibrary");
     testLibraryTarget.setGlobalID("testLibraryGID");
     testLibraryTarget.setProductReference(
         new PBXFileReference(
-            "lib.a",
-            "lib.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     testLibraryTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testTarget = new PBXNativeTarget("testRule");
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
-            "test.a",
-            "test.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     testTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testBundleTarget = new PBXNativeTarget("testBundleRule");
@@ -697,21 +637,21 @@ public class SchemeGeneratorTest {
     targetToProjectPathMapBuilder.put(testTarget, pbxprojectPath);
     targetToProjectPathMapBuilder.put(testBundleTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.empty(),
-        ImmutableSet.of(),
-        ImmutableSet.of(testBundleTarget),
-        ImmutableSet.of(testBundleTarget),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.empty(),
+            ImmutableSet.of(),
+            ImmutableSet.of(testBundleTarget),
+            ImmutableSet.of(testBundleTarget),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -728,10 +668,9 @@ public class SchemeGeneratorTest {
         buildActionXpath.compile("//BuildAction//BuildableReference/@BlueprintIdentifier");
     NodeList buildActionNodes = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
 
-    List<String> expectedOrdering = ImmutableList.of(
-        "testBundleGID");
+    List<String> expectedOrdering = ImmutableList.of("testBundleGID");
 
-    List<String> actualOrdering = Lists.newArrayList();
+    List<String> actualOrdering = new ArrayList<>();
     for (int i = 0; i < buildActionNodes.getLength(); i++) {
       actualOrdering.add(buildActionNodes.item(i).getNodeValue());
     }
@@ -795,30 +734,27 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -831,8 +767,8 @@ public class SchemeGeneratorTest {
     XPath remoteRunnableLaunchActionXPath = xpathFactory.newXPath();
     XPathExpression remoteRunnableLaunchActionExpr =
         remoteRunnableLaunchActionXPath.compile("//LaunchAction/RemoteRunnable");
-    NodeList remoteRunnables = (NodeList) remoteRunnableLaunchActionExpr.evaluate(
-        scheme, XPathConstants.NODESET);
+    NodeList remoteRunnables =
+        (NodeList) remoteRunnableLaunchActionExpr.evaluate(scheme, XPathConstants.NODESET);
 
     assertThat(remoteRunnables.getLength(), equalTo(0));
   }
@@ -845,30 +781,27 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        false /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.of("/RemoteApp") /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.of("/RemoteApp") /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -881,8 +814,8 @@ public class SchemeGeneratorTest {
     XPath remoteRunnableLaunchActionXPath = xpathFactory.newXPath();
     XPathExpression remoteRunnableLaunchActionExpr =
         remoteRunnableLaunchActionXPath.compile("//LaunchAction/RemoteRunnable");
-    NodeList remoteRunnables = (NodeList) remoteRunnableLaunchActionExpr.evaluate(
-        scheme, XPathConstants.NODESET);
+    NodeList remoteRunnables =
+        (NodeList) remoteRunnableLaunchActionExpr.evaluate(scheme, XPathConstants.NODESET);
 
     assertThat(remoteRunnables.getLength(), equalTo(1));
 
@@ -909,131 +842,6 @@ public class SchemeGeneratorTest {
   }
 
   @Test
-  public void whenProvidedAPrimaryTargetThatIsBuiltWithBuckLaunchesIt() throws Exception {
-    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
-
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
-    rootTarget.setGlobalID("rootGID");
-    rootTarget.setProductName("Foo");
-    String runnablePath = "buck-out/gen/Foo/Foo.app";
-
-    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
-    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
-
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        true /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.of(runnablePath) /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
-
-    Path schemePath = schemeGenerator.writeScheme();
-
-    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
-
-    XPathFactory xpathFactory = XPathFactory.newInstance();
-
-    XPath runnableLaunchActionXPath = xpathFactory.newXPath();
-    XPathExpression runnableLaunchActionExpr =
-        runnableLaunchActionXPath.compile("//LaunchAction/PathRunnable");
-    NodeList runnables = (NodeList) runnableLaunchActionExpr.evaluate(
-        scheme, XPathConstants.NODESET);
-
-    assertThat(runnables.getLength(), equalTo(1));
-
-    Node runnable = runnables.item(0);
-    assertThat(
-        runnable.getAttributes().getNamedItem("FilePath").getNodeValue(),
-        equalTo(runnablePath));
-  }
-
-  @Test
-  public void whenProvidedAPrimaryTargetThatIsBuiltWithBuckDoesntBuildDependencies()
-      throws Exception {
-    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
-
-    PBXTarget libraryTarget = new PBXNativeTarget("library");
-    libraryTarget.setGlobalID("libraryGID");
-    libraryTarget.setProductReference(
-        new PBXFileReference(
-            "lib.a",
-            "lib.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
-    libraryTarget.setProductType(ProductType.STATIC_LIBRARY);
-
-    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
-    rootTarget.setGlobalID("rootGID");
-    rootTarget.setProductName("Foo");
-    String runnablePath = "buck-out/gen/Foo/Foo.app";
-
-    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
-    targetToProjectPathMapBuilder.put(libraryTarget, pbxprojectPath);
-    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
-
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(libraryTarget, rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        true /* primaryTargetIsBuildWithBuck */,
-        false /* parallelizeBuild */,
-        Optional.of(runnablePath) /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
-
-    Path schemePath = schemeGenerator.writeScheme();
-
-    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
-
-    XPathFactory xpathFactory = XPathFactory.newInstance();
-
-    XPath buildActionXpath = xpathFactory.newXPath();
-    XPathExpression buildActionExpr =
-        buildActionXpath.compile("//BuildAction//BuildActionEntry");
-    NodeList buildActionNodes = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
-
-    Node libraryNode = null;
-    for (int i = 0; i < buildActionNodes.getLength(); i++) {
-      Node node = buildActionNodes.item(i);
-      if (node.getChildNodes().getLength() != 1) {
-        continue;
-      }
-      Node buildableReference = node.getChildNodes().item(0);
-      if (buildableReference
-          .getAttributes()
-          .getNamedItem("BlueprintIdentifier")
-          .getNodeValue()
-          .equals("libraryGID")) {
-        libraryNode = node;
-        break;
-      }
-    }
-    assertThat(libraryNode, is(notNullValue()));
-    assertThat(
-        libraryNode.getAttributes().getNamedItem("buildForRunning").getNodeValue(),
-        equalTo("NO"));
-  }
-
-  @Test
   public void enablingParallelizeBuild() throws Exception {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
 
@@ -1041,30 +849,27 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a",
-            "root.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            Optional.empty()));
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        Optional.of(rootTarget),
-        ImmutableSet.of(rootTarget),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
-        "TestScheme",
-        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-        true /* primaryTargetIsBuildWithBuck */,
-        true /* parallelizeBuild */,
-        Optional.empty() /* runnablePath */,
-        Optional.empty() /* remoteRunnablePath */,
-        SchemeActionType.DEFAULT_CONFIG_NAMES,
-        targetToProjectPathMapBuilder.build(),
-        XCScheme.LaunchAction.LaunchStyle.AUTO);
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            true /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -1089,5 +894,4 @@ public class SchemeGeneratorTest {
         buildActionNode.getAttributes().getNamedItem("parallelizeBuildables").getNodeValue(),
         equalTo("YES"));
   }
-
 }

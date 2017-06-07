@@ -16,15 +16,15 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -40,34 +40,28 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class CxxInferAnalyze extends AbstractBuildRule {
 
-  private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze>
-      captureAndAnalyzeRules;
+  private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules;
 
   private final Path resultsDir;
   private final Path reportFile;
   private final Path specsDir;
   private final Path specsPathList;
 
-  @AddToRuleKey
-  private final InferBuckConfig inferConfig;
+  @AddToRuleKey private final InferBuckConfig inferConfig;
 
   CxxInferAnalyze(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
       InferBuckConfig inferConfig,
       CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules) {
-    super(buildRuleParams, pathResolver);
+    super(buildRuleParams);
     this.captureAndAnalyzeRules = captureAndAnalyzeRules;
-    this.resultsDir = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        this.getBuildTarget(),
-        "infer-analysis-%s");
+    this.resultsDir =
+        BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-analysis-%s");
     this.reportFile = this.resultsDir.resolve("report.json");
     this.specsDir = this.resultsDir.resolve("specs");
     this.specsPathList = this.resultsDir.resolve("specs_path_list.txt");
@@ -77,9 +71,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
     return FluentIterable.from(captureAndAnalyzeRules.aggregatingRules)
         .transform(
-            (Function<CxxInferAnalyze, SourcePath>) input -> new BuildTargetSourcePath(
-                input.getBuildTarget(), input.getSpecsDir())
-        )
+            (Function<CxxInferAnalyze, SourcePath>)
+                input ->
+                    new ExplicitBuildTargetSourcePath(input.getBuildTarget(), input.getSpecsDir()))
         .toSortedSet(Ordering.natural());
   }
 
@@ -113,31 +107,42 @@ public class CxxInferAnalyze extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(specsDir);
-    buildableContext.recordArtifact(this.getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(getProjectFilesystem(), specsDir))
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), specsDir)))
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),
-                captureAndAnalyzeRules.captureRules.stream()
-                    .map(CxxInferCapture::getPathToOutput)
+                captureAndAnalyzeRules
+                    .captureRules
+                    .stream()
+                    .map(CxxInferCapture::getSourcePathToOutput)
+                    .map(context.getSourcePathResolver()::getRelativePath)
                     .collect(MoreCollectors.toImmutableList()),
                 resultsDir))
         .add(
             new AbstractExecutionStep("write_specs_path_list") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              public StepExecutionResult execute(ExecutionContext executionContext)
+                  throws IOException {
                 try {
                   ImmutableList<String> specsDirsWithAbsolutePath =
-                      getSpecsOfAllDeps().stream()
-                          .map(input -> getResolver().getAbsolutePath(input).toString())
+                      getSpecsOfAllDeps()
+                          .stream()
+                          .map(
+                              input ->
+                                  context.getSourcePathResolver().getAbsolutePath(input).toString())
                           .collect(MoreCollectors.toImmutableList());
                   getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 } catch (IOException e) {
-                  context.logError(e, "Error while writing specs path list file for the analyzer");
+                  executionContext.logError(
+                      e, "Error while writing specs path list file for the analyzer");
                   return StepExecutionResult.ERROR;
                 }
                 return StepExecutionResult.SUCCESS;
@@ -145,19 +150,12 @@ public class CxxInferAnalyze extends AbstractBuildRule {
             })
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(),
-                getAnalyzeCommand(),
-                ImmutableMap.of()))
+                getProjectFilesystem().getRootPath(), getAnalyzeCommand(), ImmutableMap.of()))
         .build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return this.reportFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), reportFile);
   }
-
-  public Path getAbsolutePathToOutput() {
-    return getProjectFilesystem().resolve(this.reportFile);
-  }
-
 }

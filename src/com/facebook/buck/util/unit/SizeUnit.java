@@ -19,7 +19,6 @@ package com.facebook.buck.util.unit;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableMap;
-
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -54,31 +53,31 @@ public enum SizeUnit {
     } else if (magnitude > 0) {
       return BigDecimal.valueOf(size).multiply(BigDecimal.valueOf(1024).pow(magnitude)).longValue();
     } else {
-      return BigDecimal.valueOf(size).divide(
-          BigDecimal.valueOf(1024).pow(-1 * magnitude)).longValue();
+      return BigDecimal.valueOf(size)
+          .divide(BigDecimal.valueOf(1024).pow(-1 * magnitude))
+          .longValue();
     }
   }
 
   private static final ImmutableMap<String, SizeUnit> SHORT_TO_CODE =
       ImmutableMap.<String, SizeUnit>builder()
-        .put("b", BYTES)
-        .put("kb", KILOBYTES)
-        .put("kilobytes", KILOBYTES)
-        .put("mb", MEGABYTES)
-        .put("megabytes", MEGABYTES)
-        .put("gb", GIGABYTES)
-        .put("gigabytes", GIGABYTES)
-        .put("tb", TERABYTES)
-        .put("terabytes", TERABYTES)
-        .build();
+          .put("b", BYTES)
+          .put("kb", KILOBYTES)
+          .put("kilobytes", KILOBYTES)
+          .put("mb", MEGABYTES)
+          .put("megabytes", MEGABYTES)
+          .put("gb", GIGABYTES)
+          .put("gigabytes", GIGABYTES)
+          .put("tb", TERABYTES)
+          .put("terabytes", TERABYTES)
+          .build();
 
-  private static final Pattern SIZE_PATTERN = Pattern.compile("([\\d]+(?:\\.[\\d]+)?)\\s*" +
-          MoreStrings.regexPatternForAny(SHORT_TO_CODE.keySet()),
+  private static final Pattern SIZE_PATTERN =
+      Pattern.compile(
+          "([\\d]+(?:\\.[\\d]+)?)\\s*" + MoreStrings.regexPatternForAny(SHORT_TO_CODE.keySet()),
           Pattern.CASE_INSENSITIVE);
 
-  /**
-   * Parses a string that represents a size into the number of bytes represented by that string.
-   */
+  /** Parses a string that represents a size into the number of bytes represented by that string. */
   public static long parseBytes(String input) throws NumberFormatException {
     Matcher matcher = SIZE_PATTERN.matcher(input);
     if (matcher.find()) {

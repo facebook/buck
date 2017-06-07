@@ -17,19 +17,16 @@
 package com.facebook.buck.counters;
 
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class IntegerCounterTest {
 
   private static final String CATEGORY = "Counter_Category";
   private static final String NAME = "Counter_Name";
-  public static final ImmutableMap<String, String> TAGS = ImmutableMap.of(
-      "My super Tag Key", "And the according value!"
-  );
+  public static final ImmutableMap<String, String> TAGS =
+      ImmutableMap.of("My super Tag Key", "And the according value!");
 
   @Test
   public void testIncrement() {

@@ -23,7 +23,6 @@ import com.facebook.buck.rules.ToolProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import javax.annotation.Nonnull;
 
 public class DefaultLinkerProvider implements LinkerProvider {
@@ -75,5 +74,4 @@ public class DefaultLinkerProvider implements LinkerProvider {
   public Iterable<BuildTarget> getParseTimeDeps() {
     return toolProvider.getParseTimeDeps();
   }
-
 }

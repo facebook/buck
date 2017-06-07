@@ -21,31 +21,33 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
-public class DTestDescription implements
-    Description<DTestDescription.Arg>,
-    ImplicitDepsInferringDescription<DTestDescription.Arg>,
-    VersionRoot<DTestDescription.Arg> {
+public class DTestDescription
+    implements Description<DTestDescriptionArg>,
+        ImplicitDepsInferringDescription<DTestDescription.AbstractDTestDescriptionArg>,
+        VersionRoot<DTestDescriptionArg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -64,69 +66,71 @@ public class DTestDescription implements
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<DTestDescriptionArg> getConstructorArgType() {
+    return DTestDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args)
+      CellPathResolver cellRoots,
+      DTestDescriptionArg args)
       throws NoSuchBuildTargetException {
 
     BuildTarget target = params.getBuildTarget();
 
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     SymlinkTree sourceTree =
         buildRuleResolver.addToIndex(
             DDescriptionUtils.createSourceSymlinkTree(
                 DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
                 params,
+                ruleFinder,
                 pathResolver,
-                args.srcs));
+                args.getSrcs()));
 
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.
     BuildTarget binaryTarget =
         DDescriptionUtils.createBuildTargetForFile(
-            target,
-            "build-",
-            target.getFullyQualifiedName(),
-            cxxPlatform);
+            target, "build-", target.getFullyQualifiedName(), cxxPlatform);
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
-            params.copyWithBuildTarget(binaryTarget),
+            params.withBuildTarget(binaryTarget),
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
             cxxBuckConfig,
             ImmutableList.of("-unittest"),
-            args.srcs,
-            args.linkerFlags,
+            args.getSrcs(),
+            args.getLinkerFlags(),
             DIncludes.builder()
-                .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
-                .addAllSources(args.srcs.getPaths())
+                .setLinkTree(sourceTree.getSourcePathToOutput())
+                .addAllSources(args.getSrcs().getPaths())
                 .build());
+    buildRuleResolver.addToIndex(binaryRule);
 
     return new DTest(
-        params.appendExtraDeps(ImmutableList.of(binaryRule)),
-        new SourcePathResolver(buildRuleResolver),
+        params.copyAppendingExtraDeps(ImmutableList.of(binaryRule)),
         binaryRule,
-        args.contacts,
-        args.labels,
-        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+        args.getContacts(),
+        args.getLabels(),
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    return cxxPlatform.getLd().getParseTimeDeps();
+      AbstractDTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    extraDepsBuilder.addAll(cxxPlatform.getLd().getParseTimeDeps());
   }
 
   @Override
@@ -134,13 +138,12 @@ public class DTestDescription implements
     return true;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourceList srcs;
-    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
-    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
-    public Optional<Long> testRuleTimeoutMs;
-    public ImmutableSortedSet<BuildTarget> deps;
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractDTestDescriptionArg
+      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
+    SourceList getSrcs();
+
+    ImmutableList<String> getLinkerFlags();
   }
 }

@@ -17,13 +17,16 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
-
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public interface Compiler extends Tool {
 
-  Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir);
+  ImmutableList<String> getFlagsForReproducibleBuild(
+      String alternativeCompilationDir, Path currentCellPath);
 
   Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
 
@@ -42,4 +45,6 @@ public interface Compiler extends Tool {
   ImmutableList<String> getPdcFlags();
 
   boolean shouldSanitizeOutputBinary();
+
+  InputStream getErrorStream(ProcessExecutor.LaunchedProcess compilerProcess);
 }

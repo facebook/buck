@@ -21,7 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 
 /**
  * Provides methods to extract symbol names from native formats (e.g. binaries, shared libraries,
@@ -34,13 +34,12 @@ public interface SymbolNameTool {
    *
    * @param target the name to use when creating the rule which extracts the symbols.
    * @return a {@link SourcePath} referring to a file containing all undefined symbols, one per
-   *         line, in the given inputs.
+   *     line, in the given inputs.
    */
   SourcePath createUndefinedSymbolsFile(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs);
-
 }

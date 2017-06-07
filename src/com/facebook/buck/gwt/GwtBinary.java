@@ -16,6 +16,7 @@
 
 package com.facebook.buck.gwt;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
@@ -27,6 +28,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -40,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
@@ -52,8 +54,8 @@ import java.util.List;
 public class GwtBinary extends AbstractBuildRule {
 
   /**
-   * Valid values for the GWT Compiler's {@code -style} flag.
-   * Acceptable values are defined in the GWT docs at http://bit.ly/1sclx5O.
+   * Valid values for the GWT Compiler's {@code -style} flag. Acceptable values are defined in the
+   * GWT docs at http://bit.ly/1sclx5O.
    */
   enum Style {
     /** Named "obf" for "obfuscated". This is the default style. */
@@ -66,33 +68,21 @@ public class GwtBinary extends AbstractBuildRule {
   private static final String GWT_COMPILER_CLASS = "com.google.gwt.dev.Compiler";
 
   private final Path outputFile;
-  @AddToRuleKey
-  private final ImmutableSortedSet<String> modules;
-  @AddToRuleKey
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
-  @AddToRuleKey
-  private final ImmutableList<String> vmArgs;
-  @AddToRuleKey
-  private final Style style;
-  @AddToRuleKey
-  private final boolean draftCompile;
-  @AddToRuleKey
-  private final int optimize;
-  @AddToRuleKey
-  private final int localWorkers;
-  @AddToRuleKey
-  private final boolean strict;
-  @AddToRuleKey
-  private final ImmutableList<String> experimentalArgs;
+  @AddToRuleKey private final ImmutableSortedSet<String> modules;
+  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final ImmutableList<String> vmArgs;
+  @AddToRuleKey private final Style style;
+  @AddToRuleKey private final boolean draftCompile;
+  @AddToRuleKey private final int optimize;
+  @AddToRuleKey private final int localWorkers;
+  @AddToRuleKey private final boolean strict;
+  @AddToRuleKey private final ImmutableList<String> experimentalArgs;
   // Deliberately not added to rule key
-  private final ImmutableSortedSet<Path> gwtModuleJars;
+  private final ImmutableSortedSet<SourcePath> gwtModuleJars;
 
-  /**
-   * @param modules The GWT modules to build with the GWT compiler.
-   */
+  /** @param modules The GWT modules to build with the GWT compiler. */
   GwtBinary(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSortedSet<String> modules,
       JavaRuntimeLauncher javaRuntimeLauncher,
       List<String> vmArgs,
@@ -102,18 +92,17 @@ public class GwtBinary extends AbstractBuildRule {
       int localWorkers,
       boolean strict,
       List<String> experimentalArgs,
-      ImmutableSortedSet<Path> gwtModuleJars) {
-    super(buildRuleParams, resolver);
+      ImmutableSortedSet<SourcePath> gwtModuleJars) {
+    super(buildRuleParams);
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
-    this.outputFile = BuildTargets.getGenPath(
-        buildRuleParams.getProjectFilesystem(),
-        buildTarget,
-        "__gwt_binary_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".zip");
+    this.outputFile =
+        BuildTargets.getGenPath(
+            buildRuleParams.getProjectFilesystem(),
+            buildTarget,
+            "__gwt_binary_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".zip");
     this.modules = modules;
     Preconditions.checkArgument(
-        !modules.isEmpty(),
-        "Must specify at least one module for %s.",
-        buildTarget);
+        !modules.isEmpty(), "Must specify at least one module for %s.", buildTarget);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.style = style;
@@ -123,9 +112,7 @@ public class GwtBinary extends AbstractBuildRule {
     this.optimize = optimize;
 
     Preconditions.checkArgument(
-        localWorkers > 0,
-        "localWorkers must be greater than zero: %d",
-        localWorkers);
+        localWorkers > 0, "localWorkers must be greater than zero: %d", localWorkers);
     this.localWorkers = localWorkers;
 
     this.strict = strict;
@@ -135,69 +122,83 @@ public class GwtBinary extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a clean directory where the .zip file will be written.
-    Path workingDirectory = getPathToOutput().getParent();
+    Path workingDirectory =
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getParent();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    steps.add(new MakeCleanDirectoryStep(projectFilesystem, workingDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
     // Write the deploy files into a separate directory so that the generated .zip is smaller.
     final Path deployDirectory = workingDirectory.resolve("deploy");
-    steps.add(new MkdirStep(projectFilesystem, deployDirectory));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), deployDirectory)));
 
-    Step javaStep = new ShellStep(projectFilesystem.getRootPath()) {
-      @Override
-      public String getShortName() {
-        return "gwt-compile";
-      }
+    Step javaStep =
+        new ShellStep(projectFilesystem.getRootPath()) {
+          @Override
+          public String getShortName() {
+            return "gwt-compile";
+          }
 
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
-        javaArgsBuilder.add(javaRuntimeLauncher.getCommand());
-        javaArgsBuilder.add("-Dgwt.normalizeTimestamps=true");
-        javaArgsBuilder.addAll(vmArgs);
-        javaArgsBuilder.add(
-            "-classpath", Joiner.on(File.pathSeparator).join(
-                Iterables.transform(
-                    getClasspathEntries(),
-                    getProjectFilesystem()::resolve)),
-            GWT_COMPILER_CLASS,
-            "-war", getProjectFilesystem().resolve(getPathToOutput()).toString(),
-            "-style", style.name(),
-            "-optimize", String.valueOf(optimize),
-            "-localWorkers", String.valueOf(localWorkers),
-            "-deploy", getProjectFilesystem().resolve(deployDirectory).toString());
-        if (draftCompile) {
-          javaArgsBuilder.add("-draftCompile");
-        }
-        if (strict) {
-          javaArgsBuilder.add("-strict");
-        }
-        javaArgsBuilder.addAll(experimentalArgs);
-        javaArgsBuilder.addAll(modules);
-        final ImmutableList<String> javaArgs = javaArgsBuilder.build();
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(
+              ExecutionContext executionContext) {
+            ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
+            javaArgsBuilder.add(javaRuntimeLauncher.getCommand());
+            javaArgsBuilder.add("-Dgwt.normalizeTimestamps=true");
+            javaArgsBuilder.addAll(vmArgs);
+            javaArgsBuilder.add(
+                "-classpath",
+                Joiner.on(File.pathSeparator)
+                    .join(
+                        Iterables.transform(
+                            getClasspathEntries(context.getSourcePathResolver()),
+                            getProjectFilesystem()::resolve)),
+                GWT_COMPILER_CLASS,
+                "-war",
+                context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput()).toString(),
+                "-style",
+                style.name(),
+                "-optimize",
+                String.valueOf(optimize),
+                "-localWorkers",
+                String.valueOf(localWorkers),
+                "-deploy",
+                getProjectFilesystem().resolve(deployDirectory).toString());
+            if (draftCompile) {
+              javaArgsBuilder.add("-draftCompile");
+            }
+            if (strict) {
+              javaArgsBuilder.add("-strict");
+            }
+            javaArgsBuilder.addAll(experimentalArgs);
+            javaArgsBuilder.addAll(modules);
+            final ImmutableList<String> javaArgs = javaArgsBuilder.build();
 
-        return javaArgs;
-      }
-    };
+            return javaArgs;
+          }
+        };
     steps.add(javaStep);
 
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return steps.build();
   }
 
-  /**
-   * @return The {@code .zip} file produced by this rule.
-   */
+  /** @return The {@code .zip} file produced by this rule. */
   @Override
-  public Path getPathToOutput() {
-    return outputFile;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
   }
 
   /**
@@ -205,17 +206,17 @@ public class GwtBinary extends AbstractBuildRule {
    * specified by {@link #modules}.
    */
   @VisibleForTesting
-  Iterable<Path> getClasspathEntries() {
+  Iterable<Path> getClasspathEntries(SourcePathResolver pathResolver) {
     ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
-    classpathEntries.addAll(gwtModuleJars);
+    classpathEntries.addAll(pathResolver.getAllAbsolutePaths(gwtModuleJars));
     for (BuildRule dep : getDeclaredDeps()) {
       if (!(dep instanceof JavaLibrary)) {
         continue;
       }
 
       JavaLibrary javaLibrary = (JavaLibrary) dep;
-      for (Path path : javaLibrary.getOutputClasspaths()) {
-        classpathEntries.add(path);
+      for (SourcePath path : javaLibrary.getOutputClasspaths()) {
+        classpathEntries.add(pathResolver.getAbsolutePath(path));
       }
     }
     return classpathEntries.build();

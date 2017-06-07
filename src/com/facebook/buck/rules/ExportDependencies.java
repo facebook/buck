@@ -18,9 +18,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * {@link BuildRule} that can export a subset of it's dependencies.
- */
+/** {@link BuildRule} that can export a subset of it's dependencies. */
 public interface ExportDependencies extends BuildRule {
   ImmutableSortedSet<BuildRule> getExportedDeps();
 }

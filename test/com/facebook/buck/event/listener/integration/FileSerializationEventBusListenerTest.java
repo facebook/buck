@@ -20,43 +20,39 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class FileSerializationEventBusListenerTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void shouldSerializeEventsToFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_project", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
     workspace.setUp();
 
     Path eventsOutputFile = workspace.getPath("events.json");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        "--all",
-        "--output-test-events-to-file",
-        eventsOutputFile.toAbsolutePath().toString());
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--all",
+            "--output-test-events-to-file",
+            eventsOutputFile.toAbsolutePath().toString());
     result.assertSuccess();
 
     List<String> lines = Files.readAllLines(eventsOutputFile, StandardCharsets.UTF_8);
-    assertFalse(
-        "The events output file should not be empty",
-        lines.isEmpty());
+    assertFalse("The events output file should not be empty", lines.isEmpty());
     assertThat(
         "An event should have something JSON-like in it",
         lines.get(0),

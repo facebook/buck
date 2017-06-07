@@ -25,15 +25,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.SortedSet;
 
-/**
- * Common conversion functions from raw Description Arg specifications.
- */
+/** Common conversion functions from raw Description Arg specifications. */
 public class RuleUtils {
 
   /** Utility class: do not instantiate. */
@@ -43,6 +40,7 @@ public class RuleUtils {
       Function<SourcePath, Path> resolver,
       Iterable<SourceWithFlags> sources,
       Iterable<SourcePath> extraXcodeSources,
+      Iterable<SourcePath> extraXcodeFiles,
       Iterable<SourcePath> publicHeaders,
       Iterable<SourcePath> privateHeaders) {
     Path rootPath = Paths.get("root");
@@ -56,6 +54,11 @@ public class RuleUtils {
     for (SourcePath sourcePath : extraXcodeSources) {
       Path path = rootPath.resolve(resolver.apply(sourcePath));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(SourceWithFlags.of(sourcePath));
+      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+    }
+    for (SourcePath sourcePath : extraXcodeFiles) {
+      Path path = rootPath.resolve(resolver.apply(sourcePath));
+      GroupedSource groupedSource = GroupedSource.ofIgnoredSource(sourcePath);
       entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
     for (SourcePath publicHeader : publicHeaders) {
@@ -86,15 +89,11 @@ public class RuleUtils {
 
     ImmutableList<GroupedSource> groupedSources =
         createGroupsFromEntryMaps(
-            subgroups,
-            entries,
-            groupedSourceNameComparator,
-            rootPath,
-            rootPath);
+            subgroups, entries, groupedSourceNameComparator, rootPath, rootPath);
 
     // Remove the longest common prefix from all paths.
-    while (groupedSources.size() == 1 &&
-        groupedSources.get(0).getType() == GroupedSource.Type.SOURCE_GROUP) {
+    while (groupedSources.size() == 1
+        && groupedSources.get(0).getType() == GroupedSource.Type.SOURCE_GROUP) {
       groupedSources = ImmutableList.copyOf(groupedSources.get(0).getSourceGroup().get());
     }
 
@@ -114,7 +113,6 @@ public class RuleUtils {
       String name2 = source2.getName(pathResolver);
       return name1.compareTo(name2);
     }
-
   }
 
   @VisibleForTesting
@@ -133,11 +131,7 @@ public class RuleUtils {
               subgroupName,
               subgroupPath.subpath(rootGroupPath.getNameCount(), subgroupPath.getNameCount()),
               createGroupsFromEntryMaps(
-                  subgroups,
-                  entries,
-                  comparator,
-                  rootGroupPath,
-                  subgroupPath)));
+                  subgroups, entries, comparator, rootGroupPath, subgroupPath)));
     }
 
     SortedSet<GroupedSource> sortedEntries =
@@ -148,5 +142,4 @@ public class RuleUtils {
 
     return groupBuilder.build().asList();
   }
-
 }

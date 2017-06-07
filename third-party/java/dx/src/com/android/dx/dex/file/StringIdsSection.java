@@ -117,7 +117,7 @@ public final class StringIdsSection
      * @param string {@code non-null;} the string to intern
      * @return {@code non-null;} the interned string
      */
-    public StringIdItem intern(StringIdItem string) {
+    public synchronized StringIdItem intern(StringIdItem string) {
         if (string == null) {
             throw new NullPointerException("string == null");
         }
@@ -140,7 +140,7 @@ public final class StringIdsSection
      *
      * @param nat {@code non-null;} the name-and-type
      */
-    public void intern(CstNat nat) {
+    public synchronized void intern(CstNat nat) {
         intern(nat.getName());
         intern(nat.getDescriptor());
     }

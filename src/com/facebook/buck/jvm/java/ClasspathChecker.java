@@ -17,30 +17,25 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.PathListing;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class ClasspathChecker {
 
-  private static final ImmutableSet<String> ALLOWED_EXTENSIONS_SET = ImmutableSet.of(
-      "jar",
-      "zip"
-  );
+  private static final ImmutableSet<String> ALLOWED_EXTENSIONS_SET = ImmutableSet.of("jar", "zip");
 
   private final String separator;
   private final String pathSeparator;
@@ -58,11 +53,7 @@ public class ClasspathChecker {
         Files::isRegularFile,
         (path, glob) -> {
           try {
-            return PathListing.listMatchingPaths(
-                path,
-                glob,
-                PathListing.GET_PATH_MODIFIED_TIME
-            );
+            return PathListing.listMatchingPaths(path, glob, PathListing.GET_PATH_MODIFIED_TIME);
           } catch (IOException e) {
             throw new UncheckedIOException(e);
           }
@@ -86,17 +77,16 @@ public class ClasspathChecker {
   }
 
   /**
-   * Parses a Java classpath string ("path/to/foo:baz.jar:blech.zip:path/to/*")
-   * and checks if at least one entry is valid (exists on disk).
+   * Parses a Java classpath string ("path/to/foo:baz.jar:blech.zip:path/to/*") and checks if at
+   * least one entry is valid (exists on disk).
    *
-   * From http://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html :
+   * <p>From http://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html :
    *
-   * Class path entries can contain the basename wildcard character *,
-   * which is considered equivalent to specifying a list of all the
-   * files in the directory with the extension .jar or .JAR. For
-   * example, the class path entry foo/* specifies all JAR files in the
-   * directory named foo. A classpath entry consisting simply of *
-   * expands to a list of all the jar files in the current directory.
+   * <p>Class path entries can contain the basename wildcard character *, which is considered
+   * equivalent to specifying a list of all the files in the directory with the extension .jar or
+   * .JAR. For example, the class path entry foo/* specifies all JAR files in the directory named
+   * foo. A classpath entry consisting simply of * expands to a list of all the jar files in the
+   * current directory.
    */
   public boolean validateClasspath(String classpath) {
     for (String entry : Splitter.on(pathSeparator).split(classpath)) {
@@ -112,9 +102,7 @@ public class ClasspathChecker {
 
       if (Iterables.getLast(classpathComponents).equals("*")) {
         // Trim the * off the path.
-        List<String> dirComponents = classpathComponents.subList(
-            0,
-            classpathComponents.size() - 1);
+        List<String> dirComponents = classpathComponents.subList(0, classpathComponents.size() - 1);
         Path entryDir = toPathFunc.apply(Joiner.on(separator).join(dirComponents));
         if (!Iterables.isEmpty(globberFunc.apply(entryDir, "*.jar"))) {
           return true;
@@ -125,10 +113,10 @@ public class ClasspathChecker {
         Path entryPath = toPathFunc.apply(entry);
         if (isDirectoryFunc.apply(entryPath)) {
           return true;
-        } else if (isFileFunc.apply(entryPath) &&
-                   ALLOWED_EXTENSIONS_SET.contains(
-                       com.google.common.io.Files.getFileExtension(
-                           entryPath.toString().toLowerCase(Locale.US)))) {
+        } else if (isFileFunc.apply(entryPath)
+            && ALLOWED_EXTENSIONS_SET.contains(
+                com.google.common.io.Files.getFileExtension(
+                    entryPath.toString().toLowerCase(Locale.US)))) {
           return true;
         }
       }

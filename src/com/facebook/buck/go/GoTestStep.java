@@ -20,13 +20,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Run a go test command and stream the output to a file.
- */
+/** Run a go test command and stream the output to a file. */
 public class GoTestStep extends AbstractTestStep {
 
   private static final String NAME = "go test";

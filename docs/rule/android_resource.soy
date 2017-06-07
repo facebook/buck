@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'android_resource()' /}
+    {param navid: 'rule_android_resource' /}
     {param prettify: true /}
     {param description}
       A rule that is used to bundle Android resources that are traditionally
@@ -34,7 +35,12 @@ generated via <code>aapt --output-text-symbols</code>.
   {param name: 'res' /}
   {param default : 'None' /}
   {param desc}
-  Path to a directory containing Android resources.
+  A dictionary mapping relative resource paths to either
+  the resource files or the build targets that generate them.
+  The <a href="{ROOT}function/subdir_glob.html"><code>subdir_glob()</code></a> function
+  can be used to generate dictionaries based on a directory structure of files checked
+  into the repository. Alternatively, this can be a path to a directory containing
+  Android resources, although this option is deprecated and might be removed in the future.
   {/param}
 {/call}
 
@@ -51,8 +57,35 @@ generated via <code>aapt --output-text-symbols</code>.
   {param name: 'assets' /}
   {param default : 'None' /}
   {param desc}
-  Path to a directory containing Android assets.
+  A dictionary mapping relative asset paths to either
+  the asset files or the build targets that generate them.
+  The <a href="{ROOT}function/subdir_glob.html"><code>subdir_glob()</code></a> function
+  can be used to generate dictionaries based on a directory structure of files checked
+  into the repository. Alternatively, this can be a path to a directory containing
+  Android assets, although this option is deprecated and might be removed in the future.
   {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'project_res' /}
+  {param default : 'None' /}
+  {param desc}
+  A directory containing resources to be used for project generation.
+  If not provided, defaults to whatever the build uses.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'project_assets' /}
+  {param default : 'None' /}
+  {param desc}
+  A directory containing assets to be used for project generation.
+  If not provided, defaults to whatever the build uses.
+  {/param}
+{/call}
+
+{call android_common.manifest_arg}
+  {param type: 'resource' /}
 {/call}
 
 {call buck.arg}
@@ -75,7 +108,7 @@ such simple rules are often named <code>res</code>:
 {literal}<pre class="prettyprint lang-py">
 android_resource(
   name = 'res',
-  res = 'res',
+  res = subdir_glob([('res', '**')]),
   package = 'com.example',
 )
 </pre>{/literal}

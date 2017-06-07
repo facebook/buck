@@ -31,9 +31,9 @@ public class LineFetcher implements AutoCloseable {
   private final PushbackReader inputReader;
 
   LineFetcher(Reader baseReader) {
-    inputReader = new PushbackReader(
-        new BufferedReader(baseReader),
-        BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
+    inputReader =
+        new PushbackReader(
+            new BufferedReader(baseReader), BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
   }
 
   @Nullable
@@ -63,8 +63,7 @@ public class LineFetcher implements AutoCloseable {
     return c == '\r' || c == '\n';
   }
 
-  private void pushUnreadBack(int lineEnd, int read)
-    throws IOException {
+  private void pushUnreadBack(int lineEnd, int read) throws IOException {
     int startOfPushback = lineEnd + 1;
 
     if (readBuffer[lineEnd] == '\r') {
@@ -78,8 +77,7 @@ public class LineFetcher implements AutoCloseable {
     inputReader.unread(readBuffer, startOfPushback, read - startOfPushback);
   }
 
-  private void handlePossibleWindowsLineEndingWithUnreadNewline()
-      throws IOException {
+  private void handlePossibleWindowsLineEndingWithUnreadNewline() throws IOException {
     inputReader.read(dosLineEndingCheckBuffer, 0, 1);
     if (dosLineEndingCheckBuffer[0] == '\n') {
       return;

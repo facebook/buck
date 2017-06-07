@@ -21,39 +21,37 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
-
-import org.easymock.EasyMockSupport;
-import org.eclipse.jetty.server.Request;
-import org.junit.Test;
-
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintWriter; // NOPMD required by API
 import java.io.StringWriter;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.easymock.EasyMockSupport;
+import org.eclipse.jetty.server.Request;
+import org.junit.Test;
 
 public class TemplateHandlerTest extends EasyMockSupport {
 
   @Test
   public void testHandleSimpleRequest() throws IOException, ServletException {
-    TemplateHandlerDelegate delegate = new TemplateHandlerDelegate() {
-      @Override
-      public ImmutableSet<String> getTemplates() {
-        return ImmutableSet.of("example.soy");
-      }
+    TemplateHandlerDelegate delegate =
+        new TemplateHandlerDelegate() {
+          @Override
+          public ImmutableSet<String> getTemplates() {
+            return ImmutableSet.of("example.soy");
+          }
 
-      @Override
-      public String getTemplateForRequest(Request baseRequest) {
-        return "example.hello";
-      }
+          @Override
+          public String getTemplateForRequest(Request baseRequest) {
+            return "example.hello";
+          }
 
-      @Override
-      public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
-        return new SoyMapData("name", "Michael");
-      }
-    };
+          @Override
+          public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
+            return new SoyMapData("name", "Michael");
+          }
+        };
 
     String target = "target";
     Request baseRequest = createMock(Request.class);
@@ -65,7 +63,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
     response.setStatus(200);
     response.setContentType("text/html; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 
@@ -79,23 +77,24 @@ public class TemplateHandlerTest extends EasyMockSupport {
 
   @Test
   public void testHandleMalformedRequest() throws IOException, ServletException {
-    TemplateHandlerDelegate delegate = new TemplateHandlerDelegate() {
-      @Override
-      public ImmutableSet<String> getTemplates() {
-        return ImmutableSet.of("example.soy");
-      }
+    TemplateHandlerDelegate delegate =
+        new TemplateHandlerDelegate() {
+          @Override
+          public ImmutableSet<String> getTemplates() {
+            return ImmutableSet.of("example.soy");
+          }
 
-      @Override
-      public String getTemplateForRequest(Request baseRequest) {
-        return "example.hello";
-      }
+          @Override
+          public String getTemplateForRequest(Request baseRequest) {
+            return "example.hello";
+          }
 
-      @Override
-      public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
-        // Returning null should cause a 500 to be returned.
-        return null;
-      }
-    };
+          @Override
+          public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
+            // Returning null should cause a 500 to be returned.
+            return null;
+          }
+        };
 
     String target = "target";
     Request baseRequest = createMock(Request.class);
@@ -107,7 +106,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
     response.setStatus(500);
     response.setContentType("text/plain; charset=utf-8");
     StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
+    PrintWriter printWriter = new PrintWriter(stringWriter); // NOPMD required by API
     expect(response.getWriter()).andReturn(printWriter);
     response.flushBuffer();
 

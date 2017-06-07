@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
 
 public class AuditRulesCommandTest {
@@ -34,11 +33,14 @@ public class AuditRulesCommandTest {
     assertEquals("3.14", AuditRulesCommand.createDisplayString(3.14));
     assertEquals("\"Hello, world!\"", AuditRulesCommand.createDisplayString("Hello, world!"));
     assertEquals("[\n]", AuditRulesCommand.createDisplayString(ImmutableList.<String>of()));
-    assertEquals("[\n  \"foo\",\n  \"bar\",\n  \"baz\",\n]",
+    assertEquals(
+        "[\n  \"foo\",\n  \"bar\",\n  \"baz\",\n]",
         AuditRulesCommand.createDisplayString(ImmutableList.of("foo", "bar", "baz")));
-    assertEquals("{\n  \"foo\": 1,\n  \"bar\": 2,\n  \"baz\": 3,\n}",
+    assertEquals(
+        "{\n  \"foo\": 1,\n  \"bar\": 2,\n  \"baz\": 3,\n}",
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", 1, "bar", 2, "baz", 3)));
-    assertEquals("{\n  \"foo\": [\n    1,\n  ],\n}",
+    assertEquals(
+        "{\n  \"foo\": [\n    1,\n  ],\n}",
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", ImmutableList.of(1))));
   }
 

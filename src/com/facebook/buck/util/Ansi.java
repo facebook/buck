@@ -17,13 +17,10 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.FluentIterable;
-
 import java.io.PrintStream;
 import java.util.Collections;
 
-/**
- * Encapsulates the specifics of writing to a particular kind of terminal.
- */
+/** Encapsulates the specifics of writing to a particular kind of terminal. */
 public final class Ansi {
 
   private static final String RESET = "\u001B[0m";
@@ -71,9 +68,7 @@ public final class Ansi {
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
   private static final Ansi forceTtyAnsi = new Ansi(true /* isAnsiTerminal */);
 
-  /**
-   * Construct an Ansi object and conditionally enable fancy escape sequences.
-   */
+  /** Construct an Ansi object and conditionally enable fancy escape sequences. */
   public Ansi(boolean isAnsiTerminal) {
     this.isAnsiTerminal = isAnsiTerminal;
     clearLineString = isAnsiTerminal ? ANSI_ERASE_LINE : "";
@@ -171,9 +166,7 @@ public final class Ansi {
     }
   }
 
-  /**
-   * Moves the cursor {@code y} lines up.
-   */
+  /** Moves the cursor {@code y} lines up. */
   public String cursorPreviousLine(int y) {
     if (!isAnsiTerminal) {
       return "";
@@ -192,14 +185,16 @@ public final class Ansi {
     }
   }
 
-  /**
-   * Clears the line the cursor is currently on.
-   */
+  /** Clears the line the cursor is currently on. */
   public String clearLine() {
     return clearLineString;
   }
 
-  public static enum SeverityLevel { OK, WARNING, ERROR }
+  public static enum SeverityLevel {
+    OK,
+    WARNING,
+    ERROR
+  }
 
   private String wrapWithColor(String color, String text) {
     if (!isAnsiTerminal || text.length() == 0) {
@@ -219,9 +214,7 @@ public final class Ansi {
     return text.substring(0, firstNonTab) + color + text.substring(firstNonTab) + RESET;
   }
 
-  /**
-   * @return the index of the first character that's not a tab, or -1 if none is found.
-   */
+  /** @return the index of the first character that's not a tab, or -1 if none is found. */
   private static int indexOfFirstNonTab(String s) {
     final int length = s.length();
     for (int i = 1; i < length; i++) {

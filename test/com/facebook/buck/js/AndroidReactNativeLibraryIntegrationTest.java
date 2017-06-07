@@ -29,34 +29,30 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-
+import java.io.IOException;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Optional;
-
 public class AndroidReactNativeLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   private ProjectFilesystem filesystem;
 
   @BeforeClass
-  public static void setupOnce() throws IOException {
+  public static void setupOnce() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
   }
 
   @Before
-  public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_rn", tmpFolder);
+  public void setUp() throws InterruptedException, IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "android_rn", tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
@@ -65,8 +61,8 @@ public class AndroidReactNativeLibraryIntegrationTest {
   public void testApkContainsJSAssetAndDrawables() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
     zipInspector.assertFileExists("res/drawable-hdpi-v4/image.png");
@@ -77,8 +73,8 @@ public class AndroidReactNativeLibraryIntegrationTest {
   public void testApkContainsJSAssetAndDrawablesForUnbundle() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-unbundle");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileExists("assets/js/helpers.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
@@ -90,8 +86,8 @@ public class AndroidReactNativeLibraryIntegrationTest {
   public void testApkContainsJSAssetAndDrawablesForIndexedUnbundle() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-indexed_unbundle");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileDoesNotExist("assets/js/helpers.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
@@ -104,19 +100,17 @@ public class AndroidReactNativeLibraryIntegrationTest {
     workspace.enableDirCache();
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-without-rn-res");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
+    ZipInspector zipInspector =
+        new ZipInspector(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
 
     workspace.runBuckCommand("clean");
     workspace.replaceFileContents(
-        "apps/sample/BUCK",
-        "#REPLACE_ME_WITH_ANOTHER_RES",
-        "'//res/com/sample/unused:unused'");
+        "apps/sample/BUCK", "#REPLACE_ME_WITH_ANOTHER_RES", "'//res/com/sample/unused:unused'");
 
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
+    zipInspector =
+        new ZipInspector(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
   }
 

@@ -24,7 +24,6 @@ import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
 import com.intellij.openapi.project.Project;
-
 import org.jetbrains.annotations.NotNull;
 
 public class BuckTestConsoleProperties extends SMTRunnerConsoleProperties
@@ -34,7 +33,8 @@ public class BuckTestConsoleProperties extends SMTRunnerConsoleProperties
 
   public BuckTestConsoleProperties(
       ProcessHandler handler,
-      Project project, RunProfile runConfiguration,
+      Project project,
+      RunProfile runConfiguration,
       String frameworkName,
       Executor executor) {
     super(project, runConfiguration, frameworkName, executor);
@@ -43,12 +43,8 @@ public class BuckTestConsoleProperties extends SMTRunnerConsoleProperties
 
   @Override
   public OutputToGeneralTestEventsConverter createTestEventsConverter(
-      @NotNull String testFrameworkName,
-      @NotNull TestConsoleProperties consoleProperties) {
+      @NotNull String testFrameworkName, @NotNull TestConsoleProperties consoleProperties) {
     return new BuckToGeneralTestEventsConverter(
-        testFrameworkName,
-        consoleProperties,
-        mHandler,
-        getProject());
+        testFrameworkName, consoleProperties, mHandler, getProject());
   }
 }

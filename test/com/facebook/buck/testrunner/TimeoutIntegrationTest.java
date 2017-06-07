@@ -27,70 +27,70 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Integration test to verify that timeouts are handled as expected by {@link JUnitRunner}.
- * <p>
- * Note that there is a quirk when running tests with threads and timeouts described at
+ *
+ * <p>Note that there is a quirk when running tests with threads and timeouts described at
  * https://github.com/junit-team/junit/issues/686. This test verifies that Buck honors this behavior
  * of JUnit with its custom {@link BuckBlockJUnit4ClassRunner}.
- * <p>
- * That said, this behavior of JUnit interacts badly with a default test timeout in
- * {@code .buckconfig} because it requires adding {@link org.junit.rules.Timeout} to the handful of
- * tests that exploit this behavior.
+ *
+ * <p>That said, this behavior of JUnit interacts badly with a default test timeout in {@code
+ * .buckconfig} because it requires adding {@link org.junit.rules.Timeout} to the handful of tests
+ * that exploit this behavior.
+ *
  */
 public class TimeoutIntegrationTest {
 
   private static final String PATH_TO_TIMEOUT_BEHAVIOR_TEST = "TimeoutChangesBehaviorTest.java";
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testThatTimeoutsInTestsWorkAsExpected() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "timeouts", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder);
     workspace.setUp();
 
     // ExceedsAnnotationTimeoutTest should fail.
-    ProcessResult exceedsAnnotationTimeoutTestResult = workspace.runBuckCommand(
-        "test", "//:ExceedsAnnotationTimeoutTest");
+    ProcessResult exceedsAnnotationTimeoutTestResult =
+        workspace.runBuckCommand("test", "//:ExceedsAnnotationTimeoutTest");
     exceedsAnnotationTimeoutTestResult.assertTestFailure("Test should fail due to timeout");
-    assertThat(exceedsAnnotationTimeoutTestResult.getStderr(),
+    assertThat(
+        exceedsAnnotationTimeoutTestResult.getStderr(),
         containsString(
-            "FAILURE com.example.ExceedsAnnotationTimeoutTest testShouldFailDueToExpiredTimeout: " +
-            "test timed out after 1000 milliseconds"));
+            "FAILURE com.example.ExceedsAnnotationTimeoutTest testShouldFailDueToExpiredTimeout: "
+                + "test timed out after 1000 milliseconds"));
 
     // TimeoutChangesBehaviorTest should pass.
-    ProcessResult timeoutTestWithoutTimeout = workspace.runBuckCommand(
-        "test", "//:TimeoutChangesBehaviorTest");
+    ProcessResult timeoutTestWithoutTimeout =
+        workspace.runBuckCommand("test", "//:TimeoutChangesBehaviorTest");
     timeoutTestWithoutTimeout.assertSuccess();
 
     // TimeoutChangesBehaviorTest with @Test(timeout) specified should fail.
     // See https://github.com/junit-team/junit/issues/686 about why it fails.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ true);
-    ProcessResult timeoutTestWithTimeoutOnAnnotation = workspace.runBuckCommand(
-        "test", "//:TimeoutChangesBehaviorTest");
+    ProcessResult timeoutTestWithTimeoutOnAnnotation =
+        workspace.runBuckCommand("test", "//:TimeoutChangesBehaviorTest");
     timeoutTestWithTimeoutOnAnnotation.assertTestFailure();
-    assertThat(timeoutTestWithTimeoutOnAnnotation.getStderr(),
+    assertThat(
+        timeoutTestWithTimeoutOnAnnotation.getStderr(),
         containsString(
-            "FAILURE com.example.TimeoutChangesBehaviorTest " +
-            "testTimeoutDictatesTheSuccessOfThisTest: Database should have an open transaction " +
-            "due to setUp()."));
+            "FAILURE com.example.TimeoutChangesBehaviorTest "
+                + "testTimeoutDictatesTheSuccessOfThisTest: Database should have an open transaction "
+                + "due to setUp()."));
 
     // TimeoutChangesBehaviorTest with @Rule(Timeout) should pass.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ false);
     insertTimeoutRule(PATH_TO_TIMEOUT_BEHAVIOR_TEST);
-    ProcessResult timeoutTestWithTimeoutRule = workspace.runBuckCommand(
-        "test", "//:TimeoutChangesBehaviorTest");
+    ProcessResult timeoutTestWithTimeoutRule =
+        workspace.runBuckCommand("test", "//:TimeoutChangesBehaviorTest");
     timeoutTestWithTimeoutRule.assertSuccess();
 
     workspace.verify();
@@ -98,8 +98,9 @@ public class TimeoutIntegrationTest {
 
   @Test
   public void individualTestCanOverrideTheDefaultTestTimeout() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "overridden_timeouts", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "overridden_timeouts", temporaryFolder);
     workspace.setUp();
 
     // The .buckconfig in that workspace sets the default timeout to 1000ms.
@@ -110,27 +111,29 @@ public class TimeoutIntegrationTest {
 
   @Test
   public void testThatTimeoutsDumpsThreadStacks() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "timeouts", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:SleepTest");
 
-    assertThat(testResult.getStderr(),
+    assertThat(
+        testResult.getStderr(),
         containsString("at com.example.SleepTest.testSleepABunch(SleepTest.java:"));
   }
 
-    /**
-     * Swaps all instances of {@code @Test} with {@code @Test(timeout = 10000)} in the specified Java
-     * file, as determined by the value of {@code addTimeout}.
-     */
+  /**
+   * Swaps all instances of {@code @Test} with {@code @Test(timeout = 10000)} in the specified Java
+   * file, as determined by the value of {@code addTimeout}.
+   */
   private void modifyTimeoutInTestAnnotation(String path, final boolean addTimeout)
       throws IOException {
-    Function<String, String> transform = line -> {
-      String original = addTimeout ? "@Test" : "@Test(timeout = 100000)";
-      String replacement = addTimeout ? "@Test(timeout = 100000)" : "@Test";
-      return line.replace(original, replacement) + '\n';
-    };
+    Function<String, String> transform =
+        line -> {
+          String original = addTimeout ? "@Test" : "@Test(timeout = 100000)";
+          String replacement = addTimeout ? "@Test(timeout = 100000)" : "@Test";
+          return line.replace(original, replacement) + '\n';
+        };
     rewriteFileWithTransform(path, transform);
   }
 
@@ -142,22 +145,24 @@ public class TimeoutIntegrationTest {
    * </pre>
    */
   private void insertTimeoutRule(String path) throws IOException {
-    Function<String, String> transform = line -> {
-      if (line.startsWith("public class")) {
-        return line + "\n\n" +
-            "  @org.junit.Rule\n" +
-            "  public org.junit.rules.Timeout timeoutForTests = " +
-            "new org.junit.rules.Timeout(10000);\n";
-      } else {
-        return line + '\n';
-      }
-    };
+    Function<String, String> transform =
+        line -> {
+          if (line.startsWith("public class")) {
+            return line
+                + "\n\n"
+                + "  @org.junit.Rule\n"
+                + "  public org.junit.rules.Timeout timeoutForTests = "
+                + "new org.junit.rules.Timeout(10000);\n";
+          } else {
+            return line + '\n';
+          }
+        };
     rewriteFileWithTransform(path, transform);
   }
 
   /**
-   * Finds the file at the specified path, transforms all of its lines using the specified
-   * {@code transform} parameter, and writes the transformed lines back to the path.
+   * Finds the file at the specified path, transforms all of its lines using the specified {@code
+   * transform} parameter, and writes the transformed lines back to the path.
    */
   private void rewriteFileWithTransform(String path, Function<String, String> transform)
       throws IOException {

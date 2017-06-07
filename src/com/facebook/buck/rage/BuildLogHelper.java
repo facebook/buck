@@ -16,72 +16,96 @@
 
 package com.facebook.buck.rage;
 
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
+
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
-import org.immutables.value.Value;
-
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
-/**
- * Methods for finding and inspecting buck log files.
- *
- */
+/** Methods for finding and inspecting buck log files. */
 public class BuildLogHelper {
-  // Max number of lines to read from a build.log file when searching for 'header' entries like
-  // "started", "system properties", etc...
-  private static final int MAX_LINES_TO_SCAN_FOR_LOG_HEADER = 100;
-  private static final String BUCK_LOG_FILE = BuckConstant.BUCK_LOG_FILE_NAME;
 
   private final ProjectFilesystem projectFilesystem;
-  private final ObjectMapper objectMapper;
 
-  public BuildLogHelper(
-      ProjectFilesystem projectFilesystem,
-      ObjectMapper objectMapper) {
+  private static final String INFO_FIELD_UNEXPANDED_CMD_ARGS = "unexpandedCommandArgs";
+
+  public BuildLogHelper(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
-    this.objectMapper = objectMapper;
   }
 
   public ImmutableList<BuildLogEntry> getBuildLogs() throws IOException {
-    Collection<Path> logFiles = getAllBuckLogFiles();
+    // Remove commands with unknown args or invocations of buck rage.
+    // Sort the remaining logs based on time, reverse order.
     ImmutableList.Builder<BuildLogEntry> logEntries = ImmutableList.builder();
-    for (Path logFile : logFiles) {
-      logEntries.add(newBuildLogEntry(logFile));
+    for (Path logFile : getAllBuckLogFiles()) {
+      BuildLogEntry entry = newBuildLogEntry(logFile);
+      if (entry.getCommandArgs().isPresent()
+          && !entry.getCommandArgs().get().matches(".*\\b(rage|doctor|server|launch)\\b.*")) {
+        logEntries.add(newBuildLogEntry(logFile));
+      }
     }
-    return logEntries.build();
+    return logEntries
+        .build()
+        .stream()
+        .sorted(Comparator.comparing(BuildLogEntry::getLastModifiedTime).reversed())
+        .collect(MoreCollectors.toImmutableList());
   }
 
+  @SuppressWarnings("unchecked")
   private BuildLogEntry newBuildLogEntry(Path logFile) throws IOException {
-    Optional<InvocationInfo.ParsedLog> parsedLine = extractFirstMatchingLine(logFile);
     BuildLogEntry.Builder builder = BuildLogEntry.builder();
 
-    if (parsedLine.isPresent()) {
-      builder.setBuildId(parsedLine.get().getBuildId());
-      builder.setCommandArgs(parsedLine.get().getArgs());
+    Path machineReadableLogFile =
+        logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+    if (projectFilesystem.isFile(machineReadableLogFile)) {
+      String invocationInfoLine =
+          Files.lines(projectFilesystem.resolve(machineReadableLogFile))
+              .filter(line -> line.startsWith(PREFIX_INVOCATION_INFO))
+              .map(line -> line.substring(PREFIX_INVOCATION_INFO.length()))
+              .findFirst()
+              .get();
+
+      // TODO(mikath): Keep this for a while for compatibility for commandArgs, then replace with
+      // a proper ObjectMapper deserialization of InvocationInfo.
+      Map<String, Object> invocationInfo =
+          ObjectMappers.readValue(invocationInfoLine, new TypeReference<Map<String, Object>>() {});
+      Optional<String> commandArgs = Optional.empty();
+      if (invocationInfo.containsKey(INFO_FIELD_UNEXPANDED_CMD_ARGS)
+          && invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS) instanceof List) {
+        commandArgs =
+            Optional.of(
+                String.join(
+                    " ", (List<String>) invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS)));
+      }
+
+      builder.setBuildId(new BuildId((String) invocationInfo.get(("buildId"))));
+      builder.setCommandArgs(commandArgs);
+      builder.setMachineReadableLogFile(machineReadableLogFile);
+      builder.setExitCode(readExitCode(machineReadableLogFile));
     }
 
     Path ruleKeyLoggerFile = logFile.getParent().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
@@ -89,60 +113,35 @@ public class BuildLogHelper {
       builder.setRuleKeyLoggerLogFile(ruleKeyLoggerFile);
     }
 
-    Path machineReadableLogFile =
-        logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
-    if (projectFilesystem.isFile(machineReadableLogFile)) {
-      builder.setMachineReadableLogFile(machineReadableLogFile);
-      builder.setExitCode(readExitCode(machineReadableLogFile));
-
-    }
-
-    Optional <Path> traceFile =
-        projectFilesystem.getFilesUnderPath(logFile.getParent()).stream()
+    Optional<Path> traceFile =
+        projectFilesystem
+            .getFilesUnderPath(logFile.getParent())
+            .stream()
             .filter(input -> input.toString().endsWith(".trace"))
             .findFirst();
 
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))
-        .setLastModifiedTime(new Date(projectFilesystem.getLastModifiedTime(logFile)))
+        .setLastModifiedTime(Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()))
         .setTraceFile(traceFile)
         .build();
   }
 
-  private Optional<InvocationInfo.ParsedLog> extractFirstMatchingLine(Path logPath)
-      throws IOException {
-    try (Reader reader = projectFilesystem.getReaderIfFileExists(logPath).get();
-         BufferedReader bufferedReader = new BufferedReader(reader)) {
-      for (int i = 0; i < MAX_LINES_TO_SCAN_FOR_LOG_HEADER; ++i) {
-        String line = bufferedReader.readLine();
-        if (line == null) { // EOF.
-          break;
-        }
-
-        Optional<InvocationInfo.ParsedLog> result = InvocationInfo.parseLogLine(line);
-        if (result.isPresent()) {
-          return result;
-        }
-      }
-    }
-
-    return Optional.empty();
-  }
-
   private OptionalInt readExitCode(Path machineReadableLogFile) {
-    try (BufferedReader reader = Files.newBufferedReader(
-        projectFilesystem.resolve(machineReadableLogFile))) {
-      List<String> lines = reader
-          .lines()
-          .filter(s -> s.startsWith("ExitCode"))
-          .collect(Collectors.toList());
-
-      if (lines.size() == 1) {
+    try (BufferedReader reader =
+        Files.newBufferedReader(projectFilesystem.resolve(machineReadableLogFile))) {
+      Optional<String> line =
+          reader
+              .lines()
+              .filter(s -> s.startsWith(PREFIX_EXIT_CODE))
+              .map(s -> s.substring(PREFIX_EXIT_CODE.length()))
+              .findFirst();
+      if (line.isPresent()) {
         Map<String, Integer> exitCode =
-            objectMapper.readValue(
-                lines.get(0).substring("ExitCode ".length()).getBytes(Charsets.UTF_8),
-                new TypeReference<Map<String, Integer>>(){});
+            ObjectMappers.READER.readValue(
+                ObjectMappers.createParser(line.get().getBytes(StandardCharsets.UTF_8)),
+                new TypeReference<Map<String, Integer>>() {});
         if (exitCode.containsKey("exitCode")) {
           return OptionalInt.of(exitCode.get("exitCode"));
         }
@@ -153,37 +152,39 @@ public class BuildLogHelper {
     return OptionalInt.empty();
   }
 
-  public Collection<Path> getAllBuckLogFiles() throws IOException {
-    final List<Path> logfiles = Lists.newArrayList();
+  private Collection<Path> getAllBuckLogFiles() throws IOException {
+    final List<Path> logfiles = new ArrayList<>();
     projectFilesystem.walkRelativeFileTree(
         projectFilesystem.getBuckPaths().getLogDir(),
         new FileVisitor<Path>() {
-      @Override
-      public FileVisitResult preVisitDirectory(
-          Path dir, BasicFileAttributes attrs) throws IOException {
-        return FileVisitResult.CONTINUE;
-      }
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
+            return Files.isSymbolicLink(dir)
+                ? FileVisitResult.SKIP_SUBTREE
+                : FileVisitResult.CONTINUE;
+          }
 
-      @Override
-      public FileVisitResult visitFile(
-          Path file, BasicFileAttributes attrs) throws IOException {
-        if (file.getFileName().toString().equals(BUCK_LOG_FILE)) {
-          logfiles.add(file);
-        }
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            if (file.getFileName().toString().equals(BuckConstant.BUCK_LOG_FILE_NAME)) {
+              logfiles.add(file);
+            }
 
-        return FileVisitResult.CONTINUE;
-      }
+            return FileVisitResult.CONTINUE;
+          }
 
-      @Override
-      public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-        return FileVisitResult.CONTINUE;
-      }
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+            return FileVisitResult.CONTINUE;
+          }
 
-      @Override
-      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        return FileVisitResult.CONTINUE;
-      }
-    });
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     return logfiles;
   }
@@ -192,13 +193,21 @@ public class BuildLogHelper {
   @BuckStyleImmutable
   abstract static class AbstractBuildLogEntry {
     public abstract Path getRelativePath();
+
     public abstract Optional<BuildId> getBuildId();
+
     public abstract Optional<String> getCommandArgs();
+
     public abstract OptionalInt getExitCode();
+
     public abstract Optional<Path> getRuleKeyLoggerLogFile();
+
     public abstract Optional<Path> getMachineReadableLogFile();
+
     public abstract Optional<Path> getTraceFile();
+
     public abstract long getSize();
+
     public abstract Date getLastModifiedTime();
 
     @Value.Check

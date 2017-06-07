@@ -19,7 +19,6 @@ import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -28,9 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Utility functions for working with {@link Config}s.
- */
+/** Utility functions for working with {@link Config}s. */
 public final class Configs {
   private static final Logger LOG = Logger.get(Configs.class);
 
@@ -43,29 +40,24 @@ public final class Configs {
 
   private Configs() {}
 
-  /**
-   * Convienence constructor
-   */
-  public static Config createDefaultConfig(Path root)
-      throws IOException {
-    return createDefaultConfig(
-        root,
-        RawConfig.of(ImmutableMap.of()));
+  /** Convienence constructor */
+  public static Config createDefaultConfig(Path root) throws IOException {
+    return createDefaultConfig(root, RawConfig.of(ImmutableMap.of()));
   }
 
   /**
    * Generates a Buck config by merging configs from specified locations on disk.
    *
-   * In order:
+   * <p>In order:
    *
    * <ol>
-   *   <li>{@code /etc/buckconfig}</li>
-   *   <li>Files (in lexicographical order) in {@code /etc/buckconfig.d}</li>
-   *   <li>{@code <HOME>/.buckconfig}</li>
-   *   <li>Files (in lexicographical order) in {@code <HOME>/buckconfig.d}</li>
-   *   <li>{@code <PROJECT ROOT>/.buckconfig}</li>
-   *   <li>{@code <PROJECT ROOT>/.buckconfig.local}</li>
-   *   <li>Any overrides (usually from the command line)</li>
+   *   <li>{@code /etc/buckconfig}
+   *   <li>Files (in lexicographical order) in {@code /etc/buckconfig.d}
+   *   <li>{@code <HOME>/.buckconfig}
+   *   <li>Files (in lexicographical order) in {@code <HOME>/buckconfig.d}
+   *   <li>{@code <PROJECT ROOT>/.buckconfig}
+   *   <li>{@code <PROJECT ROOT>/.buckconfig.local}
+   *   <li>Any overrides (usually from the command line)
    * </ol>
    *
    * @param root Project root.
@@ -73,9 +65,8 @@ public final class Configs {
    * @return the resulting {@code Config}.
    * @throws IOException on any exceptions during the underlying filesystem operations.
    */
-  public static Config createDefaultConfig(
-      Path root,
-      RawConfig configOverrides) throws IOException {
+  public static Config createDefaultConfig(Path root, RawConfig configOverrides)
+      throws IOException {
     LOG.debug("Loading configuration for %s", root);
     ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
 
@@ -124,5 +115,4 @@ public final class Configs {
       return ImmutableSortedSet.<Path>naturalOrder().addAll(directory.iterator()).build();
     }
   }
-
 }

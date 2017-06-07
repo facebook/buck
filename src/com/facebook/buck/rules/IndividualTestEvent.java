@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.test.TestResults;
 import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
+import com.facebook.buck.test.TestResults;
 
 public abstract class IndividualTestEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
 
@@ -76,7 +76,8 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent implements W
 
     @Override
     protected String getValueString() {
-      return String.format("%s (%d failed in %d test cases)",
+      return String.format(
+          "%s (%d failed in %d test cases)",
           results.isSuccess() ? "PASS" : "FAIL",
           results.getFailureCount(),
           results.getTestCases().size());

@@ -16,80 +16,69 @@
 
 package com.facebook.buck.cli;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Optional;
+import java.util.OptionalInt;
+import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
 public class BuckCommand extends AbstractContainerCommand {
 
-  @Argument(
-      handler = AdditionalOptionsSubCommandHandler.class,
-      metaVar = "subcommand")
+  @Argument(handler = AdditionalOptionsSubCommandHandler.class, metaVar = "subcommand")
   @SubCommands({
-      @SubCommand(name = "audit", impl = AuditCommand.class),
-      @SubCommand(name = "autodeps", impl = AutodepsCommand.class),
-      @SubCommand(name = "build", impl = BuildCommand.class),
-      @SubCommand(name = "cache", impl = CacheCommand.class),
-      @SubCommand(name = "clean", impl = CleanCommand.class),
-      @SubCommand(name = "distbuild", impl = DistBuildCommand.class),
-      @SubCommand(name = "doctor", impl = DoctorCommand.class),
-      @SubCommand(name = "fetch", impl = FetchCommand.class),
-      @SubCommand(name = "install", impl = InstallCommand.class),
-      @SubCommand(name = "machoutils", impl = MachOUtilsCommand.class),
-      @SubCommand(name = "project", impl = ProjectCommand.class),
-      @SubCommand(name = "publish", impl = PublishCommand.class),
-      @SubCommand(name = "query", impl = QueryCommand.class),
-      @SubCommand(name = "quickstart", impl = QuickstartCommand.class),
-      @SubCommand(name = "rage", impl = RageCommand.class),
-      @SubCommand(name = "root", impl = RootCommand.class),
-      @SubCommand(name = "run", impl = RunCommand.class),
-      @SubCommand(name = "server", impl = ServerCommand.class),
-      @SubCommand(name = "suggest", impl = SuggestCommand.class),
-      @SubCommand(name = "targets", impl = TargetsCommand.class),
-      @SubCommand(name = "test", impl = TestCommand.class),
-      @SubCommand(name = "uninstall", impl = UninstallCommand.class),
-      @SubCommand(name = "verify-hash-cache", impl = VerifyHashCacheCommand.class),
+    @SubCommand(name = "audit", impl = AuditCommand.class),
+    @SubCommand(name = "build", impl = BuildCommand.class),
+    @SubCommand(name = "cache", impl = CacheCommand.class),
+    @SubCommand(name = "clean", impl = CleanCommand.class),
+    @SubCommand(name = "distbuild", impl = DistBuildCommand.class),
+    @SubCommand(name = "doctor", impl = DoctorCommand.class),
+    @SubCommand(name = "fetch", impl = FetchCommand.class),
+    @SubCommand(name = "help", impl = HelpCommand.class),
+    @SubCommand(name = "install", impl = InstallCommand.class),
+    @SubCommand(name = "machoutils", impl = MachOUtilsCommand.class),
+    @SubCommand(name = "project", impl = ProjectCommand.class),
+    @SubCommand(name = "publish", impl = PublishCommand.class),
+    @SubCommand(name = "query", impl = QueryCommand.class),
+    @SubCommand(name = "rage", impl = RageCommand.class),
+    @SubCommand(name = "root", impl = RootCommand.class),
+    @SubCommand(name = "run", impl = RunCommand.class),
+    @SubCommand(name = "server", impl = ServerCommand.class),
+    @SubCommand(name = "suggest", impl = SuggestCommand.class),
+    @SubCommand(name = "targets", impl = TargetsCommand.class),
+    @SubCommand(name = "test", impl = TestCommand.class),
+    @SubCommand(name = "uninstall", impl = UninstallCommand.class),
+    @SubCommand(name = "verify-caches", impl = VerifyCachesCommand.class),
   })
   @Nullable
   Command subcommand;
 
   @Option(
-      name = "--version",
-      aliases = {"-V"},
-      usage = "Show version number.")
+    name = "--version",
+    aliases = {"-V"},
+    usage = "Show version number."
+  )
   private boolean version;
 
-  @Option(
-      name = "--help",
-      aliases = {"-h"},
-      usage = "Shows this screen and exits.")
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private boolean helpScreen;
-
-  public boolean showVersion() {
-    return version;
+  @Override
+  public OptionalInt runHelp(PrintStream stream) {
+    if (subcommand != null && subcommand instanceof HelpCommand) {
+      return OptionalInt.of(((HelpCommand) subcommand).run(stream));
+    }
+    return super.runHelp(stream);
   }
 
   @Override
   public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (subcommand == null) {
-      if (showVersion()) {
-        return new VersionCommand().run(params);
-      }
-
-      PrintStream stdErr = params.getConsole().getStdErr();
-      printUsage(stdErr);
-
-      return 1;
+    if (subcommand == null && version) {
+      // The --version flag behaves like a subcommand.
+      return new VersionCommand().run(params);
+    } else {
+      return super.run(params);
     }
-    return subcommand.run(params);
   }
 
   @Override
@@ -113,7 +102,7 @@ public class BuckCommand extends AbstractContainerCommand {
   }
 
   /**
-   * @return String'fied version of the SubCommand or "no_sub_command" is the SubCommand is null.
+   * @return String'fied version of the SubCommand or "no_sub_command" if the SubCommand is null.
    */
   public String getSubCommandNameForLogging() {
     if (subcommand == null) {
@@ -127,5 +116,4 @@ public class BuckCommand extends AbstractContainerCommand {
   public boolean isSourceControlStatsGatheringEnabled() {
     return false;
   }
-
 }

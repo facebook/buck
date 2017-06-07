@@ -16,15 +16,13 @@
 
 package com.facebook.buck.util.concurrent;
 
+import java.util.NoSuchElementException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.NoSuchElementException;
-
 public class AssertScopeExclusiveAccessTest {
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void noExceptionOnSingleScope() throws Exception {
@@ -43,5 +41,4 @@ public class AssertScopeExclusiveAccessTest {
       scope2.close();
     }
   }
-
 }

@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'cxx_library()' /}
+    {param navid: 'rule_cxx_library' /}
     {param prettify: true /}
     {param description}
       A cxx_library() rule represents a set of C/C++ source files.
@@ -88,7 +89,13 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.exported_deps_arg /}
 
+{call cxx_common.precompiled_header_arg /}
+
 {call buck.tests_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

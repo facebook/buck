@@ -16,30 +16,24 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
-public interface NativeLinkTarget extends HasBuildTarget {
+public interface NativeLinkTarget {
+
+  BuildTarget getBuildTarget();
 
   NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 
-  /**
-   * @return the {@link NativeLinkable} dependencies used to link this target.
-   */
+  /** @return the {@link NativeLinkable} dependencies used to link this target. */
   Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform);
 
-  /**
-   * @return the {@link NativeLinkableInput} used to link this target.
-   */
+  /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
 
-  /**
-   * @return an explicit {@link Path} to use for the output location.
-   */
+  /** @return an explicit {@link Path} to use for the output location. */
   Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform);
-
 }

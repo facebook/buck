@@ -20,9 +20,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -50,17 +50,27 @@ public class SymlinkTreeStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
+    for (Path dir :
+        RichStream.from(links.keySet())
+            .map(root::resolve)
+            .map(Path::getParent)
+            .distinct()
+            .toOnceIterable()) {
+      try {
+        filesystem.mkdirs(dir);
+      } catch (IOException e) {
+        String msg = String.format("failed creating dirs \"%s\"", dir);
+        throw new RuntimeException(msg, e);
+      }
+    }
     for (ImmutableMap.Entry<Path, Path> ent : links.entrySet()) {
       Path target = filesystem.resolve(ent.getValue());
       Path link = filesystem.resolve(root.resolve(ent.getKey()));
       try {
-        filesystem.mkdirs(link.getParent());
         filesystem.createSymLink(link, target, true /* force */);
       } catch (IOException e) {
         String msg = String.format("failed creating linking \"%s\" -> \"%s\"", link, target);
-        context.logError(e, msg);
-        e.printStackTrace(context.getStdErr());
-        return StepExecutionResult.ERROR;
+        throw new RuntimeException(msg, e);
       }
     }
     return StepExecutionResult.SUCCESS;
@@ -79,5 +89,4 @@ public class SymlinkTreeStep implements Step {
   public int hashCode() {
     return Objects.hashCode(root, links);
   }
-
 }

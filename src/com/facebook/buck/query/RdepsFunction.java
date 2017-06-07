@@ -36,20 +36,20 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * A 'rdeps(u, x, [, depth])' expression, which finds the reverse dependencies of the given
- * argument set 'x' within the transitive closure of the set 'u'.
- * The optional parameter 'depth' specifies the depth of the search. If the argument is absent,
- * the search is unbounded.
+ * A 'rdeps(u, x, [, depth])' expression, which finds the reverse dependencies of the given argument
+ * set 'x' within the transitive closure of the set 'u'. The optional parameter 'depth' specifies
+ * the depth of the search. If the argument is absent, the search is unbounded.
  *
  * <pre>expr ::= RDEPS '(' expr ',' expr ')'</pre>
+ *
  * <pre>       | RDEPS '(' expr ',' expr ',' WORD ')'</pre>
  */
 public class RdepsFunction implements QueryFunction {
@@ -57,8 +57,7 @@ public class RdepsFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION, ArgumentType.INTEGER);
 
-  public RdepsFunction() {
-  }
+  public RdepsFunction() {}
 
   @Override
   public String getName() {
@@ -76,15 +75,14 @@ public class RdepsFunction implements QueryFunction {
   }
 
   /**
-   * Evaluates to the reverse dependencies of the argument 'x' in the transitive closure of the
-   * set 'u'. Breadth first search from the set 'x' until there are no more unvisited nodes in the
+   * Evaluates to the reverse dependencies of the argument 'x' in the transitive closure of the set
+   * 'u'. Breadth first search from the set 'x' until there are no more unvisited nodes in the
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public Set<QueryTarget> eval(
-      QueryEnvironment env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
     Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env, executor);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE, executor);
     Predicate<QueryTarget> inUniversePredicate = env.getTransitiveClosure(universeSet)::contains;
@@ -103,15 +101,15 @@ public class RdepsFunction implements QueryFunction {
       Iterable<QueryTarget> currentInUniverse = Iterables.filter(current, inUniversePredicate);
 
       // Filter nodes visited before.
-      Collection<QueryTarget> next = env.getReverseDeps(
-          Iterables.filter(currentInUniverse, Predicates.not(visited::contains)));
+      Collection<QueryTarget> next =
+          env.getReverseDeps(
+              Iterables.filter(currentInUniverse, Predicates.not(visited::contains)));
       Iterables.addAll(visited, currentInUniverse);
       if (next.isEmpty()) {
         break;
       }
       current = next;
     }
-    return visited;
+    return ImmutableSet.copyOf(visited);
   }
-
 }

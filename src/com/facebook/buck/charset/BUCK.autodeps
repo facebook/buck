@@ -1,8 +1,0 @@
-{
-  "charset" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//third-party/java/jsr:jsr305"
-    ]
-  }
-}

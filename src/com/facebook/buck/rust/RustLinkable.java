@@ -16,36 +16,52 @@
 
 package com.facebook.buck.rust;
 
-import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableMap;
 
 /**
- * Get details about a linkable thing - either the actual linkable file, and the set
- * of directories with its dependencies.
+ * Slightly misnamed. Really just a non-source input to the compiler (ie, an already-compiled Rust
+ * crate).
  */
 interface RustLinkable {
   /**
-   * Return the crate name for this linkable (ie, the name used in an "extern crate X;" line,
-   * and in an --extern option to rustc).
+   * Return Arg for dependency.
    *
-   * @return Crate name
+   * @param direct true for direct dependency, false for transitive
+   * @param isCheck true if we're generated check builds
+   * @param cxxPlatform Current platform we're building for.
+   * @param depType What kind of linkage we want with the dependency.
+   * @return Arg for linking dependency.
    */
-  String getLinkTarget();
+  Arg getLinkerArg(
+      boolean direct, boolean isCheck, CxxPlatform cxxPlatform, Linker.LinkableDepType depType);
 
   /**
-   * Return full path to the rlib, used as a direct dependency (ie, passed to rustc as
-   * "--extern [crate_name]=path/to/libcrate_name.rlib"
+   * Return {@link BuildTarget} for linkable
    *
-   * @return path to rlib file
+   * @return BuildTarget for linkable.
    */
-  Path getLinkPath();
+  BuildTarget getBuildTarget();
 
   /**
-   * Return the set of paths to find the transitive dependencies for this linkable thing,
-   * passed to rustc as "-L dependency=path/to/dependency".
+   * Return a map of shared libraries this linkable produces (typically just one)
    *
-   * @return set of paths
+   * @param cxxPlatform the platform we're generating the shared library for
+   * @return Map of soname -> source path
    */
-  ImmutableSortedSet<Path> getDependencyPaths();
+  ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException;
+
+  /**
+   * Return the linkage style for this linkable.
+   *
+   * @return Linkage mode.
+   */
+  NativeLinkable.Linkage getPreferredLinkage();
 }

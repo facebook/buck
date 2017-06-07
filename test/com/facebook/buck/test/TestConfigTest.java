@@ -23,43 +23,36 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Joiner;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class TestConfigTest {
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testDefaultSummaryVerbosity() throws IOException {
-    TestResultSummaryVerbosity summaryVerbosity = new TestConfig(FakeBuckConfig.builder().build())
-        .getResultSummaryVerbosity();
+    TestResultSummaryVerbosity summaryVerbosity =
+        new TestConfig(FakeBuckConfig.builder().build()).getResultSummaryVerbosity();
     assertTrue(summaryVerbosity.getIncludeStdErr());
     assertTrue(summaryVerbosity.getIncludeStdOut());
   }
 
   @Test
-  public void testReadsSummaryVerbosity() throws IOException {
+  public void testReadsSummaryVerbosity() throws InterruptedException, IOException {
 
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[test_summary]",
-            "include_std_err = false",
-            "include_std_out = false"));
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join("[test_summary]", "include_std_err = false", "include_std_out = false"));
 
-    TestResultSummaryVerbosity summaryVerbosity = new TestConfig(
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder,
-            reader))
-        .getResultSummaryVerbosity();
+    TestResultSummaryVerbosity summaryVerbosity =
+        new TestConfig(BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader))
+            .getResultSummaryVerbosity();
 
     assertFalse(summaryVerbosity.getIncludeStdErr());
     assertFalse(summaryVerbosity.getIncludeStdOut());
   }
 }
-

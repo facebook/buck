@@ -1,17 +1,10 @@
 {
   "example" : {
-    "autodeps" : null,
     "bash" : "cat $SRCS > $OUT",
     "buck.base_path" : "example",
     "buck.type" : "genrule",
-    "cmd" : null,
-    "cmdExe" : null,
-    "executable" : null,
-    "licenses" : null,
     "name" : "example",
     "out" : "baz.txt",
-    "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ],
-    "tests" : null,
-    "visibility" : [ "PUBLIC" ]
+    "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ]
   }
 }

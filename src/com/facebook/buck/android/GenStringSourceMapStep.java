@@ -24,43 +24,43 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.XmlDomParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Map;
-
-
 /**
  * This class implements a Buck build step that will generate a JSON file with the following info
  * for each &lt;string&gt;, &lt;plurals&gt; and &lt;string-array&gt; resource found in the
  * strings.xml files for each resource directory:
+ *
  * <p>
+ *
  * <pre>
  * android_resource_name : {
  *   androidResourceId,
  *   stringsXmlPath
  * }
  * </pre>
- * <p>
- * where:
+ *
+ * <p>where:
+ *
  * <ul>
  *   <li>androidResourceId is the integer value, assigned by aapt, extracted from R.txt
  *   <li>stringsXmlPath is the path to the first strings.xml file where this string resource was
- *   found.
+ *       found.
  * </ul>
- * <p>
- * Example:
+ *
+ * <p>Example:
+ *
  * <pre>
  * {
  *   "strings": {
@@ -95,9 +95,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   private final ImmutableList<Path> resDirectories;
   private final Path destinationPath;
 
-  private final Map<String, Integer> stringResourceNameToIdMap = Maps.newHashMap();
-  private final Map<String, Integer> pluralsResourceNameToIdMap = Maps.newHashMap();
-  private final Map<String, Integer> arrayResourceNameToIdMap = Maps.newHashMap();
+  private final Map<String, Integer> stringResourceNameToIdMap = new HashMap<>();
+  private final Map<String, Integer> pluralsResourceNameToIdMap = new HashMap<>();
+  private final Map<String, Integer> arrayResourceNameToIdMap = new HashMap<>();
 
   /**
    * Associates each string resource with it's integer id (as assigned by {@code aapt} during
@@ -116,7 +116,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     super("build_string_source_map");
     this.filesystem = filesystem;
     this.rDotTxtDir = rDotTxtDir;
-    this.resDirectories = ImmutableList.copyOf(resDirectories);
+    this.resDirectories = resDirectories;
     this.destinationPath = destinationPath;
   }
 
@@ -133,9 +133,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
           pluralsResourceNameToIdMap,
           arrayResourceNameToIdMap);
     } catch (FileNotFoundException ex) {
-      context.logError(ex,
-        "The '%s' file is not present.",
-        rDotTxtPath);
+      context.logError(ex, "The '%s' file is not present.", rDotTxtPath);
       return StepExecutionResult.ERROR;
     } catch (IOException ex) {
       context.logError(ex, "Failure parsing R.txt file.");
@@ -147,8 +145,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // write nativeStrings out to a file
     Path outputPath = destinationPath.resolve("strings.json");
     try {
-      ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-      mapper.writeValue(filesystem.getPathForRelativePath(outputPath).toFile(), nativeStrings);
+      ObjectMappers.WRITER.writeValue(
+          filesystem.getPathForRelativePath(outputPath).toFile(), nativeStrings);
     } catch (IOException ex) {
       context.logError(
           ex, "Failed when trying to save the output file: '%s'", outputPath.toString());
@@ -159,9 +157,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   }
 
   private Map<String, Map<String, NativeResourceInfo>> parseStringFiles(ExecutionContext context) {
-    Map<String, NativeResourceInfo> nativeStrings = Maps.newHashMap();
-    Map<String, NativeResourceInfo> nativePlurals = Maps.newHashMap();
-    Map<String, NativeResourceInfo> nativeArrays = Maps.newHashMap();
+    Map<String, NativeResourceInfo> nativeStrings = new HashMap<>();
+    Map<String, NativeResourceInfo> nativePlurals = new HashMap<>();
+    Map<String, NativeResourceInfo> nativeArrays = new HashMap<>();
 
     for (Path resDir : resDirectories) {
       Path stringsPath = resDir.resolve("values").resolve("strings.xml");
@@ -180,15 +178,12 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
           NodeList arrayNodes = dom.getElementsByTagName("string-array");
           scrapeNodes(arrayNodes, stringsPathName, nativeArrays, arrayResourceNameToIdMap);
         } catch (IOException | SAXException ex) {
-          context.logError(
-              ex,
-              "Failed to parse strings file: '%s'",
-              stringsPath);
+          context.logError(ex, "Failed to parse strings file: '%s'", stringsPath);
         }
       }
     }
 
-    Map<String, Map<String, NativeResourceInfo>> resultMap = Maps.newHashMap();
+    Map<String, Map<String, NativeResourceInfo>> resultMap = new HashMap<>();
     resultMap.put("strings", nativeStrings);
     resultMap.put("plurals", nativePlurals);
     resultMap.put("string-arrays", nativeArrays);
@@ -196,8 +191,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   }
 
   /**
-   * Scrapes string resource names and values from the list of xml nodes passed and populates
-   * {@code stringsMap}, ignoring resource names that are already present in the map.
+   * Scrapes string resource names and values from the list of xml nodes passed and populates {@code
+   * stringsMap}, ignoring resource names that are already present in the map.
    *
    * @param nodes A list of XML nodes.
    * @param nativeStrings Collection of native strings, only new ones will be added to it.
@@ -223,14 +218,14 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   }
 
   /**
-   * This class manages the attributes for a <string> resource that we obtain from parsing
-   * the various strings.xml files. As information is cross-referenced with other sources, the
-   * combined set of knowledge for each string is kept here. This class is serialized to JSON for
-   * the final output file.
+   * This class manages the attributes for a <string> resource that we obtain from parsing the
+   * various strings.xml files. As information is cross-referenced with other sources, the combined
+   * set of knowledge for each string is kept here. This class is serialized to JSON for the final
+   * output file.
    */
   private static class NativeResourceInfo {
     private String androidResourceId; // assigned by aapt, we got it from R.txt
-    private String stringsXmlPath;    // relative path to the strings.xml where this
+    private String stringsXmlPath; // relative path to the strings.xml where this
     // resource originated from
 
     public NativeResourceInfo(Integer androidResourceId, String stringsXmlPath) {

@@ -31,8 +31,8 @@ public class MostExecutors {
   }
 
   /**
-   * A ThreadFactory which gives each thread a meaningful and distinct name.
-   * ThreadFactoryBuilder is not used to avoid a dependency on Guava in the junit target.
+   * A ThreadFactory which gives each thread a meaningful and distinct name. ThreadFactoryBuilder is
+   * not used to avoid a dependency on Guava in the junit target.
    */
   public static class NamedThreadFactory implements ThreadFactory {
 
@@ -42,6 +42,7 @@ public class MostExecutors {
     public NamedThreadFactory(String threadName) {
       this.threadName = threadName;
     }
+
     @Override
     public Thread newThread(Runnable r) {
       Thread newThread = Executors.defaultThreadFactory().newThread(r);
@@ -67,7 +68,8 @@ public class MostExecutors {
     return new ThreadPoolExecutor(
         /* corePoolSize */ 1,
         /* maximumPoolSize */ 1,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
+        /* keepAliveTime */ 0L,
+        TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
@@ -75,6 +77,7 @@ public class MostExecutors {
 
   /**
    * Creates a multi-threaded executor with meaningfully named threads.
+   *
    * @param threadName a thread name prefix used to easily identify threads when debugging.
    * @param count the number of threads that should be created in the pool.
    * @return A multi-threaded executor.
@@ -87,21 +90,20 @@ public class MostExecutors {
     return new ThreadPoolExecutor(
         /* corePoolSize */ count,
         /* maximumPoolSize */ count,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
+        /* keepAliveTime */ 0L,
+        TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
 
   /**
-   * Shutdown {@code service} and wait for all it's tasks to terminate.  In the event of
-   * {@link InterruptedException}, propagate the interrupt to all tasks, wait for them to
-   * finish, then re-throw the exception.
+   * Shutdown {@code service} and wait for all it's tasks to terminate. In the event of {@link
+   * InterruptedException}, propagate the interrupt to all tasks, wait for them to finish, then
+   * re-throw the exception.
    */
-  public static boolean shutdown(
-      ExecutorService service,
-      long timeout,
-      TimeUnit unit) throws InterruptedException {
+  public static boolean shutdown(ExecutorService service, long timeout, TimeUnit unit)
+      throws InterruptedException {
     service.shutdown();
     try {
       return service.awaitTermination(timeout, unit);
@@ -117,10 +119,7 @@ public class MostExecutors {
    * complete. If processing has still not terminated the method throws the given exception.
    */
   public static void shutdownOrThrow(
-      ExecutorService service,
-      long timeout,
-      TimeUnit unit,
-      RuntimeException exception) {
+      ExecutorService service, long timeout, TimeUnit unit, RuntimeException exception) {
     boolean terminated = false;
     service.shutdown();
     try {

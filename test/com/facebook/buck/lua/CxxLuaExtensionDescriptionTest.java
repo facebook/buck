@@ -18,16 +18,14 @@ package com.facebook.buck.lua;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.testutil.TargetGraphFactory;
-
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class CxxLuaExtensionDescriptionTest {
 
@@ -40,10 +38,9 @@ public class CxxLuaExtensionDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    CxxLuaExtension extension = (CxxLuaExtension) builder.build(resolver);
+    CxxLuaExtension extension = builder.build(resolver);
     assertThat(
         Paths.get(extension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.equalTo(Paths.get("hello/world/rule.so")));
   }
-
 }

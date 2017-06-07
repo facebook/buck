@@ -18,19 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.concurrent.MoreFutures;
-import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -52,63 +42,37 @@ public class UnskippedRulesTracker {
         }
       };
 
-  private static final Function<Object, Void> NULL_FUNCTION = ignored -> null;
-
-  private final AsyncFunction<ImmutableSortedSet<BuildRule>, Void> acquireReferences =
-      this::acquireReferences;
-
-  private final AsyncFunction<ImmutableSortedSet<BuildRule>, Void> releaseReferences =
-      this::releaseReferences;
-
   private final RuleDepsCache ruleDepsCache;
-  private final ListeningExecutorService executor;
+  private final BuildRuleResolver ruleResolver;
   private final AtomicInteger unskippedRules = new AtomicInteger(0);
   private final AtomicBoolean stateChanged = new AtomicBoolean(false);
   private final LoadingCache<BuildTarget, AtomicInteger> ruleReferenceCounts =
       CacheBuilder.newBuilder().build(DEFAULT_REFERENCE_COUNT_LOADER);
 
-  public UnskippedRulesTracker(RuleDepsCache ruleDepsCache, ListeningExecutorService executor) {
+  public UnskippedRulesTracker(RuleDepsCache ruleDepsCache, BuildRuleResolver ruleResolver) {
     this.ruleDepsCache = ruleDepsCache;
-    this.executor = executor;
+    this.ruleResolver = ruleResolver;
   }
 
-  public ListenableFuture<Void> registerTopLevelRule(
-      BuildRule rule,
-      final BuckEventBus eventBus) {
+  public void registerTopLevelRule(BuildRule rule, final BuckEventBus eventBus) {
     // Add a reference to the top-level rule so that it is never marked as skipped.
-    ListenableFuture<Void> future = acquireReference(rule);
-    future.addListener(
-        () -> sendEventIfStateChanged(eventBus),
-        MoreExecutors.directExecutor());
-    return future;
+    acquireReference(rule);
+    sendEventIfStateChanged(eventBus);
   }
 
-  public ListenableFuture<Void> markRuleAsUsed(
-      final BuildRule rule,
-      final BuckEventBus eventBus) {
+  public void markRuleAsUsed(final BuildRule rule, final BuckEventBus eventBus) {
     // Add a reference to the used rule so that it is never marked as skipped.
-    ListenableFuture<Void> future = acquireReference(rule);
-
+    acquireReference(rule);
     if (rule instanceof HasRuntimeDeps) {
       // Add references to rule's runtime deps since they cannot be skipped now.
-      future = MoreFutures.chainExceptions(
-          future,
-          acquireReferences(((HasRuntimeDeps) rule).getRuntimeDeps()));
+      ruleResolver
+          .getAllRules(((HasRuntimeDeps) rule).getRuntimeDeps()::iterator)
+          .forEach(this::acquireReference);
     }
 
     // Release references from rule's dependencies since this rule will not need them anymore.
-    future = Futures.transformAsync(
-        future,
-        input -> Futures.transformAsync(
-            ruleDepsCache.get(rule),
-            releaseReferences,
-            executor));
-
-    future.addListener(
-        () -> sendEventIfStateChanged(eventBus),
-        MoreExecutors.directExecutor());
-
-    return future;
+    ruleDepsCache.get(rule).forEach(this::releaseReference);
+    sendEventIfStateChanged(eventBus);
   }
 
   private void sendEventIfStateChanged(BuckEventBus eventBus) {
@@ -117,7 +81,8 @@ public class UnskippedRulesTracker {
     }
   }
 
-  private ListenableFuture<Void> acquireReference(BuildRule rule) {
+  // TODO(cjhopman): convert these to be non-recursive.
+  private void acquireReference(BuildRule rule) {
     AtomicInteger referenceCount = ruleReferenceCounts.getUnchecked(rule.getBuildTarget());
     int newValue = referenceCount.incrementAndGet();
     if (newValue == 1) {
@@ -125,25 +90,11 @@ public class UnskippedRulesTracker {
       unskippedRules.incrementAndGet();
       stateChanged.set(true);
       // Add references to all dependencies of the rule.
-      return Futures.transformAsync(
-          ruleDepsCache.get(rule),
-          acquireReferences,
-          executor);
+      ruleDepsCache.get(rule).forEach(this::acquireReference);
     }
-    return Futures.immediateFuture(null);
   }
 
-  private ListenableFuture<Void> acquireReferences(ImmutableSortedSet<BuildRule> rules) {
-    ImmutableList.Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
-    for (BuildRule rule : rules) {
-      futures.add(acquireReference(rule));
-    }
-    return Futures.transform(
-        Futures.allAsList(futures.build()),
-        NULL_FUNCTION);
-  }
-
-  private ListenableFuture<Void> releaseReference(BuildRule rule) {
+  private void releaseReference(BuildRule rule) {
     AtomicInteger referenceCount = ruleReferenceCounts.getUnchecked(rule.getBuildTarget());
     int newValue = referenceCount.decrementAndGet();
     if (newValue == 0) {
@@ -151,21 +102,7 @@ public class UnskippedRulesTracker {
       unskippedRules.decrementAndGet();
       stateChanged.set(true);
       // Remove references from all dependencies of the rule.
-      return Futures.transformAsync(
-          ruleDepsCache.get(rule),
-          releaseReferences,
-          executor);
+      ruleDepsCache.get(rule).forEach(this::releaseReference);
     }
-    return Futures.immediateFuture(null);
-  }
-
-  private ListenableFuture<Void> releaseReferences(ImmutableSortedSet<BuildRule> rules) {
-    ImmutableList.Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
-    for (BuildRule rule : rules) {
-      futures.add(releaseReference(rule));
-    }
-    return Futures.transform(
-        Futures.allAsList(futures.build()),
-        NULL_FUNCTION);
   }
 }

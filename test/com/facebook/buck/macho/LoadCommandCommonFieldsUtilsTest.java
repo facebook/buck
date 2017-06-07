@@ -15,25 +15,22 @@
  */
 package com.facebook.buck.macho;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedInteger;
-
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.junit.Test;
 
 public class LoadCommandCommonFieldsUtilsTest {
   @Test
   public void testCanCreate() {
-    LoadCommandCommonFields command = LoadCommandCommonFields.of(
-        123,
-        UnsignedInteger.fromIntBits(111),
-        UnsignedInteger.fromIntBits(222));
+    LoadCommandCommonFields command =
+        LoadCommandCommonFields.of(
+            123, UnsignedInteger.fromIntBits(111), UnsignedInteger.fromIntBits(222));
     assertThat(command.getOffsetInBinary(), equalTo(123));
     assertThat(command.getCmd(), equalTo(UnsignedInteger.fromIntBits(111)));
     assertThat(command.getCmdsize(), equalTo(UnsignedInteger.fromIntBits(222)));
@@ -53,10 +50,9 @@ public class LoadCommandCommonFieldsUtilsTest {
 
   @Test
   public void testGetBytes() {
-    LoadCommandCommonFields fields = LoadCommandCommonFields.of(
-        1,
-        UnsignedInteger.fromIntBits(2),
-        UnsignedInteger.fromIntBits(3));
+    LoadCommandCommonFields fields =
+        LoadCommandCommonFields.of(
+            1, UnsignedInteger.fromIntBits(2), UnsignedInteger.fromIntBits(3));
 
     byte[] expected = BaseEncoding.base16().decode("0000000200000003");
     byte[] expectedSwapped = BaseEncoding.base16().decode("0200000003000000");

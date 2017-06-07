@@ -16,14 +16,9 @@
 
 package com.facebook.buck.versions;
 
-/**
- * Represents a version constraint applied to a dependency.
- */
+/** Represents a version constraint applied to a dependency. */
 public interface Constraint {
 
-  /**
-   * @return whether the given {@link Version} is allowed by this constraint.
-   */
+  /** @return whether the given {@link Version} is allowed by this constraint. */
   boolean isAcceptable(Version version);
-
 }

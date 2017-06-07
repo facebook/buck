@@ -30,15 +30,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Tests {@link BaseCompileToJarStepFactory}
- */
+/** Tests {@link BaseCompileToJarStepFactory} */
 public class BaseCompileToJarStepFactoryTest {
 
   @Test
@@ -48,10 +44,11 @@ public class BaseCompileToJarStepFactoryTest {
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
     Path outputDirectory =
         filesystem.getBuckPaths().getScratchDir().resolve("android/java/lib__java__classes");
-    ImmutableSortedSet<Path> classpathEntries = ImmutableSortedSet.<Path>naturalOrder()
-        .add(filesystem.resolve("rt.jar"))
-        .add(filesystem.resolve("dep.jar"))
-        .build();
+    ImmutableSortedSet<Path> classpathEntries =
+        ImmutableSortedSet.<Path>naturalOrder()
+            .add(filesystem.resolve("rt.jar"))
+            .add(filesystem.resolve("dep.jar"))
+            .build();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -71,19 +68,25 @@ public class BaseCompileToJarStepFactoryTest {
     assertEquals(
         ImmutableList.of("bash", "-c", "tool arg1 " + outputDirectory),
         step0.getShellCommand(executionContext));
-    assertEquals(ImmutableMap.of("COMPILATION_BOOTCLASSPATH", androidBootClassPath,
-        "COMPILATION_CLASSPATH", Joiner.on(':').join(
-            Iterables.transform(classpathEntries, filesystem::resolve)))
-        , step0.getEnvironmentVariables(executionContext));
+    assertEquals(
+        ImmutableMap.of(
+            "COMPILATION_BOOTCLASSPATH",
+            androidBootClassPath,
+            "COMPILATION_CLASSPATH",
+            Joiner.on(':').join(Iterables.transform(classpathEntries, filesystem::resolve))),
+        step0.getEnvironmentVariables(executionContext));
 
     assertTrue(steps.get(1) instanceof ShellStep);
     ShellStep step1 = (ShellStep) steps.get(1);
     assertEquals(
         ImmutableList.of("bash", "-c", "tool2 " + outputDirectory),
         step1.getShellCommand(executionContext));
-    assertEquals(ImmutableMap.of("COMPILATION_BOOTCLASSPATH", androidBootClassPath,
-        "COMPILATION_CLASSPATH", Joiner.on(':').join(
-            Iterables.transform(classpathEntries, filesystem::resolve)))
-        , step1.getEnvironmentVariables(executionContext));
+    assertEquals(
+        ImmutableMap.of(
+            "COMPILATION_BOOTCLASSPATH",
+            androidBootClassPath,
+            "COMPILATION_CLASSPATH",
+            Joiner.on(':').join(Iterables.transform(classpathEntries, filesystem::resolve))),
+        step1.getEnvironmentVariables(executionContext));
   }
 }

@@ -19,25 +19,25 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * A {@link TargetNode} represents a node in the target graph which is created by the
- * {@link com.facebook.buck.parser.Parser} as a result of parsing BUCK files in a project. It is
+ * A {@link TargetNode} represents a node in the target graph which is created by the {@link
+ * com.facebook.buck.parser.Parser} as a result of parsing BUCK files in a project. It is
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
 public class TargetNode<T, U extends Description<T>>
-    implements Comparable<TargetNode<?, ?>>, HasBuildTarget {
+    implements Comparable<TargetNode<?, ?>>, ObeysVisibility {
 
   private final TargetNodeFactory factory;
 
@@ -52,7 +52,8 @@ public class TargetNode<T, U extends Description<T>>
   private final ImmutableSet<Path> inputs;
   private final ImmutableSet<BuildTarget> declaredDeps;
   private final ImmutableSet<BuildTarget> extraDeps;
-  private final ImmutableSet<VisibilityPattern> visibilityPatterns;
+  private final ImmutableSet<BuildTarget> targetGraphOnlyDeps;
+  private final VisibilityChecker visibilityChecker;
 
   private final Optional<ImmutableMap<BuildTarget, Version>> selectedVersions;
 
@@ -65,7 +66,9 @@ public class TargetNode<T, U extends Description<T>>
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
+      ImmutableSet<BuildTarget> targetGraphOnlyDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
       ImmutableSet<Path> paths,
       CellPathResolver cellNames,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
@@ -78,14 +81,13 @@ public class TargetNode<T, U extends Description<T>>
     this.cellNames = cellNames;
     this.declaredDeps = declaredDeps;
     this.extraDeps = extraDeps;
+    this.targetGraphOnlyDeps = targetGraphOnlyDeps;
     this.inputs = paths;
-    this.visibilityPatterns = visibilityPatterns;
     this.selectedVersions = selectedVersions;
+    this.visibilityChecker = new VisibilityChecker(this, visibilityPatterns, withinViewPatterns);
   }
 
-  /**
-   * @return A hash of the raw input from the build file used to construct the node.
-   */
+  /** @return A hash of the raw input from the build file used to construct the node. */
   public HashCode getRawInputsHashCode() {
     return rawInputsHashCode;
   }
@@ -119,69 +121,60 @@ public class TargetNode<T, U extends Description<T>>
     return extraDeps;
   }
 
-  public ImmutableSet<BuildTarget> getDeps() {
-    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
-    builder.addAll(getDeclaredDeps());
-    builder.addAll(getExtraDeps());
-    return builder.build();
+  /** @return all targets which must be built before this one can be. */
+  public Set<BuildTarget> getBuildDeps() {
+    return Sets.union(declaredDeps, extraDeps);
+  }
+
+  /**
+   * @return all targets which must be present in the TargetGraph before this one can be transformed
+   *     into a BuildRule.
+   */
+  public Set<BuildTarget> getParseDeps() {
+    return Sets.union(getBuildDeps(), targetGraphOnlyDeps);
   }
 
   /**
    * Stream-style API for getting dependencies. This may return duplicates if certain dependencies
    * are in both declared deps and exported deps.
    *
-   * This method can be faster than {@link #getDeps()} in cases where repeated traversals and set
-   * operations are not necessary, as it avoids creating the intermediate set.
+   * <p>This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals
+   * and set operations are not necessary, as it avoids creating the intermediate set.
    */
-  public Stream<BuildTarget> getDepsStream() {
+  public Stream<BuildTarget> getBuildDepsStream() {
     return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 
   /**
-   * TODO(andrewjcg): It'd be nice to eventually move this implementation to an
-   * `AbstractDescription` base class, so that the various types of descriptions
-   * can install their own implementations.  However, we'll probably want to move
-   * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
-   * while building the target graph.
+   * BuildTargets which, when changed, may change the BuildRules produced by this TargetNode, but
+   * whose steps don't need executing in order to build this TargetNode's BuildRules.
+   *
+   * <p>A TargetNode may require metadata from other targets in order to be constructed, but may not
+   * actually require those targets' build output. For example, some targets may execute queries
+   * against the TargetGraph (e.g. detecting the names of rules of a certain type) but don't use the
+   * output of those detected rules.
    */
-  public boolean isVisibleTo(TargetGraph graph, TargetNode<?, ?> viewer) {
-
-    // if i am in a restricted visibility group that the viewer isn't, the viewer can't see me.
-    // this check *must* take priority even over the sibling check, because if it didn't then that
-    // would introduce siblings as a way to "leak" visibility out of restricted groups.
-    for (TargetGroup targetGroup : graph.getGroupsContainingTarget(viewer.getBuildTarget())) {
-      if (targetGroup.restrictsOutboundVisibility() &&
-          !targetGroup.containsTarget(getBuildTarget())) {
-        return false;
-      }
-    }
-
-    if (getBuildTarget().getCellPath().equals(viewer.getBuildTarget().getCellPath()) &&
-        getBuildTarget().getBaseName().equals(viewer.getBuildTarget().getBaseName())) {
-      return true;
-    }
-
-    for (VisibilityPattern pattern : visibilityPatterns) {
-      if (pattern.checkVisibility(graph, viewer, this)) {
-        return true;
-      }
-    }
-
-    return false;
+  public ImmutableSet<BuildTarget> getTargetGraphOnlyDeps() {
+    return targetGraphOnlyDeps;
   }
 
-  public void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?, ?> viewer) {
-    if (!isVisibleTo(graphContext, viewer)) {
+  @Override
+  public VisibilityChecker getVisibilityChecker() {
+    return visibilityChecker;
+  }
+
+  public boolean isVisibleTo(TargetNode<?, ?> viewer) {
+    return visibilityChecker.isVisibleTo(viewer);
+  }
+
+  public void isVisibleToOrThrow(TargetNode<?, ?> viewer) {
+    if (!isVisibleTo(viewer)) {
       throw new HumanReadableException(
-          "%s depends on %s, which is not visible",
-          viewer,
-          getBuildTarget());
+          "%s depends on %s, which is not visible", viewer, getBuildTarget());
     }
   }
 
-  /**
-   * Type safe checked cast of the constructor arg.
-   */
+  /** Type safe checked cast of the constructor arg. */
   @SuppressWarnings("unchecked")
   public <V> Optional<TargetNode<V, ?>> castArg(Class<V> cls) {
     if (cls.isInstance(constructorArg)) {
@@ -205,8 +198,26 @@ public class TargetNode<T, U extends Description<T>>
     return factory.copyNodeWithDescription(this, description);
   }
 
-  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
+  public TargetNode<T, U> copyWithFlavors(ImmutableSet<Flavor> flavors) {
     return factory.copyNodeWithFlavors(this, flavors);
+  }
+
+  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
+    return new TargetNode<>(
+        factory,
+        getRawInputsHashCode(),
+        getDescription(),
+        constructorArg,
+        filesystem,
+        getBuildTarget().withFlavors(flavors),
+        declaredDeps,
+        extraDeps,
+        targetGraphOnlyDeps,
+        getVisibilityPatterns(),
+        getWithinViewPatterns(),
+        getInputs(),
+        getCellNames(),
+        getSelectedVersions());
   }
 
   public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
@@ -214,6 +225,7 @@ public class TargetNode<T, U extends Description<T>>
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
+      ImmutableSet<BuildTarget> targetGraphOnlyDeps,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVerisons) {
     return new TargetNode<>(
         factory,
@@ -224,7 +236,9 @@ public class TargetNode<T, U extends Description<T>>
         target,
         declaredDeps,
         extraDeps,
+        targetGraphOnlyDeps,
         getVisibilityPatterns(),
+        getWithinViewPatterns(),
         getInputs(),
         getCellNames(),
         selectedVerisons);
@@ -235,11 +249,14 @@ public class TargetNode<T, U extends Description<T>>
   }
 
   public ImmutableSet<VisibilityPattern> getVisibilityPatterns() {
-    return visibilityPatterns;
+    return visibilityChecker.getVisibilityPatterns();
+  }
+
+  public ImmutableSet<VisibilityPattern> getWithinViewPatterns() {
+    return visibilityChecker.getWithinViewPatterns();
   }
 
   public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions() {
     return selectedVersions;
   }
-
 }

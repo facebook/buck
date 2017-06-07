@@ -20,35 +20,32 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Function;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
+import java.nio.file.Path;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
-public class JavaLibraryClasspathProviderTest {
+public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
   private TargetNode<?, ?> aNode;
   private TargetNode<?, ?> bNode;
@@ -64,14 +61,11 @@ public class JavaLibraryClasspathProviderTest {
   private BuildRule e;
   private BuildRule z;
   private SourcePathResolver resolver;
-  private Path basePath;
-  private Function<Path, SourcePath> sourcePathFunction;
   private ProjectFilesystem filesystem;
 
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
-    basePath = filesystem.getRootPath();
 
     // Create our target graph. All nodes are JavaLibrary except b
     // (exports c) az (no exports)
@@ -79,47 +73,43 @@ public class JavaLibraryClasspathProviderTest {
     //(non java) b    c (exports e)
     //           |    |
     //           d    e
-    dNode = makeRule("//foo:d",
-        ImmutableSet.of("foo", "d.java"),
-        ImmutableSet.of(),
-        filesystem);
+    dNode = makeRule("//foo:d", ImmutableSet.of("foo", "d.java"), ImmutableSet.of(), filesystem);
 
-    sourcePathFunction = SourcePaths.toSourcePath(filesystem);
-    bNode = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
-        .setSrcs(ImmutableList.of(
-            sourcePathFunction.apply(Paths.get("foo", "b.java"))))
-        .setCmd("echo $(classpath //foo:d")
-        .setOut("b.out")
-        .build();
+    bNode =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
+            .setSrcs(ImmutableList.of(new FakeSourcePath(filesystem, "foo/b.java")))
+            .setCmd("echo $(classpath //foo:d")
+            .setOut("b.out")
+            .build();
 
-    eNode = makeRule("//foo:e",
-        ImmutableSet.of("foo", "e.java"),
-        ImmutableSet.of(),
-        filesystem);
+    eNode = makeRule("//foo:e", ImmutableSet.of("foo", "e.java"), ImmutableSet.of(), filesystem);
 
     // exported
-    cNode = makeRule("//foo:c",
-        ImmutableSet.of("foo", "c.java"),
-        ImmutableSet.of(eNode),
-        ImmutableSet.of(eNode),  // exported
-        filesystem);
+    cNode =
+        makeRule(
+            "//foo:c",
+            ImmutableSet.of("foo", "c.java"),
+            ImmutableSet.of(eNode),
+            ImmutableSet.of(eNode), // exported
+            filesystem);
 
-    aNode = makeRule("//foo:a",
-        ImmutableSet.of("foo", "a.java"),
-        ImmutableSet.of(bNode, cNode),
-        ImmutableSet.of(cNode),
-        filesystem);
+    aNode =
+        makeRule(
+            "//foo:a",
+            ImmutableSet.of("foo", "a.java"),
+            ImmutableSet.of(bNode, cNode),
+            ImmutableSet.of(cNode),
+            filesystem);
 
-    zNode = makeRule("//foo:z",
-        ImmutableSet.of("foo", "a.java"),
-        ImmutableSet.of(bNode, cNode),
-        filesystem);
+    zNode =
+        makeRule(
+            "//foo:z", ImmutableSet.of("foo", "a.java"), ImmutableSet.of(bNode, cNode), filesystem);
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(ruleResolver);
+    resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     a = ruleResolver.requireRule(aNode.getBuildTarget());
     b = ruleResolver.requireRule(bNode.getBuildTarget());
@@ -136,51 +126,47 @@ public class JavaLibraryClasspathProviderTest {
         ImmutableSet.of(
             getFullOutput(a),
             getFullOutput(c), // a exports c
-            getFullOutput(e)  // c exports e
-        ),
+            getFullOutput(e) // c exports e
+            ),
         JavaLibraryClasspathProvider.getOutputClasspathJars(
-            aLib,
-            resolver,
-            Optional.of(sourcePathFunction.apply(aLib.getPathToOutput())))
-    );
+                aLib, Optional.of(aLib.getSourcePathToOutput()))
+            .stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
   public void getClasspathFromLibraries() throws Exception {
     assertEquals(
-        ImmutableSet.of(
-            getFullOutput(a),
-            getFullOutput(c),
-            getFullOutput(e)),
-            // b is non-java so b and d do not appear
+        ImmutableSet.of(getFullOutput(a), getFullOutput(c), getFullOutput(e)),
+        // b is non-java so b and d do not appear
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(
-            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a))));
+                JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a)))
+            .stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet()));
 
     assertEquals(
         ImmutableSet.of(
             getFullOutput(c),
             getFullOutput(e), // c exports e
-            getFullOutput(d)
-        ),
+            getFullOutput(d)),
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(
-            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d))));
+                JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d)))
+            .stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
   public void getClasspathDeps() {
     assertEquals(
-        ImmutableSet.of(
-            a, c, e
-        ),
-        JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a))
-    );
+        ImmutableSet.of(a, c, e),
+        JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a)));
 
     assertEquals(
-        ImmutableSet.of(
-            d, c, e
-        ),
-        JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(d, c))
-    );
+        ImmutableSet.of(d, c, e),
+        JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(d, c)));
   }
 
   @Test
@@ -189,20 +175,20 @@ public class JavaLibraryClasspathProviderTest {
     assertEquals(
         ImmutableSet.builder()
             .add(getFullOutput(a))
-            .add(getFullOutput(c))  // a exports c
-            .add(getFullOutput(e))  // c exports e
+            .add(getFullOutput(c)) // a exports c
+            .add(getFullOutput(e)) // c exports e
             // b is non-java so b and d do not appear
             .build(),
-        aLib.getTransitiveClasspaths());
+        aLib.getTransitiveClasspaths()
+            .stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
   public void getTransitiveClasspathDeps() throws Exception {
-    TargetNode<?, ?> noOutputNode = makeRule(
-        "//no:output",
-        ImmutableSet.of(),
-        ImmutableSet.of(zNode),
-        filesystem);
+    TargetNode<?, ?> noOutputNode =
+        makeRule("//no:output", ImmutableSet.of(), ImmutableSet.of(zNode), filesystem);
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode, noOutputNode);
@@ -213,25 +199,22 @@ public class JavaLibraryClasspathProviderTest {
 
     assertEquals(
         "root does not appear if output jar not present.",
-        ImmutableSet.of(
-            c, e, z
-        ),
+        ImmutableSet.of(c, e, z),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(noOutput));
 
     assertEquals(
         "root does appear if output jar present.",
-        ImmutableSet.of(
-            z, c, e
-        ),
+        ImmutableSet.of(z, c, e),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) z));
 
-    BuildRule mavenCoord = new JavaLibraryBuilder(
-        BuildTargetFactory.newInstance("//has:output"),
-        filesystem,
-        HashCode.fromString("aaaa"))
-        .setMavenCoords("com.example:buck:1.0")
-        .addDep(z.getBuildTarget())
-        .build(ruleResolver);
+    BuildRule mavenCoord =
+        new JavaLibraryBuilder(
+                BuildTargetFactory.newInstance("//has:output"),
+                filesystem,
+                HashCode.fromString("aaaa"))
+            .setMavenCoords("com.example:buck:1.0")
+            .addDep(z.getBuildTarget())
+            .build(ruleResolver);
 
     assertEquals(
         "Does appear if no output jar but maven coordinate present.",
@@ -243,31 +226,33 @@ public class JavaLibraryClasspathProviderTest {
   public void getJavaLibraryDeps() throws Exception {
     assertThat(
         JavaLibraryClasspathProvider.getJavaLibraryDeps(ImmutableList.of(a, b, c, d, e)),
-        Matchers.containsInAnyOrder(a, c, d, e)
-    );
+        Matchers.containsInAnyOrder(a, c, d, e));
   }
 
   private Path getFullOutput(BuildRule lib) {
-    return basePath.resolve(lib.getPathToOutput().toString());
+    return resolver.getAbsolutePath(lib.getSourcePathToOutput());
   }
 
-  private static TargetNode<?, ?> makeRule(
+  private TargetNode<?, ?> makeRule(
       String target,
       Iterable<String> srcs,
       Iterable<TargetNode<?, ?>> deps,
-      ProjectFilesystem filesystem) throws Exception {
+      ProjectFilesystem filesystem)
+      throws Exception {
     return makeRule(target, srcs, deps, null, filesystem);
   }
 
-  private static TargetNode<?, ?> makeRule(
+  private TargetNode<?, ?> makeRule(
       String target,
       Iterable<String> srcs,
       Iterable<TargetNode<?, ?>> deps,
       @Nullable Iterable<TargetNode<?, ?>> exportedDeps,
-      final ProjectFilesystem filesystem) throws Exception {
+      final ProjectFilesystem filesystem)
+      throws Exception {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
-    builder = JavaLibraryBuilder.createBuilder(parsedTarget);
+    JavaBuckConfig testConfig = getJavaBuckConfigWithCompilationMode();
+    builder = JavaLibraryBuilder.createBuilder(parsedTarget, testConfig);
 
     for (String src : srcs) {
       builder.addSrc(filesystem.getBuckPaths().getGenDir().resolve(src));

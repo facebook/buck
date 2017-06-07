@@ -21,10 +21,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.junit.Test;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import org.junit.Test;
 
 public class ArrayIterableTest {
 
@@ -88,7 +87,7 @@ public class ArrayIterableTest {
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testEmptySingletonIterable() {
-    Iterable<String> iterable = ArrayIterable.of(new String[] { "only" });
+    Iterable<String> iterable = ArrayIterable.of(new String[] {"only"});
     Iterator<String> iterator = iterable.iterator();
 
     // First element.
@@ -108,7 +107,7 @@ public class ArrayIterableTest {
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testMultiElementIterable() {
-    Iterable<String> iterable = ArrayIterable.of(new String[] { "a", "b", "c" });
+    Iterable<String> iterable = ArrayIterable.of(new String[] {"a", "b", "c"});
     Iterator<String> iterator = iterable.iterator();
 
     // First element.
@@ -142,10 +141,9 @@ public class ArrayIterableTest {
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testMultiElementIterableWithIndexes() {
-    Iterable<String> iterable = ArrayIterable.of(
-        new String[] { "a", "b", "c", "d", "e" },
-        /* startIndex */ 1,
-        /* endIndex */ 4);
+    Iterable<String> iterable =
+        ArrayIterable.of(
+            new String[] {"a", "b", "c", "d", "e"}, /* startIndex */ 1, /* endIndex */ 4);
     Iterator<String> iterator = iterable.iterator();
 
     // First element.

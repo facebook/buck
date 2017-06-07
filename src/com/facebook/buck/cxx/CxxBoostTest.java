@@ -16,14 +16,17 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -38,25 +41,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
+import java.util.stream.Stream;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
@@ -65,53 +65,54 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private static final Pattern SUITE_END = Pattern.compile("^Leaving test suite \"(.*)\"$");
 
   private static final Pattern CASE_START = Pattern.compile("^Entering test case \"(.*)\"$");
-  private static final Pattern CASE_END = Pattern.compile(
-      "^Leaving test case \"(.*)\"(?:; testing time: (\\d+)ms)?$");
+  private static final Pattern CASE_END =
+      Pattern.compile("^Leaving test case \"(.*)\"(?:; testing time: (\\d+)ms)?$");
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
+  private final SourcePathRuleFinder ruleFinder;
   private final BuildRule binary;
-  private final Tool executable;
 
   public CxxBoostTest(
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRule binary,
       Tool executable,
-      Supplier<ImmutableMap<String, String>> env,
+      ImmutableMap<String, String> env,
       Supplier<ImmutableList<String>> args,
-      ImmutableSortedSet<SourcePath> resources,
+      ImmutableSortedSet<? extends SourcePath> resources,
+      ImmutableSet<SourcePath> additionalCoverageTargets,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
     super(
         params,
-        resolver,
-        executable.getEnvironment(),
+        executable,
         env,
         args,
         resources,
+        additionalCoverageTargets,
         additionalDeps,
         labels,
         contacts,
         runTestSeparately,
         testRuleTimeoutMs);
+    this.ruleFinder = ruleFinder;
     this.binary = binary;
-    this.executable = executable;
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutput() {
-    return binary.getPathToOutput();
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(Path output) {
+  public SourcePath getSourcePathToOutput() {
+    return new ForwardingBuildTargetSourcePath(
+        getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
+  }
+
+  @Override
+  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(executable.getCommandPrefix(getResolver()))
+        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--log_format=hrf")
         .add("--log_level=test_suite")
         .add("--report_format=xml")
@@ -119,11 +120,6 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .add("--result_code=no")
         .add("--report_sink=" + getProjectFilesystem().resolve(output))
         .build();
-  }
-
-  @Override
-  public Tool getExecutableCommand() {
-    return executable;
   }
 
   private void visitTestSuite(
@@ -177,19 +173,16 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   }
 
   @Override
-  protected ImmutableList<TestResultSummary> parseResults(
-      Path exitCode,
-      Path output,
-      Path results)
+  protected ImmutableList<TestResultSummary> parseResults(Path exitCode, Path output, Path results)
       throws Exception {
 
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
 
     // Process the test run output to grab the individual test stdout/stderr and
     // test run times.
-    Map<String, String> messages = Maps.newHashMap();
-    Map<String, List<String>> stdout = Maps.newHashMap();
-    Map<String, Long> times = Maps.newHashMap();
+    Map<String, String> messages = new HashMap<>();
+    Map<String, List<String>> stdout = new HashMap<>();
+    Map<String, Long> times = new HashMap<>();
     try (BufferedReader reader = Files.newBufferedReader(output, Charsets.US_ASCII)) {
       Stack<String> testSuite = new Stack<>();
       Optional<String> currentTest = Optional.empty();
@@ -206,7 +199,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         } else if ((matcher = CASE_START.matcher(line)).matches()) {
           String test = Joiner.on(".").join(testSuite) + "." + matcher.group(1);
           currentTest = Optional.of(test);
-          stdout.put(test, Lists.newArrayList());
+          stdout.put(test, new ArrayList<>());
         } else if ((matcher = CASE_END.matcher(line)).matches()) {
           String test = Joiner.on(".").join(testSuite) + "." + matcher.group(1);
           Preconditions.checkState(currentTest.isPresent() && currentTest.get().equals(test));
@@ -217,7 +210,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
           if (ERROR.matcher(line).matches()) {
             messages.put(currentTest.get(), line);
           } else {
-            stdout.get(currentTest.get()).add(line);
+            Preconditions.checkNotNull(stdout.get(currentTest.get())).add(line);
           }
         }
       }
@@ -235,26 +228,30 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
   // always available to run the test.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(super.getRuntimeDeps())
-        .addAll(executable.getDeps(getResolver()))
-        .build();
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return Stream.concat(
+        super.getRuntimeDeps(),
+        getExecutableCommand().getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
   }
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions) {
+      TestRunningOptions testRunningOptions,
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("boost")
-        .addAllCommand(executable.getCommandPrefix(getResolver()))
+        .addAllCommand(
+            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllCommand(getArgs().get())
-        .putAllEnv(getEnv().get())
+        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .addAllAdditionalCoverageTargets(
+            buildContext
+                .getSourcePathResolver()
+                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
         .build();
   }
-
 }

@@ -19,14 +19,14 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -37,17 +37,15 @@ public class CxxFlags {
 
   public static RuleKeyAppendableFunction<String, String> getTranslateMacrosFn(
       final CxxPlatform cxxPlatform) {
-
     final ImmutableSortedMap<String, String> flagMacros =
         ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros());
-
     return new RuleKeyAppendableFunction<String, String>() {
 
       @Override
       public void appendToRuleKey(RuleKeyObjectSink sink) {
-        SortedMap<String, String> sanitizedMap = Maps.transformValues(
-            flagMacros,
-            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()));
+        SortedMap<String, String> sanitizedMap =
+            Maps.transformValues(
+                flagMacros, cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()));
         sink.setReflectively("flagMacros", sanitizedMap);
       }
 
@@ -64,18 +62,35 @@ public class CxxFlags {
     };
   }
 
-  public static ImmutableList<String> getFlags(
+  public static ImmutableList<String> getFlagsWithPlatformMacroExpansion(
       ImmutableList<String> flags,
       PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
-    return FluentIterable
-        .from(flags)
-        .append(
-            Iterables.concat(
-                platformFlags
-                    .getMatchingValues(platform.getFlavor().toString())))
-        .transform(getTranslateMacrosFn(platform))
-        .toList();
+    return RichStream.from(getFlags(flags, platformFlags, platform))
+        .map(getTranslateMacrosFn(platform)::apply)
+        .toImmutableList();
+  }
+
+  public static ImmutableList<StringWithMacros> getFlagsWithMacrosWithPlatformMacroExpansion(
+      ImmutableList<StringWithMacros> flags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
+      CxxPlatform platform) {
+    RuleKeyAppendableFunction<String, String> translateMacrosFn = getTranslateMacrosFn(platform);
+    return RichStream.from(getFlags(flags, platformFlags, platform))
+        .map(s -> s.mapStrings(translateMacrosFn::apply))
+        .toImmutableList();
+  }
+
+  public static <T> ImmutableList<T> getFlags(
+      ImmutableList<T> flags,
+      PatternMatchedCollection<ImmutableList<T>> platformFlags,
+      CxxPlatform platform) {
+    ImmutableList.Builder<T> result = ImmutableList.builder();
+    result.addAll(flags);
+    for (ImmutableList<T> fl : platformFlags.getMatchingValues(platform.getFlavor().toString())) {
+      result.addAll(fl);
+    }
+    return result.build();
   }
 
   private static ImmutableListMultimap<CxxSource.Type, String> toLanguageFlags(
@@ -99,16 +114,15 @@ public class CxxFlags {
     ImmutableListMultimap.Builder<CxxSource.Type, String> langFlags =
         ImmutableListMultimap.builder();
 
-    langFlags.putAll(toLanguageFlags(getFlags(flags, platformFlags, platform)));
+    langFlags.putAll(
+        toLanguageFlags(getFlagsWithPlatformMacroExpansion(flags, platformFlags, platform)));
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
-         languageFlags.entrySet()) {
+        languageFlags.entrySet()) {
       langFlags.putAll(
-          entry.getKey(),
-          Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));
+          entry.getKey(), Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));
     }
 
     return langFlags.build();
   }
-
 }

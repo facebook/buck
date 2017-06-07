@@ -1,0 +1,71 @@
+# Before merging:
+#
+#    A
+#   / \
+#  B   C
+#
+#
+# After merging:
+#    1(AB)
+#    |
+#    C
+#
+#
+
+cxx_library(
+  name = 'A',
+  srcs = ['A.c'],
+  soname = 'lib1a.so',
+  can_be_asset = True,
+  deps = [
+    ':B',
+    ':C',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'B',
+  srcs = ['B.c'],
+  soname = 'lib1b.so',
+  can_be_asset = True,
+)
+
+cxx_library(
+  name = 'C',
+  srcs = ['C.c'],
+  deps = [
+    ':static_for_C',
+    ':prebuilt_for_C',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'static_for_C',
+  srcs = ['static_for_C.c'],
+  force_static = True,
+  deps = [],
+)
+
+prebuilt_cxx_library(
+  name = 'prebuilt_for_C',
+  lib_dir = 'prebuilt_for_C/$(platform)',
+  deps = [
+  ],
+)
+
+cxx_library(
+  name = 'glue_1',
+  srcs = ['glue_1.c'],
+  force_static = True,
+  deps = [
+  ],
+  visibility = ['PUBLIC'],
+)
+
+sh_binary(
+  name = 'codegen',
+  main = 'codegen.sh',
+  visibility = ['PUBLIC'],
+)

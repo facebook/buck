@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -45,11 +44,9 @@ public class JavaPackageFinderSerializer {
     if (packageFinder instanceof DefaultJavaPackageFinder) {
       builder.put(TYPE, TYPE_DEFAULT);
       builder.put(
-          PATH_ELEMENTS,
-          ((DefaultJavaPackageFinder) packageFinder).getPathElements().asList());
+          PATH_ELEMENTS, ((DefaultJavaPackageFinder) packageFinder).getPathElements().asList());
       builder.put(
-          PATHS_FROM_ROOT,
-          ((DefaultJavaPackageFinder) packageFinder).getPathsFromRoot().asList());
+          PATHS_FROM_ROOT, ((DefaultJavaPackageFinder) packageFinder).getPathsFromRoot().asList());
     } else if (packageFinder instanceof ResourcesRootPackageFinder) {
       builder.put(TYPE, TYPE_RESOURCE_ROOT);
       builder.put(
@@ -60,8 +57,8 @@ public class JavaPackageFinderSerializer {
           serialize(((ResourcesRootPackageFinder) packageFinder).getFallbackFinder()));
     } else {
       throw new RuntimeException(
-          String.format("Cannot serialize JavaPackageFinder with class: %s",
-              packageFinder.getClass()));
+          String.format(
+              "Cannot serialize JavaPackageFinder with class: %s", packageFinder.getClass()));
     }
 
     return builder.build();
@@ -72,17 +69,16 @@ public class JavaPackageFinderSerializer {
     String type = (String) data.get(TYPE);
     Preconditions.checkNotNull(type);
     Preconditions.checkArgument(
-        type.equals(TYPE_DEFAULT) || type.equals(TYPE_RESOURCE_ROOT),
-        "Unknown type: %s", type);
+        type.equals(TYPE_DEFAULT) || type.equals(TYPE_RESOURCE_ROOT), "Unknown type: %s", type);
 
     if (type.equals(TYPE_DEFAULT)) {
       Preconditions.checkArgument(data.containsKey(PATH_ELEMENTS));
-      ImmutableSet<String> pathElements = ImmutableSet.copyOf(
-          (List<String>) data.get(PATH_ELEMENTS));
+      ImmutableSet<String> pathElements =
+          ImmutableSet.copyOf((List<String>) data.get(PATH_ELEMENTS));
 
       Preconditions.checkArgument(data.containsKey(PATHS_FROM_ROOT));
-      ImmutableSortedSet<String> pathsFromRoot = ImmutableSortedSet.copyOf(
-          (List<String>) data.get(PATHS_FROM_ROOT));
+      ImmutableSortedSet<String> pathsFromRoot =
+          ImmutableSortedSet.copyOf((List<String>) data.get(PATHS_FROM_ROOT));
 
       return new DefaultJavaPackageFinder(pathsFromRoot, pathElements);
     } else if (type.equals(TYPE_RESOURCE_ROOT)) {

@@ -17,7 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -25,57 +28,47 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multiset;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
-public class SymlinkTree
-    extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, RuleKeyAppendable {
+public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBasedRuleKey {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
+  private final BuildTarget target;
+  private final ProjectFilesystem filesystem;
+  private final SourcePathRuleFinder ruleFinder;
 
   public SymlinkTree(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       Path root,
-      final ImmutableMap<Path, SourcePath> links) {
-    super(params, resolver);
+      final ImmutableMap<Path, SourcePath> links,
+      SourcePathRuleFinder ruleFinder) {
+    this.target = target;
+    this.filesystem = filesystem;
+    this.ruleFinder = ruleFinder;
 
     Preconditions.checkState(
-        root.isAbsolute(),
-        "Expected symlink tree root to be absolute: %s",
-        root);
+        !root.isAbsolute(), "Expected symlink tree root to be relative: %s", root);
 
     this.root = root;
     this.links = ImmutableSortedMap.copyOf(links);
-  }
-
-  public static SymlinkTree from(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      Path root,
-      ImmutableMap<String, SourcePath> links) {
-    return new SymlinkTree(
-        params,
-        resolver,
-        root,
-        MoreMaps.transformKeys(links, MorePaths.toPathFn(root.getFileSystem())));
   }
 
   @Override
@@ -93,8 +86,7 @@ public class SymlinkTree
    * @return a map that assigns a unique relative path to each of the SourcePaths.
    */
   public static ImmutableBiMap<SourcePath, Path> resolveDuplicateRelativePaths(
-      ImmutableSortedSet<SourcePath> sourcePaths,
-      SourcePathResolver resolver) {
+      ImmutableSortedSet<SourcePath> sourcePaths, SourcePathResolver resolver) {
     // This serves a dual purpose - it keeps track of whether a particular relative path had been
     // assigned to a SourcePath and how many times a particular relative path had been seen.
     Multiset<Path> assignedPaths = HashMultiset.create();
@@ -142,13 +134,49 @@ public class SymlinkTree
   }
 
   @Override
+  public BuildTarget getBuildTarget() {
+    return target;
+  }
+
+  @Override
+  public String getType() {
+    return "symlink_tree";
+  }
+
+  @Override
+  public BuildableProperties getProperties() {
+    return BuildableProperties.NONE;
+  }
+
+  /**
+   * SymlinkTree never has any compile-time deps, only runtime deps.
+   *
+   * <p>All rules which consume SymlinkTrees are themselves required to have dependencies anything
+   * which may alter the SymlinkTree contents.
+   *
+   * <p>This is to avoid removing and re-creating the same symlinks every build.
+   */
+  @Override
+  public ImmutableSortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of(
-        getVerifiyStep(),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), root),
-        new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
+      BuildContext context, BuildableContext buildableContext) {
+
+    return new ImmutableList.Builder<Step>()
+        .add(getVerifyStep())
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), root)))
+        .add(
+            new SymlinkTreeStep(
+                getProjectFilesystem(),
+                root,
+                context.getSourcePathResolver().getMappedPaths(links)))
+        .build();
   }
 
   // Put the link map into the rule key, as if it changes at all, we need to
@@ -158,41 +186,43 @@ public class SymlinkTree
         ImmutableSortedMap.naturalOrder();
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
       linksForRuleKeyBuilder.put(
-          entry.getKey().toString(),
-          new NonHashableSourcePathContainer(entry.getValue()));
+          entry.getKey().toString(), new NonHashableSourcePathContainer(entry.getValue()));
     }
     return linksForRuleKeyBuilder.build();
   }
 
-  // Since we produce a directory tree of symlinks, rather than a single file, return
-  // null here.
   @Override
-  public Path getPathToOutput() {
-    return root;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), root);
+  }
+
+  @Override
+  public ProjectFilesystem getProjectFilesystem() {
+    return filesystem;
   }
 
   @VisibleForTesting
-  protected Step getVerifiyStep() {
+  protected Step getVerifyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
-        @Override
-        public StepExecutionResult execute(ExecutionContext context) throws IOException {
-          for (ImmutableMap.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
-            for (Path pathPart : entry.getKey()) {
-              if (pathPart.toString().equals("..")) {
-                context.getBuckEventBus().post(
-                    ConsoleEvent.create(
-                        Level.SEVERE,
-                        String.format(
-                            "Path '%s' should not contain '%s'.",
-                            entry.getKey(),
-                            pathPart)));
-                return StepExecutionResult.ERROR;
-              }
+      @Override
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+        for (ImmutableMap.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
+          for (Path pathPart : entry.getKey()) {
+            if (pathPart.toString().equals("..")) {
+              context
+                  .getBuckEventBus()
+                  .post(
+                      ConsoleEvent.create(
+                          Level.SEVERE,
+                          String.format(
+                              "Path '%s' should not contain '%s'.", entry.getKey(), pathPart)));
+              return StepExecutionResult.ERROR;
             }
           }
-          return StepExecutionResult.SUCCESS;
         }
-      };
+        return StepExecutionResult.SUCCESS;
+      }
+    };
   }
 
   // We don't cache symlinks because:
@@ -204,12 +234,26 @@ public class SymlinkTree
     return false;
   }
 
-  public Path getRoot() {
-    return root;
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps() {
+    return links
+        .values()
+        .stream()
+        .map(ruleFinder::filterBuildRuleInputs)
+        .flatMap(ImmutableSet::stream)
+        .map(BuildRule::getBuildTarget);
   }
 
-  public ImmutableMap<Path, SourcePath> getLinks() {
+  public Path getRoot() {
+    return getProjectFilesystem().resolve(root);
+  }
+
+  public ImmutableSortedMap<Path, SourcePath> getLinks() {
     return links;
   }
 
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
+  }
 }

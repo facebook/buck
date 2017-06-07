@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
@@ -25,29 +24,23 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
 
-  private final Tool kotlinc;
+  private final Kotlinc kotlinc;
   private final ImmutableList<String> extraArguments;
   private final Function<BuildContext, Iterable<Path>> extraClassPath;
 
   public KotlincToJarStepFactory(
-      Tool kotlinc,
-      ImmutableList<String> extraArguments) {
-    this(kotlinc, extraArguments, EMPTY_EXTRA_CLASSPATH);
-  }
-
-  public KotlincToJarStepFactory(
-      Tool kotlinc,
+      Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       Function<BuildContext, Iterable<Path>> extraClassPath) {
     this.kotlinc = kotlinc;
@@ -57,32 +50,35 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
 
   @Override
   public void createCompileStep(
-      BuildContext context,
+      BuildContext buildContext,
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
       ClassUsageFileWriter usedClassesFileWriter,
       /* out params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+
     steps.add(
         new KotlincStep(
-            kotlinc,
-            extraArguments,
-            resolver,
+            invokingRule,
             outputDirectory,
             sourceFilePaths,
+            pathToSrcsList,
             ImmutableSortedSet.<Path>naturalOrder()
                 .addAll(
-                    Optional.ofNullable(extraClassPath.apply(context)).orElse(ImmutableList.of()))
+                    Optional.ofNullable(extraClassPath.apply(buildContext))
+                        .orElse(ImmutableList.of()))
                 .addAll(declaredClasspathEntries)
                 .build(),
+            kotlinc,
+            extraArguments,
             filesystem));
   }
 
@@ -90,5 +86,10 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     kotlinc.appendToRuleKey(sink);
     sink.setReflectively("extraArguments", extraArguments);
+  }
+
+  @Override
+  protected Tool getCompiler() {
+    return kotlinc;
   }
 }

@@ -23,37 +23,29 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import javax.annotation.Nullable;
 
-public class FakeTestRule extends AbstractBuildRule implements TestRule {
+public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
 
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> labels;
   private final Optional<Path> pathToTestOutputDirectory;
   private final boolean runTestSeparately;
   private final ImmutableList<Step> testSteps;
   private final Callable<TestResults> interpretedTestResults;
 
   public FakeTestRule(
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
-    this(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(deps)
-            .build(),
-        resolver,
-        labels
-    );
+    this(new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(deps).build(), resolver, labels);
   }
 
   public FakeTestRule(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      ImmutableSet<Label> labels) {
+      BuildRuleParams buildRuleParams, SourcePathResolver resolver, ImmutableSet<String> labels) {
     this(
         buildRuleParams,
         resolver,
@@ -69,7 +61,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   public FakeTestRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      ImmutableSet<Label> labels,
+      ImmutableSet<String> labels,
       Optional<Path> pathToTestOutputDirectory,
       boolean runTestSeparately,
       ImmutableList<Step> testSteps,
@@ -89,32 +81,28 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public Path getPathToOutput() {
+  @Nullable
+  public SourcePath getSourcePathToOutput() {
     return null;
-  }
-
-  @Override
-  public boolean hasTestResultFiles() {
-    return false;
   }
 
   @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     return testSteps;
   }
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      ExecutionContext executionContext, boolean isUsingTestSelectors) {
     return interpretedTestResults;
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 

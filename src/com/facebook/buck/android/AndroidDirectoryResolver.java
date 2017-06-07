@@ -19,40 +19,29 @@ package com.facebook.buck.android;
 import java.nio.file.Path;
 import java.util.Optional;
 
-
-/**
- * Defines an implementation capable of locating Android SDK and NDK directories.
- */
+/** Defines an implementation capable of locating Android SDK and NDK directories. */
 public interface AndroidDirectoryResolver {
-  /**
-   * @return {@code Optional<Path>} pointing to Android SDK or {@code Optional.empty()}.
-   */
+  /** @return {@code Optional<Path>} pointing to Android SDK or {@code Optional.empty()}. */
   Optional<Path> getSdkOrAbsent();
 
-  /**
-   * @return {@code Path} pointing to Android SDK or throws an exception why SDK was not found.
-   */
+  /** @return {@code Path} pointing to Android SDK or throws an exception why SDK was not found. */
   Path getSdkOrThrow();
 
-  /**
-   * @return {@code Path} pointing to Android NDK or throws an exception why NDK was not found.
-   */
+  /** @return {@code Path} pointing to Android NDK or throws an exception why NDK was not found. */
   Path getNdkOrThrow();
 
   /**
    * @return {@code Path} pointing to Android SDK build tools or throws an exception why the build
-   * tools were not found.
+   *     tools were not found.
    */
   Path getBuildToolsOrThrow();
 
-  /**
-   * @return {@code Optional<Path>} pointing to Android NDK or {@code Optional.empty()}.
-   */
+  /** @return {@code Optional<Path>} pointing to Android NDK or {@code Optional.empty()}. */
   Optional<Path> getNdkOrAbsent();
 
   /**
    * @return {@code Optional<String>} of the NDK version pointed by {@code #getNdkOrAbsent} or
-   * {@code Optional.empty()}.
+   *     {@code Optional.empty()}.
    */
   Optional<String> getNdkVersion();
 }

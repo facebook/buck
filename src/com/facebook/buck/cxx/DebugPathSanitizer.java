@@ -15,31 +15,27 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
-/**
- * Encapsulates all the logic to sanitize debug paths in native code.
- */
+/** Encapsulates all the logic to sanitize debug paths in native code. */
 public abstract class DebugPathSanitizer {
-  private final int pathSize;
-  private final char separator;
+  protected final int pathSize;
+  protected final char separator;
   protected final Path compilationDirectory;
 
-  public DebugPathSanitizer(
-      char separator,
-      int pathSize,
-      Path compilationDirectory) {
+  public DebugPathSanitizer(char separator, int pathSize, Path compilationDirectory) {
     this.separator = separator;
     this.pathSize = pathSize;
     this.compilationDirectory = compilationDirectory;
@@ -54,13 +50,12 @@ public abstract class DebugPathSanitizer {
         path.toString().length() <= pathSize,
         String.format(
             "Path is too long to sanitize:\n'%s' is %d characters long, limit is %d.",
-            path,
-            path.toString().length(),
-            pathSize));
+            path, path.toString().length(), pathSize));
     return Strings.padEnd(path.toString(), pathSize, separator);
   }
 
-  abstract Map<String, String> getCompilationEnvironment(Path workingDir, boolean shouldSanitize);
+  abstract ImmutableMap<String, String> getCompilationEnvironment(
+      Path workingDir, boolean shouldSanitize);
 
   abstract ImmutableList<String> getCompilationFlags();
 
@@ -109,4 +104,14 @@ public abstract class DebugPathSanitizer {
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   abstract void restoreCompilationDirectory(Path path, Path workingDir) throws IOException;
+
+  /**
+   * Offensive check for cross-cell builds: return a new sanitizer with the provided
+   * ProjectFilesystem
+   */
+  @SuppressWarnings("unused")
+  public DebugPathSanitizer withProjectFilesystem(ProjectFilesystem projectFilesystem) {
+    // Do nothing by default.  Only one subclass uses this right now.
+    return this;
+  }
 }

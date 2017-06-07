@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'rust_binary()' /}
+    {param navid: 'rule_rust_binary' /}
     {param prettify: true /}
     {param description}
       A rust_binary() rule builds a native Rust executable.
@@ -16,6 +17,9 @@
 <p>
   A rust_binary() rule builds a native executable from the supplied set of Rust source files
   and dependencies.
+</p>
+<p>
+  {call rust_common.check_flavor /}
 </p>
 <p>
   {call rust_common.supported_language_version /}
@@ -46,6 +50,16 @@
 {call rust_common.crate_root /}
 
 {call native_common.link_style /}
+
+{call buck.arg}
+  {param name: 'rpath' /}
+  {param default : 'true' /}
+  {param desc}
+  Set the "rpath" in the executable when using a shared link style.
+  {/param}
+{/call}
+
+{call buck.tests_arg /}
 
 {/param} // close args
 

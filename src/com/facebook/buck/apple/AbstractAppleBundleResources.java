@@ -21,12 +21,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import org.immutables.value.Value;
 
-/**
- * Resources to be bundled into a bundle.
- */
+/** Resources to be bundled into a bundle. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAppleBundleResources implements RuleKeyAppendable {
@@ -37,25 +34,19 @@ abstract class AbstractAppleBundleResources implements RuleKeyAppendable {
 
   /**
    * Directories whose contents should be copied into the root of the resources subdirectory.
-   * <p/>
-   * This is useful when the directory contents are not known beforehand, such as when a rule
+   *
+   * <p>This is useful when the directory contents are not known beforehand, such as when a rule
    * generates a directory of files.
    */
   public abstract ImmutableSet<SourcePath> getDirsContainingResourceDirs();
 
-  /**
-   * Files that are copied to the root of the resources subdirectory.
-   */
+  /** Files that are copied to the root of the resources subdirectory. */
   public abstract ImmutableSet<SourcePath> getResourceFiles();
 
-  /**
-   * Resource files with localization variants.
-   */
+  /** Resource files with localization variants. */
   public abstract ImmutableSet<SourcePath> getResourceVariantFiles();
 
-  /**
-   * Returns all the SourcePaths from the different types of resources.
-   */
+  /** Returns all the SourcePaths from the different types of resources. */
   public Iterable<SourcePath> getAll() {
     return Iterables.concat(
         getResourceDirs(),
@@ -66,8 +57,7 @@ abstract class AbstractAppleBundleResources implements RuleKeyAppendable {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("resourceDirs", getResourceDirs())
+    sink.setReflectively("resourceDirs", getResourceDirs())
         .setReflectively("dirContainingResourceDirs", getDirsContainingResourceDirs())
         .setReflectively("resourceFiles", getResourceFiles())
         .setReflectively("resourceVariantFiles", getResourceVariantFiles());

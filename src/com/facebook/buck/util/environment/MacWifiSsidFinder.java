@@ -16,35 +16,29 @@
 
 package com.facebook.buck.util.environment;
 
+import ca.weblite.objc.Client;
+import ca.weblite.objc.Proxy;
+import ca.weblite.objc.RuntimeUtils;
 import com.facebook.buck.log.Logger;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-
 import java.util.Optional;
 
-import ca.weblite.objc.Client;
-import ca.weblite.objc.Proxy;
-import ca.weblite.objc.RuntimeUtils;
-
-/**
- * Mac OS X implementation of finding the SSID of the default Wi-Fi interface.
- */
+/** Mac OS X implementation of finding the SSID of the default Wi-Fi interface. */
 public class MacWifiSsidFinder {
   private static final Logger LOG = Logger.get(MacWifiSsidFinder.class);
 
   // Utility class, do not instantiate.
-  private MacWifiSsidFinder () { }
+  private MacWifiSsidFinder() {}
 
-  public static interface CoreWlan extends Library { }
+  public static interface CoreWlan extends Library {}
 
   // Need to hold on to an instance of this library so CoreWLAN.framework is kept resident.
   public static final CoreWlan CORE_WLAN_INSTANCE =
       (CoreWlan) Native.loadLibrary("CoreWLAN", CoreWlan.class);
 
-  /**
-   * Finds the SSID of the default Wi-Fi interface using Mac OS X APIs.
-   */
+  /** Finds the SSID of the default Wi-Fi interface using Mac OS X APIs. */
   public static Optional<String> findCurrentSsid() {
     LOG.debug("Getting current SSID..");
 
@@ -66,12 +60,9 @@ public class MacWifiSsidFinder {
     return getSsidFromInterface(defaultInterface);
   }
 
-  /**
-   * Finds the SSID of the default Wi-Fi interface using Mac OS X 10.10 and later APIs.
-   */
+  /** Finds the SSID of the default Wi-Fi interface using Mac OS X 10.10 and later APIs. */
   private static Optional<Proxy> getDefaultWifiInterface(
-      Client objcClient,
-      Pointer wifiClientClass) {
+      Client objcClient, Pointer wifiClientClass) {
     // CWWiFiClient *sharedWiFiClient = [CWWiFiClient sharedWiFiClient];
     Proxy sharedWiFiClient = objcClient.sendProxy(wifiClientClass, "sharedWiFiClient");
     if (sharedWiFiClient == null) {
@@ -104,8 +95,8 @@ public class MacWifiSsidFinder {
     }
     String ssidString;
     if (!(ssid instanceof String)) {
-      LOG.warn("Fetched SSID, but got unexpected non-string type (got: %s).",
-          ssid.getClass().getName());
+      LOG.warn(
+          "Fetched SSID, but got unexpected non-string type (got: %s).", ssid.getClass().getName());
       ssidString = ssid.toString();
     } else {
       ssidString = (String) ssid;

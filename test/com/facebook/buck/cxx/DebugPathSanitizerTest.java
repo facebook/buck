@@ -20,12 +20,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableBiMap;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DebugPathSanitizerTest {
 
@@ -33,25 +31,25 @@ public class DebugPathSanitizerTest {
 
   @Before
   public void setUp() {
-    debugPathSanitizer = new MungingDebugPathSanitizer(
-        40,
-        '/',
-        Paths.get("."),
-        ImmutableBiMap.of(
-            Paths.get("/some/absolute/path"),
-            Paths.get("SYMBOLIC_NAME"),
-            Paths.get("/another/path/with/subdirectories"),
-            Paths.get("OTHER_NAME_WITH_SUFFIX"),
-            Paths.get("/another/path"),
-            Paths.get("OTHER_NAME")));
+    debugPathSanitizer =
+        new MungingDebugPathSanitizer(
+            40,
+            '/',
+            Paths.get("."),
+            ImmutableBiMap.of(
+                Paths.get("/some/absolute/path"),
+                Paths.get("SYMBOLIC_NAME"),
+                Paths.get("/another/path/with/subdirectories"),
+                Paths.get("OTHER_NAME_WITH_SUFFIX"),
+                Paths.get("/another/path"),
+                Paths.get("OTHER_NAME")));
   }
 
   @Test
   public void sanitizeWithoutAnyMatches() {
     assertThat(
         debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "an arbitrary string with no match"),
+            Optional.of(Paths.get("/project/root")), "an arbitrary string with no match"),
         equalTo("an arbitrary string with no match"));
   }
 
@@ -68,8 +66,7 @@ public class DebugPathSanitizerTest {
   public void sanitizeOtherDirectories() {
     assertThat(
         debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "-I/some/absolute/path/dir -I/another/path"),
+            Optional.of(Paths.get("/project/root")), "-I/some/absolute/path/dir -I/another/path"),
         equalTo("-ISYMBOLIC_NAME/dir -IOTHER_NAME"));
   }
 
@@ -86,8 +83,7 @@ public class DebugPathSanitizerTest {
   public void restoreWithoutAnyMatches() {
     assertThat(
         debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")),
-            "an arbitrary string with no match"),
+            Optional.of(Paths.get("/project/root")), "an arbitrary string with no match"),
         equalTo("an arbitrary string with no match"));
   }
 
@@ -105,8 +101,8 @@ public class DebugPathSanitizerTest {
     assertThat(
         debugPathSanitizer.restore(
             Optional.of(Paths.get("/project/root")),
-            "-ISYMBOLIC_NAME////////////////////////////dir " +
-                "-IOTHER_NAME//////////////////////////////"),
+            "-ISYMBOLIC_NAME////////////////////////////dir "
+                + "-IOTHER_NAME//////////////////////////////"),
         equalTo("-I/some/absolute/path/dir -I/another/path"));
   }
 
@@ -123,9 +119,7 @@ public class DebugPathSanitizerTest {
   public void restoreDoesNotTouchUnexpandedPaths() {
     assertThat(
         debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")),
-            ". -ISYMBOLIC_NAME/ OTHER_NAME"),
+            Optional.of(Paths.get("/project/root")), ". -ISYMBOLIC_NAME/ OTHER_NAME"),
         equalTo(". -ISYMBOLIC_NAME/ OTHER_NAME"));
   }
-
 }

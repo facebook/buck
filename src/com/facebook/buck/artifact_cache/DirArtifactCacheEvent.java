@@ -20,12 +20,10 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
 public class DirArtifactCacheEvent {
-  public static final ArtifactCacheEvent.CacheMode CACHE_MODE =
-      ArtifactCacheEvent.CacheMode.dir;
+  public static final ArtifactCacheEvent.CacheMode CACHE_MODE = ArtifactCacheEvent.CacheMode.dir;
 
   private DirArtifactCacheEvent() {}
 
@@ -39,9 +37,7 @@ public class DirArtifactCacheEvent {
     public ArtifactCacheEvent.Started newStoreStartedEvent(
         ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata) {
       return new Started(
-          ArtifactCacheEvent.Operation.STORE,
-          ruleKeys,
-          ArtifactCacheEvent.getTarget(metadata));
+          ArtifactCacheEvent.Operation.STORE, ruleKeys, ArtifactCacheEvent.getTarget(metadata));
     }
 
     @Override
@@ -64,8 +60,7 @@ public class DirArtifactCacheEvent {
           started.getTarget(),
           started.getRuleKeys(),
           started.getInvocationType(),
-          cacheResult
-      );
+          cacheResult);
     }
   }
 
@@ -107,5 +102,4 @@ public class DirArtifactCacheEvent {
       return "DirArtifactCacheEvent.Finished";
     }
   }
-
 }

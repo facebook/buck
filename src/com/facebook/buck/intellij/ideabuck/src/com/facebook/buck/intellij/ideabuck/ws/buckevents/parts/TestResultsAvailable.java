@@ -18,6 +18,5 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.parts;
 
 import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
 
-public interface TestResultsAvailable extends
-    IndividualTesEventFinishedExternalInterface<TestResults> {
-}
+public interface TestResultsAvailable
+    extends IndividualTesEventFinishedExternalInterface<TestResults> {}

@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -40,7 +39,8 @@ public class GoTestMainStep extends ShellStep {
       String coverageMode,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables,
       Path packageName,
-      ImmutableList<Path> testFiles, Path output) {
+      ImmutableList<Path> testFiles,
+      Path output) {
     super(workingDirectory);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
@@ -53,11 +53,12 @@ public class GoTestMainStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> command = ImmutableList.<String>builder()
-        .addAll(generatorCommandPrefix)
-        .add("--output", output.toString())
-        .add("--import-path", packageName.toString())
-        .add("--cover-mode", coverageMode);
+    ImmutableList.Builder<String> command =
+        ImmutableList.<String>builder()
+            .addAll(generatorCommandPrefix)
+            .add("--output", output.toString())
+            .add("--import-path", packageName.toString())
+            .add("--cover-mode", coverageMode);
 
     for (Map.Entry<Path, ImmutableMap<String, Path>> pkg : coverageVariables.entrySet()) {
       if (pkg.getValue().isEmpty()) {

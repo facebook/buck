@@ -1,22 +1,27 @@
 import __builtin__
 import contextlib
+import json
 import os
 import unittest
 import shutil
 import tempfile
 import StringIO
 
-from pywatchman import bser, WatchmanError
+from pywatchman import WatchmanError
+from typing import Sequence
 
 from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
 
 
-def foo_rule(name, srcs=[], visibility=[], build_env=None):
+def foo_rule(name, srcs=None, visibility=None, options=None, some_optional=None, build_env=None):
+    """A dummy build rule."""
     add_rule({
         'buck.type': 'foo',
         'name': name,
-        'srcs': srcs,
-        'visibility': visibility,
+        'srcs': srcs or [],
+        'options': options or {},
+        'some_optional': some_optional,
+        'visibility': visibility or [],
     }, build_env)
 
 
@@ -65,6 +70,13 @@ def with_envs(envs):
 class ProjectFile(object):
 
     def __init__(self, root, path, contents):
+        # type: (str, str, Sequence[str]) -> None
+        """Record of a file that can be written to disk.
+
+        :param root: root.
+        :param path: path to write the file, relative to the root.
+        :param contents: lines of file context
+        """
         self.path = path
         self.name = '//{0}'.format(path)
         self.root = root
@@ -79,19 +91,21 @@ class BuckTest(unittest.TestCase):
     def setUp(self):
         self.project_root = tempfile.mkdtemp()
         self.allow_empty_globs = False
+        self.cell_name = ''
         self.build_file_name = 'BUCK'
         self.watchman_client = None
-        self.enable_build_file_sandboxing = False
         self.project_import_whitelist = None
 
     def tearDown(self):
         shutil.rmtree(self.project_root, True)
 
     def write_file(self, pfile):
+        # type: (ProjectFile) -> None
         with open(os.path.join(self.project_root, pfile.path), 'w') as f:
             f.write(pfile.contents)
 
     def write_files(self, *pfiles):
+        # type: (*ProjectFile) -> None
         for pfile in pfiles:
             self.write_file(pfile)
 
@@ -99,15 +113,13 @@ class BuckTest(unittest.TestCase):
         return BuildFileProcessor(
             self.project_root,
             cell_roots or {},
+            self.cell_name,
             self.build_file_name,
             self.allow_empty_globs,
-            False,              # ignore_buck_autodeps_files
-            False,              # no_autodeps_signatures
             self.watchman_client,
             False,              # watchman_glob_stat_results
             False,              # watchman_use_glob_generator
             False,              # use_mercurial_glob
-            self.enable_build_file_sandboxing,
             self.project_import_whitelist,
             includes or [],
             **kwargs)
@@ -373,7 +385,7 @@ class BuckTest(unittest.TestCase):
                 fake_stdout)
         self.assertTrue(self.watchman_client.query_invoked)
         result = fake_stdout.getvalue()
-        decoded_result = bser.loads(result)
+        decoded_result = json.loads(result)
         self.assertEqual([], decoded_result['values'])
         self.assertEqual(1, len(decoded_result['diagnostics']))
         diagnostic = decoded_result['diagnostics'][0]
@@ -514,25 +526,7 @@ class BuckTest(unittest.TestCase):
             os.path.join(self.project_root, dep.path) in
             get_includes_from_results(results))
 
-    def test_import_works_without_sandboxing(self):
-        self.enable_build_file_sandboxing = False
-        build_file = ProjectFile(
-            self.project_root,
-            path='BUCK',
-            contents=(
-                'import ssl',
-            ))
-        self.write_files(build_file)
-        build_file_processor = self.create_build_file_processor()
-        with build_file_processor.with_builtins(__builtin__.__dict__):
-            build_file_processor.process(
-                build_file.root,
-                build_file.prefix,
-                build_file.path,
-                [])
-
-    def test_enabled_sandboxing_blocks_import(self):
-        self.enable_build_file_sandboxing = True
+    def test_imports_are_blocked(self):
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
@@ -552,7 +546,6 @@ class BuckTest(unittest.TestCase):
         Verify that modules whitelisted globally or in configs can be imported
         with sandboxing enabled.
         """
-        self.enable_build_file_sandboxing = True
         self.project_import_whitelist = ['sys', 'subprocess']
         build_file = ProjectFile(
             self.project_root,
@@ -572,7 +565,6 @@ class BuckTest(unittest.TestCase):
         """
         Verify that `allow_unsafe_import()` allows to import specified modules
         """
-        self.enable_build_file_sandboxing = True
         # Importing httplib results in `__import__()` calls for other modules, e.g. socket, sys
         build_file = ProjectFile(
             self.project_root,
@@ -599,9 +591,10 @@ class BuckTest(unittest.TestCase):
             self.project_root,
             path='inc_def',
             contents=(
-                'import math',
-                'def math_pi():',
-                '    return math.pi',
+                'with allow_unsafe_import():',
+                '    import math',
+                '    def math_pi():',
+                '        return math.pi',
             ))
         self.write_files(include_def)
 
@@ -638,7 +631,8 @@ class BuckTest(unittest.TestCase):
             path='inc_def',
             contents=(
                 '__all__ = ["math"]',
-                'import math',
+                'with allow_unsafe_import():',
+                '    import math',
             ))
         build_file = ProjectFile(
             self.project_root,
@@ -709,7 +703,6 @@ class BuckTest(unittest.TestCase):
         'import pipes' allows 'quote' and also that 'from os.path import *' works.
         """
 
-        self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
@@ -733,7 +726,6 @@ class BuckTest(unittest.TestCase):
         Test that after 'import os.path' unsafe functions raise errors
         """
 
-        self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
@@ -750,7 +742,6 @@ class BuckTest(unittest.TestCase):
             build_file.root, build_file.prefix, build_file.path, [])
 
     def test_wrap_access_prints_warnings(self):
-        self.enable_build_file_sandboxing = True
         path = os.path.normpath(os.path.join(self.project_root, 'foo.py'))
         build_file = ProjectFile(
             self.project_root,
@@ -790,7 +781,7 @@ class BuckTest(unittest.TestCase):
             os.path.abspath(os.path.join(self.project_root, 'bar/baz')),
             build_file_processor._get_include_path('//bar/baz'))
 
-    def test_bser_encoding_failure(self):
+    def test_json_encoding_failure(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         fake_stdout = StringIO.StringIO()
         build_file = ProjectFile(
@@ -813,7 +804,7 @@ class BuckTest(unittest.TestCase):
                 build_file_processor,
                 fake_stdout)
         result = fake_stdout.getvalue()
-        decoded_result = bser.loads(result)
+        decoded_result = json.loads(result)
         self.assertEqual(
             [],
             decoded_result['values'])
@@ -824,6 +815,209 @@ class BuckTest(unittest.TestCase):
             'parse',
             decoded_result['diagnostics'][0]['source'])
 
+    def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 2',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'include_defs("//DEFS", "defs")',
+                'foo_rule(name="foo" + str(defs.value), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with processor.with_builtins(__builtin__.__dict__):
+            result = processor.process(self.project_root, None, 'BUCK', [])
+        self.assertTrue(
+            [x for x in result if x.get('name', '') == 'foo2'],
+            "result should contain rule with name derived from a value in namespaced defs",
+        )
+        # should not be in global scope
+        self.write_file(ProjectFile(
+            self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'include_defs("//DEFS", "defs")',
+                'foo_rule(name="foo" + str(value), srcs=[])',
+            )
+        ))
+        with processor.with_builtins(__builtin__.__dict__):
+            self.assertRaises(
+                NameError,
+                lambda: processor.process(self.project_root, None, 'BUCK_fail', []))
+
+    def test_json_encoding_skips_None(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+foo_rule(
+  name="foo",
+  srcs=['Foo.java'],
+)
+'''
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = json.loads(result)
+        self.assertNotIn('some_optional', decoded_result['values'][0])
+        self.assertIn('srcs', decoded_result['values'][0])
+
+    def test_json_encoding_list_like_object(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+import collections
+
+class ListLike(collections.MutableSequence):
+  def __init__(self, list):
+    self.list = list
+  def __delitem__(self, key):
+    self.list.__delitems__(key)
+  def __getitem__(self, key):
+    return self.list.__getitem__(key)
+  def __setitem__(self, key, value):
+    self.list.__setitem__(key, value)
+  def __len__(self):
+    return self.list.__len__()
+  def insert(self, position, value):
+    self.list.insert(position, value)
+
+foo_rule(
+  name="foo",
+  srcs=ListLike(['Foo.java','Foo.c']),
+)
+'''
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        c_file = ProjectFile(self.project_root, path='Foo.c', contents=())
+        self.write_files(build_file, java_file, c_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = json.loads(result)
+        self.assertEqual(
+            [],
+            decoded_result.get('diagnostics', []))
+        self.assertEqual(
+            [u'Foo.java', u'Foo.c'],
+            decoded_result['values'][0].get('srcs', []))
+
+    def test_json_encoding_dict_like_object(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+import collections
+
+class DictLike(collections.MutableMapping):
+  def __init__(self, dict):
+    self.dict = dict
+  def __delitem__(self, key):
+    self.dict.__delitems__(key)
+  def __getitem__(self, key):
+    return self.dict.__getitem__(key)
+  def __setitem__(self, key, value):
+    self.dict.__setitem__(key, value)
+  def __len__(self):
+    return self.dict.__len__()
+  def __iter__(self):
+    return self.dict.__iter__()
+  def insert(self, position, value):
+    self.dict.insert(position, value)
+
+foo_rule(
+  name="foo",
+  srcs=[],
+  options=DictLike({'foo':'bar','baz':'blech'}),
+)
+'''
+            ))
+        self.write_file(build_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = json.loads(result)
+        self.assertEqual(
+            [],
+            decoded_result.get('diagnostics', []))
+        self.assertEqual(
+            {u'foo': u'bar', u'baz': u'blech'},
+            decoded_result['values'][0].get('options', {}))
+
+    def test_sort_keys(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                '''
+foo_rule(
+  name="foo",
+  srcs=[],
+  options={'foo':'bar','baz':'blech'},
+)
+'''
+            ))
+        self.write_file(build_file)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
+        result = fake_stdout.getvalue()
+        self.assertEquals(
+            '{"values": [{"buck.base_path": "", "buck.type": "foo", "name": '
+            '"foo", "options": {"baz": "blech", "foo": "bar"}, "srcs": [], '
+            '"visibility": []}, {"__includes": ["BUCK"]}, {"__configs": {}}, '
+            '{"__env": {}}]}',
+            result)
 
 if __name__ == '__main__':
     unittest.main()

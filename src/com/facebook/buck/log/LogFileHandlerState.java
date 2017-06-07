@@ -17,7 +17,6 @@
 package com.facebook.buck.log;
 
 import java.io.Writer;
-
 import javax.annotation.Nullable;
 
 public interface LogFileHandlerState extends ThreadIdToCommandIdMapper {

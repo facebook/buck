@@ -21,21 +21,17 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.ProcessExecutorParams;
-
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/**
- * Fake implementation of {@link Javac} for tests.
- */
+/** Fake implementation of {@link Javac} for tests. */
 public class FakeJavac implements Javac {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
@@ -43,7 +39,7 @@ public class FakeJavac implements Javac {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     throw new UnsupportedOperationException();
   }
 
@@ -58,7 +54,7 @@ public class FakeJavac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     throw new UnsupportedOperationException();
   }
 
@@ -72,13 +68,17 @@ public class FakeJavac implements Javac {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<String> safeAnnotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException {
+      Optional<Path> workingDirectory,
+      JavacCompilationMode compilationMode)
+      throws InterruptedException {
     try {
-      return context.getProcessExecutor().launchAndExecute(
-          ProcessExecutorParams.ofCommand("javac")).getExitCode();
+      return context
+          .getProcessExecutor()
+          .launchAndExecute(ProcessExecutorParams.ofCommand("javac"))
+          .getExitCode();
     } catch (IOException e) {
       return 1;
     }
@@ -96,5 +96,4 @@ public class FakeJavac implements Javac {
   public String getShortName() {
     throw new UnsupportedOperationException();
   }
-
 }

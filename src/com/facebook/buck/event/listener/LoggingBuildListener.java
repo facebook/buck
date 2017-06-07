@@ -26,23 +26,20 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.step.StepEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 
-/**
- * Log handler to bridge BuckEventBus events to java.util.logging records.
- */
+/** Log handler to bridge BuckEventBus events to java.util.logging records. */
 public class LoggingBuildListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.get(LoggingBuildListener.class);
 
   /**
-   * These are message types that have custom handling or where we want to do nothing
-   * because they are logged inline before being posted.
+   * These are message types that have custom handling or where we want to do nothing because they
+   * are logged inline before being posted.
    */
   private static final ImmutableSet<Class<? extends AbstractBuckEvent>>
       EXPLICITLY_HANDLED_EVENT_TYPES =
@@ -57,14 +54,15 @@ public class LoggingBuildListener implements BuckEventListener {
               .add(StepEvent.Started.class)
               .add(StepEvent.Finished.class)
               .build();
+
   private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
-    new ThreadLocal<SimpleDateFormat>() {
+      new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-            return format;
+          SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+          return format;
         }
-    };
+      };
 
   @Subscribe
   public void handleConsoleEvent(ConsoleEvent logEvent) {
@@ -95,6 +93,10 @@ public class LoggingBuildListener implements BuckEventListener {
 
   @Subscribe
   public void handleFallback(Object event) {
+    // This receives a lot of events. Exit fast if verbose logging is not enabled.
+    if (!LOG.isVerboseEnabled()) {
+      return;
+    }
     if (EXPLICITLY_HANDLED_EVENT_TYPES.contains(event.getClass())) {
       return;
     }

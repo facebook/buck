@@ -21,14 +21,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * Helper class to convert among various relative path-like objects.
  *
- * Methods are named in the form of {@code xToY}, such that invocation of the method will take a
+ * <p>Methods are named in the form of {@code xToY}, such that invocation of the method will take a
  * path referenced from Y to one that is referenced from X.
  */
 final class PathRelativizer {
@@ -39,23 +38,17 @@ final class PathRelativizer {
   private final Path outputDirectory;
   private final Function<SourcePath, Path> resolver;
 
-  public PathRelativizer(
-      Path outputDirectory,
-      Function<SourcePath, Path> resolver) {
+  public PathRelativizer(Path outputDirectory, Function<SourcePath, Path> resolver) {
     this.outputDirectory = outputDirectory;
     this.resolver = resolver;
   }
 
-  /**
-   * Path from output directory to a build target's buck file directory.
-   */
+  /** Path from output directory to a build target's buck file directory. */
   public Path outputPathToBuildTargetPath(BuildTarget target) {
     return outputDirToRootRelative(target.getBasePath());
   }
 
-  /**
-   * Path from output directory to given path that's relative to the root directory.
-   */
+  /** Path from output directory to given path that's relative to the root directory. */
   public Path outputDirToRootRelative(Path path) {
     Path result = MorePaths.normalize(MorePaths.relativize(outputDirectory, path));
     if (EMPTY_PATH.equals(result)) {
@@ -64,11 +57,8 @@ final class PathRelativizer {
     return result;
   }
 
-  /**
-   * Map a SourcePath to one that's relative to the output directory.
-   */
+  /** Map a SourcePath to one that's relative to the output directory. */
   public Path outputPathToSourcePath(SourcePath sourcePath) {
-    return outputDirToRootRelative(
-        Preconditions.checkNotNull(resolver.apply(sourcePath)));
+    return outputDirToRootRelative(Preconditions.checkNotNull(resolver.apply(sourcePath)));
   }
 }

@@ -1,8 +1,0 @@
-genrule(
-  name = 'generate_java_file',
-  out = 'generated.java',
-  cmd = 'echo "//" > $OUT',
-  visibility = [
-    'PUBLIC',
-  ],
-)

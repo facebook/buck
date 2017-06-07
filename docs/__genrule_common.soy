@@ -41,7 +41,7 @@
     {sp}<code>cmd</code>, using builtin {call buck.string_parameter_macros /}.
     This expansion takes two supported forms:
     <dl>
-      <dt><code>$(classpath /&#2F;path/to:target)</code></dt>
+      <dt><code>$(classpath /&#x2F;path/to:target)</code></dt>
       <dd>Expands a build rule for something that has a java classpath
       to the transitive classpath of that rule. If the rule does not
       have (or contribute to) a classpath, an exception will be thrown
@@ -109,6 +109,18 @@
   {param desc}
    The name of the output file or directory. Must be unique within the build file
    in which the <code>genrule()</code> is declared.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .type_arg}
+{call buck.arg}
+  {param name: 'type' /}
+  {param default: 'None' /}
+  {param desc}
+   The type of this genrule. This is used for logging and is particularly useful for grouping
+   different genrules that share an underlying logical "type".
   {/param}
 {/call}
 {/template}

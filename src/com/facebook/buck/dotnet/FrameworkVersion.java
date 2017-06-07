@@ -16,7 +16,7 @@
 
 package com.facebook.buck.dotnet;
 
-public enum  FrameworkVersion {
+public enum FrameworkVersion {
   NET35("v3.5"),
   NET40("v4.0"),
   NET45("v4.5"),

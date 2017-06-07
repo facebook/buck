@@ -1,8 +1,0 @@
-{
-  "immutables" : {
-    "deps" : [
-      "//third-party/java/immutables:processor"
-    ],
-    "exported_deps" : [ ]
-  }
-}

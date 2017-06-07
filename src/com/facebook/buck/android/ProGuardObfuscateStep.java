@@ -16,14 +16,17 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -34,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,6 +59,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   private final ProjectFilesystem filesystem;
   private final Map<Path, Path> inputAndOutputEntries;
   private final Path pathToProGuardCommandLineArgsFile;
+  private final boolean skipProguard;
   private final Optional<Path> proguardJarOverride;
   private final String proguardMaxHeapSize;
   private final Optional<List<String>> proguardJvmArgs;
@@ -64,8 +67,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
   /**
    * Create steps that write out ProGuard's command line arguments to a text file and then run
-   * ProGuard using those arguments. We write the arguments to a file to avoid blowing out
-   * exec()'s ARG_MAX limit.
+   * ProGuard using those arguments. We write the arguments to a file to avoid blowing out exec()'s
+   * ARG_MAX limit.
    *
    * @param steps Where to append the generated steps.
    */
@@ -84,47 +87,62 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Set<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
       BuildableContext buildableContext,
+      BuildContext buildContext,
+      boolean skipProguard,
       ImmutableList.Builder<Step> steps) {
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), filesystem, proguardDirectory)));
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 
-    CommandLineHelperStep commandLineHelperStep = new CommandLineHelperStep(
-        filesystem,
-        generatedProGuardConfig,
-        customProguardConfigs,
-        sdkProguardConfig,
-        optimizationPasses,
-        inputAndOutputEntries,
-        additionalLibraryJarsForProguard,
-        proguardDirectory,
-        pathToProGuardCommandLineArgsFile);
+    CommandLineHelperStep commandLineHelperStep =
+        new CommandLineHelperStep(
+            filesystem,
+            generatedProGuardConfig,
+            customProguardConfigs,
+            sdkProguardConfig,
+            optimizationPasses,
+            inputAndOutputEntries,
+            additionalLibraryJarsForProguard,
+            proguardDirectory,
+            pathToProGuardCommandLineArgsFile);
 
-    ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
-        javaRuntimeLauncher,
-        filesystem,
-        inputAndOutputEntries,
-        pathToProGuardCommandLineArgsFile,
-        proguardJarOverride,
-        proguardMaxHeapSize,
-        proguardJvmArgs,
-        proguardAgentPath);
+    if (skipProguard) {
+      steps.add(
+          commandLineHelperStep, new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+    } else {
+      ProGuardObfuscateStep proGuardStep =
+          new ProGuardObfuscateStep(
+              javaRuntimeLauncher,
+              filesystem,
+              inputAndOutputEntries,
+              pathToProGuardCommandLineArgsFile,
+              skipProguard,
+              proguardJarOverride,
+              proguardMaxHeapSize,
+              proguardJvmArgs,
+              proguardAgentPath);
 
-    buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
-    buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
-    buildableContext.recordArtifact(commandLineHelperStep.getSeedsTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getSeedsTxt());
 
-    steps.add(
-        commandLineHelperStep,
-        proGuardStep,
-        // Some proguard configs can propagate the "-dontobfuscate" flag which disables
-        // obfuscation and prevents the mapping.txt file from being generated.  So touch it
-        // here to guarantee it's around when we go to cache this rule.
-        new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+      steps.add(
+          commandLineHelperStep,
+          proGuardStep,
+          // Some proguard configs can propagate the "-dontobfuscate" flag which disables
+          // obfuscation and prevents the mapping.txt file from being generated.  So touch it
+          // here to guarantee it's around when we go to cache this rule.
+          new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+    }
   }
 
   /**
-   * @param inputAndOutputEntries Map of input/output pairs to proguard. The key represents an
-   *     input jar (-injars); the value an output jar (-outjars).
+   * @param inputAndOutputEntries Map of input/output pairs to proguard. The key represents an input
+   *     jar (-injars); the value an output jar (-outjars).
    * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
    */
   private ProGuardObfuscateStep(
@@ -132,6 +150,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<Path, Path> inputAndOutputEntries,
       Path pathToProGuardCommandLineArgsFile,
+      boolean skipProguard,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
@@ -141,6 +160,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     this.filesystem = filesystem;
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
     this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
+    this.skipProguard = skipProguard;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
     this.proguardJvmArgs = proguardJvmArgs;
@@ -166,13 +186,14 @@ public final class ProGuardObfuscateStep extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(javaRuntimeLauncher.getCommand());
     if (proguardAgentPath.isPresent()) {
-       args.add("-agentpath:" + proguardAgentPath.get());
+      args.add("-agentpath:" + proguardAgentPath.get());
     }
     if (proguardJvmArgs.isPresent()) {
       args.addAll(proguardJvmArgs.get());
     }
     args.add("-Xmx" + proguardMaxHeapSize)
-        .add("-jar").add(proguardJar.toString())
+        .add("-jar")
+        .add(proguardJar.toString())
         .add("@" + pathToProGuardCommandLineArgsFile);
     return args.build();
   }
@@ -187,7 +208,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     // as requested (so the file won't exist).  Our build steps are not sophisticated enough to
     // account for this and remove those entries from the classes to dex so we hack things here to
     // ensure that the files exist but are empty.
-    if (executionResult.isSuccess()) {
+    if (executionResult.isSuccess() && !this.skipProguard) {
       return StepExecutionResult.of(ensureAllOutputsExist(context));
     }
 
@@ -228,9 +249,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     ProGuardObfuscateStep that = (ProGuardObfuscateStep) obj;
-    return Objects.equal(this.inputAndOutputEntries, that.inputAndOutputEntries) &&
-        Objects.equal(this.pathToProGuardCommandLineArgsFile,
-            that.pathToProGuardCommandLineArgsFile);
+    return Objects.equal(this.inputAndOutputEntries, that.inputAndOutputEntries)
+        && Objects.equal(
+            this.pathToProGuardCommandLineArgsFile, that.pathToProGuardCommandLineArgsFile);
   }
 
   @Override
@@ -239,10 +260,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   /**
-   * Helper class to run as a step before ProGuardObfuscateStep to write out the
-   * command-line parameters to a file.  The ProGuardObfuscateStep references
-   * this file when it runs using ProGuard's '@' syntax.  This allows for longer
-   * command-lines than would otherwise be supported.
+   * Helper class to run as a step before ProGuardObfuscateStep to write out the command-line
+   * parameters to a file. The ProGuardObfuscateStep references this file when it runs using
+   * ProGuard's '@' syntax. This allows for longer command-lines than would otherwise be supported.
    */
   @VisibleForTesting
   static class CommandLineHelperStep extends AbstractExecutionStep {
@@ -261,7 +281,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
      * @param generatedProGuardConfig Proguard configuration as produced by aapt.
      * @param customProguardConfigs Main rule and its dependencies proguard configurations.
      * @param sdkProguardConfig Which proguard config from the Android SDK to use.
-     * @param inputAndOutputEntries Map of input/output pairs to proguard.  The key represents an
+     * @param inputAndOutputEntries Map of input/output pairs to proguard. The key represents an
      *     input jar (-injars); the value an output jar (-outjars).
      * @param additionalLibraryJarsForProguard Libraries that are not operated upon by proguard but
      *     needed to resolve symbols.
@@ -293,16 +313,13 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     @Override
     public StepExecutionResult execute(ExecutionContext context) {
-      String proGuardArguments = Joiner.on('\n')
-          .join(getParameters(context, filesystem.getRootPath()));
+      String proGuardArguments =
+          Joiner.on('\n').join(getParameters(context, filesystem.getRootPath()));
       try {
-        filesystem.writeContentsToPath(
-            proGuardArguments,
-            pathToProGuardCommandLineArgsFile);
+        filesystem.writeContentsToPath(proGuardArguments, pathToProGuardCommandLineArgsFile);
       } catch (IOException e) {
-        context.logError(e,
-            "Error writing ProGuard arguments to file: %s.",
-            pathToProGuardCommandLineArgsFile);
+        context.logError(
+            e, "Error writing ProGuard arguments to file: %s.", pathToProGuardCommandLineArgsFile);
         return StepExecutionResult.ERROR;
       }
 
@@ -317,14 +334,12 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
       // Relative paths should be interpreted relative to project directory root, not the
       // written parameters file.
-      args.add("-basedirectory")
-          .add(workingDirectory.toAbsolutePath().toString());
+      args.add("-basedirectory").add(workingDirectory.toAbsolutePath().toString());
 
       // -include
       switch (sdkProguardConfig) {
         case OPTIMIZED:
-          args.add("-include")
-              .add(androidPlatformTarget.getOptimizedProguardConfig().toString());
+          args.add("-include").add(androidPlatformTarget.getOptimizedProguardConfig().toString());
           if (optimizationPasses.isPresent()) {
             args.add("-optimizationpasses").add(optimizationPasses.get().toString());
           }
@@ -350,8 +365,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
       // -libraryjars
       Iterable<Path> bootclasspathPaths = androidPlatformTarget.getBootclasspathEntries();
-      Iterable<Path> libraryJars = Iterables.concat(bootclasspathPaths,
-          additionalLibraryJarsForProguard);
+      Iterable<Path> libraryJars =
+          Iterables.concat(bootclasspathPaths, additionalLibraryJarsForProguard);
 
       Character separator = File.pathSeparatorChar;
       args.add("-libraryjars").add(Joiner.on(separator).join(libraryJars));
@@ -383,15 +398,14 @@ public final class ProGuardObfuscateStep extends ShellStep {
       }
       CommandLineHelperStep that = (CommandLineHelperStep) obj;
 
-      return
-          Objects.equal(sdkProguardConfig, that.sdkProguardConfig) &&
-          Objects.equal(additionalLibraryJarsForProguard,
-              that.additionalLibraryJarsForProguard) &&
-          Objects.equal(customProguardConfigs, that.customProguardConfigs) &&
-          Objects.equal(generatedProGuardConfig, that.generatedProGuardConfig) &&
-          Objects.equal(inputAndOutputEntries, that.inputAndOutputEntries) &&
-          Objects.equal(proguardDirectory, that.proguardDirectory) &&
-          Objects.equal(pathToProGuardCommandLineArgsFile, that.pathToProGuardCommandLineArgsFile);
+      return Objects.equal(sdkProguardConfig, that.sdkProguardConfig)
+          && Objects.equal(additionalLibraryJarsForProguard, that.additionalLibraryJarsForProguard)
+          && Objects.equal(customProguardConfigs, that.customProguardConfigs)
+          && Objects.equal(generatedProGuardConfig, that.generatedProGuardConfig)
+          && Objects.equal(inputAndOutputEntries, that.inputAndOutputEntries)
+          && Objects.equal(proguardDirectory, that.proguardDirectory)
+          && Objects.equal(
+              pathToProGuardCommandLineArgsFile, that.pathToProGuardCommandLineArgsFile);
     }
 
     @Override

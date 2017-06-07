@@ -16,17 +16,14 @@
 
 package com.facebook.buck.maven;
 
+import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.util.ObjectMappers;
+import com.google.common.collect.Lists;
+import java.io.IOException;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
-
-import static org.junit.Assert.assertEquals;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
-
-import java.io.IOException;
 
 public class ArtifactConfigTest {
 
@@ -34,14 +31,13 @@ public class ArtifactConfigTest {
   public void shouldMergeCmdLineArgsCorrectly() throws IOException, CmdLineException {
 
     String jsonString =
-      "{\"repositories\": [{\"url\":\"https://example.com\"}]," +
-          "\"third_party\":\"tp0\"," +
-          "\"repo\":\"br\"," +
-          "\"visibility\":[\"r1\"]," +
-          "\"artifacts\":[\"artifact1\"]}";
+        "{\"repositories\": [{\"url\":\"https://example.com\"}],"
+            + "\"third_party\":\"tp0\","
+            + "\"repo\":\"br\","
+            + "\"visibility\":[\"r1\"],"
+            + "\"artifacts\":[\"artifact1\"]}";
 
-    ArtifactConfig base = new ObjectMapper().readValue(jsonString, ArtifactConfig.class);
-
+    ArtifactConfig base = ObjectMappers.readValue(jsonString, ArtifactConfig.class);
 
     ArtifactConfig.CmdLineArgs args = new ArtifactConfig.CmdLineArgs();
     CmdLineParser parser = new CmdLineParser(args);
@@ -53,7 +49,7 @@ public class ArtifactConfigTest {
     assertEquals(base.artifacts, Lists.newArrayList("artifact1", "artifact2"));
     assertEquals(base.visibility, Lists.newArrayList("r1", "r2"));
     assertEquals("br", base.buckRepoRoot);
-    assertEquals("https://example.com", base.repositories.get(0).url);
-    assertEquals("http://bar.co", base.repositories.get(1).url);
+    assertEquals("https://example.com", base.repositories.get(0).getUrl());
+    assertEquals("http://bar.co", base.repositories.get(1).getUrl());
   }
 }

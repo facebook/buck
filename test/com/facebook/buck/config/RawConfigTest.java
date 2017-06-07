@@ -21,24 +21,24 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class RawConfigTest {
   @Test
   public void entriesAreStoredInFileOrder() throws Exception {
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[alias]",
-            "one =   //foo:one",
-            "two =   //foo:two",
-            "three = //foo:three",
-            "four  = //foo:four"));
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n')
+                .join(
+                    "[alias]",
+                    "one =   //foo:one",
+                    "two =   //foo:two",
+                    "three = //foo:three",
+                    "four  = //foo:four"));
     RawConfig rawConfig = RawConfig.builder().putAll(Inis.read(reader)).build();
     assertThat(
         "entries are sorted in the order that they appear in the file",
@@ -48,20 +48,16 @@ public class RawConfigTest {
 
   @Test
   public void duplicateValuesAreOverridden() {
-    RawConfig rawConfig = RawConfig.builder()
-        .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value1")))
-        .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value2")))
-        .build();
-    assertThat(
-        rawConfig.getValue("section", "field"),
-        equalTo(Optional.of("value2")));
+    RawConfig rawConfig =
+        RawConfig.builder()
+            .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value1")))
+            .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value2")))
+            .build();
+    assertThat(rawConfig.getValue("section", "field"), equalTo(Optional.of("value2")));
   }
 
   @Test
   public void emptySectionReturnsEmptyList() {
-    assertThat(
-        RawConfig.builder().build().getSection("foo"),
-        Matchers.anEmptyMap());
+    assertThat(RawConfig.builder().build().getSection("foo"), Matchers.anEmptyMap());
   }
 }
-

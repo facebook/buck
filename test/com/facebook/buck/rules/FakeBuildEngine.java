@@ -19,40 +19,33 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Fake implementation of {@link BuildEngine} for use in tests.
- */
+/** Fake implementation of {@link BuildEngine} for use in tests. */
 public class FakeBuildEngine implements BuildEngine {
 
   private final ImmutableMap<BuildTarget, BuildResult> buildResults;
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
 
   public FakeBuildEngine(
-      Map<BuildTarget, BuildResult> buildResults,
-      Map<BuildTarget, RuleKey> ruleKeys) {
+      Map<BuildTarget, BuildResult> buildResults, Map<BuildTarget, RuleKey> ruleKeys) {
     this.buildResults = ImmutableMap.copyOf(buildResults);
     this.ruleKeys = ImmutableMap.copyOf(ruleKeys);
   }
 
   @Override
-  public ListenableFuture<BuildResult> build(
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      BuildRule rule) {
+  public BuildEngineResult build(
+      BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
     SettableFuture<BuildResult> future = SettableFuture.create();
     future.set(buildResults.get(rule.getBuildTarget()));
-    return future;
+    return BuildEngineResult.builder().setResult(future).build();
   }
 
   @Override
   public BuildResult getBuildRuleResult(BuildTarget buildTarget)
-    throws ExecutionException, InterruptedException {
+      throws ExecutionException, InterruptedException {
     return buildResults.get(buildTarget);
   }
 
@@ -70,5 +63,4 @@ public class FakeBuildEngine implements BuildEngine {
   public int getNumRulesToBuild(Iterable<BuildRule> rule) {
     return 0;
   }
-
 }

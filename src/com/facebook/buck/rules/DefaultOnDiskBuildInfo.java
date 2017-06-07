@@ -19,12 +19,11 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,29 +34,34 @@ import java.util.Optional;
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
  * would have been written by a {@link BuildInfoRecorder} when the rule was built initially.
- * <p>
- * Such metadata is stored as key/value pairs.
+ *
+ * <p>Such metadata is stored as key/value pairs.
  */
 public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   private static final Logger LOG = Logger.get(DefaultOnDiskBuildInfo.class);
 
+  private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
+  private final BuildInfoStore buildInfoStore;
   private final Path metadataDirectory;
-  private final ObjectMapper objectMapper;
 
   public DefaultOnDiskBuildInfo(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      ObjectMapper objectMapper) {
+      BuildTarget target, ProjectFilesystem projectFilesystem, BuildInfoStore buildInfoStore) {
+    this.buildTarget = target;
     this.projectFilesystem = projectFilesystem;
+    this.buildInfoStore = buildInfoStore;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, projectFilesystem);
-    this.objectMapper = objectMapper;
   }
 
   @Override
   public Optional<String> getValue(String key) {
     return projectFilesystem.readFileIfItExists(metadataDirectory.resolve(key));
+  }
+
+  @Override
+  public Optional<String> getBuildValue(String key) {
+    return buildInfoStore.readMetadata(buildTarget, key);
   }
 
   @Override
@@ -68,9 +72,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     }
     try {
       ImmutableList<String> list =
-          objectMapper.readValue(
-              value.get(),
-              new TypeReference<ImmutableList<String>>() {});
+          ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
       return Optional.of(list);
     } catch (IOException ignored) {
       return Optional.empty();
@@ -78,50 +80,47 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public ImmutableList<String> getValuesOrThrow(String key) {
+  public ImmutableList<String> getValuesOrThrow(String key) throws IOException {
     Optional<ImmutableList<String>> values = getValues(key);
     if (values.isPresent()) {
       return values.get();
     } else {
       Path path = projectFilesystem.getPathForRelativePath(metadataDirectory.resolve(key));
-      try {
-        BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-        throw new RuntimeException(
-            String.format(
-                "Attributes of file " + path + " are :" +
-                    "Size: %d, " +
-                    "Is Directory: %b, " +
-                    "Is regular file %b, " +
-                    "Is symbolic link %b, " +
-                    "Is other %b, " +
-                    "Last access time %s, " +
-                    "Last modify time %s, " +
-                    "Creation time %s",
-                attr.size(),
-                attr.isDirectory(),
-                attr.isRegularFile(),
-                attr.isSymbolicLink(),
-                attr.isOther(),
-                attr.lastAccessTime(),
-                attr.lastModifiedTime(),
-                attr.creationTime()));
-      } catch (IOException e) {
-        throw new RuntimeException("Failed to read " + path, e);
-      }
+      BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+      throw new IOException(
+          String.format(
+              "Attributes of file "
+                  + path
+                  + " are :"
+                  + "Size: %d, "
+                  + "Is Directory: %b, "
+                  + "Is regular file %b, "
+                  + "Is symbolic link %b, "
+                  + "Is other %b, "
+                  + "Last access time %s, "
+                  + "Last modify time %s, "
+                  + "Creation time %s",
+              attr.size(),
+              attr.isDirectory(),
+              attr.isRegularFile(),
+              attr.isSymbolicLink(),
+              attr.isOther(),
+              attr.lastAccessTime(),
+              attr.lastModifiedTime(),
+              attr.creationTime()));
     }
   }
 
   @Override
-  public Optional<ImmutableMap<String, String>> getMap(String key) {
-    Optional<String> value = getValue(key);
+  public Optional<ImmutableMap<String, String>> getBuildMap(String key) {
+    Optional<String> value = getBuildValue(key);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     try {
       ImmutableMap<String, String> map =
-          objectMapper.readValue(
-              value.get(),
-              new TypeReference<ImmutableMap<String, String>>() {});
+          ObjectMappers.readValue(
+              value.get(), new TypeReference<ImmutableMap<String, String>>() {});
       return Optional.of(map);
     } catch (IOException ignored) {
       return Optional.empty();
@@ -136,11 +135,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       try {
         return Optional.of(Sha1HashCode.of(value));
       } catch (IllegalArgumentException e) {
-        LOG.error(
-            e,
-            "DefaultOnDiskBuildInfo.getHash(%s): Cannot transform %s to SHA1",
-            key,
-            value);
+        LOG.error(e, "DefaultOnDiskBuildInfo.getHash(%s): Cannot transform %s to SHA1", key, value);
         return Optional.empty();
       }
     } else {
@@ -152,7 +147,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
     try {
-      return getValue(key).map(RuleKey::new);
+      return getBuildValue(key).map(RuleKey::new);
     } catch (IllegalArgumentException ignored) {
       return Optional.empty();
     }
@@ -166,7 +161,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public void deleteExistingMetadata() throws IOException {
+    buildInfoStore.deleteMetadata(buildTarget);
     projectFilesystem.deleteRecursivelyIfExists(metadataDirectory);
   }
-
 }

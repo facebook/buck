@@ -21,11 +21,9 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class PathSourcePathTest {
 
@@ -34,10 +32,12 @@ public class PathSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     PathSourcePath path = new PathSourcePath(projectFilesystem, Paths.get("cheese"));
 
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
-    Path resolved = resolver.deprecatedGetPath(path);
+    SourcePathResolver resolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    Path resolved = resolver.getRelativePath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }
@@ -76,23 +76,17 @@ public class PathSourcePathTest {
     assertEquals(relativePath1, pathB1.getRelativePath());
     assertEquals(relativePath2, pathB2.getRelativePath());
 
-    // check as reference
-    assertEquals(root.resolve(nameA).toString(), pathA1.asReference());
-    assertEquals(root.resolve(nameA).toString(), pathA2.asReference());
-    assertEquals(root.resolve(nameB).toString(), pathB1.asReference());
-    assertEquals(root.resolve(nameB).toString(), pathB2.asReference());
-
     // different instances, but everything is the same
     assertEquals(pathA1.hashCode(), clonedPathA1.hashCode());
     assertEquals(pathA1, clonedPathA1);
-    assertEquals(0, pathA1.compareReferences(clonedPathA1));
+    assertEquals(0, pathA1.compareTo(clonedPathA1));
     // even though the underlying relative paths are different, their names are the same
     assertEquals(pathA1.hashCode(), pathA2.hashCode());
     assertEquals(pathA1, pathA2);
-    assertEquals(0, pathA1.compareReferences(pathA2));
+    assertEquals(0, pathA1.compareTo(pathA2));
     // even though the underlying relative paths are the same, their names are not
     assertNotEquals(pathA1.hashCode(), pathB1.hashCode());
     assertNotEquals(pathA1, pathB1);
-    assertNotEquals(0, pathA1.compareReferences(pathB1));
+    assertNotEquals(0, pathA1.compareTo(pathB1));
   }
 }

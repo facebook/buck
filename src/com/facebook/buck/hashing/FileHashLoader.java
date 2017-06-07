@@ -17,8 +17,8 @@
 package com.facebook.buck.hashing;
 
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -30,4 +30,26 @@ public interface FileHashLoader {
 
   HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
 
+  /**
+   * Return the {@link HashCode} for the given relative {@link Path} under the given {@link
+   * ProjectFilesystem}.
+   */
+  default HashCode get(ProjectFilesystem filesystem, Path path) throws IOException {
+    return get(filesystem.resolve(path));
+  }
+
+  /**
+   * Return the {@link HashCode} for the given relative {@link ArchiveMemberPath} under the given
+   * {@link ProjectFilesystem}.
+   */
+  default HashCode get(ProjectFilesystem filesystem, ArchiveMemberPath path) throws IOException {
+    return get(path.withArchivePath(filesystem.resolve(path.getArchivePath())));
+  }
+
+  /**
+   * Return the size of the given relative {@link Path} under the given {@link ProjectFilesystem}.
+   */
+  default long getSize(ProjectFilesystem filesystem, Path path) throws IOException {
+    return getSize(filesystem.resolve(path));
+  }
 }

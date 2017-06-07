@@ -1,106 +1,107 @@
 java_library(
-  name = 'base',
-  srcs = [
-    'BaseRunner.java',
-    'CheckDependency.java',
-    'TestResult.java',
-  ],
-  # Currently, we have decided to manage this manually.
-  # We should see whether we can let `buck autodeps` take responsibility.
-  autodeps = False,
-  exported_deps = [
-    '//src/com/facebook/buck/test/result/type:type',
-    '//src/com/facebook/buck/test/selectors:selectors',
-  ],
+    name = "base",
+    srcs = [
+        "BaseRunner.java",
+        "CheckDependency.java",
+        "TestResult.java",
+    ],
+    deps = [
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
+    ],
 )
 
 java_library(
-  name = 'junit',
-  srcs = [
-    'BuckBlockJUnit4ClassRunner.java',
-    'DelegateRunnerWithTimeout.java',
-    'DelegateRunNotifier.java',
-    'JulLogFormatter.java',
-    'JUnitMain.java',
-    'JUnitRunner.java',
-    'SameThreadFailOnTimeout.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/testrunner:testrunner',
-  ],
-  autodeps = False, # See comment in deps. Should be manually maintained.
-  deps = [
-    ':base',
+    name = "junit",
+    srcs = [
+        "BuckBlockJUnit4ClassRunner.java",
+        "DelegateRunNotifier.java",
+        "DelegateRunnerWithTimeout.java",
+        "JUnitMain.java",
+        "JUnitRunner.java",
+        "JulLogFormatter.java",
+        "SameThreadFailOnTimeout.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
     # IMPORTANT! This library limits itself to types that are available in both the JDK and Android
     # Java API. The objective is to limit the set of files added to the ClassLoader that runs the
     # test, as not to interfere with the results of the test.
-    '//src/com/facebook/buck/log:appendablelogrecord',
-    '//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner',
-    '//src/com/facebook/buck/jvm/java/runner:runner',
-    '//third-party/java/junit:junit',
-  ],
-  visibility = [
-    '//test/com/facebook/buck/testrunner:testrunner',
-  ],
+    deps = [
+        ":base",
+        # This is loaded by reflection. Joy.
+        "//src/com/facebook/buck/jvm/java/runner:runner",
+        "//src/com/facebook/buck/log:appendablelogrecord",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
+        "//third-party/java/junit:junit",
+    ],
 )
 
 java_library(
-  name = 'instrumentation',
-  srcs = [
-    'BuckXmlTestRunListener.java',
-    'InstrumentationTestRunner.java',
-    'InstrumentationMain.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/testrunner:testrunner',
-  ],
-  deps = [
-    '//third-party/java/ddmlib:ddmlib',
-  ],
-  visibility = [
-    '//test/com/facebook/buck/testrunner:testrunner',
-  ],
+    name = "instrumentation",
+    srcs = [
+        "BuckXmlTestRunListener.java",
+        "InstrumentationMain.java",
+        "InstrumentationTestRunner.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
+    deps = ["//third-party/java/ddmlib:ddmlib"],
 )
 
 java_library(
-  name = 'testng',
-  srcs = [
-    'TestNGMain.java',
-    'TestNGRunner.java',
-  ],
-  deps = [
-    ':base',
-    '//third-party/java/testng:testng',
-  ],
+    name = "testng",
+    srcs = [
+        "TestNGMain.java",
+        "TestNGRunner.java",
+    ],
+    deps = [
+        ":base",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
+        "//third-party/java/testng:testng",
+    ],
 )
 
 java_binary(
-  name = 'testrunner-bin',
-  deps = [
-    ':testng',
-    ':junit',
-    ':instrumentation',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "testrunner-bin",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":instrumentation",
+        ":junit",
+        ":testng",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
+    ],
 )
 
 # Strip out classes we don't want automatically added to the classpath for
 # tests, leaving just the extra buck classes.
 genrule(
-  name = 'testrunner-bin-fixed',
-  out = 'testrunner-bin-fixed.jar',
-  cmd = ' '.join([
-    '$(exe //py/buck/zip:munger)',
-    '--input=$(location :testrunner-bin)',
-    '--output=$OUT',
-    '--include=com/facebook/buck/',
-  ]),
-  srcs = [
-    ':testrunner-bin',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "testrunner-bin-fixed",
+    srcs = [
+        ":testrunner-bin",
+    ],
+    out = "testrunner-bin-fixed.jar",
+    cmd = " ".join([
+        "$(exe //py/buck/zip:munger)",
+        "--input=$(location :testrunner-bin)",
+        "--output=$OUT",
+        "--include=com/facebook/buck/",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
 )

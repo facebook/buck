@@ -18,16 +18,12 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Responsible for getting extra information to the report by running a user-specified command.
- */
+/** Responsible for getting extra information to the report by running a user-specified command. */
 public interface ExtraInfoCollector {
 
   Optional<ExtraInfoResult> run()
@@ -37,6 +33,7 @@ public interface ExtraInfoCollector {
   @BuckStyleImmutable
   interface AbstractExtraInfoResult {
     String getOutput();
+
     ImmutableSet<Path> getExtraFiles();
   }
 

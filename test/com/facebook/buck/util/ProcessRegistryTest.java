@@ -19,12 +19,10 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ProcessRegistryTest {
 
@@ -93,9 +91,7 @@ public class ProcessRegistryTest {
     final ImmutableMap<String, String> context;
 
     ProcessInfo(
-        Object process,
-        ProcessExecutorParams params,
-        ImmutableMap<String, String> context) {
+        Object process, ProcessExecutorParams params, ImmutableMap<String, String> context) {
       this.process = process;
       this.params = params;
       this.context = context;
@@ -116,9 +112,9 @@ public class ProcessRegistryTest {
         return false;
       }
       ProcessInfo that = (ProcessInfo) obj;
-      return process.equals(that.process) &&
-          params.equals(that.params) &&
-          context.equals(that.context);
+      return process.equals(that.process)
+          && params.equals(that.params)
+          && context.equals(that.context);
     }
   }
 }

@@ -16,18 +16,15 @@
 
 package com.facebook.buck.i18n;
 
-import static org.junit.Assert.assertThat;
-
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Function;
-
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
-
 import org.junit.Test;
 
 public class NumberFormatterTest {
@@ -59,8 +56,8 @@ public class NumberFormatterTest {
 
   @Test
   public void formatLongWithGermanUsesThousandsPoint() {
-    String formatted = new NumberFormatter(
-        decimalFormatCreator()).format(Locale.GERMAN, 123456789L);
+    String formatted =
+        new NumberFormatter(decimalFormatCreator()).format(Locale.GERMAN, 123456789L);
     assertThat(formatted, equalTo("123.456.789"));
   }
 

@@ -20,15 +20,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
@@ -36,6 +30,10 @@ import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class OnDiskMavenDownloaderTest {
@@ -43,8 +41,7 @@ public class OnDiskMavenDownloaderTest {
   private FileSystem filesystem;
   private Path root;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setupFilesystem() throws IOException {
@@ -59,10 +56,8 @@ public class OnDiskMavenDownloaderTest {
     Path output = filesystem.getPath("output.txt");
 
     Downloader downloader = new OnDiskMavenDownloader(root);
-    boolean result = downloader.fetch(
-        BuckEventBusFactory.newInstance(),
-        relativePath.toUri(),
-        output);
+    boolean result =
+        downloader.fetch(BuckEventBusForTests.newInstance(), relativePath.toUri(), output);
 
     assertFalse(result);
   }
@@ -77,7 +72,7 @@ public class OnDiskMavenDownloaderTest {
     Files.write(source, "cake".getBytes(UTF_8));
 
     Downloader downloader = new OnDiskMavenDownloader(root);
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 
@@ -98,7 +93,7 @@ public class OnDiskMavenDownloaderTest {
     Files.write(source, "cake".getBytes(UTF_8));
 
     Downloader downloader = new OnDiskMavenDownloader(root);
-    downloader.fetch(BuckEventBusFactory.newInstance(), uri, output);
+    downloader.fetch(BuckEventBusForTests.newInstance(), uri, output);
 
     String result = new String(Files.readAllBytes(output), UTF_8);
 
@@ -110,10 +105,7 @@ public class OnDiskMavenDownloaderTest {
     Path rootNotExist = filesystem.getPath("not/a/valid/path");
 
     thrown.expect(FileNotFoundException.class);
-    thrown.expectMessage(
-        String.format(
-            "Maven root %s doesn't exist",
-            rootNotExist.toString()));
+    thrown.expectMessage(String.format("Maven root %s doesn't exist", rootNotExist.toString()));
 
     new OnDiskMavenDownloader(rootNotExist);
   }

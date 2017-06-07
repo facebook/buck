@@ -1,0 +1,17 @@
+java_test(
+    name = "resources",
+    srcs = glob(["*.java"]),
+    resources = glob(
+        ["testdata/**"],
+        include_dotfiles = True,
+    ),
+    deps = [
+        "//src/com/facebook/buck/android/resources:resources",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

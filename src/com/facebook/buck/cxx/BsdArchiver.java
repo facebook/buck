@@ -22,12 +22,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
@@ -44,8 +44,7 @@ public class BsdArchiver implements Archiver {
         // Grab the global header chunk and verify it's accurate.
         byte[] globalHeader = ObjectFileScrubbers.getBytes(map, EXPECTED_GLOBAL_HEADER.length);
         ObjectFileScrubbers.checkArchive(
-            Arrays.equals(EXPECTED_GLOBAL_HEADER, globalHeader),
-            "invalid global header");
+            Arrays.equals(EXPECTED_GLOBAL_HEADER, globalHeader), "invalid global header");
 
         byte[] marker = ObjectFileScrubbers.getBytes(map, 3);
         if (!Arrays.equals(LONG_NAME_MARKER, marker)) {
@@ -87,9 +86,7 @@ public class BsdArchiver implements Archiver {
           int lastSymbolNameOffset = 0;
           for (int i = 0; i < descriptorsSize / 8; i++) {
             lastSymbolNameOffset =
-                Math.max(
-                    lastSymbolNameOffset,
-                    ObjectFileScrubbers.getLittleEndianInt(map));
+                Math.max(lastSymbolNameOffset, ObjectFileScrubbers.getLittleEndianInt(map));
             // Skip the corresponding object offset
             ObjectFileScrubbers.getLittleEndianInt(map);
           }
@@ -110,8 +107,7 @@ public class BsdArchiver implements Archiver {
         } else {
           int symbolNameTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
           ObjectFileScrubbers.checkArchive(
-              symbolNameTableSize == 0,
-              "archive has no symbol descriptors but has symbol names");
+              symbolNameTableSize == 0, "archive has no symbol descriptors but has symbol names");
         }
       };
 
@@ -150,8 +146,8 @@ public class BsdArchiver implements Archiver {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return tool.getDeps(ruleFinder);
   }
 
   @Override
@@ -165,15 +161,12 @@ public class BsdArchiver implements Archiver {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment() {
-    return tool.getEnvironment();
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return tool.getEnvironment(resolver);
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
-
 }

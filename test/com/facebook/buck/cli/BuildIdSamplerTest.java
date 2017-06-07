@@ -22,24 +22,22 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.SampleRate;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class BuildIdSamplerTest {
 
-  ImmutableMap<BuildId, Float> buildIdToExpectedHashMap = ImmutableMap.of(
-      new BuildId("0a0a1967-5797-c4fa-6c32-b90c45516c6d"), 0.09f,
-      new BuildId("6d093717-b445-baf3-2863-64b6d71ebdac"), 0.56f,
-      new BuildId("a8d6975f-2859-f12e-559c-4486da52F9aK"), 1.0f,
-      new BuildId("a8d6975f-2859-f12e-559c-4486da52F9aM"), 0.0f
-  );
+  ImmutableMap<BuildId, Float> buildIdToExpectedHashMap =
+      ImmutableMap.of(
+          new BuildId("0a0a1967-5797-c4fa-6c32-b90c45516c6d"), 0.09f,
+          new BuildId("6d093717-b445-baf3-2863-64b6d71ebdac"), 0.56f,
+          new BuildId("a8d6975f-2859-f12e-559c-4486da52F9aK"), 1.0f,
+          new BuildId("a8d6975f-2859-f12e-559c-4486da52F9aM"), 0.0f);
 
   @Test
   public void testRejectAllSampler() {
@@ -48,8 +46,7 @@ public class BuildIdSamplerTest {
       assertThat(
           String.format("BuildId %s", buildId),
           rejectAllSampler.apply(buildId),
-          Matchers.equalTo(false)
-      );
+          Matchers.equalTo(false));
     }
   }
 
@@ -60,8 +57,7 @@ public class BuildIdSamplerTest {
       assertThat(
           String.format("BuildId %s", buildId),
           acceptAllSampler.apply(buildId),
-          Matchers.equalTo(true)
-      );
+          Matchers.equalTo(true));
     }
   }
 
@@ -73,8 +69,7 @@ public class BuildIdSamplerTest {
       assertThat(
           String.format("BuildId %s", buildId),
           sampler.apply(buildId),
-          Matchers.equalTo(shouldAccept)
-      );
+          Matchers.equalTo(shouldAccept));
     }
   }
 
@@ -86,9 +81,9 @@ public class BuildIdSamplerTest {
 
     List<Pair<BuildIdSampler, AtomicInteger>> buckets = new ArrayList<>();
     for (int i = 1; i <= bucketCount; ++i) {
-      buckets.add(new Pair<BuildIdSampler, AtomicInteger>(
-              new BuildIdSampler(SampleRate.of(((float) i) / bucketCount)),
-              new AtomicInteger(0)));
+      buckets.add(
+          new Pair<BuildIdSampler, AtomicInteger>(
+              new BuildIdSampler(SampleRate.of(((float) i) / bucketCount)), new AtomicInteger(0)));
     }
 
     Random random = new Random(0);
@@ -107,9 +102,7 @@ public class BuildIdSamplerTest {
       float bucketSize = ((float) bucketPair.getSecond().get()) / iterations;
       assertThat(
           bucketSize,
-          Matchers.allOf(
-              Matchers.greaterThan(0.1f - fudge),
-              Matchers.lessThan(0.1f + fudge)));
+          Matchers.allOf(Matchers.greaterThan(0.1f - fudge), Matchers.lessThan(0.1f + fudge)));
     }
   }
 }

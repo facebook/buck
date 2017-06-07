@@ -16,9 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-/**
- * Superclass of coercers for non-collection/map types.
- */
+/** Superclass of coercers for non-collection/map types. */
 public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
 
   @Override

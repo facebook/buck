@@ -16,19 +16,31 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Optional;
 
 public class PythonLibraryBuilder
-    extends AbstractNodeBuilder<PythonLibraryDescription.Arg, PythonLibraryDescription> {
+    extends AbstractNodeBuilder<
+        PythonLibraryDescriptionArg.Builder, PythonLibraryDescriptionArg, PythonLibraryDescription,
+        PythonLibrary> {
+
+  PythonLibraryBuilder(
+      BuildTarget target,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    super(new PythonLibraryDescription(pythonPlatforms, cxxPlatforms), target);
+  }
 
   public PythonLibraryBuilder(BuildTarget target) {
-    super(new PythonLibraryDescription(), target);
+    this(target, PythonTestUtils.PYTHON_PLATFORMS, CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
 
   public static PythonLibraryBuilder createBuilder(BuildTarget target) {
@@ -36,29 +48,45 @@ public class PythonLibraryBuilder
   }
 
   public PythonLibraryBuilder setSrcs(SourceList srcs) {
-    arg.srcs = srcs;
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
   public PythonLibraryBuilder setPlatformSrcs(PatternMatchedCollection<SourceList> platformSrcs) {
-    arg.platformSrcs = platformSrcs;
+    getArgForPopulating().setPlatformSrcs(platformSrcs);
     return this;
   }
 
   public PythonLibraryBuilder setPlatformResources(
       PatternMatchedCollection<SourceList> platformResources) {
-    arg.platformResources = platformResources;
+    getArgForPopulating().setPlatformResources(platformResources);
     return this;
   }
 
   public PythonLibraryBuilder setBaseModule(String baseModule) {
-    arg.baseModule = Optional.of(baseModule);
+    getArgForPopulating().setBaseModule(Optional.of(baseModule));
     return this;
   }
 
   public PythonLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
+  public PythonLibraryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    getArgForPopulating().setPlatformDeps(deps);
+    return this;
+  }
+
+  public PythonLibraryBuilder setVersionedSrcs(VersionMatchedCollection<SourceList> versionedSrcs) {
+    getArgForPopulating().setVersionedSrcs(Optional.of(versionedSrcs));
+    return this;
+  }
+
+  public PythonLibraryBuilder setVersionedResources(
+      VersionMatchedCollection<SourceList> versionedResources) {
+    getArgForPopulating().setVersionedResources(Optional.of(versionedResources));
+    return this;
+  }
 }

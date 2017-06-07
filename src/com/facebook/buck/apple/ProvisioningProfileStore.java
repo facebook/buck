@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -41,12 +40,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 
-/**
- * A collection of provisioning profiles.
- */
+/** A collection of provisioning profiles. */
 public class ProvisioningProfileStore implements RuleKeyAppendable {
   public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
       Optional.empty();
@@ -56,8 +52,19 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
       ImmutableList.of("openssl", "smime", "-inform", "der", "-verify", "-noverify", "-in");
 
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
-  private final Supplier<ImmutableList<ProvisioningProfileMetadata>>
-      provisioningProfilesSupplier;
+  private final Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier;
+
+  private static final ImmutableSet<String> FORCE_INCLUDE_ENTITLEMENTS =
+      ImmutableSet.of(
+          "keychain-access-groups",
+          "application-identifier",
+          "com.apple.developer.associated-domains",
+          "com.apple.developer.icloud-container-development-container-identifiers",
+          "com.apple.developer.icloud-container-environment",
+          "com.apple.developer.icloud-container-identifiers",
+          "com.apple.developer.icloud-services",
+          "com.apple.developer.ubiquity-container-identifiers",
+          "com.apple.developer.ubiquity-kvstore-identifier");
 
   private ProvisioningProfileStore(
       Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier) {
@@ -96,6 +103,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
   // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
   public Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
       String bundleID,
+      ApplePlatform platform,
       Optional<ImmutableMap<String, NSObject>> entitlements,
       Optional<? extends Iterable<CodeSignIdentity>> identities) {
     final Optional<String> prefix;
@@ -119,15 +127,31 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
           boolean match;
           if (profileBundleID.endsWith("*")) {
             // Chop the ending * if wildcard.
-            profileBundleID =
-                profileBundleID.substring(0, profileBundleID.length() - 1);
+            profileBundleID = profileBundleID.substring(0, profileBundleID.length() - 1);
             match = bundleID.startsWith(profileBundleID);
           } else {
             match = (bundleID.equals(profileBundleID));
           }
 
           if (!match) {
-            LOG.debug("Ignoring non-matching ID for profile " + profile.getUUID());
+            LOG.debug(
+                "Ignoring non-matching ID for profile "
+                    + profile.getUUID()
+                    + ".  Expected: "
+                    + profileBundleID
+                    + ", actual: "
+                    + bundleID);
+            continue;
+          }
+
+          Optional<String> platformName = platform.getProvisioningProfileName();
+          if (platformName.isPresent() && !profile.getPlatforms().contains(platformName.get())) {
+            LOG.debug(
+                "Ignoring incompatible platform "
+                    + platformName.get()
+                    + " for profile "
+                    + profile.getUUID());
+            continue;
           }
 
           // Match against other keys of the entitlements.  Otherwise, we could potentially select
@@ -135,20 +159,23 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
           // installing to device.
           //
           // For example: get-task-allow, aps-environment, etc.
-          if (match && entitlements.isPresent()) {
+          if (entitlements.isPresent()) {
             ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
             ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
             for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
-              if (!(entry.getKey().equals("keychain-access-groups") ||
-                  entry.getKey().equals("application-identifier") ||
-                  entry.getKey().equals("com.apple.developer.associated-domains") ||
-                  matchesOrArrayIsSubsetOf(
-                      entry.getValue(),
-                      profileEntitlements.get(entry.getKey())))) {
+              NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
+              if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
+                  || matchesOrArrayIsSubsetOf(entry.getValue(), profileEntitlement))) {
                 match = false;
-                LOG.debug("Ignoring profile " + profile.getUUID() +
-                    " with mismatched entitlement " + entry.getKey() + "; value is " +
-                    profileEntitlements.get(entry.getKey()) + " but expected " + entry.getValue());
+                LOG.debug(
+                    "Ignoring profile "
+                        + profile.getUUID()
+                        + " with mismatched entitlement "
+                        + entry.getKey()
+                        + "; value is "
+                        + profileEntitlement
+                        + " but expected "
+                        + entry.getValue());
                 break;
               }
             }
@@ -167,8 +194,11 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
             }
 
             if (!match) {
-              LOG.debug("Ignoring profile " + profile.getUUID() +
-                  " because it can't be signed with any valid identity in the current keychain.");
+              LOG.debug(
+                  "Ignoring profile "
+                      + profile.getUUID()
+                      + " because it can't be signed with any valid identity in the current keychain.");
+              continue;
             }
           }
 
@@ -197,44 +227,43 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
       final ImmutableList<String> readCommand,
       final Path searchPath) {
     LOG.debug("Provisioning profile search path: " + searchPath);
-    return new ProvisioningProfileStore(Suppliers.memoize(
-        () -> {
-          final ImmutableList.Builder<ProvisioningProfileMetadata> profilesBuilder =
-              ImmutableList.builder();
-          try {
-            Files.walkFileTree(
-                searchPath.toAbsolutePath(), new SimpleFileVisitor<Path>() {
-                  @Override
-                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                      throws IOException {
-                    if (file.toString().endsWith(".mobileprovision")) {
-                      try {
-                        ProvisioningProfileMetadata profile =
-                            ProvisioningProfileMetadata.fromProvisioningProfilePath(
-                                executor,
-                                readCommand,
-                                file);
-                        profilesBuilder.add(profile);
-                      } catch (IOException | IllegalArgumentException e) {
-                        LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
-                      } catch (InterruptedException e) {
-                        throw new IOException(e);
-                      }
-                    }
+    return new ProvisioningProfileStore(
+        Suppliers.memoize(
+            () -> {
+              final ImmutableList.Builder<ProvisioningProfileMetadata> profilesBuilder =
+                  ImmutableList.builder();
+              try {
+                Files.walkFileTree(
+                    searchPath.toAbsolutePath(),
+                    new SimpleFileVisitor<Path>() {
+                      @Override
+                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                          throws IOException {
+                        if (file.toString().endsWith(".mobileprovision")) {
+                          try {
+                            ProvisioningProfileMetadata profile =
+                                ProvisioningProfileMetadata.fromProvisioningProfilePath(
+                                    executor, readCommand, file);
+                            profilesBuilder.add(profile);
+                          } catch (IOException | IllegalArgumentException e) {
+                            LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
+                          } catch (InterruptedException e) {
+                            throw new IOException(e);
+                          }
+                        }
 
-                    return FileVisitResult.CONTINUE;
-                  }
-                });
-          } catch (IOException e) {
-            if (e.getCause() instanceof InterruptedException) {
-              LOG.error(e, "Interrupted while searching for mobileprovision files");
-            } else {
-              LOG.error(e, "Error while searching for mobileprovision files");
-            }
-          }
-          return profilesBuilder.build();
-        }
-    ));
+                        return FileVisitResult.CONTINUE;
+                      }
+                    });
+              } catch (IOException e) {
+                if (e.getCause() instanceof InterruptedException) {
+                  LOG.error(e, "Interrupted while searching for mobileprovision files");
+                } else {
+                  LOG.error(e, "Error while searching for mobileprovision files");
+                }
+              }
+              return profilesBuilder.build();
+            }));
   }
 
   public static ProvisioningProfileStore fromProvisioningProfiles(

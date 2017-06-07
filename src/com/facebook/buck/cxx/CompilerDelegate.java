@@ -23,12 +23,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
+import java.nio.file.Path;
 
-import java.util.Optional;
-
-/**
- * Helper class for generating compiler invocations for a cxx compilation rule.
- */
+/** Helper class for generating compiler invocations for a cxx compilation rule. */
 class CompilerDelegate implements RuleKeyAppendable {
   // Fields that are added to rule key as is.
   private final Compiler compiler;
@@ -55,20 +52,16 @@ class CompilerDelegate implements RuleKeyAppendable {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("compiler", compiler);
     sink.setReflectively(
-        "platformCompilerFlags",
-        sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
+        "platformCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
     sink.setReflectively(
-        "ruleCompilerFlags",
-        sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
+        "ruleCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 
-  /**
-   * Returns the argument list for executing the compiler.
-   */
-  public ImmutableList<String> getCommand(CxxToolFlags prependedFlags) {
+  /** Returns the argument list for executing the compiler. */
+  public ImmutableList<String> getCommand(CxxToolFlags prependedFlags, Path cellPath) {
     return ImmutableList.<String>builder()
         .addAll(getCommandPrefix())
-        .addAll(getArguments(prependedFlags))
+        .addAll(getArguments(prependedFlags, cellPath))
         .build();
   }
 
@@ -76,12 +69,11 @@ class CompilerDelegate implements RuleKeyAppendable {
     return compiler.getCommandPrefix(resolver);
   }
 
-  public ImmutableList<String> getArguments(CxxToolFlags prependedFlags) {
+  public ImmutableList<String> getArguments(CxxToolFlags prependedFlags, Path cellPath) {
     return ImmutableList.<String>builder()
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
-            compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory()).orElse(
-                ImmutableList.of()))
+            compiler.getFlagsForReproducibleBuild(sanitizer.getCompilationDirectory(), cellPath))
         .build();
   }
 
@@ -90,15 +82,11 @@ class CompilerDelegate implements RuleKeyAppendable {
   }
 
   public ImmutableMap<String, String> getEnvironment() {
-    return compiler.getEnvironment();
+    return compiler.getEnvironment(resolver);
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
     return Ordering.natural().immutableSortedCopy(compiler.getInputs());
-  }
-
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return compiler.getFlagsForColorDiagnostics();
   }
 
   public boolean isArgFileSupported() {

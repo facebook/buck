@@ -16,6 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.format;
 
+import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils.hasElementType;
+
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArrayElements;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckRuleBody;
@@ -38,18 +40,12 @@ import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
-import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils.hasElementType;
-
-/**
- * Describes a single AST block, used for reformatting.
- */
+/** Describes a single AST block, used for reformatting. */
 public class BuckBlock implements ASTBlock {
 
   private static final TokenSet BUCK_CONTAINERS =
@@ -87,9 +83,9 @@ public class BuckBlock implements ASTBlock {
 
     mySpacingBuilder = BuckFormattingModelBuilder.createSpacingBuilder(settings);
 
-    if (myPsiElement instanceof BuckArrayElements ||
-        myPsiElement instanceof BuckRuleBody ||
-        myPsiElement instanceof BuckListElements) {
+    if (myPsiElement instanceof BuckArrayElements
+        || myPsiElement instanceof BuckRuleBody
+        || myPsiElement instanceof BuckListElements) {
       myChildWrap = Wrap.createWrap(CommonCodeStyleSettings.WRAP_ALWAYS, true);
     } else {
       myChildWrap = null;
@@ -114,9 +110,7 @@ public class BuckBlock implements ASTBlock {
     return new ArrayList<Block>(mySubBlocks);
   }
 
-  /**
-   * Recursively build sub blocks.
-   */
+  /** Recursively build sub blocks. */
   private List<BuckBlock> buildSubBlocks() {
     final List<BuckBlock> blocks = new ArrayList<BuckBlock>();
     for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {

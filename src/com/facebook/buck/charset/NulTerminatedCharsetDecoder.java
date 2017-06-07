@@ -23,17 +23,15 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
-
 import java.util.Objects;
-
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
- * Wrapper for {@link CharsetDecoder} to provide decoding of NUL-terminated
- * bytestrings to Unicode Strings.
+ * Wrapper for {@link CharsetDecoder} to provide decoding of NUL-terminated bytestrings to Unicode
+ * Strings.
  *
- * Instances of this object are not thread-safe. If you want to re-use this
- * object, make sure to synchronize access and invoke {@link #reset()} between uses.
+ * <p>Instances of this object are not thread-safe. If you want to re-use this object, make sure to
+ * synchronize access and invoke {@link #reset()} between uses.
  */
 @NotThreadSafe
 public class NulTerminatedCharsetDecoder {
@@ -61,9 +59,8 @@ public class NulTerminatedCharsetDecoder {
       }
 
       NulTerminatedCharsetDecoder.Result that = (NulTerminatedCharsetDecoder.Result) other;
-      return
-          this.nulTerminatorReached == that.nulTerminatorReached &&
-          Objects.equals(this.coderResult, that.coderResult);
+      return this.nulTerminatorReached == that.nulTerminatorReached
+          && Objects.equals(this.coderResult, that.coderResult);
     }
 
     @Override
@@ -75,9 +72,7 @@ public class NulTerminatedCharsetDecoder {
     public String toString() {
       return String.format(
           "%s nulTerminatorReached=%s coderResult=%s",
-          super.toString(),
-          nulTerminatorReached,
-          coderResult);
+          super.toString(), nulTerminatorReached, coderResult);
     }
   }
 
@@ -87,8 +82,7 @@ public class NulTerminatedCharsetDecoder {
 
   public NulTerminatedCharsetDecoder(CharsetDecoder decoder, int initialCapacity) {
     this.decoder = decoder;
-    this.charBuffer = CharBuffer.allocate(
-        (int) (initialCapacity * decoder.averageCharsPerByte()));
+    this.charBuffer = CharBuffer.allocate((int) (initialCapacity * decoder.averageCharsPerByte()));
   }
 
   public static String decodeUTF8String(ByteBuffer in) throws CharacterCodingException {

@@ -33,41 +33,16 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-/**
- * Unit tests for {@link ProvisioningProfileMetadata}.
- *
- * How to create a fake provisioning profile for unit tests
- *
- * A .mobileprovision file is simply a XML plist with a cryptographically-signed wrapper.  A real
- * profile would be signed by Apple.  For unit tests, we need to have something that decodes
- * properly but we don't care who signs it.
- *
- * First, you'll want to create a fake signing identity.  Do this in
- *
- * Keychain Access > Certificate Assistant > Create a Certificate
- * 1. Pick a name, e.g. "Fake codesigning"
- * 2. Check "Let me override defaults".
- * 3. Continue, and fill in a bogus name/email address where it asks for them.
- * Otherwise, just accept the defaults.
- *
- * Then:
- * 1. Make a XML .plist with the expected contents.
- * 2. {@code /usr/bin/security cms -S -N "Fake codesigning" -i file.plist -o file.mobileprovision}
- *
- * Of course, the file will be unusable on an actual device, but is good enough for unit testing.
- */
 public class ProvisioningProfileMetadataTest {
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static final ImmutableList<String> FAKE_READ_COMMAND = ImmutableList.of("cat");
 
   @Test
   public void testParseProvisioningProfileFile() throws Exception {
@@ -78,9 +53,7 @@ public class ProvisioningProfileMetadataTest {
 
     ProvisioningProfileMetadata data =
         ProvisioningProfileMetadata.fromProvisioningProfilePath(
-            executor,
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testFile);
+            executor, FAKE_READ_COMMAND, testFile);
 
     assertThat(data.getExpirationDate(), is(equalTo(new NSDate("9999-03-05T01:33:40Z").getDate())));
     assertThat(data.getAppID(), is(equalTo(new Pair<>("ABCDE12345", "com.example.TestApp"))));
@@ -90,11 +63,19 @@ public class ProvisioningProfileMetadataTest {
         data.getDeveloperCertificateFingerprints(),
         equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));
 
-    thrown.expect(IOException.class);
+    // Test old-style provisioning profile without "Platforms" field
+    data =
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(
+            executor,
+            FAKE_READ_COMMAND,
+            testdataDir.resolve("sample_without_platforms.mobileprovision"));
+    assertThat(
+        data.getDeveloperCertificateFingerprints(),
+        equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));
+
+    thrown.expect(IllegalArgumentException.class);
     ProvisioningProfileMetadata.fromProvisioningProfilePath(
-        executor,
-        ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-        testdataDir.resolve("invalid.mobileprovision"));
+        executor, FAKE_READ_COMMAND, testdataDir.resolve("invalid.mobileprovision"));
   }
 
   @Test
@@ -134,14 +115,13 @@ public class ProvisioningProfileMetadataTest {
 
     ProvisioningProfileMetadata data =
         ProvisioningProfileMetadata.fromProvisioningProfilePath(
-            executor,
-            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
-            testFile);
+            executor, FAKE_READ_COMMAND, testFile);
 
-    assertTrue(data.getEntitlements().containsKey(
-        "com.apple.developer.icloud-container-development-container-identifiers"));
-    assertFalse(data.getMergeableEntitlements().containsKey(
-        "com.apple.developer.icloud-container-development-container-identifiers"));
+    assertTrue(
+        data.getEntitlements()
+            .containsKey("com.apple.developer.icloud-container-development-container-identifiers"));
+    assertFalse(
+        data.getMergeableEntitlements()
+            .containsKey("com.apple.developer.icloud-container-development-container-identifiers"));
   }
-
 }

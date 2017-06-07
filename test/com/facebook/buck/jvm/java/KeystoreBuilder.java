@@ -21,7 +21,8 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 
 public class KeystoreBuilder
-    extends AbstractNodeBuilder<KeystoreDescription.Arg, KeystoreDescription> {
+    extends AbstractNodeBuilder<
+        KeystoreDescriptionArg.Builder, KeystoreDescriptionArg, KeystoreDescription, Keystore> {
 
   private KeystoreBuilder(BuildTarget target) {
     super(new KeystoreDescription(), target);
@@ -32,17 +33,17 @@ public class KeystoreBuilder
   }
 
   public KeystoreBuilder setStore(SourcePath store) {
-    arg.store = store;
+    getArgForPopulating().setStore(store);
     return this;
   }
 
   public KeystoreBuilder setProperties(SourcePath properties) {
-    arg.properties = properties;
+    getArgForPopulating().setProperties(properties);
     return this;
   }
 
   public KeystoreBuilder addDep(BuildTarget dep) {
-    arg.deps = amend(arg.deps, dep);
+    getArgForPopulating().addDeps(dep);
     return this;
   }
 }

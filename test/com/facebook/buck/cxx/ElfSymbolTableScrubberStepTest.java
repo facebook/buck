@@ -21,34 +21,31 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfHeader;
 import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.elf.ElfSymbolTable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ElfSymbolTableScrubberStepTest {
 
   private static final String SECTION = ".dynsym";
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void test() throws IOException {
+  public void test() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
@@ -62,39 +59,30 @@ public class ElfSymbolTableScrubberStepTest {
 
     // Verify that the symbol table values and sizes are zero.
     try (FileChannel channel =
-        FileChannel.open(
-            step.getFilesystem().resolve(step.getPath()),
-            StandardOpenOption.READ)) {
+        FileChannel.open(step.getFilesystem().resolve(step.getPath()), StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
-      Optional<ElfSection> section = elf.getSectionByName(SECTION);
-      assertTrue(section.isPresent());
-      long address = 1;
-      for (ByteBuffer body = section.get().body; body.hasRemaining(); ) {
-        long stValue;
-        long stSize;
-        if (elf.header.ei_class == ElfHeader.EIClass.ELFCLASS32) {
-          Elf.Elf32.getElf32Word(body);  // st_name
-          stValue = Elf.Elf32.getElf32Addr(body);  // st_value
-          stSize = Elf.Elf32.getElf32Word(body);  // st_size
-          body.get();  // st_info;
-          body.get();  // st_other;
-          Elf.Elf32.getElf32Half(body);  // st_shndx
-        } else {
-          Elf.Elf64.getElf64Word(body);  // st_name
-          body.get();  // st_info;
-          body.get();  // st_other;
-          Elf.Elf64.getElf64Half(body);  // st_shndx
-          stValue = Elf.Elf64.getElf64Addr(body);  // st_value;
-          stSize = Elf.Elf64.getElf64Xword(body);  // st_size
-        }
-        assertThat(stValue, Matchers.oneOf(0L, address));
-        assertThat(stSize, Matchers.oneOf(0L, ElfSymbolTableScrubberStep.STABLE_SIZE));
-        if (stValue > 0) {
-          address++;
-        }
-      }
+      ElfSection section =
+          elf.getSectionByName(SECTION).orElseThrow(AssertionError::new).getSecond();
+      ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
+      Set<Long> addresses = new HashSet<>();
+      table.entries.forEach(
+          entry -> {
+            // Addresses should either be 0, or a unique value.
+            assertTrue(entry.st_value == 0 || addresses.add((entry.st_value)));
+            assertThat(
+                entry.st_shndx,
+                Matchers.equalTo(
+                    entry.st_shndx != 0
+                        ? ElfSymbolTableScrubberStep.STABLE_SECTION
+                        : entry.st_shndx));
+            assertThat(
+                entry.st_size,
+                Matchers.equalTo(
+                    entry.st_info.st_type == ElfSymbolTable.Entry.Info.Type.STT_FUNC
+                        ? 0
+                        : entry.st_size));
+          });
     }
   }
-
 }

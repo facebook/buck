@@ -33,21 +33,16 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.DefaultJDOMExternalizer;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
-
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 
 public class TestConfiguration extends LocatableConfigurationBase
     implements RunConfigurationWithSuppressedDefaultRunAction {
 
   public final Data data = new Data();
 
-  protected TestConfiguration(
-      Project project,
-      @NotNull ConfigurationFactory factory,
-      String name) {
+  protected TestConfiguration(Project project, @NotNull ConfigurationFactory factory, String name) {
     super(project, factory, name);
   }
 
@@ -60,15 +55,13 @@ public class TestConfiguration extends LocatableConfigurationBase
   @Nullable
   @Override
   public RunProfileState getState(
-      @NotNull Executor executor,
-      @NotNull ExecutionEnvironment environment) throws ExecutionException {
+      @NotNull Executor executor, @NotNull ExecutionEnvironment environment)
+      throws ExecutionException {
     final BuckBuildManager buildManager = BuckBuildManager.getInstance(getProject());
     if (buildManager.isBuilding()) {
-      final Notification notification = new Notification(
-          "",
-          "Can't run test. Buck is already running!",
-          "",
-          NotificationType.ERROR);
+      final Notification notification =
+          new Notification(
+              "", "Can't run test. Buck is already running!", "", NotificationType.ERROR);
       Notifications.Bus.notify(notification);
       return null;
     }

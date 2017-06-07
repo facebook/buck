@@ -22,6 +22,7 @@ import com.intellij.util.messages.MessageBus;
 public class BuckEventsConsumerFactory {
 
   private MessageBus mBus;
+
   public BuckEventsConsumerFactory(Project project) {
     mBus = project.getMessageBus();
   }
@@ -69,6 +70,7 @@ public class BuckEventsConsumerFactory {
   public BuckConsoleEventConsumer getConsoleEventConsumer() {
     return mBus.syncPublisher(BuckConsoleEventConsumer.BUCK_CONSOLE_EVENT);
   }
+
   public BuckProjectGenerationFinishedConsumer getBuckProjectGenerationFinishedConsumer() {
     return mBus.syncPublisher(
         BuckProjectGenerationFinishedConsumer.PROJECT_GENERATION_FINISHED_CONSUMER);
@@ -85,8 +87,6 @@ public class BuckEventsConsumerFactory {
   }
 
   public BuckInstallFinishedConsumer getInstallFinishedConsumer() {
-    return mBus.syncPublisher(
-        BuckInstallFinishedConsumer.INSTALL_FINISHED_CONSUMER);
+    return mBus.syncPublisher(BuckInstallFinishedConsumer.INSTALL_FINISHED_CONSUMER);
   }
-
 }

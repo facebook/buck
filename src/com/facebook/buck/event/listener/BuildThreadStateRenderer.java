@@ -24,12 +24,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class BuildThreadStateRenderer implements ThreadStateRenderer {
+public class BuildThreadStateRenderer implements MultiStateRenderer {
 
   private final CommonThreadStateRenderer commonThreadStateRenderer;
   private final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap;
@@ -39,52 +37,38 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      AccumulatedTimeTracker accumulatedTimeTracker) {
-    this.threadInformationMap = getThreadInformationMap(
-        currentTimeMs,
-        runningStepsByThread,
-        accumulatedTimeTracker);
-    this.commonThreadStateRenderer = new CommonThreadStateRenderer(
-        ansi,
-        formatTimeFunction,
-        currentTimeMs,
-        threadInformationMap);
+      BuildRuleThreadTracker buildRuleThreadTracker) {
+    this.threadInformationMap =
+        getThreadInformationMap(currentTimeMs, runningStepsByThread, buildRuleThreadTracker);
+    this.commonThreadStateRenderer =
+        new CommonThreadStateRenderer(
+            ansi, formatTimeFunction, currentTimeMs, threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
       long currentTimeMs,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      AccumulatedTimeTracker accumulatedTimeTracker) {
+      BuildRuleThreadTracker buildRuleThreadTracker) {
     ImmutableMap.Builder<Long, ThreadRenderingInformation> threadInformationMapBuilder =
         ImmutableMap.builder();
-    Map<Long, Optional<? extends BuildRuleEvent>> buildEventsByThread =
-        accumulatedTimeTracker.getBuildEventsByThread();
+    Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>> buildEventsByThread =
+        buildRuleThreadTracker.getBuildEventsByThread();
     ImmutableList<Long> threadIds = ImmutableList.copyOf(buildEventsByThread.keySet());
     for (long threadId : threadIds) {
-      Optional<? extends BuildRuleEvent> buildRuleEvent = buildEventsByThread.get(threadId);
+      Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent> buildRuleEvent =
+          buildEventsByThread.get(threadId);
       if (buildRuleEvent == null) {
         continue;
       }
       Optional<BuildTarget> buildTarget = Optional.empty();
+      long elapsedTimeMs = 0;
       if (buildRuleEvent.isPresent()) {
         buildTarget = Optional.of(buildRuleEvent.get().getBuildRule().getBuildTarget());
+        elapsedTimeMs =
+            currentTimeMs
+                - buildRuleEvent.get().getTimestamp()
+                + buildRuleEvent.get().getDuration().getWallMillisDuration();
       }
-      AtomicLong accumulatedTime = null;
-      if (buildTarget.isPresent()) {
-        accumulatedTime = accumulatedTimeTracker.getTime(buildTarget.get());
-      }
-      long elapsedTimeMs = 0;
-      if (buildRuleEvent.isPresent() && accumulatedTime != null) {
-        elapsedTimeMs = currentTimeMs - buildRuleEvent.get().getTimestamp() + accumulatedTime.get();
-      } else {
-        buildRuleEvent = Optional.empty();
-        buildTarget = Optional.empty();
-      }
-      Optional<? extends LeafEvent> runningStep = runningStepsByThread.get(threadId);
-      if (runningStep == null) {
-        runningStep = Optional.empty();
-      }
-
       threadInformationMapBuilder.put(
           threadId,
           new ThreadRenderingInformation(
@@ -92,35 +76,36 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
               buildRuleEvent,
               Optional.empty(),
               Optional.empty(),
-              runningStep,
+              runningStepsByThread.getOrDefault(threadId, Optional.empty()),
               elapsedTimeMs));
     }
     return threadInformationMapBuilder.build();
   }
 
   @Override
-  public int getThreadCount() {
+  public String getExecutorCollectionLabel() {
+    return "THREADS";
+  }
+
+  @Override
+  public int getExecutorCount() {
     return commonThreadStateRenderer.getThreadCount();
   }
 
   @Override
-  public ImmutableList<Long> getSortedThreadIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
     return commonThreadStateRenderer.getSortedThreadIds(sortByTime);
   }
 
   @Override
   public String renderStatusLine(long threadId, StringBuilder lineBuilder) {
-    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadId));
-    Optional<String> stepCategory = Optional.empty();
-    if (threadInformation.getRunningStep().isPresent()) {
-      stepCategory = Optional.of(threadInformation.getRunningStep().get().getCategory());
-    }
+    ThreadRenderingInformation threadInformation =
+        Preconditions.checkNotNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderLine(
         threadInformation.getBuildTarget(),
         threadInformation.getStartEvent(),
         threadInformation.getRunningStep(),
-        stepCategory,
+        threadInformation.getRunningStep().map(LeafEvent::getCategory),
         Optional.of("checking_cache"),
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
@@ -128,8 +113,8 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
 
   @Override
   public String renderShortStatus(long threadId) {
-    ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
-        threadInformationMap.get(threadId));
+    ThreadRenderingInformation threadInformation =
+        Preconditions.checkNotNull(threadInformationMap.get(threadId));
     return commonThreadStateRenderer.renderShortStatus(
         threadInformation.getStartEvent().isPresent(),
         !threadInformation.getRunningStep().isPresent(),

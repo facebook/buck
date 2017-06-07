@@ -33,23 +33,19 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
-
-
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
   private static final Logger LOG = Logger.getInstance(BuckAutoDepsContributor.class);
   private Project mProject;
-  Pattern importPattern = Pattern.compile(
-      "import\\s+([a-z][A-Za-z0-9_]*(\\.[A-Za-z0-9]+)+)($|\\s|;)?");
+  Pattern importPattern =
+      Pattern.compile("import\\s+([a-z][A-Za-z0-9_]*(\\.[A-Za-z0-9]+)+)($|\\s|;)?");
   ObjectMapper mObjectMapper = new ObjectMapper();
 
   public BuckAutoDepsContributor(Project project) {
@@ -76,8 +72,7 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
     document.addDocumentListener(
         new DocumentListener() {
           @Override
-          public void beforeDocumentChange(DocumentEvent documentEvent) {
-          }
+          public void beforeDocumentChange(DocumentEvent documentEvent) {}
 
           @Override
           public void documentChanged(DocumentEvent documentEvent) {
@@ -103,10 +98,7 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
   }
 
   @Override
-  public void fileCreated(
-      @NotNull PsiFile psiFile, @NotNull Document document) {
-
-  }
+  public void fileCreated(@NotNull PsiFile psiFile, @NotNull Document document) {}
 
   public void addDependency(final VirtualFile importClass, final VirtualFile currentClass) {
     BuckAuditOwner.execute(
@@ -125,8 +117,8 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
               for (Map.Entry<String, List<String>> targetAndPathEntry :
                   pathAndTargetData.entrySet()) {
-                String[] pathAndTarget = targetAndPathEntry.getValue().
-                    get(0).replaceFirst("//", "").split(":");
+                String[] pathAndTarget =
+                    targetAndPathEntry.getValue().get(0).replaceFirst("//", "").split(":");
                 if (currentClassPath.contains(targetAndPathEntry.getKey())) {
                   currentTargetName = pathAndTarget[1];
                   currentPath = pathAndTarget[0];
@@ -138,24 +130,14 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
               // Make sure we found both ends of the dependency to add.
               // TODO(ideabuck):  Consider if a single file is part of more than one target.
-              if (!Strings.isNullOrEmpty(currentTargetName) &&
-                  !Strings.isNullOrEmpty(currentPath) &&
-                  !Strings.isNullOrEmpty(importTargetName) &&
-                  !Strings.isNullOrEmpty(importPath)) {
+              if (!Strings.isNullOrEmpty(currentTargetName)
+                  && !Strings.isNullOrEmpty(currentPath)
+                  && !Strings.isNullOrEmpty(importTargetName)
+                  && !Strings.isNullOrEmpty(importPath)) {
                 BuckDeps.addDeps(
-                    mProject,
-                    importPath,
-                    currentPath,
-                    importTargetName,
-                    currentTargetName
-                );
+                    mProject, importPath, currentPath, importTargetName, currentTargetName);
                 BuckDeps.addVisibility(
-                    mProject,
-                    importPath,
-                    currentPath,
-                    importTargetName,
-                    currentTargetName
-                );
+                    mProject, importPath, currentPath, importTargetName, currentTargetName);
               }
             } catch (IOException e) {
               LOG.error(e.toString());
@@ -163,8 +145,7 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
           }
 
           @Override
-          public void onFailure(Throwable throwable) {
-          }
+          public void onFailure(Throwable throwable) {}
         },
         importClass.getPath(),
         currentClass.getPath());

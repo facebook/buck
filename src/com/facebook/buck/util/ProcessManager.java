@@ -18,17 +18,11 @@ package com.facebook.buck.util;
 
 import java.io.IOException;
 
-/**
- * Checks for and kills processes.
- */
+/** Checks for and kills processes. */
 public interface ProcessManager {
-  /**
-   * Returns true if the named process is running, false otherwise.
-   */
+  /** Returns true if the named process is running, false otherwise. */
   boolean isProcessRunning(String processName) throws InterruptedException, IOException;
 
-  /**
-   * Kills the process if it's running.
-   */
+  /** Kills the process if it's running. */
   void killProcess(String processName) throws InterruptedException, IOException;
 }

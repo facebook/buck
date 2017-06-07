@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Locale;
-
 import org.junit.Test;
 
 public class TimeFormatTest {

@@ -26,7 +26,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
 
 public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements LeafEvent {
@@ -43,23 +42,20 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   }
 
   public enum CacheMode {
-    dir, http
+    dir,
+    http
   }
 
-  @JsonIgnore
-  private final CacheMode cacheMode;
+  @JsonIgnore private final CacheMode cacheMode;
 
   @JsonProperty("operation")
   private final Operation operation;
 
-  @JsonIgnore
-  private final ArtifactCacheEvent.InvocationType invocationType;
+  @JsonIgnore private final ArtifactCacheEvent.InvocationType invocationType;
 
-  @JsonIgnore
-  private final Optional<String> target;
+  @JsonIgnore private final Optional<String> target;
 
-  @JsonIgnore
-  private final ImmutableSet<RuleKey> ruleKeys;
+  @JsonIgnore private final ImmutableSet<RuleKey> ruleKeys;
 
   protected ArtifactCacheEvent(
       EventKey eventKey,
@@ -86,10 +82,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     return cacheMode.toString().toLowerCase() + "_artifact_" + operation.toString().toLowerCase();
   }
 
-  public CacheMode getCacheMode() {
-    return cacheMode;
-  }
-
   public Operation getOperation() {
     return operation;
   }
@@ -110,8 +102,9 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   public abstract String getEventName();
 
   public static final Optional<String> getTarget(final ImmutableMap<String, String> metadata) {
-    return metadata.containsKey(TARGET_KEY) ?
-        Optional.of(metadata.get(TARGET_KEY)) : Optional.empty();
+    return metadata.containsKey(TARGET_KEY)
+        ? Optional.of(metadata.get(TARGET_KEY))
+        : Optional.empty();
   }
 
   public abstract static class Started extends ArtifactCacheEvent {
@@ -141,8 +134,8 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
       super(eventKey, cacheMode, operation, target, ruleKeys, invocationType);
       Preconditions.checkArgument(
           (!operation.equals(Operation.FETCH) || cacheResult.isPresent()),
-          "For FETCH operations, cacheResult must be non-null. " +
-              "For non-FETCH operations, cacheResult must be null.");
+          "For FETCH operations, cacheResult must be non-null. "
+              + "For non-FETCH operations, cacheResult must be null.");
       this.cacheResult = cacheResult;
     }
 
@@ -153,7 +146,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     public boolean isSuccess() {
       return !cacheResult.isPresent() || cacheResult.get().getType().isSuccess();
     }
-
 
     @Override
     public boolean equals(Object o) {

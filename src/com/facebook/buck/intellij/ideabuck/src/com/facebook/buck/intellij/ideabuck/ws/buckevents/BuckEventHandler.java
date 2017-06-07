@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.module.mrbean.MrBeanModule;
-
 import java.io.IOException;
 
 public class BuckEventHandler implements BuckEventsHandlerInterface {
@@ -32,7 +31,8 @@ public class BuckEventHandler implements BuckEventsHandlerInterface {
   private Runnable mOnConnectHandler = null;
   private Runnable mOnDisconnectHandler = null;
 
-  public BuckEventHandler(BuckEventsConsumerFactory consumerFactory,
+  public BuckEventHandler(
+      BuckEventsConsumerFactory consumerFactory,
       Runnable onConnectHandler,
       Runnable onDisconnectHandler) {
     mOnConnectHandler = onConnectHandler;

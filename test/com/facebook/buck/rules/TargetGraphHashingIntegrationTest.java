@@ -18,33 +18,27 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
-/**
- * Integration tests for {@link TargetGraphHashing}.
- */
+/** Integration tests for {@link TargetGraphHashing}. */
 public class TargetGraphHashingIntegrationTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void hashDoesNotChangeWhenResourcesRootFolderContentsChange() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "java_library_resources_root_target_hash", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "java_library_resources_root_target_hash", tmp);
     workspace.setUp();
 
-    String expectedHash = workspace.runBuckCommand(
-        "targets",
-        "--show-target-hash",
-        "//:empty").getStdout();
+    String expectedHash =
+        workspace.runBuckCommand("targets", "--show-target-hash", "//:empty").getStdout();
     workspace.writeContentsToPath("some content", "somefile.txt");
     String hash = workspace.runBuckCommand("targets", "--show-target-hash", "//:empty").getStdout();
     assertThat(hash, Matchers.equalTo(expectedHash));

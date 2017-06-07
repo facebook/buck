@@ -16,21 +16,21 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 public class ArtifactConfig {
 
@@ -40,13 +40,15 @@ public class ArtifactConfig {
     public List<String> artifacts = new ArrayList<>();
 
     @Option(name = "-repo", usage = "Root of your repository")
-    public String buckRepoRoot;
+    @Nullable
+    public String buckRepoRoot = null;
 
     @Option(name = "-third-party", usage = "Directory to place dependencies in")
     public String thirdParty = "third-party";
 
     @Option(name = "-local-maven", usage = "Local Maven repository")
-    public String mavenLocalRepo;
+    @Nullable
+    public String mavenLocalRepo = null;
 
     @Option(name = "-maven", usage = "Maven URI(s)")
     public List<String> repositoryURIs = new ArrayList<>();
@@ -55,21 +57,26 @@ public class ArtifactConfig {
     public List<String> visibility = new ArrayList<>();
 
     @Option(name = "-json", usage = "JSON configuration file for artifacts, paths, and Maven repos")
-    public String artifactConfigJson;
+    @Nullable
+    public String artifactConfigJson = null;
 
     @Option(name = "-help", help = true)
     public boolean showHelp;
   }
 
   public static class Repository {
-    public String url;
-    public String user;
-    public String password;
+    private @Nullable String url;
+    public @Nullable String user;
+    public @Nullable String password;
 
     public Repository() {}
 
     public Repository(String url) {
       this.url = url;
+    }
+
+    public String getUrl() {
+      return Preconditions.checkNotNull(url);
     }
   }
 
@@ -112,14 +119,14 @@ public class ArtifactConfig {
     System.out.println("Usage: java -jar resolver.jar [OPTIONS] -repo REPO artifact...");
     System.out.println();
     System.out.println(
-        "Artifacts are of the form group:artifact[:extension[:classifier]]:version, " +
-            "or a .pom file");
+        "Artifacts are of the form group:artifact[:extension[:classifier]]:version, "
+            + "or a .pom file");
     parser.printUsage(System.out);
     System.exit(0);
   }
 
-  public static ArtifactConfig fromCommandLineArgs(
-      String[] args) throws CmdLineException, IOException {
+  public static ArtifactConfig fromCommandLineArgs(String[] args)
+      throws CmdLineException, IOException {
 
     CmdLineArgs parsedArgs = new CmdLineArgs();
     CmdLineParser parser = new CmdLineParser(parsedArgs);
@@ -133,9 +140,8 @@ public class ArtifactConfig {
 
     // If the -config argument was specified, load a config from JSON.
     if (parsedArgs.artifactConfigJson != null) {
-      ObjectMapper mapper = new ObjectMapper();
       File jsonFile = new File(parsedArgs.artifactConfigJson);
-      artifactConfig = mapper.readValue(jsonFile, ArtifactConfig.class);
+      artifactConfig = ObjectMappers.readValue(jsonFile, ArtifactConfig.class);
     } else {
       artifactConfig = new ArtifactConfig();
     }

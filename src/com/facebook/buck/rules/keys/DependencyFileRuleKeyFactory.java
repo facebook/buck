@@ -16,35 +16,38 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
-import java.util.Optional;
+import org.immutables.value.Value;
 
 public interface DependencyFileRuleKeyFactory {
 
   /**
-   * @return either a {@link RuleKey} for the given {@link BuildRule} using the given list of
-   *     explicit {@code inputs} and an {@link ImmutableSet} of the members of
-   *     possibleDepFileSourcePaths that were actually used in constructing the key, or absent
-   *     if no rule key was computed.
+   * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
+   *     {@code inputs} and an {@link ImmutableSet} of the members of possibleDepFileSourcePaths
+   *     that were actually used in constructing the key.
    */
-  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
-      SupportsDependencyFileRuleKey rule,
-      ImmutableList<DependencyFileEntry> inputs) throws IOException;
+  RuleKeyAndInputs build(
+      SupportsDependencyFileRuleKey rule, ImmutableList<DependencyFileEntry> inputs)
+      throws IOException;
 
   /**
-   * @return either the {@link RuleKey} used to index the manifest database and the list of inputs
-   *         that should appear in the manifest (i.e., those that appeared in the dependency file,
-   *         because all other inputs would be accounted for in the manifest key itself), or absent
-   *         if no rule key was computed.
+   * @return the {@link RuleKey} used to index the manifest database and the list of inputs that
+   *     should appear in the manifest (i.e., those that appeared in the dependency file, because
+   *     all other inputs would be accounted for in the manifest key itself).
    */
-  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
-      SupportsDependencyFileRuleKey rule) throws IOException;
+  RuleKeyAndInputs buildManifestKey(SupportsDependencyFileRuleKey rule) throws IOException;
 
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractRuleKeyAndInputs {
+    RuleKey getRuleKey();
+
+    ImmutableSet<SourcePath> getInputs();
+  }
 }

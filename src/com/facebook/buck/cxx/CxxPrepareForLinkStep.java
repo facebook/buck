@@ -18,80 +18,81 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.CompositeStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 
 /**
- * Prepares argfile for the CxxLinkStep, so all arguments to the linker will be stored in a
- * single file. CxxLinkStep then would pass it to the linker via @path/to/the.argsfile command.
- * This allows us to break the constraints that command line sets for the maximum length of
- * the commands.
+ * Prepares argfile for the CxxLinkStep, so all arguments to the linker will be stored in a single
+ * file. CxxLinkStep then would pass it to the linker via @path/to/the.argsfile command. This allows
+ * us to break the constraints that command line sets for the maximum length of the commands.
  */
-public class CxxPrepareForLinkStep extends CompositeStep {
+public class CxxPrepareForLinkStep {
 
   private static final Logger LOG = Logger.get(CxxPrepareForLinkStep.class);
 
-  public static CxxPrepareForLinkStep create(
+  public static ImmutableList<Step> create(
       Path argFilePath,
       Path fileListPath,
       Iterable<Arg> linkerArgsToSupportFileList,
       Path output,
       ImmutableList<Arg> args,
       Linker linker,
-      Path currentCellPath) {
+      Path currentCellPath,
+      SourcePathResolver resolver) {
 
-    ImmutableList<Arg> allArgs = ImmutableList.<Arg>builder()
-        .addAll(StringArg.from(linker.outputArgs(output.toString())))
-        .addAll(args)
-        .addAll(linkerArgsToSupportFileList)
-        .build();
+    ImmutableList<Arg> allArgs =
+        new ImmutableList.Builder<Arg>()
+            .addAll(StringArg.from(linker.outputArgs(output.toString())))
+            .addAll(args)
+            .addAll(linkerArgsToSupportFileList)
+            .build();
 
     boolean hasLinkArgsToSupportFileList = linkerArgsToSupportFileList.iterator().hasNext();
 
-    CxxWriteArgsToFileStep createArgFileStep = new CxxWriteArgsToFileStep(
-        argFilePath,
-        hasLinkArgsToSupportFileList ? allArgs.stream()
-            .filter(input -> !(input instanceof FileListableLinkerInputArg))
-            .collect(MoreCollectors.toImmutableList()) : allArgs,
-        Optional.of(Javac.ARGFILES_ESCAPER),
-        currentCellPath);
+    LOG.debug(
+        "Link command (pwd=%s): %s %s",
+        currentCellPath.toString(),
+        String.join("", linker.getCommandPrefix(resolver)),
+        String.join(" ", CxxWriteArgsToFileStep.stringify(allArgs, currentCellPath, resolver)));
+
+    CxxWriteArgsToFileStep createArgFileStep =
+        CxxWriteArgsToFileStep.create(
+            argFilePath,
+            hasLinkArgsToSupportFileList
+                ? allArgs
+                    .stream()
+                    .filter(input -> !(input instanceof FileListableLinkerInputArg))
+                    .collect(MoreCollectors.toImmutableList())
+                : allArgs,
+            Optional.of(Javac.ARGFILES_ESCAPER),
+            currentCellPath,
+            resolver);
 
     if (!hasLinkArgsToSupportFileList) {
       LOG.verbose("linkerArgsToSupportFileList is empty, filelist feature is not supported");
-      return new CxxPrepareForLinkStep(ImmutableList.of(createArgFileStep));
+      return ImmutableList.of(createArgFileStep);
     }
 
-    CxxWriteArgsToFileStep createFileListStep = new CxxWriteArgsToFileStep(
-        fileListPath,
-        allArgs.stream()
-            .filter(input -> input instanceof FileListableLinkerInputArg)
-            .collect(MoreCollectors.toImmutableList()),
-        Optional.empty(), currentCellPath);
+    CxxWriteArgsToFileStep createFileListStep =
+        CxxWriteArgsToFileStep.create(
+            fileListPath,
+            allArgs
+                .stream()
+                .filter(input -> input instanceof FileListableLinkerInputArg)
+                .collect(MoreCollectors.toImmutableList()),
+            Optional.empty(),
+            currentCellPath,
+            resolver);
 
-    return new CxxPrepareForLinkStep(ImmutableList.of(createArgFileStep, createFileListStep));
+    return ImmutableList.of(createArgFileStep, createFileListStep);
   }
 
-  private CxxPrepareForLinkStep(List<? extends Step> commands) {
-    super(commands);
-  }
-
-  @Override
-  public String getShortName() {
-    return "cxx prepare for link step";
-  }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    return "prepares arg file that will be passed to the linker";
-  }
+  private CxxPrepareForLinkStep() {}
 }

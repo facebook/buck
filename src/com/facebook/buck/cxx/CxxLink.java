@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -23,13 +24,15 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
+import com.facebook.buck.step.fs.LogContentsOfFileStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -37,114 +40,169 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.logging.Level;
 
-public class CxxLink
-    extends AbstractBuildRule
+public class CxxLink extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
 
-  @AddToRuleKey
-  private final Linker linker;
+  @AddToRuleKey private final Linker linker;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
-  @AddToRuleKey
-  private final ImmutableList<Arg> args;
+
+  @AddToRuleKey private final ImmutableList<Arg> args;
+  @AddToRuleKey private final Optional<LinkOutputPostprocessor> postprocessor;
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;
+  @AddToRuleKey private boolean thinLto;
 
   public CxxLink(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Linker linker,
       Path output,
       ImmutableList<Arg> args,
+      Optional<LinkOutputPostprocessor> postprocessor,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
-      boolean cacheable) {
-    super(params, resolver);
+      boolean cacheable,
+      boolean thinLto) {
+    super(params);
     this.linker = linker;
     this.output = output;
     this.args = args;
+    this.postprocessor = postprocessor;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.cacheable = cacheable;
+    this.thinLto = thinLto;
     performChecks(params);
   }
 
   private void performChecks(BuildRuleParams params) {
     Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR) ||
-            !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR)
+            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
         "CxxLink should not be created with CxxStrip flavors");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     Optional<Path> linkerMapPath = getLinkerMapPath();
-    if (linkerMapPath.isPresent() &&
-        LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
+    if (linkerMapPath.isPresent()
+        && LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
       buildableContext.recordArtifact(linkerMapPath.get());
+    }
+    if (linker instanceof HasThinLTO && thinLto) {
+      buildableContext.recordArtifact(((HasThinLTO) linker).thinLTOPath(output));
     }
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
-    Path argFilePath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
-    Path fileListPath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
+    Path argFilePath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
+    Path fileListPath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
+
+    boolean requiresPostprocessing = postprocessor.isPresent();
+    Path linkOutput = requiresPostprocessing ? scratchDir.resolve("link-output") : output;
 
     // Try to find all the cell roots used during the link.  This isn't technically correct since,
     // in theory not all inputs need to come from build rules, but it probably works in practice.
     // One way that we know would work is exposing every known cell root paths, since the only rules
     // that we built (and therefore need to scrub) will be in one of those roots.
     ImmutableSet.Builder<Path> cellRoots = ImmutableSet.builder();
-    for (BuildRule dep : getDeps()) {
+    for (BuildRule dep : getBuildDeps()) {
       cellRoots.add(dep.getProjectFilesystem().getRootPath());
     }
 
-    return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        new RmStep(getProjectFilesystem(), argFilePath, true),
-        new RmStep(getProjectFilesystem(), fileListPath, true),
-        CxxPrepareForLinkStep.create(
-            argFilePath,
-            fileListPath,
-            linker.fileList(fileListPath),
-            output,
-            args,
-            linker,
-            getBuildTarget().getCellPath()),
-        new CxxLinkStep(
-            getProjectFilesystem().getRootPath(),
-            linker.getEnvironment(),
-            linker.getCommandPrefix(getResolver()),
-            argFilePath,
-            getProjectFilesystem().getRootPath().resolve(scratchDir)),
-        new FileScrubberStep(
-            getProjectFilesystem(),
-            output,
-            linker.getScrubbers(cellRoots.build())),
-        new RmStep(getProjectFilesystem(), argFilePath, true),
-        new RmStep(getProjectFilesystem(), fileListPath, true),
-        new RmStep(getProjectFilesystem(), scratchDir, true, true));
+    return new ImmutableList.Builder<Step>()
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), argFilePath)))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), fileListPath)))
+        .addAll(
+            CxxPrepareForLinkStep.create(
+                argFilePath,
+                fileListPath,
+                linker.fileList(fileListPath),
+                linkOutput,
+                args,
+                linker,
+                getBuildTarget().getCellPath(),
+                context.getSourcePathResolver()))
+        .add(
+            new CxxLinkStep(
+                getProjectFilesystem().getRootPath(),
+                linker.getEnvironment(context.getSourcePathResolver()),
+                linker.getCommandPrefix(context.getSourcePathResolver()),
+                argFilePath,
+                getProjectFilesystem().getRootPath().resolve(scratchDir)))
+        .addAll(
+            postprocessor
+                .map(
+                    p ->
+                        p.getSteps(
+                            context,
+                            getProjectFilesystem().resolve(linkOutput),
+                            getProjectFilesystem().resolve(output)))
+                .orElse(ImmutableList.of()))
+        .add(
+            new FileScrubberStep(
+                getProjectFilesystem(), output, linker.getScrubbers(cellRoots.build())))
+        .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), argFilePath)))
+        .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST))
+        .add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), fileListPath)))
+        .add(
+            RmStep.of(
+                    BuildCellRelativePath.fromCellRelativePath(
+                        context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
+                .withRecursive(true))
+        .build();
   }
 
   @Override
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    return FluentIterable.from(getDeps()).filter(Archive.class::isInstance).toSet();
+    return FluentIterable.from(getBuildDeps()).filter(Archive.class::isInstance).toSet();
   }
 
   @Override
   public ImmutableSet<BuildRule> getCompileDeps() {
-    return FluentIterable.from(getDeps()).filter(CxxPreprocessAndCompile.class::isInstance).toSet();
+    return FluentIterable.from(getBuildDeps())
+        .filter(CxxPreprocessAndCompile.class::isInstance)
+        .toSet();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
   @Override

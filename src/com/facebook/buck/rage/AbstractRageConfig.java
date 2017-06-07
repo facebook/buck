@@ -23,26 +23,20 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
 
-  @VisibleForTesting
-  static final String RAGE_SECTION = "rage";
-  @VisibleForTesting
-  static final String REPORT_UPLOAD_PATH_FIELD = "report_upload_path";
+  @VisibleForTesting static final String RAGE_SECTION = "rage";
+  @VisibleForTesting static final String REPORT_UPLOAD_PATH_FIELD = "report_upload_path";
   private static final String REPORT_MAX_SIZE_FIELD = "report_max_size";
-  @VisibleForTesting
-  static final String EXTRA_INFO_COMMAND_FIELD = "extra_info_command";
+  @VisibleForTesting static final String EXTRA_INFO_COMMAND_FIELD = "extra_info_command";
   private static final String RAGE_TIMEOUT_MILLIS_FIELD = "rage_timeout_millis";
   private static final String RAGE_MAX_UPLOAD_RETRIES_FIELD = "rage_max_upload_retries";
-  @VisibleForTesting
-  static final String PROTOCOL_VERSION_FIELD = "protocol_version";
+  @VisibleForTesting static final String PROTOCOL_VERSION_FIELD = "protocol_version";
 
   // Default values
   public static final long HTTP_TIMEOUT_MILLIS = 60 * 1000;
@@ -54,7 +48,6 @@ abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
   @Value.Parameter
   public String getReportUploadPath() {
     return getDelegate().getValue(RAGE_SECTION, REPORT_UPLOAD_PATH_FIELD).orElse(UPLOAD_PATH);
-
   }
 
   @Value.Parameter
@@ -79,7 +72,6 @@ abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
   @Value.Parameter
   public Optional<SlbBuckConfig> getFrontendConfig() {
     return Optional.of(new SlbBuckConfig(getDelegate(), RAGE_SECTION));
-
   }
 
   @Value.Parameter
@@ -98,5 +90,4 @@ abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
     SIMPLE,
     JSON,
   }
-
 }

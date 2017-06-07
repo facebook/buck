@@ -1,23 +1,22 @@
-java_binary (
-  name = 'api_jar',
-  deps = [
-    ':api',
-  ],
-  visibility = [
-    # This target isn't actually used anywhere by the buck build. It's here so that one can use Buck
-    # to build an event API jar for use in compiler plugins. (One can also get such a jar from the
-    # ant build.)
-  ],
+java_binary(
+    name = "api_jar",
+    visibility = [
+        # This target isn't actually used anywhere by the buck build. It's here so that one can use Buck
+        # to build an event API jar for use in compiler plugins. (One can also get such a jar from the
+        # ant build.)
+    ],
+    deps = [
+        ":api",
+    ],
 )
 
 java_library(
-  name = 'api',
-  srcs = glob(['*.java']),
-  autodeps = False, # See below.
-  deps = [
-    # Don't add deps; this is a super-light library that can be used outside of Buck
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "api",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        # Don't add deps; this is a super-light library that can be used outside of Buck
+    ],
 )

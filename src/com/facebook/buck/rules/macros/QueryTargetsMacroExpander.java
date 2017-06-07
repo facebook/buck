@@ -14,8 +14,6 @@
  * under the License.
  */
 
-
-
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
@@ -26,74 +24,90 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Used to expand the macro {@literal $(query_targets "some(query(:expression))")} to the
- * set of targets matching the query.
- * Example queries
+ * Used to expand the macro {@literal $(query_targets "some(query(:expression))")} to the set of
+ * targets matching the query. Example queries
+ *
  * <pre>
  *   '$(query_targets "deps(:foo)")'
  *   '$(query_targets "filter(bar, classpath(:bar))")'
  *   '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, deps(:app))")'
  * </pre>
  */
-public class QueryTargetsMacroExpander extends QueryMacroExpander {
+public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMacro> {
 
   public QueryTargetsMacroExpander(Optional<TargetGraph> targetGraph) {
     super(targetGraph);
   }
 
   @Override
-  public String expand(
+  public Class<QueryTargetsMacro> getInputClass() {
+    return QueryTargetsMacro.class;
+  }
+
+  @Override
+  QueryTargetsMacro fromQuery(Query query) {
+    return QueryTargetsMacro.of(query);
+  }
+
+  @Override
+  public String expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
-    return resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          BuildRule rule = resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-          return rule.getBuildTarget().toString();
-        })
+      QueryTargetsMacro input,
+      QueryResults precomputedQueryResults)
+      throws MacroException {
+    return precomputedQueryResults
+        .results
+        .stream()
+        .map(
+            queryTarget -> {
+              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+              BuildRule rule = resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+              return rule.getBuildTarget().toString();
+            })
         .sorted()
         .collect(Collectors.joining(" "));
   }
 
   @Override
-  public Object extractRuleKeyAppendables(
+  public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       final BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      QueryTargetsMacro input,
+      QueryResults precomputedQueryResults)
       throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
     // Return the set of targets which matched the query
-    return resolveQuery(target, cellNames, resolver, queryExpression)
+    return precomputedQueryResults
+        .results
+        .stream()
         .map(QueryTarget::toString)
         .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
+  boolean detectsTargetGraphOnlyDeps() {
+    return true;
+  }
+
+  @Override
+  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
+      QueryTargetsMacro input,
+      QueryResults precomputedQueryResults)
+      throws MacroException {
     // The query_targets macro is only used for inspecting the build graph or creating
     // log files, or buck invocations, so it should not depend on actual builds of the referenced
     // rules

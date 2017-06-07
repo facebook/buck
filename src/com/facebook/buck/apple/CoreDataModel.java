@@ -16,65 +16,57 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.annotation.Nullable;
-
 public class CoreDataModel extends AbstractBuildRule {
 
-  public static final Flavor FLAVOR = ImmutableFlavor.of("core-data-model");
+  public static final Flavor FLAVOR = InternalFlavor.of("core-data-model");
 
-  @AddToRuleKey
-  private final String moduleName;
+  @AddToRuleKey private final String moduleName;
 
-  @AddToRuleKey
-  private final Tool momc;
+  @AddToRuleKey private final Tool momc;
 
-  @AddToRuleKey
-  private final ImmutableSet<SourcePath> dataModelPaths;
+  @AddToRuleKey private final ImmutableSet<SourcePath> dataModelPaths;
 
-  @AddToRuleKey
-  private final String sdkName;
+  @AddToRuleKey private final String sdkName;
 
-  @AddToRuleKey
-  private final String minOSVersion;
+  @AddToRuleKey private final String minOSVersion;
 
   private final Path sdkRoot;
   private final Path outputDir;
 
   CoreDataModel(
       BuildRuleParams params,
-      final SourcePathResolver resolver,
       AppleCxxPlatform appleCxxPlatform,
       String moduleName,
       ImmutableSet<SourcePath> dataModelPaths) {
-    super(params, resolver);
+    super(params);
     this.moduleName = moduleName;
     this.dataModelPaths = dataModelPaths;
     String outputDirString =
         BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
             .toString()
-            .replace('#', '-');  // momc doesn't like # in paths
+            .replace('#', '-'); // momc doesn't like # in paths
     this.outputDir = Paths.get(outputDirString);
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
     this.sdkRoot = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
@@ -86,28 +78,36 @@ public class CoreDataModel extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    stepsBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
+    stepsBuilder.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath dataModelPath : dataModelPaths) {
       stepsBuilder.add(
           new ShellStep(getProjectFilesystem().getRootPath()) {
             @Override
-            protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            protected ImmutableList<String> getShellCommandInternal(
+                ExecutionContext executionContext) {
               ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
-              commandBuilder.addAll(momc.getCommandPrefix(getResolver()));
+              commandBuilder.addAll(momc.getCommandPrefix(context.getSourcePathResolver()));
               commandBuilder.add(
-                  "--sdkroot", sdkRoot.toString(),
-                  "--" + sdkName + "-deployment-target", minOSVersion,
-                  "--module", moduleName,
-                  getResolver().getAbsolutePath(dataModelPath).toString(),
+                  "--sdkroot",
+                  sdkRoot.toString(),
+                  "--" + sdkName + "-deployment-target",
+                  minOSVersion,
+                  "--module",
+                  moduleName,
+                  context.getSourcePathResolver().getAbsolutePath(dataModelPath).toString(),
                   getProjectFilesystem().resolve(outputDir).toString());
 
               return commandBuilder.build();
             }
 
             @Override
-            public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-              return momc.getEnvironment();
+            public ImmutableMap<String, String> getEnvironmentVariables(
+                ExecutionContext executionContext) {
+              return momc.getEnvironment(context.getSourcePathResolver());
             }
 
             @Override
@@ -116,17 +116,12 @@ public class CoreDataModel extends AbstractBuildRule {
             }
           });
     }
-    buildableContext.recordArtifact(getOutputDir());
+    buildableContext.recordArtifact(outputDir);
     return stepsBuilder.build();
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return outputDir;
-  }
-
-  public Path getOutputDir() {
-    return outputDir;
+  public SourcePath getSourcePathToOutput() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDir);
   }
 }

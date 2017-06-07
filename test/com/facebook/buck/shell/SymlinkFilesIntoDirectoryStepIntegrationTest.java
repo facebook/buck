@@ -29,39 +29,37 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class SymlinkFilesIntoDirectoryStepIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
    * Verifies that {@link SymlinkFilesIntoDirectoryStep} works correctly by symlinking files at
    * various depth levels into an empty output directory.
    */
   @Test
-  public void testSymlinkFilesIntoDirectory() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "symlink_files_into_directory", tmp);
+  public void testSymlinkFilesIntoDirectory() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_files_into_directory", tmp);
     workspace.setUp();
 
     Path outputFolder = tmp.newFolder("output");
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    SymlinkFilesIntoDirectoryStep symlinkStep = new SymlinkFilesIntoDirectoryStep(
-        projectFilesystem,
-        tmp.getRoot(),
-        ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
-        outputFolder);
+    SymlinkFilesIntoDirectoryStep symlinkStep =
+        new SymlinkFilesIntoDirectoryStep(
+            projectFilesystem,
+            tmp.getRoot(),
+            ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
+            outputFolder);
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
 
@@ -70,17 +68,19 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     Path symlinkToADotTxt = tmp.getRoot().resolve("output/a.txt");
     assertTrue(Files.isSymbolicLink(symlinkToADotTxt));
-    assertEquals(projectFilesystem.resolve(Paths.get("a.txt")),
-        Files.readSymbolicLink(symlinkToADotTxt));
+    assertEquals(
+        projectFilesystem.resolve(Paths.get("a.txt")), Files.readSymbolicLink(symlinkToADotTxt));
 
     Path symlinkToBDotTxt = tmp.getRoot().resolve("output/foo/b.txt");
     assertTrue(Files.isSymbolicLink(symlinkToBDotTxt));
-    assertEquals(projectFilesystem.resolve(Paths.get("foo/b.txt")),
+    assertEquals(
+        projectFilesystem.resolve(Paths.get("foo/b.txt")),
         Files.readSymbolicLink(symlinkToBDotTxt));
 
     Path symlinkToCDotTxt = tmp.getRoot().resolve("output/foo/bar/c.txt");
     assertTrue(Files.isSymbolicLink(symlinkToCDotTxt));
-    assertEquals(projectFilesystem.resolve(Paths.get("foo/bar/c.txt")),
+    assertEquals(
+        projectFilesystem.resolve(Paths.get("foo/bar/c.txt")),
         Files.readSymbolicLink(symlinkToCDotTxt));
   }
 }

@@ -20,20 +20,17 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.zip.JarBuilder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 
-/**
- * Creates a JAR file from a collection of directories/ZIP/JAR files.
- */
+/** Creates a JAR file from a collection of directories/ZIP/JAR files. */
 public class JarDirectoryStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -45,19 +42,18 @@ public class JarDirectoryStep implements Step {
   private final ImmutableSortedSet<Path> entriesToJar;
 
   /** If specified, the Main-Class to list in the manifest of the generated JAR file. */
-  @Nullable
-  private final String mainClass;
+  @Nullable private final String mainClass;
 
-  /** If specified, the Manifest file to use for the generated JAR file.  */
-  @Nullable
-  private final Path manifestFile;
+  /** If specified, the Manifest file to use for the generated JAR file. */
+  @Nullable private final Path manifestFile;
 
   /** Indicates that manifest merging should occur. Defaults to true. */
   private final boolean mergeManifests;
 
-  /**
-   * A set of regex. If a file matches one of the regex it will not be included in the Jar.
-   */
+  /** Indicates that the manifest should contain hashes of the entries. Defaults to false. */
+  private final boolean hashEntries;
+
+  /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
   private final ImmutableSet<Pattern> blacklist;
 
   public JarDirectoryStep(
@@ -76,13 +72,32 @@ public class JarDirectoryStep implements Step {
         ImmutableSet.of());
   }
 
+  public JarDirectoryStep(
+      ProjectFilesystem filesystem,
+      Path pathToOutputFile,
+      ImmutableSortedSet<Path> entriesToJar,
+      @Nullable String mainClass,
+      @Nullable Path manifestFile,
+      boolean mergeManifests,
+      ImmutableSet<Pattern> blacklist) {
+    this(
+        filesystem,
+        pathToOutputFile,
+        entriesToJar,
+        mainClass,
+        manifestFile,
+        mergeManifests,
+        false,
+        blacklist);
+  }
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
-   * <p>
-   * If an entry is a directory, then its files are traversed and added to the generated JAR.
-   * <p>
-   * If an entry is a file, then it is assumed to be a ZIP/JAR file, and its entries will be read
+   *
+   * <p>If an entry is a directory, then its files are traversed and added to the generated JAR.
+   *
+   * <p>If an entry is a file, then it is assumed to be a ZIP/JAR file, and its entries will be read
    * and copied to the generated JAR.
+   *
    * @param pathToOutputFile The directory that contains this path must exist before this command is
    *     executed.
    * @param entriesToJar Paths to directories/ZIP/JAR files.
@@ -97,6 +112,7 @@ public class JarDirectoryStep implements Step {
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,
+      boolean hashEntries,
       ImmutableSet<Pattern> blacklist) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
@@ -104,6 +120,7 @@ public class JarDirectoryStep implements Step {
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
+    this.hashEntries = hashEntries;
     this.blacklist = blacklist;
   }
 
@@ -122,7 +139,8 @@ public class JarDirectoryStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("jar %s %s %s %s",
+    return String.format(
+        "jar %s %s %s %s",
         getJarArgs(),
         pathToOutputFile,
         manifestFile != null ? manifestFile : "",
@@ -130,21 +148,19 @@ public class JarDirectoryStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
-          filesystem,
-          pathToOutputFile,
-          entriesToJar,
-          Optional.ofNullable(mainClass),
-          Optional.ofNullable(manifestFile),
-          mergeManifests,
-          blacklist,
-          new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
-          context.getStdErr()));
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+
+    JavacEventSinkToBuckEventBusBridge eventSink =
+        new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
+    return StepExecutionResult.of(
+        new JarBuilder()
+            .setObserver(new LoggingJarBuilderObserver(eventSink))
+            .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
+            .setMainClass(Optional.ofNullable(mainClass).orElse(null))
+            .setManifestFile(manifestFile != null ? filesystem.resolve(manifestFile) : null)
+            .setShouldMergeManifests(mergeManifests)
+            .setShouldHashEntries(hashEntries)
+            .setEntryPatternBlacklist(blacklist)
+            .createJarFile(filesystem.resolve(pathToOutputFile)));
   }
 }

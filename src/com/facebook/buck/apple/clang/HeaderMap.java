@@ -20,8 +20,6 @@ import static java.lang.Math.max;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,28 +29,28 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Header maps are essentially hash maps from strings to paths (coded as two strings: a prefix and
- * a suffix).
- * <p>
- * This class provides support for reading and generating clang header maps.
- * No spec is available but we conform to the
- * <a href="http://clang.llvm.org/doxygen/HeaderMap_8h_source.html">reader class defined in the
- * Clang documentation</a>.
- * <p>
- * Note: currently we don't support offsets greater than MAX_SIGNED_INT.
+ * Header maps are essentially hash maps from strings to paths (coded as two strings: a prefix and a
+ * suffix).
+ *
+ * <p>This class provides support for reading and generating clang header maps. No spec is available
+ * but we conform to the <a href="http://clang.llvm.org/doxygen/HeaderMap_8h_source.html">reader
+ * class defined in the Clang documentation</a>.
+ *
+ * <p>Note: currently we don't support offsets greater than MAX_SIGNED_INT.
  */
 public class HeaderMap {
   private static final double MAX_LOAD_FACTOR = 0.75;
 
   /**
-   * Bucket in the hashtable that is a {@link HeaderMap}.
-   * Note: This notion of bucket is slightly more abstract than the one on disk (string offsets
-   * being already swapped/shifted).
+   * Bucket in the hashtable that is a {@link HeaderMap}. Note: This notion of bucket is slightly
+   * more abstract than the one on disk (string offsets being already swapped/shifted).
    */
   private static class Bucket {
     /** Offset of the key string into stringBytes. */
@@ -90,14 +88,14 @@ public class HeaderMap {
   /** Map to help share strings. */
   private Map<String, Integer> addedStrings;
 
+  private Set<String> existingKeys;
+
   private HeaderMap(int numBuckets, int stringBytesLength) {
     Preconditions.checkArgument(numBuckets > 0, "The number of buckets must be greater than 0");
     Preconditions.checkArgument(
-        stringBytesLength > 0,
-        "The size of the string array must be greater than 0");
+        stringBytesLength > 0, "The size of the string array must be greater than 0");
     Preconditions.checkArgument(
-        (numBuckets & (numBuckets - 1)) == 0,
-        "The number of buckets must be a power of 2");
+        (numBuckets & (numBuckets - 1)) == 0, "The number of buckets must be a power of 2");
 
     this.numEntries = 0;
     this.numBuckets = numBuckets;
@@ -106,7 +104,8 @@ public class HeaderMap {
     this.buckets = new Bucket[numBuckets];
     this.stringBytes = new byte[stringBytesLength];
     this.stringBytesActualLength = 0;
-    this.addedStrings = Maps.newHashMap();
+    this.addedStrings = new HashMap<>();
+    this.existingKeys = new HashSet<>();
   }
 
   public int getNumEntries() {
@@ -145,18 +144,19 @@ public class HeaderMap {
   }
 
   public void print(final Appendable stream) {
-    visit((str, prefix, suffix) -> {
-      try {
-        stream.append("\"");
-        stream.append(str);
-        stream.append("\" -> \"");
-        stream.append(prefix);
-        stream.append(suffix);
-        stream.append("\"\n");
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    });
+    visit(
+        (str, prefix, suffix) -> {
+          try {
+            stream.append("\"");
+            stream.append(str);
+            stream.append("\" -> \"");
+            stream.append(prefix);
+            stream.append(suffix);
+            stream.append("\"\n");
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   @Nullable
@@ -263,10 +263,11 @@ public class HeaderMap {
         buckets[i] = null;
       } else {
         // we can subtract 1 value because index 0 is EMPTY_BUCKET_KEY
-        buckets[i] = new Bucket(
-            keyRawOffset - actualOffset,
-            prefixRawOffset - actualOffset,
-            suffixRawOffset - actualOffset);
+        buckets[i] =
+            new Bucket(
+                keyRawOffset - actualOffset,
+                prefixRawOffset - actualOffset,
+                suffixRawOffset - actualOffset);
       }
     }
     // anything else is string
@@ -340,9 +341,8 @@ public class HeaderMap {
       while (result == AddResult.FAILURE_FULL) {
         // the table is full, let's start all over again with a doubled number of bucket
         // and (optimization) the same size of string bytes
-        final HeaderMap newHeaderMap = new HeaderMap(
-            headerMap.numBuckets * 2,
-            headerMap.stringBytes.length);
+        final HeaderMap newHeaderMap =
+            new HeaderMap(headerMap.numBuckets * 2, headerMap.stringBytes.length);
         headerMap.visit(
             (str, prefix1, suffix1) -> {
               AddResult copying = newHeaderMap.add(str, prefix1, suffix1);
@@ -405,24 +405,23 @@ public class HeaderMap {
       return AddResult.FAILURE_FULL;
     }
 
+    String lowercaseStr = Ascii.toLowerCase(str);
+    if (existingKeys.contains(lowercaseStr)) {
+      return AddResult.FAILURE_ALREADY_PRESENT;
+    }
+
     int hash0 = hashKey(str) & (numBuckets - 1);
 
     int hash = hash0;
     while (true) {
       Bucket bucket = buckets[hash];
       if (bucket == null) {
-        bucket = new Bucket(
-            addString(str),
-            addString(prefix),
-            addString(suffix));
+        bucket = new Bucket(addString(str), addString(prefix), addString(suffix));
         buckets[hash] = bucket;
         numEntries++;
         maxValueLength = max(maxValueLength, prefix.length() + suffix.length());
+        existingKeys.add(lowercaseStr);
         return AddResult.OK;
-      }
-
-      if (str.equalsIgnoreCase(getString(bucket.key))) {
-        return AddResult.FAILURE_ALREADY_PRESENT;
       }
 
       hash = (hash + 1) & (numBuckets - 1);

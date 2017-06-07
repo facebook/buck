@@ -17,16 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -59,8 +57,8 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
   }
 
   @Override
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getRoot());
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(getRoot());
   }
 
   @Override
@@ -70,16 +68,13 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
   }
 
   public static CxxSandboxInclude from(
-      SymlinkTree symlinkTree,
-      String includeDir,
-      CxxPreprocessables.IncludeType includeType) {
+      SymlinkTree symlinkTree, String includeDir, CxxPreprocessables.IncludeType includeType) {
 
     CxxSandboxInclude.Builder builder = CxxSandboxInclude.builder();
     builder.setIncludeType(includeType);
     builder.setRoot(
-        new BuildTargetSourcePath(
-            symlinkTree.getBuildTarget(),
-            symlinkTree.getRoot().resolve(includeDir)));
+        new ExplicitBuildTargetSourcePath(
+            symlinkTree.getBuildTarget(), symlinkTree.getRoot().resolve(includeDir)));
     builder.setIncludeDir(includeDir);
     return builder.build();
   }

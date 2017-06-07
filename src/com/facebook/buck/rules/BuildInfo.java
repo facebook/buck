@@ -20,12 +20,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.google.common.annotations.VisibleForTesting;
-
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
-/**
- * Shared utilities for {@link BuildInfoRecorder} and {@link OnDiskBuildInfo}.
- */
+/** Shared utilities for {@link BuildInfoRecorder} and {@link OnDiskBuildInfo}. */
 @VisibleForTesting
 public class BuildInfo {
 
@@ -33,35 +31,20 @@ public class BuildInfo {
     /** Utility class: do not instantiate. */
     private MetadataKey() {}
 
-    /**
-     * Key for {@link OnDiskBuildInfo} which lists the recorded items.
-     */
+    /** Key for {@link OnDiskBuildInfo} which lists the recorded items. */
     static final String RECORDED_PATHS = "RECORDED_PATHS";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} with a map of outputs to hashes.
-     */
+    /** Key for {@link OnDiskBuildInfo} with a map of outputs to hashes. */
     static final String RECORDED_PATH_HASHES = "RECORDED_PATH_HASHES";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} to identify additional info describing a build.
-     */
+    /** Key for {@link OnDiskBuildInfo} to identify additional info describing a build. */
     static final String ADDITIONAL_INFO = "ADDITIONAL_INFO";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
-     */
+    /** Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule. */
     public static final String RULE_KEY = "RULE_KEY";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule.
-     */
+    /** Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule. */
     static final String INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
-
-    /**
-     * Key for {@link OnDiskBuildInfo} to identify the ABI RuleKey for a build rule.
-     */
-    static final String ABI_RULE_KEY = "ABI_RULE_KEY";
 
     /**
      * Key for {@link OnDiskBuildInfo} to identify the dependency-file {@link RuleKey} for a build
@@ -69,21 +52,26 @@ public class BuildInfo {
      */
     static final String DEP_FILE_RULE_KEY = "DEP_FILE_RULE_KEY";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} to identify the dependency-file for a build rule.
-     */
+    /** Key for {@link OnDiskBuildInfo} to identify the dependency-file for a build rule. */
     static final String DEP_FILE = "DEP_FILE";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
-     */
+    /** Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule. */
     public static final String TARGET = "TARGET";
 
-    /**
-     * Key for {@link OnDiskBuildInfo} to store the cache key of the manifest.
-     */
+    /** Key for {@link OnDiskBuildInfo} to store the cache key of the manifest. */
     static final String MANIFEST_KEY = "MANIFEST_KEY";
+
+    /** Key containing the ID of the current build. */
+    static final String BUILD_ID = "BUILD_ID";
+
+    /** Key containing the ID of the build that previously built/cached this rule's outputs. */
+    static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
   }
+
+  /** All keys corresponding to rule keys. */
+  static final ImmutableSet<String> RULE_KEY_NAMES =
+      ImmutableSet.of(
+          MetadataKey.RULE_KEY, MetadataKey.INPUT_BASED_RULE_KEY, MetadataKey.DEP_FILE_RULE_KEY);
 
   /**
    * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based
@@ -95,8 +83,9 @@ public class BuildInfo {
   private BuildInfo() {}
 
   /**
-   * Returns the path to a directory where metadata files for a build rule with the specified
-   * target should be stored.
+   * Returns the path to a directory where metadata files for a build rule with the specified target
+   * should be stored.
+   *
    * @return A path relative to the project root that includes a trailing slash.
    */
   @VisibleForTesting

@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -51,7 +50,7 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     AndroidManifestReader androidManifestReader;
     try {
-      androidManifestReader = DefaultAndroidManifestReader.forPath(manifest, filesystem);
+      androidManifestReader = DefaultAndroidManifestReader.forPath(filesystem.resolve(manifest));
     } catch (IOException e) {
       context.logError(e, "Failed to create AndroidManifestReader for %s.", manifest);
       return StepExecutionResult.ERROR;

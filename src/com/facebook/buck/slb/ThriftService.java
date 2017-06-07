@@ -16,14 +16,13 @@
 
 package com.facebook.buck.slb;
 
-import org.apache.thrift.TBase;
-
 import java.io.Closeable;
 import java.io.IOException;
+import org.apache.thrift.TBase;
 
-public interface ThriftService
-    <ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>> extends Closeable {
+public interface ThriftService<
+        ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>>
+    extends Closeable {
 
-  void makeRequest(ThriftRequest thriftRequest, ThriftResponse thriftResponse)
-      throws IOException;
+  void makeRequest(ThriftRequest thriftRequest, ThriftResponse thriftResponse) throws IOException;
 }

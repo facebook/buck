@@ -18,43 +18,43 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
-
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.PrintStream;
+import java.util.OptionalInt;
 
 public interface Command {
 
-  /**
-   * @return the appropriate exit code for the command
-   */
+  /** @return the appropriate exit code for the command */
   int run(CommandRunnerParams params) throws IOException, InterruptedException;
 
   /**
-   * @return whether the command doesn't modify the state of the filesystem
+   * If the current command is a help command, run the action to print out the appropriate help
+   * message.
+   *
+   * <p>This is an optimization to avoid initializing everything in CommandRunnerParams, in order to
+   * return help strings quickly.
+   *
+   * @param stream stream to output the help text.
+   * @return The exit code of the command, if the command is a help request.
    */
+  OptionalInt runHelp(PrintStream stream);
+
+  /** @return whether the command doesn't modify the state of the filesystem */
   boolean isReadOnly();
 
-  /**
-   * @return whether we should gather source control stats while executing the command.
-   */
+  /** @return whether we should gather source control stats while executing the command. */
   boolean isSourceControlStatsGatheringEnabled();
 
   String getShortDescription();
 
   CellConfig getConfigOverrides();
 
-  /**
-   * @return how we want logging to be configured for the the command.
-   */
+  /** @return how we want logging to be configured for the the command. */
   LogConfigSetup getLogConfig();
 
-
   // If it gets messy adding more arguments here, make them into an Immutable instead.
-  Iterable<BuckEventListener> getEventListeners(
-      Path logDirectoryPath,
-      ProjectFilesystem filesystem);
+  Iterable<BuckEventListener> getEventListeners();
 
-
+  void printUsage(PrintStream stream);
 }

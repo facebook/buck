@@ -132,6 +132,19 @@ def run_process(*args, **kwargs):
     return stdout
 
 
+def getMisplacedBuckFilesInTestdata(repo_root):
+    buck_files = []
+    for root, dirs, files in os.walk(repo_root):
+        for f in files:
+            full_path = os.path.join(root, f)
+            if not f == 'BUCK':
+                continue
+            if 'testdata' not in full_path:
+                continue
+            buck_files.append(full_path)
+    return buck_files
+
+
 def main():
     repo_root = findRepoRoot(os.getcwd())
     test_files = getTestFiles(repo_root)
@@ -140,7 +153,12 @@ def main():
     for f in unreferenced_files:
         print(f, "looks like a test file, but is not covered by a test rule.")
 
-    if len(unreferenced_files) == 0:
+    misplaced_buck_files = getMisplacedBuckFilesInTestdata(repo_root)
+    for b in misplaced_buck_files:
+        print(b, "lives in `testdata`, you should rename it to BUCK.fixture " +
+              "otherwise it will be accidentally picked up by the build.")
+
+    if len(unreferenced_files) == 0 and len(misplaced_buck_files) == 0:
         print('No unreferenced test files found, all is good.')
         return 0
     else:

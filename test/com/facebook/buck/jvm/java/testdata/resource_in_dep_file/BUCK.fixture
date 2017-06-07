@@ -1,5 +1,13 @@
-java_library(
+java_annotation_processor(
   name = 'annotation_processor',
+  processor_class = 'com.example.AnnotationProcessor',
+  deps = [
+    ':annotation_processor_lib',
+  ]
+)
+
+java_library(
+  name = 'annotation_processor_lib',
   srcs = [
     'AnnotationProcessor.java',
   ],
@@ -10,10 +18,7 @@ java_library(
   srcs = [
     'Main.java',
   ],
-  annotation_processors = [
-    'com.example.AnnotationProcessor',
-  ],
-  annotation_processor_deps = [
+  plugins = [
     ':annotation_processor',
   ],
   deps = [

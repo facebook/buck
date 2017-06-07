@@ -41,13 +41,14 @@ public class BuckUIManager {
 
   public RunnerLayoutUi getLayoutUi(Project project) {
     if (runnerLayoutUi == null) {
-      runnerLayoutUi = RunnerLayoutUi.Factory.getInstance(project).create(
-          "buck", "buck", "buck", project);
+      runnerLayoutUi =
+          RunnerLayoutUi.Factory.getInstance(project).create("buck", "buck", "buck", project);
     }
     return runnerLayoutUi;
   }
 
   private DefaultTreeModel mTreeModel;
+
   public DefaultTreeModel getTreeModel() {
     if (mTreeModel == null) {
       mTreeModel = new DefaultTreeModel(null);

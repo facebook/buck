@@ -27,33 +27,31 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class HeaderMapStepTest {
 
-  @Rule
-  public final TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testHeaderMap() throws IOException {
+  public void testHeaderMap() throws InterruptedException, IOException {
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
     Path output = Paths.get("headers.hmap");
-    ImmutableMap<Path, Path> entries = ImmutableMap.of(
-        Paths.get("file1.h"), Paths.get("/some/absolute/path.h"),
-        Paths.get("file2.h"), Paths.get("/other/absolute/path.h"),
-        Paths.get("prefix/file1.h"), Paths.get("/some/absolute/path.h"));
+    ImmutableMap<Path, Path> entries =
+        ImmutableMap.of(
+            Paths.get("file1.h"), Paths.get("/some/absolute/path.h"),
+            Paths.get("file2.h"), Paths.get("/other/absolute/path.h"),
+            Paths.get("prefix/file1.h"), Paths.get("/some/absolute/path.h"));
 
     HeaderMapStep step = new HeaderMapStep(projectFilesystem, output, entries);
 
@@ -66,10 +64,7 @@ public class HeaderMapStepTest {
     assertNotNull(headerMap);
     assertThat(headerMap.getNumEntries(), equalTo(entries.size()));
     for (Map.Entry<Path, Path> entry : entries.entrySet()) {
-      assertThat(
-          headerMap.lookup(entry.getKey().toString()),
-          equalTo(entry.getValue().toString()));
+      assertThat(headerMap.lookup(entry.getKey().toString()), equalTo(entry.getValue().toString()));
     }
   }
-
 }

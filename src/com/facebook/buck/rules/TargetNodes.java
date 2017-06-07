@@ -17,21 +17,18 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasTests;
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * Utility class to work with {@link TargetNode} objects.
- */
+/** Utility class to work with {@link TargetNode} objects. */
 public class TargetNodes {
   // Utility class, do not instantiate.
-  private TargetNodes() { }
+  private TargetNodes() {}
 
   /**
-   * If {@code node} refers to a node which contains references to its
-   * tests, returns the tests associated with that node.
+   * If {@code node} refers to a node which contains references to its tests, returns the tests
+   * associated with that node.
    *
-   * Otherwise, returns an empty set.
+   * <p>Otherwise, returns an empty set.
    */
   public static ImmutableSortedSet<BuildTarget> getTestTargetsForNode(TargetNode<?, ?> node) {
     if (node.getConstructorArg() instanceof HasTests) {

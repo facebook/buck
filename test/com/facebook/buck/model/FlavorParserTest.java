@@ -27,33 +27,24 @@ public class FlavorParserTest {
   @Test
   public void testParseEmpty() {
     FlavorParser flavorParser = new FlavorParser();
-    assertThat(
-        flavorParser.parseFlavorString(""),
-        emptyIterable());
+    assertThat(flavorParser.parseFlavorString(""), emptyIterable());
   }
 
   @Test
   public void testParseSingle() {
     FlavorParser flavorParser = new FlavorParser();
-    assertThat(
-        flavorParser.parseFlavorString("foo"),
-        contains("foo"));
+    assertThat(flavorParser.parseFlavorString("foo"), contains("foo"));
   }
 
   @Test
   public void testParseMultiple() {
     FlavorParser flavorParser = new FlavorParser();
-    assertThat(
-        flavorParser.parseFlavorString("foo,bar"),
-        contains("foo", "bar"));
+    assertThat(flavorParser.parseFlavorString("foo,bar"), contains("foo", "bar"));
   }
 
   @Test
   public void testParseMultipleWithDeprecated() {
     FlavorParser flavorParser = new FlavorParser();
-    assertThat(
-        flavorParser.parseFlavorString("foo,dynamic"),
-        contains("foo", "shared"));
+    assertThat(flavorParser.parseFlavorString("foo,dynamic"), contains("foo", "shared"));
   }
-
 }

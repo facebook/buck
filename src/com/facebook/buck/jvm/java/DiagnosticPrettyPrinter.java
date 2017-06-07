@@ -20,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -29,9 +28,10 @@ import javax.tools.JavaFileObject;
  * Take a {@link Diagnostic} and pretty print it, using the same formatting as you'd find in the
  * Oracle javac implementation. This ensures that no matter which compiler is being used, output to
  * the user is consistent.
- * <p>
- * Output is given in the following format, where "summary" is the first line of
- * {@link Diagnostic#getMessage(Locale)} and "Remainder of message" are all the other lines.
+ *
+ * <p>Output is given in the following format, where "summary" is the first line of {@link
+ * Diagnostic#getMessage(Locale)} and "Remainder of message" are all the other lines.
+ *
  * <pre>
  * Path-to-file:line-number: kind-of-error: summary\n
  *
@@ -48,33 +48,32 @@ public class DiagnosticPrettyPrinter {
 
   public static String format(Diagnostic<? extends JavaFileObject> diagnostic) {
     /*
-     In BasicDiagnosticFormatter.class, the default format used is: "%f:%l:%_%p%L%m"
-     This expands to:
+    In BasicDiagnosticFormatter.class, the default format used is: "%f:%l:%_%p%L%m"
+    This expands to:
 
-     "filename":"line":" ""kind""lint category""format message"
+    "filename":"line":" ""kind""lint category""format message"
 
-     Format message is implemented in the BasicDiagnosticFormatter. This splits the message into
-     lines and picks the first one as the summary (seems reasonable to do). If details are
-     requested, then the remaining lines are added. Details are always requested.
-     */
+    Format message is implemented in the BasicDiagnosticFormatter. This splits the message into
+    lines and picks the first one as the summary (seems reasonable to do). If details are
+    requested, then the remaining lines are added. Details are always requested.
+    */
 
     StringBuilder builder = new StringBuilder();
 
     JavaFileObject source = diagnostic.getSource();
     if (source != null && !source.getName().isEmpty()) {
-      builder
-          .append(source.getName())
-          .append(":").append(diagnostic.getLineNumber());
+      builder.append(source.getName()).append(":").append(diagnostic.getLineNumber());
     }
 
-    builder.append(": ")
+    builder
+        .append(": ")
         .append(diagnostic.getKind().toString().toLowerCase(Locale.US))
         .append(": ");
 
     String formattedMessage = diagnostic.getMessage(Locale.getDefault());
     String[] parts = formattedMessage.split("\n");
     if (parts.length == 0) {
-      parts = new String[]{""};
+      parts = new String[] {""};
     }
 
     // Use the first line as a summary. With the normal Oracle JSR199 javac, the remaining lines are

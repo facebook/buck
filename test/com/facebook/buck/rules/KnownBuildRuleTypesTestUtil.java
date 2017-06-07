@@ -26,7 +26,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -60,12 +59,11 @@ public final class KnownBuildRuleTypesTestUtil {
     ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> processMap = ImmutableMap.builder();
     for (Map.Entry<String, String> python : PYTHONS.entrySet()) {
       for (String path : uniquePaths) {
-        for (String extension : new String[]{"", ".exe", ".EXE"}) {
+        for (String extension : new String[] {"", ".exe", ".EXE"}) {
           processMap.put(
               ProcessExecutorParams.builder()
-                  .setCommand(ImmutableList.of(
-                      path + File.separator + python.getKey() + extension,
-                      "-"))
+                  .setCommand(
+                      ImmutableList.of(path + File.separator + python.getKey() + extension, "-"))
                   .build(),
               new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
         }
@@ -84,19 +82,20 @@ public final class KnownBuildRuleTypesTestUtil {
     return Arrays.asList(pathEnv.split(File.pathSeparator));
   }
 
-  public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem,
-      ImmutableMap<String, String> environment) throws InterruptedException, IOException {
+  public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(
+      ProjectFilesystem filesystem, ImmutableMap<String, String> environment)
+      throws InterruptedException, IOException {
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     List<String> paths = getPaths(environment);
 
     return KnownBuildRuleTypes.createInstance(
         config,
-        filesystem, new FakeProcessExecutor(
+        filesystem,
+        new FakeProcessExecutor(
             ImmutableMap.<ProcessExecutorParams, FakeProcess>builder()
                 .put(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)
                 .putAll(getPythonProcessMap(paths))
                 .build()),
         new FakeAndroidDirectoryResolver());
   }
-
 }

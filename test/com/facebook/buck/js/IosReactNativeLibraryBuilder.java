@@ -14,37 +14,36 @@
  * under the License.
  */
 
-
 package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 
 public class IosReactNativeLibraryBuilder
-    extends AbstractNodeBuilder<ReactNativeLibraryArgs, IosReactNativeLibraryDescription> {
+    extends AbstractNodeBuilder<
+        ReactNativeLibraryArg.Builder, ReactNativeLibraryArg, IosReactNativeLibraryDescription,
+        BuildRule> {
 
   protected IosReactNativeLibraryBuilder(
-      IosReactNativeLibraryDescription description,
-      BuildTarget target) {
+      IosReactNativeLibraryDescription description, BuildTarget target) {
     super(description, target);
   }
 
   public static IosReactNativeLibraryBuilder builder(
-      BuildTarget buildTarget,
-      ReactNativeBuckConfig buckConfig) {
+      BuildTarget buildTarget, ReactNativeBuckConfig buckConfig) {
     return new IosReactNativeLibraryBuilder(
-        new IosReactNativeLibraryDescription(buckConfig),
-        buildTarget);
+        new IosReactNativeLibraryDescription(buckConfig), buildTarget);
   }
 
   public IosReactNativeLibraryBuilder setBundleName(String bundleName) {
-    arg.bundleName = bundleName;
+    getArgForPopulating().setBundleName(bundleName);
     return this;
   }
 
   public IosReactNativeLibraryBuilder setEntryPath(SourcePath path) {
-    arg.entryPath = path;
+    getArgForPopulating().setEntryPath(path);
     return this;
   }
 }

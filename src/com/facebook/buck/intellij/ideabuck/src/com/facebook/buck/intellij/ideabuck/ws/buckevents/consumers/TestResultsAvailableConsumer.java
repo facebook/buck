@@ -20,9 +20,8 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResults;
 import com.intellij.util.messages.Topic;
 
 public interface TestResultsAvailableConsumer {
-  Topic<TestResultsAvailableConsumer> BUCK_TEST_RESULTS_AVAILABLE = Topic.create(
-      "buck.test.available",
-      TestResultsAvailableConsumer.class
-  );
+  Topic<TestResultsAvailableConsumer> BUCK_TEST_RESULTS_AVAILABLE =
+      Topic.create("buck.test.available", TestResultsAvailableConsumer.class);
+
   void consumeTestResultsAvailable(long timestamp, TestResults testResults);
 }

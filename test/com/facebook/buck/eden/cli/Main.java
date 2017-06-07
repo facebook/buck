@@ -18,11 +18,9 @@ package com.facebook.buck.eden.cli;
 
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
-
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.CmdLineException;
-
 import java.io.IOException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 /** Utility for communicating with Eden from the command line. */
 public final class Main {

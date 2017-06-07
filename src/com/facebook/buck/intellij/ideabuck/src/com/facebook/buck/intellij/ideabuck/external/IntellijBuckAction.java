@@ -19,9 +19,7 @@ package com.facebook.buck.intellij.ideabuck.external;
 import com.intellij.util.messages.Topic;
 
 public interface IntellijBuckAction {
-  Topic<IntellijBuckAction> EVENT = Topic.create(
-      "buck.intellij.action",
-      IntellijBuckAction.class
-  );
+  Topic<IntellijBuckAction> EVENT = Topic.create("buck.intellij.action", IntellijBuckAction.class);
+
   void consume(String className);
 }

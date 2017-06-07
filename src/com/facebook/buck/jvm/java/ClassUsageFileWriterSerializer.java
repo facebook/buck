@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -37,8 +36,7 @@ public class ClassUsageFileWriterSerializer {
     if (writer instanceof DefaultClassUsageFileWriter) {
       builder.put(TYPE, TYPE_DEFAULT);
       builder.put(
-          RELATIVE_PATH,
-          ((DefaultClassUsageFileWriter) writer).getRelativePath().toString());
+          RELATIVE_PATH, ((DefaultClassUsageFileWriter) writer).getRelativePath().toString());
     } else if (writer instanceof NoOpClassUsageFileWriter) {
       builder.put(TYPE, TYPE_NOOP);
     } else {

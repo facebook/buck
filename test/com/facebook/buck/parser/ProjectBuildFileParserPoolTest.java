@@ -28,16 +28,11 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.easymock.EasyMock;
-import org.easymock.IAnswer;
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -49,20 +44,32 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.Nullable;
+import org.easymock.EasyMock;
+import org.easymock.IAnswer;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ProjectBuildFileParserPoolTest {
+
+  private ProjectBuildFileParserPool createParserPool(
+      int maxParsersPerCell, Function<Cell, ProjectBuildFileParser> parserFactory) {
+    return new ProjectBuildFileParserPool(maxParsersPerCell, parserFactory, false);
+  }
 
   private void assertHowManyParserInstancesAreCreated(
       ListeningExecutorService executorService,
       final int maxParsers,
       int numRequests,
-      int expectedCreateCount) throws Exception {
+      int expectedCreateCount)
+      throws Exception {
     final AtomicInteger createCount = new AtomicInteger(0);
     Cell cell = EasyMock.createMock(Cell.class);
 
     final CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             maxParsers,
             input -> {
               createCount.incrementAndGet();
@@ -73,7 +80,8 @@ public class ProjectBuildFileParserPoolTest {
                     try {
                       didntTimeout = createParserLatch.await(1, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {
-                      Throwables.propagate(e);
+                      Throwables.throwIfUnchecked(e);
+                      throw new RuntimeException(e);
                     }
                     assertThat(didntTimeout, Matchers.equalTo(true));
                     return ImmutableList.of();
@@ -87,8 +95,8 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void createsConstrainedNumberOfParsers() throws Exception {
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(2));
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(2));
     assertHowManyParserInstancesAreCreated(
         /* executor */ executorService,
         /* maxParsers */ 2,
@@ -112,12 +120,12 @@ public class ProjectBuildFileParserPoolTest {
     final int parsersCount = 4;
     final AtomicInteger parserCount = new AtomicInteger(0);
     Cell cell = EasyMock.createMock(Cell.class);
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(parsersCount));
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(parsersCount));
 
     final CountDownLatch createParserLatch = new CountDownLatch(parsersCount);
     try (ProjectBuildFileParserPool parserPool =
-        new ProjectBuildFileParserPool(
+        createParserPool(
             parsersCount,
             input -> {
               parserCount.incrementAndGet();
@@ -125,7 +133,9 @@ public class ProjectBuildFileParserPoolTest {
               final ProjectBuildFileParser parser =
                   EasyMock.createMock(ProjectBuildFileParser.class);
               try {
-                EasyMock.expect(parser.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+                EasyMock.expect(
+                        parser.getAllRulesAndMetaRules(
+                            EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
                     .andAnswer(
                         () -> {
                           createParserLatch.countDown();
@@ -135,16 +145,18 @@ public class ProjectBuildFileParserPoolTest {
                         })
                     .anyTimes();
                 parser.close();
-                EasyMock.expectLastCall().andAnswer(
-                    new IAnswer<Void>() {
-                      @Override
-                      public Void answer() throws Throwable {
-                        parserCount.decrementAndGet();
-                        return null;
-                      }
-                    });
+                EasyMock.expectLastCall()
+                    .andAnswer(
+                        new IAnswer<Void>() {
+                          @Override
+                          public Void answer() throws Throwable {
+                            parserCount.decrementAndGet();
+                            return null;
+                          }
+                        });
               } catch (Exception e) {
-                Throwables.propagate(e);
+                Throwables.throwIfUnchecked(e);
+                throw new RuntimeException(e);
               }
               EasyMock.replay(parser);
               return parser;
@@ -170,26 +182,26 @@ public class ProjectBuildFileParserPoolTest {
   public void fuzzForConcurrentAccess() throws Exception {
     final int parsersCount = 3;
     Cell cell = EasyMock.createMock(Cell.class);
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(4));
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
 
     try (ProjectBuildFileParserPool parserPool =
-             new ProjectBuildFileParserPool(
-                 parsersCount,
-                 input -> {
-                   final AtomicInteger sleepCallCount = new AtomicInteger(0);
-                   return createMockParser(
-                       () -> {
-                         int numCalls = sleepCallCount.incrementAndGet();
-                         Preconditions.checkState(numCalls == 1);
-                         try {
-                           Thread.sleep(10);
-                         } finally {
-                           sleepCallCount.decrementAndGet();
-                         }
-                         return ImmutableList.of();
-                       });
-                 })) {
+        createParserPool(
+            parsersCount,
+            input -> {
+              final AtomicInteger sleepCallCount = new AtomicInteger(0);
+              return createMockParser(
+                  () -> {
+                    int numCalls = sleepCallCount.incrementAndGet();
+                    Preconditions.checkState(numCalls == 1);
+                    try {
+                      Thread.sleep(10);
+                    } finally {
+                      sleepCallCount.decrementAndGet();
+                    }
+                    return ImmutableList.of();
+                  });
+            })) {
 
       Futures.allAsList(scheduleWork(cell, parserPool, executorService, 142)).get();
     } finally {
@@ -200,21 +212,21 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void ignoresCancellation() throws Exception {
     Cell cell = EasyMock.createMock(Cell.class);
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(1));
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
     int numberOfJobs = 5;
     final CountDownLatch waitTillAllWorkIsDone = new CountDownLatch(numberOfJobs);
     final CountDownLatch waitTillCanceled = new CountDownLatch(1);
     try (ProjectBuildFileParserPool parserPool =
-             new ProjectBuildFileParserPool(
-                 /* maxParsers */ 1,
-                 createMockParserFactory(
-                     () -> {
-                       waitTillCanceled.await();
-                       waitTillAllWorkIsDone.countDown();
-                       return ImmutableList.of();
-                     }))) {
+        createParserPool(
+            /* maxParsers */ 1,
+            createMockParserFactory(
+                () -> {
+                  waitTillCanceled.await();
+                  waitTillAllWorkIsDone.countDown();
+                  return ImmutableList.of();
+                }))) {
 
       ImmutableSet<ListenableFuture<?>> futures =
           scheduleWork(cell, parserPool, executorService, numberOfJobs);
@@ -234,8 +246,8 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void closeWhenRunningJobs() throws Exception {
     Cell cell = EasyMock.createMock(Cell.class);
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(1));
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
     final CountDownLatch waitTillClosed = new CountDownLatch(1);
     final CountDownLatch firstJobRunning = new CountDownLatch(1);
@@ -243,25 +255,27 @@ public class ProjectBuildFileParserPoolTest {
     ImmutableSet<ListenableFuture<?>> futures;
 
     try (ProjectBuildFileParserPool parserPool =
-             new ProjectBuildFileParserPool(
-                 /* maxParsers */ 1,
-                 createMockParserFactory(
-                     () -> {
-                       firstJobRunning.countDown();
-                       waitTillClosed.await();
-                       return ImmutableList.of();
-                     }))) {
+        createParserPool(
+            /* maxParsers */ 1,
+            createMockParserFactory(
+                () -> {
+                  firstJobRunning.countDown();
+                  waitTillClosed.await();
+                  return ImmutableList.of();
+                }))) {
 
       futures = scheduleWork(cell, parserPool, executorService, 5);
       for (ListenableFuture<?> future : futures) {
-        Futures.transform(
+        Futures.addCallback(
             future,
-            new Function<Object, Object>() {
+            new FutureCallback<Object>() {
               @Override
-              public Object apply(Object input) {
+              public void onSuccess(@Nullable Object result) {
                 postCloseWork.incrementAndGet();
-                return null;
               }
+
+              @Override
+              public void onFailure(Throwable t) {}
             });
       }
       firstJobRunning.await(1, TimeUnit.SECONDS);
@@ -273,9 +287,7 @@ public class ProjectBuildFileParserPoolTest {
     // The threadpool is of size 1, so we had 1 job in the 'running' state. That one job completed
     // normally, the rest should have been cancelled.
     int expectedCompletedJobs = 1;
-    int completedJobs = FluentIterable.from(futureResults)
-        .filter(Objects::nonNull)
-        .size();
+    int completedJobs = FluentIterable.from(futureResults).filter(Objects::nonNull).size();
     assertThat(completedJobs, Matchers.equalTo(expectedCompletedJobs));
 
     executorService.shutdown();
@@ -286,21 +298,21 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void workThatThrows() throws Exception {
     Cell cell = EasyMock.createMock(Cell.class);
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(1));
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
     final String exceptionMessage = "haha!";
     final AtomicBoolean throwWhileParsing = new AtomicBoolean(true);
     try (ProjectBuildFileParserPool parserPool =
-             new ProjectBuildFileParserPool(
-                 /* maxParsers */ 2,
-                 createMockParserFactory(
-                     () -> {
-                       if (throwWhileParsing.get()) {
-                         throw new Exception(exceptionMessage);
-                       }
-                       return ImmutableList.of();
-                     }))) {
+        createParserPool(
+            /* maxParsers */ 2,
+            createMockParserFactory(
+                () -> {
+                  if (throwWhileParsing.get()) {
+                    throw new Exception(exceptionMessage);
+                  }
+                  return ImmutableList.of();
+                }))) {
 
       ImmutableSet<ListenableFuture<?>> failedWork =
           scheduleWork(cell, parserPool, executorService, 5);
@@ -328,7 +340,8 @@ public class ProjectBuildFileParserPoolTest {
       int count) {
     ImmutableSet.Builder<ListenableFuture<?>> futures = ImmutableSet.builder();
     for (int i = 0; i < count; i++) {
-      futures.add(pool.getAllRulesAndMetaRules(cell, Paths.get("BUCK"), executorService));
+      futures.add(
+          pool.getAllRulesAndMetaRules(cell, Paths.get("BUCK"), new AtomicLong(), executorService));
     }
     return futures.build();
   }
@@ -337,13 +350,16 @@ public class ProjectBuildFileParserPoolTest {
       IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(mock.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+      EasyMock.expect(
+              mock.getAllRulesAndMetaRules(
+                  EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
           .andAnswer(parseFn)
           .anyTimes();
       mock.close();
       EasyMock.expectLastCall().andVoid().once();
     } catch (Exception e) {
-      Throwables.propagate(e);
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
     EasyMock.replay(mock);
     return mock;
@@ -352,8 +368,7 @@ public class ProjectBuildFileParserPoolTest {
   private Function<Cell, ProjectBuildFileParser> createMockParserFactory(
       final IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
     return input -> {
-      final AssertScopeExclusiveAccess exclusiveAccess =
-          new AssertScopeExclusiveAccess();
+      final AssertScopeExclusiveAccess exclusiveAccess = new AssertScopeExclusiveAccess();
       return createMockParser(
           () -> {
             try (AssertScopeExclusiveAccess.Scope scope = exclusiveAccess.scope()) {

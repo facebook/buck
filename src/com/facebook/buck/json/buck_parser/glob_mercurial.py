@@ -11,8 +11,8 @@ class DiagnosticsFileObject(object):
         self.diagnostics = diagnostics
 
     def write(self, value):
-        self.diagnostics.add(Diagnostic(
-            message=value, level='warning', source='mercurial'))
+        self.diagnostics.append(Diagnostic(
+            message=value, level='warning', source='mercurial', exception=None))
 
     def flush(self):
         pass
@@ -116,7 +116,12 @@ def _load_mercurial_repo_info_for_root(build_env, hgroot, allow_safe_import):
     with allow_safe_import():
         from mercurial import ui, hg
         # Mercurial imports extensions when creating the UI and accessing a new repository.
-        ui_ = ui.ui()
+        try:
+            # Explicitly load configuration
+            ui_ = ui.ui.load()
+        except AttributeError:
+            # Older Mercurial version, configuration is loaded implicitly
+            ui_ = ui.ui()
         ui_.fout = DiagnosticsFileObject(build_env.diagnostics)
         ui_.ferr = DiagnosticsFileObject(build_env.diagnostics)
         ui_.quiet = True

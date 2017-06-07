@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -28,9 +27,7 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
     super(toolProvider, type);
   }
 
-  public CompilerProvider(
-      Path path,
-      Optional<Type> type) {
+  public CompilerProvider(Path path, Optional<Type> type) {
     super(path, type);
   }
 
@@ -47,5 +44,4 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
     }
     throw new IllegalStateException();
   }
-
 }

@@ -42,6 +42,9 @@ import time
 # so fall back to a pure Python implementation.
 try:
     from . import bser
+    # Demandimport causes modules to be loaded lazily. Force the load now
+    # so that we can fall back on pybser if bser doesn't exist
+    bser.pdu_info
 except ImportError:
     from . import pybser as bser
 
@@ -202,6 +205,10 @@ class WatchmanError(Exception):
         if self.cmd:
             return '%s, while executing %s' % (self.msg, self.cmd)
         return self.msg
+
+
+class BSERv1Unsupported(WatchmanError):
+    pass
 
 
 class WatchmanEnvironmentError(WatchmanError):
@@ -424,6 +431,10 @@ class WindowsNamedPipeTransport(Transport):
             CloseHandle(self._waitable)
         self._waitable = None
 
+    def setTimeout(self, value):
+        # convert to milliseconds
+        self.timeout = int(value * 1000)
+
     def readBytes(self, size):
         """ A read can block for an unbounded amount of time, even if the
             kernel reports that the pipe handle is signalled, so we need to
@@ -558,6 +569,7 @@ class CLIProcessTransport(Transport):
                 self.proc.kill()
             self.proc.stdin.close()
             self.proc.stdout.close()
+            self.proc.wait()
             self.proc = None
 
     def _connect(self):
@@ -599,8 +611,17 @@ class CLIProcessTransport(Transport):
 class BserCodec(Codec):
     """ use the BSER encoding.  This is the default, preferred codec """
 
+    def __init__(self, transport, value_encoding, value_errors):
+        super(BserCodec, self).__init__(transport)
+        self._value_encoding = value_encoding
+        self._value_errors = value_errors
+
     def _loads(self, response):
-        return bser.loads(response) # Defaults to BSER v1
+        return bser.loads(
+            response,
+            value_encoding=self._value_encoding,
+            value_errors=self._value_errors,
+        )
 
     def receive(self):
         buf = [self.transport.readBytes(sniff_len)]
@@ -631,22 +652,36 @@ class ImmutableBserCodec(BserCodec):
         immutable object support """
 
     def _loads(self, response):
-        return bser.loads(response, False) # Defaults to BSER v1
-
+        return bser.loads(
+            response,
+            False,
+            value_encoding=self._value_encoding,
+            value_errors=self._value_errors,
+        )
 
 class Bser2WithFallbackCodec(BserCodec):
     """ use BSER v2 encoding """
 
-    def __init__(self, transport):
-        super(Bser2WithFallbackCodec, self).__init__(transport)
-        # Once the server advertises support for bser-v2 we should switch this
-        # to 'required' on Python 3.
-        self.send(["version", {"optional": ["bser-v2"]}])
+    def __init__(self, transport, value_encoding, value_errors):
+        super(Bser2WithFallbackCodec, self).__init__(
+            transport,
+            value_encoding,
+            value_errors,
+        )
+        if compat.PYTHON3:
+            bserv2_key = 'required'
+        else:
+            bserv2_key = 'optional'
+
+        self.send(["version", {bserv2_key: ["bser-v2"]}])
 
         capabilities = self.receive()
 
         if 'error' in capabilities:
-          raise Exception('Unsupported BSER version')
+            raise BSERv1Unsupported(
+                'The watchman server version does not support Python 3. Please '
+                'upgrade your watchman server.'
+            )
 
         if capabilities['capabilities']['bser-v2']:
             self.bser_version = 2
@@ -654,9 +689,6 @@ class Bser2WithFallbackCodec(BserCodec):
         else:
             self.bser_version = 1
             self.bser_capabilities = 0
-
-    def _loads(self, response):
-        return bser.loads(response)
 
     def receive(self):
         buf = [self.transport.readBytes(sniff_len)]
@@ -666,9 +698,9 @@ class Bser2WithFallbackCodec(BserCodec):
         recv_bser_version, recv_bser_capabilities, elen = bser.pdu_info(buf[0])
 
         if hasattr(self, 'bser_version'):
-          # Readjust BSER version and capabilities if necessary
-          self.bser_version = max(self.bser_version, recv_bser_version)
-          self.capabilities = self.bser_capabilities & recv_bser_capabilities
+            # Readjust BSER version and capabilities if necessary
+            self.bser_version = max(self.bser_version, recv_bser_version)
+            self.capabilities = self.bser_capabilities & recv_bser_capabilities
 
         rlen = len(buf[0])
         while elen > rlen:
@@ -689,6 +721,12 @@ class Bser2WithFallbackCodec(BserCodec):
         else:
             cmd = bser.dumps(*args)
         self.transport.write(cmd)
+
+
+class ImmutableBser2Codec(Bser2WithFallbackCodec, ImmutableBserCodec):
+    """ use the BSER encoding, decoding values using the newer
+        immutable object support """
+    pass
 
 
 class JsonCodec(Codec):
@@ -747,7 +785,11 @@ class client(object):
                  transport=None,
                  sendEncoding=None,
                  recvEncoding=None,
-                 useImmutableBser=False):
+                 useImmutableBser=False,
+                 # use False for these last two because None has a special
+                 # meaning
+                 valueEncoding=False,
+                 valueErrors=False):
         self.sockpath = sockpath
         self.timeout = timeout
         self.useImmutableBser = useImmutableBser
@@ -777,13 +819,43 @@ class client(object):
         self.recvCodec = self._parseEncoding(recvEncoding)
         self.sendCodec = self._parseEncoding(sendEncoding)
 
+        # We want to act like the native OS methods as much as possible. This
+        # means returning bytestrings on Python 2 by default and Unicode
+        # strings on Python 3. However we take an optional argument that lets
+        # users override this.
+        if valueEncoding is False:
+            if compat.PYTHON3:
+                self.valueEncoding = encoding.get_local_encoding()
+                self.valueErrors = encoding.default_local_errors
+            else:
+                self.valueEncoding = None
+                self.valueErrors = None
+        else:
+            self.valueEncoding = valueEncoding
+            if valueErrors is False:
+                self.valueErrors = encoding.default_local_errors
+            else:
+                self.valueErrors = valueErrors
+
+    def _makeBSERCodec(self, codec):
+        def make_codec(transport):
+            return codec(transport, self.valueEncoding, self.valueErrors)
+        return make_codec
+
     def _parseEncoding(self, enc):
         if enc == 'bser':
             if self.useImmutableBser:
-                return ImmutableBserCodec
-            return BserCodec
-        elif enc == 'experimental-bser-v2':
-          return Bser2WithFallbackCodec
+                return self._makeBSERCodec(ImmutableBser2Codec)
+            return self._makeBSERCodec(Bser2WithFallbackCodec)
+        elif enc == 'bser-v1':
+            if compat.PYTHON3:
+                raise BSERv1Unsupported(
+                    'Python 3 does not support the BSER v1 encoding: specify '
+                    '"bser" or omit the sendEncoding and recvEncoding '
+                    'arguments')
+            if self.useImmutableBser:
+                return self._makeBSERCodec(ImmutableBserCodec)
+            return self._makeBSERCodec(BserCodec)
         elif enc == 'json':
             return JsonCodec
         else:
@@ -827,10 +899,10 @@ class client(object):
             raise WatchmanError("watchman exited with code %d" % exitcode)
 
         result = bser.loads(stdout)
-        if b'error' in result:
+        if 'error' in result:
             raise WatchmanError('get-sockname error: %s' % result['error'])
 
-        return result[b'sockname']
+        return result['sockname']
 
     def _connect(self):
         """ establish transport connection """
@@ -873,16 +945,10 @@ class client(object):
         self._connect()
         result = self.recvConn.receive()
         if self._hasprop(result, 'error'):
-            error = result['error']
-            if compat.PYTHON3 and isinstance(self.recvConn, BserCodec):
-                error = result['error'].decode('utf-8', 'surrogateescape')
-            raise CommandError(error)
+            raise CommandError(result['error'])
 
         if self._hasprop(result, 'log'):
-            log = result['log']
-            if compat.PYTHON3 and isinstance(self.recvConn, BserCodec):
-                log = log.decode('utf-8', 'surrogateescape')
-            self.logs.append(log)
+            self.logs.append(result['log'])
 
         if self._hasprop(result, 'subscription'):
             sub = result['subscription']
@@ -891,7 +957,7 @@ class client(object):
             self.subs[sub].append(result)
 
             # also accumulate in {root,sub} keyed store
-            root = os.path.normcase(result['root'])
+            root = os.path.normpath(os.path.normcase(result['root']))
             if not root in self.sub_by_root:
                 self.sub_by_root[root] = {}
             if not sub in self.sub_by_root[root]:
@@ -934,18 +1000,11 @@ class client(object):
         remove processing impacts both the unscoped and scoped stores
         for the subscription data.
         """
-        if compat.PYTHON3 and issubclass(self.recvCodec, BserCodec):
-            # People may pass in Unicode strings here -- but currently BSER only
-            # returns bytestrings. Deal with that.
-            if isinstance(root, str):
-                root = encoding.encode_local(root)
-            if isinstance(name, str):
-                name = name.encode('utf-8')
-
         if root is not None:
-            if not root in self.sub_by_root:
+            root = os.path.normpath(os.path.normcase(root))
+            if root not in self.sub_by_root:
                 return None
-            if not name in self.sub_by_root[root]:
+            if name not in self.sub_by_root[root]:
                 return None
             sub = self.sub_by_root[root][name]
             if remove:
@@ -955,7 +1014,7 @@ class client(object):
                     del self.subs[name]
             return sub
 
-        if not (name in self.subs):
+        if name not in self.subs:
             return None
         sub = self.subs[name]
         if remove:

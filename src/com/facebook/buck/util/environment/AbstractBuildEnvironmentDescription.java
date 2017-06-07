@@ -21,10 +21,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -32,19 +30,30 @@ abstract class AbstractBuildEnvironmentDescription {
   public static final int PROTOCOL_VERSION = 1;
 
   public abstract String getUser();
+
   public abstract String getHostname();
+
   public abstract String getOs();
+
   public abstract int getAvailableCores();
+
   public abstract long getSystemMemory();
+
   public abstract Optional<Boolean> getBuckDirty();
+
   public abstract String getBuckCommit();
+
   public abstract String getJavaVersion();
+
   public abstract ImmutableList<String> getCacheModes();
+
   public abstract ImmutableMap<String, String> getExtraData();
+
   @Value.Default
   public int getJsonProtocolVersion() {
     return PROTOCOL_VERSION;
   }
+
   @Value.Default
   public String getBuildType() {
     return BuildType.CURRENT_BUILD_TYPE.get().toString();
@@ -68,8 +77,7 @@ abstract class AbstractBuildEnvironmentDescription {
         .setUser(executionEnvironment.getUsername())
         .setHostname(executionEnvironment.getHostname())
         .setOs(
-            executionEnvironment
-                .getPlatform().getPrintableName().toLowerCase().replace(' ', '_'))
+            executionEnvironment.getPlatform().getPrintableName().toLowerCase().replace(' ', '_'))
         .setAvailableCores(executionEnvironment.getAvailableCores())
         .setSystemMemory(executionEnvironment.getTotalMemory())
         .setBuckDirty(buckDirty)

@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
@@ -26,16 +28,14 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class CxxWriteArgsToFileStepTest {
 
@@ -43,13 +43,15 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
+    Path fileListPath =
+        projectFilesystem
+            .getRootPath()
+            .resolve("/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
 
     runTestForArgFilePathAndOutputPath(
         fileListPath,
         Optional.empty(),
-        ImmutableList.of(new StringArg("-dummy"), new StringArg("\"")),
+        ImmutableList.of(StringArg.of("-dummy"), StringArg.of("\"")),
         ImmutableList.of("-dummy", "\""),
         projectFilesystem.getRootPath());
   }
@@ -58,13 +60,13 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "unexisting_parent_folder/filelist.txt");
+    Path fileListPath =
+        projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");
 
     runTestForArgFilePathAndOutputPath(
         fileListPath,
         Optional.of(input -> "foo".equals(input) ? "bar" : input),
-        ImmutableList.of(new StringArg("-dummy"), new StringArg("foo")),
+        ImmutableList.of(StringArg.of("-dummy"), StringArg.of("foo")),
         ImmutableList.of("-dummy", "bar"),
         projectFilesystem.getRootPath());
 
@@ -78,15 +80,14 @@ public class CxxWriteArgsToFileStepTest {
       Optional<Function<String, String>> escaper,
       ImmutableList<Arg> inputArgs,
       ImmutableList<String> expectedArgFileContents,
-      Path currentCellPath) throws IOException, InterruptedException {
+      Path currentCellPath)
+      throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     // Create our CxxWriteArgsToFileStep to test.
-    CxxWriteArgsToFileStep step = new CxxWriteArgsToFileStep(
-        argFilePath,
-        inputArgs,
-        escaper,
-        currentCellPath);
+    CxxWriteArgsToFileStep step =
+        CxxWriteArgsToFileStep.create(
+            argFilePath, inputArgs, escaper, currentCellPath, createMock(SourcePathResolver.class));
 
     step.execute(context);
 
@@ -100,5 +101,4 @@ public class CxxWriteArgsToFileStepTest {
     List<String> fileContents = Files.readAllLines(file, StandardCharsets.UTF_8);
     assertThat(fileContents, Matchers.equalTo(contents));
   }
-
 }

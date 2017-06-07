@@ -16,12 +16,18 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroFinder;
+import com.facebook.buck.model.MacroMatchResult;
+import com.facebook.buck.model.MacroReplacer;
+import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -30,46 +36,57 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatorOverridingDescription;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
-public class CxxGenruleDescription
-    extends AbstractGenruleDescription<AbstractGenruleDescription.Arg>
-    implements
-        Flavored,
-        VersionPropagator<AbstractGenruleDescription.Arg> {
+public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenruleDescriptionArg>
+    implements Flavored,
+        VersionPropagator<CxxGenruleDescriptionArg>,
+        TargetTranslatorOverridingDescription<CxxGenruleDescriptionArg> {
+
+  private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
@@ -77,55 +94,69 @@ public class CxxGenruleDescription
     this.cxxPlatforms = cxxPlatforms;
   }
 
+  public static boolean wrapsCxxGenrule(SourcePathRuleFinder ruleFinder, SourcePath path) {
+    Optional<BuildRule> rule = ruleFinder.getRule(path);
+    return rule.map(CxxGenrule.class::isInstance).orElse(false);
+  }
+
   /**
    * @return a new {@link BuildTargetSourcePath} for an existing {@link BuildTargetSourcePath} which
-   *         refers to a {@link CxxGenrule} with the given {@code platform} flavor applied.
+   *     refers to a {@link CxxGenrule} with the given {@code platform} flavor applied.
    */
   public static SourcePath fixupSourcePath(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
       SourcePath path)
       throws NoSuchBuildTargetException {
-    Optional<BuildRule> rule = pathResolver.getRule(path);
+    Optional<BuildRule> rule = ruleFinder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
-      BuildRule platformRule =
-          ruleResolver.requireRule(
-              rule.get().getBuildTarget().withAppendedFlavors(platform.getFlavor()));
-      path = new BuildTargetSourcePath(platformRule.getBuildTarget());
+      Genrule platformRule =
+          (Genrule)
+              ruleResolver.requireRule(
+                  rule.get().getBuildTarget().withAppendedFlavors(platform.getFlavor()));
+      path = platformRule.getSourcePathToOutput();
     }
     return path;
   }
 
   public static ImmutableList<SourcePath> fixupSourcePaths(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       ImmutableList<SourcePath> paths)
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
     for (SourcePath path : paths) {
-      fixed.add(
-          fixupSourcePath(ruleResolver, pathResolver, cxxPlatform, path));
+      fixed.add(fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, path));
+    }
+    return fixed.build();
+  }
+
+  public static ImmutableSortedSet<SourcePath> fixupSourcePaths(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      CxxPlatform cxxPlatform,
+      ImmutableSortedSet<SourcePath> paths)
+      throws NoSuchBuildTargetException {
+    ImmutableSortedSet.Builder<SourcePath> fixed =
+        new ImmutableSortedSet.Builder<>(Preconditions.checkNotNull(paths.comparator()));
+    for (SourcePath path : paths) {
+      fixed.add(fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, path));
     }
     return fixed.build();
   }
 
   public static <T> ImmutableMap<T, SourcePath> fixupSourcePaths(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       ImmutableMap<T, SourcePath> paths)
       throws NoSuchBuildTargetException {
     ImmutableMap.Builder<T, SourcePath> fixed = ImmutableMap.builder();
     for (Map.Entry<T, SourcePath> ent : paths.entrySet()) {
       fixed.put(
-          ent.getKey(),
-          fixupSourcePath(
-              ruleResolver,
-              pathResolver,
-              cxxPlatform,
-              ent.getValue()));
+          ent.getKey(), fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, ent.getValue()));
     }
     return fixed.build();
   }
@@ -135,8 +166,8 @@ public class CxxGenruleDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<CxxGenruleDescriptionArg> getConstructorArgType() {
+    return CxxGenruleDescriptionArg.class;
   }
 
   @Override
@@ -173,39 +204,47 @@ public class CxxGenruleDescription
   }
 
   @Override
-  protected <A extends Arg> MacroHandler getMacroHandler(
-      BuildRuleParams params,
+  protected Optional<MacroHandler> getMacroHandler(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       TargetGraph targetGraph,
-      A args) {
-    final Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
-    Preconditions.checkState(cxxPlatform.isPresent());
+      CxxGenruleDescriptionArg args) {
+    Optional<CxxPlatform> maybeCxxPlatform = cxxPlatforms.getValue(buildTarget);
+    if (!maybeCxxPlatform.isPresent()) {
+      return Optional.empty();
+    }
+    CxxPlatform cxxPlatform = maybeCxxPlatform.get();
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
-    macros.put("location", new LocationMacroExpander());
-    macros.put("platform-name", new StringExpander(cxxPlatform.get().getFlavor().toString()));
+    macros.put("location", new CxxLocationMacroExpander(cxxPlatform));
+    macros.put("platform-name", new StringExpander(cxxPlatform.getFlavor().toString()));
     macros.put(
         "location-platform",
         new LocationMacroExpander() {
           @Override
-          protected BuildRule resolve(BuildRuleResolver resolver, BuildTarget input)
+          protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input)
               throws MacroException {
             try {
-              return resolver.requireRule(input.withAppendedFlavors(cxxPlatform.get().getFlavor()));
+              return resolver.requireRule(
+                  input.getTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
             } catch (NoSuchBuildTargetException e) {
               throw new MacroException(e.getHumanReadableErrorMessage());
             }
           }
         });
-    macros.put("cc", new ToolExpander(cxxPlatform.get().getCc().resolve(resolver)));
-    macros.put("cxx", new ToolExpander(cxxPlatform.get().getCxx().resolve(resolver)));
-    macros.put("cflags", new StringExpander(shquoteJoin(cxxPlatform.get().getCflags())));
-    macros.put("cxxflags", new StringExpander(shquoteJoin(cxxPlatform.get().getCxxflags())));
-    macros.put("cppflags", new CxxPreprocessorFlagsExpander(cxxPlatform.get(), CxxSource.Type.C));
-    macros.put(
-        "cxxppflags",
-        new CxxPreprocessorFlagsExpander(cxxPlatform.get(), CxxSource.Type.CXX));
-    macros.put("ld", new ToolExpander(cxxPlatform.get().getLd().resolve(resolver)));
+    macros.put("cc", new ToolExpander(cxxPlatform.getCc().resolve(resolver)));
+    macros.put("cxx", new ToolExpander(cxxPlatform.getCxx().resolve(resolver)));
+
+    ImmutableList<String> asflags = cxxPlatform.getAsflags();
+    ImmutableList<String> cflags = cxxPlatform.getCflags();
+    ImmutableList<String> cxxflags = cxxPlatform.getCxxflags();
+    macros.put("cflags", new StringExpander(shquoteJoin(Iterables.concat(cflags, asflags))));
+    macros.put("cxxflags", new StringExpander(shquoteJoin(Iterables.concat(cxxflags, asflags))));
+
+    macros.put("cppflags", new CxxPreprocessorFlagsExpander(cxxPlatform, CxxSource.Type.C));
+    macros.put("cxxppflags", new CxxPreprocessorFlagsExpander(cxxPlatform, CxxSource.Type.CXX));
+    macros.put("ld", new ToolExpander(cxxPlatform.getLd().resolve(resolver)));
     for (Linker.LinkableDepType depType : Linker.LinkableDepType.values()) {
       for (Filter filter : Filter.values()) {
         macros.put(
@@ -214,53 +253,133 @@ public class CxxGenruleDescription
                 depType.toString().toLowerCase().replace('_', '-'),
                 filter == Filter.PARAM ? "-filter" : ""),
             new CxxLinkerFlagsExpander(
-                params,
-                cxxPlatform.get(),
-                depType,
-                args.out,
-                filter));
+                buildTarget, filesystem, cxxPlatform, depType, args.getOut(), filter));
       }
     }
-    return new MacroHandler(macros.build());
+    return Optional.of(new MacroHandler(macros.build()));
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args)
+      CellPathResolver cellRoots,
+      CxxGenruleDescriptionArg args)
       throws NoSuchBuildTargetException {
     Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
-          params.copyWithBuildTarget(
-              params.getBuildTarget().withAppendedFlavors(cxxPlatform.get().getFlavor())),
+          params.withAppendedFlavor(cxxPlatform.get().getFlavor()),
           resolver,
+          cellRoots,
           args);
     }
-    return new CxxGenrule(params, new SourcePathResolver(resolver), resolver, args.out);
+    return new CxxGenrule(params, resolver, args.getOut());
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-
+      CxxGenruleDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
     for (CxxPlatform cxxPlatform : cxxPlatforms.getValues()) {
-      targets.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
     }
 
     // Add in parse time deps from parent.
-    targets.addAll(
-        super.findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg));
-
-    return targets.build();
+    super.findDepsForTargetFromConstructorArgs(
+        buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
+
+  private ImmutableMap<String, MacroReplacer> getMacroReplacersForTargetTranslation(
+      BuildTarget target, CellPathResolver cellNames, TargetNodeTranslator translator) {
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
+        BuildTargetPatternParser.forBaseName(target.getBaseName());
+
+    ImmutableMap.Builder<String, MacroReplacer> macros = ImmutableMap.builder();
+
+    ImmutableList.of("exe", "location", "location-platform", "cppflags", "cxxppflags", "solibs")
+        .forEach(
+            name ->
+                macros.put(
+                    name,
+                    new TargetTranslatorMacroReplacer(
+                        new AsIsMacroReplacer(name),
+                        Filter.NONE,
+                        buildTargetPatternParser,
+                        cellNames,
+                        translator)));
+
+    ImmutableList.of("platform-name", "cc", "cflags", "cxx", "cxxflags", "ld")
+        .forEach(name -> macros.put(name, new AsIsMacroReplacer(name)));
+
+    for (Linker.LinkableDepType style : Linker.LinkableDepType.values()) {
+      for (Filter filter : Filter.values()) {
+        String name =
+            String.format(
+                "ldflags-%s%s",
+                CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, style.toString()),
+                filter == Filter.PARAM ? "-filter" : "");
+        macros.put(
+            name,
+            new TargetTranslatorMacroReplacer(
+                new AsIsMacroReplacer(name),
+                filter,
+                buildTargetPatternParser,
+                cellNames,
+                translator));
+      }
+    }
+    return macros.build();
+  }
+
+  private String translateCmd(
+      BuildTarget root,
+      CellPathResolver cellNames,
+      TargetNodeTranslator translator,
+      String field,
+      String cmd) {
+    try {
+      return MACRO_FINDER.replace(
+          getMacroReplacersForTargetTranslation(root, cellNames, translator), cmd, false);
+    } catch (MacroException e) {
+      throw new HumanReadableException(
+          e, "%s: \"%s\": error expanding macros: %s", root, field, e.getMessage());
+    }
+  }
+
+  @Override
+  public Optional<CxxGenruleDescriptionArg> translateConstructorArg(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      TargetNodeTranslator translator,
+      CxxGenruleDescriptionArg constructorArg) {
+    CxxGenruleDescriptionArg.Builder newConstructorArgBuilder = CxxGenruleDescriptionArg.builder();
+    translator.translateConstructorArg(
+        cellNames,
+        BuildTargetPatternParser.forBaseName(target.getBaseName()),
+        constructorArg,
+        newConstructorArgBuilder);
+    CxxGenruleDescriptionArg newIntermediate = newConstructorArgBuilder.build();
+    newConstructorArgBuilder.setCmd(
+        newIntermediate.getCmd().map(c -> translateCmd(target, cellNames, translator, "cmd", c)));
+    newConstructorArgBuilder.setBash(
+        newIntermediate.getBash().map(c -> translateCmd(target, cellNames, translator, "bash", c)));
+    newConstructorArgBuilder.setCmdExe(
+        newIntermediate
+            .getCmdExe()
+            .map(c -> translateCmd(target, cellNames, translator, "cmd_exe", c)));
+    return Optional.of(newConstructorArgBuilder.build());
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractCxxGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {}
 
   /**
    * A build target macro expander just used at parse time to extract deps from the preprocessor
@@ -273,20 +392,20 @@ public class CxxGenruleDescription
     }
 
     @Override
+    public Class<FilterAndTargets> getInputClass() {
+      return FilterAndTargets.class;
+    }
+
+    @Override
     protected String expand(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rule,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rule, Optional<Pattern> filter)
         throws MacroException {
       throw new IllegalStateException();
     }
-
   }
 
-  /**
-   * A macro expander that expands to a specific {@link Tool}.
-   */
-  private static class ToolExpander implements MacroExpander {
+  /** A macro expander that expands to a specific {@link Tool}. */
+  private static class ToolExpander extends SimpleMacroExpander {
 
     private final Tool tool;
 
@@ -295,49 +414,31 @@ public class CxxGenruleDescription
     }
 
     @Override
-    public String expand(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        ImmutableList<String> input) throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    public String expandFrom(
+        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
+        throws MacroException {
+      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       return shquoteJoin(tool.getCommandPrefix(pathResolver));
     }
 
     @Override
-    public ImmutableList<BuildRule> extractBuildTimeDeps(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        ImmutableList<String> input) throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-      return ImmutableList.copyOf(tool.getDeps(pathResolver));
-    }
-
-    @Override
-    public ImmutableList<BuildTarget> extractParseTimeDeps(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        ImmutableList<String> input)
+    public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
+        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
         throws MacroException {
-      // We already return all platform-specific parse-time deps from
-      // `findDepsForTargetFromConstructorArgs`.
-      return ImmutableList.of();
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      return ImmutableList.copyOf(tool.getDeps(ruleFinder));
     }
 
     @Override
-    public Object extractRuleKeyAppendables(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        ImmutableList<String> input) throws MacroException {
+    public Object extractRuleKeyAppendablesFrom(
+        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
+        throws MacroException {
       return tool;
     }
-
   }
 
   private abstract static class FilterAndTargetsExpander
-      extends AbstractMacroExpander<FilterAndTargets> {
+      extends AbstractMacroExpanderWithoutPrecomputedWork<FilterAndTargets> {
 
     private final Filter filter;
 
@@ -347,9 +448,7 @@ public class CxxGenruleDescription
 
     @Override
     protected final FilterAndTargets parse(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        ImmutableList<String> input)
+        BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
         throws MacroException {
 
       if (this.filter == Filter.PARAM && input.size() < 1) {
@@ -359,26 +458,20 @@ public class CxxGenruleDescription
       Iterator<String> itr = input.iterator();
 
       Optional<Pattern> filter =
-          this.filter == Filter.PARAM ?
-              Optional.of(Pattern.compile(itr.next())) :
-              Optional.empty();
+          this.filter == Filter.PARAM ? Optional.of(Pattern.compile(itr.next())) : Optional.empty();
 
       ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
       while (itr.hasNext()) {
         targets.add(
             BuildTargetParser.INSTANCE.parse(
-                itr.next(),
-                BuildTargetPatternParser.forBaseName(target.getBaseName()),
-                cellNames));
+                itr.next(), BuildTargetPatternParser.forBaseName(target.getBaseName()), cellNames));
       }
 
       return new FilterAndTargets(filter, targets.build());
     }
 
     protected ImmutableList<BuildRule> resolve(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildTarget> input)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
       ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
       for (BuildTarget ruleTarget : input) {
         Optional<BuildRule> rule = resolver.getRuleOptional(ruleTarget);
@@ -391,9 +484,7 @@ public class CxxGenruleDescription
     }
 
     protected abstract String expand(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException;
 
     @Override
@@ -425,11 +516,13 @@ public class CxxGenruleDescription
     }
 
     @Override
-    public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
+    public void extractParseTimeDepsFrom(
         BuildTarget target,
         CellPathResolver cellNames,
-        FilterAndTargets input) {
-      return input.targets;
+        FilterAndTargets input,
+        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+      buildDepsBuilder.addAll(input.targets);
     }
 
     @Override
@@ -439,11 +532,12 @@ public class CxxGenruleDescription
         BuildRuleResolver resolver,
         FilterAndTargets input)
         throws MacroException {
-      return input.targets.stream()
-          .map(BuildTargetSourcePath::new)
+      return input
+          .targets
+          .stream()
+          .map(DefaultBuildTargetSourcePath::new)
           .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     }
-
   }
 
   /**
@@ -455,32 +549,28 @@ public class CxxGenruleDescription
     private final CxxPlatform cxxPlatform;
     private final CxxSource.Type sourceType;
 
-    public CxxPreprocessorFlagsExpander(
-        CxxPlatform cxxPlatform,
-        CxxSource.Type sourceType) {
+    public CxxPreprocessorFlagsExpander(CxxPlatform cxxPlatform, CxxSource.Type sourceType) {
       super(Filter.NONE);
       this.cxxPlatform = cxxPlatform;
       this.sourceType = sourceType;
     }
 
-    /**
-     * Make sure all resolved targets are instances of {@link CxxPreprocessorDep}.
-     */
+    @Override
+    public Class<FilterAndTargets> getInputClass() {
+      return FilterAndTargets.class;
+    }
+
+    /** Make sure all resolved targets are instances of {@link CxxPreprocessorDep}. */
     @Override
     protected ImmutableList<BuildRule> resolve(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildTarget> input)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
           .filter(CxxPreprocessorDep.class::isInstance)
           .toList();
     }
 
-    /**
-     * Get the transitive C/C++ preprocessor input rooted at the given rules.
-     */
-    private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(
-        ImmutableList<BuildRule> rules)
+    /** Get the transitive C/C++ preprocessor input rooted at the given rules. */
+    private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(ImmutableList<BuildRule> rules)
         throws MacroException {
       try {
         return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, rules);
@@ -491,8 +581,8 @@ public class CxxGenruleDescription
     }
 
     /**
-     * Return the {@link PreprocessorFlags} object formed by the transitive C/C++ preprocessor
-     * input for the given rules.
+     * Return the {@link PreprocessorFlags} object formed by the transitive C/C++ preprocessor input
+     * for the given rules.
      */
     private PreprocessorFlags getPreprocessorFlags(
         Iterable<CxxPreprocessorInput> transitivePreprocessorInput) {
@@ -502,7 +592,6 @@ public class CxxGenruleDescription
           CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType));
       for (CxxPreprocessorInput input : transitivePreprocessorInput) {
         ppFlagsBuilder.addAllIncludes(input.getIncludes());
-        ppFlagsBuilder.addAllSystemIncludePaths(input.getSystemIncludeRoots());
         ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
         toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(sourceType));
       }
@@ -516,34 +605,30 @@ public class CxxGenruleDescription
      */
     @Override
     protected String expand(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       PreprocessorFlags ppFlags = getPreprocessorFlags(getCxxPreprocessorInput(rules));
       Preprocessor preprocessor =
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver);
       CxxToolFlags flags =
           ppFlags.toToolFlags(
               pathResolver,
-              Functions.identity(),
+              PathShortener.identity(),
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor,
-              /*pch*/ Optional.empty());
+              /* pch */ Optional.empty());
       return Joiner.on(' ').join(Iterables.transform(flags.getAllFlags(), Escaper.SHELL_ESCAPER));
     }
 
     @Override
     protected ImmutableList<BuildRule> extractBuildTimeDeps(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
       for (CxxPreprocessorInput input : getCxxPreprocessorInput(rules)) {
-        deps.addAll(input.getDeps(resolver, pathResolver));
+        deps.addAll(input.getDeps(resolver, ruleFinder));
       }
       return deps.build();
     }
@@ -553,20 +638,21 @@ public class CxxGenruleDescription
         final BuildTarget target,
         final CellPathResolver cellNames,
         final BuildRuleResolver resolver,
-        FilterAndTargets input) throws MacroException {
+        FilterAndTargets input)
+        throws MacroException {
       final Iterable<CxxPreprocessorInput> transitivePreprocessorInput =
           getCxxPreprocessorInput(resolve(resolver, input.targets));
       final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
-      return (RuleKeyAppendable) sink -> {
-        ppFlags.appendToRuleKey(sink, cxxPlatform.getCompilerDebugPathSanitizer());
-        sink.setReflectively(
-            "headers",
-            FluentIterable.from(transitivePreprocessorInput)
-                .transformAndConcat(CxxPreprocessorInput::getIncludes)
-                .toList());
-      };
+      return (RuleKeyAppendable)
+          sink -> {
+            ppFlags.appendToRuleKey(sink, cxxPlatform.getCompilerDebugPathSanitizer());
+            sink.setReflectively(
+                "headers",
+                FluentIterable.from(transitivePreprocessorInput)
+                    .transformAndConcat(CxxPreprocessorInput::getIncludes)
+                    .toList());
+          };
     }
-
   }
 
   /**
@@ -575,37 +661,41 @@ public class CxxGenruleDescription
    */
   private static class CxxLinkerFlagsExpander extends FilterAndTargetsExpander {
 
-    private final BuildRuleParams params;
+    private final BuildTarget buildTarget;
+    private final ProjectFilesystem filesystem;
     private final CxxPlatform cxxPlatform;
     private final Linker.LinkableDepType depType;
     private final String out;
 
     public CxxLinkerFlagsExpander(
-        BuildRuleParams params,
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType depType,
         String out,
         Filter filter) {
       super(filter);
-      this.params = params;
+      this.buildTarget = buildTarget;
+      this.filesystem = filesystem;
       this.cxxPlatform = cxxPlatform;
       this.depType = depType;
       this.out = out;
     }
 
+    @Override
+    public Class<FilterAndTargets> getInputClass() {
+      return FilterAndTargets.class;
+    }
+
     /**
      * @return a {@link SymlinkTree} containing all the transitive shared libraries from the given
-     *         roots linked in by their library name.
+     *     roots linked in by their library name.
      */
     private SymlinkTree requireSymlinkTree(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules)
-        throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules) throws MacroException {
       BuildTarget symlinkTreeTarget =
           CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget(
-              params.getBuildTarget(),
-              cxxPlatform.getFlavor());
+              buildTarget, cxxPlatform.getFlavor());
       SymlinkTree symlinkTree =
           resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orElse(null);
       if (symlinkTree == null) {
@@ -613,8 +703,9 @@ public class CxxGenruleDescription
           symlinkTree =
               resolver.addToIndex(
                   CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                      params,
-                      pathResolver,
+                      new SourcePathRuleFinder(resolver),
+                      buildTarget,
+                      filesystem,
                       cxxPlatform,
                       rules,
                       NativeLinkable.class::isInstance));
@@ -629,19 +720,15 @@ public class CxxGenruleDescription
 
     /**
      * @return the list of {@link com.facebook.buck.rules.args.Arg} required for dynamic linking so
-     *         that linked binaries can find their shared library dependencies at runtime.
+     *     that linked binaries can find their shared library dependencies at runtime.
      */
     private ImmutableList<com.facebook.buck.rules.args.Arg> getSharedLinkArgs(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules) throws MacroException {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path linkOutput =
-          BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
-              .resolve(out);
-      Path absLinkOut = params.getBuildTarget().getCellPath().resolve(linkOutput);
+      Path linkOutput = BuildTargets.getGenPath(filesystem, buildTarget, "%s").resolve(out);
+      Path absLinkOut = buildTarget.getCellPath().resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(resolver, rules);
       return ImmutableList.copyOf(
           StringArg.from(
@@ -654,24 +741,22 @@ public class CxxGenruleDescription
     }
 
     private NativeLinkableInput getNativeLinkableInput(
-        Iterable<BuildRule> rules,
-        final Optional<Pattern> filter)
-        throws MacroException {
+        Iterable<BuildRule> rules, final Optional<Pattern> filter) throws MacroException {
       try {
         ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
             NativeLinkables.getNativeLinkables(
                 cxxPlatform,
-                FluentIterable.from(rules)
-                    .filter(NativeLinkable.class),
+                FluentIterable.from(rules).filter(NativeLinkable.class),
                 depType,
-                !filter.isPresent() ?
-                    x -> true :
-                    input -> {
+                !filter.isPresent()
+                    ? x -> true
+                    : input -> {
                       Preconditions.checkArgument(input instanceof BuildRule);
                       BuildRule rule = (BuildRule) input;
-                      return filter.get()
+                      return filter
+                          .get()
                           .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
-                          .matches();
+                          .find();
                     });
         ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
         for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
@@ -685,26 +770,18 @@ public class CxxGenruleDescription
       }
     }
 
-    /**
-     * Make sure all resolved targets are instances of {@link NativeLinkable}.
-     */
+    /** Make sure all resolved targets are instances of {@link NativeLinkable}. */
     @Override
     protected ImmutableList<BuildRule> resolve(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildTarget> input)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
           .filter(NativeLinkable.class::isInstance)
           .toList();
     }
 
-    /**
-     * Return the args formed by the transitive native linkable input for the given rules.
-     */
+    /** Return the args formed by the transitive native linkable input for the given rules. */
     private ImmutableList<com.facebook.buck.rules.args.Arg> getLinkerArgs(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
       ImmutableList.Builder<com.facebook.buck.rules.args.Arg> args = ImmutableList.builder();
       args.addAll(StringArg.from(cxxPlatform.getLdflags()));
@@ -721,25 +798,24 @@ public class CxxGenruleDescription
      */
     @Override
     public String expand(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
       return shquoteJoin(
-          com.facebook.buck.rules.args.Arg.stringify(getLinkerArgs(resolver, rules, filter)));
+          com.facebook.buck.rules.args.Arg.stringify(
+              getLinkerArgs(resolver, rules, filter),
+              new SourcePathResolver(new SourcePathRuleFinder(resolver))));
     }
 
     @Override
     protected ImmutableList<BuildRule> extractBuildTimeDeps(
-        BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        Optional<Pattern> filter)
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
       deps.addAll(
-          getLinkerArgs(resolver, rules, filter).stream()
-              .flatMap(arg -> arg.getDeps(pathResolver).stream())
+          getLinkerArgs(resolver, rules, filter)
+              .stream()
+              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
               .iterator());
       if (depType == Linker.LinkableDepType.SHARED) {
         deps.add(requireSymlinkTree(resolver, rules));
@@ -756,7 +832,6 @@ public class CxxGenruleDescription
         throws MacroException {
       return getLinkerArgs(resolver, resolve(resolver, inputs.targets), inputs.filter);
     }
-
   }
 
   private static class CxxPlatformParseTimeDepsExpander extends StringExpander {
@@ -769,14 +844,16 @@ public class CxxGenruleDescription
     }
 
     @Override
-    public ImmutableList<BuildTarget> extractParseTimeDeps(
+    public void extractParseTimeDepsFrom(
         BuildTarget target,
         CellPathResolver cellNames,
-        ImmutableList<String> input) throws MacroException {
+        ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
+        ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
+        throws MacroException {
       Optional<CxxPlatform> platform = cxxPlatforms.getValue(target.getFlavors());
-      return platform.isPresent() ?
-          ImmutableList.copyOf(CxxPlatforms.getParseTimeDeps(platform.get())) :
-          ImmutableList.<BuildTarget>of();
+      if (platform.isPresent()) {
+        buildDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.get()));
+      }
     }
   }
 
@@ -785,18 +862,82 @@ public class CxxGenruleDescription
     public final Optional<Pattern> filter;
     public final ImmutableList<BuildTarget> targets;
 
-    public FilterAndTargets(
-        Optional<Pattern> filter,
-        ImmutableList<BuildTarget> targets) {
+    public FilterAndTargets(Optional<Pattern> filter, ImmutableList<BuildTarget> targets) {
       this.filter = filter;
       this.targets = targets;
     }
+  }
 
+  private static class AsIsMacroReplacer implements MacroReplacer {
+
+    private final String name;
+
+    private AsIsMacroReplacer(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String replace(MacroMatchResult input) throws MacroException {
+      return replace(input.getMacroInput());
+    }
+
+    public String replace(ImmutableList<String> args) throws MacroException {
+      return String.format("$(%s %s)", name, Joiner.on(' ').join(args));
+    }
+  }
+
+  private static class TargetTranslatorMacroReplacer implements MacroReplacer {
+
+    private final AsIsMacroReplacer asIsMacroReplacer;
+    private final Filter filter;
+    private final BuildTargetPatternParser<BuildTargetPattern> buildTargetBuildTargetParser;
+    private final CellPathResolver cellNames;
+    private final TargetNodeTranslator translator;
+
+    private TargetTranslatorMacroReplacer(
+        AsIsMacroReplacer asIsMacroReplacer,
+        Filter filter,
+        BuildTargetPatternParser<BuildTargetPattern> buildTargetBuildTargetParser,
+        CellPathResolver cellNames,
+        TargetNodeTranslator translator) {
+      this.asIsMacroReplacer = asIsMacroReplacer;
+      this.filter = filter;
+      this.buildTargetBuildTargetParser = buildTargetBuildTargetParser;
+      this.cellNames = cellNames;
+      this.translator = translator;
+    }
+
+    private BuildTarget parse(String input) throws MacroException {
+      try {
+        return BuildTargetParser.INSTANCE.parse(input, buildTargetBuildTargetParser, cellNames);
+      } catch (BuildTargetParseException e) {
+        throw new MacroException(e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public String replace(MacroMatchResult input) throws MacroException {
+      ImmutableList.Builder<String> strings = ImmutableList.builder();
+      ImmutableList<String> args = input.getMacroInput();
+      if (filter == Filter.PARAM) {
+        strings.add(args.get(0));
+      }
+
+      for (String arg : args.subList(filter == Filter.PARAM ? 1 : 0, args.size())) {
+        BuildTarget target = parse(arg);
+        strings.add(
+            translator
+                .translate(cellNames, buildTargetBuildTargetParser, target)
+                .orElse(target)
+                .getFullyQualifiedName());
+      }
+
+      return asIsMacroReplacer.replace(strings.build());
+    }
   }
 
   private enum Filter {
     NONE,
     PARAM,
   }
-
 }

@@ -18,14 +18,13 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
-import com.google.common.collect.Lists;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,9 +35,7 @@ public class DirectoryCleaner {
   public interface PathSelector {
     Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException;
 
-    /**
-     * Returns the preferred sorting order to delete paths.
-     */
+    /** Returns the preferred sorting order to delete paths. */
     int comparePaths(PathStats path1, PathStats path2);
   }
 
@@ -50,7 +47,7 @@ public class DirectoryCleaner {
 
   public void clean(Path pathToClean) throws IOException {
 
-    List<PathStats> pathStats = Lists.newArrayList();
+    List<PathStats> pathStats = new ArrayList<>();
     long totalSizeBytes = 0;
     for (Path path : args.getPathSelector().getCandidatesToDelete(pathToClean)) {
       PathStats stats = computePathStats(path);
@@ -59,8 +56,8 @@ public class DirectoryCleaner {
     }
 
     if (shouldDeleteOldestLog(pathStats.size(), totalSizeBytes)) {
-      Collections.sort(pathStats,
-          (stats1, stats2) -> args.getPathSelector().comparePaths(stats1, stats2));
+      Collections.sort(
+          pathStats, (stats1, stats2) -> args.getPathSelector().comparePaths(stats1, stats2));
 
       int remainingLogDirectories = pathStats.size();
       long finalMaxSizeBytes = args.getMaxTotalSizeBytes();
@@ -69,16 +66,15 @@ public class DirectoryCleaner {
       }
 
       for (int i = 0; i < pathStats.size(); ++i) {
-        if (totalSizeBytes <= finalMaxSizeBytes &&
-            remainingLogDirectories <= args.getMaxPathCount()) {
+        if (totalSizeBytes <= finalMaxSizeBytes
+            && remainingLogDirectories <= args.getMaxPathCount()) {
           break;
         }
 
         PathStats currentPath = pathStats.get(i);
         LOG.verbose(
             "Deleting path [%s] of total size [%d] bytes.",
-            currentPath.getPath(),
-            currentPath.getTotalSizeBytes());
+            currentPath.getPath(), currentPath.getTotalSizeBytes());
         MoreFiles.deleteRecursivelyIfExists(currentPath.getPath());
         --remainingLogDirectories;
         totalSizeBytes -= currentPath.getTotalSizeBytes();
@@ -91,15 +87,13 @@ public class DirectoryCleaner {
       return false;
     }
 
-    return totalSizeBytes > args.getMaxTotalSizeBytes() ||
-        currentNumberOfLogs > args.getMaxPathCount();
+    return totalSizeBytes > args.getMaxTotalSizeBytes()
+        || currentNumberOfLogs > args.getMaxPathCount();
   }
 
   private PathStats computePathStats(Path path) throws IOException {
     // Note this will change the lastAccessTime of the file.
-    BasicFileAttributes attributes = Files.readAttributes(
-        path,
-        BasicFileAttributes.class);
+    BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
 
     if (attributes.isDirectory()) {
       return new PathStats(
@@ -115,21 +109,22 @@ public class DirectoryCleaner {
           attributes.lastAccessTime().toMillis());
     }
 
-    throw new IllegalArgumentException(String.format(
-        "Argument path [%s] is not a valid file or directory.",
-        path.toString()));
+    throw new IllegalArgumentException(
+        String.format("Argument path [%s] is not a valid file or directory.", path.toString()));
   }
 
   private static long computeDirSizeBytesRecursively(Path directoryPath) throws IOException {
     final AtomicLong totalSizeBytes = new AtomicLong(0);
-    Files.walkFileTree(directoryPath, new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(
-          Path file, BasicFileAttributes attrs) throws IOException {
-        totalSizeBytes.addAndGet(attrs.size());
-        return FileVisitResult.CONTINUE;
-      }
-    });
+    Files.walkFileTree(
+        directoryPath,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            totalSizeBytes.addAndGet(attrs.size());
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     return totalSizeBytes.get();
   }
@@ -140,8 +135,7 @@ public class DirectoryCleaner {
     private final long creationMillis;
     private final long lastAccessMillis;
 
-    public PathStats(
-        Path path, long totalSizeBytes, long creationMillis, long lastAccessMillis) {
+    public PathStats(Path path, long totalSizeBytes, long creationMillis, long lastAccessMillis) {
       this.path = path;
       this.totalSizeBytes = totalSizeBytes;
       this.creationMillis = creationMillis;

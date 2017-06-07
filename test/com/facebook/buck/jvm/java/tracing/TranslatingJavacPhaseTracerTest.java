@@ -16,6 +16,10 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+
+import com.google.common.collect.ImmutableList;
 import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
 import org.easymock.MockType;
@@ -23,16 +27,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-
-import com.google.common.collect.ImmutableList;
-
 @RunWith(EasyMockRunner.class)
 public class TranslatingJavacPhaseTracerTest {
 
   @Mock(type = MockType.STRICT)
   private JavacPhaseEventLogger mockLogger;
+
   private TranslatingJavacPhaseTracer tracer;
 
   @Before

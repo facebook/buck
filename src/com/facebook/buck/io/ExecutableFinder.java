@@ -20,7 +20,6 @@ import static java.io.File.pathSeparator;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -28,7 +27,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -46,16 +44,7 @@ public class ExecutableFinder {
   private static final Logger LOG = Logger.get(ExecutableFinder.class);
   private static final ImmutableSet<String> DEFAULT_WINDOWS_EXTENSIONS =
       ImmutableSet.of(
-          ".bat",
-          ".cmd",
-          ".com",
-          ".cpl",
-          ".exe",
-          ".js",
-          ".jse",
-          ".msc",
-          ".vbs",
-          ".wsf",
+          "", ".bat", ".cmd", ".com", ".cpl", ".exe", ".js", ".jse", ".msc", ".vbs", ".wsf",
           ".wsh");
 
   private final Platform platform;
@@ -69,33 +58,28 @@ public class ExecutableFinder {
     this.platform = platform;
   }
 
-  public Path getExecutable(
-      Path suggestedExecutable,
-      ImmutableMap<String, String> env) {
+  public Path getExecutable(Path suggestedExecutable, ImmutableMap<String, String> env) {
     Optional<Path> exe = getOptionalExecutable(suggestedExecutable, env);
     if (!exe.isPresent()) {
-      throw new HumanReadableException(String.format(
-          "Unable to locate %s on PATH, or it's not marked as being executable",
-          suggestedExecutable));
+      throw new HumanReadableException(
+          String.format(
+              "Unable to locate %s on PATH, or it's not marked as being executable",
+              suggestedExecutable));
     }
     return exe.get();
   }
 
   public Optional<Path> getOptionalExecutable(
-      Path suggestedExecutable,
-      ImmutableMap<String, String> env) {
-    env = EnvironmentFilter.filteredEnvironment(env, platform);
-
-    return getOptionalExecutable(suggestedExecutable, getPaths(env), getExecutableSuffixes(env));
+      Path suggestedExecutable, ImmutableMap<String, String> env) {
+    return getOptionalExecutable(
+        suggestedExecutable, getPaths(env), getExecutableSuffixes(platform, env));
   }
 
-  public Optional<Path> getOptionalExecutable(
-      Path suggestedExecutable,
-      Path basePath) {
+  public Optional<Path> getOptionalExecutable(Path suggestedExecutable, Path basePath) {
     return getOptionalExecutable(
         suggestedExecutable,
         ImmutableSet.of(basePath),
-        getExecutableSuffixes(ImmutableMap.of()));
+        getExecutableSuffixes(platform, ImmutableMap.of()));
   }
 
   public Optional<Path> getOptionalExecutable(
@@ -108,13 +92,14 @@ public class ExecutableFinder {
       return Optional.of(suggestedExecutable);
     }
 
-    Optional<Path> executable = FileFinder.getOptionalFile(
-        FileFinder.combine(
-            /* prefixes */ null,
-            suggestedExecutable.toString(),
-            ImmutableSet.copyOf(fileSuffixes)),
-        path,
-        ExecutableFinder::isExecutable);
+    Optional<Path> executable =
+        FileFinder.getOptionalFile(
+            FileFinder.combine(
+                ImmutableSet.of(),
+                suggestedExecutable.toString(),
+                ImmutableSet.copyOf(fileSuffixes)),
+            path,
+            ExecutableFinder::isExecutable);
     LOG.debug("Executable '%s' mapped to '%s'", suggestedExecutable, executable);
 
     return executable;
@@ -158,8 +143,7 @@ public class ExecutableFinder {
       pathEnv = pathEnv.trim();
       paths.addAll(
           StreamSupport.stream(
-              Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv).spliterator(),
-              false)
+                  Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv).spliterator(), false)
               .map(Paths::get)
               .iterator());
     }
@@ -169,7 +153,8 @@ public class ExecutableFinder {
       if (Files.exists(osXPaths)) {
         try {
           paths.addAll(
-              Files.readAllLines(osXPaths, Charset.defaultCharset()).stream()
+              Files.readAllLines(osXPaths, Charset.defaultCharset())
+                  .stream()
                   .map(Paths::get)
                   .iterator());
         } catch (IOException e) {
@@ -181,7 +166,8 @@ public class ExecutableFinder {
     return paths.build();
   }
 
-  private ImmutableSet<String> getExecutableSuffixes(ImmutableMap<String, String> env) {
+  public static ImmutableSet<String> getExecutableSuffixes(
+      Platform platform, ImmutableMap<String, String> env) {
     if (platform == Platform.WINDOWS) {
       String pathext = env.get("PATHEXT");
       if (pathext == null) {
@@ -194,12 +180,7 @@ public class ExecutableFinder {
     return ImmutableSet.of("");
   }
 
-  public Optional<Path> getOptionalToolPath(
-      String tool,
-      ImmutableList<Path> toolSearchPaths) {
-    return getOptionalExecutable(
-        Paths.get(tool),
-        toolSearchPaths,
-        ImmutableSet.of());
+  public Optional<Path> getOptionalToolPath(String tool, ImmutableList<Path> toolSearchPaths) {
+    return getOptionalExecutable(Paths.get(tool), toolSearchPaths, ImmutableSet.of());
   }
 }

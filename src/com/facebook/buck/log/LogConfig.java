@@ -21,9 +21,6 @@ import com.facebook.buck.io.PathListing;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-
-import org.stringtemplate.v4.ST;
-
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,39 +34,36 @@ import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger; // NOPMD
+import org.stringtemplate.v4.ST;
 
 /**
  * Constructed by java.util.logging.LogManager via the system property
  * java.util.logging.LogManager.config.
  *
- * Extends LogManager's support for a single logging.properties file
- * to support a three-level config. Each existent property file is
- * concatenated together and used as a single LogManager configuration,
- * with later entries overriding earlier ones.
+ * <p>Extends LogManager's support for a single logging.properties file to support a three-level
+ * config. Each existent property file is concatenated together and used as a single LogManager
+ * configuration, with later entries overriding earlier ones.
  *
- * 1) $BUCK_DIRECTORY/config/logging.properties.st
- * 2) $PROJECT_ROOT/.bucklogging.properties
- * 3) $PROJECT_ROOT/.bucklogging.local.properties
+ * <p>1) $BUCK_DIRECTORY/config/logging.properties.st 2) $PROJECT_ROOT/.bucklogging.properties 3)
+ * $PROJECT_ROOT/.bucklogging.local.properties
  */
-@SuppressWarnings("checkstyle:hideutilityclassconstructor")
 public class LogConfig {
 
   private static final byte[] NEWLINE = {'\n'};
 
-  /**
-   * Default constructor, called by LogManager.
-   */
+  /** Default constructor, called by LogManager. */
   public LogConfig() throws IOException {
-    setupLogging(LogConfigSetup.builder()
-        .from(LogConfigSetup.DEFAULT_SETUP)
-        .setLogFilePrefix("launch-")
-        .setCount(1)
-        .build());
+    setupLogging(
+        LogConfigSetup.builder()
+            .from(LogConfigSetup.DEFAULT_SETUP)
+            .setLogFilePrefix("launch-")
+            .setCount(1)
+            .build());
   }
 
   /**
-   * Creates the log output directory and concatenates logging.properties
-   * files together to configure or re-configure LogManager.
+   * Creates the log output directory and concatenates logging.properties files together to
+   * configure or re-configure LogManager.
    */
   public static synchronized void setupLogging(LogConfigSetup logConfigSetup) throws IOException {
     // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
@@ -80,9 +74,7 @@ public class LogConfig {
       try {
         deleteOldLogFiles(logConfigSetup);
       } catch (IOException e) {
-        System.err.format(
-            "Error deleting old log files (ignored): %s\n",
-            e.getMessage());
+        System.err.format("Error deleting old log files (ignored): %s\n", e.getMessage());
       }
     }
 
@@ -93,12 +85,9 @@ public class LogConfig {
           LogConfigPaths.BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY);
     } else {
       if (!addInputStreamForTemplate(
-          LogConfigPaths.MAIN_PATH.get(),
-          logConfigSetup,
-          inputStreamsBuilder)) {
+          LogConfigPaths.MAIN_PATH.get(), logConfigSetup, inputStreamsBuilder)) {
         System.err.format(
-            "Error: Couldn't open logging properties file %s\n",
-            LogConfigPaths.MAIN_PATH.get());
+            "Error: Couldn't open logging properties file %s\n", LogConfigPaths.MAIN_PATH.get());
       }
     }
 
@@ -109,8 +98,8 @@ public class LogConfig {
     // Concatenate each of the files together and read them in as a single properties file
     // for log settings.
     try (InputStream is =
-         new SequenceInputStream(Iterators.asEnumeration(inputStreamsBuilder.build().iterator()))) {
-        LogManager.getLogManager().readConfiguration(is);
+        new SequenceInputStream(Iterators.asEnumeration(inputStreamsBuilder.build().iterator()))) {
+      LogManager.getLogManager().readConfiguration(is);
     }
   }
 
@@ -131,11 +120,13 @@ public class LogConfig {
   private static boolean addInputStreamForTemplate(
       Path path,
       LogConfigSetup logConfigSetup,
-      ImmutableList.Builder<InputStream> inputStreamsBuilder) throws IOException {
+      ImmutableList.Builder<InputStream> inputStreamsBuilder)
+      throws IOException {
     try {
       String template = new String(Files.readAllBytes(path), Charsets.UTF_8);
       ST st = new ST(template);
-      st.add("default_file_pattern",
+      st.add(
+          "default_file_pattern",
           MorePaths.pathWithUnixSeparators(logConfigSetup.getLogFilePath()).toString());
       st.add("default_count", logConfigSetup.getCount());
       st.add("default_max_size_bytes", logConfigSetup.getMaxLogSizeBytes());
@@ -149,8 +140,7 @@ public class LogConfig {
   }
 
   private static boolean addInputStreamForPath(
-      Path path,
-      ImmutableList.Builder<InputStream> inputStreamsBuilder) {
+      Path path, ImmutableList.Builder<InputStream> inputStreamsBuilder) {
     try {
       inputStreamsBuilder.add(new FileInputStream(path.toString()));
       // Handle the case where a file doesn't end with a newline.
@@ -162,13 +152,14 @@ public class LogConfig {
   }
 
   private static void deleteOldLogFiles(LogConfigSetup logConfigSetup) throws IOException {
-    for (Path path : PathListing.listMatchingPathsWithFilters(
-        logConfigSetup.getLogDir(),
-             logConfigSetup.getLogFilePrefix() + "*.log*",
-             PathListing.GET_PATH_MODIFIED_TIME,
-             PathListing.FilterMode.EXCLUDE,
-             Optional.empty(),
-             Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
+    for (Path path :
+        PathListing.listMatchingPathsWithFilters(
+            logConfigSetup.getLogDir(),
+            logConfigSetup.getLogFilePrefix() + "*.log*",
+            PathListing.GET_PATH_MODIFIED_TIME,
+            PathListing.FilterMode.EXCLUDE,
+            Optional.empty(),
+            Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }
   }

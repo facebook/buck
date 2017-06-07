@@ -16,49 +16,43 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.CharBuffer;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 
-/**
- * Specialized parser for .d Makefiles emitted by {@code gcc -MD}.
- */
+/** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
 public class Depfiles {
 
   private Depfiles() {}
 
   private enum State {
-      LOOKING_FOR_TARGET,
-      FOUND_TARGET
+    LOOKING_FOR_TARGET,
+    FOUND_TARGET
   }
 
   private enum Action {
-      NONE,
-      APPEND_TO_IDENTIFIER,
-      SET_TARGET,
-      ADD_PREREQ
+    NONE,
+    APPEND_TO_IDENTIFIER,
+    SET_TARGET,
+    ADD_PREREQ
   }
 
   private static final String WHITESPACE_CHARS = " \n\r\t";
@@ -66,8 +60,8 @@ public class Depfiles {
   private static final String ESCAPED_PREREQ_CHARS = " #";
 
   /**
-   * Parses the input as a .d Makefile as emitted by {@code gcc -MD}
-   * and returns the (target, [dep, dep2, ...]) inside.
+   * Parses the input as a .d Makefile as emitted by {@code gcc -MD} and returns the (target, [dep,
+   * dep2, ...]) inside.
    */
   public static Depfile parseDepfile(Readable readable) throws IOException {
     String target = null;
@@ -175,16 +169,33 @@ public class Depfiles {
     }
   }
 
-  public static int parseAndWriteBuckCompatibleDepfile(
-      ExecutionContext context,
+  /**
+   * Reads and processes {@code .dep} file produced by a cxx compiler.
+   *
+   * @param eventBus Used for outputting perf events and messages.
+   * @param filesystem Used to access the filesystem and handle String to Path conversion.
+   * @param headerPathNormalizer Used to convert raw paths into absolutized paths that can be
+   *     resolved to SourcePaths.
+   * @param headerVerification Setting for how to respond to untracked header errors.
+   * @param sourceDepFile Path to the raw dep file
+   * @param inputPath Path to source file input, used to skip any leading entries from {@code
+   *     -fsanitize-blacklist}.
+   * @param outputPath Path to object file output, used for stat tracking.
+   * @return Normalized path objects suitable for use as arguments to {@link
+   *     HeaderPathNormalizer#getSourcePathForAbsolutePath(Path)}.
+   * @throws IOException if an IO error occurs.
+   * @throws HeaderVerificationException if HeaderVerification error occurs and {@code
+   *     headerVerification == ERROR}.
+   */
+  public static ImmutableList<Path> parseAndOutputBuckCompatibleDepfile(
+      BuckEventBus eventBus,
       ProjectFilesystem filesystem,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path sourceDepFile,
-      Path destDepFile,
       Path inputPath,
-      Path outputPath
-  ) throws IOException {
+      Path outputPath)
+      throws IOException, HeaderVerificationException {
     // Process the dependency file, fixing up the paths, and write it out to it's final location.
     // The paths of the headers written out to the depfile are the paths to the symlinks from the
     // root of the repo if the compilation included them from the header search paths pointing to
@@ -192,16 +203,14 @@ public class Depfiles {
     // included them using source relative include paths. To handle both cases we check for the
     // prerequisites both in the values and the keys of the replacement map.
     Logger.get(Depfiles.class).debug("Processing dependency file %s as Makefile", sourceDepFile);
-    ImmutableMap<String, Object> params = ImmutableMap.of(
-        "input", inputPath, "output", outputPath);
+    ImmutableList.Builder<Path> resultBuilder = ImmutableList.builder();
     try (InputStream input = filesystem.newFileInputStream(sourceDepFile);
-         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-         OutputStream output = filesystem.newFileOutputStream(destDepFile);
-         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output));
-         SimplePerfEvent.Scope perfEvent = SimplePerfEvent.scope(
-             context.getBuckEventBus(),
-             PerfEventId.of("depfile-parse"),
-             params)) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        SimplePerfEvent.Scope perfEvent =
+            SimplePerfEvent.scope(
+                eventBus,
+                PerfEventId.of("depfile-parse"),
+                ImmutableMap.of("input", inputPath, "output", outputPath))) {
       ImmutableList<String> prereqs = Depfiles.parseDepfile(reader).getPrereqs();
 
       // Additional files passed in via command-line flags (e.g. `-fsanitize-blacklist=<file>`)
@@ -221,31 +230,35 @@ public class Depfiles {
       Iterable<String> headers = Iterables.skip(prereqs, inputIndex + 1);
 
       for (String rawHeader : headers) {
-        Path header = Paths.get(rawHeader).normalize();
+        Path header = filesystem.resolve(rawHeader).normalize();
         Optional<Path> absolutePath =
             headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header);
+        Optional<Path> repoRelativePath = filesystem.getPathRelativeToProjectRoot(header);
         if (absolutePath.isPresent()) {
           Preconditions.checkState(absolutePath.get().isAbsolute());
-          writer.write(absolutePath.get().toString());
-          writer.newLine();
-        } else if (
-            headerVerification.getMode() != HeaderVerification.Mode.IGNORE &&
-                !headerVerification.isWhitelisted(header.toString())) {
-          context.getBuckEventBus().post(
-              ConsoleEvent.create(
-                  headerVerification.getMode() == HeaderVerification.Mode.ERROR ?
-                      Level.SEVERE :
-                      Level.WARNING,
+          resultBuilder.add(absolutePath.get());
+        } else if (headerVerification.getMode() != HeaderVerification.Mode.IGNORE
+            && !(headerVerification.isWhitelisted(header.toString())
+                || repoRelativePath
+                    .map(path -> headerVerification.isWhitelisted(path.toString()))
+                    .orElse(false))) {
+          String errorMessage =
+              String.format(
                   "%s: included an untracked header \"%s\"",
-                  inputPath,
-                  header));
+                  inputPath, repoRelativePath.orElse(header));
+          eventBus.post(
+              ConsoleEvent.create(
+                  headerVerification.getMode() == HeaderVerification.Mode.ERROR
+                      ? Level.SEVERE
+                      : Level.WARNING,
+                  errorMessage));
           if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
-            return 1;
+            throw new HeaderVerificationException(errorMessage);
           }
         }
       }
     }
-    return 0;
+    return resultBuilder.build();
   }
 
   public static class Depfile {
@@ -279,6 +292,19 @@ public class Depfiles {
     @Override
     public String toString() {
       return String.format("%s target=%s prereqs=%s", super.toString(), target, prereqs);
+    }
+  }
+
+  public static class HeaderVerificationException extends Exception
+      implements ExceptionWithHumanReadableMessage {
+
+    public HeaderVerificationException(String message) {
+      super(message);
+    }
+
+    @Override
+    public String getHumanReadableErrorMessage() {
+      return getLocalizedMessage();
     }
   }
 }

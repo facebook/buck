@@ -22,10 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
-
-import org.junit.Test;
-
 import java.io.IOException;
+import org.junit.Test;
 
 public class PackagedResourceIntegrationTest {
   @Test
@@ -38,11 +36,11 @@ public class PackagedResourceIntegrationTest {
 
     assertThat(
         packagedResource.getResourceIdentifier(),
-        is("com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil" +
-                "#testdata/packaged_resource_one"));
+        is(
+            "com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil"
+                + "#testdata/packaged_resource_one"));
 
-    String fileContent =
-        filesystem.readFileIfItExists(packagedResource.get()).get();
+    String fileContent = filesystem.readFileIfItExists(packagedResource.get()).get();
     assertThat(fileContent, is("abc"));
   }
 }

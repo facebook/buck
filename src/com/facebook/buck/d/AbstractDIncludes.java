@@ -20,10 +20,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -35,10 +34,10 @@ abstract class AbstractDIncludes implements RuleKeyAppendable {
   @Value.NaturalOrder
   public abstract ImmutableSortedSet<SourcePath> getSources();
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver pathResolver) {
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(pathResolver.filterBuildRuleInputs(getLinkTree()))
-        .addAll(pathResolver.filterBuildRuleInputs(getSources()))
+        .addAll(ruleFinder.filterBuildRuleInputs(getLinkTree()))
+        .addAll(ruleFinder.filterBuildRuleInputs(getSources()))
         .build();
   }
 
@@ -46,5 +45,4 @@ abstract class AbstractDIncludes implements RuleKeyAppendable {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("sources", getSources());
   }
-
 }

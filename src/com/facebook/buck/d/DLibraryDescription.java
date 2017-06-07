@@ -23,69 +23,67 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
-public class DLibraryDescription implements
-    Description<DLibraryDescription.Arg>,
-    VersionPropagator<DLibraryDescription.Arg> {
+public class DLibraryDescription
+    implements Description<DLibraryDescriptionArg>, VersionPropagator<DLibraryDescriptionArg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
 
   public DLibraryDescription(
-      DBuckConfig dBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform) {
+      DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<DLibraryDescriptionArg> getConstructorArgType() {
+    return DLibraryDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args)
+      CellPathResolver cellRoots,
+      DLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          params.getBuildTarget(),
-          params,
-          pathResolver,
-          args.srcs);
+          params.getBuildTarget(), params, ruleFinder, pathResolver, args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
         params.getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
-            .setLinkTree(new BuildTargetSourcePath(sourceTreeTarget))
-            .setSources(args.srcs.getPaths())
+            .setLinkTree(new DefaultBuildTargetSourcePath(sourceTreeTarget))
+            .setSources(args.getSrcs().getPaths())
             .build();
 
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
@@ -94,28 +92,24 @@ public class DLibraryDescription implements
           params,
           buildRuleResolver,
           pathResolver,
+          ruleFinder,
           cxxPlatform,
           dBuckConfig,
           /* compilerFlags */ ImmutableList.of(),
-          args.srcs,
+          args.getSrcs(),
           dIncludes,
           CxxSourceRuleFactory.PicType.PDC);
     }
 
-    return new DLibrary(
-        params,
-        buildRuleResolver,
-        pathResolver,
-        dIncludes);
+    return new DLibrary(params, buildRuleResolver, dIncludes);
   }
 
-  /**
-   * @return a BuildRule that creates a static library.
-   */
+  /** @return a BuildRule that creates a static library. */
   private BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -129,6 +123,7 @@ public class DLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,
@@ -138,9 +133,7 @@ public class DLibraryDescription implements
     // Write a build rule to create the archive for this library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            pic);
+            params.getBuildTarget(), cxxPlatform.getFlavor(), pic);
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
@@ -153,17 +146,18 @@ public class DLibraryDescription implements
     return Archive.from(
         staticTarget,
         params,
-        pathResolver,
+        ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         compiledSources);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourceList srcs;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableList<String> linkerFlags = ImmutableList.of();
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractDLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourceList getSrcs();
+
+    ImmutableList<String> getLinkerFlags();
   }
 }

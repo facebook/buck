@@ -25,11 +25,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,22 +33,24 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class AccumulateClassNamesStepTest {
 
   private static final String SHA1_FOR_EMPTY_STRING = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
-  @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnJarFile() throws IOException {
+  public void testExecuteAccumulateClassNamesStepOnJarFile()
+      throws InterruptedException, IOException {
     // Create a JAR file.
     String name = "example.jar";
     File jarFile = tmp.newFile(name);
-    try (JarOutputStream out = new JarOutputStream(
-        new BufferedOutputStream(
-            new FileOutputStream(jarFile)))) {
+    try (JarOutputStream out =
+        new JarOutputStream(new BufferedOutputStream(new FileOutputStream(jarFile)))) {
       out.putNextEntry(new ZipEntry("com/example/Foo.class"));
       out.closeEntry();
       out.putNextEntry(new ZipEntry("com/example/Bar.class"));
@@ -66,10 +63,9 @@ public class AccumulateClassNamesStepTest {
 
     // Create the AccumulateClassNamesStep and execute it.
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
-        filesystem,
-        Optional.of(Paths.get(name)),
-        Paths.get("output.txt"));
+    AccumulateClassNamesStep accumulateClassNamesStep =
+        new AccumulateClassNamesStep(
+            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
@@ -77,15 +73,18 @@ public class AccumulateClassNamesStepTest {
     String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
-        Joiner.on('\n').join(
-            "com/example/Bar" + separator + SHA1_FOR_EMPTY_STRING,
-            "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
-            "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING) + '\n',
+        Joiner.on('\n')
+                .join(
+                    "com/example/Bar" + separator + SHA1_FOR_EMPTY_STRING,
+                    "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
+                    "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING)
+            + '\n',
         contents);
   }
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnDirectory() throws IOException {
+  public void testExecuteAccumulateClassNamesStepOnDirectory()
+      throws InterruptedException, IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);
@@ -101,10 +100,9 @@ public class AccumulateClassNamesStepTest {
 
     // Create the AccumulateClassNamesStep and execute it.
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
-        filesystem,
-        Optional.of(Paths.get(name)),
-        Paths.get("output.txt"));
+    AccumulateClassNamesStep accumulateClassNamesStep =
+        new AccumulateClassNamesStep(
+            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
@@ -112,16 +110,18 @@ public class AccumulateClassNamesStepTest {
     String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
-        Joiner.on('\n').join(
-            MorePaths.pathWithUnixSeparators(Paths.get("com/example/Bar")) +
-                separator +
-                SHA1_FOR_EMPTY_STRING,
-            MorePaths.pathWithUnixSeparators(Paths.get("com/example/Foo")) +
-                separator +
-                SHA1_FOR_EMPTY_STRING,
-            MorePaths.pathWithUnixSeparators(Paths.get("com/example/subpackage/Baz")) +
-                separator +
-                SHA1_FOR_EMPTY_STRING) + '\n',
+        Joiner.on('\n')
+                .join(
+                    MorePaths.pathWithUnixSeparators(Paths.get("com/example/Bar"))
+                        + separator
+                        + SHA1_FOR_EMPTY_STRING,
+                    MorePaths.pathWithUnixSeparators(Paths.get("com/example/Foo"))
+                        + separator
+                        + SHA1_FOR_EMPTY_STRING,
+                    MorePaths.pathWithUnixSeparators(Paths.get("com/example/subpackage/Baz"))
+                        + separator
+                        + SHA1_FOR_EMPTY_STRING)
+            + '\n',
         contents);
   }
 }

@@ -19,7 +19,7 @@ package com.facebook.buck.util.network.offline;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -28,5 +28,6 @@ import org.immutables.value.Value;
 @JsonDeserialize(as = ScribeData.class)
 abstract class AbstractScribeData {
   public abstract String getCategory();
-  public abstract Iterable<String> getLines();
+
+  public abstract ImmutableList<String> getLines();
 }

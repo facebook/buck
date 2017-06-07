@@ -18,18 +18,21 @@ package com.facebook.buck.model;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Simple type representing a pair of differently typed values.
  *
- * Used to represent pair-like structures in coerced values.
+ * <p>Used to represent pair-like structures in coerced values.
  */
 public class Pair<FIRST, SECOND> {
 
   private FIRST first;
   private SECOND second;
-  private WeakReference<Integer> hashCache = null;
-  private WeakReference<String> stringCache = null;
+
+  private volatile boolean hashCodeComputed = false;
+  private int hashCode;
+  @Nullable private WeakReference<String> stringCache = null;
 
   public Pair(FIRST first, SECOND second) {
     this.first = first;
@@ -51,28 +54,21 @@ public class Pair<FIRST, SECOND> {
     }
 
     Pair<?, ?> that = (Pair<?, ?>) other;
-    return Objects.equals(this.first, that.first) &&
-        Objects.equals(this.second, that.second);
+    return Objects.equals(this.first, that.first) && Objects.equals(this.second, that.second);
   }
 
   @Override
   public int hashCode() {
-    synchronized (this) {
-      if (hashCache == null) {
-        return calculateHashAndCache();
+    if (!hashCodeComputed) {
+      synchronized (this) {
+        if (!hashCodeComputed) {
+          hashCode = Objects.hash(first, second);
+          hashCodeComputed = true;
+        }
       }
-      Integer hash = hashCache.get();
-      if (hash == null) {
-        return calculateHashAndCache();
-      }
-      return hash;
     }
-  }
 
-  private int calculateHashAndCache() {
-    int hash = Objects.hash(first, second);
-    hashCache = new WeakReference<>(hash);
-    return hash;
+    return hashCode;
   }
 
   @Override
@@ -94,5 +90,4 @@ public class Pair<FIRST, SECOND> {
     stringCache = new WeakReference<>(string);
     return string;
   }
-
 }

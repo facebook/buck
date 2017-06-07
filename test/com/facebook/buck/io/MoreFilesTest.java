@@ -17,9 +17,7 @@
 package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-
 import static org.hamcrest.Matchers.is;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -32,16 +30,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
-import org.hamcrest.Matchers;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -49,11 +41,13 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class MoreFilesTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testDeleteRecursively() throws IOException {
@@ -94,8 +88,7 @@ public class MoreFilesTest {
     Path childDir = dirToDelete.resolve("child-dir");
     Files.createDirectories(childDir);
     MoreFiles.deleteRecursivelyWithOptions(
-        dirToDelete,
-        EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+        dirToDelete, EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(childDir), is(false));
   }
@@ -103,11 +96,8 @@ public class MoreFilesTest {
   @Test
   public void testWriteLinesToFile() throws IOException {
     Path outputFile = tmp.newFile("output.txt");
-    ImmutableList<String> lines = ImmutableList.of(
-        "The",
-        "quick brown fox",
-        "jumps over",
-        "the lazy dog.");
+    ImmutableList<String> lines =
+        ImmutableList.of("The", "quick brown fox", "jumps over", "the lazy dog.");
     MoreFiles.writeLinesToFile(lines, outputFile);
 
     List<String> observedLines = Files.readAllLines(outputFile, Charsets.UTF_8);
@@ -240,9 +230,8 @@ public class MoreFilesTest {
 
     Path outputPath = vfs.getPath("logs.txt");
 
-    boolean concatenated = MoreFiles.concatenateFiles(
-        outputPath,
-        ImmutableList.of(fooPath, barPath));
+    boolean concatenated =
+        MoreFiles.concatenateFiles(outputPath, ImmutableList.of(fooPath, barPath));
     assertThat(concatenated, is(false));
 
     assertThat(Files.exists(outputPath), is(false));
@@ -260,9 +249,8 @@ public class MoreFilesTest {
 
     Path outputPath = vfs.getPath("logs.txt");
 
-    boolean concatenated = MoreFiles.concatenateFiles(
-        outputPath,
-        ImmutableList.of(fooPath, barPath));
+    boolean concatenated =
+        MoreFiles.concatenateFiles(outputPath, ImmutableList.of(fooPath, barPath));
     assertThat(concatenated, is(true));
 
     assertThat(

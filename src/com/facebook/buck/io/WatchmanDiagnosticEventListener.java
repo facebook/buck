@@ -24,14 +24,10 @@ import com.facebook.buck.model.BuildId;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-
 import java.util.Set;
-
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * Deduplicating event bus listener that outputs deduplicated messages over the given event bus.
- */
+/** Deduplicating event bus listener that outputs deduplicated messages over the given event bus. */
 @ThreadSafe
 public class WatchmanDiagnosticEventListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(WatchmanDiagnosticEventListener.class);
@@ -45,8 +41,7 @@ public class WatchmanDiagnosticEventListener implements BuckEventListener {
 
   @VisibleForTesting
   public WatchmanDiagnosticEventListener(
-      BuckEventBus outputEventBus,
-      Set<WatchmanDiagnostic> diagnosticCache) {
+      BuckEventBus outputEventBus, Set<WatchmanDiagnostic> diagnosticCache) {
     this.diagnosticCache = diagnosticCache;
     this.buckEventBus = outputEventBus;
   }
@@ -72,6 +67,5 @@ public class WatchmanDiagnosticEventListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) {
-  }
+  public void outputTrace(BuildId buildId) {}
 }

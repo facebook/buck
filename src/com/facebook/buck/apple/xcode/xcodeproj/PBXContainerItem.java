@@ -18,9 +18,7 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 
-/**
- * Superclass in Xcode's object hierarchy, has no non-structural functionality here.
- */
+/** Superclass in Xcode's object hierarchy, has no non-structural functionality here. */
 public abstract class PBXContainerItem extends PBXObject {
 
   @Override
@@ -31,6 +29,5 @@ public abstract class PBXContainerItem extends PBXObject {
   @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
-
   }
 }

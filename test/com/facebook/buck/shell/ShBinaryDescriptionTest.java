@@ -18,13 +18,12 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -36,12 +35,10 @@ public class ShBinaryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     FakeSourcePath main = new FakeSourcePath("main.sh");
     ShBinary shBinary =
-        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
             .build(resolver);
-    assertThat(
-        shBinary.getExecutableCommand().getInputs(),
-        Matchers.hasItem(main));
+    assertThat(shBinary.getExecutableCommand().getInputs(), Matchers.hasItem(main));
   }
 
   @Test
@@ -51,13 +48,10 @@ public class ShBinaryDescriptionTest {
     FakeSourcePath main = new FakeSourcePath("main.sh");
     FakeSourcePath resource = new FakeSourcePath("resource.dat");
     ShBinary shBinary =
-        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
             .setResources(ImmutableSet.of(resource))
             .build(resolver);
-    assertThat(
-        shBinary.getExecutableCommand().getInputs(),
-        Matchers.hasItem(resource));
+    assertThat(shBinary.getExecutableCommand().getInputs(), Matchers.hasItem(resource));
   }
-
 }

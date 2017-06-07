@@ -17,28 +17,19 @@
 package com.facebook.buck.httpserver;
 
 import com.google.common.net.MediaType;
-
+import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletResponse;
-
-/**
- * Utility methods for writing HTTP responses.
- */
+/** Utility methods for writing HTTP responses. */
 class Responses {
 
   /** Utility class: do not instantiate. */
   private Responses() {}
 
-  /**
-   * Writes the specified content to the response with a status code of 200.
-   */
-  static void writeSuccessfulResponse(String content,
-      MediaType mediaType,
-      Request baseRequest,
-      HttpServletResponse response)
+  /** Writes the specified content to the response with a status code of 200. */
+  static void writeSuccessfulResponse(
+      String content, MediaType mediaType, Request baseRequest, HttpServletResponse response)
       throws IOException {
     writeResponse(content, mediaType, baseRequest, response, HttpServletResponse.SC_OK);
   }
@@ -46,17 +37,12 @@ class Responses {
   /** Responds with a 500. */
   static void writeFailedResponse(Request baseRequest, HttpServletResponse response)
       throws IOException {
-    writeResponse("ERROR",
-        MediaType.PLAIN_TEXT_UTF_8,
-        baseRequest,
-        response,
-        /* status */ 500);
+    writeResponse("ERROR", MediaType.PLAIN_TEXT_UTF_8, baseRequest, response, /* status */ 500);
   }
 
-  /**
-   * Writes the specified content to the response with the specified status code.
-   */
-  private static void writeResponse(String content,
+  /** Writes the specified content to the response with the specified status code. */
+  private static void writeResponse(
+      String content,
       MediaType mediaType,
       Request baseRequest,
       HttpServletResponse response,

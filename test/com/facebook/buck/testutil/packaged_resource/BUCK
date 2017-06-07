@@ -1,16 +1,41 @@
-# This file does not use standard_java_test() because it defines a library with some nonstandard
-# resources.
 java_library(
-  name = 'testutil',
-  srcs = [
-    'PackagedResourceTestUtil.java',
-  ],
-  resources = [
-    'testdata/packaged_resource_one',
-    'testdata/packaged_resource_two'
-  ],
-  autodeps = True,
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = [
+        "PackagedResourceTestUtil.java",
+    ],
+    resources = [
+        "testdata/packaged_resource_one",
+        "testdata/packaged_resource_two",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/io:BuckPaths",
+        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:transport",
+        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules:relative_cell_name",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/timing:timing",
+        "//src/com/facebook/buck/util:packaged_resource",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/autosparse:autosparse_config",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

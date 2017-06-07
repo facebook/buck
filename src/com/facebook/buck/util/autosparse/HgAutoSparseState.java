@@ -18,9 +18,10 @@ package com.facebook.buck.util.autosparse;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -29,37 +30,35 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
  * AutoSparseState for a mercurial repository.
- * <p>
- * The first time access to the manifest is requested, load the manifest in one big blob and store
- * the information in <code>hgManifest</code> (containing {@link ManifestInfo} entries) and
+ *
+ * <p>The first time access to the manifest is requested, load the manifest in one big blob and
+ * store the information in <code>hgManifest</code> (containing {@link ManifestInfo} entries) and
  * <code>hgKnownDirectories</code> (a set of directories containing files with manifest entries).
- * <p>
- * When adding files to the sparse profile, the <em>parent directory</em> is added instead, to
- * minimise the sparse profile. An exception is made for paths in the <code>ignore</code> set;
- * for those only the direct file path is added to the profile. This makes it possible to quickly
- * add a series of subdirectories to the profile, but lets us keep some directories (like the
- * project root) out of the sparse profile to prevent extending a sparse profile too far.
- * <p>
- * Another optimisation is that once a parent directory has been adedd to the profile, any child
+ *
+ * <p>When adding files to the sparse profile, the <em>parent directory</em> is added instead, to
+ * minimise the sparse profile. An exception is made for paths in the <code>ignore</code> set; for
+ * those only the direct file path is added to the profile. This makes it possible to quickly add a
+ * series of subdirectories to the profile, but lets us keep some directories (like the project
+ * root) out of the sparse profile to prevent extending a sparse profile too far.
+ *
+ * <p>Another optimisation is that once a parent directory has been adedd to the profile, any child
  * paths are ignored. After all, these are already going to be part of the working copy once the
  * parent directory has been materialised.
  */
 public class HgAutoSparseState implements AutoSparseState {
   private static final Logger LOG = Logger.get(AutoSparseState.class);
 
-  private static final String SPARSE_INCLUDE_STATEMENT = "%include {PROFILE_NAME}\n";
   private static final String SPARSE_INCLUDE_HEADER = "[include]\n";
 
   private final Path hgRoot;
@@ -68,59 +67,52 @@ public class HgAutoSparseState implements AutoSparseState {
   private final Set<Path> hgKnownDirectories;
   private final Set<Path> hgDirectParents;
   private final Set<Path> ignoredPaths;
-  private final Optional<String> baseProfile;
 
   private Map<Path, ManifestInfo> hgManifest;
   private boolean hgManifestLoaded;
 
   public HgAutoSparseState(
-      HgCmdLineInterface hgCmdLineInterface, Path scRoot, Set<Path> ignore,
-      Optional<String> baseProfile) {
+      HgCmdLineInterface hgCmdLineInterface, Path scRoot, AutoSparseConfig autoSparseConfig) {
     this.hgRoot = scRoot;
     this.hgCmdLine = hgCmdLineInterface;
     this.hgSparseSeen = new HashSet<Path>();
     this.hgKnownDirectories = new HashSet<Path>();
     this.hgDirectParents = new HashSet<Path>();
-    this.ignoredPaths = ignore;
-    this.baseProfile = baseProfile;
+    this.ignoredPaths = autoSparseConfig.ignoredPaths();
 
     this.hgManifest = ImmutableMap.<Path, ManifestInfo>of();
     this.hgManifestLoaded = false;
   }
 
   @Override
-  public Path getSCRoot() {
-    return hgCmdLine.getHgRoot();
+  public Path getSCRoot() throws InterruptedException {
+    return Preconditions.checkNotNull(hgCmdLine.getHgRoot());
   }
 
   @Override
-  public void materialiseSparseProfile() {
+  public SparseSummary materialiseSparseProfile() throws IOException, InterruptedException {
     if (!hgSparseSeen.isEmpty()) {
-      LOG.debug("Writing %d entries to the sparse profile", hgSparseSeen.size());
+      LOG.debug("Exporting %d entries to the sparse profile", hgSparseSeen.size());
       try {
-        try (Writer writer =
-                 new BufferedWriter(
-                     new FileWriter(
-                         hgRoot.resolve(".hg/sparse").toString()))) {
-          if (baseProfile.isPresent()) {
-            String includeHeader = SPARSE_INCLUDE_STATEMENT.replace(
-                "{PROFILE_NAME}", baseProfile.get());
-            writer.write(includeHeader);
-          }
+        Path exportFile = Files.createTempFile("buck_autosparse_rules", "");
+        try (Writer writer = new BufferedWriter(new FileWriter(exportFile.toFile()))) {
           writer.write(SPARSE_INCLUDE_HEADER);
           for (Path path : hgSparseSeen) {
             writer.write(path.toString() + "\n");
           }
         }
+        try {
+          return hgCmdLine.exportHgSparseRules(exportFile);
+        } catch (VersionControlCommandFailedException e) {
+          LOG.debug(e, "Sparse profile refresh command failed");
+          throw new IOException("Sparse profile refresh command failed", e);
+        }
       } catch (IOException e) {
-        LOG.debug("Failed to write out sparse profile");
-        return;
+        LOG.debug(e, "Failed to write out sparse profile export");
+        throw e;
       }
-      try {
-        hgCmdLine.refreshHgSparse();
-      } catch (VersionControlCommandFailedException | InterruptedException e) {
-        LOG.debug("Sparse profile refresh command failed");
-      }
+    } else {
+      return SparseSummary.of();
     }
   }
 
@@ -176,8 +168,7 @@ public class HgAutoSparseState implements AutoSparseState {
     }
     // Any parent files not in the manifest, or not a direct parent of a file in the manifest
     // is ignored.
-    if (!hgManifest.containsKey(relativePath) &&
-        !hgDirectParents.contains(relativePath)) {
+    if (!hgManifest.containsKey(relativePath) && !hgDirectParents.contains(relativePath)) {
       LOG.debug("Not adding unknown file or directory %s to sparse profile", relativePath);
       return;
     }
@@ -196,20 +187,17 @@ public class HgAutoSparseState implements AutoSparseState {
     hgSparseSeen.add(relativePath);
   }
 
-  private void loadHgManifest()
-      throws VersionControlCommandFailedException, InterruptedException {
+  private void loadHgManifest() throws VersionControlCommandFailedException, InterruptedException {
     if (!hgManifestLoaded) {
       // Cache manifest data
-      try (
-        InputStream is = new FileInputStream(hgCmdLine.extractRawManifest());
-        BufferedReader reader = new BufferedReader(
-            new InputStreamReader(
-                is,
-                // Here is to hoping this is the correct codec on all platforms; Mercurial
-                // doesn't care what the filesystem encoding is and just stores the raw bytes.
-                System.getProperty("file.encoding", "UTF-8")
-            ));
-      ) {
+      try (InputStream is = new FileInputStream(hgCmdLine.extractRawManifest());
+          BufferedReader reader =
+              new BufferedReader(
+                  new InputStreamReader(
+                      is,
+                      // Here is to hoping this is the correct codec on all platforms; Mercurial
+                      // doesn't care what the filesystem encoding is and just stores the raw bytes.
+                      System.getProperty("file.encoding", "UTF-8"))); ) {
 
         hgManifest = new HashMap<Path, ManifestInfo>();
         String line;

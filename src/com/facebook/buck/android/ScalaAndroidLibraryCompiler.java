@@ -21,18 +21,16 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableCollection;
+import javax.annotation.Nullable;
 
 public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
-
   private final ScalaBuckConfig scalaBuckConfig;
-  private Tool scalac;
+  private @Nullable Tool scalac;
 
   public ScalaAndroidLibraryCompiler(ScalaBuckConfig config) {
     this.scalaBuckConfig = config;
@@ -51,44 +49,31 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   }
 
   @Override
-  public Iterable<BuildRule> getDeclaredDeps(
-      AndroidLibraryDescription.Arg arg,
-      BuildRuleResolver resolver) {
-    return ImmutableList.of(resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()));
-  }
-
-  @Override
-  public Iterable<BuildRule> getExtraDeps(
-      AndroidLibraryDescription.Arg arg,
-      BuildRuleResolver resolver) {
-    return getScalac(resolver).getDeps(new SourcePathResolver(resolver));
-  }
-
-  @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg arg,
+      AndroidLibraryDescription.CoreArg arg,
       JavacOptions javacOptions,
       BuildRuleResolver resolver) {
 
     return new ScalacToJarStepFactory(
         getScalac(resolver),
-        ScalacToJarStepFactory.collectScalacArguments(
-            scalaBuckConfig,
-            resolver,
-            arg.extraArguments),
+        resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
+        scalaBuckConfig.getCompilerFlags(),
+        arg.getExtraArguments(),
+        resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
         ANDROID_CLASSPATH_FROM_CONTEXT);
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.Arg constructorArg) {
+      AndroidLibraryDescription.CoreArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    return ImmutableList.<BuildTarget>builder()
+    extraDepsBuilder
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()))
-        .build();
+        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()));
   }
 }

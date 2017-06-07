@@ -1,5 +1,18 @@
-standard_java_library(
-  immutable_types = [
-    'GlobArg',
-  ],
+java_immutables_library(
+    name = "args",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/model:macros",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/macros:macros",
+        "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/shell:worker_tool",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/versions:translator",
+    ],
 )

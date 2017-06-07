@@ -1,9 +1,0 @@
-#@# GENERATED FILE: DO NOT MODIFY 5eb54b754a850f3485fb81d6b842ed5e08b2b1a2 #@#
-{
-  "foo" : {
-    "deps" : [
-      "//:bar"
-    ],
-    "exported_deps" : [ ]
-  }
-}

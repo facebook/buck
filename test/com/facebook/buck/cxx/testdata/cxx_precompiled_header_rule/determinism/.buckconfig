@@ -1,0 +1,6 @@
+[cxx]
+  pch_enabled = true
+  untracked_headers = warn
+
+[build]
+  depfiles = enabled

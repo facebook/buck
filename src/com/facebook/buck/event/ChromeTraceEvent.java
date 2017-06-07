@@ -22,11 +22,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Map;
-
 /**
- * Json format for Chrome Trace events that can be viewed in chrome://tracing.
- * See https://github.com/google/trace-viewer for more information.
+ * Json format for Chrome Trace events that can be viewed in chrome://tracing. See
+ * https://github.com/google/trace-viewer for more information.
  */
 @JsonInclude(Include.NON_NULL)
 public class ChromeTraceEvent {
@@ -63,14 +61,15 @@ public class ChromeTraceEvent {
   private final long microThreadUserTime;
   private final ImmutableMap<String, String> args;
 
-  public ChromeTraceEvent(@JsonProperty("cat") String category,
-                          @JsonProperty("name") String name,
-                          @JsonProperty("ph") Phase phase,
-                          @JsonProperty("pid") long processId,
-                          @JsonProperty("tid") long threadId,
-                          @JsonProperty("ts") long microTime,
-                          @JsonProperty("tts") long microThreadUserTime,
-                          @JsonProperty("args") ImmutableMap<String, String> args) {
+  public ChromeTraceEvent(
+      @JsonProperty("cat") String category,
+      @JsonProperty("name") String name,
+      @JsonProperty("ph") Phase phase,
+      @JsonProperty("pid") long processId,
+      @JsonProperty("tid") long threadId,
+      @JsonProperty("ts") long microTime,
+      @JsonProperty("tts") long microThreadUserTime,
+      @JsonProperty("args") ImmutableMap<String, String> args) {
     this.category = category;
     this.name = name;
     this.phase = phase;
@@ -112,7 +111,7 @@ public class ChromeTraceEvent {
   }
 
   @JsonProperty("args")
-  public Map<String, String> getArgs() {
+  public ImmutableMap<String, String> getArgs() {
     return args;
   }
 

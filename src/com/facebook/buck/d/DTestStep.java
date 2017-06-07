@@ -19,13 +19,11 @@ package com.facebook.buck.d;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Runs a D test command, remembering its exit code and streaming its output to
- * a given output file.
+ * Runs a D test command, remembering its exit code and streaming its output to a given output file.
  */
 public class DTestStep extends AbstractTestStep {
 

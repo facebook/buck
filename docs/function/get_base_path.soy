@@ -1,0 +1,34 @@
+{namespace buck.get_base_path}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'get_base_path()' /}
+    {param navid: 'function_get_base_path' /}
+    {param prettify: true /}
+    {param description}
+      The get_base_path() function is used to get the relative path to the build file.
+    {/param}
+    {param content}
+
+{call buck.function}
+{param status: 'FROZEN' /}
+{param overview}
+The <code>get_base_path()</code> function is used to get the relative path to build file
+from within a build file.
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  No arguments.
+  {/param}
+{/call}
+
+{/param}
+
+{/call} // buck.function
+    {/param} // content
+  {/call}
+{/template}

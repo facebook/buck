@@ -15,11 +15,10 @@
  */
 package com.facebook.buck.macho;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.primitives.UnsignedInteger;
-
 import org.junit.Test;
 
 public class FatHeaderUtilsTest {
@@ -27,23 +26,18 @@ public class FatHeaderUtilsTest {
   @Test
   public void testDetectingLittleEndian() {
     assertThat(
-        FatHeaderUtils.isLittleEndian(UnsignedInteger.fromIntBits(0xCAFEBABE)),
-        equalTo(false));
+        FatHeaderUtils.isLittleEndian(UnsignedInteger.fromIntBits(0xCAFEBABE)), equalTo(false));
     assertThat(
-        FatHeaderUtils.isLittleEndian(UnsignedInteger.fromIntBits(0xBEBAFECA)),
-        equalTo(true));
+        FatHeaderUtils.isLittleEndian(UnsignedInteger.fromIntBits(0xBEBAFECA)), equalTo(true));
   }
 
   @Test
   public void testDetectingFatHeaderMagic() {
     assertThat(
-        FatHeaderUtils.isFatHeaderMagic(UnsignedInteger.fromIntBits(0xCAFEBABE)),
-        equalTo(true));
+        FatHeaderUtils.isFatHeaderMagic(UnsignedInteger.fromIntBits(0xCAFEBABE)), equalTo(true));
     assertThat(
-        FatHeaderUtils.isFatHeaderMagic(UnsignedInteger.fromIntBits(0xBEBAFECA)),
-        equalTo(true));
+        FatHeaderUtils.isFatHeaderMagic(UnsignedInteger.fromIntBits(0xBEBAFECA)), equalTo(true));
     assertThat(
-        FatHeaderUtils.isFatHeaderMagic(UnsignedInteger.fromIntBits(0xFEEDFACE)),
-        equalTo(false));
+        FatHeaderUtils.isFatHeaderMagic(UnsignedInteger.fromIntBits(0xFEEDFACE)), equalTo(false));
   }
 }

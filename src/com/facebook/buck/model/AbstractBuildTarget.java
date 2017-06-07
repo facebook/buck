@@ -28,24 +28,20 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import org.immutables.value.Value;
 
 @JsonAutoDetect(
-    fieldVisibility = JsonAutoDetect.Visibility.NONE,
-    getterVisibility = JsonAutoDetect.Visibility.NONE,
-    setterVisibility = JsonAutoDetect.Visibility.NONE)
+  fieldVisibility = JsonAutoDetect.Visibility.NONE,
+  getterVisibility = JsonAutoDetect.Visibility.NONE,
+  setterVisibility = JsonAutoDetect.Visibility.NONE
+)
 @BuckStyleImmutable
 @Value.Immutable(prehash = true)
-abstract class AbstractBuildTarget
-    implements
-    Comparable<AbstractBuildTarget>,
-    HasBuildTarget {
+abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();
@@ -136,27 +132,21 @@ abstract class AbstractBuildTarget
   }
 
   public static BuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
-    return BuildTarget.of(
-        unflavoredBuildTarget,
-        ImmutableSortedSet.of());
+    return BuildTarget.of(unflavoredBuildTarget, ImmutableSortedSet.of());
   }
 
   public static BuildTarget.Builder builder(BuildTarget buildTarget) {
-    return BuildTarget
-        .builder()
+    return BuildTarget.builder()
         .setUnflavoredBuildTarget(buildTarget.getUnflavoredBuildTarget())
         .addAllFlavors(buildTarget.getFlavors());
   }
 
   public static BuildTarget.Builder builder(UnflavoredBuildTarget buildTarget) {
-    return BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(buildTarget);
+    return BuildTarget.builder().setUnflavoredBuildTarget(buildTarget);
   }
 
   public static BuildTarget.Builder builder(Path cellPath, String baseName, String shortName) {
-    return BuildTarget
-        .builder()
+    return BuildTarget.builder()
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
   }
@@ -179,11 +169,6 @@ abstract class AbstractBuildTarget
         .result();
   }
 
-  @Override
-  public BuildTarget getBuildTarget() {
-    return BuildTarget.copyOf(this);
-  }
-
   public BuildTarget withoutFlavors(Set<Flavor> flavors) {
     BuildTarget.Builder builder = BuildTarget.builder();
     builder.setUnflavoredBuildTarget(getUnflavoredBuildTarget());
@@ -200,22 +185,21 @@ abstract class AbstractBuildTarget
   }
 
   public BuildTarget withAppendedFlavors(Set<Flavor> flavorsToAppend) {
-    BuildTarget.Builder builder = BuildTarget.builder(getBuildTarget());
+    BuildTarget.Builder builder = BuildTarget.builder(BuildTarget.copyOf(this));
     builder.addAllFlavors(flavorsToAppend);
     return builder.build();
   }
 
   public BuildTarget withAppendedFlavors(Flavor... flavors) {
-    return withAppendedFlavors(ImmutableSet.copyOf(flavors));
+    BuildTarget.Builder builder = BuildTarget.builder(BuildTarget.copyOf(this));
+    builder.addFlavors(flavors);
+    return builder.build();
   }
 
   public BuildTarget withoutCell() {
     return BuildTarget.builder(
-        getUnflavoredBuildTarget().getCellPath(),
-        getBaseName(),
-        getShortName())
+            getUnflavoredBuildTarget().getCellPath(), getBaseName(), getShortName())
         .addAllFlavors(getFlavors())
         .build();
-
   }
 }

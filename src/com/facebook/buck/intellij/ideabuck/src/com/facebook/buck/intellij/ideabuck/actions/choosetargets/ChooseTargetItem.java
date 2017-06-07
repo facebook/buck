@@ -19,13 +19,10 @@ package com.facebook.buck.intellij.ideabuck.actions.choosetargets;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
+import javax.swing.Icon;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.Icon;
-
-/**
- * Model for "Choose Target" action of Buck build tool window.
- */
+/** Model for "Choose Target" action of Buck build tool window. */
 public class ChooseTargetItem implements NavigationItem {
 
   private final String mAlias;
@@ -52,8 +49,7 @@ public class ChooseTargetItem implements NavigationItem {
   }
 
   @Override
-  public void navigate(boolean requestFocus) {
-  }
+  public void navigate(boolean requestFocus) {}
 
   @Override
   public boolean canNavigate() {

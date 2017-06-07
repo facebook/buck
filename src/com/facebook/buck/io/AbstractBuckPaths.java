@@ -17,35 +17,29 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
 
-  /**
-   * The relative path to the directory where Buck will generate its files.
-   */
+  /** The relative path to the directory where Buck will generate its files. */
   @Value.Parameter
   public abstract Path getBuckOut();
 
   /**
-   * The relative path to the directory where Buck will generate its files.  This is used when
+   * The relative path to the directory where Buck will generate its files. This is used when
    * configuring the output directory to some used-defined value and is a stop-gap until we can
-   * support configuring all output paths.  However, for now, only certain paths below will use
-   * this path.
+   * support configuring all output paths. However, for now, only certain paths below will use this
+   * path.
    */
   @Value.Default
   public Path getConfiguredBuckOut() {
     return getBuckOut();
   }
 
-  /**
-   * The version the buck output directory was created for
-   */
+  /** The version the buck output directory was created for */
   @Value.Derived
   public Path getCurrentVersionFile() {
     return getBuckOut().resolve(".currentversion");

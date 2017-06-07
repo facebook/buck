@@ -23,212 +23,215 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
-
+import org.immutables.value.Value;
 import org.junit.Test;
-
 
 public class TargetNodeVisibilityTest {
 
   private static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   private static final BuildTarget orcaTarget =
-      BuildTarget.builder(
-          filesystem.getRootPath(),
-          "//src/com/facebook/orca",
-          "orca").build();
+      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/orca", "orca").build();
   private static final BuildTarget publicTarget =
-      BuildTarget.builder(
-          filesystem.getRootPath(),
-          "//src/com/facebook/for",
-          "everyone").build();
+      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/for", "everyone").build();
   private static final BuildTarget nonPublicTarget1 =
-      BuildTarget.builder(
-          filesystem.getRootPath(),
-          "//src/com/facebook/something1",
-          "nonPublic").build();
+      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/something1", "nonPublic")
+          .build();
   private static final BuildTarget nonPublicTarget2 =
-      BuildTarget.builder(
-          filesystem.getRootPath(),
-          "//src/com/facebook/something2",
-          "nonPublic").build();
-  private static final TargetGraph GRAPH = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?, ?>>(),
-      ImmutableMap.of(),
-      ImmutableSet.of());
+      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/something2", "nonPublic")
+          .build();
 
-  private static final String VISIBLETO_PUBLIC = "PUBLIC";
-  private static final String VISIBLETO_ORCA = orcaTarget.getFullyQualifiedName();
-  private static final String VISIBLETO_SOME_OTHER = "//some/other:target";
+  private static final ImmutableList<String> DEFAULT = ImmutableList.of();
+  private static final ImmutableList<String> PUBLIC = ImmutableList.of("PUBLIC");
+  private static final ImmutableList<String> ORCA =
+      ImmutableList.of(orcaTarget.getFullyQualifiedName());
+  private static final ImmutableList<String> SOME_OTHER = ImmutableList.of("//some/other:target");
 
   @Test
-  public void testVisibilityPublic()
-      throws NoSuchBuildTargetException {
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
+  public void testVisibilityPublic() throws NoSuchBuildTargetException {
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
 
-    assertTrue(publicTargetNode.isVisibleTo(GRAPH, orcaRule));
-    assertFalse(orcaRule.isVisibleTo(GRAPH, publicTargetNode));
+    assertTrue(publicTargetNode.isVisibleTo(orcaRule));
+    assertFalse(orcaRule.isVisibleTo(publicTargetNode));
   }
 
   @Test
-  public void testVisibilityNonPublic()
-      throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+  public void testVisibilityNonPublic() throws NoSuchBuildTargetException {
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, ORCA);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
 
-    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
-        nonPublicTargetNode1.isVisibleTo(GRAPH, orcaRule));
-    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
-        nonPublicTargetNode2.isVisibleTo(GRAPH, orcaRule));
-    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode1));
-    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode2));
+    assertTrue(
+        shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
+        nonPublicTargetNode1.isVisibleTo(orcaRule));
+    assertTrue(
+        shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
+        nonPublicTargetNode2.isVisibleTo(orcaRule));
+    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode1));
+    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode2));
 
-    assertTrue(publicTargetNode.isVisibleTo(GRAPH, nonPublicTargetNode1));
-    assertFalse(nonPublicTargetNode1.isVisibleTo(GRAPH, publicTargetNode));
+    assertTrue(publicTargetNode.isVisibleTo(nonPublicTargetNode1));
+    assertFalse(nonPublicTargetNode1.isVisibleTo(publicTargetNode));
   }
 
   @Test
-  public void testVisibilityNonPublicFailure()
-      throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+  public void testVisibilityNonPublicFailure() throws NoSuchBuildTargetException {
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
 
     try {
-      nonPublicTargetNode1.isVisibleToOrThrow(GRAPH, publicTargetNode);
-      fail("checkVisibility() should throw an exception");
-    } catch (RuntimeException e) {
-      assertEquals(
-          String.format("%s depends on %s, which is not visible",
-              publicTarget,
-              nonPublicTargetNode1.getBuildTarget()),
-          e.getMessage());
-    }
-  }
-
-  @Test
-  public void testVisibilityMix()
-      throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
-
-    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
-        nonPublicTargetNode1.isVisibleTo(GRAPH, orcaRule));
-    assertTrue(shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
-        nonPublicTargetNode2.isVisibleTo(GRAPH, orcaRule));
-    assertTrue(publicTargetNode.isVisibleTo(GRAPH, orcaRule));
-    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode1));
-    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode2));
-    assertFalse(orcaRule.isVisibleTo(GRAPH, publicTargetNode));
-  }
-
-  @Test
-  public void testVisibilityMixFailure()
-      throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?, ?> nonPublicTargetNode2 =
-        createTargetNode(nonPublicTarget2, VISIBLETO_SOME_OTHER);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
-
-    publicTargetNode.isVisibleToOrThrow(GRAPH, orcaRule);
-    nonPublicTargetNode1.isVisibleToOrThrow(GRAPH, orcaRule);
-
-    try {
-      nonPublicTargetNode2.isVisibleToOrThrow(GRAPH, orcaRule);
+      nonPublicTargetNode1.isVisibleToOrThrow(publicTargetNode);
       fail("checkVisibility() should throw an exception");
     } catch (RuntimeException e) {
       assertEquals(
           String.format(
               "%s depends on %s, which is not visible",
-              orcaTarget,
-              nonPublicTargetNode2.getBuildTarget()),
+              publicTarget, nonPublicTargetNode1.getBuildTarget()),
           e.getMessage());
     }
   }
 
   @Test
-  public void testVisibilityForDirectory()
-      throws NoSuchBuildTargetException {
+  public void testVisibilityMix() throws NoSuchBuildTargetException {
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, ORCA);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+
+    assertTrue(
+        shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
+        nonPublicTargetNode1.isVisibleTo(orcaRule));
+    assertTrue(
+        shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
+        nonPublicTargetNode2.isVisibleTo(orcaRule));
+    assertTrue(publicTargetNode.isVisibleTo(orcaRule));
+    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode1));
+    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode2));
+    assertFalse(orcaRule.isVisibleTo(publicTargetNode));
+  }
+
+  @Test
+  public void testVisibilityMixFailure() throws NoSuchBuildTargetException {
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, SOME_OTHER);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+
+    publicTargetNode.isVisibleToOrThrow(orcaRule);
+    nonPublicTargetNode1.isVisibleToOrThrow(orcaRule);
+
+    try {
+      nonPublicTargetNode2.isVisibleToOrThrow(orcaRule);
+      fail("checkVisibility() should throw an exception");
+    } catch (RuntimeException e) {
+      assertEquals(
+          String.format(
+              "%s depends on %s, which is not visible",
+              orcaTarget, nonPublicTargetNode2.getBuildTarget()),
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void testVisibilityForDirectory() throws NoSuchBuildTargetException {
     BuildTarget libTarget = BuildTarget.builder(filesystem.getRootPath(), "//lib", "lib").build();
-    TargetNode<?, ?> targetInSpecifiedDirectory = createTargetNode(
-        BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build());
-    TargetNode<?, ?> targetUnderSpecifiedDirectory = createTargetNode(
-        BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/buck", "test").build());
-    TargetNode<?, ?> targetInOtherDirectory = createTargetNode(
-        BuildTarget.builder(filesystem.getRootPath(), "//src/com/instagram", "test").build());
-    TargetNode<?, ?> targetInParentDirectory = createTargetNode(
-        BuildTarget.builder(filesystem.getRootPath(), "//", "test").build());
+    TargetNode<?, ?> targetInSpecifiedDirectory =
+        createTargetNode(
+            BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build(),
+            DEFAULT);
+    TargetNode<?, ?> targetUnderSpecifiedDirectory =
+        createTargetNode(
+            BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/buck", "test")
+                .build(),
+            DEFAULT);
+    TargetNode<?, ?> targetInOtherDirectory =
+        createTargetNode(
+            BuildTarget.builder(filesystem.getRootPath(), "//src/com/instagram", "test").build(),
+            DEFAULT);
+    TargetNode<?, ?> targetInParentDirectory =
+        createTargetNode(
+            BuildTarget.builder(filesystem.getRootPath(), "//", "test").build(), DEFAULT);
 
     // Build rule that visible to targets in or under directory src/com/facebook
-    TargetNode<?, ?> directoryTargetNode = createTargetNode(libTarget, "//src/com/facebook/...");
-    assertTrue(directoryTargetNode.isVisibleTo(GRAPH, targetInSpecifiedDirectory));
-    assertTrue(directoryTargetNode.isVisibleTo(GRAPH, targetUnderSpecifiedDirectory));
-    assertFalse(directoryTargetNode.isVisibleTo(GRAPH, targetInOtherDirectory));
-    assertFalse(directoryTargetNode.isVisibleTo(GRAPH, targetInParentDirectory));
+    TargetNode<?, ?> directoryTargetNode =
+        createTargetNode(libTarget, ImmutableList.of("//src/com/facebook/..."));
+    assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
+    assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
+    assertFalse(directoryTargetNode.isVisibleTo(targetInOtherDirectory));
+    assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
 
     // Build rule that's visible to all targets, equals to PUBLIC.
-    TargetNode<?, ?> pubicTargetNode = createTargetNode(libTarget, "//...");
-    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInSpecifiedDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetUnderSpecifiedDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInOtherDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInParentDirectory));
+    TargetNode<?, ?> pubicTargetNode = createTargetNode(libTarget, ImmutableList.of("//..."));
+    assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(targetInParentDirectory));
+  }
+
+  @Test
+  public void testOnlyWithinViewIsVisible() throws NoSuchBuildTargetException {
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC, ORCA);
+    TargetNode<?, ?> publicOrcaRule = createTargetNode(orcaTarget, PUBLIC, SOME_OTHER);
+
+    assertTrue(publicOrcaRule.isVisibleTo(publicTargetNode));
+    assertFalse(publicTargetNode.isVisibleTo(publicOrcaRule));
   }
 
   private String shouldBeVisibleMessage(TargetNode<?, ?> rule, BuildTarget target) {
     return String.format(
         "%1$s should be visible to %2$s because the visibility list of %1$s contains %2$s",
-        rule.getBuildTarget(),
-        target);
+        rule.getBuildTarget(), target);
   }
 
-  public static class FakeRuleDescription implements Description<FakeRuleDescription.FakeArg> {
+  public static class FakeRuleDescription implements Description<FakeRuleDescriptionArg> {
 
     @Override
-    public FakeArg createUnpopulatedConstructorArg() {
-      return new FakeArg();
+    public Class<FakeRuleDescriptionArg> getConstructorArgType() {
+      return FakeRuleDescriptionArg.class;
     }
 
     @Override
-    public <A extends FakeArg> BuildRule createBuildRule(
+    public BuildRule createBuildRule(
         TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
-        A args) {
-      return new FakeBuildRule(params, new SourcePathResolver(resolver));
+        CellPathResolver cellRoots,
+        FakeRuleDescriptionArg args) {
+      return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
 
-    public static class FakeArg extends AbstractDescriptionArg {
-
-    }
+    @BuckStyleImmutable
+    @Value.Immutable
+    interface AbstractFakeRuleDescriptionArg extends CommonDescriptionArg {}
   }
 
   private static TargetNode<?, ?> createTargetNode(
-      BuildTarget buildTarget,
-      String... visibilities)
+      BuildTarget buildTarget, ImmutableList<String> visibilities)
+      throws NoSuchBuildTargetException {
+    return createTargetNode(buildTarget, visibilities, DEFAULT);
+  }
+
+  private static TargetNode<?, ?> createTargetNode(
+      BuildTarget buildTarget, ImmutableList<String> visibilities, ImmutableList<String> withinView)
       throws NoSuchBuildTargetException {
     VisibilityPatternParser parser = new VisibilityPatternParser();
-    ImmutableSet.Builder<VisibilityPattern> builder = ImmutableSet.builder();
-    CellPathResolver cellNames = new FakeCellPathResolver(filesystem);
-    for (String visibility : visibilities) {
-      builder.add(parser.parse(cellNames, visibility));
-    }
-    Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
-    FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
-    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+    CellPathResolver cellNames = TestCellPathResolver.get(filesystem);
+    FakeRuleDescription description = new FakeRuleDescription();
+    FakeRuleDescriptionArg arg =
+        FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory())
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
@@ -236,7 +239,14 @@ public class TargetNodeVisibilityTest {
             filesystem,
             buildTarget,
             ImmutableSet.of(),
-            builder.build(),
+            visibilities
+                .stream()
+                .map(s -> parser.parse(cellNames, s))
+                .collect(MoreCollectors.toImmutableSet()),
+            withinView
+                .stream()
+                .map(s -> parser.parse(cellNames, s))
+                .collect(MoreCollectors.toImmutableSet()),
             createCellRoots(filesystem));
   }
 }

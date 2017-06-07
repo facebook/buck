@@ -20,26 +20,23 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class PrebuiltCxxLibraryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void prebuiltCxxLibraryFromGenrule() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_cxx_from_genrule", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
     workspace.enableDirCache();
     final String binaryTargetString = "//core:binary";
@@ -76,8 +73,8 @@ public class PrebuiltCxxLibraryIntegrationTest {
   @Test
   public void prebuiltCxxLibraryFromGenruleChangeFile() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_cxx_from_genrule", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
     workspace.enableDirCache();
     final String binaryTargetString = "//core:binary";
@@ -87,11 +84,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
     workspace.runBuckCommand("clean").assertSuccess();
 
     // Make sure that deps are pulled from the cache.
-    workspace.replaceFileContents(
-        "core/binary.cpp",
-        "return bar();",
-        "return bar() + 1;"
-    );
+    workspace.replaceFileContents("core/binary.cpp", "return bar();", "return bar() + 1;");
 
     workspace.runBuckBuild(binaryTargetString).assertSuccess();
   }

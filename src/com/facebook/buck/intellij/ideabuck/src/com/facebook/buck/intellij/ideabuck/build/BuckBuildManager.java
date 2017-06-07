@@ -36,15 +36,14 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.WindowManager;
-import org.jetbrains.annotations.Nullable;
-
 import javax.swing.JComponent;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Run buck build commands in background thread, then parse the output from stderr and print to
  * IntelliJ's console window.
- * <p/>
- * We can also create a websocket client and collect information from buck's local http server.
+ *
+ * <p>We can also create a websocket client and collect information from buck's local http server.
  * However, http server of buck is still immaturity, lots of useful information is not available.
  * For example, we can't get compiler error outputs. Therefore the only way for us is parsing the
  * stderr output of the buck process.
@@ -65,9 +64,7 @@ public class BuckBuildManager {
     return;
   }
 
-  /**
-   * Get saved target for this project from settings.
-   */
+  /** Get saved target for this project from settings. */
   public String getCurrentSavedTarget(Project project) {
     if (BuckSettingsProvider.getInstance().getState().lastAlias == null) {
       return null;
@@ -106,13 +103,12 @@ public class BuckBuildManager {
   }
 
   /**
-   * Print "no selected target" error message to console window.
-   * Also provide a hyperlink which can directly jump to "Choose Target" GUI window.
+   * Print "no selected target" error message to console window. Also provide a hyperlink which can
+   * directly jump to "Choose Target" GUI window.
    */
   public void showNoTargetMessage(Project project) {
     BuckModule buckModule = project.getComponent(BuckModule.class);
-    buckModule.getBuckEventsConsumer()
-        .consumeConsoleEvent("Please choose a build target!");
+    buckModule.getBuckEventsConsumer().consumeConsoleEvent("Please choose a build target!");
 
     BuckToolWindowFactory.outputConsoleMessage(
         project, "Please ", ConsoleViewContentType.ERROR_OUTPUT);
@@ -125,10 +121,13 @@ public class BuckBuildManager {
             JComponent frame = WindowManager.getInstance().getIdeFrame(project).getComponent();
             AnAction action = ActionManager.getInstance().getAction("buck.ChooseTarget");
             action.actionPerformed(
-                new AnActionEvent(null, DataManager.getInstance().getDataContext(frame),
-                    ActionPlaces.UNKNOWN, action.getTemplatePresentation(),
-                    ActionManager.getInstance(), 0)
-            );
+                new AnActionEvent(
+                    null,
+                    DataManager.getInstance().getDataContext(frame),
+                    ActionPlaces.UNKNOWN,
+                    action.getTemplatePresentation(),
+                    ActionManager.getInstance(),
+                    0));
           }
         });
   }
@@ -136,26 +135,25 @@ public class BuckBuildManager {
   /**
    * Execute simple process asynchronously with progress.
    *
-   * @param handler        a handler
+   * @param handler a handler
    * @param operationTitle an operation title shown in progress dialog
    */
   public synchronized void runBuckCommand(
-      final BuckCommandHandler handler,
-      final String operationTitle) {
+      final BuckCommandHandler handler, final String operationTitle) {
     if (!(handler instanceof BuckKillCommandHandler)) {
       currentRunningBuckCommandHandler = handler;
       // Save files for anything besides buck kill
-      ApplicationManager.getApplication().invokeAndWait(
-          new Runnable() {
-            @Override
-            public void run() {
-              FileDocumentManager.getInstance().saveAllDocuments();
-            }
-          },
-          ModalityState.NON_MODAL);
+      ApplicationManager.getApplication()
+          .invokeAndWait(
+              new Runnable() {
+                @Override
+                public void run() {
+                  FileDocumentManager.getInstance().saveAllDocuments();
+                }
+              },
+              ModalityState.NON_MODAL);
     }
     Project project = handler.project();
-
 
     String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
     if (exec == null) {
@@ -172,38 +170,38 @@ public class BuckBuildManager {
     }
 
     final ProgressManager manager = ProgressManager.getInstance();
-    ApplicationManager.getApplication().invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        manager.run(new Task.Backgroundable(handler.project(), operationTitle, true) {
-          public void run(final ProgressIndicator indicator) {
-            runInCurrentThread(handler, indicator, true, operationTitle);
-          }
-        });
-      }
-    });
-
+    ApplicationManager.getApplication()
+        .invokeLater(
+            new Runnable() {
+              @Override
+              public void run() {
+                manager.run(
+                    new Task.Backgroundable(handler.project(), operationTitle, true) {
+                      public void run(final ProgressIndicator indicator) {
+                        runInCurrentThread(handler, indicator, true, operationTitle);
+                      }
+                    });
+              }
+            });
   }
 
   /**
    * Execute simple process asynchronously with progress and connect to Buck server.
    *
-   * @param handler        a handler
+   * @param handler a handler
    * @param operationTitle an operation title shown in progress dialog
-   * @param module         the BuckModule throught which we connect to Buck
+   * @param module the BuckModule throught which we connect to Buck
    */
   public synchronized void runBuckCommandWhileConnectedToBuck(
-      final BuckCommandHandler handler,
-      final String operationTitle,
-      final BuckModule module) {
+      final BuckCommandHandler handler, final String operationTitle, final BuckModule module) {
     runBuckCommand(handler, operationTitle);
   }
 
   /**
    * Run handler in the current thread.
    *
-   * @param handler              a handler to run
-   * @param indicator            a progress manager
+   * @param handler a handler to run
+   * @param indicator a progress manager
    * @param setIndeterminateFlag if true handler is configured as indeterminate
    * @param operationName
    */
@@ -212,28 +210,29 @@ public class BuckBuildManager {
       final ProgressIndicator indicator,
       final boolean setIndeterminateFlag,
       @Nullable final String operationName) {
-    runInCurrentThread(handler, new Runnable() {
-      public void run() {
-        if (indicator != null) {
-          indicator.setText(operationName);
-          indicator.setText2("");
-          if (setIndeterminateFlag) {
-            indicator.setIndeterminate(true);
+    runInCurrentThread(
+        handler,
+        new Runnable() {
+          public void run() {
+            if (indicator != null) {
+              indicator.setText(operationName);
+              indicator.setText2("");
+              if (setIndeterminateFlag) {
+                indicator.setIndeterminate(true);
+              }
+            }
           }
-        }
-      }
-    });
+        });
   }
 
   /**
    * Run handler in the current thread.
    *
-   * @param handler         a handler to run
+   * @param handler a handler to run
    * @param postStartAction an action that is executed
    */
   public void runInCurrentThread(
-      final BuckCommandHandler handler,
-      @Nullable final Runnable postStartAction) {
+      final BuckCommandHandler handler, @Nullable final Runnable postStartAction) {
     handler.runInCurrentThread(postStartAction);
   }
 }

@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface BuckProjectGenerationProgressConsumer {
-  Topic<BuckProjectGenerationProgressConsumer> PROJECT_GENERATION_PROGRESS_CONSUMER = Topic.create(
-      "buck.project.generation.progress",
-      BuckProjectGenerationProgressConsumer.class
-  );
+  Topic<BuckProjectGenerationProgressConsumer> PROJECT_GENERATION_PROGRESS_CONSUMER =
+      Topic.create("buck.project.generation.progress", BuckProjectGenerationProgressConsumer.class);
+
   void consumeBuckProjectGenerationProgress(long timestamp, double progressValue);
 }

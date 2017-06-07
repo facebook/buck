@@ -19,9 +19,8 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface TestRunStartedConsumer {
-  Topic<TestRunStartedConsumer> BUCK_TEST_RUN_STARTED = Topic.create(
-      "buck.test.started",
-      TestRunStartedConsumer.class
-  );
+  Topic<TestRunStartedConsumer> BUCK_TEST_RUN_STARTED =
+      Topic.create("buck.test.started", TestRunStartedConsumer.class);
+
   void consumeTestRunStarted(long timestamp);
 }

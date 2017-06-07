@@ -24,7 +24,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.io.Reader;
 
@@ -32,9 +31,7 @@ public class BuckConfigTestUtils {
   private BuckConfigTestUtils() {}
 
   public static BuckConfig createWithDefaultFilesystem(
-      TemporaryPaths temporaryFolder,
-      Reader reader)
-      throws IOException {
+      TemporaryPaths temporaryFolder, Reader reader) throws InterruptedException, IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     return createFromReader(
         reader,

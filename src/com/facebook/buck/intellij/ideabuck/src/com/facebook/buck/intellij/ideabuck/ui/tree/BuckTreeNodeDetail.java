@@ -16,8 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.tree;
 
-import javax.swing.tree.TreeNode;
 import java.util.Enumeration;
+import javax.swing.tree.TreeNode;
 
 public class BuckTreeNodeDetail implements TreeNode {
 

@@ -1,4 +1,4 @@
-Project URL: 
+Project URL:
 Git repo to clone: https://github.com/pantsbuild/pex.git
 Git revision: 1e70fddafd480311e717e58dbf9466cf40003137
 License: Apache 2.0
@@ -9,3 +9,4 @@ Local modifications:
  - Fixed usage of os.link (does not exist on windows).
  - Fixed prebuilt package resolution when pexs have '#' in the name.
  - Added the ability to not hash the contents of the pex (used for in-place builds).
+ - Added support for directory resources

@@ -19,93 +19,137 @@ package com.facebook.buck.util.versioncontrol;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import java.util.Map;
+import com.google.common.collect.Sets;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 public class VersionControlStatsGenerator {
 
   private static final Logger LOG = Logger.get(VersionControlStatsGenerator.class);
 
-  public static final ImmutableSet<String> TRACKED_BOOKMARKS = ImmutableSet.of(
-      "remote/master");
-
-  private final ExecutorService executorService;
-  private final VersionControlCmdLineInterfaceFactory versionControlCmdLineInterfaceFactory;
-  private final BuckEventBus buckEventBus;
-
-  public VersionControlStatsGenerator(
-      ExecutorService executorService,
-      VersionControlCmdLineInterfaceFactory versionControlCmdLineInterfaceFactory,
-      BuckEventBus buckEventBus) {
-    this.executorService = executorService;
-    this.versionControlCmdLineInterfaceFactory = versionControlCmdLineInterfaceFactory;
-    this.buckEventBus = buckEventBus;
+  /**
+   * Modes the generator can get stats in, in order from least comprehensive to most comprehensive.
+   * Each mode should include all the information present in the previous one.
+   */
+  public enum Mode {
+    /** Do not generate new information, but return whatever is already generated */
+    PREGENERATED,
+    /** Generate a set of stats that is fast to generate but incomplete */
+    FAST,
+    /** Generate the full set of stats */
+    FULL,
+    ;
   }
 
-  public void generateStatsAsync() {
+  private static final String REMOTE_MASTER = "remote/master";
+  private static final ImmutableSet<String> TRACKED_BOOKMARKS =
+      ImmutableSet.of(
+          REMOTE_MASTER);
+
+  private final VersionControlCmdLineInterface versionControlCmdLineInterface;
+
+  private final Optional<FastVersionControlStats> pregeneratedVersionControlStats;
+
+  @GuardedBy("this")
+  @Nullable
+  private FastVersionControlStats fastStats;
+
+  @GuardedBy("this")
+  @Nullable
+  private ImmutableSet<String> changedFiles;
+
+  @GuardedBy("this")
+  @Nullable
+  private Optional<String> diff;
+
+  public VersionControlStatsGenerator(
+      VersionControlCmdLineInterface versionControlCmdLineInterface,
+      Optional<FastVersionControlStats> pregeneratedVersionControlStats) {
+    this.versionControlCmdLineInterface = versionControlCmdLineInterface;
+    this.pregeneratedVersionControlStats = pregeneratedVersionControlStats;
+    pregeneratedVersionControlStats.ifPresent(
+        x ->
+            this.fastStats =
+                FastVersionControlStats.of(
+                    x.getCurrentRevisionId(),
+                    x.getBaseBookmarks(),
+                    x.getBranchedFromMasterRevisionId(),
+                    x.getBranchedFromMasterTS()));
+  }
+
+  public void generateStatsAsync(
+      Mode mode, ExecutorService executorService, BuckEventBus buckEventBus) {
     executorService.submit(
         () -> {
           try {
-            generateStats();
+            Optional<FullVersionControlStats> versionControlStats;
+            try (SimplePerfEvent.Scope ignored =
+                SimplePerfEvent.scope(buckEventBus, "gen_source_control_info")) {
+              versionControlStats = generateStats(mode);
+            }
+            versionControlStats.ifPresent(x -> buckEventBus.post(new VersionControlStatsEvent(x)));
           } catch (InterruptedException e) {
             LOG.warn(e, "Failed to generate VC stats due to being interrupted. Skipping..");
             Thread.currentThread().interrupt(); // Re-set interrupt flag
-          } catch (VersionControlCommandFailedException e) {
-            LOG.warn(e, "Failed to generate VC stats due to exception. Skipping..");
           }
         });
   }
 
-  private void generateStats() throws InterruptedException, VersionControlCommandFailedException {
-    LOG.info("Starting generation of version control stats.");
-
-    VersionControlCmdLineInterface vcCmdLineInterface =
-        versionControlCmdLineInterfaceFactory.createCmdLineInterface();
-
-    if (!vcCmdLineInterface.isSupportedVersionControlSystem()) {
-      LOG.warn("Skipping generation of version control stats as unsupported repository type.");
-      return;
+  public synchronized Optional<FullVersionControlStats> generateStats(Mode mode)
+      throws InterruptedException {
+    if (mode == Mode.PREGENERATED) {
+      return pregeneratedVersionControlStats.map(
+          x -> FullVersionControlStats.builder().from(x).build());
     }
 
-    VersionControlStats.Builder versionControlStats = VersionControlStats.builder();
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-        buckEventBus,
-        "gen_source_control_info")) {
+    FullVersionControlStats versionControlStats = null;
+    LOG.info("Starting generation of version control stats.");
+    if (!versionControlCmdLineInterface.isSupportedVersionControlSystem()) {
+      LOG.warn("Skipping generation of version control stats as unsupported repository type.");
+    } else {
+      FullVersionControlStats.Builder versionControlStatsBuilder =
+          FullVersionControlStats.builder();
       try {
-        // Get a list of the revision ids of all the tracked bookmarks.
-        ImmutableMap<String, String> bookmarksRevisionIds =
-            vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
-        // Get the current revision id.
-        String currentRevisionId = vcCmdLineInterface.currentRevisionId();
-        // Get the common ancestor of master and current revision
-        String branchedFromMasterRevisionId = vcCmdLineInterface.commonAncestor(
-            currentRevisionId,
-            bookmarksRevisionIds.get("remote/master"));
-        // Get the list of tracked changes files.
-        ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
-
-        ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
-        for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
-          if (bookmark.getValue().startsWith(currentRevisionId)) {
-            baseBookmarks.add(bookmark.getKey());
+        if (fastStats == null) {
+          fastStats = versionControlCmdLineInterface.fastVersionControlStats();
+        }
+        versionControlStatsBuilder.setCurrentRevisionId(fastStats.getCurrentRevisionId());
+        versionControlStatsBuilder.setBaseBookmarks(
+            Sets.intersection(fastStats.getBaseBookmarks(), TRACKED_BOOKMARKS));
+        versionControlStatsBuilder.setBranchedFromMasterRevisionId(
+            fastStats.getBranchedFromMasterRevisionId());
+        versionControlStatsBuilder.setBranchedFromMasterTS(fastStats.getBranchedFromMasterTS());
+        if (mode == Mode.FULL) {
+          // Prepopulate as much as possible before trying to query the VCS: this way if it fails
+          // we still have this information.
+          if (changedFiles != null) {
+            versionControlStatsBuilder.setPathsChangedInWorkingDirectory(changedFiles);
+          }
+          if (diff != null) {
+            versionControlStatsBuilder.setDiff(diff);
+          }
+          if (changedFiles == null) {
+            changedFiles =
+                versionControlCmdLineInterface.changedFiles(
+                    fastStats.getBranchedFromMasterRevisionId());
+            versionControlStatsBuilder.setPathsChangedInWorkingDirectory(changedFiles);
+          }
+          if (diff == null) {
+            diff =
+                versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
+                    fastStats.getBranchedFromMasterRevisionId(), fastStats.getCurrentRevisionId());
+            versionControlStatsBuilder.setDiff(diff);
           }
         }
-
-        versionControlStats
-            .setPathsChangedInWorkingDirectory(changedFiles)
-            .setCurrentRevisionId(currentRevisionId)
-            .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
-            .setBaseBookmarks(baseBookmarks.build())
-            .build();
       } catch (VersionControlCommandFailedException e) {
-        LOG.warn("Failed to gather source control stats.");
+        LOG.warn("Failed to gather some source control stats.");
       }
+      versionControlStats = versionControlStatsBuilder.build();
+      LOG.info("Stats generated successfully. \n%s", versionControlStats);
     }
-
-    LOG.info("Stats generated successfully. \n%s", versionControlStats);
-    buckEventBus.post(new VersionControlStatsEvent(versionControlStats.build()));
+    return Optional.ofNullable(versionControlStats);
   }
 }

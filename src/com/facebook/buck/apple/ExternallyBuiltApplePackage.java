@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -28,58 +27,51 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Rule for generating an apple package via external script.
- */
-public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppendable {
+/** Rule for generating an apple package via external script. */
+public class ExternallyBuiltApplePackage extends Genrule {
   private ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo;
   private boolean cacheable;
 
   public ExternallyBuiltApplePackage(
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
       boolean cacheable) {
     super(
         params,
-        resolver,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
-        Optional.empty(),
-        Optional.empty(),
-        params.getBuildTarget().getShortName() + "." +
-            packageConfigAndPlatformInfo.getConfig().getExtension());
+        /* bash */ Optional.empty(),
+        /* cmdExe */ Optional.empty(),
+        /* type */ Optional.empty(),
+        params.getBuildTarget().getShortName()
+            + "."
+            + packageConfigAndPlatformInfo.getConfig().getExtension());
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
     this.cacheable = cacheable;
   }
 
   @Override
   protected void addEnvironmentVariables(
+      SourcePathResolver pathResolver,
       ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
     environmentVariablesBuilder.put(
-        "SDKROOT",
-        packageConfigAndPlatformInfo.getSdkPath().toString());
+        "SDKROOT", packageConfigAndPlatformInfo.getSdkPath().toString());
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("sdkVersion", packageConfigAndPlatformInfo.getSdkVersion())
+    sink.setReflectively("sdkVersion", packageConfigAndPlatformInfo.getSdkVersion())
         .setReflectively("buildVersion", packageConfigAndPlatformInfo.getPlatformBuildVersion());
   }
 
-  /**
-   * Value type for tracking a package config and information about the platform.
-   */
+  /** Value type for tracking a package config and information about the platform. */
   @Value.Immutable
   @BuckStyleTuple
   abstract static class AbstractApplePackageConfigAndPlatformInfo {
@@ -91,7 +83,7 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     /**
      * The apple cxx platform in question.
      *
-     * As this value is architecture specific, it is omitted from equality computation, via
+     * <p>As this value is architecture specific, it is omitted from equality computation, via
      * {@code Value.Auxiliary}. Since the actual apple "Platform" is architecture agnostic, proxy
      * values for the actual platform are used for equality comparison instead.
      */
@@ -101,7 +93,7 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     /**
      * The sdk version of the platform.
      *
-     * This is used as a proxy for the version of the external packager.
+     * <p>This is used as a proxy for the version of the external packager.
      */
     @Value.Derived
     public String getSdkVersion() {
@@ -111,24 +103,20 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     /**
      * The build version of the platform.
      *
-     * This is used as a proxy for the version of the external packager.
+     * <p>This is used as a proxy for the version of the external packager.
      */
     @Value.Derived
     public Optional<String> getPlatformBuildVersion() {
       return getPlatform().getBuildVersion();
     }
 
-    /**
-     * Returns the Apple SDK path.
-     */
+    /** Returns the Apple SDK path. */
     @Value.Derived
     public Path getSdkPath() {
       return getPlatform().getAppleSdkPaths().getSdkPath();
     }
 
-    /**
-     * Command after passing through argument expansion.
-     */
+    /** Command after passing through argument expansion. */
     @Value.Derived
     @Value.Auxiliary
     public Arg getExpandedArg() {

@@ -24,63 +24,60 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.Test;
 
 public class GenAidlTest {
 
   @Test
-  public void testSimpleGenAidlRule() throws IOException {
+  public void testSimpleGenAidlRule() throws InterruptedException, IOException {
     ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 
-    FakeSourcePath pathToAidl = new FakeSourcePath(
-        stubFilesystem,
-        "java/com/example/base/IWhateverService.aidl");
+    FakeSourcePath pathToAidl =
+        new FakeSourcePath(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
-            stubFilesystem.getRootPath(),
-            "//java/com/example/base:IWhateverService");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setProjectFilesystem(stubFilesystem)
-        .build();
-    GenAidl genAidlRule = new GenAidl(
-        params,
+            stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(stubFilesystem).build();
+    SourcePathResolver pathResolver =
         new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        pathToAidl,
-        importPath);
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    GenAidl genAidlRule = new GenAidl(params, pathToAidl, importPath);
 
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(
@@ -88,31 +85,43 @@ public class GenAidlTest {
         Description.getBuildRuleType(description));
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
-    List<Step> steps = genAidlRule.getBuildSteps(null, new FakeBuildableContext());
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(stubFilesystem.getRootPath());
+    List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
-    final String pathToFrameworkAidl = Paths.get(
-        "/home/root/android/platforms/android-16/framework.aidl").toString();
+    final String pathToFrameworkAidl =
+        Paths.get("/home/root/android/platforms/android-16/framework.aidl").toString();
     final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getAidlExecutable()).andReturn(Paths.get(pathToAidlExecutable));
     expect(androidPlatformTarget.getAndroidFrameworkIdlFile())
         .andReturn(Paths.get(pathToFrameworkAidl));
     replay(androidPlatformTarget);
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
+            .build();
     assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
 
     Path outputDirectory = BuildTargets.getScratchPath(stubFilesystem, target, "__%s.aidl");
-    MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
-    assertEquals("gen_aidl() should make a directory at " + outputDirectory,
-        outputDirectory,
-        mkdirStep.getPath());
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory))
+            .withRecursive(true),
+        steps.get(2));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory)),
+        steps.get(3));
 
-    ShellStep aidlStep = (ShellStep) steps.get(2);
+    ShellStep aidlStep = (ShellStep) steps.get(4);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
-        String.format("(cd %s && %s -p%s -I%s -o%s %s)",
+        String.format(
+            "(cd %s && %s -p%s -I%s -o%s %s)",
             stubFilesystem.getRootPath(),
             pathToAidlExecutable,
             pathToFrameworkAidl,
@@ -121,7 +130,7 @@ public class GenAidlTest {
             pathToAidl.getRelativePath()),
         aidlStep.getDescription(executionContext));
 
-    assertEquals(5, steps.size());
+    assertEquals(7, steps.size());
 
     verify(androidPlatformTarget);
   }

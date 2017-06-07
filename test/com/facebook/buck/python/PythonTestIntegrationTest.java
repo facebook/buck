@@ -17,37 +17,60 @@
 package com.facebook.buck.python;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
-
+import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import java.io.IOException;
-
+@RunWith(Parameterized.class)
 public class PythonTestIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(
+        ImmutableList.copyOf(PythonBuckConfig.PackageStyle.values()));
+  }
+
+  @Parameterized.Parameter public PythonBuckConfig.PackageStyle packageStyle;
+
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "python_test", tmp);
+  public void setUp() throws InterruptedException, IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);
     workspace.setUp();
+    workspace.writeContentsToPath(
+        "[python]\npackage_style = " + packageStyle.toString().toLowerCase() + "\n", ".buckconfig");
+    PythonBuckConfig config = getPythonBuckConfig();
+    assertThat(config.getPackageStyle(), equalTo(packageStyle));
   }
 
   @Test
@@ -76,17 +99,20 @@ public class PythonTestIntegrationTest {
 
   @Test
   public void testPythonTestSelectors() throws IOException {
-    ProcessResult result = workspace.runBuckCommand(
-        "test", "--test-selectors", "Test#test_that_passes", "//:test-failure");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test", "--test-selectors", "Test#test_that_passes", "//:test-failure");
     result.assertSuccess();
 
-    result = workspace.runBuckCommand(
-        "test", "--test-selectors", "!Test#test_that_fails", "//:test-failure");
+    result =
+        workspace.runBuckCommand(
+            "test", "--test-selectors", "!Test#test_that_fails", "//:test-failure");
     result.assertSuccess();
     workspace.resetBuildLogFile();
 
-    result = workspace.runBuckCommand(
-        "test", "--test-selectors", "!test_failure.Test#", "//:test-failure");
+    result =
+        workspace.runBuckCommand(
+            "test", "--test-selectors", "!test_failure.Test#", "//:test-failure");
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("1 Passed"));
   }
@@ -129,9 +155,7 @@ public class PythonTestIntegrationTest {
   public void testRunPythonTest() throws IOException {
     ProcessResult result = workspace.runBuckCommand("run", "//:test-success");
     result.assertSuccess();
-    assertThat(
-        result.getStderr(),
-        containsString("test_that_passes (test_success.Test) ... ok"));
+    assertThat(result.getStderr(), containsString("test_that_passes (test_success.Test) ... ok"));
   }
 
   @Test
@@ -143,8 +167,22 @@ public class PythonTestIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "FAILURE test_setup_class_failure_with_test_suite.Test test_that_passes:" +
-                " Exception: setup failure!"));
+            "FAILURE test_setup_class_failure_with_test_suite.Test test_that_passes:"
+                + " Exception: setup failure!"));
+  }
+
+  @Test
+  public void testPythonTestCached() throws IOException {
+    workspace.enableDirCache();
+
+    // Warm the cache.
+    workspace.runBuckBuild("//:test-success").assertSuccess();
+
+    // Clean buck-out.
+    workspace.runBuckCommand("clean");
+
+    // Run the tests, which should get cache hits for everything.
+    workspace.runBuckCommand("test", "//:test-success").assertSuccess();
   }
 
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
@@ -156,11 +194,21 @@ public class PythonTestIntegrationTest {
     assumeTrue(
         String.format(
             "Needs at least Python-%s, but found Python-%s: %s",
-            expectedVersion,
-            actualVersion,
-            message),
-        new VersionStringComparator().compare(
-            actualVersion.getVersionString(), expectedVersion) >= 0);
+            expectedVersion, actualVersion, message),
+        new VersionStringComparator().compare(actualVersion.getVersionString(), expectedVersion)
+            >= 0);
   }
 
+  private PythonBuckConfig getPythonBuckConfig() throws InterruptedException, IOException {
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
+    BuckConfig buckConfig =
+        new BuckConfig(
+            rawConfig,
+            new ProjectFilesystem(tmp.getRoot()),
+            Architecture.detect(),
+            Platform.detect(),
+            ImmutableMap.copyOf(System.getenv()),
+            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
+    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
+  }
 }

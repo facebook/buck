@@ -1,13 +1,9 @@
 android_resource(
   name = 'res',
   res = 'res',
+  assets = 'assets',
   package = 'com.example',
   visibility = [
     'PUBLIC',
   ],
-)
-
-project_config(
-  src_target = ':res',
-  src_roots = None,
 )

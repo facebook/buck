@@ -19,24 +19,19 @@ package com.facebook.buck.cli;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.kohsuke.args4j.Argument;
 
-import java.io.IOException;
-import java.util.List;
-
-/**
- * Command for proposing a fine-grained partitioning of a Java build rule.
- */
+/** Command for proposing a fine-grained partitioning of a Java build rule. */
 public class SuggestCommand extends AbstractCommand {
   /** This command has one required argument, which must be a build target or alias. */
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   /**
-   * Normalizes the sole build target argument and partitions it using a
-   * {@link FineGrainedJavaDependencySuggester}.
+   * Normalizes the sole build target argument and partitions it using a {@link
+   * FineGrainedJavaDependencySuggester}.
    */
   @Override
   public int runWithoutHelp(final CommandRunnerParams params)
@@ -48,20 +43,20 @@ public class SuggestCommand extends AbstractCommand {
     }
 
     String targetToBreakDown = Iterables.getOnlyElement(arguments);
-    final String fullyQualifiedTarget = Iterables.getOnlyElement(
-        getCommandLineBuildTargetNormalizer(params.getBuckConfig())
-            .normalize(targetToBreakDown));
+    final String fullyQualifiedTarget =
+        Iterables.getOnlyElement(
+            getCommandLineBuildTargetNormalizer(params.getBuckConfig())
+                .normalize(targetToBreakDown));
 
-    JavaBuildGraphProcessor.Processor processor = (graph, javaDepsFinder, executorService) -> {
-      BuildTarget buildTarget = params.getBuckConfig().getBuildTargetForFullyQualifiedTarget(
-          fullyQualifiedTarget);
-      FineGrainedJavaDependencySuggester suggester = new FineGrainedJavaDependencySuggester(
-          buildTarget,
-          graph,
-          javaDepsFinder,
-          console);
-      suggester.suggestRefactoring();
-    };
+    MetadataChecker.checkAndCleanIfNeeded(params.getCell());
+    JavaBuildGraphProcessor.Processor processor =
+        (graph, javaDepsFinder, executorService) -> {
+          BuildTarget buildTarget =
+              params.getBuckConfig().getBuildTargetForFullyQualifiedTarget(fullyQualifiedTarget);
+          FineGrainedJavaDependencySuggester suggester =
+              new FineGrainedJavaDependencySuggester(buildTarget, graph, javaDepsFinder, console);
+          suggester.suggestRefactoring();
+        };
     try {
       JavaBuildGraphProcessor.run(params, this, processor);
     } catch (JavaBuildGraphProcessor.ExitCodeException e) {

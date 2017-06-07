@@ -17,20 +17,20 @@
 package com.facebook.buck.immutables;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
- * Interface from which a concrete immutable implementation {@link Type}
- * will be generated, along with an {@link Type.Builder}.
+ * Interface from which a concrete immutable implementation {@link Type} will be generated, along
+ * with an {@link Type.Builder}.
  */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractType {
   String getName();
+
   List<Long> getPhoneNumbers();
+
   Optional<String> getDescription();
 }
