@@ -49,6 +49,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -56,6 +57,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.versions.VersionException;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -91,6 +94,8 @@ public class XCodeProjectCommandHelper {
   private final BuckEventBus buckEventBus;
   private final Parser parser;
   private final BuckConfig buckConfig;
+  private final VersionedTargetGraphCache versionedTargetGraphCache;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
   private final Console console;
   private final Optional<ProcessManager> processManager;
@@ -112,6 +117,8 @@ public class XCodeProjectCommandHelper {
       BuckEventBus buckEventBus,
       Parser parser,
       BuckConfig buckConfig,
+      VersionedTargetGraphCache versionedTargetGraphCache,
+      TypeCoercerFactory typeCoercerFactory,
       Cell cell,
       Console console,
       Optional<ProcessManager> processManager,
@@ -131,6 +138,8 @@ public class XCodeProjectCommandHelper {
     this.buckEventBus = buckEventBus;
     this.parser = parser;
     this.buckConfig = buckConfig;
+    this.versionedTargetGraphCache = versionedTargetGraphCache;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
     this.console = console;
     this.processManager = processManager;
@@ -198,6 +207,7 @@ public class XCodeProjectCommandHelper {
     } catch (BuildFileParseException
         | TargetGraph.NoSuchNodeException
         | BuildTargetException
+        | VersionException
         | HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
@@ -590,7 +600,8 @@ public class XCodeProjectCommandHelper {
       boolean isWithDependenciesTests,
       boolean needsFullRecursiveParse,
       ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
+          VersionException {
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
@@ -627,7 +638,19 @@ public class XCodeProjectCommandHelper {
       }
     }
 
-    return TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
+    TargetGraphAndTargets targetGraphAndTargets =
+        TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
+    if (buckConfig.getBuildVersions()) {
+      targetGraphAndTargets =
+          TargetGraphAndTargets.toVersionedTargetGraphAndTargets(
+              targetGraphAndTargets,
+              versionedTargetGraphCache,
+              buckEventBus,
+              buckConfig,
+              typeCoercerFactory,
+              explicitTestTargets);
+    }
+    return targetGraphAndTargets;
   }
 
   @VisibleForTesting

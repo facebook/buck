@@ -16,11 +16,18 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.versions.VersionException;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
@@ -69,5 +76,31 @@ public class TargetGraphAndTargets {
         projectGraph.getSubgraph(Iterables.concat(projectRoots, associatedTests));
 
     return new TargetGraphAndTargets(targetGraph, projectRoots);
+  }
+
+  public static TargetGraphAndTargets toVersionedTargetGraphAndTargets(
+      TargetGraphAndTargets targetGraphAndTargets,
+      VersionedTargetGraphCache versionedTargetGraphCache,
+      BuckEventBus buckEventBus,
+      BuckConfig buckConfig,
+      TypeCoercerFactory typeCoercerFactory,
+      ImmutableSet<BuildTarget> explicitTestTargets)
+      throws VersionException, InterruptedException {
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        TargetGraphAndBuildTargets.of(
+            targetGraphAndTargets.getTargetGraph(),
+            Sets.union(
+                targetGraphAndTargets
+                    .getProjectRoots()
+                    .stream()
+                    .map(root -> root.getBuildTarget())
+                    .collect(Collectors.toSet()),
+                explicitTestTargets));
+    TargetGraphAndBuildTargets versionedTargetGraphAndBuildTargets =
+        versionedTargetGraphCache.toVersionedTargetGraph(
+            buckEventBus, buckConfig, typeCoercerFactory, targetGraphAndBuildTargets);
+    return new TargetGraphAndTargets(
+        versionedTargetGraphAndBuildTargets.getTargetGraph(),
+        targetGraphAndTargets.getProjectRoots());
   }
 }

@@ -46,10 +46,13 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.versions.VersionException;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -69,6 +72,8 @@ public class IjProjectCommandHelper {
   private final Parser parser;
   private final BuckConfig buckConfig;
   private final ActionGraphCache actionGraphCache;
+  private final VersionedTargetGraphCache versionedTargetGraphCache;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
@@ -83,6 +88,8 @@ public class IjProjectCommandHelper {
       ListeningExecutorService executor,
       BuckConfig buckConfig,
       ActionGraphCache actionGraphCache,
+      VersionedTargetGraphCache versionedTargetGraphCache,
+      TypeCoercerFactory typeCoercerFactory,
       Cell cell,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
@@ -95,6 +102,8 @@ public class IjProjectCommandHelper {
     this.parser = projectViewParameters.getParser();
     this.buckConfig = buckConfig;
     this.actionGraphCache = actionGraphCache;
+    this.versionedTargetGraphCache = versionedTargetGraphCache;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
     this.projectConfig = projectConfig;
     this.enableParserProfiling = enableParserProfiling;
@@ -161,6 +170,7 @@ public class IjProjectCommandHelper {
     } catch (BuildFileParseException
         | TargetGraph.NoSuchNodeException
         | BuildTargetException
+        | VersionException
         | HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
@@ -349,7 +359,8 @@ public class IjProjectCommandHelper {
       ImmutableSet<BuildTarget> graphRoots,
       boolean needsFullRecursiveParse,
       ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
+          VersionException {
 
     boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
@@ -370,7 +381,19 @@ public class IjProjectCommandHelper {
               Sets.union(graphRoots, explicitTestTargets));
     }
 
-    return TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
+    TargetGraphAndTargets targetGraphAndTargets =
+        TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
+    if (buckConfig.getBuildVersions()) {
+      targetGraphAndTargets =
+          TargetGraphAndTargets.toVersionedTargetGraphAndTargets(
+              targetGraphAndTargets,
+              versionedTargetGraphCache,
+              buckEventBus,
+              buckConfig,
+              typeCoercerFactory,
+              explicitTestTargets);
+    }
+    return targetGraphAndTargets;
   }
 
   /**
