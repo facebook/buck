@@ -432,12 +432,13 @@ public class DistBuildFileHashesTest {
 
     private StackedFileHashCache createFileHashCache() throws InterruptedException {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
-      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
-      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false));
+      cacheList.add(
+          DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem, false));
       for (Path path : javaFs.getRootDirectories()) {
         if (Files.isDirectory(path)) {
           cacheList.add(
-              DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(path)));
+              DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(path), false));
         }
       }
       return new StackedFileHashCache(cacheList.build());

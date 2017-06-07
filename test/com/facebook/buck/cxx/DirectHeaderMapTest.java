@@ -174,7 +174,7 @@ public class DirectHeaderMapTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new ProjectFilesystem(tmpDir.getRoot()))));
+                    new ProjectFilesystem(tmpDir.getRoot()), false)));
     RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
     RuleKey key2 =
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
@@ -196,7 +196,8 @@ public class DirectHeaderMapTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(tmpDir.getRoot()));
+        DefaultFileHashCache.createDefaultFileHashCache(
+            new ProjectFilesystem(tmpDir.getRoot()), false);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
     RuleKey defaultKey1 =

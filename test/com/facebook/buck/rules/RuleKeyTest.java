@@ -75,7 +75,7 @@ public class RuleKeyTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     BuildRuleResolver ruleResolver1 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRuleResolver ruleResolver2 =
@@ -583,7 +583,8 @@ public class RuleKeyTest {
     FileHashCache hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    new FakeProjectFilesystem(), false)));
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(params, "foo", "bar");
     BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(params, "foo", "xyzzy");
@@ -608,7 +609,8 @@ public class RuleKeyTest {
     FileHashCache hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    new FakeProjectFilesystem(), false)));
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(params, "foo", "bar");
     BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(params, "foo", "xyzzy");

@@ -95,7 +95,7 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache initialHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     DefaultRuleKeyFactory initialRuleKeyFactory =
         new DefaultRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
@@ -117,7 +117,7 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache alteredHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     DefaultRuleKeyFactory alteredRuleKeyFactory =
         new DefaultRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
@@ -160,7 +160,7 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache initialHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     DefaultRuleKeyFactory initialRuleKeyFactory =
         new DefaultRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
@@ -180,7 +180,7 @@ public class CalculateAbiFromClassesTest {
 
     FileHashCache alteredHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     DefaultRuleKeyFactory alteredRuleKeyFactory =
         new DefaultRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);

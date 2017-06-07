@@ -16,16 +16,13 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -33,13 +30,12 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 public class DefaultFileHashCache implements ProjectFileHashCache {
 
@@ -49,44 +45,49 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Path> buckOutPath;
 
-  @VisibleForTesting final LoadingCache<Path, HashCodeAndFileType> loadingCache;
-
-  @VisibleForTesting final LoadingCache<Path, Long> sizeCache;
+  @VisibleForTesting FileHashCacheEngine fileHashCacheEngine;
 
   @VisibleForTesting
-  DefaultFileHashCache(ProjectFilesystem projectFilesystem, Optional<Path> buckOutPath) {
+  DefaultFileHashCache(
+      ProjectFilesystem projectFilesystem,
+      Optional<Path> buckOutPath,
+      boolean compareFileHashCacheEngines) {
     this.projectFilesystem = projectFilesystem;
     this.buckOutPath = buckOutPath;
+    final Function<Path, HashCodeAndFileType> hashLoader =
+        path -> {
+          try {
+            return getHashCodeAndFileType(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e.getCause());
+          }
+        };
 
-    this.loadingCache =
-        CacheBuilder.newBuilder()
-            .build(
-                new CacheLoader<Path, HashCodeAndFileType>() {
-                  @Override
-                  public HashCodeAndFileType load(Path path) throws Exception {
-                    return getHashCodeAndFileType(path);
-                  }
-                });
-
-    this.sizeCache =
-        CacheBuilder.newBuilder()
-            .build(
-                new CacheLoader<Path, Long>() {
-                  @Override
-                  public Long load(Path path) throws Exception {
-                    return getPathSize(path);
-                  }
-                });
+    final Function<Path, Long> sizeLoader =
+        path -> {
+          try {
+            return getPathSize(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e.getCause());
+          }
+        };
+    if (compareFileHashCacheEngines) {
+      fileHashCacheEngine = new ComboFileHashCache(hashLoader::apply, sizeLoader::apply);
+    } else {
+      fileHashCacheEngine = new LoadingCacheFileHashCache(hashLoader::apply, sizeLoader::apply);
+    }
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem, Path buckOutPath) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.of(buckOutPath));
+      ProjectFilesystem projectFilesystem, Path buckOutPath, boolean compareFileHashCacheEngines) {
+    return new DefaultFileHashCache(
+        projectFilesystem, Optional.of(buckOutPath), compareFileHashCacheEngines);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
-      ProjectFilesystem projectFilesystem) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.empty());
+      ProjectFilesystem projectFilesystem, boolean compareFileHashCacheEngines) {
+    return new DefaultFileHashCache(
+        projectFilesystem, Optional.empty(), compareFileHashCacheEngines);
   }
 
   public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches()
@@ -107,7 +108,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
-      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false));
     }
 
     return allCaches.build();
@@ -152,7 +153,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public boolean willGet(Path relativePath) {
     Preconditions.checkState(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
-    return loadingCache.getIfPresent(relativePath) != null
+    return fileHashCacheEngine.getIfPresent(relativePath) != null
         || (projectFilesystem.exists(relativePath) && !isIgnored(relativePath));
   }
 
@@ -170,28 +171,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return willGet(archiveMemberPath.getArchivePath());
   }
 
-  private void invalidateImmediate(Path path) {
-    loadingCache.invalidate(path);
-    sizeCache.invalidate(path);
+  @Override
+  public void invalidate(Path relativePath) {
+    fileHashCacheEngine.invalidate(relativePath);
   }
 
   @Override
   public void invalidateAll() {
-    loadingCache.invalidateAll();
-    sizeCache.invalidateAll();
-  }
-
-  @Override
-  public void invalidate(Path relativePath) {
-    Preconditions.checkArgument(!relativePath.isAbsolute());
-    checkNotIgnored(relativePath);
-    HashCodeAndFileType cached = loadingCache.getIfPresent(relativePath);
-    invalidateImmediate(relativePath);
-    if (cached != null) {
-      for (Path child : cached.getChildren()) {
-        invalidateImmediate(relativePath.resolve(child));
-      }
-    }
+    fileHashCacheEngine.invalidateAll();
   }
 
   /** @return The {@link com.google.common.hash.HashCode} of the contents of path. */
@@ -199,49 +186,21 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public HashCode get(Path relativePath) throws IOException {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
-    HashCode sha1;
-    try {
-      sha1 = loadingCache.get(relativePath.normalize()).getHashCode();
-    } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
-      throw new RuntimeException(e.getCause());
-    }
-
-    return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", relativePath);
+    return fileHashCacheEngine.get(relativePath);
   }
 
   @Override
   public long getSize(Path relativePath) throws IOException {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
-    try {
-      return sizeCache.get(relativePath.normalize());
-    } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
-      throw new RuntimeException(e.getCause());
-    }
+    return fileHashCacheEngine.getSize(relativePath);
   }
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     Preconditions.checkArgument(!archiveMemberPath.isAbsolute());
     checkNotIgnored(archiveMemberPath.getArchivePath());
-
-    Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
-    try {
-      HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
-      Path memberPath = archiveMemberPath.getMemberPath();
-      HashCodeAndFileType memberHashCodeAndFileType =
-          fileHashCodeAndFileType.getContents().get(memberPath);
-      if (memberHashCodeAndFileType == null) {
-        throw new NoSuchFileException(archiveMemberPath.toString());
-      }
-
-      return memberHashCodeAndFileType.getHashCode();
-    } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
-      throw new RuntimeException(e.getCause());
-    }
+    return fileHashCacheEngine.get(archiveMemberPath);
   }
 
   @Override
@@ -276,13 +235,13 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       value = HashCodeAndFileType.ofFile(hashCode);
     }
 
-    loadingCache.put(relativePath, value);
+    fileHashCacheEngine.put(relativePath, value);
   }
 
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {
     List<String> errors = new ArrayList<>();
-    Map<Path, HashCodeAndFileType> cacheMap = loadingCache.asMap();
+    Map<Path, HashCodeAndFileType> cacheMap = fileHashCacheEngine.asMap();
     for (Map.Entry<Path, HashCodeAndFileType> entry : cacheMap.entrySet()) {
       Path path = entry.getKey();
       HashCodeAndFileType cached = entry.getValue();
@@ -296,5 +255,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         .setFilesExamined(cacheMap.size())
         .addAllVerificationErrors(errors)
         .build();
+  }
+
+  public List<AbstractBuckEvent> getStatsEvents() {
+    return fileHashCacheEngine.getStatsEvents();
   }
 }

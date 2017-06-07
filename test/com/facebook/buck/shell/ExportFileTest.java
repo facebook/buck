@@ -224,7 +224,7 @@ public class ExportFileTest {
 
     FileHashCache hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -257,7 +257,7 @@ public class ExportFileTest {
 
     hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(

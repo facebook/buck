@@ -17,6 +17,7 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -256,5 +257,32 @@ public class FileSystemMap<T> {
       maybe.load(loader);
     }
     return maybe.value;
+  }
+
+  /**
+   * Gets the value associated with the given path, if found, or `null` otherwise.
+   *
+   * @param path The path to fetch.
+   * @return The value associated with the path.
+   */
+  @Nullable
+  public T getIfPresent(Path path) {
+    Entry<T> entry = map.get(path);
+    return entry == null ? null : entry.value;
+  }
+
+  /**
+   * Returns a copy of the leaves stored in the trie as a map. N.B.: this is quite an expensive call
+   * to make, so use it wisely.
+   */
+  public ImmutableMap<Path, T> asMap() {
+    ImmutableMap.Builder<Path, T> builder = ImmutableMap.builder();
+    map.forEach(
+        (k, v) -> {
+          if (v.value != null) {
+            builder.put(k, v.value);
+          }
+        });
+    return builder.build();
   }
 }

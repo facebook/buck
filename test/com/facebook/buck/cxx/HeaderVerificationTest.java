@@ -49,7 +49,8 @@ public class HeaderVerificationTest {
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    new FakeProjectFilesystem(), false)));
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder);
     RuleKeyBuilder<HashCode> builder =

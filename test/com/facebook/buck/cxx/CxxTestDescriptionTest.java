@@ -442,7 +442,8 @@ public class CxxTestDescriptionTest {
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(rule.getProjectFilesystem())));
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    rule.getProjectFilesystem(), false)));
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);

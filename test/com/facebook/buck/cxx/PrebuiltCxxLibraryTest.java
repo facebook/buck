@@ -70,7 +70,7 @@ public class PrebuiltCxxLibraryTest {
 
     FileHashCache originalHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
 

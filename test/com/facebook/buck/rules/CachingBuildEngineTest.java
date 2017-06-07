@@ -221,7 +221,7 @@ public class CachingBuildEngineTest {
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
       fileHashCache =
           new StackedFileHashCache(
-              ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+              ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
       buildContext =
           BuildEngineBuildContext.builder()
               .setBuildContext(FakeBuildContext.NOOP_CONTEXT)

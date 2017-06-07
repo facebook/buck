@@ -602,17 +602,26 @@ public final class Main {
           rootCell
               .getAllCells()
               .stream()
-              .map(cell -> DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()))
+              .map(
+                  cell ->
+                      DefaultFileHashCache.createDefaultFileHashCache(
+                          cell.getFilesystem(),
+                          rootCell.getBuckConfig().getCompareFileHashCacheEngines()))
               .forEach(allCaches::add);
           allCaches.add(
               DefaultFileHashCache.createBuckOutFileHashCache(
-                  rootCellProjectFilesystem, rootCell.getFilesystem().getBuckPaths().getBuckOut()));
+                  rootCellProjectFilesystem,
+                  rootCell.getFilesystem().getBuckPaths().getBuckOut(),
+                  rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
         }
 
         // A cache which caches hashes of cell-relative paths which may have been ignore by
         // the main cell cache, and only serves to prevent rehashing the same file multiple
         // times in a single run.
-        allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCellProjectFilesystem));
+        allCaches.add(
+            DefaultFileHashCache.createDefaultFileHashCache(
+                rootCellProjectFilesystem,
+                rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
         allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
 
         StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());

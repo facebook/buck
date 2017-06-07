@@ -625,7 +625,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // Create a new `DefaultFileHashCache` to prevent caching from interfering with verification.
     ProjectFileHashCache fileHashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, false);
 
     // Verify each path from the recorded path hashes entry matches the actual on-disk version.
     for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {

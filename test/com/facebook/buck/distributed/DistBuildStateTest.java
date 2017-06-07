@@ -321,7 +321,8 @@ public class DistBuildStateTest {
         sourcePathResolver,
         ruleFinder,
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem))),
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false))),
         new DistBuildCellIndexer(rootCell),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0,

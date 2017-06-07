@@ -229,7 +229,7 @@ public class BuildInfoRecorderTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
 
     byte[] contents = "contents".getBytes();

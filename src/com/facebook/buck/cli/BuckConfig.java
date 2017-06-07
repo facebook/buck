@@ -1036,6 +1036,11 @@ public class BuckConfig implements ConfigPathGetter {
     return getListWithoutComments("clean", "additional_paths");
   }
 
+  /** @return whether to enable new file hash cache engine. */
+  public boolean getCompareFileHashCacheEngines() {
+    return getBooleanValue("build", "compare_file_hash_cache_engines", false);
+  }
+
   public Config getConfig() {
     return config;
   }

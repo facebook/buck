@@ -1016,7 +1016,8 @@ public class PythonBinaryDescriptionTest {
             new RuleKeyFieldLoader(0),
             new StackedFileHashCache(
                 ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(rule.getProjectFilesystem()))),
+                    DefaultFileHashCache.createDefaultFileHashCache(
+                        rule.getProjectFilesystem(), false))),
             new SourcePathResolver(ruleFinder),
             ruleFinder);
     return ruleKeyFactory.build(rule);

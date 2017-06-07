@@ -42,7 +42,8 @@ public class SanitizedArgTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem)));
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false)));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(

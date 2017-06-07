@@ -211,10 +211,10 @@ public class DistBuildFileHashesIntegrationTest {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
-    allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCell.getFilesystem()));
+    allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCell.getFilesystem(), false));
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
-      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()));
+      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem(), false));
     }
     allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
