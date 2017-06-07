@@ -237,7 +237,9 @@ public class DistBuildService implements Closeable {
     // No response expected.
   }
 
-  public BuildJob createBuild(BuildMode buildMode, int numberOfMinions) throws IOException {
+  public BuildJob createBuild(
+      BuildMode buildMode, int numberOfMinions, String repository, String tenantId)
+      throws IOException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
             || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR,
@@ -249,14 +251,23 @@ public class DistBuildService implements Closeable {
         "The number of minions must be greater than zero. Value [%d] found.",
         numberOfMinions);
     // Tell server to create the build and get the build id.
-    CreateBuildRequest createTimeRequest = new CreateBuildRequest();
-    createTimeRequest
+    CreateBuildRequest createBuildRequest = new CreateBuildRequest();
+    createBuildRequest
         .setCreateTimestampMillis(System.currentTimeMillis())
         .setBuildMode(buildMode)
         .setNumberOfMinions(numberOfMinions);
+
+    if (repository != null && repository.length() > 0) {
+      createBuildRequest.setRepository(repository);
+    }
+
+    if (tenantId != null && tenantId.length() > 0) {
+      createBuildRequest.setTenantId(tenantId);
+    }
+
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.CREATE_BUILD);
-    request.setCreateBuildRequest(createTimeRequest);
+    request.setCreateBuildRequest(createBuildRequest);
     FrontendResponse response = makeRequestChecked(request);
 
     return response.getCreateBuildResponse().getBuildJob();

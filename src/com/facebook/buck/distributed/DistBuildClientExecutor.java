@@ -127,11 +127,13 @@ public class DistBuildClientExecutor {
       FileHashCache fileHashCache,
       BuckEventBus eventBus,
       BuildMode buildMode,
-      int numberOfMinions)
+      int numberOfMinions,
+      String repository,
+      String tenantId)
       throws IOException, InterruptedException {
 
     distBuildClientStats.startCreateBuildTimer();
-    BuildJob job = distBuildService.createBuild(buildMode, numberOfMinions);
+    BuildJob job = distBuildService.createBuild(buildMode, numberOfMinions, repository, tenantId);
     distBuildClientStats.stopCreateBuildTimer();
 
     final StampedeId stampedeId = job.getStampedeId();
@@ -249,7 +251,9 @@ public class DistBuildClientExecutor {
       FileHashCache fileHashCache,
       BuckEventBus eventBus,
       BuildMode buildMode,
-      int numberOfMinions)
+      int numberOfMinions,
+      String repository,
+      String tenantId)
       throws IOException, InterruptedException {
 
     final BuildJob initJob =
@@ -259,7 +263,9 @@ public class DistBuildClientExecutor {
             fileHashCache,
             eventBus,
             buildMode,
-            numberOfMinions);
+            numberOfMinions,
+            repository,
+            tenantId);
 
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =

@@ -164,6 +164,8 @@ struct BuildJob {
   5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
   6: optional list<PathInfo> dotFiles;
   7: optional BuildModeInfo buildModeInfo;
+  8: optional string repository;
+  9: optional string tenantId;
 }
 
 struct Announcement {
@@ -211,6 +213,8 @@ struct CreateBuildRequest {
   2: optional BuildMode buildMode = BuildMode.REMOTE_BUILD;
   // Maximum number of minions to be used in this distributed build.
   3: optional i32 numberOfMinions;
+  4: optional string repository;
+  5: optional string tenantId;
 }
 
 struct CreateBuildResponse {
@@ -397,6 +401,7 @@ enum FrontendRequestType {
   FETCH_BUILD_SLAVE_STATUS = 18,
   APPEND_BUILD_SLAVE_EVENTS = 19,
   MULTI_GET_BUILD_SLAVE_EVENTS = 20,
+  SET_BUILD_MODE = 21,
 
   // [100-199] Values are reserved for the buck cache request types.
 }

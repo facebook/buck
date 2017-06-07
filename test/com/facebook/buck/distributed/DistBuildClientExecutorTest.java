@@ -85,6 +85,8 @@ public class DistBuildClientExecutorTest {
   private BuckEventBus mockEventBus;
   private StampedeId stampedeId;
   private DistBuildClientStatsTracker distBuildClientStatsTracker;
+  private static final String REPOSITORY = "repositoryOne";
+  private static final String TENANT_ID = "tenantOne";
 
   @Before
   public void setUp() {
@@ -380,7 +382,8 @@ public class DistBuildClientExecutorTest {
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
-    expect(mockDistBuildService.createBuild(BuildMode.REMOTE_BUILD, 1)).andReturn(job);
+    expect(mockDistBuildService.createBuild(BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+        .andReturn(job);
     expect(
             mockDistBuildService.uploadMissingFilesAsync(
                 buildJobState.fileHashes, distBuildClientStatsTracker, directExecutor))
@@ -477,7 +480,9 @@ public class DistBuildClientExecutorTest {
         fakeFileHashCache,
         mockEventBus,
         BuildMode.REMOTE_BUILD,
-        1);
+        1,
+        REPOSITORY,
+        TENANT_ID);
 
     verify(mockDistBuildService);
     verify(mockLogStateTracker);

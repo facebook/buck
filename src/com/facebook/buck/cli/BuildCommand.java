@@ -661,7 +661,9 @@ public class BuildCommand extends AbstractCommand {
               fileHashCache,
               params.getBuckEventBus(),
               distBuildConfig.getBuildMode(),
-              distBuildConfig.getNumberOfMinions());
+              distBuildConfig.getNumberOfMinions(),
+              distBuildConfig.getRepository(),
+              distBuildConfig.getTenantId());
       distBuildExitCode = distBuildResult.exitCode;
     } finally {
       BuildEvent.DistBuildFinished finished =

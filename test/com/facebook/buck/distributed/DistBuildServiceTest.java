@@ -79,6 +79,8 @@ public class DistBuildServiceTest {
   private DistBuildService distBuildService;
   private ListeningExecutorService executor;
   private DistBuildClientStatsTracker distBuildClientStatsTracker;
+  private static final String REPOSITORY = "repositoryOne";
+  private static final String TENANT_ID = "tenantOne";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -221,7 +223,7 @@ public class DistBuildServiceTest {
         .once();
     EasyMock.replay(frontendService);
 
-    BuildJob job = distBuildService.createBuild(BuildMode.REMOTE_BUILD, 1);
+    BuildJob job = distBuildService.createBuild(BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());

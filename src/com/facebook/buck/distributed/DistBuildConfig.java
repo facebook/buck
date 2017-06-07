@@ -43,6 +43,11 @@ public class DistBuildConfig {
   private static final String NUMBER_OF_MINIONS = "number_of_minions";
   private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 2;
 
+  private static final String REPOSITORY = "repository";
+  private static final String DEFAULT_REPOSITORY = "";
+  private static final String TENANT_ID = "tenant_id";
+  private static final String DEFAULT_TENANT_ID = "";
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -79,6 +84,14 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
         .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
+  }
+
+  public String getRepository() {
+    return buckConfig.getValue(STAMPEDE_SECTION, REPOSITORY).orElse(DEFAULT_REPOSITORY);
+  }
+
+  public String getTenantId() {
+    return buckConfig.getValue(STAMPEDE_SECTION, TENANT_ID).orElse(DEFAULT_TENANT_ID);
   }
 
   /**
