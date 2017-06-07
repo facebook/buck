@@ -25,10 +25,11 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -75,12 +76,8 @@ public class AndroidInstrumentationTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidInstrumentationTestDescriptionArg extends CommonDescriptionArg {
+  interface AbstractAndroidInstrumentationTestDescriptionArg
+      extends CommonDescriptionArg, HasContacts, HasTestTimeout {
     BuildTarget getApk();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getContacts();
-
-    Optional<Long> getTestRuleTimeoutMs();
   }
 }

@@ -32,6 +32,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -161,10 +163,8 @@ public class ScalaTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractScalaTestDescriptionArg extends ScalaLibraryDescription.CoreArg {
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getContacts();
-
+  interface AbstractScalaTestDescriptionArg
+      extends HasContacts, HasTestTimeout, ScalaLibraryDescription.CoreArg {
     ImmutableList<String> getVmArgs();
 
     @Value.Default
@@ -189,8 +189,6 @@ public class ScalaTestDescription
     Optional<Boolean> getUseCxxLibraries();
 
     ImmutableSet<BuildTarget> getCxxLibraryWhitelist();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     Optional<Long> getTestCaseTimeoutMs();
 

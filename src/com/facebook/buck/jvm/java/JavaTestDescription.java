@@ -29,6 +29,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -173,15 +175,12 @@ public class JavaTestDescription
     }
   }
 
-    @VisibleForTesting
+  @VisibleForTesting
   public CxxPlatform getCxxPlatform() {
     return cxxPlatform;
   }
 
-  public interface CoreArg extends JavaLibraryDescription.CoreArg {
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getContacts();
-
+  public interface CoreArg extends HasContacts, HasTestTimeout, JavaLibraryDescription.CoreArg {
     ImmutableList<String> getVmArgs();
 
     Optional<TestType> getTestType();
@@ -203,8 +202,6 @@ public class JavaTestDescription
     Optional<Boolean> getUseCxxLibraries();
 
     ImmutableSet<BuildTarget> getCxxLibraryWhitelist();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     Optional<Long> getTestCaseTimeoutMs();
 

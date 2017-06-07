@@ -33,6 +33,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -152,10 +154,8 @@ public class KotlinTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractKotlinTestDescriptionArg extends KotlinLibraryDescription.CoreArg {
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getContacts();
-
+  interface AbstractKotlinTestDescriptionArg
+      extends HasContacts, HasTestTimeout, KotlinLibraryDescription.CoreArg {
     ImmutableList<String> getVmArgs();
 
     Optional<TestType> getTestType();
@@ -163,8 +163,6 @@ public class KotlinTestDescription
     Optional<Level> getStdErrLogLevel();
 
     Optional<Level> getStdOutLogLevel();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     Optional<Long> getTestCaseTimeoutMs();
 

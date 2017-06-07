@@ -173,8 +173,10 @@ java_library(
     srcs = [
         "AbstractDescriptionArg.java",
         "CommonDescriptionArg.java",
+        "HasContacts.java",
         "HasDeclaredDeps.java",
         "HasSrcs.java",
+        "HasTestTimeout.java",
         "HasTests.java",
         "Hint.java",
     ],

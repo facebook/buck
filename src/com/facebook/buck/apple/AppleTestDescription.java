@@ -45,6 +45,8 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
@@ -500,10 +502,7 @@ public class AppleTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleTestDescriptionArg
-      extends AppleNativeTargetDescriptionArg, HasAppleBundleFields {
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getContacts();
-
+      extends AppleNativeTargetDescriptionArg, HasAppleBundleFields, HasContacts, HasTestTimeout {
     @Value.Default
     default boolean getRunTestSeparately() {
       return false;
@@ -521,8 +520,6 @@ public class AppleTestDescription
 
     // Bundle related fields.
     ImmutableMap<String, String> getDestinationSpecifier();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     @Override
     default Either<AppleBundleExtension, String> getExtension() {

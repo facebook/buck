@@ -32,6 +32,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -377,10 +379,8 @@ public class PythonTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonTestDescriptionArg
-      extends PythonLibraryDescription.CoreArg, HasVersionUniverse {
+      extends HasContacts, HasTestTimeout, PythonLibraryDescription.CoreArg, HasVersionUniverse {
     Optional<String> getMainModule();
-
-    ImmutableSet<String> getContacts();
 
     Optional<String> getPlatform();
 
@@ -399,7 +399,5 @@ public class PythonTestDescription
     ImmutableList<String> getBuildArgs();
 
     ImmutableMap<String, String> getEnv();
-
-    Optional<Long> getTestRuleTimeoutMs();
   }
 }

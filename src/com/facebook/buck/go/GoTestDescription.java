@@ -29,8 +29,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -347,7 +349,8 @@ public class GoTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGoTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  interface AbstractGoTestDescriptionArg
+      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasSrcs, HasTestTimeout {
     Optional<BuildTarget> getLibrary();
 
     Optional<String> getPackageName();
@@ -357,10 +360,6 @@ public class GoTestDescription
     ImmutableList<String> getAssemblerFlags();
 
     ImmutableList<String> getLinkerFlags();
-
-    ImmutableSet<String> getContacts();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     @Value.Default
     default boolean getRunTestSeparately() {

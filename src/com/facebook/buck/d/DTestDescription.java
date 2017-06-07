@@ -27,7 +27,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -39,7 +41,6 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -139,13 +140,9 @@ public class DTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractDTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractDTestDescriptionArg
+      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
     SourceList getSrcs();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getContacts();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     ImmutableList<String> getLinkerFlags();
   }

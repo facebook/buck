@@ -27,6 +27,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
@@ -413,9 +415,8 @@ public class CxxTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCxxTestDescriptionArg extends CxxBinaryDescription.CommonArg {
-    ImmutableSet<String> getContacts();
-
+  interface AbstractCxxTestDescriptionArg
+      extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
     Optional<CxxTestType> getFramework();
 
     ImmutableMap<String, String> getEnv();
@@ -425,8 +426,6 @@ public class CxxTestDescription
     Optional<Boolean> getRunTestSeparately();
 
     Optional<Boolean> getUseDefaultTestMain();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     @Value.NaturalOrder
     ImmutableSortedSet<Path> getResources();

@@ -23,7 +23,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -44,7 +46,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -132,14 +133,11 @@ public class ShTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractShTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractShTestDescriptionArg
+      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
     Optional<SourcePath> getTest();
 
     ImmutableList<String> getArgs();
-
-    ImmutableSet<String> getContacts();
-
-    Optional<Long> getTestRuleTimeoutMs();
 
     @Value.Default
     default boolean getRunTestSeparately() {
