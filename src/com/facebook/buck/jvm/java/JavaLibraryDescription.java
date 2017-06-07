@@ -206,8 +206,6 @@ public class JavaLibraryDescription
 
     Optional<SourcePath> getMavenPomTemplate();
 
-    Optional<Boolean> getAutodeps();
-
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getProvidedDeps();
 
