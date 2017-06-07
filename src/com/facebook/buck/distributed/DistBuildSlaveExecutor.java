@@ -241,6 +241,12 @@ public class DistBuildSlaveExecutor {
   }
 
   private DistBuildTargetGraphCodec createGraphCodec() {
+    // Note: This is a hack. Do not confuse this hack with the other hack where we 'pre-load' all
+    // files so that file existence checks in TG -> AG transformation pass (which is a bigger bug).
+    // We need this hack in addition to the other one, because some source file dependencies get
+    // shaved off in the versioned target graph, and so they don't get recorded in the distributed
+    // state, and hence they're not pre-loaded. So even when we pre-load the files, we need this
+    // hack so that the coercer does not check for existence of these unrecorded files.
     TypeCoercerFactory typeCoercerFactory =
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
