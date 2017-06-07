@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -206,9 +205,9 @@ public class Unzip {
           if (filesystem.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
             // We have a pre-existing directory: delete its contents if they aren't in the zip.
             if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
-              for (File f : filesystem.listFiles(target)) {
-                if (!pathMap.containsKey(f.toPath())) {
-                  filesystem.deleteRecursivelyIfExists(f.toPath());
+              for (Path path : filesystem.getDirectoryContents(target)) {
+                if (!pathMap.containsKey(path)) {
+                  filesystem.deleteRecursivelyIfExists(path);
                 }
               }
             }

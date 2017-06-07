@@ -281,7 +281,7 @@ public class FilterResourcesStep implements Step {
 
         // Delete newly-empty directories to prevent missing resources errors in apkbuilder.
         Path parent = drawable.getParent();
-        if (filesystem.listFiles(parent).length == 0) {
+        if (filesystem.getDirectoryContents(parent).isEmpty()) {
           filesystem.deleteFileAtPath(parent);
         }
       }

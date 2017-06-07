@@ -78,7 +78,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -147,9 +146,11 @@ public class ChromeTraceBuildListenerTest {
     listener.outputTrace(invocationInfo.getBuildId());
 
     ImmutableList<String> files =
-        Arrays.stream(projectFilesystem.listFiles(invocationInfo.getLogDirectoryPath()))
+        projectFilesystem
+            .getDirectoryContents(invocationInfo.getLogDirectoryPath())
+            .stream()
             .filter(i -> i.toString().endsWith(".trace"))
-            .map(File::getName)
+            .map(path -> path.getFileName().toString())
             .collect(MoreCollectors.toImmutableList());
 
     assertEquals(4, files.size());

@@ -34,7 +34,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +47,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -557,18 +555,6 @@ public class ProjectFilesystem {
   /** Allows {@link Files#isExecutable} to be faked in tests. */
   public boolean isExecutable(Path child) {
     return delegate.isExecutable(child);
-  }
-
-  /**
-   * Allows {@link java.io.File#listFiles} to be faked in tests.
-   *
-   * <p>// @deprecated Replaced by {@link #getDirectoryContents}
-   */
-  public File[] listFiles(Path pathRelativeToProjectRoot) throws IOException {
-    Collection<Path> paths = getDirectoryContents(pathRelativeToProjectRoot);
-
-    File[] result = new File[paths.size()];
-    return Collections2.transform(paths, Path::toFile).toArray(result);
   }
 
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
