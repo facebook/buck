@@ -29,6 +29,7 @@ import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.Unzip;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.collect.FluentIterable;
@@ -114,6 +115,16 @@ public class ProjectFilesystemTest {
   public void testMkdirsCanCreateNestedFolders() throws IOException {
     filesystem.mkdirs(new File("foo/bar/baz").toPath());
     assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar/baz")));
+  }
+
+  @Test
+  public void mkdirsAllowsSymlinksToDirs() throws IOException {
+    Assume.assumeTrue("System supports symlinks", !Platform.detect().equals(Platform.WINDOWS));
+    Files.createDirectory(tmp.getRoot().resolve("real_dir"));
+    // Create a relative symbolic link.
+    Files.createSymbolicLink(
+        tmp.getRoot().resolve("symlinked_dir"), filesystem.getPath("real_dir"));
+    filesystem.mkdirs(filesystem.getPath("symlinked_dir"));
   }
 
   @Test

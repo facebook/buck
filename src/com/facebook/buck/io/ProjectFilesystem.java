@@ -57,6 +57,7 @@ import java.io.Writer;
 import java.nio.channels.Channels;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemLoopException;
 import java.nio.file.FileVisitOption;
@@ -608,7 +609,16 @@ public class ProjectFilesystem {
    * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
-    Files.createDirectories(resolve(pathRelativeToProjectRoot));
+    Path resolved = resolve(pathRelativeToProjectRoot);
+    try {
+      Files.createDirectories(resolved);
+    } catch (FileAlreadyExistsException e) {
+      // Don't complain if the file is a symlink that points to a valid directory.
+      // This check is done only on exception as it's a rare case, and lstat is not free.
+      if (!Files.isDirectory(resolved)) {
+        throw e;
+      }
+    }
   }
 
   /** Creates a new file relative to the project root. */
