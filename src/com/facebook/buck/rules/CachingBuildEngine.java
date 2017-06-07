@@ -497,7 +497,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               buildContext,
               buildResultFuture,
               () -> checkInputBasedCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
-              cacheActivityService.withDefaultAmounts(CACHE_CHECK_RESOURCE_AMOUNTS));
+              serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
     }
 
     // 5. Then check if the depfile matches.
