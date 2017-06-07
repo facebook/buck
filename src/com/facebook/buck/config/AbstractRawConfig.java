@@ -17,7 +17,7 @@ package com.facebook.buck.config;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -62,7 +62,7 @@ abstract class AbstractRawConfig {
    * <p>Unless otherwise stated, duplicate keys overwrites earlier ones.
    */
   public static class Builder {
-    private Map<String, Map<String, String>> values = Maps.newLinkedHashMap();
+    private Map<String, Map<String, String>> values = new LinkedHashMap<>();
 
     /** Merge raw config values into this config. */
     public <M extends Map<String, String>> Builder putAll(Map<String, M> config) {
@@ -95,7 +95,7 @@ abstract class AbstractRawConfig {
     private Map<String, String> requireSection(String sectionName) {
       Map<String, String> section = values.get(sectionName);
       if (section == null) {
-        section = Maps.newLinkedHashMap();
+        section = new LinkedHashMap<>();
         values.put(sectionName, section);
       }
       return section;

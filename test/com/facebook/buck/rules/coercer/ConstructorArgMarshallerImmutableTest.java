@@ -38,9 +38,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -224,7 +224,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
     BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
 
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
     args.put("notdeps", ImmutableList.of(notDep));
 
@@ -469,7 +469,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void shouldNotPopulateDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("defaultString", null);
     args.put("defaultSourcePath", null);
     DtoWithOptionalValues built =
@@ -490,7 +490,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void shouldRespectSpecifiedDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("something", null);
     args.put("things", null);
     DtoWithDefaultValues built =
@@ -511,7 +511,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void shouldAllowOverridingDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
-    Map<String, Object> args = Maps.newHashMap();
+    Map<String, Object> args = new HashMap<>();
     args.put("something", "bar");
     args.put("things", ImmutableList.of("qux", "quz"));
     args.put("more", 1234L);

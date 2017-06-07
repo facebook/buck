@@ -28,10 +28,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -183,7 +183,7 @@ public class SourcePathResolver {
       Predicate<T> filter,
       Function<T, SourcePath> objectSourcePathFunction) {
 
-    Map<String, T> resolved = Maps.newLinkedHashMap();
+    Map<String, T> resolved = new LinkedHashMap<>();
 
     for (T object : objects) {
       if (filter.test(object)) {

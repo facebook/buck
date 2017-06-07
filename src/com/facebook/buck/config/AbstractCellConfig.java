@@ -29,10 +29,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -131,7 +131,7 @@ abstract class AbstractCellConfig {
    * <p>Unless otherwise stated, duplicate keys overwrites earlier ones.
    */
   public static class Builder {
-    private Map<RelativeCellName, RawConfig.Builder> values = Maps.newLinkedHashMap();
+    private Map<RelativeCellName, RawConfig.Builder> values = new LinkedHashMap<>();
 
     /** Put a single value. */
     public Builder put(RelativeCellName cell, String section, String key, String value) {

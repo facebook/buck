@@ -35,13 +35,13 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -385,7 +385,7 @@ public class WorkerShellStepTest {
             .build();
 
     Map<String, String> processEnv =
-        Maps.newHashMap(
+        new HashMap<>(
             step.getFactory()
                 .getEnvironmentForProcess(
                     context,

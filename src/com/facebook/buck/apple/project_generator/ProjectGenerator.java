@@ -142,7 +142,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -1663,7 +1662,7 @@ public class ProjectGenerator {
               .getBuildConfigurationsByName()
               .getUnchecked(configurationEntry.getKey());
 
-      HashMap<String, String> combinedOverrideConfigs = Maps.newHashMap(overrideBuildSettings);
+      HashMap<String, String> combinedOverrideConfigs = new HashMap<>(overrideBuildSettings);
       for (Map.Entry<String, String> entry : defaultBuildSettings.entrySet()) {
         String existingSetting = targetLevelInlineSettings.get(entry.getKey());
         if (existingSetting == null) {

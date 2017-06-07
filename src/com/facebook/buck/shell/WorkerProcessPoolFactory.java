@@ -27,12 +27,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -152,7 +152,7 @@ public class WorkerProcessPoolFactory {
       ExecutionContext context, WorkerProcessParams workerJobParams) {
     Path tmpDir = workerJobParams.getTempDir();
 
-    Map<String, String> envVars = Maps.newHashMap(context.getEnvironment());
+    Map<String, String> envVars = new HashMap<>(context.getEnvironment());
     envVars.put("TMP", filesystem.resolve(tmpDir).toString());
     envVars.putAll(workerJobParams.getStartupEnvironment());
     return ImmutableMap.copyOf(envVars);

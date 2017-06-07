@@ -27,7 +27,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -100,8 +99,8 @@ public class BuildReport {
 
   public String generateJsonBuildReport() throws IOException {
     Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
-    LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
-    LinkedHashMap<String, Object> failures = Maps.newLinkedHashMap();
+    LinkedHashMap<String, Object> results = new LinkedHashMap<>();
+    LinkedHashMap<String, Object> failures = new LinkedHashMap<>();
     boolean isOverallSuccess = true;
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
@@ -110,7 +109,7 @@ public class BuildReport {
       if (result.isPresent()) {
         success = Optional.ofNullable(result.get().getSuccess());
       }
-      Map<String, Object> value = Maps.newLinkedHashMap();
+      Map<String, Object> value = new LinkedHashMap<>();
 
       boolean isSuccess = success.isPresent();
       value.put("success", isSuccess);
@@ -133,7 +132,7 @@ public class BuildReport {
       failures.put(failureResult.getRule().getFullyQualifiedName(), failure.getMessage());
     }
 
-    Map<String, Object> report = Maps.newLinkedHashMap();
+    Map<String, Object> report = new LinkedHashMap<>();
     report.put("success", isOverallSuccess);
     report.put("results", results);
     report.put("failures", failures);

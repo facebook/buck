@@ -18,7 +18,6 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -30,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -45,7 +45,7 @@ import javax.annotation.Nullable;
  */
 public class OverwritingZipOutputStreamImpl implements CustomZipOutputStream.Impl {
   // Attempt to maintain ordering of files that are added.
-  private final Map<File, EntryAccounting> entries = Maps.newLinkedHashMap();
+  private final Map<File, EntryAccounting> entries = new LinkedHashMap<>();
   private final File scratchDir;
   private final Clock clock;
   private final OutputStream delegate;

@@ -58,10 +58,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -1123,7 +1123,7 @@ public class CxxLibraryDescription
           // Nothing to add.
           return inputs.values().stream();
         } else {
-          Map<BuildTarget, CxxPreprocessorInput> result = Maps.newLinkedHashMap();
+          Map<BuildTarget, CxxPreprocessorInput> result = new LinkedHashMap<>();
           result.putAll(inputs);
           for (CxxPreprocessorDep dep : privateDepsForPlatform) {
             result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
@@ -1140,7 +1140,7 @@ public class CxxLibraryDescription
      */
     static TransitiveCxxPreprocessorInputFunction fromDeps() {
       return (target, ruleResolver, cxxPlatform, deps, privateDeps) -> {
-        Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
+        Map<BuildTarget, CxxPreprocessorInput> input = new LinkedHashMap<>();
         input.put(
             target,
             queryMetadataCxxPreprocessorInput(

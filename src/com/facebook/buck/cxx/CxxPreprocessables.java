@@ -37,7 +37,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -141,7 +140,7 @@ public class CxxPreprocessables {
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
     // target.
-    final Map<BuildTarget, CxxPreprocessorInput> deps = Maps.newLinkedHashMap();
+    final Map<BuildTarget, CxxPreprocessorInput> deps = new LinkedHashMap<>();
 
     // Build up the map of all C/C++ preprocessable dependencies.
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(inputs) {

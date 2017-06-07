@@ -18,7 +18,7 @@ package com.facebook.buck.distributed;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Maps;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -38,10 +38,10 @@ public class DistBuildClientStatsTracker {
   }
 
   @GuardedBy("this")
-  private final Map<DistBuildClientStat, Stopwatch> stopwatchesByType = Maps.newHashMap();
+  private final Map<DistBuildClientStat, Stopwatch> stopwatchesByType = new HashMap<>();
 
   @GuardedBy("this")
-  private final Map<DistBuildClientStat, Long> durationsMsByType = Maps.newHashMap();
+  private final Map<DistBuildClientStat, Long> durationsMsByType = new HashMap<>();
 
   private volatile Optional<String> stampedeId = Optional.empty();
 

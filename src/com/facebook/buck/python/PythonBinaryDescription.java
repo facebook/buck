@@ -54,9 +54,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -121,7 +121,7 @@ public class PythonBinaryDescription
   public static ImmutableMap<Path, SourcePath> addMissingInitModules(
       ImmutableMap<Path, SourcePath> modules, SourcePath emptyInit) {
 
-    Map<Path, SourcePath> initModules = Maps.newLinkedHashMap();
+    Map<Path, SourcePath> initModules = new LinkedHashMap<>();
 
     // Insert missing `__init__.py` modules.
     Set<Path> packages = new HashSet<>();

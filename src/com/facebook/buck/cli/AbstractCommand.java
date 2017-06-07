@@ -41,11 +41,11 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,7 +83,7 @@ public abstract class AbstractCommand implements Command {
     aliases = {"-c"},
     usage = ""
   )
-  private Map<String, String> configOverrides = Maps.newLinkedHashMap();
+  private Map<String, String> configOverrides = new LinkedHashMap<>();
 
   @Override
   public CellConfig getConfigOverrides() {
