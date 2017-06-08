@@ -15,28 +15,32 @@
  */
 package com.facebook.buck.worker;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 public interface WorkerProcessProtocol {
 
-  /** When worker process starts up, main process and worker process should send handshakes. */
-  void sendHandshake(int handshakeID) throws IOException;
+  interface CommandSender extends Closeable {
+    void handshake(int messageId) throws IOException;
 
-  /** This method expects to receive a handshake from the other end. */
-  void receiveHandshake(int handshakeID) throws IOException;
+    void send(int messageId, WorkerProcessCommand command) throws IOException;
 
-  /** Send the given command to the other end for invocation. */
-  void sendCommand(int messageID, WorkerProcessCommand command) throws IOException;
+    int receiveCommandResponse(int messageID) throws IOException;
 
-  /** This method expects to receive a command to invoke on this end. */
-  WorkerProcessCommand receiveCommand(int messageID) throws IOException;
+    /** Instructs the CommandReceiver to shut itself down. */
+    @Override
+    void close() throws IOException;
+  }
 
-  /** Sends a response for previously received command. */
-  void sendCommandResponse(int messageID, String type, int exitCode) throws IOException;
+  interface CommandReceiver extends Closeable {
+    void handshake(int messageId) throws IOException;
 
-  /** This method expects to receive a response for previously sent command. */
-  int receiveCommandResponse(int messageID) throws IOException;
+    WorkerProcessCommand receiveCommand(int messageId) throws IOException;
 
-  /** Close connection and properly end the stream. */
-  void close() throws IOException;
+    void sendResponse(int messageId, String type, int exitCode) throws IOException;
+
+    /** Should be called when the CommandSender has requested the receiver closes. */
+    @Override
+    void close() throws IOException;
+  }
 }

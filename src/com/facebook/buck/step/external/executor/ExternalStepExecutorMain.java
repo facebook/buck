@@ -35,13 +35,12 @@ public class ExternalStepExecutorMain {
     AtomicInteger messageCounter = new AtomicInteger();
 
     try {
-      WorkerProcessProtocol workerProcessProtocol = null;
+      WorkerProcessProtocol.CommandReceiver workerProcessProtocol = null;
       try {
         workerProcessProtocol =
-            new WorkerProcessProtocolZero(processStdinWriter, processStdoutReader);
+            new WorkerProcessProtocolZero.CommandReceiver(processStdinWriter, processStdoutReader);
 
-        workerProcessProtocol.sendHandshake(messageCounter.getAndIncrement());
-        workerProcessProtocol.receiveHandshake(0);
+        workerProcessProtocol.handshake(messageCounter.getAndIncrement());
         while (true) {
           if (JsonToken.END_ARRAY == processStdoutReader.peek()) {
             workerProcessProtocol.close();
@@ -49,7 +48,7 @@ public class ExternalStepExecutorMain {
           }
           int messageId = messageCounter.getAndIncrement();
           workerProcessProtocol.receiveCommand(messageId);
-          workerProcessProtocol.sendCommandResponse(messageId, "result", 0);
+          workerProcessProtocol.sendResponse(messageId, "result", 0);
         }
       } finally {
         if (workerProcessProtocol != null) {

@@ -70,7 +70,7 @@ public class WorkerProcessTest {
     try (WorkerProcess process =
         new WorkerProcess(new FakeProcessExecutor(), createDummyParams(), filesystem, tmpPath)) {
       process.setProtocol(
-          new FakeWorkerProcessProtocol() {
+          new FakeWorkerProcessProtocol.FakeCommandSender() {
             @Override
             public int receiveCommandResponse(int messageID) throws IOException {
               // simulate the external tool and write the stdout and stderr files
@@ -88,7 +88,8 @@ public class WorkerProcessTest {
 
   @Test
   public void testClose() throws IOException {
-    FakeWorkerProcessProtocol protocol = new FakeWorkerProcessProtocol();
+    FakeWorkerProcessProtocol.FakeCommandSender protocol =
+        new FakeWorkerProcessProtocol.FakeCommandSender();
 
     try (WorkerProcess process =
         new WorkerProcess(

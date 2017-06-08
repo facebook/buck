@@ -18,38 +18,55 @@ package com.facebook.buck.worker;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-public class FakeWorkerProcessProtocol implements WorkerProcessProtocol {
+public class FakeWorkerProcessProtocol {
 
-  private boolean isClosed = false;
+  public static class FakeCommandSender implements WorkerProcessProtocol.CommandSender {
 
-  @Override
-  public void sendHandshake(int handshakeID) throws IOException {}
+    private boolean isClosed = false;
 
-  @Override
-  public void receiveHandshake(int handshakeID) throws IOException {}
+    @Override
+    public void handshake(int messageId) throws IOException {}
 
-  @Override
-  public void sendCommand(int messageID, WorkerProcessCommand command) throws IOException {}
+    @Override
+    public void send(int messageId, WorkerProcessCommand command) throws IOException {}
 
-  @Override
-  public WorkerProcessCommand receiveCommand(int messageID) throws IOException {
-    return WorkerProcessCommand.of(Paths.get(""), Paths.get(""), Paths.get(""));
+    @Override
+    public int receiveCommandResponse(int messageID) throws IOException {
+      return 0;
+    }
+
+    @Override
+    public void close() throws IOException {
+      isClosed = true;
+    }
+
+    public boolean isClosed() {
+      return isClosed;
+    }
   }
 
-  @Override
-  public void sendCommandResponse(int messageID, String type, int exitCode) throws IOException {}
+  public static class FakeCommandReceiver implements WorkerProcessProtocol.CommandReceiver {
 
-  @Override
-  public int receiveCommandResponse(int messageID) throws IOException {
-    return 0;
-  }
+    private boolean isClosed = false;
 
-  @Override
-  public void close() throws IOException {
-    isClosed = true;
-  }
+    @Override
+    public void handshake(int messageId) throws IOException {}
 
-  public boolean isClosed() {
-    return isClosed;
+    @Override
+    public WorkerProcessCommand receiveCommand(int messageId) throws IOException {
+      return WorkerProcessCommand.of(Paths.get(""), Paths.get(""), Paths.get(""));
+    }
+
+    @Override
+    public void sendResponse(int messageId, String type, int exitCode) throws IOException {}
+
+    @Override
+    public void close() throws IOException {
+      isClosed = true;
+    }
+
+    public boolean isClosed() {
+      return isClosed;
+    }
   }
 }

@@ -38,7 +38,7 @@ public class FakeWorkerProcess extends WorkerProcess {
         Paths.get("tmp").toAbsolutePath().normalize());
     this.jobArgsToJobResultMap = jobArgsToJobResultMap;
     this.isAlive = false;
-    this.setProtocol(new FakeWorkerProcessProtocol());
+    this.setProtocol(new FakeWorkerProcessProtocol.FakeCommandSender());
   }
 
   @Override

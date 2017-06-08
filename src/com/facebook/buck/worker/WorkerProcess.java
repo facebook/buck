@@ -51,7 +51,7 @@ public class WorkerProcess implements Closeable {
   private final Path stdErr;
   private final AtomicInteger currentMessageID = new AtomicInteger();
   private boolean handshakePerformed = false;
-  @Nullable private WorkerProcessProtocol protocol;
+  @Nullable private WorkerProcessProtocol.CommandSender protocol;
   @Nullable private ProcessExecutor.LaunchedProcess launchedProcess;
 
   /**
@@ -99,7 +99,7 @@ public class WorkerProcess implements Closeable {
     JsonReader processStdoutReader =
         new JsonReader(new BufferedReader(new InputStreamReader(launchedProcess.getInputStream())));
     protocol =
-        new WorkerProcessProtocolZero(
+        new WorkerProcessProtocolZero.CommandSender(
             processStdinWriter,
             processStdoutReader,
             stdErr,
@@ -109,11 +109,8 @@ public class WorkerProcess implements Closeable {
               }
             });
 
-    int messageID = currentMessageID.getAndAdd(1);
-    LOG.debug("Sending handshake to process %d", this.hashCode());
-    protocol.sendHandshake(messageID);
-    LOG.debug("Receiving handshake from process %d", this.hashCode());
-    protocol.receiveHandshake(messageID);
+    LOG.debug("Handshaking with process %d", this.hashCode());
+    protocol.handshake(currentMessageID.getAndIncrement());
     handshakePerformed = true;
   }
 
@@ -133,7 +130,7 @@ public class WorkerProcess implements Closeable {
     LOG.debug(
         "Sending job %d to process %d \n" + " job arguments: \'%s\'",
         messageID, this.hashCode(), jobArgs);
-    protocol.sendCommand(messageID, WorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
+    protocol.send(messageID, WorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
     LOG.debug("Receiving response for job %d from process %d", messageID, this.hashCode());
     int exitCode = protocol.receiveCommandResponse(messageID);
     Optional<String> stdout = filesystem.readFileIfItExists(stdoutPath);
@@ -179,7 +176,7 @@ public class WorkerProcess implements Closeable {
   }
 
   @VisibleForTesting
-  void setProtocol(WorkerProcessProtocol protocolMock) {
+  void setProtocol(WorkerProcessProtocol.CommandSender protocolMock) {
     this.protocol = protocolMock;
   }
 }
