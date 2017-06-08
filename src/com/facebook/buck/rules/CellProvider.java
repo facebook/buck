@@ -94,17 +94,17 @@ public final class CellProvider {
     DefaultCellPathResolver rootCellCellPathResolver =
         new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
-    ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping =
-        rootCellCellPathResolver.getTransitivePathMapping();
+    ImmutableMap<RelativeCellName, Path> cellPathMapping =
+        rootCellCellPathResolver.getPathMapping();
 
     ImmutableMap<Path, RawConfig> pathToConfigOverrides;
     try {
-      pathToConfigOverrides = rootCellConfigOverrides.getOverridesByPath(transitiveCellPathMapping);
+      pathToConfigOverrides = rootCellConfigOverrides.getOverridesByPath(cellPathMapping);
     } catch (CellConfig.MalformedOverridesException e) {
       throw new HumanReadableException(e.getMessage());
     }
 
-    ImmutableSet<Path> allRoots = ImmutableSet.copyOf(transitiveCellPathMapping.values());
+    ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
     return new CellProvider(
         cellProvider ->
             new CacheLoader<Path, Cell>() {

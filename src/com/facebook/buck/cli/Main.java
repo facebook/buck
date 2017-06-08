@@ -459,7 +459,7 @@ public final class Main {
             .add(canonicalRootPath)
             .addAll(
                 buckConfig.getView(ParserConfig.class).getWatchCells()
-                    ? cellPathResolver.getTransitivePathMapping().values()
+                    ? cellPathResolver.getPathMapping().values()
                     : ImmutableList.of())
             .build();
     Optional<ImmutableList<String>> allowedJavaSpecificiationVersions =

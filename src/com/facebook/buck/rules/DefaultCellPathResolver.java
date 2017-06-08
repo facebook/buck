@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
@@ -32,7 +31,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
@@ -76,77 +74,36 @@ public class DefaultCellPathResolver implements CellPathResolver {
   }
 
   /**
-   * Recursively walks configuration files to find all possible {@link Cell} locations.
+   * The root cell is required to declare all {@link Cell}s it and its dependants can reach
    *
-   * @return MultiMap of Path to cell name. The map will contain multiple names for a path if that
-   *     cell is reachable through different paths from the current cell.
+   * @return Map of cell name to path.
    */
-  public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() {
+  public ImmutableMap<RelativeCellName, Path> getPathMapping() {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
     builder.put(RelativeCellName.of(ImmutableList.of()), root);
-
     HashSet<Path> seenPaths = new HashSet<>();
     seenPaths.add(root);
 
-    constructFullMapping(builder, seenPaths, RelativeCellName.of(ImmutableList.of()), this);
-    return builder.build();
-  }
-
-  public Path getRoot() {
-    return root;
-  }
-
-  private ImmutableMap<String, Path> getPartialMapping() {
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
-    ImmutableMap.Builder<String, Path> rootsMap = ImmutableMap.builder();
     for (String cellName : sortedCellNames) {
       Path cellRoot = Preconditions.checkNotNull(getCellPath(cellName));
-      rootsMap.put(cellName, cellRoot);
-    }
-    return rootsMap.build();
-  }
-
-  private static void constructFullMapping(
-      ImmutableMap.Builder<RelativeCellName, Path> result,
-      Set<Path> pathStack,
-      RelativeCellName parentCellPath,
-      DefaultCellPathResolver parentStub) {
-    ImmutableMap<String, Path> partialMapping = parentStub.getPartialMapping();
-    for (Map.Entry<String, Path> entry : partialMapping.entrySet()) {
-      Path cellRoot = entry.getValue().normalize();
       try {
         cellRoot = cellRoot.toRealPath().normalize();
       } catch (IOException e) {
         LOG.warn("cellroot [" + cellRoot + "] does not exist in filesystem");
       }
-
-      // Do not recurse into previously visited Cell roots. It's OK for cell references to form
-      // cycles as long as the targets don't form a cycle.
-      // We intentionally allow for the map to contain entries whose Config objects can't be
-      // created. These are still technically reachable and will not cause problems as long as none
-      // of the BuildTargets in the build reference them.
-      if (pathStack.contains(cellRoot)) {
+      if (seenPaths.contains(cellRoot)) {
         continue;
       }
-      pathStack.add(cellRoot);
-
-      RelativeCellName relativeCellName = parentCellPath.withAppendedComponent(entry.getKey());
-      result.put(relativeCellName, cellRoot);
-
-      Config config;
-      try {
-        // We don't support overriding repositories from the command line so creating the config
-        // with no overrides is OK.
-        config = Configs.createDefaultConfig(cellRoot);
-      } catch (IOException e) {
-        LOG.debug(e, "Error when constructing cell, skipping path %s", cellRoot);
-        continue;
-      }
-      constructFullMapping(
-          result, pathStack, relativeCellName, new DefaultCellPathResolver(cellRoot, config));
-      pathStack.remove(cellRoot);
+      builder.put(RelativeCellName.of(ImmutableList.of(cellName)), cellRoot);
+      seenPaths.add(cellRoot);
     }
+    return builder.build();
+  }
+
+  public Path getRoot() {
+    return root;
   }
 
   private Path getCellPath(String cellName) {

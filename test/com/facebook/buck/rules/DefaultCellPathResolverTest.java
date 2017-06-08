@@ -55,7 +55,7 @@ public class DefaultCellPathResolverTest {
                 REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
 
     assertThat(
-        cellPathResolver.getTransitivePathMapping(),
+        cellPathResolver.getPathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
                 RelativeCellName.ROOT_CELL_NAME,
@@ -82,7 +82,7 @@ public class DefaultCellPathResolverTest {
     // Allow non-existant paths; Buck should allow paths whose .buckconfigs
     // cannot be loaded.
     assertThat(
-        cellPathResolver.getTransitivePathMapping(),
+        cellPathResolver.getPathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
                 RelativeCellName.ROOT_CELL_NAME,
@@ -117,53 +117,13 @@ public class DefaultCellPathResolverTest {
         StandardCharsets.UTF_8);
 
     assertThat(
-        cellPathResolver.getTransitivePathMapping(),
+        cellPathResolver.getPathMapping(),
         Matchers.equalTo(
             ImmutableMap.of(
                 RelativeCellName.ROOT_CELL_NAME,
                 cell1Root,
                 RelativeCellName.of(ImmutableList.of("two")),
                 cell2Root)));
-  }
-
-  @Test
-  public void transitiveMappingForCycle() throws Exception {
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-
-    Path root = vfs.getPath("/opt/local/");
-    Path cell1Root = root.resolve("repo1");
-    Files.createDirectories(cell1Root);
-    Path cell2Root = root.resolve("repo2");
-    Files.createDirectories(cell2Root);
-    Path cell3Root = root.resolve("repo3");
-    Files.createDirectories(cell3Root);
-
-    DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
-            cell1Root,
-            ConfigBuilder.createFromText(
-                REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
-
-    Files.write(
-        cell2Root.resolve(".buckconfig"),
-        ImmutableList.of(REPOSITORIES_SECTION, " three = " + cell3Root.toString()),
-        StandardCharsets.UTF_8);
-
-    Files.write(
-        cell3Root.resolve(".buckconfig"),
-        ImmutableList.of(REPOSITORIES_SECTION, " cycle = " + cell1Root.toString()),
-        StandardCharsets.UTF_8);
-
-    assertThat(
-        cellPathResolver.getTransitivePathMapping(),
-        Matchers.equalTo(
-            ImmutableMap.of(
-                RelativeCellName.ROOT_CELL_NAME,
-                cell1Root,
-                RelativeCellName.of(ImmutableList.of("simple")),
-                cell2Root,
-                RelativeCellName.of(ImmutableList.of("simple", "three")),
-                cell3Root)));
   }
 
   @Test
@@ -186,7 +146,8 @@ public class DefaultCellPathResolverTest {
             ConfigBuilder.createFromText(
                 REPOSITORIES_SECTION,
                 " left = " + cellLeftRoot.toString(),
-                " right = " + cellRightRoot.toString()));
+                " right = " + cellRightRoot.toString(),
+                " center = " + cellCenterRoot.toString()));
 
     Files.write(
         cellLeftRoot.resolve(".buckconfig"),
@@ -199,13 +160,12 @@ public class DefaultCellPathResolverTest {
         StandardCharsets.UTF_8);
 
     assertThat(
-        cellPathResolver.getTransitivePathMapping(),
+        cellPathResolver.getPathMapping(),
         Matchers.equalTo(
             ImmutableMap.<RelativeCellName, Path>builder()
                 .put(RelativeCellName.ROOT_CELL_NAME, cell1Root)
+                .put(RelativeCellName.of(ImmutableList.of("center")), cellCenterRoot)
                 .put(RelativeCellName.of(ImmutableList.of("left")), cellLeftRoot)
-                .put(RelativeCellName.of(ImmutableList.of("left", "center")), cellCenterRoot)
-                .put(RelativeCellName.of(ImmutableList.of("right", "center")), cellCenterRoot)
                 .put(RelativeCellName.of(ImmutableList.of("right")), cellRightRoot)
                 .build()));
   }
