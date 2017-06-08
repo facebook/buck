@@ -50,6 +50,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
             .getRootPath()
             .resolve(filesystem.getBuckPaths().getScratchDir().resolve("metadata.db"))
             .toString();
+    filesystem.createParentDirs(dbPath);
     try {
       Class.forName("org.sqlite.JDBC");
       connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
