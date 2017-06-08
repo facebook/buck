@@ -185,6 +185,7 @@ java_immutables_library(
         "JavacErrorParser.java",
         "JavacEventSinkToBuckEventBusBridge.java",
         "JavacExecutionContextSerializer.java",
+        "JavacPluginJsr199FieldsSerializer.java",
         "JavacProvider.java",
         "JdkProvidedInMemoryJavac.java",
         "Jsr199Javac.java",
