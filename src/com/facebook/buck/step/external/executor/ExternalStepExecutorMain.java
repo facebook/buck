@@ -16,8 +16,8 @@
 
 package com.facebook.buck.step.external.executor;
 
-import com.facebook.buck.shell.WorkerProcessProtocol;
-import com.facebook.buck.shell.WorkerProcessProtocolZero;
+import com.facebook.buck.worker.WorkerProcessProtocol;
+import com.facebook.buck.worker.WorkerProcessProtocolZero;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;

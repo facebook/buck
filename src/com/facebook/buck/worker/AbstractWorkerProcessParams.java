@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.worker;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;

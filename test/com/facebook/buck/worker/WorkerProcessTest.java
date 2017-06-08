@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.worker;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;

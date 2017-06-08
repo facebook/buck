@@ -19,8 +19,6 @@ java_immutables_library(
     deps = [
         ":steps",
         ":worker",
-        ":worker_job_params",
-        ":worker_pool_factory",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:BuckPaths",
@@ -46,6 +44,8 @@ java_immutables_library(
         "//src/com/facebook/buck/util:object_mapper",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/versions:translator",
+        "//src/com/facebook/buck/worker:worker_job_params",
+        "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/zip:steps",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
@@ -94,16 +94,6 @@ java_library(
 )
 
 java_immutables_library(
-    name = "worker_job_params",
-    srcs = [
-        "AbstractWorkerJobParams.java",
-        "AbstractWorkerProcessIdentity.java",
-        "AbstractWorkerProcessParams.java",
-    ],
-    visibility = ["PUBLIC"],
-)
-
-java_immutables_library(
     name = "worker",
     srcs = [
         "DefaultWorkerTool.java",
@@ -115,9 +105,6 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":worker_job_params",
-        ":worker_pool_factory",
-        ":worker_process",
         ":worker_tool",
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/event:event",
@@ -142,6 +129,9 @@ java_immutables_library(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/worker:worker_job_params",
+        "//src/com/facebook/buck/worker:worker_pool_factory",
+        "//src/com/facebook/buck/worker:worker_process",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
@@ -159,52 +149,6 @@ java_library(
     deps = [
         "//src/com/facebook/buck/rules:build_rule",
         "//third-party/java/guava:guava",
-    ],
-)
-
-java_library(
-    name = "worker_pool_factory",
-    srcs = [
-        "WorkerProcessPoolFactory.java",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        ":worker_job_params",
-        ":worker_process",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/environment:platform",
-        "//third-party/java/guava:guava",
-    ],
-)
-
-java_immutables_library(
-    name = "worker_process",
-    srcs = [
-        "AbstractWorkerJobResult.java",
-        "AbstractWorkerProcessCommand.java",
-        "WorkerProcess.java",
-        "WorkerProcessPool.java",
-        "WorkerProcessProtocol.java",
-        "WorkerProcessProtocolZero.java",
-    ],
-    tests = [
-        "//test/com/facebook/buck/shell:shell",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//third-party/java/gson:gson",
     ],
 )
 

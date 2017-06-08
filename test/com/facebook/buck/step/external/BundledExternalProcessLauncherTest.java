@@ -20,14 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.shell.WorkerJobResult;
-import com.facebook.buck.shell.WorkerProcess;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.worker.WorkerJobResult;
+import com.facebook.buck.worker.WorkerProcess;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.worker;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -148,7 +148,7 @@ public class WorkerProcessPoolFactory {
   }
 
   @VisibleForTesting
-  ImmutableMap<String, String> getEnvironmentForProcess(
+  public ImmutableMap<String, String> getEnvironmentForProcess(
       ExecutionContext context, WorkerProcessParams workerJobParams) {
     Path tmpDir = workerJobParams.getTempDir();
 
@@ -159,7 +159,7 @@ public class WorkerProcessPoolFactory {
   }
 
   @VisibleForTesting
-  WorkerProcess createWorkerProcess(
+  public WorkerProcess createWorkerProcess(
       ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
       throws IOException {
     return new WorkerProcess(context.getProcessExecutor(), processParams, filesystem, tmpDir);

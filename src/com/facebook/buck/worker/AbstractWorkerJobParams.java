@@ -14,18 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.shell;
+package com.facebook.buck.worker;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractWorkerJobResult {
-  int getExitCode();
+interface AbstractWorkerJobParams {
+  /**
+   * The arguments of the actual job once tool has started and ready to accept jobs. For example,
+   * "--hash-file /path/to/file".
+   */
+  String getJobArgs();
 
-  Optional<String> getStdout();
-
-  Optional<String> getStderr();
+  WorkerProcessParams getWorkerProcessParams();
 }

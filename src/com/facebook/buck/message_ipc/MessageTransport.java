@@ -16,8 +16,8 @@
 
 package com.facebook.buck.message_ipc;
 
-import com.facebook.buck.shell.WorkerJobResult;
-import com.facebook.buck.shell.WorkerProcess;
+import com.facebook.buck.worker.WorkerJobResult;
+import com.facebook.buck.worker.WorkerProcess;
 import com.google.common.base.Preconditions;
 
 public class MessageTransport implements AutoCloseable {

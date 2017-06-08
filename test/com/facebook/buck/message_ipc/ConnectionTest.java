@@ -18,9 +18,9 @@ package com.facebook.buck.message_ipc;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.shell.FakeWorkerProcess;
-import com.facebook.buck.shell.WorkerJobResult;
-import com.facebook.buck.shell.WorkerProcess;
+import com.facebook.buck.worker.FakeWorkerProcess;
+import com.facebook.buck.worker.WorkerJobResult;
+import com.facebook.buck.worker.WorkerProcess;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.hamcrest.Matchers;

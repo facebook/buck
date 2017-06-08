@@ -32,6 +32,14 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.worker.FakeWorkerProcess;
+import com.facebook.buck.worker.WorkerJobParams;
+import com.facebook.buck.worker.WorkerJobResult;
+import com.facebook.buck.worker.WorkerProcess;
+import com.facebook.buck.worker.WorkerProcessIdentity;
+import com.facebook.buck.worker.WorkerProcessParams;
+import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -419,7 +427,7 @@ public class WorkerShellStepTest {
             Optional.empty(),
             new WorkerProcessPoolFactory(new FakeProjectFilesystem()) {
               @Override
-              WorkerProcess createWorkerProcess(
+              public WorkerProcess createWorkerProcess(
                   ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
                   throws IOException {
                 try {
