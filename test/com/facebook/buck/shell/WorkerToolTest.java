@@ -31,6 +31,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -56,8 +58,8 @@ public class WorkerToolTest {
 
     assertThat(
         "getArgs should return the args string supplied in the definition.",
-        "arg1 arg2",
-        Matchers.is(((WorkerTool) workerRule).getArgs(pathResolver)));
+        ImmutableList.of("arg1", "arg2"),
+        Matchers.is(((WorkerTool) workerRule).getTool().getCommandPrefix(pathResolver).subList(1, 3)));
   }
 
   @Test
@@ -112,7 +114,7 @@ public class WorkerToolTest {
         workerTool.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
-        workerTool.getArgs(pathResolver),
+        Joiner.on(' ').join(workerTool.getTool().getCommandPrefix(pathResolver)),
         Matchers.containsString(
             pathResolver.getAbsolutePath(exportFileRule.getSourcePathToOutput()).toString()));
   }

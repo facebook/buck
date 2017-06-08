@@ -288,9 +288,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
   public WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
-        convertToWorkerJobParams(cmd, context.getSourcePathResolver()),
-        convertToWorkerJobParams(bash, context.getSourcePathResolver()),
-        convertToWorkerJobParams(cmdExe, context.getSourcePathResolver()),
+        convertToWorkerJobParams(cmd),
+        convertToWorkerJobParams(bash),
+        convertToWorkerJobParams(cmdExe),
         new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables(
@@ -304,7 +304,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(
-      Optional<Arg> arg, SourcePathResolver pathResolver) {
+      Optional<Arg> arg) {
     return arg.map(
         arg1 -> {
           WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
@@ -313,7 +313,6 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
               WorkerProcessParams.of(
                   workerMacroArg.getTempDir(),
                   workerMacroArg.getStartupCommand(),
-                  workerMacroArg.getStartupArgs(pathResolver),
                   workerMacroArg.getEnvironment(),
                   workerMacroArg.getMaxWorkers(),
                   workerMacroArg.getPersistentWorkerKey().isPresent()

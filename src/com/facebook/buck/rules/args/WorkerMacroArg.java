@@ -99,10 +99,6 @@ public class WorkerMacroArg extends MacroArg {
     return workerTool.getTempDir();
   }
 
-  public String getStartupArgs(SourcePathResolver pathResolver) {
-    return workerTool.getArgs(pathResolver);
-  }
-
   public Optional<String> getPersistentWorkerKey() {
     if (workerTool.isPersistent()) {
       return Optional.of(buildTarget.getCellPath().toString() + buildTarget.toString());

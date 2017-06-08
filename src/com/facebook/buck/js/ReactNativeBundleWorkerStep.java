@@ -23,6 +23,7 @@ import com.facebook.buck.shell.WorkerProcessPoolFactory;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -32,7 +33,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
       ProjectFilesystem filesystem,
       Path tmpDir,
       ImmutableList<String> jsPackagerCommand,
-      Optional<String> additionalPackagerFlags,
+      ImmutableList<String> additionalPackagerFlags,
       ReactNativePlatform platform,
       boolean isUnbundle,
       boolean isIndexedUnbundle,
@@ -57,13 +58,11 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     sourceMapFile.toString()),
                 WorkerProcessParams.of(
                     filesystem.resolve(tmpDir),
-                    jsPackagerCommand,
-                    String.format(
-                        "--platform %s%s",
-                        platform.toString(),
-                        additionalPackagerFlags.isPresent()
-                            ? " " + additionalPackagerFlags.get()
-                            : ""),
+                    ImmutableList.<String>builder()
+                        .addAll(jsPackagerCommand)
+                        .add("--platform", platform.toString())
+                        .addAll(additionalPackagerFlags)
+                        .build(),
                     ImmutableMap.of(),
                     1,
                     Optional.empty()))),

@@ -19,86 +19,48 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
+
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public class DefaultWorkerTool extends NoopBuildRule
     implements HasRuntimeDeps, WorkerTool, InitializableFromDisk<DefaultWorkerTool.Data> {
 
-  @AddToRuleKey private final ImmutableList<Arg> args;
-
   @AddToRuleKey
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ImmutableMap<String, Arg> env;
+  private final Tool tool;
 
-  private final BinaryBuildRule exe;
   private final int maxWorkers;
   private final boolean isPersistent;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
-  private final Tool tool;
 
   protected DefaultWorkerTool(
       BuildRuleParams ruleParams,
-      BinaryBuildRule exe,
-      ImmutableList<Arg> args,
-      ImmutableMap<String, Arg> env,
+      Tool tool,
       int maxWorkers,
       boolean isPersistent) {
     super(ruleParams);
-    this.exe = exe;
-    this.args = args;
-    this.env = env;
+    this.tool = tool;
     this.maxWorkers = maxWorkers;
     this.isPersistent = isPersistent;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
-    Tool baseTool = this.exe.getExecutableCommand();
-    CommandTool.Builder builder =
-        new CommandTool.Builder(baseTool)
-            .addInputs(
-                this.getBuildDeps()
-                    .stream()
-                    .map(BuildRule::getSourcePathToOutput)
-                    .collect(MoreCollectors.toImmutableList()));
-    for (Map.Entry<String, Arg> e : env.entrySet()) {
-      builder.addEnv(e.getKey(), e.getValue());
-    }
-    tool = builder.build();
   }
 
   @Override
   public Tool getTool() {
     return tool;
-  }
-
-  @Override
-  public String getArgs(SourcePathResolver pathResolver) {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    for (Arg arg : args) {
-      arg.appendToCommandLine(command, pathResolver);
-    }
-    return Joiner.on(' ').join(command.build());
   }
 
   @Override

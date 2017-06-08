@@ -26,11 +26,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -43,9 +46,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import org.immutables.value.Value;
+
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class WorkerToolDescription
     implements Description<WorkerToolDescriptionArg>,
@@ -82,34 +87,59 @@ public class WorkerToolDescription
       WorkerToolDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    BuildRule rule = resolver.requireRule(args.getExe());
-    if (!(rule instanceof BinaryBuildRule)) {
-      throw new HumanReadableException(
-          "The 'exe' argument of %s, %s, needs to correspond to a "
-              + "binary rule, such as sh_binary().",
-          params.getBuildTarget(), args.getExe().getFullyQualifiedName());
+    CommandTool.Builder builder;
+    if (args.getExe().isPresent()) {
+      BuildRule rule = resolver.requireRule(args.getExe().get());
+      if (!(rule instanceof BinaryBuildRule)) {
+        throw new HumanReadableException(
+            "The 'exe' argument of %s, %s, needs to correspond to a "
+                + "binary rule, such as sh_binary().",
+            params.getBuildTarget(), args.getExe().get().getFullyQualifiedName());
+      }
+
+      builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+    } else {
+      builder = new CommandTool.Builder();
     }
+
+    builder.addInputs(
+        params.getBuildDeps()
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableList()));
 
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
-    final ImmutableList<com.facebook.buck.rules.args.Arg> workerToolArgs =
-        args.getStartupArgs().stream().map(toArg::apply).collect(MoreCollectors.toImmutableList());
 
-    ImmutableMap<String, com.facebook.buck.rules.args.Arg> unexpandedEnv =
-        args.getEnv()
-            .entrySet()
-            .stream()
-            .collect(
-                MoreCollectors.toImmutableMap(Map.Entry::getKey, e -> toArg.apply(e.getValue())));
+    if (args.getArgs().isLeft()) {
+      builder.addArg(new ProxyArg(toArg.apply(args.getArgs().getLeft())) {
+        @Override
+        public void appendToCommandLine(
+            ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+          ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
+          super.appendToCommandLine(subBuilder, pathResolver);
+          for (String arg : subBuilder.build()) {
+            for (String splitArg : arg.split("\\s+")) {
+              builder.add(splitArg);
+            }
+          }
+        }
+      });
+    } else {
+      for (String arg : args.getArgs().getRight()) {
+        builder.addArg(toArg.apply(arg));
+      }
+    }
+    for (Map.Entry<String, String> e : args.getEnv().entrySet()) {
+      builder.addEnv(e.getKey(), toArg.apply(e.getValue()));
+    }
 
     // negative or zero: unlimited number of worker processes
     int maxWorkers = args.getMaxWorkers() < 1 ? Integer.MAX_VALUE : args.getMaxWorkers();
 
     return new DefaultWorkerTool(
         params,
-        (BinaryBuildRule) rule,
-        workerToolArgs,
-        unexpandedEnv,
+        builder.build(),
         maxWorkers,
         args.getPersistent()
             .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
@@ -123,9 +153,14 @@ public class WorkerToolDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     try {
-      for (String arg : constructorArg.getStartupArgs()) {
+      if (constructorArg.getArgs().isLeft()) {
         MACRO_HANDLER.extractParseTimeDeps(
-            buildTarget, cellRoots, arg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+            buildTarget, cellRoots, constructorArg.getArgs().getLeft(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
+      } else {
+        for (String arg : constructorArg.getArgs().getRight()) {
+          MACRO_HANDLER.extractParseTimeDeps(
+              buildTarget, cellRoots, arg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+        }
       }
       for (Map.Entry<String, String> env : constructorArg.getEnv().entrySet()) {
         MACRO_HANDLER.extractParseTimeDeps(
@@ -139,15 +174,6 @@ public class WorkerToolDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
-    @Value.Derived
-    default ImmutableList<String> getStartupArgs() {
-      if (getArgs().isLeft()) {
-        return ImmutableList.of(getArgs().getLeft());
-      } else {
-        return getArgs().getRight();
-      }
-    }
-
     ImmutableMap<String, String> getEnv();
 
     @Value.Default
@@ -155,7 +181,7 @@ public class WorkerToolDescription
       return Either.ofRight(ImmutableList.of());
     }
 
-    BuildTarget getExe();
+    Optional<BuildTarget> getExe();
 
     @Value.Default
     default int getMaxWorkers() {

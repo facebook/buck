@@ -58,13 +58,13 @@ import org.junit.Test;
 public class WorkerShellStepTest {
 
   private static final String startupCommand = "startupCommand";
-  private static final String startupArgs = "startupArgs";
-  private static final String persistentStartupArgs = "persistentStartupArgs";
+  private static final String startupArg = "startupArg";
+  private static final String persistentStartupArg = "persistentStartupArg";
   private static final String persistentWorkerKey = "//:my-persistent-worker";
   private static final String fakeWorkerStartupCommand =
-      String.format("/bin/bash -e -c %s %s", startupCommand, startupArgs);
+      String.format("/bin/bash -e -c %s %s", startupCommand, startupArg);
   private static final String fakePersistentWorkerStartupCommand =
-      String.format("/bin/bash -e -c %s %s", startupCommand, persistentStartupArgs);
+      String.format("/bin/bash -e -c %s %s", startupCommand, persistentStartupArg);
 
   private WorkerShellStep createWorkerShellStep(
       @Nullable WorkerJobParams cmdParams,
@@ -78,30 +78,27 @@ public class WorkerShellStepTest {
   }
 
   private WorkerJobParams createJobParams() {
-    return createJobParams(ImmutableList.of(), "", ImmutableMap.of(), "");
+    return createJobParams(ImmutableList.of(), ImmutableMap.of(), "");
   }
 
   private WorkerJobParams createJobParams(
       ImmutableList<String> startupCommand,
-      String startupArgs,
       ImmutableMap<String, String> startupEnv,
       String jobArgs) {
-    return createJobParams(startupCommand, startupArgs, startupEnv, jobArgs, 1);
+    return createJobParams(startupCommand, startupEnv, jobArgs, 1);
   }
 
   private WorkerJobParams createJobParams(
       ImmutableList<String> startupCommand,
-      String startupArgs,
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers) {
     return createJobParams(
-        startupCommand, startupArgs, startupEnv, jobArgs, maxWorkers, null, null);
+        startupCommand, startupEnv, jobArgs, maxWorkers, null, null);
   }
 
   private WorkerJobParams createJobParams(
       ImmutableList<String> startupCommand,
-      String startupArgs,
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers,
@@ -112,7 +109,6 @@ public class WorkerShellStepTest {
         WorkerProcessParams.of(
             Paths.get("tmp").toAbsolutePath().normalize(),
             startupCommand,
-            startupArgs,
             startupEnv,
             maxWorkers,
             persistentWorkerKey == null || workerHash == null
@@ -221,10 +217,10 @@ public class WorkerShellStepTest {
   public void testGetCommand() {
     WorkerJobParams cmdParams =
         createJobParams(
-            ImmutableList.of("command"), "--platform unix-like", ImmutableMap.of(), "job params");
+            ImmutableList.of("command", "--platform", "unix-like"), ImmutableMap.of(), "job params");
     WorkerJobParams cmdExeParams =
         createJobParams(
-            ImmutableList.of("command"), "--platform windows", ImmutableMap.of(), "job params");
+            ImmutableList.of("command", "--platform", "windows"), ImmutableMap.of(), "job params");
 
     WorkerShellStep step = createWorkerShellStep(cmdParams, null, cmdExeParams);
     assertThat(
@@ -254,7 +250,7 @@ public class WorkerShellStepTest {
     WorkerShellStep step =
         createWorkerShellStep(
             createJobParams(
-                ImmutableList.of(startupCommand), startupArgs, ImmutableMap.of(), "myJobArgs"),
+                ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), "myJobArgs"),
             null,
             null);
 
@@ -282,8 +278,7 @@ public class WorkerShellStepTest {
     WorkerShellStep step =
         createWorkerShellStep(
             createJobParams(
-                ImmutableList.of(startupCommand),
-                persistentStartupArgs,
+                ImmutableList.of(startupCommand, persistentStartupArg),
                 ImmutableMap.of(),
                 "myJobArgs",
                 1,
@@ -309,7 +304,7 @@ public class WorkerShellStepTest {
 
     WorkerJobParams params =
         createJobParams(
-            ImmutableList.of(startupCommand), startupArgs, ImmutableMap.of(), jobArgs1, 1);
+            ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), jobArgs1, 1);
 
     WorkerShellStep step1 = createWorkerShellStep(params, null, null);
     final WorkerShellStep step2 = createWorkerShellStep(params.withJobArgs(jobArgs2), null, null);
@@ -337,7 +332,7 @@ public class WorkerShellStepTest {
     WorkerShellStep step =
         createWorkerShellStep(
             createJobParams(
-                ImmutableList.of(startupCommand), startupArgs, ImmutableMap.of(), "myJobArgs"),
+                ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), "myJobArgs"),
             null,
             null);
 
@@ -361,7 +356,6 @@ public class WorkerShellStepTest {
             Optional.of(
                 createJobParams(
                     ImmutableList.of(),
-                    "",
                     ImmutableMap.of("BAK", "chicken"),
                     "$FOO $BAR $BAZ $BAK")),
             Optional.empty(),
@@ -442,7 +436,7 @@ public class WorkerShellStepTest {
 
     WorkerJobParams jobParamsA =
         createJobParams(
-            ImmutableList.of(startupCommand), startupArgs, ImmutableMap.of(), jobArgsA, 2);
+            ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), jobArgsA, 2);
     WorkerShellStep stepA = new WorkerShellStepWithFakeProcesses(jobParamsA);
     WorkerShellStep stepB = new WorkerShellStepWithFakeProcesses(jobParamsA.withJobArgs(jobArgsB));
 
@@ -481,8 +475,7 @@ public class WorkerShellStepTest {
 
     WorkerJobParams params =
         createJobParams(
-            ImmutableList.of(startupCommand),
-            startupArgs,
+            ImmutableList.of(startupCommand, startupArg),
             ImmutableMap.of(),
             "jobArgs",
             stepPoolSize);

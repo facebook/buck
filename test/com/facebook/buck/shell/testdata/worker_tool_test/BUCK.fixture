@@ -5,7 +5,7 @@ sh_binary(
 
 worker_tool(
   name = 'worker1',
-  args = ['--num-jobs 2'],
+  args = ['--num-jobs', '2'],
   exe = ':external_tool',
 )
 
@@ -17,7 +17,7 @@ worker_tool(
 
 worker_tool(
   name = 'worker3',
-  args = ['--num-jobs 2'],
+  args = ['--num-jobs', '2'],
   exe = ':concurrent_tool',
   persistent = True,
 )
@@ -30,13 +30,13 @@ worker_tool(
 
 worker_tool(
   name = 'worker_location_args_list',
-  args = ['--num-jobs 2', '--loc $(location :external_tool)'],
+  args = ['--num-jobs', '2', '--loc', '$(location :external_tool)'],
   exe = ':external_tool',
 )
 
 worker_tool(
   name = 'worker_crash_on_start',
-  args = ['--num-jobs 2', '--loc /doesnotexsist'],
+  args = ['--num-jobs', '2', '--loc', '/doesnotexsist'],
   exe = ':external_tool',
 )
 
