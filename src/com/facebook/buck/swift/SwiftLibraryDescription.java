@@ -53,7 +53,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -168,7 +167,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                         .getUnflavoredBuildTarget()
                         .equals(buildTarget.getUnflavoredBuildTarget()))
             .collect(MoreCollectors.toImmutableSortedSet());
-    params = params.copyReplacingExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
+    params = params.copyReplacingExtraDeps(filteredExtraDeps);
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();

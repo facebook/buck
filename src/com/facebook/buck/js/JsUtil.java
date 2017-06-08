@@ -35,7 +35,6 @@ import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -113,8 +112,7 @@ public class JsUtil {
 
   static BuildRuleParams copyParamsWithDependencies(BuildRuleParams params, BuildRule... rules) {
     return params.copyReplacingDeclaredAndExtraDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.of()),
-        Suppliers.ofInstance(ImmutableSortedSet.copyOf(rules)));
+        ImmutableSortedSet.of(), ImmutableSortedSet.copyOf(rules));
   }
 
   static SourcePath relativeToOutputRoot(

@@ -56,7 +56,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -268,7 +267,7 @@ public class HalideLibraryDescription
             resolver.requireRule(params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
 
     return new HalideCompile(
-        params.copyReplacingExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(halideCompiler))),
+        params.copyReplacingExtraDeps(ImmutableSortedSet.of(halideCompiler)),
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
@@ -316,8 +315,7 @@ public class HalideLibraryDescription
           params
               .withAppendedFlavor(HALIDE_COMPILER_FLAVOR)
               .copyReplacingDeclaredAndExtraDeps(
-                  Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
-                  Suppliers.ofInstance(ImmutableSortedSet.of())),
+                  resolver.getAllRules(compilerDeps), ImmutableSortedSet.of()),
           resolver,
           pathResolver,
           ruleFinder,
@@ -342,8 +340,7 @@ public class HalideLibraryDescription
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
           params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(ImmutableSortedSet.of()),
-              Suppliers.ofInstance(ImmutableSortedSet.of())),
+              ImmutableSortedSet.of(), ImmutableSortedSet.of()),
           resolver,
           cxxPlatform,
           Optional.of(args.getCompilerInvocationFlags()),

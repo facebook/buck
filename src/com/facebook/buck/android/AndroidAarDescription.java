@@ -37,13 +37,12 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -105,8 +104,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     originalBuildRuleParams.getBuildTarget().checkUnflavored();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    ImmutableList.Builder<BuildRule> aarExtraDepsBuilder =
-        ImmutableList.<BuildRule>builder().addAll(originalBuildRuleParams.getExtraDeps().get());
+    ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
+        new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
+            .addAll(originalBuildRuleParams.getExtraDeps().get());
 
     /* android_manifest */
     BuildRuleParams androidManifestParams =
@@ -147,8 +147,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
         originalBuildRuleParams
             .withAppendedFlavor(AAR_ASSEMBLE_ASSETS_FLAVOR)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(androidResourceDeclaredDeps),
-                Suppliers.ofInstance(androidResourceExtraDeps));
+                androidResourceDeclaredDeps, androidResourceExtraDeps);
     ImmutableCollection<SourcePath> assetsDirectories =
         packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories =
@@ -159,8 +158,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
         originalBuildRuleParams
             .withAppendedFlavor(AAR_ASSEMBLE_RESOURCE_FLAVOR)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(androidResourceDeclaredDeps),
-                Suppliers.ofInstance(androidResourceExtraDeps));
+                androidResourceDeclaredDeps, androidResourceExtraDeps);
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
     MergeAndroidResourceSources assembleResourceDirectories =
@@ -172,10 +170,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
         originalBuildRuleParams
             .withAppendedFlavor(AAR_ANDROID_RESOURCE_FLAVOR)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.of(
-                        manifest, assembleAssetsDirectories, assembleResourceDirectories)),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+                ImmutableSortedSet.of(
+                    manifest, assembleAssetsDirectories, assembleResourceDirectories),
+                ImmutableSortedSet.of());
 
     AndroidResource androidResource =
         new AndroidResource(
@@ -268,8 +265,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               return copyNativeLibraries.getPathToNativeLibsDir();
             });
     BuildRuleParams androidAarParams =
-        originalBuildRuleParams.copyReplacingExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
+        originalBuildRuleParams.copyReplacingExtraDeps(aarExtraDepsBuilder.build());
     return new AndroidAar(
         androidAarParams,
         manifest,

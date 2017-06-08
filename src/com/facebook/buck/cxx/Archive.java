@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -132,12 +131,11 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         baseParams
             .withBuildTarget(target)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ruleFinder.filterBuildRuleInputs(inputs))
-                        .addAll(archiver.getDeps(ruleFinder))
-                        .build()));
+                ImmutableSortedSet.of(),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(inputs))
+                    .addAll(archiver.getDeps(ruleFinder))
+                    .build());
 
     return new Archive(
         archiveParams, archiver, arFlags, ranlib, ranlibFlags, contents, output, inputs);

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -143,9 +142,8 @@ public final class CxxInferEnhancer {
     return ruleResolver.addToIndex(
         new CxxInferCaptureTransitive(
             params.copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder().addAll(captureRules).build()),
-                ImmutableSortedSet::of),
+                ImmutableSortedSet.<BuildRule>naturalOrder().addAll(captureRules).build(),
+                ImmutableSortedSet.of()),
             captureRules));
   }
 
@@ -390,12 +388,11 @@ public final class CxxInferEnhancer {
     return ruleResolver.addToIndex(
         new CxxInferAnalyze(
             params.copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(captureAnalyzeRules.captureRules)
-                        .addAll(captureAnalyzeRules.aggregatingRules)
-                        .build()),
-                ImmutableSortedSet::of),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(captureAnalyzeRules.captureRules)
+                    .addAll(captureAnalyzeRules.aggregatingRules)
+                    .build(),
+                ImmutableSortedSet.of()),
             inferBuckConfig,
             captureAnalyzeRules));
   }
@@ -412,12 +409,11 @@ public final class CxxInferEnhancer {
     return ruleResolver.addToIndex(
         new CxxInferComputeReport(
             buildRuleParams.copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(analysisToReport.getTransitiveAnalyzeRules())
-                        .add(analysisToReport)
-                        .build()),
-                ImmutableSortedSet::of),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(analysisToReport.getTransitiveAnalyzeRules())
+                    .add(analysisToReport)
+                    .build(),
+                ImmutableSortedSet.of()),
             analysisToReport));
   }
 }

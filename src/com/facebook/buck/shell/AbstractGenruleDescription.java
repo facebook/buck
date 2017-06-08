@@ -45,7 +45,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -124,15 +123,13 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           args.getCmdExe().map(macroArgFunction);
       return createBuildRule(
           params.copyReplacingExtraDeps(
-              Suppliers.ofInstance(
-                  Stream.concat(
-                          ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
-                          Stream.of(cmd, bash, cmdExe)
-                              .flatMap(Optionals::toStream)
-                              .flatMap(input -> input.getDeps(ruleFinder).stream()))
-                      .collect(
-                          MoreCollectors.toImmutableSortedSet(
-                              Comparator.<BuildRule>naturalOrder())))),
+              Stream.concat(
+                      ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
+                      Stream.of(cmd, bash, cmdExe)
+                          .flatMap(Optionals::toStream)
+                          .flatMap(input -> input.getDeps(ruleFinder).stream()))
+                  .collect(
+                      MoreCollectors.toImmutableSortedSet(Comparator.<BuildRule>naturalOrder()))),
           resolver,
           args,
           cmd,

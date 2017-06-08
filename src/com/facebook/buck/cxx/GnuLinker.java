@@ -41,7 +41,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -145,10 +144,8 @@ public class GnuLinker implements Linker {
                 baseParams
                     .withBuildTarget(target)
                     .copyReplacingDeclaredAndExtraDeps(
-                        Suppliers.ofInstance(
-                            ImmutableSortedSet.copyOf(
-                                ruleFinder.filterBuildRuleInputs(symbolFiles))),
-                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                        ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles)),
+                        ImmutableSortedSet.of()),
                 symbolFiles));
     return ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));
   }

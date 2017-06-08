@@ -294,8 +294,7 @@ public class AppleTestDescription
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         Optional.of(args.getDestinationSpecifier()),
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.of(bundle), ImmutableSortedSet.of()),
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
         args.getContacts(),
@@ -328,8 +327,7 @@ public class AppleTestDescription
             params
                 .withBuildTarget(unzipXctoolTarget)
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
-                    Suppliers.ofInstance(ImmutableSortedSet.of()));
+                    ImmutableSortedSet.of(xctoolZipBuildRule), ImmutableSortedSet.of());
         resolver.addToIndex(
             new AbstractBuildRule(unzipXctoolParams) {
               @Override

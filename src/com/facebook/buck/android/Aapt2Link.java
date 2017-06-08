@@ -39,7 +39,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -68,13 +67,12 @@ public class Aapt2Link extends AbstractBuildRule {
       ManifestEntries manifestEntries) {
     super(
         buildRuleParams.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compileRules)
-                    .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
-                    .addAll(ruleFinder.filterBuildRuleInputs(manifest))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())));
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(compileRules)
+                .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
+                .addAll(ruleFinder.filterBuildRuleInputs(manifest))
+                .build(),
+            ImmutableSortedSet.of()));
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;

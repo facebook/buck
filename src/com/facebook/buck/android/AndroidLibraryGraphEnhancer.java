@@ -122,7 +122,7 @@ public class AndroidLibraryGraphEnhancer {
                 // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
                 // that is used to build it
                 originalBuildRuleParams.copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet::of, ImmutableSortedSet::of),
+                    ImmutableSortedSet.of(), ImmutableSortedSet.of()),
                 ruleFinder)
             .withBuildTarget(dummyRDotJavaBuildTarget);
 

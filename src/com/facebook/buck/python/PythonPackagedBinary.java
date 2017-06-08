@@ -39,7 +39,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -109,12 +108,11 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       boolean legacyOutputPath) {
     return new PythonPackagedBinary(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(components.getDeps(ruleFinder))
-                    .addAll(builder.getDeps(ruleFinder))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(components.getDeps(ruleFinder))
+                .addAll(builder.getDeps(ruleFinder))
+                .build(),
+            ImmutableSortedSet.of()),
         params.getDeclaredDeps(),
         ruleFinder,
         pythonPlatform,

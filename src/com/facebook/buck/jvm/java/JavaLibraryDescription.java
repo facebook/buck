@@ -38,7 +38,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -126,8 +125,7 @@ public class JavaLibraryDescription
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());
       BuildRuleParams emptyParams =
-          params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(deps.build()), Suppliers.ofInstance(ImmutableSortedSet.of()));
+          params.copyReplacingDeclaredAndExtraDeps(deps.build(), ImmutableSortedSet.of());
 
       return new Javadoc(
           emptyParams,

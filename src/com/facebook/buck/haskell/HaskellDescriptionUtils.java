@@ -48,7 +48,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -321,16 +320,15 @@ public class HaskellDescriptionUtils {
             baseParams
                 .withBuildTarget(target)
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(linker.getDeps(ruleFinder))
-                            .addAll(
-                                Stream.of(args, linkerArgs)
-                                    .flatMap(Collection::stream)
-                                    .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                                    .iterator())
-                            .build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(linker.getDeps(ruleFinder))
+                        .addAll(
+                            Stream.of(args, linkerArgs)
+                                .flatMap(Collection::stream)
+                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                                .iterator())
+                        .build(),
+                    ImmutableSortedSet.of()),
             linker,
             name,
             args,

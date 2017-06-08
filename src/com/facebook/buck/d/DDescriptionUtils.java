@@ -43,7 +43,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -245,8 +244,7 @@ abstract class DDescriptionUtils {
           new DCompileBuildRule(
               baseParams
                   .withBuildTarget(compileTarget)
-                  .copyReplacingDeclaredAndExtraDeps(
-                      Suppliers.ofInstance(deps), Suppliers.ofInstance(ImmutableSortedSet.of())),
+                  .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
               compiler,
               ImmutableList.<String>builder()
                   .addAll(dBuckConfig.getBaseCompilerFlags())

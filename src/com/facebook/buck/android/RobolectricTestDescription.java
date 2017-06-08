@@ -122,8 +122,7 @@ public class RobolectricTestDescription
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             params.getBuildTarget(),
-            params.copyReplacingExtraDeps(
-                Suppliers.ofInstance(resolver.getAllRules(args.getExportedDeps()))),
+            params.copyReplacingExtraDeps(resolver.getAllRules(args.getExportedDeps())),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
@@ -177,8 +176,7 @@ public class RobolectricTestDescription
 
     return new RobolectricTest(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.of(testsLibrary), ImmutableSortedSet.of()),
         ruleFinder,
         testsLibrary,
         args.getLabels(),

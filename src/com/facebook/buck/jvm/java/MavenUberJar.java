@@ -31,7 +31,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -66,9 +65,8 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
 
   private static BuildRuleParams adjustParams(BuildRuleParams params, TraversedDeps traversedDeps) {
     return params.copyReplacingDeclaredAndExtraDeps(
-        Suppliers.ofInstance(
-            ImmutableSortedSet.copyOf(Ordering.natural(), traversedDeps.packagedDeps)),
-        Suppliers.ofInstance(ImmutableSortedSet.of()));
+        ImmutableSortedSet.copyOf(Ordering.natural(), traversedDeps.packagedDeps),
+        ImmutableSortedSet.of());
   }
 
   /**

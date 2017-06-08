@@ -41,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -184,9 +183,7 @@ abstract class AbstractCxxSourceRuleFactory {
       BuildRuleParams params =
           getParams()
               .withBuildTarget(target)
-              .copyReplacingDeclaredAndExtraDeps(
-                  Suppliers.ofInstance(getPreprocessDeps()),
-                  Suppliers.ofInstance(ImmutableSortedSet.of()));
+              .copyReplacingDeclaredAndExtraDeps(getPreprocessDeps(), ImmutableSortedSet.of());
       DependencyAggregation rule = new DependencyAggregation(params);
       getResolver().addToIndex(rule);
       return rule;
@@ -330,9 +327,7 @@ abstract class AbstractCxxSourceRuleFactory {
         CxxPreprocessAndCompile.compile(
             getParams()
                 .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(depsBuilder.build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of()),
             compilerDelegate,
             getCompileOutputPath(target, name),
             source.getPath(),
@@ -431,9 +426,7 @@ abstract class AbstractCxxSourceRuleFactory {
         new CxxInferCapture(
             getParams()
                 .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(depsBuilder.build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of()),
             ppFlags,
             cFlags,
             source.getPath(),
@@ -519,9 +512,7 @@ abstract class AbstractCxxSourceRuleFactory {
         CxxPreprocessAndCompile.preprocessAndCompile(
             getParams()
                 .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(depsBuilder.build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of()),
             preprocessorDelegate,
             compilerDelegate,
             getCompileOutputPath(target, name),
@@ -731,9 +722,7 @@ abstract class AbstractCxxSourceRuleFactory {
     BuildRuleParams params =
         getParams()
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(depsBuilder.build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+            .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of());
 
     CxxPrecompiledHeader rule =
         new CxxPrecompiledHeader(

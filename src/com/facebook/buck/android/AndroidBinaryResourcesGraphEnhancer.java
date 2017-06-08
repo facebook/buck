@@ -34,7 +34,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -286,7 +285,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new SplitResources(
         buildRuleParams
             .withAppendedFlavor(SPLIT_RESOURCES_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet::of, ImmutableSortedSet::of),
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
         ruleFinder,
         aaptOutputPath,
         aaptRDotTxtPath);
@@ -304,9 +303,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new Aapt2Link(
         buildRuleParams
             .withAppendedFlavor(AAPT2_LINK_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
         ruleFinder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
@@ -321,7 +318,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new GenerateRDotJava(
         buildRuleParams
             .withAppendedFlavor(GENERATE_RDOT_JAVA_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet::of, ImmutableSortedSet::of),
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
         ruleFinder,
         bannedDuplicateResourceTypes,
         pathToRDotTxtFile,
@@ -339,12 +336,11 @@ class AndroidBinaryResourcesGraphEnhancer {
         buildRuleParams
             .withAppendedFlavor(RESOURCES_FILTER_FLAVOR)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(resourceRules)
-                        .addAll(rulesWithResourceDirectories)
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(resourceRules)
+                    .addAll(rulesWithResourceDirectories)
+                    .build(),
+                ImmutableSortedSet.of()),
         resourceDetails.getResourceDirectories(),
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
         locales,
@@ -359,9 +355,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new AaptPackageResources(
         buildRuleParams
             .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
         ruleFinder,
         ruleResolver,
         manifest,
@@ -381,18 +375,17 @@ class AndroidBinaryResourcesGraphEnhancer {
         buildRuleParams
             .withAppendedFlavor(PACKAGE_STRING_ASSETS_FLAVOR)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getPathToRDotTxt()))
-                        .addAll(resourceRules)
-                        .addAll(rulesWithResourceDirectories)
-                        // Model the dependency on the presence of res directories, which, in the
-                        // case of resource filtering, is cached by the `ResourcesFilter` rule.
-                        .addAll(
-                            Iterables.filter(
-                                ImmutableList.of(filteredResourcesProvider), BuildRule.class))
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getPathToRDotTxt()))
+                    .addAll(resourceRules)
+                    .addAll(rulesWithResourceDirectories)
+                    // Model the dependency on the presence of res directories, which, in the
+                    // case of resource filtering, is cached by the `ResourcesFilter` rule.
+                    .addAll(
+                        Iterables.filter(
+                            ImmutableList.of(filteredResourcesProvider), BuildRule.class))
+                    .build(),
+                ImmutableSortedSet.of()),
         locales,
         filteredResourcesProvider,
         aaptOutputInfo.getPathToRDotTxt());
@@ -405,8 +398,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             buildRuleParams
                 .withAppendedFlavor(MERGE_ASSETS_FLAVOR)
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    ImmutableSortedSet.of(), ImmutableSortedSet.of()),
             ruleFinder,
             baseApk,
             ImmutableSortedSet.copyOf(assetsDirectories));

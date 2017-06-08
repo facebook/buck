@@ -232,9 +232,7 @@ public class OcamlBuildRulesGenerator {
     BuildRuleParams debugParams =
         params
             .withBuildTarget(addDebugFlavor(params.getBuildTarget()))
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of());
 
     OcamlDebugLauncher debugLauncher =
         new OcamlDebugLauncher(
@@ -252,26 +250,25 @@ public class OcamlBuildRulesGenerator {
   private BuildRule generateNativeLinking(ImmutableList<SourcePath> allInputs) {
     BuildRuleParams linkParams =
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
-                    .addAll(
-                        ocamlContext
-                            .getNativeLinkableInput()
-                            .getArgs()
-                            .stream()
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                            .iterator())
-                    .addAll(
-                        ocamlContext
-                            .getCLinkableInput()
-                            .getArgs()
-                            .stream()
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                            .iterator())
-                    .addAll(cxxCompiler.getDeps(ruleFinder))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
+                .addAll(
+                    ocamlContext
+                        .getNativeLinkableInput()
+                        .getArgs()
+                        .stream()
+                        .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                        .iterator())
+                .addAll(
+                    ocamlContext
+                        .getCLinkableInput()
+                        .getArgs()
+                        .stream()
+                        .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                        .iterator())
+                .addAll(cxxCompiler.getDeps(ruleFinder))
+                .build(),
+            ImmutableSortedSet.of());
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
@@ -309,20 +306,19 @@ public class OcamlBuildRulesGenerator {
         params
             .withBuildTarget(addBytecodeFlavor(params.getBuildTarget()))
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
-                        .addAll(ocamlContext.getBytecodeLinkDeps())
-                        .addAll(
-                            Stream.concat(
-                                    ocamlContext.getBytecodeLinkableInput().getArgs().stream(),
-                                    ocamlContext.getCLinkableInput().getArgs().stream())
-                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                                .filter(rule -> !(rule instanceof OcamlBuild))
-                                .iterator())
-                        .addAll(cxxCompiler.getDeps(ruleFinder))
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
+                    .addAll(ocamlContext.getBytecodeLinkDeps())
+                    .addAll(
+                        Stream.concat(
+                                ocamlContext.getBytecodeLinkableInput().getArgs().stream(),
+                                ocamlContext.getCLinkableInput().getArgs().stream())
+                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .filter(rule -> !(rule instanceof OcamlBuild))
+                            .iterator())
+                    .addAll(cxxCompiler.getDeps(ruleFinder))
+                    .build(),
+                ImmutableSortedSet.of());
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());

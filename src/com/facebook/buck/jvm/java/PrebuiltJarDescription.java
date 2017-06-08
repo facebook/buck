@@ -41,7 +41,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -88,8 +87,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         params
             .withAppendedFlavor(JavaLibrary.GWT_MODULE_FLAVOR)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+                ImmutableSortedSet.of(prebuilt), ImmutableSortedSet.of());
     BuildRule gwtModule = createGwtModule(gwtParams, args);
     resolver.addToIndex(gwtModule);
 

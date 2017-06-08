@@ -43,7 +43,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -104,9 +103,8 @@ public class AndroidPrebuiltAarDescription
       Preconditions.checkState(flavors.size() == 1);
       BuildRuleParams unzipAarParams =
           params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(ImmutableSortedSet.of()),
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(args.getAar()))));
+              ImmutableSortedSet.of(),
+              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(args.getAar())));
       return new UnzipAar(unzipAarParams, args.getAar());
     }
 
@@ -146,8 +144,7 @@ public class AndroidPrebuiltAarDescription
           flavors);
       BuildRuleParams buildRuleParams =
           params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(ImmutableSortedSet.copyOf(javaDeps)),
-              Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+              ImmutableSortedSet.copyOf(javaDeps), ImmutableSortedSet.of(unzipAar));
       return new PrebuiltJar(
           /* params */ buildRuleParams,
           /* resolver */ pathResolver,
@@ -182,8 +179,8 @@ public class AndroidPrebuiltAarDescription
 
     BuildRuleParams androidLibraryParams =
         params.copyReplacingDeclaredAndExtraDeps(
-            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
+            /* declaredDeps */ ImmutableSortedSet.of(prebuiltJar),
+            /* extraDeps */ ImmutableSortedSet.of(unzipAar));
     return new AndroidPrebuiltAar(
         androidLibraryParams,
         /* resolver */ pathResolver,

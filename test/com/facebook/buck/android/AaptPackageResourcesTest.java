@@ -39,7 +39,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -209,8 +208,7 @@ public class AaptPackageResourcesTest {
             params
                 .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    ImmutableSortedSet.of(resource1, resource2), ImmutableSortedSet.of()),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -225,8 +223,7 @@ public class AaptPackageResourcesTest {
             params
                 .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of(resource1, resource2)),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    ImmutableSortedSet.of(resource1, resource2), ImmutableSortedSet.of()),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),

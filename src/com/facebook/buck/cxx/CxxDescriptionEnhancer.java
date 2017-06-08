@@ -58,7 +58,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1047,8 +1046,7 @@ public class CxxDescriptionEnhancer {
                     .getBuildTarget()
                     .withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()))
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+                ImmutableSortedSet.of(unstrippedBinaryRule), ImmutableSortedSet.of());
     Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());
     if (exisitingRule.isPresent()) {
       Preconditions.checkArgument(exisitingRule.get() instanceof CxxStrip);
@@ -1083,10 +1081,9 @@ public class CxxDescriptionEnhancer {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JsonConcatenate(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.copyOf(
-                    ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths()))),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.copyOf(
+                ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),
+            ImmutableSortedSet.of()),
         pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",

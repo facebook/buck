@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -144,8 +143,7 @@ public class MultiarchFileInfos {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     MultiarchFile multiarchFile =
         new MultiarchFile(
-            params.copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()), Suppliers.ofInstance(thinRules)),
+            params.copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), thinRules),
             ruleFinder,
             info.getRepresentativePlatform().getLipo(),
             inputs,

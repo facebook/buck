@@ -41,7 +41,6 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -160,8 +159,7 @@ public class AndroidBuildConfigDescription
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams =
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(androidBuildConfig)),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+            ImmutableSortedSet.of(androidBuildConfig), ImmutableSortedSet.of());
     return new AndroidBuildConfigJavaLibrary(
         javaLibraryParams,
         pathResolver,

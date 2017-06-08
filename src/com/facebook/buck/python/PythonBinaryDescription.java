@@ -48,7 +48,6 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -110,8 +109,7 @@ public class PythonBinaryDescription
                 params
                     .withBuildTarget(emptyInitTarget)
                     .copyReplacingDeclaredAndExtraDeps(
-                        Suppliers.ofInstance(ImmutableSortedSet.of()),
-                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                        ImmutableSortedSet.of(), ImmutableSortedSet.of()),
                 "",
                 emptyInitPath,
                 /* executable */ false));

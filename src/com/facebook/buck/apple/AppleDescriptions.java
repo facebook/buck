@@ -63,7 +63,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -349,9 +348,7 @@ public class AppleDescriptions {
     BuildRuleParams assetCatalogParams =
         params
             .withAppendedFlavor(AppleAssetCatalog.FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of());
 
     return Optional.of(
         new AppleAssetCatalog(
@@ -383,9 +380,7 @@ public class AppleDescriptions {
     BuildRuleParams coreDataModelParams =
         params
             .withAppendedFlavor(CoreDataModel.FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of());
 
     if (coreDataModelArgs.isEmpty()) {
       return Optional.empty();
@@ -416,9 +411,7 @@ public class AppleDescriptions {
     BuildRuleParams sceneKitAssetsParams =
         params
             .withAppendedFlavor(SceneKitAssets.FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.of()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of());
 
     if (sceneKitAssetsArgs.isEmpty()) {
       return Optional.empty();
@@ -467,10 +460,9 @@ public class AppleDescriptions {
                         .withAppendedFlavors(
                             AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()))
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(
-                        AppleDebuggableBinary.getRequiredRuntimeDeps(
-                            debugFormat, strippedBinaryRule, unstrippedBinaryRule, appleDsym)),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    AppleDebuggableBinary.getRequiredRuntimeDeps(
+                        debugFormat, strippedBinaryRule, unstrippedBinaryRule, appleDsym),
+                    ImmutableSortedSet.of()),
             buildRuleForDebugFormat);
     return rule;
   }
@@ -530,13 +522,12 @@ public class AppleDescriptions {
     AppleDsym appleDsym =
         new AppleDsym(
             params.copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .add(unstrippedBinaryBuildRule)
-                        .addAll(unstrippedBinaryBuildRule.getCompileDeps())
-                        .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .add(unstrippedBinaryBuildRule)
+                    .addAll(unstrippedBinaryBuildRule.getCompileDeps())
+                    .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
+                    .build(),
+                ImmutableSortedSet.of()),
             appleCxxPlatform.getDsymutil(),
             appleCxxPlatform.getLldb(),
             unstrippedBinaryBuildRule.getSourcePathToOutput(),
@@ -856,15 +847,13 @@ public class AppleDescriptions {
     final Predicate<BuildRule> notOriginalBinaryRule =
         Predicates.not(BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
     return params.copyReplacingDeclaredAndExtraDeps(
-        Suppliers.ofInstance(
-            FluentIterable.from(params.getDeclaredDeps().get())
-                .filter(notOriginalBinaryRule)
-                .append(newDeps)
-                .toSortedSet(Ordering.natural())),
-        Suppliers.ofInstance(
-            FluentIterable.from(params.getExtraDeps().get())
-                .filter(notOriginalBinaryRule)
-                .toSortedSet(Ordering.natural())));
+        FluentIterable.from(params.getDeclaredDeps().get())
+            .filter(notOriginalBinaryRule)
+            .append(newDeps)
+            .toSortedSet(Ordering.natural()),
+        FluentIterable.from(params.getExtraDeps().get())
+            .filter(notOriginalBinaryRule)
+            .toSortedSet(Ordering.natural()));
   }
 
   private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(

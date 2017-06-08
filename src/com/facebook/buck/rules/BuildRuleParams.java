@@ -71,6 +71,10 @@ public class BuildRuleParams {
     return copyReplacingDeclaredAndExtraDeps(declaredDeps, extraDeps);
   }
 
+  public BuildRuleParams copyReplacingExtraDeps(ImmutableSortedSet<BuildRule> extraDeps) {
+    return copyReplacingExtraDeps(() -> extraDeps);
+  }
+
   public BuildRuleParams copyAppendingExtraDeps(
       final Supplier<? extends Iterable<? extends BuildRule>> additional) {
     return copyReplacingDeclaredAndExtraDeps(
@@ -104,6 +108,12 @@ public class BuildRuleParams {
 
   public BuildRuleParams copyAppendingExtraDeps(BuildRule... additional) {
     return copyAppendingExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
+  }
+
+  public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
+      ImmutableSortedSet<BuildRule> declaredDeps, ImmutableSortedSet<BuildRule> extraDeps) {
+    return new BuildRuleParams(
+        buildTarget, () -> declaredDeps, () -> extraDeps, targetGraphOnlyDeps, projectFilesystem);
   }
 
   public BuildRuleParams copyReplacingDeclaredAndExtraDeps(

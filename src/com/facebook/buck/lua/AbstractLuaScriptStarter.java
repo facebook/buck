@@ -31,7 +31,6 @@ import com.facebook.buck.rules.WriteStringTemplateRule;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Charsets;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
@@ -90,8 +89,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                     getBaseParams()
                         .withBuildTarget(templateTarget)
                         .copyReplacingDeclaredAndExtraDeps(
-                            Suppliers.ofInstance(ImmutableSortedSet.of()),
-                            Suppliers.ofInstance(ImmutableSortedSet.of())),
+                            ImmutableSortedSet.of(), ImmutableSortedSet.of()),
                     getPureStarterTemplate(),
                     BuildTargets.getGenPath(
                         getBaseParams().getProjectFilesystem(),

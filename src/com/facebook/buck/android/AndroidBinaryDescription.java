@@ -68,7 +68,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -331,7 +330,7 @@ public class AndroidBinaryDescription
 
       return new AndroidBinary(
           params
-              .copyReplacingExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
+              .copyReplacingExtraDeps(result.getFinalDeps())
               .copyAppendingExtraDeps(
                   ruleFinder.filterBuildRuleInputs(
                       result.getPackageableCollection().getProguardConfigs()))

@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -80,12 +79,11 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                 baseParams
                     .withBuildTarget(target)
                     .copyReplacingDeclaredAndExtraDeps(
-                        Suppliers.ofInstance(
-                            ImmutableSortedSet.<BuildRule>naturalOrder()
-                                .addAll(nm.getDeps(ruleFinder))
-                                .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
-                                .build()),
-                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(nm.getDeps(ruleFinder))
+                            .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
+                            .build(),
+                        ImmutableSortedSet.of()),
                 nm,
                 linkerInputs));
     return rule.getSourcePathToOutput();

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Suppliers;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -207,8 +206,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRule
         params
             .withBuildTarget(depAggTarget)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(getPreprocessDeps(cxxPlatform)),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+                getPreprocessDeps(cxxPlatform), ImmutableSortedSet.of());
 
     DependencyAggregation depAgg = new DependencyAggregation(depAggParams);
     ruleResolver.addToIndex(depAgg);

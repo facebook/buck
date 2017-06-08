@@ -68,7 +68,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -678,14 +677,13 @@ public class LuaBinaryDescription
                 params
                     .withAppendedFlavor(BINARY_FLAVOR)
                     .copyReplacingDeclaredAndExtraDeps(
-                        Suppliers.ofInstance(
-                            ImmutableSortedSet.<BuildRule>naturalOrder()
-                                .addAll(ruleFinder.filterBuildRuleInputs(starter))
-                                .addAll(components.getDeps(ruleFinder))
-                                .addAll(lua.getDeps(ruleFinder))
-                                .addAll(packager.getDeps(ruleFinder))
-                                .build()),
-                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(ruleFinder.filterBuildRuleInputs(starter))
+                            .addAll(components.getDeps(ruleFinder))
+                            .addAll(lua.getDeps(ruleFinder))
+                            .addAll(packager.getDeps(ruleFinder))
+                            .build(),
+                        ImmutableSortedSet.of()),
                 packager,
                 ImmutableList.of(),
                 output,

@@ -39,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -237,13 +236,12 @@ abstract class GoDescriptors {
 
     return new GoBinary(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
-                    .add(symlinkTree)
-                    .add(library)
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
+                .add(symlinkTree)
+                .add(library)
+                .build(),
+            ImmutableSortedSet.of()),
         platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
         symlinkTree,
         library,
@@ -280,8 +278,7 @@ abstract class GoDescriptors {
                 sourceParams
                     .withBuildTarget(generatorSourceTarget)
                     .copyReplacingDeclaredAndExtraDeps(
-                        Suppliers.ofInstance(ImmutableSortedSet.of()),
-                        Suppliers.ofInstance(ImmutableSortedSet.of())),
+                        ImmutableSortedSet.of(), ImmutableSortedSet.of()),
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
                     sourceParams.getProjectFilesystem(), generatorSourceTarget, "%s/main.go"),
@@ -293,8 +290,7 @@ abstract class GoDescriptors {
                 sourceParams
                     .withBuildTarget(generatorTarget)
                     .copyReplacingDeclaredAndExtraDeps(
-                        Suppliers.ofInstance(ImmutableSortedSet.of()),
-                        Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
+                        ImmutableSortedSet.of(), ImmutableSortedSet.of(writeFile)),
                 resolver,
                 goBuckConfig,
                 ImmutableSet.of(writeFile.getSourcePathToOutput()),

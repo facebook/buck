@@ -44,7 +44,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -143,9 +142,8 @@ public class GoTestDescription
             params
                 .withAppendedFlavor(InternalFlavor.of("test-main-src"))
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder))),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
+                    ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder)),
+                    ImmutableSortedSet.of()),
             testMainGenerator,
             srcs,
             packageName);
@@ -177,8 +175,7 @@ public class GoTestDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.of(testMain), ImmutableSortedSet.of()),
         ruleFinder,
         testMain,
         args.getLabels(),
@@ -207,8 +204,7 @@ public class GoTestDescription
             params
                 .withAppendedFlavor(InternalFlavor.of("test-main"))
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
+                    ImmutableSortedSet.of(testLibrary), ImmutableSortedSet.of(generatedTestMain)),
             resolver,
             goBuckConfig,
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),

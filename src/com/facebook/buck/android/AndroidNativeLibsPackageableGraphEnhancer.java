@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -248,12 +247,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         NativeRelinker relinker =
             new NativeRelinker(
                 buildRuleParams.copyReplacingExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
-                            .addAll(
-                                ruleFinder.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
-                            .build())),
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
+                        .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
+                        .build()),
                 pathResolver,
                 ruleFinder,
                 cxxBuckConfig,
@@ -294,16 +291,15 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           buildRuleParams
               .withAppendedFlavor(InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
               .copyReplacingDeclaredAndExtraDeps(
-                  Suppliers.ofInstance(
-                      ImmutableSortedSet.<BuildRule>naturalOrder()
-                          .addAll(nativeLibsRules)
-                          .addAll(
-                              ruleFinder.filterBuildRuleInputs(
-                                  packageableCollection.getNativeLibsDirectories().get(module)))
-                          .addAll(strippedLibsMap.keySet())
-                          .addAll(strippedLibsAssetsMap.keySet())
-                          .build()),
-                  Suppliers.ofInstance(ImmutableSortedSet.of()));
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(nativeLibsRules)
+                      .addAll(
+                          ruleFinder.filterBuildRuleInputs(
+                              packageableCollection.getNativeLibsDirectories().get(module)))
+                      .addAll(strippedLibsMap.keySet())
+                      .addAll(strippedLibsAssetsMap.keySet())
+                      .build(),
+                  ImmutableSortedSet.of());
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
@@ -368,11 +364,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             buildRuleParams
                 .withBuildTarget(targetForStripRule)
                 .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
-                            .build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.of()));
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
+                        .build(),
+                    ImmutableSortedSet.of());
 
         stripLinkable =
             new StripLinkable(

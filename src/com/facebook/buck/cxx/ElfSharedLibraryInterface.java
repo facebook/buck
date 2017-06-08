@@ -33,7 +33,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,12 +74,11 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
         baseParams
             .withBuildTarget(target)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(objcopy.getDeps(ruleFinder))
-                        .addAll(ruleFinder.filterBuildRuleInputs(input))
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(objcopy.getDeps(ruleFinder))
+                    .addAll(ruleFinder.filterBuildRuleInputs(input))
+                    .build(),
+                ImmutableSortedSet.of()),
         resolver,
         objcopy,
         input);

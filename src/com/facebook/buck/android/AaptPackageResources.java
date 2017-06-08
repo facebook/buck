@@ -40,7 +40,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,15 +94,14 @@ public class AaptPackageResources extends AbstractBuildRule {
       ManifestEntries manifestEntries) {
     super(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(
-                getAllDeps(
-                    params.getBuildTarget(),
-                    ruleFinder,
-                    ruleResolver,
-                    manifest,
-                    filteredResourcesProvider,
-                    resourceDeps)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())));
+            getAllDeps(
+                params.getBuildTarget(),
+                ruleFinder,
+                ruleResolver,
+                manifest,
+                filteredResourcesProvider,
+                resourceDeps),
+            ImmutableSortedSet.of()));
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.skipCrunchPngs = skipCrunchPngs;

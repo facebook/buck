@@ -48,7 +48,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -103,8 +102,7 @@ public class PythonTest extends AbstractBuildRule
       ImmutableSet<String> contacts) {
     return new PythonTest(
         params.copyReplacingDeclaredAndExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.of(binary)),
-            Suppliers.ofInstance(ImmutableSortedSet.of())),
+            ImmutableSortedSet.of(binary), ImmutableSortedSet.of()),
         ruleFinder,
         params.getDeclaredDeps(),
         env,

@@ -244,8 +244,7 @@ public class OcamlRuleBuilder {
     final BuildRuleParams compileParams =
         params
             .withBuildTarget(buildTarget)
-            .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(allDeps), Suppliers.ofInstance(ImmutableSortedSet.of()));
+            .copyReplacingDeclaredAndExtraDeps(allDeps, ImmutableSortedSet.of());
 
     ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
@@ -374,27 +373,26 @@ public class OcamlRuleBuilder {
         params
             .withBuildTarget(buildTarget)
             .copyReplacingDeclaredAndExtraDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)))
-                        .addAll(
-                            Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
-                                .flatMap(input -> input.getArgs().stream())
-                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                                .iterator())
-                        .addAll(
-                            argFlags
-                                .stream()
-                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                                .iterator())
-                        .addAll(
-                            ruleFinder.filterBuildRuleInputs(
-                                ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
-                        .addAll(
-                            ruleFinder.filterBuildRuleInputs(
-                                ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of()));
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)))
+                    .addAll(
+                        Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
+                            .flatMap(input -> input.getArgs().stream())
+                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .iterator())
+                    .addAll(
+                        argFlags
+                            .stream()
+                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .iterator())
+                    .addAll(
+                        ruleFinder.filterBuildRuleInputs(
+                            ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
+                    .addAll(
+                        ruleFinder.filterBuildRuleInputs(
+                            ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
+                    .build(),
+                ImmutableSortedSet.of());
 
     ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);

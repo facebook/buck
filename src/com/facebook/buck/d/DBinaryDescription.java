@@ -40,7 +40,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -116,7 +115,7 @@ public class DBinaryDescription
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params.copyReplacingExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
+        params.copyReplacingExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
         ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getSourcePathToOutput());

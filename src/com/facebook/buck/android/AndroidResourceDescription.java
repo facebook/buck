@@ -143,9 +143,8 @@ public class AndroidResourceDescription
           params.getBuildTarget());
       params =
           params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get()))),
-              Suppliers.ofInstance(ImmutableSortedSet.of()));
+              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
+              ImmutableSortedSet.of());
       return new Aapt2Compile(params, resDir.get());
     }
 
