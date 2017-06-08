@@ -62,11 +62,8 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
       BuildContext context, BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
-    Path buckOut =
-        getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
     for (Path key : getLinks().keySet()) {
-      Path path =
-          buckOut.relativize(context.getSourcePathResolver().getAbsolutePath(getLinks().get(key)));
+      Path path = context.getSourcePathResolver().getAbsolutePath(getLinks().get(key));
       LOG.debug("header map %s -> %s", key, path);
       headerMapEntries.put(key, path);
     }

@@ -135,14 +135,8 @@ public class DirectHeaderMapTest {
                 projectFilesystem,
                 headerMapPath,
                 ImmutableMap.of(
-                    Paths.get("file"),
-                    projectFilesystem
-                        .resolve(projectFilesystem.getBuckPaths().getBuckOut())
-                        .relativize(file1),
-                    Paths.get("directory/then/file"),
-                    projectFilesystem
-                        .resolve(projectFilesystem.getBuckPaths().getBuckOut())
-                        .relativize(file2))));
+                    Paths.get("file"), file1,
+                    Paths.get("directory/then/file"), file2)));
     ImmutableList<Step> actualBuildSteps = buildRule.getBuildSteps(buildContext, buildableContext);
     assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));
   }
