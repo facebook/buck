@@ -119,7 +119,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public AllowSymlinks getAllowSymlinks() {
     return getDelegate()
         .getEnum("project", "allow_symlinks", AllowSymlinks.class)
-        .orElse(AllowSymlinks.WARN);
+        .orElse(AllowSymlinks.FORBID);
   }
 
   @Value.Lazy

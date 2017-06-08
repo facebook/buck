@@ -195,20 +195,21 @@ public class ParserTest {
     cellRoot = filesystem.getRootPath();
     eventBus = BuckEventBusForTests.newInstance();
 
+    ImmutableMap.Builder<String, String> projectSectionBuilder = ImmutableMap.builder();
+    projectSectionBuilder.put("allow_symlinks", "warn");
+    if (parallelParsing) {
+      projectSectionBuilder.put("parallel_parsing", "true");
+      projectSectionBuilder.put("parsing_threads", Integer.toString(threads));
+    }
+
     ImmutableMap.Builder<String, ImmutableMap<String, String>> configSectionsBuilder =
         ImmutableMap.builder();
     configSectionsBuilder.put(
         "buildfile", ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"));
-    if (parallelParsing) {
-      configSectionsBuilder.put(
-          "project",
-          ImmutableMap.of(
-              "parallel_parsing", "true", "parsing_threads", Integer.toString(threads)));
-    }
-
     configSectionsBuilder.put(
         "unknown_flavors_messages",
         ImmutableMap.of("macosx*", "This is an error message read by the .buckconfig"));
+    configSectionsBuilder.put("project", projectSectionBuilder.build());
 
     BuckConfig config =
         FakeBuckConfig.builder()

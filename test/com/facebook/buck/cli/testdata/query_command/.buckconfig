@@ -1,2 +1,5 @@
 [alias]
     app = //example/app:seven
+
+[project]
+    read_only_paths = symlinks/
