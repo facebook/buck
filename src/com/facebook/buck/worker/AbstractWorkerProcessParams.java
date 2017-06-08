@@ -40,13 +40,6 @@ interface AbstractWorkerProcessParams {
    */
   ImmutableList<String> getStartupCommand();
 
-  /**
-   * All args combined into single string and separated with a white space, e.g. if tool is expected
-   * to compute hashes on the fly you may pass something like "--compute-hashes". This string will
-   * be escaped for you using Escaper#SHELL_ESCAPER.
-   */
-  String getStartupArgs();
-
   /** Environment that will be used to start the worker tool. */
   ImmutableMap<String, String> getStartupEnvironment();
 

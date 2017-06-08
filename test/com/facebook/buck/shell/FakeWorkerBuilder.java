@@ -69,11 +69,6 @@ public class FakeWorkerBuilder
     }
 
     @Override
-    public String getArgs(SourcePathResolver pathResolver) {
-      return "";
-    }
-
-    @Override
     public Path getTempDir() {
       return Paths.get("");
     }

@@ -53,6 +53,18 @@ public class ReactNativeLibraryGraphEnhancer {
       CoreReactNativeLibraryArg args,
       ReactNativePlatform platform) {
     Tool jsPackager = buckConfig.getPackager(resolver);
+
+    ImmutableList<String> packagerFlags;
+    if (args.getPackagerFlags().isPresent()) {
+      if (args.getPackagerFlags().get().isLeft()) {
+        packagerFlags = ImmutableList.copyOf(args.getPackagerFlags().get().getLeft().split("\\s+"));
+      } else {
+        packagerFlags = args.getPackagerFlags().get().getRight();
+      }
+    } else {
+      packagerFlags = ImmutableList.of();
+    }
+
     return new ReactNativeBundle(
         baseParams
             .withBuildTarget(target)
@@ -71,7 +83,7 @@ public class ReactNativeLibraryGraphEnhancer {
         ReactNativeFlavors.isDevMode(baseParams.getBuildTarget()),
         ReactNativeFlavors.exposeSourceMap(baseParams.getBuildTarget()),
         args.getBundleName(),
-        args.getPackagerFlags(),
+        packagerFlags,
         jsPackager,
         platform);
   }

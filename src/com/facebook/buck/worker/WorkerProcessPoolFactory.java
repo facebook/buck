@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -36,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * WorkerProcessPoolFactory class is designed to provide you an instance of WorkerProcessPool based
@@ -140,10 +140,11 @@ public class WorkerProcessPoolFactory {
     return ImmutableList.<String>builder()
         .addAll(executionArgs)
         .add(
-            FluentIterable.from(paramsToUse.getStartupCommand())
-                .transform(Escaper.SHELL_ESCAPER)
-                .append(paramsToUse.getStartupArgs())
-                .join(Joiner.on(' ')))
+            paramsToUse
+                .getStartupCommand()
+                .stream()
+                .map(Escaper::escapeAsShellString)
+                .collect(Collectors.joining(" ")))
         .build();
   }
 

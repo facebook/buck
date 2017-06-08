@@ -16,10 +16,12 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 // Immutables get really angry if you try to inherit from other Immutables. So we need to extract
@@ -29,5 +31,5 @@ public interface CoreReactNativeLibraryArg extends CommonDescriptionArg, HasDecl
 
   String getBundleName();
 
-  Optional<String> getPackagerFlags();
+  Optional<Either<String, ImmutableList<String>>> getPackagerFlags();
 }

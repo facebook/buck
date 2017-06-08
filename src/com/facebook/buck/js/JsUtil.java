@@ -59,7 +59,6 @@ public class JsUtil {
             WorkerProcessParams.of(
                 worker.getTempDir(),
                 tool.getCommandPrefix(sourcePathResolver),
-                worker.getArgs(sourcePathResolver),
                 tool.getEnvironment(sourcePathResolver),
                 worker.getMaxWorkers(),
                 worker.isPersistent()
