@@ -423,8 +423,8 @@ public class WorkerProcessProtocolZero {
       return "";
     }
     StringBuilder sb = new StringBuilder();
-    try (InputStream inputStream = Files.newInputStream(stdErr.get())) {
-      BufferedReader errorReader = new BufferedReader(new InputStreamReader(inputStream));
+    try (InputStream inputStream = Files.newInputStream(stdErr.get());
+        BufferedReader errorReader = new BufferedReader(new InputStreamReader(inputStream))) {
       while (errorReader.ready()) {
         sb.append("\t").append(errorReader.readLine()).append("\n");
       }
