@@ -942,7 +942,11 @@ public class TargetsCommand extends AbstractCommand {
       case PATHS_AND_CONTENTS:
         return params.getFileHashCache();
       case PATHS_ONLY:
-        return new FilePathHashLoader(params.getCell().getRoot(), getTargetHashModifiedPaths());
+        return new FilePathHashLoader(
+            params.getCell().getRoot(),
+            getTargetHashModifiedPaths(),
+            params.getCell().getBuckConfig().getView(ParserConfig.class).getAllowSymlinks()
+                != ParserConfig.AllowSymlinks.FORBID);
     }
     throw new IllegalStateException(
         "Invalid value for target hash file mode: " + targetHashFileMode);

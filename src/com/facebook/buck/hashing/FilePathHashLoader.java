@@ -43,13 +43,16 @@ public class FilePathHashLoader implements FileHashLoader {
 
   private final Path defaultCellRoot;
   private final ImmutableSet<Path> assumeModifiedFiles;
+  private final boolean allowSymlinks;
 
-  public FilePathHashLoader(final Path defaultCellRoot, ImmutableSet<Path> assumeModifiedFiles)
+  public FilePathHashLoader(
+      final Path defaultCellRoot, ImmutableSet<Path> assumeModifiedFiles, boolean allowSymlinks)
       throws IOException {
     this.defaultCellRoot = defaultCellRoot;
+    this.allowSymlinks = allowSymlinks;
     ImmutableSet.Builder<Path> modifiedFilesBuilder = ImmutableSet.builder();
     for (Path path : assumeModifiedFiles) {
-      modifiedFilesBuilder.add(defaultCellRoot.resolve(path).toRealPath());
+      modifiedFilesBuilder.add(resolvePath(path));
     }
     this.assumeModifiedFiles = modifiedFilesBuilder.build();
   }
@@ -72,7 +75,7 @@ public class FilePathHashLoader implements FileHashLoader {
         });
     Hasher hasher = Hashing.sha1().newHasher();
     for (Path file : files.build()) {
-      file = defaultCellRoot.resolve(file).toRealPath();
+      file = resolvePath(file);
       boolean assumeModified = assumeModifiedFiles.contains(file);
       Path relativePath = MorePaths.relativize(defaultCellRoot, file);
 
@@ -93,5 +96,13 @@ public class FilePathHashLoader implements FileHashLoader {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     throw new UnsupportedOperationException("Not implemented");
+  }
+
+  private Path resolvePath(Path path) throws IOException {
+    Path resolvedPath = defaultCellRoot.resolve(path);
+    if (!allowSymlinks) {
+      return resolvedPath;
+    }
+    return resolvedPath.toRealPath();
   }
 }

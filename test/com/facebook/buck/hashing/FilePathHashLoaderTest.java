@@ -53,13 +53,13 @@ public class FilePathHashLoaderTest {
 
   @Test
   public void returnsDifferentHashesForDifferentPaths() throws IOException {
-    FilePathHashLoader loader = new FilePathHashLoader(cellRoot, ImmutableSet.of());
+    FilePathHashLoader loader = newFilePathHashLoader();
     assertThat(loader.get(file), not(equalTo(loader.get(fileInDirectory))));
   }
 
   @Test
   public void doesNotCareAboutFileContents() throws IOException {
-    FilePathHashLoader loader = new FilePathHashLoader(cellRoot, ImmutableSet.of());
+    FilePathHashLoader loader = newFilePathHashLoader();
     HashCode hashBefore = loader.get(file);
     Files.write(file, "Goodbye!".getBytes());
     HashCode hashAfter = loader.get(file);
@@ -78,8 +78,8 @@ public class FilePathHashLoaderTest {
 
   @Test
   public void changesInOtherFilesDoNotAffectDirectoryHash() throws IOException {
-    FilePathHashLoader baseLoader = new FilePathHashLoader(cellRoot, ImmutableSet.of());
-    FilePathHashLoader modifiedLoader = new FilePathHashLoader(cellRoot, ImmutableSet.of(file));
+    FilePathHashLoader baseLoader = newFilePathHashLoader();
+    FilePathHashLoader modifiedLoader = newFilePathHashLoader(file);
     assertThat(baseLoader.get(directory), equalTo(modifiedLoader.get(directory)));
   }
 
@@ -119,8 +119,7 @@ public class FilePathHashLoaderTest {
 
   @Test
   public void cellRootPathDoesNotInfluenceTheHashes() throws IOException {
-    FilePathHashLoader baseLoader =
-        new FilePathHashLoader(cellRoot, ImmutableSet.of(fileInDirectory));
+    FilePathHashLoader baseLoader = newFilePathHashLoader(fileInDirectory);
     HashCode fileHashCode = baseLoader.get(file);
     HashCode fileInDirectoryHashCode = baseLoader.get(fileInDirectory);
     HashCode directoryHashCode = baseLoader.get(directory);
@@ -130,16 +129,20 @@ public class FilePathHashLoaderTest {
     directory = newCellRoot.resolve("dir");
     fileInDirectory = directory.resolve("a.txt");
     FilePathHashLoader newLoader =
-        new FilePathHashLoader(newCellRoot, ImmutableSet.of(fileInDirectory));
+        new FilePathHashLoader(
+            newCellRoot, ImmutableSet.of(fileInDirectory), /* allowSymlinks */ true);
     assertThat(newLoader.get(file), equalTo(fileHashCode));
     assertThat(newLoader.get(fileInDirectory), equalTo(fileInDirectoryHashCode));
     assertThat(newLoader.get(directory), equalTo(directoryHashCode));
   }
 
   private void assertThatChangeIsDetected(Path changedPath, Path checkedPath) throws IOException {
-    FilePathHashLoader baseLoader = new FilePathHashLoader(cellRoot, ImmutableSet.of());
-    FilePathHashLoader modifiedLoader =
-        new FilePathHashLoader(cellRoot, ImmutableSet.of(changedPath));
+    FilePathHashLoader baseLoader = newFilePathHashLoader();
+    FilePathHashLoader modifiedLoader = newFilePathHashLoader(changedPath);
     assertThat(baseLoader.get(checkedPath), not(equalTo(modifiedLoader.get(checkedPath))));
+  }
+
+  private FilePathHashLoader newFilePathHashLoader(Path... path) throws IOException {
+    return new FilePathHashLoader(cellRoot, ImmutableSet.copyOf(path), /* allowSymlinks */ true);
   }
 }
