@@ -5,6 +5,7 @@ env:
   - CI_ACTION=build
   - CI_ACTION=unit
   - CI_ACTION=integration
+  - CI_ACTION=heavy_integration
   - CI_ACTION=ant
 
 # Enable container-based architecture.

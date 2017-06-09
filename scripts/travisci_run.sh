@@ -24,7 +24,12 @@ if [ "$CI_ACTION" = "unit" ]; then
 fi
 
 if [ "$CI_ACTION" = "integration" ]; then
-  ./bin/buck test --num-threads=$BUCK_NUM_THREADS --all --filter '.*[Ii]ntegration.*'
+  ./bin/buck test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
+fi
+
+if [ "$CI_ACTION" = "heavy_integration" ]; then
+  ./bin/buck build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
+  ./bin/buck test  --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
 fi
 
 if [ "$CI_ACTION" = "ant" ]; then
