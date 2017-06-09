@@ -2,6 +2,7 @@ standard_java_test(
     name = "collect",
     deps = [
         "//src/com/facebook/buck/util/collect:collect",
+        "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
 )

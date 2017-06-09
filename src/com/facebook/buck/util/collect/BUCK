@@ -5,5 +5,8 @@ java_library(
         "//test/com/facebook/buck/util/collect:collect",
     ],
     visibility = ["PUBLIC"],
-    deps = ["//third-party/java/guava:guava"],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
