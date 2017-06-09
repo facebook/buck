@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +42,6 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   private static final Logger LOG = Logger.get(MaterializerProjectFileHashCache.class);
 
   private final ImmutableMap<Path, BuildJobStateFileHashEntry> remoteFileHashesByAbsPath;
-  private final Set<Path> symlinkedPaths;
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
   private final ProjectFilesystem projectFilesystem;
@@ -54,7 +54,6 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     this.delegate = delegate;
     this.remoteFileHashesByAbsPath =
         DistBuildFileHashes.indexEntriesByPath(delegate.getFilesystem(), remoteFileHashes);
-    this.symlinkedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.materializedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.provider = provider;
     this.projectFilesystem = delegate.getFilesystem();
@@ -77,9 +76,18 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
         get(relPath);
       } else if (fileHashEntry.isSetRootSymLink()) {
-        materializeSymlink(fileHashEntry, symlinkedPaths);
-        integrityCheck(getFilesystem().getPathRelativeToProjectRoot(absPath).get());
-        symlinkedPaths.add(absPath);
+        Path rootSymlinkAbsPath =
+            projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
+        Optional<Path> rootSymlinkRelPath =
+            projectFilesystem.getPathRelativeToProjectRoot(rootSymlinkAbsPath);
+        if (!rootSymlinkRelPath.isPresent()) {
+          // RecordingProjectFileHashCache stored an absolute path (which was also a sym link).
+          throw new RuntimeException("Root symlink is not in project root: " + absPath);
+        }
+
+        materializeSymlink(
+            projectFilesystem.getPathRelativeToProjectRoot(absPath).get(), fileHashEntry);
+        continue;
       } else if (!fileHashEntry.isDirectory) {
         // Touch file
         projectFilesystem.createParentDirs(absPath);
@@ -113,11 +121,8 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       }
 
       if (fileHashEntry.isSetRootSymLink()) {
-        if (!symlinkedPaths.contains(relPath)) {
-          materializeSymlink(fileHashEntry, materializedPaths);
-        }
-        recordMaterializedPath(relPath);
-        continue;
+        materializeSymlink(relPath, fileHashEntry);
+        return;
       }
 
       if (fileHashEntry.isIsDirectory()) {
@@ -180,37 +185,35 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   }
 
   private synchronized void materializeSymlink(
-      BuildJobStateFileHashEntry fileHashEntry, Set<Path> processedPaths) {
-    Path rootSymlink = projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
-
-    if (symlinkedPaths.contains(rootSymlink)) {
-      processedPaths.add(rootSymlink);
-    }
-
-    if (processedPaths.contains(rootSymlink)) {
+      Path relPath, BuildJobStateFileHashEntry fileHashEntry) throws IOException {
+    if (materializedPaths.contains(relPath)) {
       return;
     }
-    processedPaths.add(rootSymlink);
 
-    if (!projectFilesystem.getPathRelativeToProjectRoot(rootSymlink).isPresent()) {
-      // RecordingProjectFileHashCache stored an absolute path (which was also a sym link).
-      throw new RuntimeException(
-          "Root symlink is not in project root: " + rootSymlink.toAbsolutePath());
+    Path rootSymlinkAbsPath = projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
+    Path rootSymlinkRelPath =
+        projectFilesystem.getPathRelativeToProjectRoot(rootSymlinkAbsPath).get();
+
+    if (materializedPaths.contains(rootSymlinkRelPath)) {
+      recordMaterializedPath(relPath);
+      return;
     }
 
-    Path rootSymlinkTarget =
-        projectFilesystem.resolve(fileHashEntry.getRootSymLinkTarget().getPath());
+    Path targetAbsPath = projectFilesystem.resolve(fileHashEntry.getRootSymLinkTarget().getPath());
     LOG.info(
         "Materializing sym link [%s] with target [%s]",
-        rootSymlink.toAbsolutePath().toString(), rootSymlinkTarget.toAbsolutePath().toString());
+        rootSymlinkAbsPath.toString(), targetAbsPath.toString());
 
     try {
-      projectFilesystem.createParentDirs(rootSymlink);
-      projectFilesystem.createSymLink(rootSymlink, rootSymlinkTarget, true /* force creation */);
+      projectFilesystem.createParentDirs(rootSymlinkAbsPath);
+      projectFilesystem.createSymLink(rootSymlinkAbsPath, targetAbsPath, true);
     } catch (IOException e) {
       LOG.error(e);
       throw new RuntimeException(e);
     }
+
+    recordMaterializedPath(relPath);
+    recordMaterializedPath(rootSymlinkRelPath);
   }
 
   /**
