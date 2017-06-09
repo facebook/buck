@@ -32,9 +32,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 class MaterializerProjectFileHashCache implements ProjectFileHashCache {
@@ -93,35 +92,41 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  private void materializeIfNeeded(Path relPath, Queue<Path> remainingRelPaths) throws IOException {
-    if (materializedPaths.contains(relPath)) {
-      return;
-    }
+  private void materializeIfNeeded(Path relPath) throws IOException {
+    Stack<Path> remainingPaths = new Stack<>();
+    remainingPaths.add(relPath);
 
-    LOG.info("Materializing path: [%s]", relPath.toString());
-
-    Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
-    BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
-    if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
-      recordMaterializedPath(relPath);
-      return;
-    }
-
-    if (fileHashEntry.isSetRootSymLink()) {
-      if (!symlinkedPaths.contains(relPath)) {
-        materializeSymlink(fileHashEntry, materializedPaths);
+    while (!remainingPaths.isEmpty()) {
+      relPath = remainingPaths.pop();
+      if (materializedPaths.contains(relPath)) {
+        continue;
       }
-      recordMaterializedPath(relPath);
-      return;
-    }
 
-    if (fileHashEntry.isIsDirectory()) {
-      materializeDirectory(relPath, fileHashEntry, remainingRelPaths);
-      materializedPaths.add(relPath);
-      return;
-    }
+      LOG.info("Materializing path: [%s]", relPath.toString());
 
-    materializeFile(relPath, fileHashEntry);
+      Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
+      BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
+
+      if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
+        recordMaterializedPath(relPath);
+        continue;
+      }
+
+      if (fileHashEntry.isSetRootSymLink()) {
+        if (!symlinkedPaths.contains(relPath)) {
+          materializeSymlink(fileHashEntry, materializedPaths);
+        }
+        recordMaterializedPath(relPath);
+        continue;
+      }
+
+      if (fileHashEntry.isIsDirectory()) {
+        materializeDirectory(relPath, fileHashEntry, remainingPaths);
+        continue;
+      }
+
+      materializeFile(relPath, fileHashEntry);
+    }
   }
 
   private void materializeFile(Path relPath, BuildJobStateFileHashEntry fileHashEntry)
@@ -150,18 +155,27 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   }
 
   private synchronized void materializeDirectory(
-      Path path, BuildJobStateFileHashEntry fileHashEntry, Queue<Path> remainingPaths)
+      Path relPath, BuildJobStateFileHashEntry fileHashEntry, Stack<Path> remainingPaths)
       throws IOException {
-    if (materializedPaths.contains(path)) {
+    if (materializedPaths.contains(relPath)) {
       return;
     }
 
-    projectFilesystem.mkdirs(path);
+    projectFilesystem.mkdirs(relPath);
+    remainingPaths.push(relPath);
 
     for (PathWithUnixSeparators unixPath : fileHashEntry.getChildren()) {
-      Path absPath = projectFilesystem.resolve(Paths.get(unixPath.getPath()));
-      Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
-      remainingPaths.add(relPath);
+      Path absPathToChild = projectFilesystem.resolve(Paths.get(unixPath.getPath()));
+      Path relPathToChild = projectFilesystem.getPathRelativeToProjectRoot(absPathToChild).get();
+      if (!materializedPaths.contains(relPathToChild)) {
+        remainingPaths.push(relPathToChild);
+      }
+    }
+
+    if (remainingPaths.peek().equals(relPath)) {
+      // This means all children were already materialized.
+      remainingPaths.pop();
+      recordMaterializedPath(relPath);
     }
   }
 
@@ -232,12 +246,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
   @Override
   public HashCode get(Path relPath) throws IOException {
-    Queue<Path> remainingPaths = new LinkedList<>();
-    remainingPaths.add(relPath);
-    while (remainingPaths.size() > 0) {
-      materializeIfNeeded(remainingPaths.remove(), remainingPaths);
-    }
-
+    materializeIfNeeded(relPath);
     return delegate.get(relPath);
   }
 
@@ -248,7 +257,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
-    materializeIfNeeded(archiveMemberRelPath.getArchivePath(), new LinkedList<>());
+    materializeIfNeeded(archiveMemberRelPath.getArchivePath());
     return delegate.get(archiveMemberRelPath);
   }
 
