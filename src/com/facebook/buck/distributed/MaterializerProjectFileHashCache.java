@@ -71,11 +71,16 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
       if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
         continue;
-      } else if (fileHashEntry.isSetMaterializeDuringPreloading()
+      }
+
+      if (fileHashEntry.isSetMaterializeDuringPreloading()
           && fileHashEntry.isMaterializeDuringPreloading()) {
         Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
         get(relPath);
-      } else if (fileHashEntry.isSetRootSymLink()) {
+        continue;
+      }
+
+      if (fileHashEntry.isSetRootSymLink()) {
         Path rootSymlinkAbsPath =
             projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
         Optional<Path> rootSymlinkRelPath =
@@ -88,15 +93,18 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         materializeSymlink(
             projectFilesystem.getPathRelativeToProjectRoot(absPath).get(), fileHashEntry);
         continue;
-      } else if (!fileHashEntry.isDirectory) {
-        // Touch file
-        projectFilesystem.createParentDirs(absPath);
-        projectFilesystem.touch(absPath);
-      } else {
+      }
+
+      if (fileHashEntry.isDirectory) {
         // Create directory
         // No need to materialize sub-dirs/files here, as there will be separate entries for those.
         projectFilesystem.mkdirs(absPath);
+        continue;
       }
+
+      // Touch file
+      projectFilesystem.createParentDirs(absPath);
+      projectFilesystem.touch(absPath);
     }
   }
 
@@ -159,61 +167,67 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  private synchronized void materializeDirectory(
+  private void materializeDirectory(
       Path relPath, BuildJobStateFileHashEntry fileHashEntry, Stack<Path> remainingPaths)
       throws IOException {
-    if (materializedPaths.contains(relPath)) {
-      return;
-    }
-
-    projectFilesystem.mkdirs(relPath);
-    remainingPaths.push(relPath);
-
-    for (PathWithUnixSeparators unixPath : fileHashEntry.getChildren()) {
-      Path absPathToChild = projectFilesystem.resolve(Paths.get(unixPath.getPath()));
-      Path relPathToChild = projectFilesystem.getPathRelativeToProjectRoot(absPathToChild).get();
-      if (!materializedPaths.contains(relPathToChild)) {
-        remainingPaths.push(relPathToChild);
+    synchronized (fileHashEntry) {
+      // Check if someone materialized the dir while we were waiting for synchronization.
+      if (materializedPaths.contains(relPath)) {
+        return;
       }
-    }
 
-    if (remainingPaths.peek().equals(relPath)) {
-      // This means all children were already materialized.
-      remainingPaths.pop();
-      recordMaterializedPath(relPath);
+      projectFilesystem.mkdirs(relPath);
+      remainingPaths.push(relPath);
+
+      for (PathWithUnixSeparators unixPath : fileHashEntry.getChildren()) {
+        Path absPathToChild = projectFilesystem.resolve(Paths.get(unixPath.getPath()));
+        Path relPathToChild = projectFilesystem.getPathRelativeToProjectRoot(absPathToChild).get();
+        if (!materializedPaths.contains(relPathToChild)) {
+          remainingPaths.push(relPathToChild);
+        }
+      }
+
+      if (remainingPaths.peek().equals(relPath)) {
+        // This means all children were already materialized.
+        remainingPaths.pop();
+        recordMaterializedPath(relPath);
+      }
     }
   }
 
   private synchronized void materializeSymlink(
       Path relPath, BuildJobStateFileHashEntry fileHashEntry) throws IOException {
-    if (materializedPaths.contains(relPath)) {
-      return;
-    }
+    synchronized (fileHashEntry) {
+      // Check if someone materialized the symlink while we were waiting for synchronization.
+      if (materializedPaths.contains(relPath)) {
+        return;
+      }
 
-    Path rootSymlinkAbsPath = projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
-    Path rootSymlinkRelPath =
-        projectFilesystem.getPathRelativeToProjectRoot(rootSymlinkAbsPath).get();
+      Path rootSymlinkAbsPath = projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
+      Path rootSymlinkRelPath =
+          projectFilesystem.getPathRelativeToProjectRoot(rootSymlinkAbsPath).get();
 
-    if (materializedPaths.contains(rootSymlinkRelPath)) {
+      if (materializedPaths.contains(rootSymlinkRelPath)) {
+        recordMaterializedPath(relPath);
+        return;
+      }
+
+      Path targetAbsPath =
+          projectFilesystem.resolve(fileHashEntry.getRootSymLinkTarget().getPath());
+      LOG.info(
+          "Materializing sym link [%s] with target [%s]",
+          rootSymlinkAbsPath.toString(), targetAbsPath.toString());
+
+      try {
+        projectFilesystem.createParentDirs(rootSymlinkAbsPath);
+        projectFilesystem.createSymLink(rootSymlinkAbsPath, targetAbsPath, true);
+      } catch (IOException e) {
+        LOG.error(e);
+        throw new RuntimeException(e);
+      }
       recordMaterializedPath(relPath);
-      return;
+      recordMaterializedPath(rootSymlinkRelPath);
     }
-
-    Path targetAbsPath = projectFilesystem.resolve(fileHashEntry.getRootSymLinkTarget().getPath());
-    LOG.info(
-        "Materializing sym link [%s] with target [%s]",
-        rootSymlinkAbsPath.toString(), targetAbsPath.toString());
-
-    try {
-      projectFilesystem.createParentDirs(rootSymlinkAbsPath);
-      projectFilesystem.createSymLink(rootSymlinkAbsPath, targetAbsPath, true);
-    } catch (IOException e) {
-      LOG.error(e);
-      throw new RuntimeException(e);
-    }
-
-    recordMaterializedPath(relPath);
-    recordMaterializedPath(rootSymlinkRelPath);
   }
 
   /**
