@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.android.relinker;
 
+import com.facebook.buck.android.AndroidLinkableMetadata;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -64,8 +65,8 @@ public class NativeRelinker {
   private final BuildRuleParams buildRuleParams;
   private final SourcePathResolver resolver;
   private final CxxBuckConfig cxxBuckConfig;
-  private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibs;
-  private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibsAssets;
+  private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibs;
+  private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibsAssets;
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ImmutableList<RelinkerRule> rules;
@@ -76,8 +77,8 @@ public class NativeRelinker {
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibs,
-      ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibsAssets) {
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibs,
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets) {
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(
         !linkableLibs.isEmpty() || !linkableLibsAssets.isEmpty(),
@@ -104,14 +105,14 @@ public class NativeRelinker {
         ImmutableMap.builder();
     ImmutableSet.Builder<Pair<TargetCpuType, SourcePath>> copiedLibraries = ImmutableSet.builder();
 
-    for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry :
+    for (Map.Entry<AndroidLinkableMetadata, SourcePath> entry :
         Iterables.concat(linkableLibs.entrySet(), linkableLibsAssets.entrySet())) {
       SourcePath source = entry.getValue();
       Optional<BuildRule> rule = ruleFinder.getRule(source);
       if (rule.isPresent()) {
-        ruleMapBuilder.put(rule.get(), new Pair<>(entry.getKey().getFirst(), source));
+        ruleMapBuilder.put(rule.get(), new Pair<>(entry.getKey().getTargetCpuType(), source));
       } else {
-        copiedLibraries.add(new Pair<>(entry.getKey().getFirst(), source));
+        copiedLibraries.add(new Pair<>(entry.getKey().getTargetCpuType(), source));
       }
     }
 
@@ -247,11 +248,11 @@ public class NativeRelinker {
         linkerArgs);
   }
 
-  public ImmutableMap<Pair<TargetCpuType, String>, SourcePath> getRelinkedLibs() {
+  public ImmutableMap<AndroidLinkableMetadata, SourcePath> getRelinkedLibs() {
     return relinkedLibs;
   }
 
-  public ImmutableMap<Pair<TargetCpuType, String>, SourcePath> getRelinkedLibsAssets() {
+  public ImmutableMap<AndroidLinkableMetadata, SourcePath> getRelinkedLibsAssets() {
     return relinkedLibsAssets;
   }
 

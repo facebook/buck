@@ -375,6 +375,8 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
     public abstract TargetCpuType getTargetCpuType();
 
+    public abstract APKModule getApkModule();
+
     @Override
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       sink.setReflectively("sourcePath", getSourcePath())

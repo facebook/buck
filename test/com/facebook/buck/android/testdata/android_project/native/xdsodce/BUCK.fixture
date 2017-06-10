@@ -28,6 +28,9 @@ cxx_library(
   exported_deps = [
     ':bot',
   ],
+  visibility = [
+    'PUBLIC',
+  ],
 )
 
 cxx_library(
@@ -38,6 +41,9 @@ cxx_library(
   ],
   srcs = [
     'bot.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
   ],
 )
 

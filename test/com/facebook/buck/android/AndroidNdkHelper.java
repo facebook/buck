@@ -32,12 +32,18 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.zip.ZipFile;
+import org.tukaani.xz.XZInputStream;
 
 public class AndroidNdkHelper {
 
@@ -84,7 +90,8 @@ public class AndroidNdkHelper {
   }
 
   private static Path unzip(Path tmpDir, Path zipPath, String name) throws IOException {
-    Path outPath = tmpDir.resolve(zipPath.getFileName());
+    File nameFile = new File(name);
+    Path outPath = tmpDir.resolve(zipPath.getFileName() + "_" + nameFile.getName());
     try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
       Files.copy(
           zipFile.getInputStream(zipFile.getEntry(name)),
@@ -113,9 +120,41 @@ public class AndroidNdkHelper {
       return unzip(tmpDir, apkPath, libName);
     }
 
+    private void advanceStream(InputStream stream, int bytes) throws IOException {
+      byte[] buf = new byte[bytes];
+      int read = stream.read(buf, 0, bytes);
+      if (read != bytes) {
+        throw new IOException("unable to read " + bytes + " bytes");
+      }
+    }
+
     public Symbols getSymbols(Path apkPath, String libName)
         throws IOException, InterruptedException {
       Path lib = unpack(apkPath, libName);
+      return Symbols.getSymbols(executor, objdump, resolver, lib);
+    }
+
+    public Symbols getXzsSymbols(Path apkPath, String libName, String xzsName, String metadataName)
+        throws IOException, InterruptedException {
+      Path xzs = unpack(apkPath, xzsName);
+      Path metadata = unpack(apkPath, metadataName);
+      Path lib = tmpDir.resolve(libName);
+      try (BufferedReader metadataReader = new BufferedReader(new FileReader(metadata.toFile()))) {
+        try (XZInputStream xzInput =
+            new XZInputStream(new FileInputStream(xzs.toFile()), -1, false)) {
+          String line = metadataReader.readLine();
+          while (line != null) {
+            String[] tokens = line.split(" ");
+            File metadataFile = new File(tokens[0]);
+            if (metadataFile.getName().equals(libName)) {
+              break;
+            }
+            advanceStream(xzInput, Integer.parseInt(tokens[1]));
+            line = metadataReader.readLine();
+          }
+          Files.copy(xzInput, lib, StandardCopyOption.REPLACE_EXISTING);
+        }
+      }
       return Symbols.getSymbols(executor, objdump, resolver, lib);
     }
 

@@ -680,6 +680,57 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testNativeRelinkerModular() throws IOException, InterruptedException {
+    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    Path tmpDir = tmpFolder.newFolder("xdso");
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
+    Symbols sym;
+
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce_modular");
+
+    sym =
+        syms.getXzsSymbols(
+            apkPath,
+            "libnative_xdsodce_top.so",
+            "assets/native.xdsodce.top/libs.xzs",
+            "assets/native.xdsodce.top/libs.txt");
+    assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
+    assertTrue(sym.undefined.contains("_Z10midFromTopi"));
+    assertTrue(sym.undefined.contains("_Z10botFromTopi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    sym =
+        syms.getXzsSymbols(
+            apkPath,
+            "libnative_xdsodce_mid.so",
+            "assets/native.xdsodce.mid/libs.xzs",
+            "assets/native.xdsodce.mid/libs.txt");
+    assertTrue(sym.global.contains("_Z10midFromTopi"));
+    assertTrue(sym.undefined.contains("_Z10botFromMidi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+
+    sym =
+        syms.getXzsSymbols(
+            apkPath,
+            "libnative_xdsodce_bot.so",
+            "assets/native.xdsodce.mid/libs.xzs",
+            "assets/native.xdsodce.mid/libs.txt");
+    assertTrue(sym.global.contains("_Z10botFromTopi"));
+    assertTrue(sym.global.contains("_Z10botFromMidi"));
+    assertFalse(sym.all.contains("_Z6unusedi"));
+  }
+
+  @Test
   public void testHeaderOnlyCxxLibrary() throws IOException {
     String target = "//apps/sample:app_header_only_cxx_lib_dep";
     workspace.runBuckCommand("build", target).assertSuccess();
