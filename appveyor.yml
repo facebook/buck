@@ -17,7 +17,8 @@ install:
   - cmd: python --version
   - cmd: java -version
   - cmd: ant -version
-
+  
+build: off
 
 build_script:
   - "bin\\buck build buck"
