@@ -13,6 +13,7 @@ EXCEPTION_SRCS = [
     "ExceptionWithHumanReadableMessage.java",
     "HumanReadableException.java",
     "WatchmanWatcherException.java",
+    "RetryingException.java",
 ]
 
 java_library(
