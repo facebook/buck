@@ -200,7 +200,7 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--view",
     usage =
-        "Experimental command to build a 'project view', which is a directory outside the "
+        "New command to build a 'project view', which is a directory outside the "
             + "repo, containing symlinks in to the repo. This directory looks a lot like a standard "
             + "IntelliJ project with all resources under /res, but what's really important is that it "
             + "generates a single IntelliJ module, so that editing is much faster than when you use "
