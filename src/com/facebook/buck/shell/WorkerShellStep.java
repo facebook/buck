@@ -33,6 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -94,8 +95,8 @@ public class WorkerShellStep implements Step {
         }
       }
       return StepExecutionResult.of(result.getExitCode());
-    } catch (Exception e) {
-      throw new HumanReadableException(e, "Error communicating with external process.");
+    } catch (IOException e) {
+      throw new RuntimeException("Error communicating with external process.", e);
     } finally {
       if (pool != null && process != null) {
         pool.destroyWorkerProcess(process);
