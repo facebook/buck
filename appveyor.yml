@@ -18,6 +18,8 @@ install:
   - cmd: java -version
   - cmd: ant -version
 
+# to disable automatic builds by MsBuild
+build: off
 
 build_script:
   - "bin\\buck build buck"
