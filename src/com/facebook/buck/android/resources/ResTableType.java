@@ -424,12 +424,14 @@ public class ResTableType extends ResChunk {
       for (int j = 0; j < count; j++) {
         // Visit the name attribute reference.
         transformEntryDataOffset(entryData, entryOffset + 16, visitor);
-        int size = entryData.getShort(entryOffset + 20);
         int type = entryData.get(entryOffset + 23);
         if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
           // Visit the value if it's a reference.
           transformEntryDataOffset(entryData, entryOffset + 24, visitor);
+        } else if (type == RES_DYNAMIC_REFERENCE || type == RES_DYNAMIC_ATTRIBUTE) {
+          throw new UnsupportedOperationException();
         }
+        int size = entryData.getShort(entryOffset + 20);
         entryOffset += 4 + size;
       }
     } else {
@@ -437,6 +439,8 @@ public class ResTableType extends ResChunk {
       if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
         // Visit the value if it's a reference.
         transformEntryDataOffset(entryData, offset + 12, visitor);
+      } else if (type == RES_DYNAMIC_REFERENCE || type == RES_DYNAMIC_ATTRIBUTE) {
+        throw new UnsupportedOperationException();
       }
     }
   }

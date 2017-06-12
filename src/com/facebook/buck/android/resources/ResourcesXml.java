@@ -85,6 +85,15 @@ public class ResourcesXml extends ResChunk {
       refMap = Optional.of(map);
       buf.position(buf.position() + map.getChunkSize());
     }
+
+    int position = buf.position();
+    while (position < buf.limit()) {
+      nextType = buf.getShort(position);
+      Preconditions.checkState(
+          nextType >= XML_FIRST_TYPE && nextType <= XML_LAST_TYPE, "Got: " + nextType);
+      position += buf.getInt(position + 4);
+    }
+    Preconditions.checkState(position == buf.limit());
     return new ResourcesXml(buf.limit(), strings, refMap, slice(buf, buf.position()));
   }
 
