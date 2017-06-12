@@ -54,6 +54,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -388,6 +389,9 @@ public class ExopackageInstaller {
       String localAppSignature =
           AgentUtil.getJarSignature(
               pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
+      if (Objects.equals(localAppSignature, AgentUtil.FAILED_TO_FIND_SHA1_DIGEST)) {
+        LOG.warn("Failed to find manifest digest.");
+      }
       LOG.debug("Local app signature: %s", localAppSignature);
       LOG.debug("Remote app signature: %s", installedAppSignature);
 

@@ -43,6 +43,8 @@ public final class AgentUtil {
 
   public static final String TEMP_PREFIX = "exopackage_temp-";
 
+  public static final String FAILED_TO_FIND_SHA1_DIGEST = "FAILED_TO_FIND_SHA1_DIGEST";
+
   public static String getJarSignature(String packagePath) throws IOException {
     Pattern signatureFilePattern = Pattern.compile("META-INF/[A-Z]+\\.SF");
 
@@ -63,8 +65,7 @@ public final class AgentUtil {
           while (true) {
             String line = sigContents.readLine();
             if (line == null || line.equals("")) {
-              throw new IllegalArgumentException(
-                  "Failed to find manifest digest in " + entry.getName());
+              return FAILED_TO_FIND_SHA1_DIGEST;
             }
             String prefix = "SHA1-Digest-Manifest: ";
             if (line.startsWith(prefix)) {
