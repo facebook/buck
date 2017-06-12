@@ -286,7 +286,11 @@ public class ExoResourcesRewriter {
     }
 
     private ResourcesXml extractXml(String path) {
-      return ResourcesXml.get(ResChunk.wrap(getContent(path)));
+      try {
+        return ResourcesXml.get(ResChunk.wrap(getContent(path)));
+      } catch (Exception e) {
+        throw new RuntimeException("When extracting " + path, e);
+      }
     }
   }
 }
