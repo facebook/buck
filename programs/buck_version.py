@@ -38,9 +38,11 @@ def is_git(dirpath):
         if os.path.exists(dot_git) and os.path.isdir(dot_git):
             return True
         try:
-            output = check_output(
-                ['git', 'rev-parse', '--is-inside-work-tree'],
-                cwd=dirpath)
+            with open(os.devnull, 'w') as devnull:
+                output = check_output(
+                    ['git', 'rev-parse', '--is-inside-work-tree'],
+                    cwd=dirpath,
+                    stderr=devnull)
             return output.strip() == 'true'
         except CalledProcessError:
             pass
