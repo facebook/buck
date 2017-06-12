@@ -1608,6 +1608,13 @@ public class AndroidBinary extends AbstractBuildRule
               .stream()
               .map(BuildRule::getBuildTarget));
     }
+    if (ExopackageMode.enabledForResources(exopackageModes)) {
+      deps.add(
+          ruleFinder
+              .filterBuildRuleInputs(enhancementResult.getExoResources())
+              .stream()
+              .map(BuildRule::getBuildTarget));
+    }
     return deps.build().reduce(Stream.empty(), Stream::concat);
   }
 
