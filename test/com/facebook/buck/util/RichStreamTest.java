@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -111,5 +112,43 @@ public class RichStreamTest {
         ImmutableList.of("a", "b"),
         RichStream.fromSupplierOfIterable(() -> ImmutableList.of("a", "b"))
             .collect(Collectors.toList()));
+  }
+
+  private static class MyRuntimeException extends RuntimeException {}
+
+  @Test(expected = IOException.class)
+  public void forEachOrderedThrowingCanRethrowException() throws IOException {
+    RichStream.of("a")
+        .forEachOrderedThrowing(
+            f -> {
+              throw new IOException("test io exception");
+            });
+  }
+
+  @Test(expected = MyRuntimeException.class)
+  public void forEachOrderedThrowingCanPassThroughRuntimeException() throws IOException {
+    RichStream.of("a")
+        .forEachOrderedThrowing(
+            f -> {
+              throw new MyRuntimeException();
+            });
+  }
+
+  @Test(expected = IOException.class)
+  public void forEachThrowingCanRethrowException() throws IOException {
+    RichStream.of("a")
+        .forEachThrowing(
+            f -> {
+              throw new IOException("test io exception");
+            });
+  }
+
+  @Test(expected = MyRuntimeException.class)
+  public void forEachThrowingCanPassThroughRuntimeException() throws IOException {
+    RichStream.of("a")
+        .forEachThrowing(
+            f -> {
+              throw new MyRuntimeException();
+            });
   }
 }
