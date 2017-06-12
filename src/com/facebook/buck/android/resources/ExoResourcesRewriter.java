@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,7 @@ import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -170,21 +172,63 @@ public class ExoResourcesRewriter {
 
   static void rewriteRDotTxt(ReferenceMapper refMapping, Path inputRDotTxt, Path outputRDotTxt) {
     Map<String, String> cache = new HashMap<>();
-    Function<String, String> stringMapping =
-        (s) -> String.format("0x%x", refMapping.map(Integer.parseInt(s, 16)));
+    Function<String, String> mapping =
+        (s) ->
+            cache.computeIfAbsent(
+                s, (k) -> String.format("0x%x", refMapping.map(Integer.parseInt(k, 16))));
     try {
       List<String> lines = Files.readAllLines(inputRDotTxt, Charsets.UTF_8);
       List<String> mappedLines = new ArrayList<>(lines.size());
-      Pattern p = Pattern.compile("0x(7f[0-9a-f]{6})");
-      for (String line : lines) {
-        Matcher m = p.matcher(line);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-          String replacement = cache.computeIfAbsent(m.group(1), stringMapping);
-          m.appendReplacement(sb, replacement);
+      Pattern regular = Pattern.compile("int ([^ ]*) ([^ ]*) 0x(7f[0-9a-f]{6})");
+      Pattern styleable = Pattern.compile("int\\[] (styleable) ([^ ]*) \\{(.*) }");
+      Pattern index = Pattern.compile("int (styleable) ([^ ]*) ([0-9]*)");
+      Pattern number = Pattern.compile("0x([0-9a-f]{8})");
+
+      Iterator<String> iter = lines.iterator();
+      while (iter.hasNext()) {
+        String line = iter.next();
+        Matcher reg = regular.matcher(line);
+        if (reg.matches()) {
+          String newId = mapping.apply(reg.group(3));
+          mappedLines.add(String.format("int %s %s %s", reg.group(1), reg.group(2), newId));
+          continue;
         }
-        m.appendTail(sb);
-        mappedLines.add(sb.toString());
+        Matcher stMatcher = styleable.matcher(line);
+        if (!stMatcher.matches()) {
+          throw new RuntimeException("Unmatched: " + line);
+        }
+        String values = stMatcher.group(3);
+        ArrayList<String> ids = new ArrayList<>();
+        Matcher m = number.matcher(values);
+        while (m.find()) {
+          String id = mapping.apply(m.group(1));
+          ids.add(id);
+        }
+        Map<String, Integer> newIndex = new HashMap<>();
+        List<String> sortedIds = ids.stream().sorted().collect(Collectors.toList());
+        for (int i = 0; i < sortedIds.size(); i++) {
+          newIndex.put(sortedIds.get(i), i);
+        }
+        StringBuilder valuesBuilder = new StringBuilder();
+        String prefix = "";
+        for (String id : sortedIds) {
+          valuesBuilder.append(prefix);
+          valuesBuilder.append(id);
+          prefix = ", ";
+        }
+        mappedLines.add(
+            String.format(
+                "int[] styleable %s { %s }", stMatcher.group(2), valuesBuilder.toString()));
+        for (int i = 0; i < ids.size(); i++) {
+          line = iter.next();
+          m = index.matcher(line);
+          if (!m.matches()) {
+            throw new RuntimeException("Unmatched: " + line);
+          }
+          int idx = Integer.parseInt(m.group(3));
+          int newIdx = newIndex.get(ids.get(idx));
+          mappedLines.add(String.format("int styleable %s %d", m.group(2), newIdx));
+        }
       }
       MoreFiles.writeLinesToFile(mappedLines, outputRDotTxt);
     } catch (IOException e) {

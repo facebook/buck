@@ -106,15 +106,23 @@ public class ExoResourcesRewriterTest {
     String rtxtContent =
         "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0025\n"
             + "int style Widget_AppCompat_Light_PopupMenu_Overflow 0x7f0b0023\n"
-            + "int[] styleable VariableTextLayoutView { 0x7f0100ac, 0x7f0100c9, 0x7f0100d0, "
-            + "0x7f0100d3, 0x7f0100d4, 0x7f0100d6, 0x7f0100d7, 0x7f0100d8, 0x7f0100d9 }\n"
-            + "int styleable VariableTextLayoutView_alignment 7\n";
+            + "int[] styleable ActionMode { 0x7f010000, 0x7f01005a, 0x7f01005b, 0x7f01005e, 0x7f010060, 0x7f01006e }\n"
+            + "int styleable ActionMode_background 3\n"
+            + "int styleable ActionMode_backgroundSplit 4\n"
+            + "int styleable ActionMode_closeItemLayout 5\n"
+            + "int styleable ActionMode_height 0\n"
+            + "int styleable ActionMode_subtitleTextStyle 2\n"
+            + "int styleable ActionMode_titleTextStyle 1\n";
     String expectedOutput =
         "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0001\n"
             + "int style Widget_AppCompat_Light_PopupMenu_Overflow 0x7f0b0023\n"
-            + "int[] styleable VariableTextLayoutView { 0x7f010001, 0x7f0100c9, 0x7f0100d0, "
-            + "0x7f0100d3, 0x7f0100d4, 0x7f010002, 0x7f0100d7, 0x7f0100d8, 0x7f0100d9 }\n"
-            + "int styleable VariableTextLayoutView_alignment 7\n";
+            + "int[] styleable ActionMode { 0x7f010000, 0x7f010001, 0x7f010002, 0x7f01005a, 0x7f01005e, 0x7f01006e }\n"
+            + "int styleable ActionMode_background 4\n"
+            + "int styleable ActionMode_backgroundSplit 1\n"
+            + "int styleable ActionMode_closeItemLayout 5\n"
+            + "int styleable ActionMode_height 0\n"
+            + "int styleable ActionMode_subtitleTextStyle 2\n"
+            + "int styleable ActionMode_titleTextStyle 3\n";
     filesystem.writeContentsToPath(rtxtContent, inputRTxt);
 
     Path outputRTxt = tmpFolder.getRoot().resolve("output.R.txt");
@@ -125,10 +133,10 @@ public class ExoResourcesRewriterTest {
             switch (id) {
               case 0x7f0b0025:
                 return 0x7f0b0001;
-              case 0x7f0100ac:
-                return 0x7f010001;
-              case 0x7f0100d6:
+              case 0x7f01005b:
                 return 0x7f010002;
+              case 0x7f010060:
+                return 0x7f010001;
             }
             return id;
           }
