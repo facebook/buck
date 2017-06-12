@@ -73,4 +73,9 @@ warnings = os.environ.get('PYTHONWARNINGS', 'd').split(',')
 for item in reversed(warnings):
     args.insert(1, '-W{0}'.format(item.strip()))
 
+# Allow users to disable byte code generation by setting the standard environment var.
+# Same as above, because of -E we have to pass this down using the command line.
+if 'PYTHONDONTWRITEBYTECODE' in os.environ:
+    args.insert(1, '-B')
+
 os.execv(sys.executable, args + sys.argv[1:])
