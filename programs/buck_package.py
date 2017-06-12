@@ -137,7 +137,7 @@ class BuckPackage(BuckTool):
 
     def _get_extra_java_args(self):
         return [
-            "-Dbuck.git_commit={0}".format(self._package_info['version']),
+            "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
             "-Dbuck.git_commit_timestamp={0}".format(self._package_info['timestamp']),
             "-Dbuck.git_dirty=0",
         ]

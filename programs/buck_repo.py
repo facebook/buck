@@ -272,7 +272,7 @@ class BuckRepo(BuckTool):
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):
             return [
-                "-Dbuck.git_commit={0}".format(self._get_git_revision()),
+                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
                 "-Dbuck.git_commit_timestamp={0}".format(
                     self._get_git_commit_timestamp()),
                 "-Dbuck.git_dirty={0}".format(
