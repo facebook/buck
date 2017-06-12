@@ -1,4 +1,0 @@
-[project]
-		autodeps_command_enabled = true
-[autodeps]
-    include_signature = false
