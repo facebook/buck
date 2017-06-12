@@ -166,6 +166,13 @@ public class TargetsCommand extends AbstractCommand {
   private boolean isShowRuleKey;
 
   @Option(
+    name = "--show-transitive-rulekeys",
+    aliases = {"--show-transitive-rulekeys"},
+    usage = "Show rule keys of transitive deps as well."
+  )
+  private boolean isShowTransitiveRuleKeys;
+
+  @Option(
     name = "--show-target-hash",
     usage = "Print a stable hash of each target after the target name."
   )
@@ -259,6 +266,11 @@ public class TargetsCommand extends AbstractCommand {
   /** @return {@code true} if {@code --show-rulekey} was specified. */
   public boolean isShowRuleKey() {
     return isShowRuleKey;
+  }
+
+  /** @return {@code true} if {@code --show-transitive-rulekeys} was specified. */
+  public boolean isShowTransitiveRuleKeys() {
+    return isShowTransitiveRuleKeys;
   }
 
   /** @return {@code true} if {@code --show-targethash} was specified. */
@@ -830,6 +842,9 @@ public class TargetsCommand extends AbstractCommand {
         BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
         if (isShowRuleKey()) {
           showOptionsBuilder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
+          if (isShowTransitiveRuleKeys()) {
+            showTransitiveRuleKeys(rule, ruleKeyFactory.get(), showOptionBuilderMap);
+          }
         }
         if (isShowOutput() || isShowFullOutput()) {
           Optional<Path> outputPath =
@@ -850,6 +865,20 @@ public class TargetsCommand extends AbstractCommand {
       builder.put(entry.getKey(), entry.getValue().build());
     }
     return builder.build();
+  }
+
+  private void showTransitiveRuleKeys(
+      BuildRule root,
+      DefaultRuleKeyFactory ruleKeyFactory,
+      Map<BuildTarget, ShowOptions.Builder> optionsMap) {
+    AbstractBreadthFirstTraversal.traverse(
+        root,
+        r -> {
+          ShowOptions.Builder showOptionsBuilder =
+              getShowOptionBuilder(optionsMap, r.getBuildTarget());
+          showOptionsBuilder.setRuleKey(ruleKeyFactory.build(r).toString());
+          return r.getBuildDeps();
+        });
   }
 
   static Optional<Path> getUserFacingOutputPath(
