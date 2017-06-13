@@ -262,7 +262,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       }
 
       builder.add(
-          createHttpArtifactCache(
+          createRetryingArtifactCache(
               cacheEntry,
               buckConfig.getHostToReportToRemoteCacheServer(),
               buckEventBus,
@@ -302,6 +302,30 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       throw new HumanReadableException(
           e, "Failure initializing artifact cache directory: %s", cacheDir);
     }
+  }
+
+  private static ArtifactCache createRetryingArtifactCache(
+      HttpCacheEntry cacheDescription,
+      final String hostToReportToRemote,
+      final BuckEventBus buckEventBus,
+      ProjectFilesystem projectFilesystem,
+      ListeningExecutorService httpWriteExecutorService,
+      ArtifactCacheBuckConfig config,
+      NetworkCacheFactory factory,
+      boolean distributedBuildModeEnabled,
+      ArtifactCacheMode cacheMode) {
+    ArtifactCache cache =
+        createHttpArtifactCache(
+            cacheDescription,
+            hostToReportToRemote,
+            buckEventBus,
+            projectFilesystem,
+            httpWriteExecutorService,
+            config,
+            factory,
+            distributedBuildModeEnabled,
+            cacheMode);
+    return new RetryingNetworkCache(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
   }
 
   private static ArtifactCache createHttpArtifactCache(

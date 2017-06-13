@@ -94,7 +94,6 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
-      reportFailure(e, "fetch(%s): %s", ruleKey, msg);
       CacheResult cacheResult = CacheResult.error(name, mode, msg);
       eventBuilder.getFetchBuilder().setFetchResult(cacheResult).setErrorMessage(msg);
       buckEventBus.post(eventBuilder.build());

@@ -73,7 +73,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  public CacheResult fetchImpl(
+  protected CacheResult fetchImpl(
       RuleKey ruleKey, LazyPath output, HttpArtifactCacheEvent.Finished.Builder eventBuilder)
       throws IOException {
 

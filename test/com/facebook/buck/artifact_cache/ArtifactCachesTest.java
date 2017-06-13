@@ -157,6 +157,10 @@ public class ArtifactCachesTest {
           (TwoLevelArtifactCacheDecorator) artifactCache;
       return stripDecorators(cacheDecorator.getDelegate());
     }
+    if (artifactCache instanceof RetryingNetworkCache) {
+      RetryingNetworkCache cacheDecorator = (RetryingNetworkCache) artifactCache;
+      return stripDecorators(cacheDecorator.getDelegate());
+    }
     return artifactCache;
   }
 }

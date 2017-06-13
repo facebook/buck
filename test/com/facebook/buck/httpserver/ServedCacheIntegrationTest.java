@@ -105,8 +105,16 @@ public class ServedCacheIntegrationTest {
   }
 
   private ArtifactCacheBuckConfig createMockLocalHttpCacheConfig(int port) throws Exception {
+    return createMockLocalHttpCacheConfig(port, 1);
+  }
+
+  private ArtifactCacheBuckConfig createMockLocalHttpCacheConfig(int port, int retryCount)
+      throws Exception {
     return createMockLocalConfig(
-        "[cache]", "mode = http", String.format("http_url = http://127.0.0.1:%d/", port));
+        "[cache]",
+        "mode = http",
+        String.format("http_url = http://127.0.0.1:%d/", port),
+        String.format("http_max_fetch_retries = %d", retryCount));
   }
 
   private ArtifactCacheBuckConfig createMockLocalDirCacheConfig() throws Exception {
@@ -194,6 +202,64 @@ public class ServedCacheIntegrationTest {
 
     // Try again to make sure the exception didn't kill the server.
     cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
+  }
+
+  @Test
+  public void testExceptionDuringTheReadRetryingFail() throws Exception {
+    ProjectFilesystem throwingStreamFilesystem =
+        new ProjectFilesystem(tmpDir.getRoot()) {
+          private int throwingStreamServedCount = 0;
+
+          @Override
+          public InputStream newFileInputStream(Path pathRelativeToProjectRoot) throws IOException {
+            InputStream inputStream = super.newFileInputStream(pathRelativeToProjectRoot);
+            if (throwingStreamServedCount < 3
+                && pathRelativeToProjectRoot.toString().contains("outgoing_rulekey")) {
+              throwingStreamServedCount++;
+              return new ThrowAfterXBytesStream(inputStream, 10L);
+            }
+            return inputStream;
+          }
+        };
+
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, "/static/");
+    webServer.updateAndStartIfNeeded(Optional.of(dirCache));
+
+    ArtifactCache serverBackedCache =
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get(), 3));
+
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
+    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.ERROR));
+  }
+
+  @Test
+  public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
+    ProjectFilesystem throwingStreamFilesystem =
+        new ProjectFilesystem(tmpDir.getRoot()) {
+          private int throwingStreamServedCount = 0;
+
+          @Override
+          public InputStream newFileInputStream(Path pathRelativeToProjectRoot) throws IOException {
+            InputStream inputStream = super.newFileInputStream(pathRelativeToProjectRoot);
+            if (throwingStreamServedCount < 3
+                && pathRelativeToProjectRoot.toString().contains("outgoing_rulekey")) {
+              throwingStreamServedCount++;
+              return new ThrowAfterXBytesStream(inputStream, 10L);
+            }
+            return inputStream;
+          }
+        };
+
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, "/static/");
+    webServer.updateAndStartIfNeeded(Optional.of(dirCache));
+
+    ArtifactCache serverBackedCache =
+        createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get(), 4));
+
+    LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
+    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
   }
 
