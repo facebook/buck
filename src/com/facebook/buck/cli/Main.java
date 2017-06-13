@@ -677,6 +677,7 @@ public final class Main {
             BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
+                    buildId.toString(),
                     clock,
                     new SuperConsoleConfig(buckConfig),
                     console,
@@ -1400,6 +1401,7 @@ public final class Main {
   }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
+      String buildId,
       Clock clock,
       SuperConsoleConfig config,
       Console console,
@@ -1425,7 +1427,13 @@ public final class Main {
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(
-        console, clock, testResultSummaryVerbosity, locale, testLogPath, executionEnvironment);
+        console,
+        clock,
+        testResultSummaryVerbosity,
+        locale,
+        testLogPath,
+        buildId,
+        executionEnvironment);
   }
 
   private boolean isSuperConsoleEnabled(Console console) {

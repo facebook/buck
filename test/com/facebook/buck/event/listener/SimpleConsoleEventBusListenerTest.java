@@ -62,10 +62,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
+  private static final String BUILD_ID = "123";
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
+  private static final String BUILD_ID_OUTPUT = "Build ID: 123\n";
   private static final String FINISHED_DOWNLOAD_STRING =
       "[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)";
 
@@ -91,6 +93,7 @@ public class SimpleConsoleEventBusListenerTest {
             TestResultSummaryVerbosity.of(false, false),
             Locale.US,
             logPath,
+            BUILD_ID,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()));
 
@@ -99,6 +102,9 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testSimpleBuild() {
+    String expectedOutput = BUILD_ID_OUTPUT;
+    assertOutput(expectedOutput, console);
+
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
@@ -120,7 +126,7 @@ public class SimpleConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 0L, TimeUnit.MILLISECONDS, threadId));
 
-    assertOutput("", console);
+    assertOutput(expectedOutput, console);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -129,7 +135,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    String expectedOutput = "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
+    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
     assertOutput(expectedOutput, console);
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -219,6 +225,9 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testJobSummaryIsDisplayed() {
+    String expectedOutput = BUILD_ID_OUTPUT;
+    assertOutput(expectedOutput, console);
+
     BuildEvent.RuleCountCalculated ruleCountCalculated =
         BuildEvent.ruleCountCalculated(ImmutableSet.of(), 10);
     eventBus.post(ruleCountCalculated);
@@ -239,15 +248,15 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    assertOutput(
-        "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n"
-            + FINISHED_DOWNLOAD_STRING
-            + "\n",
-        console);
+    expectedOutput += "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n";
+    assertOutput(expectedOutput + FINISHED_DOWNLOAD_STRING + "\n", console);
   }
 
   @Test
   public void testBuildTimeDoesNotDisplayNegativeOffset() {
+    String expectedOutput = BUILD_ID_OUTPUT;
+    assertOutput(expectedOutput, console);
+
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
@@ -264,7 +273,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    String expectedOutput = "[-] PARSING BUCK FILES...FINISHED 0.2s\n";
+    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.2s\n";
     assertOutput(expectedOutput, console);
 
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();

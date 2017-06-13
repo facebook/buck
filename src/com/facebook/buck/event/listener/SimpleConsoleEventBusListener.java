@@ -58,6 +58,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       TestResultSummaryVerbosity summaryVerbosity,
       Locale locale,
       Path testLogPath,
+      String buildId,
       ExecutionEnvironment executionEnvironment) {
     super(console, clock, locale, executionEnvironment);
     this.locale = locale;
@@ -70,6 +71,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             summaryVerbosity,
             locale,
             Optional.of(testLogPath));
+
+    ImmutableList.Builder<String> buildMetaDataLines = ImmutableList.builder();
+    buildMetaDataLines.add("Build ID: " + buildId);
+    printLines(buildMetaDataLines);
   }
 
   @Override
