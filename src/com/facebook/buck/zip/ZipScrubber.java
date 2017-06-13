@@ -31,7 +31,6 @@ class ZipScrubber {
   private ZipScrubber() {}
 
   private static final int EXTENDED_TIMESTAMP_ID = 0x5455;
-  private static final int DATA_DESCRIPTOR_BIT_FLAG = 0x0008;
 
   private static void check(boolean expression, String msg) throws IOException {
     if (!expression) {
@@ -66,10 +65,6 @@ class ZipScrubber {
         scrubExtraFields(
             slice(entry, ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM)),
             entry.getShort(ZipEntry.CENEXT));
-        if (idx == cdEntries - 1) {
-          // Only run this on the last entry.
-          populateLocalEntryIfNecessary(entry, localEntry);
-        }
 
         cdOffset +=
             ZipEntry.CENHDR
@@ -119,69 +114,6 @@ class ZipScrubber {
         data.position(data.position() + size);
       }
     }
-  }
-
-  /**
-   * Android's libziparchive produces zip files that only store the file size in the central
-   * directory and data descriptor, not in the local file header. ZipInputStream doesn't tolerate
-   * this for STORED files, so this step will (1) identify whether the file is STORED with a data
-   * descriptor, (2) validate the DD against the central directory entry, (3) copy those values to
-   * the local file header, (4) clear the DD bit.
-   *
-   * <p>We leave the data descriptor as garbage data between entries, WHICH IS A PROBLEM for
-   * ZipInputStream, which can't tolerate that garbage (it views it as end-of-file). Therefore, we
-   * only call this on the last file in the zip (which is the only time it is needed for aapt2
-   * output).
-   */
-  @SuppressWarnings("PMD.PrematureDeclaration")
-  private static void populateLocalEntryIfNecessary(ByteBuffer centralEntry, ByteBuffer localEntry)
-      throws IOException {
-
-    // Check to see if we even need to do anything.
-    if (localEntry.getShort(ZipEntry.LOCHOW) != ZipEntry.STORED
-        || (localEntry.getShort(ZipEntry.LOCFLG) & DATA_DESCRIPTOR_BIT_FLAG) == 0) {
-      return;
-    }
-
-    // Load the data from the central directory.
-    int crc = centralEntry.getInt(ZipEntry.CENCRC);
-    int csize = centralEntry.getInt(ZipEntry.CENSIZ);
-    int usize = centralEntry.getInt(ZipEntry.CENLEN);
-    if (csize != usize) {
-      throw new IOException("Compressed and uncompressed size mismatch for STORED entry.");
-    }
-
-    // Load the data from the data descriptor as a double-check.
-    int dataDescriptorOffset =
-        ZipEntry.LOCHDR
-            + localEntry.getShort(ZipEntry.LOCNAM)
-            + localEntry.getShort(ZipEntry.LOCEXT)
-            + csize;
-    ByteBuffer extBuffer = slice(localEntry, dataDescriptorOffset);
-    int extsig = extBuffer.getInt(0);
-    if (extsig != ZipEntry.EXTSIG) {
-      throw new IOException("No EXT sig.  Too dangerous to proceed.");
-    }
-    int extcrc = extBuffer.getInt(ZipEntry.EXTCRC);
-    int extcsize = extBuffer.getInt(ZipEntry.EXTSIZ);
-    int extusize = extBuffer.getInt(ZipEntry.EXTLEN);
-    if (extcrc != crc) {
-      throw new IOException("CRC mismatch between central entry and data descriptor");
-    }
-    if (extcsize != csize) {
-      throw new IOException("Size mismatch between central entry and data descriptor");
-    }
-    if (extusize != usize) {
-      throw new IOException("Length mismatch between central entry and data descriptor");
-    }
-
-    // Write the data into the local entry.
-    localEntry.putInt(ZipEntry.LOCCRC, crc);
-    localEntry.putInt(ZipEntry.LOCSIZ, csize);
-    localEntry.putInt(ZipEntry.LOCLEN, usize);
-    localEntry.putShort(
-        ZipEntry.LOCFLG,
-        (short) (localEntry.getShort(ZipEntry.LOCFLG) & ~DATA_DESCRIPTOR_BIT_FLAG));
   }
 
   /** Read the name of a zip file from a local entry. Useful for debugging. */
