@@ -20,7 +20,9 @@ import static com.facebook.buck.jvm.java.BaseCompileToJarStepFactory.EMPTY_EXTRA
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -37,8 +39,9 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
-      KotlinBuckConfig kotlinBuckConfig) {
-    super(targetGraph, params, buildRuleResolver, cellRoots);
+      KotlinBuckConfig kotlinBuckConfig,
+      JavaBuckConfig javaBuckConfig) {
+    super(targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
     this.kotlinBuckConfig = kotlinBuckConfig;
   }
 
@@ -48,6 +51,12 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
 
     KotlinLibraryDescription.CoreArg kotlinArgs = (KotlinLibraryDescription.CoreArg) args;
     extraKotlincArguments = kotlinArgs.getExtraKotlincArguments();
+    return this;
+  }
+
+  @Override
+  public KotlinLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
+    this.javacOptions = javacOptions;
     return this;
   }
 
@@ -62,7 +71,10 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       return new KotlincToJarStepFactory(
           Preconditions.checkNotNull(kotlinBuckConfig).getKotlinc(),
           extraKotlincArguments,
-          EMPTY_EXTRA_CLASSPATH);
+          EMPTY_EXTRA_CLASSPATH,
+          getJavac(),
+          Preconditions.checkNotNull(javacOptions),
+          javacOptionsAmender);
     }
   }
 }

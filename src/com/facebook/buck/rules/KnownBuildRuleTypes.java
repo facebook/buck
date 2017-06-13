@@ -635,10 +635,12 @@ public class KnownBuildRuleTypes {
     builder.register(new JsBundleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());
-    builder.register(new KotlinLibraryDescription(kotlinBuckConfig));
+    builder.register(
+        new KotlinLibraryDescription(kotlinBuckConfig, javaConfig, defaultJavacOptions));
     builder.register(
         new KotlinTestDescription(
             kotlinBuckConfig,
+            javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs));
