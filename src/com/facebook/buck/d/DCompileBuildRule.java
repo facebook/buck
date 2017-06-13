@@ -23,7 +23,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
@@ -101,10 +100,5 @@ public class DCompileBuildRule extends AbstractBuildRule {
     return new ExplicitBuildTargetSourcePath(
         getBuildTarget(),
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + name + ".o"));
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return new BuildableProperties(BuildableProperties.Kind.LIBRARY);
   }
 }

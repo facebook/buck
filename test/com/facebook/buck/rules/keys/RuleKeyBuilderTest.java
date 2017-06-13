@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -31,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
@@ -310,11 +308,6 @@ public class RuleKeyBuilderTest {
     @Override
     public String getType() {
       return "empty";
-    }
-
-    @Override
-    public BuildableProperties getProperties() {
-      return new BuildableProperties(LIBRARY);
     }
 
     @Override

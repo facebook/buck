@@ -18,17 +18,11 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 
 public abstract class RustLibrary extends NoopBuildRule implements RustLinkable, NativeLinkable {
 
   public RustLibrary(BuildRuleParams params) {
     super(params);
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return new BuildableProperties(BuildableProperties.Kind.LIBRARY);
   }
 }

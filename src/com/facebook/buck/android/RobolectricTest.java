@@ -16,10 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
-
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -30,7 +26,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -61,9 +56,6 @@ import java.util.stream.Stream;
 public class RobolectricTest extends JavaTest {
 
   private static final Logger LOG = Logger.get(RobolectricTest.class);
-
-  private static final BuildableProperties PROPERTIES =
-      new BuildableProperties(ANDROID, LIBRARY, TEST);
 
   private final SourcePathRuleFinder ruleFinder;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
@@ -156,11 +148,6 @@ public class RobolectricTest extends JavaTest {
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
   }
 
   @Override

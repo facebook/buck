@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.event.ConsoleEvent;
@@ -31,7 +29,6 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -64,8 +61,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
         SupportsInputBasedRuleKey {
-
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   @AddToRuleKey private final SourcePath binaryJar;
   private final JarContentsSupplier binaryJarContentsSupplier;
@@ -131,11 +126,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
     this.binaryJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
 
     buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
   }
 
   public Optional<SourcePath> getSourceJar() {

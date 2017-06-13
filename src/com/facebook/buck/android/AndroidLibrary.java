@@ -16,9 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -33,7 +30,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,8 +53,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
-
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /**
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
@@ -131,11 +125,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         tests,
         javacOptions.getClassesToRemoveFromJar());
     this.manifestFile = manifestFile;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
   }
 
   public Optional<SourcePath> getManifestFile() {

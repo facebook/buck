@@ -16,9 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.redex.ReDexStep;
@@ -41,7 +38,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -120,8 +116,6 @@ import javax.annotation.Nullable;
  */
 public class AndroidBinary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, HasInstallableApk {
-
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
   /**
    * The filename of the solidly compressed libraries if compressAssetLibraries is set to true. This
@@ -373,11 +367,6 @@ public class AndroidBinary extends AbstractBuildRule
 
   public static Path getPrimaryDexPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargets.getScratchPath(filesystem, buildTarget, ".dex/%s/classes.dex");
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
   }
 
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {

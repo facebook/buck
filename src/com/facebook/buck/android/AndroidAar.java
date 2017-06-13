@@ -16,9 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
@@ -30,7 +27,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -49,7 +45,6 @@ import java.util.Optional;
 
 public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries {
 
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
   public static final String AAR_FORMAT = "%s.aar";
 
   private final Path pathToOutputFile;
@@ -187,11 +182,6 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutputFile);
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
   }
 
   @Override

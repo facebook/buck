@@ -50,11 +50,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public BuildableProperties getProperties() {
-    return BuildableProperties.NONE;
-  }
-
-  @Override
   public final BuildTarget getBuildTarget() {
     return buildTarget;
   }

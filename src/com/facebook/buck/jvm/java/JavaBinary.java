@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -26,7 +24,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -48,8 +45,6 @@ import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
 public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, HasClasspathEntries {
-
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
   @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
 
@@ -91,11 +86,6 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
     this.transitiveClasspathDeps = transitiveClasspathDeps;
     this.transitiveClasspaths = transitiveClasspaths;
     this.cache = cache;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
   }
 
   @Override

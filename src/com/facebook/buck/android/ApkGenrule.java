@@ -16,13 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -53,7 +50,6 @@ import java.util.Optional;
  */
 public class ApkGenrule extends Genrule implements HasInstallableApk {
 
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
   private final boolean isCacheable;
@@ -83,11 +79,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
     this.isCacheable = isCacheable;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
   }
 
   public HasInstallableApk getInstallableApk() {

@@ -143,11 +143,6 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
     return "symlink_tree";
   }
 
-  @Override
-  public BuildableProperties getProperties() {
-    return BuildableProperties.NONE;
-  }
-
   /**
    * SymlinkTree never has any compile-time deps, only runtime deps.
    *

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -93,7 +92,6 @@ public class NdkLibraryTest {
 
     assertEquals("ndk_library", ndkLibrary.getType());
 
-    assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());
     assertEquals(
         projectFilesystem.getBuckPaths().getGenDir().resolve(basePath).resolve("__libbase"),

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.python;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -26,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,8 +43,6 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
-
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Tool builder;
@@ -126,11 +121,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         preloadLibraries,
         cache,
         legacyOutputPath);
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
   }
 
   @Override

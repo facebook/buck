@@ -16,9 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -28,7 +25,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -66,8 +62,6 @@ import javax.annotation.Nullable;
  */
 public class NdkLibrary extends AbstractBuildRule
     implements NativeLibraryBuildRule, AndroidPackageable {
-
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** @see NativeLibraryBuildRule#isAsset() */
   @AddToRuleKey private final boolean isAsset;
@@ -213,11 +207,6 @@ public class NdkLibrary extends AbstractBuildRule
     return isScratchDir
         ? BuildTargets.getScratchPath(getProjectFilesystem(), target, "__lib%s")
         : BuildTargets.getGenPath(getProjectFilesystem(), target, "__lib%s");
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
   }
 
   @Override

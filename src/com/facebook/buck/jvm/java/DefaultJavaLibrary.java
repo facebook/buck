@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.BuckPaths;
@@ -33,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -97,7 +94,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         SupportsDependencyFileRuleKey,
         JavaLibraryWithTests {
 
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
   private static final Path METADATA_DIR = Paths.get("META-INF");
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
@@ -274,11 +270,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
    */
   public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes");
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
   }
 
   @Override

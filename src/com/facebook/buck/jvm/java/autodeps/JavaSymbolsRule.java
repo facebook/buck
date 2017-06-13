@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -126,11 +125,6 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   @Override
   public String getType() {
     return TYPE;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return BuildableProperties.NONE;
   }
 
   @Override
