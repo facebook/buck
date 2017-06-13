@@ -22,6 +22,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 class OmnibusNode implements NativeLinkable {
 
@@ -73,7 +74,10 @@ class OmnibusNode implements NativeLinkable {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
     return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 

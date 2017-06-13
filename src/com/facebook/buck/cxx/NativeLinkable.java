@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
@@ -61,12 +62,29 @@ public interface NativeLinkable {
    */
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps();
 
+  public enum LanguageExtensions {
+    HS_PROFILE
+  }
+
   /**
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
    */
-  NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
+  NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<LanguageExtensions> languageExtensions)
       throws NoSuchBuildTargetException;
+
+  /**
+   * Return input that *dependents* should put on their link line when linking against this
+   * linkable.
+   */
+  default NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of());
+  }
 
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 

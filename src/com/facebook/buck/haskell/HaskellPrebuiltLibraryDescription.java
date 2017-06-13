@@ -44,6 +44,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
@@ -111,7 +112,11 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type,
+          boolean forceLinkWhole,
+          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+          throws NoSuchBuildTargetException {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {

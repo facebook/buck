@@ -750,7 +750,10 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        final CxxPlatform cxxPlatform, final Linker.LinkableDepType type)
+        final CxxPlatform cxxPlatform,
+        final Linker.LinkableDepType type,
+        boolean forceLinkWhole,
+        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
         throws NoSuchBuildTargetException {
 
       // This path gets taken for a force-static library.

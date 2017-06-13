@@ -55,7 +55,11 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+      throws NoSuchBuildTargetException {
     Archive archive =
         (Archive)
             buildRuleResolver.requireRule(

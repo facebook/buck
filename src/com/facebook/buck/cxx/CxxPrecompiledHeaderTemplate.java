@@ -107,7 +107,11 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
    */
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+      throws NoSuchBuildTargetException {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         cxxPlatform,
         getBuildDeps(),

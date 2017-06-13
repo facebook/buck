@@ -518,7 +518,11 @@ public class HaskellLibraryDescription
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type,
+          boolean forceLinkWhole,
+          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+          throws NoSuchBuildTargetException {
         Iterable<com.facebook.buck.rules.args.Arg> linkArgs;
         switch (type) {
           case STATIC:

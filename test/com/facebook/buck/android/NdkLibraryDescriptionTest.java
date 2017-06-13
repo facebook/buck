@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -62,7 +63,10 @@ public class NdkLibraryDescriptionTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+        CxxPlatform cxxPlatform,
+        Linker.LinkableDepType type,
+        boolean forceLinkWhole,
+        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
       return NativeLinkableInput.builder().addArgs(SourcePathArg.of(input)).build();
     }
 

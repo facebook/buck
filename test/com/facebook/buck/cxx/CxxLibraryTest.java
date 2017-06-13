@@ -48,7 +48,7 @@ import org.junit.Test;
 public class CxxLibraryTest {
 
   @Test
-  public void cxxLibraryInterfaces() {
+  public void cxxLibraryInterfaces() throws Exception {
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new SourcePathRuleFinder(

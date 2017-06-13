@@ -33,6 +33,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
@@ -82,7 +83,10 @@ public class NativeLinkablesTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+        CxxPlatform cxxPlatform,
+        Linker.LinkableDepType type,
+        boolean forceLinkWhole,
+        ImmutableSet<LanguageExtensions> languageExtensions) {
       return nativeLinkableInput;
     }
 

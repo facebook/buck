@@ -100,7 +100,10 @@ public class CxxLinkableEnhancerTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+        CxxPlatform cxxPlatform,
+        Linker.LinkableDepType type,
+        boolean forceLinkWhole,
+        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 

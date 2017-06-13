@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
@@ -82,7 +83,11 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+      throws NoSuchBuildTargetException {
     return NativeLinkableInput.builder().addAllArgs(StringArg.from("-llua")).build();
   }
 

@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,6 +32,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import org.immutables.value.Value;
 
 /**
  * An action graph representation of a C/C++ library from the target graph, providing the various
@@ -78,7 +79,17 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
    */
   private final boolean propagateLinkables;
 
-  private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
+  @Value.Immutable
+  @BuckStyleTuple
+  abstract static class AbstractNativeLinkableCacheKey {
+    public abstract Flavor getFlavor();
+
+    public abstract Linker.LinkableDepType getType();
+
+    public abstract boolean getForceLinkWhole();
+  };
+
+  private final Map<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
@@ -216,7 +227,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   private NativeLinkableInput getNativeLinkableInputUncached(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type, boolean forceLinkWhole)
+      throws NoSuchBuildTargetException {
 
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
@@ -250,7 +262,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                     type == Linker.LinkableDepType.STATIC
                         ? CxxDescriptionEnhancer.STATIC_FLAVOR
                         : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-        if (linkWhole) {
+        if (linkWhole || forceLinkWhole) {
           Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
           linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
         } else {
@@ -282,11 +294,16 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
-    Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+      throws NoSuchBuildTargetException {
+    NativeLinkableCacheKey key =
+        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole);
     NativeLinkableInput input = nativeLinkableCache.get(key);
     if (input == null) {
-      input = getNativeLinkableInputUncached(cxxPlatform, type);
+      input = getNativeLinkableInputUncached(cxxPlatform, type, forceLinkWhole);
       nativeLinkableCache.put(key, input);
     }
     return input;

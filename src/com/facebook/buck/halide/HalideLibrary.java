@@ -137,7 +137,11 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+      throws NoSuchBuildTargetException {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }

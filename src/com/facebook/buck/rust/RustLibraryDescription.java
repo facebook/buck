@@ -301,7 +301,10 @@ public class RustLibraryDescription
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType depType)
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType depType,
+          boolean forceLinkWhole,
+          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
           throws NoSuchBuildTargetException {
         CrateType crateType;
 

@@ -126,7 +126,10 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ImmutableSet<LanguageExtensions> languageExtensions) {
     return type == Linker.LinkableDepType.STATIC
         ? NativeLinkableInput.of(
             ImmutableList.of(SourcePathArg.of(archive.getSourcePathToOutput())),

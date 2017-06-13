@@ -877,7 +877,11 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type,
+          boolean forceLinkWhole,
+          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
+          throws NoSuchBuildTargetException {
         Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
         NativeLinkableInput input = nativeLinkableCache.get(key);
         if (input == null) {
