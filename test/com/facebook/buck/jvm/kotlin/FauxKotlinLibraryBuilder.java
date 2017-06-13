@@ -33,9 +33,9 @@ public class FauxKotlinLibraryBuilder
 
   private final ProjectFilesystem projectFilesystem;
 
-  protected FauxKotlinLibraryBuilder(
+  private FauxKotlinLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
-    super(new KotlinLibraryDescription(null), target, projectFilesystem, hashCode);
+    super(new KotlinLibraryDescription(null, null, null), target, projectFilesystem, hashCode);
     this.projectFilesystem = projectFilesystem;
   }
 
