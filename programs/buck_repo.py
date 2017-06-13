@@ -213,14 +213,19 @@ class BuckRepo(BuckTool):
         with Tracing('BuckRepo._get_buck_version_uid'):
 
             # Check if the developer has requested that we impersonate some other version.
-            fake_buck_version_file_path = os.path.join(self._buck_dir, ".fakebuckversion")
-            if os.path.exists(fake_buck_version_file_path):
-                with open(fake_buck_version_file_path) as fake_buck_version_file:
-                    fake_buck_version = fake_buck_version_file.read().strip()
+            # Start with the environment variable BUCK_FAKE_VERSION.
+            fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
+            if not fake_buck_version:
+                # Then check the content of .fakebuckversion.
+                fake_buck_version_file_path = os.path.join(self._buck_dir, ".fakebuckversion")
+                if os.path.exists(fake_buck_version_file_path):
+                    with open(fake_buck_version_file_path) as fake_buck_version_file:
+                        fake_buck_version = fake_buck_version_file.read().strip()
 
+            if fake_buck_version:
                 print(textwrap.dedent("""\
-                ::: Faking buck version %s, despite your buck directory not being that version."""
-                                      % fake_buck_version),
+                ::: Faking buck version {}, despite your buck directory not being that version."""
+                      .format(fake_buck_version)),
                       file=sys.stderr)
                 return fake_buck_version
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import errno
 import contextlib
 import os
@@ -6,6 +7,7 @@ import shutil
 import stat
 import sys
 import tempfile
+import textwrap
 
 import pkg_resources
 import file_locks
@@ -52,6 +54,13 @@ class BuckPackage(BuckTool):
         self._lock_file = None
 
     def _get_buck_version_uid(self):
+        fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
+        if fake_buck_version:
+            print(textwrap.dedent("""\
+            ::: Faking buck version {}, despite your buck directory not being that version."""
+                  .format(fake_buck_version)),
+                  file=sys.stderr)
+            return fake_buck_version
         return self._package_info['version']
 
     def _get_resource_dir(self):
