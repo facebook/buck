@@ -338,9 +338,12 @@ public class BuckConfig implements ConfigPathGetter {
       BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
       return Optional.of(new DefaultBuildTargetSourcePath(target));
     } catch (BuildTargetParseException e) {
-      checkPathExists(
-          value.get(), String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.of(new PathSourcePath(projectFilesystem, getPathFromVfs(value.get())));
+      return Optional.of(
+          new PathSourcePath(
+              projectFilesystem,
+              checkPathExists(
+                  value.get(),
+                  String.format("Overridden %s:%s path not found: ", section, field))));
     }
   }
 
@@ -358,9 +361,12 @@ public class BuckConfig implements ConfigPathGetter {
       return Optional.of(
           new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
     } else {
-      checkPathExists(
-          value.get(), String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.of(new ConstantToolProvider(new HashedFileTool(getPathFromVfs(value.get()))));
+      return Optional.of(
+          new ConstantToolProvider(
+              new HashedFileTool(
+                  checkPathExists(
+                      value.get(),
+                      String.format("Overridden %s:%s path not found: ", section, field)))));
     }
   }
 
@@ -842,7 +848,9 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   private Path convertPathWithError(String pathString, boolean isCellRootRelative, String error) {
-    return isCellRootRelative ? checkPathExists(pathString, error) : getPathFromVfs(pathString);
+    return isCellRootRelative
+        ? checkPathExistsAndResolve(pathString, error)
+        : getPathFromVfs(pathString);
   }
 
   private Path convertPath(String pathString, String section, String field) {
@@ -852,10 +860,14 @@ public class BuckConfig implements ConfigPathGetter {
         String.format("Error in %s.%s: Cell-relative path not found: ", section, field));
   }
 
-  public Path checkPathExists(String pathString, String errorMsg) {
+  public Path checkPathExistsAndResolve(String pathString, String errorMsg) {
+    return projectFilesystem.getPathForRelativePath(checkPathExists(pathString, errorMsg));
+  }
+
+  private Path checkPathExists(String pathString, String errorMsg) {
     Path path = getPathFromVfs(pathString);
     if (projectFilesystem.exists(path)) {
-      return projectFilesystem.getPathForRelativePath(path);
+      return path;
     }
     throw new HumanReadableException(errorMsg + path);
   }

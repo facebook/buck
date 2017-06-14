@@ -118,6 +118,6 @@ public class AndroidBuckConfig {
 
     Path pathToTool = Paths.get(pathString.get(), platformDir, tool);
     return Optional.of(
-        delegate.checkPathExists(pathToTool.toString(), "Overridden path not found: "));
+        delegate.checkPathExistsAndResolve(pathToTool.toString(), "Overridden path not found: "));
   }
 }
