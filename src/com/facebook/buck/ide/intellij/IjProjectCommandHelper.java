@@ -335,7 +335,7 @@ public class IjProjectCommandHelper {
     ProjectTestsMode parameterMode = ProjectTestsMode.WITH_TESTS;
 
     // TODO(shemitz) Just refactoring the existing incoherence ... really need to clean this up
-    if (!projectGeneratorParameters.isWithoutTests()) {
+    if (projectGeneratorParameters.isWithoutTests()) {
       parameterMode = ProjectTestsMode.WITHOUT_TESTS;
     } else if (projectGeneratorParameters.isWithoutDependenciesTests()) {
       parameterMode = ProjectTestsMode.WITHOUT_DEPENDENCIES_TESTS;
