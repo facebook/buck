@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
@@ -50,7 +51,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.CoreArg arg,
+      JvmLibraryArg arg,
       JavacOptions javacOptions,
       BuildRuleResolver resolver) {
 
@@ -67,7 +68,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.CoreArg constructorArg,
+      JvmLibraryArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 

@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 
@@ -34,7 +35,7 @@ public class JavaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.CoreArg arg,
+      JvmLibraryArg arg,
       JavacOptions javacOptions,
       BuildRuleResolver resolver) {
 
@@ -42,7 +43,7 @@ public class JavaAndroidLibraryCompiler extends AndroidLibraryCompiler {
         getJavac(resolver, arg), javacOptions, new BootClasspathAppender());
   }
 
-  private Javac getJavac(BuildRuleResolver resolver, AndroidLibraryDescription.CoreArg arg) {
+  private Javac getJavac(BuildRuleResolver resolver, JvmLibraryArg arg) {
     return JavacFactory.create(new SourcePathRuleFinder(resolver), javaBuckConfig, arg);
   }
 }
