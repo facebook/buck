@@ -240,7 +240,7 @@ public class BuckConfig implements ConfigPathGetter {
           rawPaths
               .get()
               .stream()
-              .map(input -> convertPath(input, true, section, field))
+              .map(input -> convertPath(input, section, field))
               .collect(MoreCollectors.toImmutableList());
       return Optional.of(paths);
     }
@@ -847,17 +847,11 @@ public class BuckConfig implements ConfigPathGetter {
         : getPathFromVfs(pathString);
   }
 
-  private Path convertPath(
-      String pathString, boolean isCellRootRelative, String section, String field) {
+  private Path convertPath(String pathString, String section, String field) {
     return convertPathWithError(
         pathString,
-        isCellRootRelative,
-        String.format(
-            isCellRootRelative
-                ? "Error in %s.%s: Cell-relative path not found: "
-                : "Error in %s.%s: Path not found: ",
-            section,
-            field));
+        /* isCellRootRelative */ true,
+        String.format("Error in %s.%s: Cell-relative path not found: ", section, field));
   }
 
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {
