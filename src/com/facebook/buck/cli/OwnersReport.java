@@ -28,7 +28,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
@@ -50,7 +49,7 @@ final class OwnersReport {
   final ImmutableSet<String> nonExistentInputs;
   final ImmutableSet<String> nonFileInputs;
 
-  OwnersReport(
+  private OwnersReport(
       SetMultimap<TargetNode<?, ?>, Path> owners,
       Set<Path> inputsWithNoOwners,
       Set<String> nonExistentInputs,
@@ -61,11 +60,13 @@ final class OwnersReport {
     this.nonFileInputs = ImmutableSet.copyOf(nonFileInputs);
   }
 
+  @VisibleForTesting
   static OwnersReport emptyReport() {
     return new OwnersReport(
         ImmutableSetMultimap.of(), new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
+  @VisibleForTesting
   OwnersReport updatedWith(OwnersReport other) {
     SetMultimap<TargetNode<?, ?>, Path> updatedOwners = TreeMultimap.create(owners);
     updatedOwners.putAll(other.owners);
@@ -86,40 +87,40 @@ final class OwnersReport {
 
   @VisibleForTesting
   static OwnersReport generateOwnersReport(
-      Cell rootCell, TargetNode<?, ?> targetNode, Iterable<String> filePaths) {
-
-    // Process arguments assuming they are all relative file paths.
-    Set<Path> inputs = new HashSet<>();
-    Set<String> nonExistentInputs = new HashSet<>();
-    Set<String> nonFileInputs = new HashSet<>();
-
-    for (String filePath : filePaths) {
-      Path file = rootCell.getFilesystem().getPathForRelativePath(filePath);
-      if (!Files.exists(file)) {
-        nonExistentInputs.add(filePath);
-      } else if (!Files.isRegularFile(file)) {
-        nonFileInputs.add(filePath);
-      } else {
-        inputs.add(rootCell.getFilesystem().getPath(filePath));
-      }
-    }
-
-    // Try to find owners for each valid and existing file.
-    Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
-    SetMultimap<TargetNode<?, ?>, Path> owners = TreeMultimap.create();
-    for (final Path commandInput : inputs) {
+      Cell rootCell, TargetNode<?, ?> targetNode, String filePath) {
+    Path file = rootCell.getFilesystem().getPathForRelativePath(filePath);
+    if (!Files.exists(file)) {
+      return new OwnersReport(
+          ImmutableSetMultimap.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of(filePath),
+          ImmutableSet.of());
+    } else if (!Files.isRegularFile(file)) {
+      return new OwnersReport(
+          ImmutableSetMultimap.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of(filePath));
+    } else {
+      Path commandInput = rootCell.getFilesystem().getPath(filePath);
+      Set<Path> ruleInputs = targetNode.getInputs();
       Predicate<Path> startsWith =
           input -> !commandInput.equals(input) && commandInput.startsWith(input);
-
-      Set<Path> ruleInputs = targetNode.getInputs();
       if (ruleInputs.contains(commandInput)
           || FluentIterable.from(ruleInputs).anyMatch(startsWith)) {
-        inputsWithNoOwners.remove(commandInput);
-        owners.put(targetNode, commandInput);
+        return new OwnersReport(
+            ImmutableSetMultimap.of(targetNode, commandInput),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of());
+      } else {
+        return new OwnersReport(
+            ImmutableSetMultimap.of(),
+            ImmutableSet.of(commandInput),
+            ImmutableSet.of(),
+            ImmutableSet.of());
       }
     }
-
-    return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
   static Builder builder(Cell rootCell, Parser parser, BuckEventBus eventBus, Console console) {
@@ -187,9 +188,7 @@ final class OwnersReport {
 
         for (TargetNode<?, ?> targetNode : targetNodes.get(buckFile)) {
           report =
-              report.updatedWith(
-                  generateOwnersReport(
-                      rootCell, targetNode, ImmutableList.of(filePath.toString())));
+              report.updatedWith(generateOwnersReport(rootCell, targetNode, filePath.toString()));
         }
       }
       return report;
