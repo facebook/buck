@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -218,7 +217,9 @@ public class CxxBinaryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(compileRule1);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
+        compileRule1
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         Matchers.containsInAnyOrder(
@@ -233,7 +234,9 @@ public class CxxBinaryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactory.createCompileBuildTarget(genSourceName));
     assertNotNull(compileRule2);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
+        compileRule2
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableList()),
         Matchers.containsInAnyOrder(

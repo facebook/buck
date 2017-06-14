@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.PeekingIterator;
+import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -152,9 +153,24 @@ public class SortedSets {
       return comparator.compare(a, b) >= 0 ? a : b;
     }
 
+    /**
+     * Return the number of de-duplicated elements in the underlying sets.
+     *
+     * <p>Note that this is relatively expensive to compute, and {@link #sizeEstimate} may be more
+     * appropriate.
+     */
     @Override
     public int size() {
-      return Iterators.size(iterator());
+      return Sets.union(a, b).size();
+    }
+
+    /**
+     * Return an estimate of the size of this Set, which is quicker to compute than the actual size.
+     *
+     * <p>This will always return an over-estimate rather than an under-estimate.
+     */
+    public int sizeEstimate() {
+      return a.size() + b.size();
     }
 
     @Override
@@ -286,5 +302,12 @@ public class SortedSets {
       return true;
     }
     return false;
+  }
+
+  public static <T> int sizeEstimate(SortedSet<T> set) {
+    if (set instanceof MergedSortedSetView) {
+      return ((MergedSortedSetView<?>) set).sizeEstimate();
+    }
+    return set.size();
   }
 }

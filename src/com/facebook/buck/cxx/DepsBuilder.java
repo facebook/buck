@@ -20,19 +20,27 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.collect.SortedSets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.SortedSet;
+import javax.annotation.Nullable;
 
 /** Builder suitable for generating the dependency list of a build rule. */
 public class DepsBuilder {
   private final ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
   private final SourcePathRuleFinder ruleFinder;
+  @Nullable private SortedSet<BuildRule> commonDeps;
 
   public DepsBuilder(SourcePathRuleFinder ruleFinder) {
     this.ruleFinder = ruleFinder;
   }
 
-  public ImmutableSortedSet<BuildRule> build() {
-    return builder.build();
+  public SortedSet<BuildRule> build() {
+    if (commonDeps == null) {
+      return builder.build();
+    }
+    return SortedSets.union(builder.build(), commonDeps);
   }
 
   private DepsBuilder add(Tool tool) {
@@ -61,6 +69,19 @@ public class DepsBuilder {
 
   public DepsBuilder add(CompilerDelegate delegate) {
     add(delegate.getCompiler());
+    return this;
+  }
+
+  // We create a BuildRule per source file. To avoid copying the deps of the target into so many
+  // BuildRules, which uses a non-trivial amount of memory, hold on to the common deps in one
+  // SortedSet, and return a merging view.
+  public DepsBuilder setCommonDeps(SortedSet<BuildRule> commonDeps) {
+    Preconditions.checkState(
+        this.commonDeps == null,
+        "Can only set commonDeps once. Tried to set it to %s but was already %s",
+        commonDeps,
+        this.commonDeps);
+    this.commonDeps = commonDeps;
     return this;
   }
 }

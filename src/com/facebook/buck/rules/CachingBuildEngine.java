@@ -55,6 +55,7 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -315,7 +316,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       ExecutionContext executionContext,
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
     List<ListenableFuture<BuildResult>> depResults =
-        Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
+        new ArrayList<>(SortedSets.sizeEstimate(rule.getBuildDeps()));
     for (BuildRule dep : shuffled(rule.getBuildDeps())) {
       depResults.add(
           getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext, asyncCallbacks));
@@ -1288,7 +1289,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return Futures.transformAsync(
         Futures.immediateFuture(ruleDeps.get(rule)),
         deps -> {
-          List<ListenableFuture<?>> results1 = Lists.newArrayListWithExpectedSize(deps.size());
+          List<ListenableFuture<?>> results1 = new ArrayList<>(SortedSets.sizeEstimate(deps));
           for (BuildRule dep : deps) {
             if (seen.add(dep)) {
               results1.add(walkRule(dep, seen));
@@ -1336,7 +1337,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             Futures.immediateFuture(ruleDeps.get(rule)),
             deps -> {
               List<ListenableFuture<RuleKey>> depKeys1 =
-                  Lists.newArrayListWithExpectedSize(rule.getBuildDeps().size());
+                  new ArrayList<>(SortedSets.sizeEstimate(rule.getBuildDeps()));
               for (BuildRule dep : deps) {
                 depKeys1.add(calculateRuleKey(dep, context));
               }

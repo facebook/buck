@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
@@ -114,18 +113,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   private Builder<HashCode> newVerifyingBuilder(final BuildRule rule) {
-    final Iterable<DependencyAggregation> aggregatedRules =
-        Iterables.filter(rule.getBuildDeps(), DependencyAggregation.class);
     return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher()) {
-      private boolean hasEffectiveDirectDep(BuildRule dep) {
-        for (BuildRule aggregationRule : aggregatedRules) {
-          if (aggregationRule.getBuildDeps().contains(dep)) {
-            return true;
-          }
-        }
-        return false;
-      }
-
       // Construct the rule key, verifying that all the deps we saw when constructing it
       // are explicit dependencies of the rule.
       @Override
@@ -134,7 +122,6 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
               rule.getBuildDeps().contains(usedDep)
-                  || hasEffectiveDirectDep(usedDep)
                   || (rule instanceof AbstractBuildRuleWithDeclaredAndExtraDeps
                       && ((AbstractBuildRuleWithDeclaredAndExtraDeps) rule)
                           .getTargetGraphOnlyDeps()

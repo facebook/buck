@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -126,13 +125,9 @@ public class CxxSourceRuleFactoryTest {
 
       BuildRule cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(name, cxxSource);
-      assertThat(
-          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess)::iterator,
-          contains((BuildRule) dep));
+      assertThat(cxxPreprocess.getBuildDeps(), contains(dep));
       cxxPreprocess = cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(name, cxxSource);
-      assertThat(
-          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess)::iterator,
-          contains((BuildRule) dep));
+      assertThat(cxxPreprocess.getBuildDeps(), contains(dep));
     }
 
     @Test
@@ -235,9 +230,7 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               namePreprocessAndCompile, cxxSourcePreprocessAndCompile);
-      assertThat(
-          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocessAndCompile)::iterator,
-          contains((BuildRule) dep));
+      assertThat(cxxPreprocessAndCompile.getBuildDeps(), contains(dep));
     }
 
     @Test

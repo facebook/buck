@@ -42,7 +42,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -293,7 +292,9 @@ public class CxxLibraryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(compileRule1);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
+        compileRule1
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
@@ -313,7 +314,9 @@ public class CxxLibraryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactory.createCompileBuildTarget(genSourceName));
     assertNotNull(compileRule2);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
+        compileRule2
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
@@ -540,7 +543,9 @@ public class CxxLibraryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(staticCompileRule1);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule1)
+        staticCompileRule1
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
@@ -559,7 +564,9 @@ public class CxxLibraryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName));
     assertNotNull(staticCompileRule2);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule2)
+        staticCompileRule2
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
@@ -604,7 +611,9 @@ public class CxxLibraryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(sharedCompileRule1);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule1)
+        sharedCompileRule1
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
@@ -623,7 +632,9 @@ public class CxxLibraryDescriptionTest {
         resolver.getRule(cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName));
     assertNotNull(sharedCompileRule2);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule2)
+        sharedCompileRule2
+            .getBuildDeps()
+            .stream()
             .map(BuildRule::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(
