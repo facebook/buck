@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AndroidResourceHelper {
@@ -33,7 +34,7 @@ public class AndroidResourceHelper {
    *
    * <p>
    */
-  public static ImmutableSortedSet<BuildRule> androidResOnly(ImmutableSortedSet<BuildRule> deps) {
+  public static ImmutableSortedSet<BuildRule> androidResOnly(SortedSet<BuildRule> deps) {
     return FluentIterable.from(deps)
         .transform(
             new Function<BuildRule, BuildRule>() {

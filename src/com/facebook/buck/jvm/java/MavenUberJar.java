@@ -40,6 +40,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A {@link BuildRule} used to have the provided {@link JavaLibrary} published to a maven repository
@@ -206,7 +207,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
       this.packagedDeps = packagedDeps;
     }
 
-    private static TraversedDeps traverse(ImmutableSet<? extends BuildRule> roots) {
+    private static TraversedDeps traverse(Set<? extends BuildRule> roots) {
       ImmutableSortedSet.Builder<HasMavenCoordinates> depsCollector =
           ImmutableSortedSet.naturalOrder();
 

@@ -29,15 +29,15 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 
 public abstract class PythonBinary extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
-  private final Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
   @AddToRuleKey private final PythonPackageComponents components;
@@ -47,7 +47,7 @@ public abstract class PythonBinary extends AbstractBuildRule
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,
-      Supplier<? extends ImmutableCollection<BuildRule>> originalDeclaredDeps,
+      Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
       PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components,

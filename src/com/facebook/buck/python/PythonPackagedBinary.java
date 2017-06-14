@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
@@ -55,7 +56,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
 
   private PythonPackagedBinary(
       BuildRuleParams params,
-      Supplier<ImmutableSortedSet<BuildRule>> originalDeclareDeps,
+      Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       Tool builder,

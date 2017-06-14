@@ -36,6 +36,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.SortedSet;
 
 public class AndroidLibraryGraphEnhancer {
 
@@ -87,7 +88,7 @@ public class AndroidLibraryGraphEnhancer {
     if (previouslyCreated.isPresent()) {
       return previouslyCreated.map(input -> (DummyRDotJava) input);
     }
-    ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getBuildDeps();
+    SortedSet<BuildRule> originalDeps = originalBuildRuleParams.getBuildDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
 
     switch (resourceDependencyMode) {

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 @JsonAutoDetect(
@@ -56,7 +56,7 @@ public interface BuildRule extends Comparable<BuildRule> {
    *     the original {@code deps} argument, as defined in the build file, must be accessed via a
    *     custom getter provided by the build rule.
    */
-  ImmutableSortedSet<BuildRule> getBuildDeps();
+  SortedSet<BuildRule> getBuildDeps();
 
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override

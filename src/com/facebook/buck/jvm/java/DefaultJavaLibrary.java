@@ -61,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -113,7 +114,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
   // these deps being represented as their full-jar dependency form.
-  private final ImmutableSortedSet<BuildRule> fullJarDeclaredDeps;
+  private final SortedSet<BuildRule> fullJarDeclaredDeps;
   private final ImmutableSortedSet<BuildRule> fullJarExportedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarProvidedDeps;
 
@@ -165,7 +166,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> fullJarDeclaredDeps,
+      SortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
@@ -337,7 +338,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getExportedDeps() {
+  public SortedSet<BuildRule> getExportedDeps() {
     return fullJarExportedDeps;
   }
 

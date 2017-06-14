@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 import org.stringtemplate.v4.ST;
 
@@ -68,7 +69,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   private PythonInPlaceBinary(
       BuildRuleParams params,
-      Supplier<ImmutableSortedSet<BuildRule>> originalDeclareDeps,
+      Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components,

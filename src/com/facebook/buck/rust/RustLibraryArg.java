@@ -26,14 +26,14 @@ import com.facebook.buck.rules.args.HasSourcePath;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
 /** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg implements Arg, HasSourcePath {
   private final SourcePathResolver resolver;
   private final String crate;
-  private final ImmutableSortedSet<BuildRule> deps;
+  private final SortedSet<BuildRule> deps;
   private final SourcePath rlib;
   private final boolean direct;
 
@@ -42,7 +42,7 @@ public class RustLibraryArg implements Arg, HasSourcePath {
       String crate,
       SourcePath rlib,
       boolean direct,
-      ImmutableSortedSet<BuildRule> deps) {
+      SortedSet<BuildRule> deps) {
     this.resolver = resolver;
     this.crate = crate;
     this.rlib = rlib;

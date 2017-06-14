@@ -95,6 +95,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -1550,7 +1551,7 @@ public class AndroidBinary extends AbstractBuildRule
     return Optional.of(exopackageInfo);
   }
 
-  public ImmutableSortedSet<BuildRule> getClasspathDeps() {
+  public SortedSet<BuildRule> getClasspathDeps() {
     return getDeclaredDeps();
   }
 

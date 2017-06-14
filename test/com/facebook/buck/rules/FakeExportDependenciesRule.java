@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.SortedSet;
 
 public class FakeExportDependenciesRule extends FakeBuildRule implements ExportDependencies {
 
@@ -28,7 +29,7 @@ public class FakeExportDependenciesRule extends FakeBuildRule implements ExportD
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getExportedDeps() {
+  public SortedSet<BuildRule> getExportedDeps() {
     return exportedDeps;
   }
 }

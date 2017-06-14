@@ -76,6 +76,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Consumer;
 
 /**
@@ -857,7 +858,7 @@ public class AppleDescriptions {
   }
 
   private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(
-      ImmutableSortedSet<BuildRule> deps, AppleBundleDestinations destinations) {
+      SortedSet<BuildRule> deps, AppleBundleDestinations destinations) {
     ImmutableMap.Builder<SourcePath, String> extensionBundlePaths = ImmutableMap.builder();
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.

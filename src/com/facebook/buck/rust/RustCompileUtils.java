@@ -53,6 +53,8 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 
 /** Utilities to generate various kinds of Rust compilation. */
@@ -92,7 +94,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule)
       throws NoSuchBuildTargetException {
-    ImmutableSortedSet<BuildRule> ruledeps = params.getBuildDeps();
+    SortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
     Stream.concat(rustConfig.getLinkerArgs(cxxPlatform).stream(), extraLinkerFlags.stream())
@@ -151,11 +153,9 @@ public class RustCompileUtils {
             .stream()
             .flatMap(r -> r.getBuildDeps().stream())
             .collect(MoreCollectors.toImmutableList())) {
-      private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
-
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
-        ImmutableSet<BuildRule> deps = empty;
+        SortedSet<BuildRule> deps = ImmutableSortedSet.of();
         if (rule instanceof RustLinkable) {
           deps = rule.getBuildDeps();
 
@@ -483,11 +483,9 @@ public class RustCompileUtils {
     ImmutableSortedMap.Builder<String, SourcePath> libs = ImmutableSortedMap.naturalOrder();
 
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(inputs) {
-      private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
-
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        ImmutableSet<BuildRule> deps = empty;
+        Set<BuildRule> deps = ImmutableSet.of();
         if (rule instanceof RustLinkable) {
           deps = rule.getBuildDeps();
 

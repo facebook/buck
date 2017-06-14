@@ -26,8 +26,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
+import java.util.SortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +73,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
       exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
-    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
+    SortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
     assertThat(deps, Matchers.hasItem(exportedRule));
   }
 
@@ -109,7 +109,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
       exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
-    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
+    SortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getBuildDeps();
     assertThat(deps, Matchers.hasItem(exportedRule));
   }
 }

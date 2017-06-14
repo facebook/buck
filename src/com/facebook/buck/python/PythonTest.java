@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
@@ -62,7 +63,7 @@ public class PythonTest extends AbstractBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   private final SourcePathRuleFinder ruleFinder;
-  private final Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
   @AddToRuleKey private final Supplier<ImmutableMap<String, String>> env;
   @AddToRuleKey private final PythonBinary binary;
   private final ImmutableSet<String> labels;
@@ -73,7 +74,7 @@ public class PythonTest extends AbstractBuildRule
   private PythonTest(
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      Supplier<ImmutableSortedSet<BuildRule>> originalDeclaredDeps,
+      Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
       Supplier<ImmutableMap<String, String>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,

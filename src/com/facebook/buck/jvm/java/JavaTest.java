@@ -79,6 +79,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -482,7 +483,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getExportedDeps() {
+  public SortedSet<BuildRule> getExportedDeps() {
     return ImmutableSortedSet.of(compiledTestsLibrary);
   }
 

@@ -63,6 +63,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.regex.Pattern;
 
 public class AndroidBinaryGraphEnhancer {
@@ -83,7 +84,7 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("generate_proguard_config_from_native_libs");
 
   private final BuildTarget originalBuildTarget;
-  private final ImmutableSortedSet<BuildRule> originalDeps;
+  private final SortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
   private final Optional<String> keepResourcePattern;

@@ -50,6 +50,7 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
@@ -89,7 +90,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Set<? extends SourcePath> resources,
       Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> fullJarDeclaredDeps,
+      SortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,

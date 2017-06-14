@@ -23,6 +23,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
+import java.util.SortedSet;
 
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
@@ -32,9 +33,9 @@ import java.util.Objects;
 public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
-  private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> buildDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> declaredDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> extraDeps;
+  private final Supplier<SortedSet<BuildRule>> buildDeps;
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
 
@@ -55,15 +56,15 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final ImmutableSortedSet<BuildRule> getBuildDeps() {
+  public final SortedSet<BuildRule> getBuildDeps() {
     return buildDeps.get();
   }
 
-  public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
+  public final SortedSet<BuildRule> getDeclaredDeps() {
     return declaredDeps.get();
   }
 
-  public final ImmutableSortedSet<BuildRule> deprecatedGetExtraDeps() {
+  public final SortedSet<BuildRule> deprecatedGetExtraDeps() {
     return extraDeps.get();
   }
 

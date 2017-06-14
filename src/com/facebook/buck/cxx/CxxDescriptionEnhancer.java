@@ -71,6 +71,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
@@ -776,7 +777,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
-      ImmutableSortedSet<BuildRule> deps,
+      SortedSet<BuildRule> deps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
