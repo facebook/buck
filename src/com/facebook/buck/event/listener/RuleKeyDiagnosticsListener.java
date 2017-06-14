@@ -28,7 +28,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -39,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -227,14 +227,14 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     public final long duration;
     public final BuildRuleKeys ruleKeys;
     public final Optional<HashCode> outputHash;
-    public final ImmutableSortedSet<BuildRule> deps;
+    public final SortedSet<BuildRule> deps;
 
     public RuleInfo(
         int id,
         long duration,
         BuildRuleKeys ruleKeys,
         Optional<HashCode> outputHash,
-        ImmutableSortedSet<BuildRule> deps) {
+        SortedSet<BuildRule> deps) {
       this.id = id;
       this.duration = duration;
       this.ruleKeys = ruleKeys;

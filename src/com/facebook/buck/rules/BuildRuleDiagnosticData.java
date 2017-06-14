@@ -18,17 +18,16 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
+import java.util.SortedSet;
 
 /** Some build rule diagnostic data. */
 public class BuildRuleDiagnosticData {
 
-  public final ImmutableSortedSet<BuildRule> deps;
+  public final SortedSet<BuildRule> deps;
   public final ImmutableList<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeys;
 
   public BuildRuleDiagnosticData(
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableList<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeys) {
+      SortedSet<BuildRule> deps, ImmutableList<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeys) {
     this.deps = deps;
     this.diagnosticKeys = diagnosticKeys;
   }
