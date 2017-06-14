@@ -767,7 +767,10 @@ public class BuildCommand extends AbstractCommand {
         BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
         Optional<Path> outputPath =
             TargetsCommand.getUserFacingOutputPath(
-                pathResolver, rule, showFullOutput, params.getBuckConfig().getBuckOutCompatLink());
+                    pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
+                .map(
+                    path ->
+                        showFullOutput ? path : params.getCell().getFilesystem().relativize(path));
         params
             .getConsole()
             .getStdOut()

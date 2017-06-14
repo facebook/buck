@@ -579,7 +579,7 @@ public class TargetsCommand extends AbstractCommand {
    * @param referencedFiles If present, the result will be limited to the nodes that transitively
    *     depend on at least one of those.
    * @param matchingBuildTargets If present, the result will be limited to the specified targets.
-   * @param buildRuleTypes If present, the result will be limited to targets with the specified
+   * @param descriptionClasses If present, the result will be limited to targets with the specified
    *     types.
    * @param detectTestChanges If true, tests are considered to be dependencies of the targets they
    *     are testing.
@@ -847,15 +847,14 @@ public class TargetsCommand extends AbstractCommand {
           }
         }
         if (isShowOutput() || isShowFullOutput()) {
-          Optional<Path> outputPath =
-              getUserFacingOutputPath(
+          getUserFacingOutputPath(
                   new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver.get())),
                   rule,
-                  isShowFullOutput(),
-                  params.getBuckConfig().getBuckOutCompatLink());
-          if (outputPath.isPresent()) {
-            showOptionsBuilder.setOutputPath(outputPath.get().toString());
-          }
+                  params.getBuckConfig().getBuckOutCompatLink())
+              .map(
+                  path ->
+                      isShowFullOutput() ? path : params.getCell().getFilesystem().relativize(path))
+              .ifPresent(path -> showOptionsBuilder.setOutputPath(path.toString()));
         }
       }
     }
@@ -881,11 +880,9 @@ public class TargetsCommand extends AbstractCommand {
         });
   }
 
+  /** Returns absolute path to the output rule, if the rule has an output. */
   static Optional<Path> getUserFacingOutputPath(
-      SourcePathResolver pathResolver,
-      BuildRule rule,
-      boolean absolute,
-      boolean buckOutCompatLink) {
+      SourcePathResolver pathResolver, BuildRule rule, boolean buckOutCompatLink) {
     Optional<Path> outputPathOptional =
         Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
 
@@ -907,11 +904,7 @@ public class TargetsCommand extends AbstractCommand {
       }
     }
 
-    if (absolute) {
-      return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
-    } else {
-      return outputPathOptional;
-    }
+    return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
   }
 
   private TargetGraphAndTargetNodes computeTargetsAndGraphToShowTargetHash(
