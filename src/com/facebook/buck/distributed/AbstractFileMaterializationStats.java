@@ -15,33 +15,15 @@
  */
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.CacheRateStats;
-import com.facebook.buck.distributed.thrift.RunId;
-import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractBuildSlaveFinishedStatus {
+abstract class AbstractFileMaterializationStats {
+  abstract int getFilesMaterializedLocallyCount();
 
-  abstract StampedeId getStampedeId();
+  abstract int getFilesMaterializedRemotelyCount();
 
-  abstract RunId getRunId();
-
-  abstract int getTotalRulesCount();
-
-  abstract int getRulesStartedCount();
-
-  abstract int getRulesFinishedCount();
-
-  abstract int getRulesSuccessCount();
-
-  abstract int getRulesFailureCount();
-
-  abstract int getExitCode();
-
-  abstract CacheRateStats getCacheRateStats();
-
-  abstract FileMaterializationStats getFileMaterializationStats();
+  abstract long getTotalTimeSpentMaterializingFilesRemotelyMillis();
 }

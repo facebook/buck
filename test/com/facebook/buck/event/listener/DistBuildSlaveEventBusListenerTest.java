@@ -29,6 +29,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
+import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
@@ -69,6 +70,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class DistBuildSlaveEventBusListenerTest {
+  private static final int FILES_MATERIALIZED_COUNT = 1;
 
   private DistBuildSlaveEventBusListener listener;
   private RunId runId;
@@ -76,6 +78,7 @@ public class DistBuildSlaveEventBusListenerTest {
   private DistBuildService distBuildServiceMock;
   private BuckEventBus eventBus;
   private SettableFakeClock clock = new SettableFakeClock(0, 0);
+  private FileMaterializationStatsTracker fileMaterializationStatsTracker;
 
   @Before
   public void setUp() {
@@ -85,12 +88,18 @@ public class DistBuildSlaveEventBusListenerTest {
     stampedeId.setId("this-is-the-big-id");
     distBuildServiceMock = EasyMock.createMock(DistBuildService.class);
     eventBus = BuckEventBusForTests.newInstance();
+    fileMaterializationStatsTracker = new FileMaterializationStatsTracker();
   }
 
   private void setUpDistBuildSlaveEventBusListener() {
     listener =
         new DistBuildSlaveEventBusListener(
-            stampedeId, runId, clock, Executors.newScheduledThreadPool(1), 1);
+            stampedeId,
+            runId,
+            clock,
+            fileMaterializationStatsTracker,
+            Executors.newScheduledThreadPool(1),
+            1);
     eventBus.register(listener);
     listener.setDistBuildService(distBuildServiceMock);
   }
@@ -125,6 +134,8 @@ public class DistBuildSlaveEventBusListenerTest {
     cacheRateStats.setCacheErrorsCount(0);
     cacheRateStats.setCacheIgnoresCount(0);
     cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
+
+    status.setFilesMaterializedCount(0);
 
     return status;
   }
@@ -235,6 +246,9 @@ public class DistBuildSlaveEventBusListenerTest {
     cacheRateStats.setCacheMissesCount(1);
     cacheRateStats.setCacheErrorsCount(1);
     cacheRateStats.setCacheIgnoresCount(1);
+
+    fileMaterializationStatsTracker.recordLocalFileMaterialized();
+    expectedStatus.setFilesMaterializedCount(FILES_MATERIALIZED_COUNT);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());
     expectLastCall().anyTimes();

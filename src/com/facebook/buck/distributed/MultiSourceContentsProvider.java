@@ -18,9 +18,11 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.log.Logger;
+import com.google.common.base.Stopwatch;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class MultiSourceContentsProvider implements FileContentsProvider {
   private static final Logger LOG = Logger.get(MultiSourceContentsProvider.class);
@@ -28,16 +30,23 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
   private final FileContentsProvider serverProvider;
   private final Optional<LocalFsContentsProvider> localFsProvider;
   private final InlineContentsProvider inlineProvider;
+  private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
 
-  public MultiSourceContentsProvider(DistBuildService service, Optional<Path> localCacheAbsPath)
+  public MultiSourceContentsProvider(
+      DistBuildService service,
+      FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      Optional<Path> localCacheAbsPath)
       throws InterruptedException, IOException {
-    this(new ServerContentsProvider(service), localCacheAbsPath);
+    this(new ServerContentsProvider(service), fileMaterializationStatsTracker, localCacheAbsPath);
   }
 
   public MultiSourceContentsProvider(
-      FileContentsProvider serverContentProvider, Optional<Path> localCacheAbsPath)
+      FileContentsProvider serverContentProvider,
+      FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      Optional<Path> localCacheAbsPath)
       throws InterruptedException, IOException {
     this.inlineProvider = new InlineContentsProvider();
+    this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
     if (localCacheAbsPath.isPresent()) {
       this.localFsProvider = Optional.of(new LocalFsContentsProvider(localCacheAbsPath.get()));
     } else {
@@ -52,6 +61,7 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
       throws IOException {
 
     if (inlineProvider.materializeFileContents(entry, targetAbsPath)) {
+      fileMaterializationStatsTracker.recordLocalFileMaterialized();
       LOG.info("Materialized source file using Inline Data: [%s]", targetAbsPath);
       return true;
     }
@@ -62,7 +72,12 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
       return true;
     }
 
-    if (serverProvider.materializeFileContents(entry, targetAbsPath)) {
+    Stopwatch remoteMaterializationStopwatch = Stopwatch.createStarted();
+    boolean wasRemotelyMaterialized = serverProvider.materializeFileContents(entry, targetAbsPath);
+    remoteMaterializationStopwatch.stop();
+    if (wasRemotelyMaterialized) {
+      fileMaterializationStatsTracker.recordRemoteFileMaterialized(
+          remoteMaterializationStopwatch.elapsed(TimeUnit.MILLISECONDS));
       if (localFsProvider.isPresent()) {
         localFsProvider.get().writeFileAndGetInputStream(entry, targetAbsPath);
       }

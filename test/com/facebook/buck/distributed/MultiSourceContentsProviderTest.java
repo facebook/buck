@@ -47,7 +47,8 @@ public class MultiSourceContentsProviderTest {
   public void inlineContentProviderTakesPrecedence() throws InterruptedException, IOException {
     EasyMock.replay(mockProvider);
     MultiSourceContentsProvider provider =
-        new MultiSourceContentsProvider(mockProvider, Optional.empty());
+        new MultiSourceContentsProvider(
+            mockProvider, new FileMaterializationStatsTracker(), Optional.empty());
     BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
     entry.setHashCode("1234");
     entry.setContents(FILE_CONTENTS);
@@ -71,7 +72,8 @@ public class MultiSourceContentsProviderTest {
     EasyMock.replay(mockProvider);
 
     MultiSourceContentsProvider provider =
-        new MultiSourceContentsProvider(mockProvider, Optional.empty());
+        new MultiSourceContentsProvider(
+            mockProvider, new FileMaterializationStatsTracker(), Optional.empty());
     Assert.assertFalse(Files.isRegularFile(targetAbsPath));
     provider.materializeFileContents(entry, targetAbsPath);
     EasyMock.verify(mockProvider);

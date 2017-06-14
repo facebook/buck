@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
+import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -73,7 +74,8 @@ public abstract class DistBuildFactory {
       DistBuildMode mode,
       int coordinatorPort,
       Optional<StampedeId> stampedeId,
-      Optional<Path> globalCacheDir)
+      Optional<Path> globalCacheDir,
+      FileMaterializationStatsTracker fileMaterializationStatsTracker)
       throws InterruptedException, IOException {
     DistBuildState state =
         DistBuildState.load(
@@ -104,7 +106,9 @@ public abstract class DistBuildFactory {
                 .setActionGraphCache(params.getActionGraphCache())
                 .setCacheKeySeed(params.getBuckConfig().getKeySeed())
                 .setConsole(params.getConsole())
-                .setProvider(new MultiSourceContentsProvider(service, globalCacheDir))
+                .setProvider(
+                    new MultiSourceContentsProvider(
+                        service, fileMaterializationStatsTracker, globalCacheDir))
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)
                 .setCoordinatorPort(coordinatorPort)

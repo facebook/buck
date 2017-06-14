@@ -68,4 +68,6 @@ struct BuildSlaveStatus {
     23: optional i32 httpArtifactUploadsOngoingCount;
     24: optional i32 httpArtifactUploadsSuccessCount;
     25: optional i32 httpArtifactUploadsFailureCount;
+
+    30: optional i32 filesMaterializedCount;
 }

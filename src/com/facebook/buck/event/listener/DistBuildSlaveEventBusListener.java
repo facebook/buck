@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.BuildSlaveFinishedStatus;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
+import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.RunId;
@@ -77,22 +78,36 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   protected final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
+  protected final FileMaterializationStatsTracker fileMaterializationStatsTracker;
+
   private volatile @Nullable DistBuildService distBuildService;
 
   public DistBuildSlaveEventBusListener(
-      StampedeId stampedeId, RunId runId, Clock clock, ScheduledExecutorService networkScheduler) {
-    this(stampedeId, runId, clock, networkScheduler, DEFAULT_SERVER_UPDATE_PERIOD_MILLIS);
+      StampedeId stampedeId,
+      RunId runId,
+      Clock clock,
+      FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      ScheduledExecutorService networkScheduler) {
+    this(
+        stampedeId,
+        runId,
+        clock,
+        fileMaterializationStatsTracker,
+        networkScheduler,
+        DEFAULT_SERVER_UPDATE_PERIOD_MILLIS);
   }
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
       RunId runId,
       Clock clock,
+      FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService networkScheduler,
       long serverUpdatePeriodMillis) {
     this.stampedeId = stampedeId;
     this.runId = runId;
     this.clock = clock;
+    this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
 
     scheduledServerUpdates =
         networkScheduler.scheduleAtFixedRate(
@@ -136,6 +151,9 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     status.setHttpArtifactUploadsFailureCount(
         httpCacheUploadStats.getHttpArtifactUploadsFailureCount());
 
+    status.setFilesMaterializedCount(
+        fileMaterializationStatsTracker.getTotalFilesMaterializedCount());
+
     return status;
   }
 
@@ -149,6 +167,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
         .setRulesSuccessCount(buildRulesSuccessCount.get())
         .setRulesFailureCount(buildRulesFailureCount.get())
         .setCacheRateStats(cacheRateStatsKeeper.getSerializableStats())
+        .setFileMaterializationStats(fileMaterializationStatsTracker.getFileMaterializationStats())
         .setExitCode(exitCode)
         .build();
   }
