@@ -64,6 +64,11 @@ public enum IjModuleType {
     public boolean canBeAggregated(IjProjectConfig projectConfig) {
       return projectConfig.isAggregatingAndroidResourceModulesEnabled();
     }
+
+    @Override
+    public int getAggregationLimit(IjProjectConfig projectConfig) {
+      return projectConfig.getAggregationLimitForAndroidResourceModule();
+    }
   },
 
   /**
@@ -138,5 +143,10 @@ public enum IjModuleType {
 
   public boolean hasHigherPriorityThan(IjModuleType moduleType) {
     return this.compareTo(moduleType) < 0;
+  }
+
+  @SuppressWarnings("unused")
+  public int getAggregationLimit(IjProjectConfig projectConfig) {
+    return Integer.MAX_VALUE;
   }
 }

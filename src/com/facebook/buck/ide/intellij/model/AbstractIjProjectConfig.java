@@ -79,4 +79,6 @@ abstract class AbstractIjProjectConfig {
 
   /** Labels that indicate targets that need to be ignored during project generation. */
   public abstract ImmutableSet<String> getIgnoredTargetLabels();
+
+  public abstract int getAggregationLimitForAndroidResourceModule();
 }

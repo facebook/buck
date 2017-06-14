@@ -189,6 +189,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("android_resource_aggregation");
   }
 
+  @Test
+  public void testAndroidResourceAggregationWithLimit() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("android_resource_aggregation_with_limit");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();

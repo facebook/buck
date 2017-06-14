@@ -1850,6 +1850,17 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'android_resource_module_aggregation_limit' /}
+  {param example_value: '1000' /}
+  {param description}
+    The maximum number of targets that can be aggregated into one module with Android resources. This
+    limit is a workaround to avoid a problem when Android plugin cannot operate on modules with a big number
+    of resource folders.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}

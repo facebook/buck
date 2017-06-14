@@ -104,6 +104,11 @@ public class IjProjectBuckConfig {
         .setAggregatingAndroidResourceModulesEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "aggregate_android_resource_modules", false))
+        .setAggregationLimitForAndroidResourceModule(
+            buckConfig
+                .getInteger(
+                    INTELLIJ_BUCK_CONFIG_SECTION, "android_resource_module_aggregation_limit")
+                .orElse(Integer.MAX_VALUE))
         .build();
   }
 

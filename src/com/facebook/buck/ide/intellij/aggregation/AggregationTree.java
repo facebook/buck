@@ -22,6 +22,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -194,16 +195,12 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
       }
     }
 
-    ImmutableSet<Path> excludes = findExcludes(parentNode, modulePathsToAggregate);
+    Map<Path, AggregationModule> modulesToAggregate =
+        collectModulesToAggregate(rootModuleType, parentNode, modulePathsToAggregate);
 
-    List<AggregationModule> modulesToAggregate =
-        modulePathsToAggregate
-            .stream()
-            .map(parentNode::getChild)
-            .map(AggregationTreeNode::getModule)
-            .collect(Collectors.toList());
+    ImmutableSet<Path> excludes = findExcludes(parentNode, modulesToAggregate.keySet());
 
-    modulePathsToAggregate.forEach(parentNode::removeChild);
+    modulesToAggregate.keySet().forEach(parentNode::removeChild);
 
     if (nodeModule == null) {
       parentNode.setModule(
@@ -211,18 +208,53 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
               moduleBasePath,
               rootModuleType,
               aggregationTag == null
-                  ? modulesToAggregate.iterator().next().getAggregationTag()
+                  ? modulesToAggregate.values().iterator().next().getAggregationTag()
                   : aggregationTag,
-              modulesToAggregate,
+              modulesToAggregate.values(),
               excludes));
     } else {
-      parentNode.setModule(ModuleAggregator.aggregate(nodeModule, modulesToAggregate, excludes));
+      parentNode.setModule(
+          ModuleAggregator.aggregate(nodeModule, modulesToAggregate.values(), excludes));
     }
     LOG.verbose("Module after aggregation: %s", parentNode.getModule());
   }
 
+  private ImmutableMap<Path, AggregationModule> collectModulesToAggregate(
+      IjModuleType rootModuleType,
+      AggregationTreeNode parentNode,
+      ImmutableSet<Path> modulePathsToAggregate) {
+    int aggregationLimit = rootModuleType.getAggregationLimit(projectConfig);
+    ImmutableMap<Path, AggregationModule> modules =
+        modulePathsToAggregate
+            .stream()
+            .collect(
+                MoreCollectors.toImmutableMap(
+                    path -> path, path -> parentNode.getChild(path).getModule()));
+    if (aggregationLimit == Integer.MAX_VALUE) {
+      return modules;
+    }
+
+    ImmutableMap.Builder<Path, AggregationModule> filteredModules = ImmutableMap.builder();
+    int count = 0;
+    if (parentNode.getModule() != null) {
+      count += parentNode.getModule().getTargets().size();
+    }
+    for (Map.Entry<Path, AggregationModule> pathWithModule : modules.entrySet()) {
+      int childTargetsSize = pathWithModule.getValue().getTargets().size();
+      if (count + childTargetsSize > aggregationLimit) {
+        continue;
+      }
+      filteredModules.put(pathWithModule.getKey(), pathWithModule.getValue());
+      count += childTargetsSize;
+      if (count == aggregationLimit) {
+        break;
+      }
+    }
+    return filteredModules.build();
+  }
+
   private ImmutableSet<Path> findExcludes(
-      AggregationTreeNode parentNode, ImmutableSet<Path> modulePathsToAggregate) {
+      AggregationTreeNode parentNode, Set<Path> modulePathsToAggregate) {
     return parentNode
         .getChildrenPaths()
         .stream()
