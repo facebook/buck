@@ -67,7 +67,8 @@ public class WorkerShellStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(final ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(final ExecutionContext context)
+      throws IOException, InterruptedException {
     WorkerProcessPool pool = null;
     WorkerProcess process = null;
     try {
@@ -95,8 +96,6 @@ public class WorkerShellStep implements Step {
         }
       }
       return StepExecutionResult.of(result.getExitCode());
-    } catch (IOException e) {
-      throw new RuntimeException("Error communicating with external process.", e);
     } finally {
       if (pool != null && process != null) {
         pool.destroyWorkerProcess(process);

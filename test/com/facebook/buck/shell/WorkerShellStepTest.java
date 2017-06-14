@@ -326,7 +326,7 @@ public class WorkerShellStepTest {
                 () -> {
                   try {
                     step2.execute(context);
-                  } catch (InterruptedException e) {
+                  } catch (InterruptedException | IOException e) {
                     throw new RuntimeException(e);
                   }
                 });
@@ -467,8 +467,7 @@ public class WorkerShellStepTest {
   }
 
   @Test
-  public void testWarningIsPrintedForIdenticalWorkerToolsWithDifferentCapacity()
-      throws InterruptedException {
+  public void testWarningIsPrintedForIdenticalWorkerToolsWithDifferentCapacity() throws Exception {
     int existingPoolSize = 2;
     int stepPoolSize = 4;
 
@@ -518,7 +517,7 @@ public class WorkerShellStepTest {
     public void run() {
       try {
         step.execute(context);
-      } catch (InterruptedException e) {
+      } catch (InterruptedException | IOException e) {
         throw new RuntimeException(e);
       }
     }
