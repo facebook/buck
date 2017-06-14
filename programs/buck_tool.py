@@ -16,7 +16,7 @@ import uuid
 from pynailgun import NailgunConnection, NailgunException
 from timing import monotonic_time_nanos
 from tracing import Tracing
-from subprocutils import which
+from subprocutils import check_output, which
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
@@ -509,7 +509,7 @@ def install_signal_handlers():
 def platform_path(path):
     if sys.platform != 'cygwin':
         return path
-    return subprocess.check_output(['cygpath', '-w', path]).strip()
+    return check_output(['cygpath', '-w', path]).strip()
 
 
 def truncate_logs_pretty(logs):

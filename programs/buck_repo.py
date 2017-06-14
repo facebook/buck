@@ -7,8 +7,7 @@ import textwrap
 from tracing import Tracing
 from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB, platform_path
 from buck_tool import BuckToolException, RestartBuck
-from subprocess import check_output
-from subprocutils import which
+from subprocutils import check_output, which
 import buck_version
 
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
