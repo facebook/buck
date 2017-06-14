@@ -17,7 +17,7 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -35,7 +35,8 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class LuaBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
+public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Path output;
   private final Tool wrappedBinary;

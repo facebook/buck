@@ -17,7 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -35,7 +35,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
+class PrebuiltOcamlLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements OcamlLibrary {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Optional<SourcePath> staticNativeLibraryPath;

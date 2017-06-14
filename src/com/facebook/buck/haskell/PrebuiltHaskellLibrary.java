@@ -19,9 +19,9 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 
-public abstract class PrebuiltHaskellLibrary extends NoopBuildRule
+public abstract class PrebuiltHaskellLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements HaskellCompileDep, NativeLinkable, CxxPreprocessorDep {
 
   public PrebuiltHaskellLibrary(BuildRuleParams params) {

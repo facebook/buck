@@ -20,10 +20,11 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 
-public abstract class CxxLuaExtension extends NoopBuildRule implements NativeLinkTarget {
+public abstract class CxxLuaExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements NativeLinkTarget {
 
   public CxxLuaExtension(BuildRuleParams params) {
     super(params);

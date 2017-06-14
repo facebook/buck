@@ -25,14 +25,14 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class DLibrary extends NoopBuildRule implements NativeLinkable {
+public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements NativeLinkable {
 
   private final BuildRuleResolver buildRuleResolver;
   private final DIncludes includes;

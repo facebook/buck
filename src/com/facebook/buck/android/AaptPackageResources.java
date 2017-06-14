@@ -20,7 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -50,7 +50,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Packages the resources using {@code aapt}. */
-public class AaptPackageResources extends AbstractBuildRule {
+public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
   public static final String FILTERED_RESOURCE_DIRS_KEY = "filtered_resource_dirs";

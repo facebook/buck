@@ -20,11 +20,11 @@ import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.Genrule;
 
-public class CxxGenrule extends NoopBuildRule implements HasOutputName {
+public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements HasOutputName {
 
   private final BuildRuleResolver resolver;
   private final String output;

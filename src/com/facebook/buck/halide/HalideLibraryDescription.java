@@ -44,7 +44,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -213,7 +213,7 @@ public class HalideLibraryDescription
       throws NoSuchBuildTargetException {
 
     if (!isPlatformSupported(args, platform)) {
-      return new NoopBuildRule(params);
+      return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
     }
 
     BuildRule halideCompile =

@@ -31,7 +31,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -323,8 +323,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     };
   }
 
-  private abstract static class CustomPrebuiltCxxLibrary extends NoopBuildRule
-      implements AbstractCxxLibrary {
+  private abstract static class CustomPrebuiltCxxLibrary
+      extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibrary {
     public CustomPrebuiltCxxLibrary(BuildRuleParams params) {
       super(params);
     }

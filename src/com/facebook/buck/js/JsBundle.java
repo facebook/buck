@@ -17,7 +17,7 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class JsBundle extends AbstractBuildRule implements JsBundleOutputs {
+public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implements JsBundleOutputs {
 
   @AddToRuleKey private final String bundleName;
 

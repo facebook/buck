@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -48,7 +48,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.stream.Stream;
 
-public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
+public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements BinaryBuildRule, HasRuntimeDeps {
 
   private static final Path TEMPLATE =
       Paths.get(

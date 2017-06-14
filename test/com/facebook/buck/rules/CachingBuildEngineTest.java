@@ -3557,7 +3557,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private abstract static class DepFileBuildRule extends AbstractBuildRule
+  private abstract static class DepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       implements SupportsDependencyFileRuleKey {
     public DepFileBuildRule(BuildRuleParams buildRuleParams) {
       super(buildRuleParams);
@@ -3569,7 +3569,7 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static class RuleWithSteps extends AbstractBuildRule {
+  private static class RuleWithSteps extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     private final ImmutableList<Step> steps;
     @Nullable private final Path output;

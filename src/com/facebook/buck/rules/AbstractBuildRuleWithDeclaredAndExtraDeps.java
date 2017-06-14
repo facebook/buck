@@ -30,7 +30,7 @@ import java.util.SortedSet;
  * matches the one on disk, then it has no work to do. It should also try to fetch its output from
  * an {@link com.facebook.buck.artifact_cache.ArtifactCache} to avoid doing any computation.
  */
-public abstract class AbstractBuildRule implements BuildRule {
+public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps implements BuildRule {
 
   private final BuildTarget buildTarget;
   private final Supplier<SortedSet<BuildRule>> declaredDeps;
@@ -41,7 +41,7 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   private final Supplier<String> typeSupplier = Suppliers.memoize(this::getTypeForClass);
 
-  protected AbstractBuildRule(BuildRuleParams buildRuleParams) {
+  protected AbstractBuildRuleWithDeclaredAndExtraDeps(BuildRuleParams buildRuleParams) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
@@ -93,10 +93,11 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final boolean equals(Object obj) {
-    if (!(obj instanceof AbstractBuildRule)) {
+    if (!(obj instanceof AbstractBuildRuleWithDeclaredAndExtraDeps)) {
       return false;
     }
-    AbstractBuildRule that = (AbstractBuildRule) obj;
+    AbstractBuildRuleWithDeclaredAndExtraDeps that =
+        (AbstractBuildRuleWithDeclaredAndExtraDeps) obj;
     return Objects.equals(this.buildTarget, that.buildTarget)
         && Objects.equals(this.getType(), that.getType());
   }

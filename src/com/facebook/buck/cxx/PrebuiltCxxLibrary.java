@@ -17,10 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.collect.ImmutableList;
 
-public abstract class PrebuiltCxxLibrary extends NoopBuildRule
+public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
 
   PrebuiltCxxLibrary(BuildRuleParams params) {

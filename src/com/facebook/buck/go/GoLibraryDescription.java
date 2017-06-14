@@ -30,7 +30,7 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -135,7 +135,7 @@ public class GoLibraryDescription
               .append(args.getExportedDeps()));
     }
 
-    return new NoopBuildRule(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
   }
 
   @BuckStyleImmutable

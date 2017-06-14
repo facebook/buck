@@ -23,7 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +52,7 @@ public class SceneKitAssetsDescription implements Description<AppleWrapperResour
     String extension = Files.getFileExtension(args.getPath().getFileName().toString());
     Preconditions.checkArgument(SCENEKIT_ASSETS_EXTENSION.equals(extension));
 
-    return new NoopBuildRule(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
   }
 
   @Override

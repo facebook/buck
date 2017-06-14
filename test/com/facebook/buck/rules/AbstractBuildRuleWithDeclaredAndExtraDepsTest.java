@@ -20,12 +20,14 @@ import static org.junit.Assert.assertThat;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class AbstractBuildRuleTest {
+public class AbstractBuildRuleWithDeclaredAndExtraDepsTest {
 
   @Test
   public void getTypeForAnonymousClass() {
-    NoopBuildRule noopBuildRule =
-        new NoopBuildRule(new FakeBuildRuleParamsBuilder("//:rule").build()) {};
-    assertThat(noopBuildRule.getType(), Matchers.equalTo("noop_build_rule"));
+    NoopBuildRuleWithDeclaredAndExtraDeps noopBuildRule =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(
+            new FakeBuildRuleParamsBuilder("//:rule").build()) {};
+    assertThat(
+        noopBuildRule.getType(), Matchers.equalTo("noop_build_rule_with_declared_and_extra_deps"));
   }
 }

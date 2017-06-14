@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -131,13 +131,18 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   }
 
   private void addDepsToRuleKey(BuildRule buildRule, RuleKeyObjectSink sink) {
-    if (buildRule instanceof AbstractBuildRule) {
+    if (buildRule instanceof AbstractBuildRuleWithDeclaredAndExtraDeps) {
       // TODO(mkosiba): We really need to get rid of declared/extra deps in rules. Instead
       // rules should explicitly take the needed sub-sets of deps as constructor args.
-      AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
-      sink.setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps());
-      sink.setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
-      sink.setReflectively("buck.targetGraphOnlyDeps", abstractBuildRule.getTargetGraphOnlyDeps());
+      AbstractBuildRuleWithDeclaredAndExtraDeps abstractBuildRuleWithDeclaredAndExtraDeps =
+          (AbstractBuildRuleWithDeclaredAndExtraDeps) buildRule;
+      sink.setReflectively(
+          "buck.extraDeps", abstractBuildRuleWithDeclaredAndExtraDeps.deprecatedGetExtraDeps());
+      sink.setReflectively(
+          "buck.declaredDeps", abstractBuildRuleWithDeclaredAndExtraDeps.getDeclaredDeps());
+      sink.setReflectively(
+          "buck.targetGraphOnlyDeps",
+          abstractBuildRuleWithDeclaredAndExtraDeps.getTargetGraphOnlyDeps());
     } else {
       sink.setReflectively("buck.deps", buildRule.getBuildDeps());
     }

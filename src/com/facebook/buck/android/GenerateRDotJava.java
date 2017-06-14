@@ -21,7 +21,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -42,7 +42,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class GenerateRDotJava extends AbstractBuildRule {
+public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final SourcePath pathToRDotTxtFile;
   @AddToRuleKey private Optional<String> resourceUnionPackage;

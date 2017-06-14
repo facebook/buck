@@ -20,7 +20,7 @@ import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -69,7 +69,7 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResource extends AbstractBuildRule
+public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         HasAndroidResourceDeps,
         InitializableFromDisk<String>,

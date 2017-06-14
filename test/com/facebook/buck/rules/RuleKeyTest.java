@@ -621,12 +621,12 @@ public class RuleKeyTest {
         new FakeBuildRuleParamsBuilder(parentTarget)
             .setDeclaredDeps(ImmutableSortedSet.of(buildRule1))
             .build();
-    BuildRule parentRule1 = new NoopBuildRule(parentParams1);
+    BuildRule parentRule1 = new NoopBuildRuleWithDeclaredAndExtraDeps(parentParams1);
     BuildRuleParams parentParams2 =
         new FakeBuildRuleParamsBuilder(parentTarget)
             .setDeclaredDeps(ImmutableSortedSet.of(buildRule2))
             .build();
-    BuildRule parentRule2 = new NoopBuildRule(parentParams2);
+    BuildRule parentRule2 = new NoopBuildRuleWithDeclaredAndExtraDeps(parentParams2);
 
     RuleKey ruleKey1 =
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(parentRule1);
@@ -689,22 +689,26 @@ public class RuleKeyTest {
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
     BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
-    NoopBuildRule dep = new NoopBuildRule(depParams);
+    NoopBuildRuleWithDeclaredAndExtraDeps dep =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(depParams);
 
     BuildRuleParams paramsWithDeclaredDep =
         new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(ImmutableSortedSet.of(dep)).build();
-    NoopBuildRule ruleWithDeclaredDep = new NoopBuildRule(paramsWithDeclaredDep);
+    NoopBuildRuleWithDeclaredAndExtraDeps ruleWithDeclaredDep =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithDeclaredDep);
 
     BuildRuleParams paramsWithExtraDep =
         new FakeBuildRuleParamsBuilder(target).setExtraDeps(ImmutableSortedSet.of(dep)).build();
-    NoopBuildRule ruleWithExtraDep = new NoopBuildRule(paramsWithExtraDep);
+    NoopBuildRuleWithDeclaredAndExtraDeps ruleWithExtraDep =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithExtraDep);
 
     BuildRuleParams paramsWithBothDeps =
         new FakeBuildRuleParamsBuilder(target)
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .setExtraDeps(ImmutableSortedSet.of(dep))
             .build();
-    NoopBuildRule ruleWithBothDeps = new NoopBuildRule(paramsWithBothDeps);
+    NoopBuildRuleWithDeclaredAndExtraDeps ruleWithBothDeps =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithBothDeps);
 
     assertNotEquals(
         ruleKeyFactory.build(ruleWithDeclaredDep), ruleKeyFactory.build(ruleWithExtraDep));
@@ -728,7 +732,8 @@ public class RuleKeyTest {
     }
   }
 
-  private static class TestRuleKeyAppendableBuildRule extends NoopBuildRule {
+  private static class TestRuleKeyAppendableBuildRule
+      extends NoopBuildRuleWithDeclaredAndExtraDeps {
     private final String foo;
 
     @SuppressWarnings("PMD.UnusedPrivateField")

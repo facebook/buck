@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
-public class SplitResources extends AbstractBuildRule {
+public class SplitResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey(stringify = true)
   private final Path exoResourcesOutputPath;
 

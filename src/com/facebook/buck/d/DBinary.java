@@ -17,7 +17,7 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -33,7 +33,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.stream.Stream;
 
 /** BinaryBuildRule implementation for D binaries. */
-public class DBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
+public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements BinaryBuildRule, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;
   private final Tool executable;

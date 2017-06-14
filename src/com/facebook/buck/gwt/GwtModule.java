@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,7 +40,7 @@ import java.nio.file.Path;
  * and resources suitable for a GWT module. (It differs slightly from a source JAR because it
  * contains resources.)
  */
-public class GwtModule extends AbstractBuildRule {
+public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final Path outputFile;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> filesForGwtModule;

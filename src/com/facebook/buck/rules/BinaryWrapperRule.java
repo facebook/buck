@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * A no-op stub class for binary rules which delegate to another rule to provide the output path and
  * executable tool.
  */
-public abstract class BinaryWrapperRule extends AbstractBuildRule
+public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final SourcePathRuleFinder ruleFinder;

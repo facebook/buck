@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /** A fake {@link BuildRule} that implements {@link SupportsDependencyFileRuleKey}. */
-public class FakeDepFileBuildRule extends AbstractBuildRule
+public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsDependencyFileRuleKey {
 
   private Path outputPath;

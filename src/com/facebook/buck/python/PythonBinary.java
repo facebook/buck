@@ -19,7 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.stream.Stream;
 
-public abstract class PythonBinary extends AbstractBuildRule
+public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;

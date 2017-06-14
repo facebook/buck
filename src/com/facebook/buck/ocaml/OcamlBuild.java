@@ -18,7 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** A build rule which preprocesses, compiles, and assembles an OCaml source. */
-public class OcamlBuild extends AbstractBuildRule {
+public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final OcamlBuildContext ocamlContext;
   @AddToRuleKey private final Compiler cCompiler;

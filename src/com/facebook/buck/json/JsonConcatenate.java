@@ -19,7 +19,7 @@ package com.facebook.buck.json;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
 /*
  * Concatenates Json arrays in files
  */
-public class JsonConcatenate extends AbstractBuildRule {
+public class JsonConcatenate extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final String stepShortName;
   private final String stepDescription;

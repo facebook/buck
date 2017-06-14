@@ -23,7 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
         CORE_DATA_MODEL_EXTENSION.equals(extension)
             || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
 
-    return new NoopBuildRule(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
   }
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {

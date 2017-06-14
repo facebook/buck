@@ -19,7 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
+public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implements BinaryBuildRule {
 
   @AddToRuleKey private final Tool linker;
   @AddToRuleKey private final ImmutableList<String> linkerFlags;

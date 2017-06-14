@@ -20,7 +20,7 @@ import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -63,7 +63,7 @@ import java.util.zip.ZipFile;
  * <p>Android's ApkBuilder seemingly would do this, but it doesn't actually compress the assets that
  * are added.
  */
-public class MergeAssets extends AbstractBuildRule {
+public class MergeAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   // TODO(cjhopman): This should be an input-based rule, but the asset directories are from symlink
   // trees and the file hash caches don't currently handle those correctly. The symlink trees
   // shouldn't actually be necessary anymore as we can just take the full list of source paths

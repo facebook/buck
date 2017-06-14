@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,7 +35,7 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /** Perform the "aapt2 compile" step of a single Android resource. */
-public class Aapt2Compile extends AbstractBuildRule {
+public class Aapt2Compile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final SourcePath resDir;
 
   public Aapt2Compile(BuildRuleParams buildRuleParams, SourcePath resDir) {

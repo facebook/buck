@@ -23,10 +23,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import java.util.stream.Stream;
 
-public class PythonLibrary extends NoopBuildRule implements PythonPackagable, HasRuntimeDeps {
+public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements PythonPackagable, HasRuntimeDeps {
 
   private final BuildRuleResolver resolver;
 

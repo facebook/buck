@@ -29,7 +29,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -185,7 +185,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
     BuildRule rule =
-        new NoopBuildRule(params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
@@ -228,7 +228,7 @@ public class InputBasedRuleKeyFactoryTest {
             .setProjectFilesystem(filesystem)
             .build();
     BuildRule rule =
-        new NoopBuildRule(params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
@@ -301,7 +301,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
     BuildRule rule =
-        new NoopBuildRule(params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
           @AddToRuleKey
           NestedRuleKeyAppendableWithInput input =
               new NestedRuleKeyAppendableWithInput(new PathSourcePath(filesystem, inputFile));

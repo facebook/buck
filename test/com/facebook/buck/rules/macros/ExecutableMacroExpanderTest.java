@@ -34,7 +34,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -231,7 +231,7 @@ public class ExecutableMacroExpanderTest {
         Matchers.equalTo(tool));
   }
 
-  private abstract static class NoopBinaryBuildRule extends NoopBuildRule
+  private abstract static class NoopBinaryBuildRule extends NoopBuildRuleWithDeclaredAndExtraDeps
       implements BinaryBuildRule {
 
     public NoopBinaryBuildRule(BuildRuleParams params) {

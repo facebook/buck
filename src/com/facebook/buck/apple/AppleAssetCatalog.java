@@ -20,7 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -37,7 +37,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public class AppleAssetCatalog extends AbstractBuildRule {
+public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   public static final Flavor FLAVOR = InternalFlavor.of("apple-asset-catalog");
 

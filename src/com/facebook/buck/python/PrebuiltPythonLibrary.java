@@ -20,13 +20,14 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
-public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackagable {
+public class PrebuiltPythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements PythonPackagable {
 
   @AddToRuleKey private final SourcePath binarySrc;
 

@@ -21,7 +21,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -60,7 +60,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class AndroidInstrumentationTest extends AbstractBuildRule
+public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements ExternalTestRunnerRule, HasRuntimeDeps, TestRule {
 
   private static final String TEST_RESULT_FILE = "test_result.xml";

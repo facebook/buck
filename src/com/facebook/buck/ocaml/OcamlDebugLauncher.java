@@ -17,7 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
  * This works with bytecode and provides limited debugging functionality like stepping, breakpoints,
  * etc.
  */
-public class OcamlDebugLauncher extends AbstractBuildRule {
+public class OcamlDebugLauncher extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final OcamlDebugLauncherStep.Args args;
 
   public OcamlDebugLauncher(BuildRuleParams params, OcamlDebugLauncherStep.Args args) {

@@ -32,7 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -494,7 +494,7 @@ public class DefaultRuleKeyFactoryTest {
 
     // Create a dummy build rule that uses the input.
     BuildRule rule =
-        new NoopBuildRule(
+        new NoopBuildRuleWithDeclaredAndExtraDeps(
             new FakeBuildRuleParamsBuilder("//:target")
                 .setProjectFilesystem(filesystem)
                 .setDeclaredDeps(ImmutableSortedSet.of(dep))
@@ -557,7 +557,7 @@ public class DefaultRuleKeyFactoryTest {
 
     // Create a dummy build rule that uses the input.
     BuildRule rule =
-        new NoopBuildRule(
+        new NoopBuildRuleWithDeclaredAndExtraDeps(
             new FakeBuildRuleParamsBuilder("//:target").setProjectFilesystem(filesystem).build()) {
 
           @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;

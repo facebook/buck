@@ -20,7 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenateStep;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -39,7 +39,8 @@ import java.nio.file.Path;
  * Merge all the json reports together into one and emit a list of results dirs of each capture and
  * analysis target involved for the analysis itself.
  */
-public class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSteps {
+public class CxxInferComputeReport extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements HasPostBuildSteps {
 
   private CxxInferAnalyze analysisToReport;
   private ProjectFilesystem projectFilesystem;

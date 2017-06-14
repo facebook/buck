@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class WriteStringTemplateRule extends AbstractBuildRule {
+public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey(stringify = true)
   private final Path output;

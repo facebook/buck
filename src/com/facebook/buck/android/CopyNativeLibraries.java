@@ -23,7 +23,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -62,7 +62,7 @@ import org.immutables.value.Value;
  * shared objects collected and stores this metadata in a text file, to be used later by {@link
  * ExopackageInstaller}.
  */
-public class CopyNativeLibraries extends AbstractBuildRule {
+public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final ImmutableSet<SourcePath> nativeLibDirectories;
   @AddToRuleKey private final ImmutableSet<TargetCpuType> cpuFilters;

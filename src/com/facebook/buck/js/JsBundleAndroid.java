@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** Represents a combination of a JavaScript bundle *and* Android resources. */
-public class JsBundleAndroid extends AbstractBuildRule
+public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable, JsBundleOutputs {
 
   @AddToRuleKey private final JsBundleOutputs delegate;

@@ -19,7 +19,7 @@ package com.facebook.buck.d;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -55,7 +55,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends AbstractBuildRule
+public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements ExternalTestRunnerRule, HasRuntimeDeps, TestRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<String> labels;

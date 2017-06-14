@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public class CxxInferCaptureTransitive extends AbstractBuildRule
+public class CxxInferCaptureTransitive extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasRuntimeDeps, HasPostBuildSteps {
 
   private ImmutableSet<CxxInferCapture> captureRules;

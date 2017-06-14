@@ -38,7 +38,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -449,7 +449,7 @@ public class DistBuildFileHashesTest {
     }
   }
 
-  private static class BuildRuleWithToolAndPath extends NoopBuildRule {
+  private static class BuildRuleWithToolAndPath extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
     @AddToRuleKey Tool tool;
 

@@ -23,7 +23,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -57,7 +57,7 @@ import java.nio.file.Path;
  * )
  * </pre>
  */
-public class GenAidl extends AbstractBuildRule {
+public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.

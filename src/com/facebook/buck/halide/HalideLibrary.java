@@ -31,7 +31,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -45,7 +45,8 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class HalideLibrary extends NoopBuildRule implements CxxPreprocessorDep, NativeLinkable {
+public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements CxxPreprocessorDep, NativeLinkable {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;

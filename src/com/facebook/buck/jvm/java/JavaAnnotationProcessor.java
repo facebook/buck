@@ -18,11 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 
-public class JavaAnnotationProcessor extends NoopBuildRule implements SupportsInputBasedRuleKey {
+public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements SupportsInputBasedRuleKey {
   @AddToRuleKey private final JavacPluginProperties properties;
   private final ResolvedJavacPluginProperties resolvedProperties;
 

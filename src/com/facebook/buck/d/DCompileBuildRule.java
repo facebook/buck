@@ -18,7 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /** A build rule for invoking the D compiler. */
-public class DCompileBuildRule extends AbstractBuildRule {
+public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Tool compiler;
 

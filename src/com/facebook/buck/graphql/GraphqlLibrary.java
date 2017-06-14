@@ -18,11 +18,11 @@ package com.facebook.buck.graphql;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class GraphqlLibrary extends NoopBuildRule {
+public class GraphqlLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 

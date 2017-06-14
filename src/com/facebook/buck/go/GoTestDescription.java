@@ -35,7 +35,7 @@ import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -194,7 +194,7 @@ public class GoTestDescription
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
     BuildRuleParams testTargetParams = params.withAppendedFlavor(TEST_LIBRARY_FLAVOR);
-    BuildRule testLibrary = new NoopBuildRule(testTargetParams);
+    BuildRule testLibrary = new NoopBuildRuleWithDeclaredAndExtraDeps(testTargetParams);
     resolver.addToIndex(testLibrary);
 
     BuildRule generatedTestMain =

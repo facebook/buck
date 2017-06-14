@@ -21,7 +21,7 @@ import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -72,7 +72,7 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibrary extends AbstractBuildRule
+public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsInputBasedRuleKey, InitializableFromDisk<BuildOutput> {
 
   @VisibleForTesting static final String WEIGHT_ESTIMATE = "weight_estimate";

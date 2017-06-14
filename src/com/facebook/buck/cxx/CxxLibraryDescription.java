@@ -33,7 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -523,7 +523,7 @@ public class CxxLibraryDescription
             params.getBuildTarget(), cxxPlatform.getFlavor(), pic);
 
     if (objects.isEmpty()) {
-      return new NoopBuildRule(
+      return new NoopBuildRuleWithDeclaredAndExtraDeps(
           new BuildRuleParams(
               staticTarget,
               ImmutableSortedSet.of(),

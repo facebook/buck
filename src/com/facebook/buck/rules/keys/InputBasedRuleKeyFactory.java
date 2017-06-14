@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
@@ -135,8 +135,10 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
           Preconditions.checkState(
               rule.getBuildDeps().contains(usedDep)
                   || hasEffectiveDirectDep(usedDep)
-                  || (rule instanceof AbstractBuildRule
-                      && ((AbstractBuildRule) rule).getTargetGraphOnlyDeps().contains(usedDep)),
+                  || (rule instanceof AbstractBuildRuleWithDeclaredAndExtraDeps
+                      && ((AbstractBuildRuleWithDeclaredAndExtraDeps) rule)
+                          .getTargetGraphOnlyDeps()
+                          .contains(usedDep)),
               "%s: %s not in deps (%s)",
               rule.getBuildTarget(),
               usedDep.getBuildTarget(),

@@ -18,7 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
-public class JsLibrary extends AbstractBuildRule {
+public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
 

@@ -21,7 +21,7 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  * apple platform. Depending on the debug format, it should depend on dsym and stripped cxx binary,
  * or just on stripped binary.
  */
-public class AppleDebuggableBinary extends AbstractBuildRule
+public class AppleDebuggableBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BuildRuleWithBinary, SupportsInputBasedRuleKey, HasRuntimeDeps {
 
   public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-debuggable-binary");

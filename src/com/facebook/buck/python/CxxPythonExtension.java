@@ -22,11 +22,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.Path;
 
-public abstract class CxxPythonExtension extends NoopBuildRule
+public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements PythonPackagable, HasRuntimeDeps {
 
   public CxxPythonExtension(BuildRuleParams params) {

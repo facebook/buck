@@ -20,7 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 /** Rule for trimming unnecessary ids from R.java files. */
-class TrimUberRDotJava extends AbstractBuildRule {
+class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /**
    * If the app has resources, aapt will have generated an R.java in this directory. If there are no
    * resources, this should be empty and we'll create a placeholder R.java below.

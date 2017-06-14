@@ -22,7 +22,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -43,7 +43,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordinates, HasSources {
+public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements HasMavenCoordinates, HasSources {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
   private final Path output;

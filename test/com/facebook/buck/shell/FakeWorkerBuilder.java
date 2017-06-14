@@ -25,7 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -55,7 +55,8 @@ public class FakeWorkerBuilder
     super(new FakeWorkerDescription(create), target);
   }
 
-  public static class FakeWorkerTool extends NoopBuildRule implements WorkerTool {
+  public static class FakeWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
+      implements WorkerTool {
     private final Tool tool = new FakeTool();
     private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
 

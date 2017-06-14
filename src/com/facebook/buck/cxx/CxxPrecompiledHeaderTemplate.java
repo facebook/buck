@@ -25,7 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.DependencyAggregation;
-import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -47,7 +47,7 @@ import java.util.Optional;
  * rule R uses a precompiled header rule P, then all of P's {@code deps} will get merged into R's
  * {@code deps} list.
  */
-public class CxxPrecompiledHeaderTemplate extends NoopBuildRule
+public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements NativeLinkable, CxxPreprocessorDep {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =

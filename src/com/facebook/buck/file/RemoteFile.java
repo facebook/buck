@@ -18,7 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,7 +40,7 @@ import java.nio.file.Path;
  * from running at build time, requiring a user to run {@code buck fetch} before executing the
  * build.
  */
-public class RemoteFile extends AbstractBuildRule {
+public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey(stringify = true)
   private final URI uri;
 
