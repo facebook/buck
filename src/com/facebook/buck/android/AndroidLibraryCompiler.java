@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -34,15 +35,13 @@ import java.nio.file.Path;
  * different compilers for different {@link JvmLanguage}.
  */
 public abstract class AndroidLibraryCompiler
-    implements ImplicitDepsInferringDescription<AndroidLibraryDescription.CoreArg> {
+    implements ImplicitDepsInferringDescription<JvmLibraryArg> {
 
   public static final Function<BuildContext, Iterable<Path>> ANDROID_CLASSPATH_FROM_CONTEXT =
       context -> context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
 
   public abstract CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.CoreArg args,
-      JavacOptions javacOptions,
-      BuildRuleResolver resolver);
+      JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver);
 
   public boolean trackClassUsage(JavacOptions javacOptions) {
     return javacOptions.trackClassUsage();
@@ -52,7 +51,7 @@ public abstract class AndroidLibraryCompiler
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AndroidLibraryDescription.CoreArg constructorArg,
+      JvmLibraryArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 }
