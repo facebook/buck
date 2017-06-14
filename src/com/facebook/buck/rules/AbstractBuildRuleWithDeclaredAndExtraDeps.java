@@ -16,43 +16,33 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Objects;
 import java.util.SortedSet;
 
 /**
- * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
- * matches the one on disk, then it has no work to do. It should also try to fetch its output from
- * an {@link com.facebook.buck.artifact_cache.ArtifactCache} to avoid doing any computation.
+ * Some rules have a legacy behavior of distinguishing between "declared" deps (i.e. the contents of
+ * the TargetNode's deps attribute) and "extra" deps (i.e. other deps which were detected somehow
+ * else).
+ *
+ * <p>This class formalizes those concepts.
+ *
+ * <p>Some rules have switched to have more custom handling of different kinds of deps. Other rules
+ * are currently very unclear as to what "extra" means, or when it should be used.
  */
-public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps implements BuildRule {
+public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRule {
 
-  private final BuildTarget buildTarget;
   private final Supplier<SortedSet<BuildRule>> declaredDeps;
   private final Supplier<SortedSet<BuildRule>> extraDeps;
   private final Supplier<SortedSet<BuildRule>> buildDeps;
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
-  private final ProjectFilesystem projectFilesystem;
-
-  private final Supplier<String> typeSupplier = Suppliers.memoize(this::getTypeForClass);
 
   protected AbstractBuildRuleWithDeclaredAndExtraDeps(BuildRuleParams buildRuleParams) {
-    this.buildTarget = buildRuleParams.getBuildTarget();
+    super(buildRuleParams.getBuildTarget(), buildRuleParams.getProjectFilesystem());
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
     this.buildDeps = () -> buildRuleParams.getBuildDeps();
     this.targetGraphOnlyDeps = buildRuleParams.getTargetGraphOnlyDeps();
-    this.projectFilesystem = buildRuleParams.getProjectFilesystem();
-  }
-
-  @Override
-  public final BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override
@@ -71,49 +61,5 @@ public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps implements Build
   /** See {@link TargetNode#getTargetGraphOnlyDeps}. */
   public final ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
     return targetGraphOnlyDeps;
-  }
-
-  @Override
-  public String getType() {
-    return typeSupplier.get();
-  }
-
-  private String getTypeForClass() {
-    Class<?> clazz = getClass();
-    if (clazz.isAnonymousClass()) {
-      clazz = clazz.getSuperclass();
-    }
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName()).intern();
-  }
-
-  @Override
-  public final ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
-  }
-
-  @Override
-  public final boolean equals(Object obj) {
-    if (!(obj instanceof AbstractBuildRuleWithDeclaredAndExtraDeps)) {
-      return false;
-    }
-    AbstractBuildRuleWithDeclaredAndExtraDeps that =
-        (AbstractBuildRuleWithDeclaredAndExtraDeps) obj;
-    return Objects.equals(this.buildTarget, that.buildTarget)
-        && Objects.equals(this.getType(), that.getType());
-  }
-
-  @Override
-  public final int hashCode() {
-    return this.buildTarget.hashCode();
-  }
-
-  @Override
-  public final String toString() {
-    return getFullyQualifiedName();
-  }
-
-  @Override
-  public boolean isCacheable() {
-    return true;
   }
 }
