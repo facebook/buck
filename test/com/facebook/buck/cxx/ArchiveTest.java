@@ -21,16 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
@@ -46,6 +44,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -74,7 +73,7 @@ public class ArchiveTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>builder()
@@ -92,7 +91,7 @@ public class ArchiveTest {
             .build(
                 Archive.from(
                     target,
-                    params,
+                    projectFilesystem,
                     ruleFinder,
                     DEFAULT_ARCHIVER,
                     ImmutableList.of(),
@@ -108,7 +107,7 @@ public class ArchiveTest {
             .build(
                 Archive.from(
                     target,
-                    params,
+                    projectFilesystem,
                     ruleFinder,
                     new GnuArchiver(new HashedFileTool(Paths.get("different"))),
                     ImmutableList.of(),
@@ -125,7 +124,7 @@ public class ArchiveTest {
             .build(
                 Archive.from(
                     target,
-                    params,
+                    projectFilesystem,
                     ruleFinder,
                     DEFAULT_ARCHIVER,
                     ImmutableList.of(),
@@ -142,7 +141,7 @@ public class ArchiveTest {
             .build(
                 Archive.from(
                     target,
-                    params,
+                    projectFilesystem,
                     ruleFinder,
                     DEFAULT_ARCHIVER,
                     ImmutableList.of(),
@@ -159,7 +158,7 @@ public class ArchiveTest {
             .build(
                 Archive.from(
                     target,
-                    params,
+                    projectFilesystem,
                     ruleFinder,
                     new BsdArchiver(new HashedFileTool(AR)),
                     ImmutableList.of(),
@@ -176,13 +175,13 @@ public class ArchiveTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Archive archive =
         Archive.from(
             target,
-            params,
+            projectFilesystem,
             ruleFinder,
             DEFAULT_ARCHIVER,
             ImmutableList.of("-foo"),
@@ -213,7 +212,7 @@ public class ArchiveTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     // Create a couple of genrules to generate inputs for an archive rule.
     Genrule genrule1 =
@@ -230,7 +229,7 @@ public class ArchiveTest {
     Archive archive =
         Archive.from(
             target,
-            params,
+            projectFilesystem,
             ruleFinder,
             DEFAULT_ARCHIVER,
             ImmutableList.of(),
@@ -246,41 +245,5 @@ public class ArchiveTest {
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
     assertEquals(ImmutableSortedSet.<BuildRule>of(genrule1, genrule2), archive.getBuildDeps());
-  }
-
-  @Test
-  public void testThatOriginalBuildParamsDepsDoNotPropagateToArchive() {
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
-    // Create an `Archive` rule using build params with an existing dependency,
-    // as if coming from a `TargetNode` which had declared deps.  These should *not*
-    // propagate to the `Archive` rule, since it only cares about dependencies generating
-    // it's immediate inputs.
-    BuildRule dep =
-        new FakeBuildRule(new FakeBuildRuleParamsBuilder("//:fake").build(), pathResolver);
-    BuildTarget target = BuildTargetFactory.newInstance("//:archive");
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .build();
-    Archive archive =
-        Archive.from(
-            target,
-            params,
-            ruleFinder,
-            DEFAULT_ARCHIVER,
-            ImmutableList.of(),
-            DEFAULT_RANLIB,
-            ImmutableList.of(),
-            Archive.Contents.NORMAL,
-            DEFAULT_OUTPUT,
-            DEFAULT_INPUTS);
-
-    // Verify that the archive rules dependencies are empty.
-    assertEquals(archive.getBuildDeps(), ImmutableSortedSet.<BuildRule>of());
   }
 }

@@ -152,7 +152,7 @@ public class HaskellLibraryDescription
             baseParams, resolver, pathResolver, ruleFinder, cxxPlatform, args, deps, depType);
     return Archive.from(
         target,
-        baseParams,
+        baseParams.getProjectFilesystem(),
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

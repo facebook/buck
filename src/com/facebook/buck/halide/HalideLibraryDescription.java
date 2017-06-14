@@ -223,7 +223,7 @@ public class HalideLibraryDescription
 
     return Archive.from(
         params.getBuildTarget(),
-        params,
+        params.getProjectFilesystem(),
         ruleFinder,
         platform,
         cxxBuckConfig.getArchiveContents(),

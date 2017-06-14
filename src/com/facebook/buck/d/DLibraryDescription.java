@@ -145,7 +145,7 @@ public class DLibraryDescription
 
     return Archive.from(
         staticTarget,
-        params,
+        params.getProjectFilesystem(),
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

@@ -541,7 +541,7 @@ public class CxxLibraryDescription
             cxxPlatform.getStaticLibraryExtension());
     return Archive.from(
         staticTarget,
-        params,
+        params.getProjectFilesystem(),
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

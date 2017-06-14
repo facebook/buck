@@ -303,7 +303,7 @@ public class HaskellDescriptionUtils {
         resolver.addToIndex(
             Archive.from(
                 emptyArchiveTarget,
-                baseParams,
+                baseParams.getProjectFilesystem(),
                 ruleFinder,
                 cxxPlatform,
                 Archive.Contents.NORMAL,
