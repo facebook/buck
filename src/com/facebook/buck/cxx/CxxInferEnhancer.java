@@ -256,7 +256,7 @@ public final class CxxInferEnhancer {
     final ImmutableSet.Builder<T> depsBuilder = ImmutableSet.builder();
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
       @Override
-      public ImmutableSet<BuildRule> visit(BuildRule buildRule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule buildRule) throws NoSuchBuildTargetException {
         if (buildRule instanceof CxxLibrary) {
           CxxLibrary library = (CxxLibrary) buildRule;
           depsBuilder.add(

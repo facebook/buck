@@ -69,7 +69,7 @@ public class UnsortedAndroidResourceDeps {
         new AbstractBreadthFirstTraversal<BuildRule>(rules) {
 
           @Override
-          public Set<BuildRule> visit(BuildRule rule) {
+          public Iterable<BuildRule> visit(BuildRule rule) {
             HasAndroidResourceDeps androidResourceRule = null;
             if (rule instanceof HasAndroidResourceDeps) {
               androidResourceRule = (HasAndroidResourceDeps) rule;

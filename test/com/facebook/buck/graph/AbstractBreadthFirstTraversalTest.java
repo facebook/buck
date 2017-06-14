@@ -95,7 +95,7 @@ public class AbstractBreadthFirstTraversalTest {
     // This visitor only visits dependencies whose node names are even numbers.
     new AbstractBreadthFirstTraversal<FakeNode>(initialNode) {
       @Override
-      public ImmutableSet<FakeNode> visit(FakeNode node) {
+      public Iterable<FakeNode> visit(FakeNode node) {
         nodeTraversalOrder.add(node);
         return ImmutableSet.copyOf(
             Iterables.filter(node.getDeps(), input -> Integer.parseInt(input.getName()) % 2 == 0));

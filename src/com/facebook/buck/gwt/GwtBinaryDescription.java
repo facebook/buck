@@ -86,7 +86,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
     ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.getModuleDeps());
     new AbstractBreadthFirstTraversal<BuildRule>(moduleDependencies) {
       @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         if (!(rule instanceof JavaLibrary)) {
           return ImmutableSet.of();
         }

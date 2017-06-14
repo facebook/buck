@@ -112,7 +112,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
 
     new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(roots) {
       @Override
-      public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+      public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
         subgraph.addNode(node);
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {

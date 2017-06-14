@@ -59,7 +59,7 @@ public class NativeLinkables {
     AbstractBreadthFirstTraversal<BuildRule> visitor =
         new AbstractBreadthFirstTraversal<BuildRule>(from) {
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+          public Iterable<BuildRule> visit(BuildRule rule) {
 
             // If this is `NativeLinkable`, we've found a root so record the rule and terminate
             // the search.
@@ -248,7 +248,7 @@ public class NativeLinkables {
     AbstractBreadthFirstTraversal<BuildTarget> visitor =
         new AbstractBreadthFirstTraversal<BuildTarget>(nativeLinkables.keySet()) {
           @Override
-          public ImmutableSet<BuildTarget> visit(BuildTarget target) {
+          public Iterable<BuildTarget> visit(BuildTarget target) {
             NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
             graph.addNode(target);
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();

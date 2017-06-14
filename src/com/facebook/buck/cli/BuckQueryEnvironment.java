@@ -277,7 +277,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
     new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(nodes) {
       @Override
-      public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+      public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
         result.add(getOrCreateQueryBuildTarget(node.getBuildTarget()));
         return node.getParseDeps()
             .stream()

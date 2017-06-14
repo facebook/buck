@@ -145,7 +145,7 @@ public class CxxPreprocessables {
     // Build up the map of all C/C++ preprocessable dependencies.
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(inputs) {
       @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
           deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));

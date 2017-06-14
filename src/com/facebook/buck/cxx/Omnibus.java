@@ -154,7 +154,7 @@ public class Omnibus {
     // 2. Perform an initial discovery of dependency nodes to exclude from the omnibus link.
     new AbstractBreadthFirstTraversal<BuildTarget>(rootDeps.keySet()) {
       @Override
-      public ImmutableSet<BuildTarget> visit(BuildTarget target) {
+      public Iterable<BuildTarget> visit(BuildTarget target) {
         NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(getDeps(nativeLinkable, cxxPlatform), NativeLinkable::getBuildTarget);

@@ -42,7 +42,7 @@ public class AndroidTransitiveDependencyGraph {
 
     new AbstractBreadthFirstTraversal<BuildRule>(rulesToTraverseForTransitiveDeps) {
       @Override
-      public Set<BuildRule> visit(BuildRule rule) {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         Set<BuildRule> deps;
         if (rule instanceof AndroidResource) {
           AndroidResource androidRule = (AndroidResource) rule;

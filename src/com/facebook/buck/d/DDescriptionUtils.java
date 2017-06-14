@@ -185,7 +185,7 @@ abstract class DDescriptionUtils {
     final ImmutableMap.Builder<BuildTarget, DLibrary> libraries = ImmutableMap.builder();
     new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
       @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         if (rule instanceof DLibrary) {
           libraries.put(rule.getBuildTarget(), (DLibrary) rule);
           return rule.getBuildDeps();

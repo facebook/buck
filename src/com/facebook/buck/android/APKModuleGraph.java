@@ -267,7 +267,7 @@ public class APKModuleGraph {
     if (targetGraph != TargetGraph.EMPTY) {
       new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(target)) {
         @Override
-        public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+        public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
 
           ImmutableSet.Builder<TargetNode<?, ?>> depsBuilder = ImmutableSet.builder();
           for (BuildTarget depTarget : node.getBuildDeps()) {

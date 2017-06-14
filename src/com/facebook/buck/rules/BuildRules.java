@@ -22,7 +22,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -69,7 +68,7 @@ public class BuildRules {
         new AbstractBreadthFirstTraversal<ExportDependencies>(
             Iterables.filter(rules, ExportDependencies.class)) {
           @Override
-          public ImmutableSet<ExportDependencies> visit(ExportDependencies exporter) {
+          public Iterable<ExportDependencies> visit(ExportDependencies exporter) {
             Iterable<BuildRule> exported = exporter.getExportedDeps();
             exportedRules.addAll(exported);
             return FluentIterable.from(exported).filter(ExportDependencies.class).toSet();
@@ -86,7 +85,7 @@ public class BuildRules {
         new AbstractBreadthFirstTraversal<BuildTarget>(
             rule.getRuntimeDeps().collect(MoreCollectors.toImmutableSet())) {
           @Override
-          public ImmutableCollection<BuildTarget> visit(BuildTarget runtimeDep) {
+          public Iterable<BuildTarget> visit(BuildTarget runtimeDep) {
             runtimeDeps.add(runtimeDep);
             Optional<BuildRule> rule = resolver.getRuleOptional(runtimeDep);
             if (rule.isPresent() && rule.get() instanceof HasRuntimeDeps) {

@@ -670,7 +670,7 @@ public class TargetsCommand extends AbstractCommand {
     AbstractBreadthFirstTraversal<TargetNode<?, ?>> traversal =
         new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(nodes) {
           @Override
-          public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> targetNode) {
+          public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> targetNode) {
             builder.add(targetNode);
             return FluentIterable.from(graph.getIncomingNodesFor(targetNode))
                 .append(extraEdges.get(targetNode))

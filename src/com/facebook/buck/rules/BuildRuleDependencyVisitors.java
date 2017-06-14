@@ -47,7 +47,7 @@ public class BuildRuleDependencyVisitors {
     AbstractBreadthFirstTraversal<BuildRule> visitor =
         new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+          public Iterable<BuildRule> visit(BuildRule rule) {
             if (filter.apply(rule)) {
               graph.addNode(rule);
               for (BuildRule dep : rule.getBuildDeps()) {
