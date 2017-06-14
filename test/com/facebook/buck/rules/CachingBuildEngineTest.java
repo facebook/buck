@@ -302,7 +302,7 @@ public class CachingBuildEngineTest {
               filesystem,
               resolver,
               pathResolver,
-              ImmutableSet.of(dep),
+              ImmutableSortedSet.of(dep),
               buildSteps,
               /* postBuildSteps */ ImmutableList.of(),
               pathToOutputFile,
@@ -441,7 +441,7 @@ public class CachingBuildEngineTest {
               filesystem,
               resolver,
               pathResolver,
-              /* deps */ ImmutableSet.of(),
+              /* deps */ ImmutableSortedSet.of(),
               ImmutableList.of(step),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
@@ -521,7 +521,7 @@ public class CachingBuildEngineTest {
               filesystem,
               resolver,
               pathResolver,
-              /* deps */ ImmutableSet.of(),
+              /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(),
               /* postBuildSteps */ ImmutableList.of(buildStep),
               /* pathToOutputFile */ null,
@@ -826,7 +826,7 @@ public class CachingBuildEngineTest {
               filesystem,
               resolver,
               pathResolver,
-              /* deps */ ImmutableSet.of(),
+              /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(failingStep),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
@@ -874,7 +874,7 @@ public class CachingBuildEngineTest {
                 filesystem,
                 resolver,
                 pathResolver,
-                /* deps */ ImmutableSet.of(),
+                /* deps */ ImmutableSortedSet.of(),
                 /* buildSteps */ ImmutableList.of(failingStep),
                 /* postBuildSteps */ ImmutableList.of(),
                 /* pathToOutputFile */ null,
@@ -933,7 +933,7 @@ public class CachingBuildEngineTest {
               filesystem,
               resolver,
               pathResolver,
-              /* deps */ ImmutableSet.of(),
+              /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(failingStep),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
@@ -972,7 +972,7 @@ public class CachingBuildEngineTest {
               filesystem,
               resolver,
               pathResolver,
-              /* deps */ ImmutableSet.of(),
+              /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(),
               /* postBuildSteps */ ImmutableList.of(failingStep),
               /* pathToOutputFile */ null,
@@ -3373,18 +3373,16 @@ public class CachingBuildEngineTest {
       ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       SourcePathResolver resolver,
-      ImmutableSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> deps,
       List<Step> buildSteps,
       ImmutableList<Step> postBuildSteps,
       @Nullable String pathToOutputFile,
       ImmutableList<Flavor> flavors) {
-    Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
-    ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
     BuildRuleParams buildRuleParams =
         new FakeBuildRuleParamsBuilder(BUILD_TARGET.withFlavors(flavors))
             .setProjectFilesystem(filesystem)
-            .setDeclaredDeps(sortedDeps)
+            .setDeclaredDeps(deps)
             .build();
 
     BuildableAbstractCachingBuildRule rule =
