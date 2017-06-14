@@ -26,7 +26,6 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -50,6 +49,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -70,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
@@ -78,14 +79,12 @@ import java.util.concurrent.ExecutionException;
  */
 public class BuckQueryEnvironment implements QueryEnvironment {
 
-  private static final Logger LOG = Logger.get(BuckQueryEnvironment.class);
-
   private final PerBuildState parserState;
   private final Cell rootCell;
   private final OwnersReport.Builder ownersReportBuilder;
   private final TargetPatternEvaluator targetPatternEvaluator;
 
-  private final Map<Cell, BuildFileTree> buildFileTrees = new HashMap<>();
+  private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
   private final Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
 
   // Query execution is single threaded, however the buildTransitiveClosure implementation
@@ -101,9 +100,16 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     this.parserState = parserState;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
-    this.buildFileTrees.put(
-        rootCell,
-        new FilesystemBackedBuildFileTree(rootCell.getFilesystem(), rootCell.getBuildFileName()));
+    this.buildFileTrees =
+        rootCell
+            .getAllCells()
+            .stream()
+            .collect(
+                MoreCollectors.toImmutableMap(
+                    Function.identity(),
+                    cell ->
+                        new FilesystemBackedBuildFileTree(
+                            cell.getFilesystem(), cell.getBuildFileName())));
     this.targetPatternEvaluator = targetPatternEvaluator;
   }
 
@@ -440,12 +446,6 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       Preconditions.checkState(target instanceof QueryBuildTarget);
       BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget);
-
-      if (!buildFileTrees.containsKey(cell)) {
-        LOG.info("Creating a new filesystem-backed build file tree for %s", cell.getRoot());
-        buildFileTrees.put(
-            cell, new FilesystemBackedBuildFileTree(cell.getFilesystem(), cell.getBuildFileName()));
-      }
       BuildFileTree buildFileTree = Preconditions.checkNotNull(buildFileTrees.get(cell));
       Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
       Preconditions.checkState(path.isPresent());
@@ -464,8 +464,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       ImmutableList<String> files, ListeningExecutorService executor)
       throws InterruptedException, QueryException {
     try {
-      BuildFileTree buildFileTree = Preconditions.checkNotNull(buildFileTrees.get(rootCell));
-      OwnersReport report = ownersReportBuilder.build(buildFileTree, executor, files);
+      OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
       return getTargetsFromTargetNodes(report.owners.keySet());
     } catch (BuildFileParseException | IOException e) {
       throw new QueryException(e, "Could not parse build targets.\n%s", e.getMessage());

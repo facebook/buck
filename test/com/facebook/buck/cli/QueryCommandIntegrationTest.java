@@ -20,6 +20,7 @@ import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatform
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -730,5 +731,17 @@ public class QueryCommandIntegrationTest {
             equalToIgnoringPlatformNewlines(
                 String.format(
                     "%s%n%s%n%s%n", "example/4-test.txt", "example/Test.plist", "example/1.txt"))));
+  }
+
+  @Test
+  public void testOwnerCrossCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command_cross_cell", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            workspace.resolve("cell1"), "query", "owner(../cell2/foo/foo.txt)");
+    result.assertSuccess();
+    assertEquals("cell2//foo:test", result.getStdout().trim());
   }
 }
