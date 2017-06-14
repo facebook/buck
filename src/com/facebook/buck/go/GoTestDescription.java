@@ -268,22 +268,18 @@ public class GoTestDescription
       final GoLibraryDescriptionArg libraryArg =
           resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class).get();
 
-      final BuildRuleParams originalParams = params;
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       BuildRuleParams testTargetParams =
           params.copyReplacingDeclaredAndExtraDeps(
-              () ->
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(originalParams.getDeclaredDeps().get())
-                      .addAll(resolver.getAllRules(libraryArg.getDeps()))
-                      .build(),
-              () -> {
-                SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-                return ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(originalParams.getExtraDeps().get())
-                    // Make sure to include dynamically generated sources as deps.
-                    .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
-                    .build();
-              });
+              ImmutableSortedSet.<BuildRule>naturalOrder()
+                  .addAll(params.getDeclaredDeps().get())
+                  .addAll(resolver.getAllRules(libraryArg.getDeps()))
+                  .build(),
+              ImmutableSortedSet.<BuildRule>naturalOrder()
+                  .addAll(params.getExtraDeps().get())
+                  // Make sure to include dynamically generated sources as deps.
+                  .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
+                  .build());
 
       testLibrary =
           GoDescriptors.createGoCompileRule(

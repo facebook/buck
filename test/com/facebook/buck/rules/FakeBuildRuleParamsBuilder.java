@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class FakeBuildRuleParamsBuilder {
@@ -56,10 +55,6 @@ public class FakeBuildRuleParamsBuilder {
 
   public BuildRuleParams build() {
     return new BuildRuleParams(
-        buildTarget,
-        Suppliers.ofInstance(declaredDeps),
-        Suppliers.ofInstance(extraDeps),
-        ImmutableSortedSet.of(),
-        filesystem);
+        buildTarget, declaredDeps, extraDeps, ImmutableSortedSet.of(), filesystem);
   }
 }

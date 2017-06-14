@@ -92,15 +92,11 @@ public class ApplePackageDescription
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
           params.copyReplacingExtraDeps(
-              () ->
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .add(bundle)
-                      .addAll(
-                          applePackageConfigAndPlatformInfo
-                              .get()
-                              .getExpandedArg()
-                              .getDeps(ruleFinder))
-                      .build()),
+              ImmutableSortedSet.<BuildRule>naturalOrder()
+                  .add(bundle)
+                  .addAll(
+                      applePackageConfigAndPlatformInfo.get().getExpandedArg().getDeps(ruleFinder))
+                  .build()),
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable());

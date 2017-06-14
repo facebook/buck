@@ -241,7 +241,7 @@ public class CxxBinaryDescription
         new CxxBinary(
             params
                 .copyReplacingDeclaredAndExtraDeps(
-                    () -> cxxLinkAndCompileRules.deps, metadataRuleParams.getExtraDeps())
+                    cxxLinkAndCompileRules.deps, metadataRuleParams.getExtraDeps().get())
                 .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
             resolver,
             ruleFinder,

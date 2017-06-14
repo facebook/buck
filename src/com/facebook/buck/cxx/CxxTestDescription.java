@@ -209,8 +209,7 @@ public class CxxTestDescription
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
         params
-            .copyReplacingDeclaredAndExtraDeps(
-                () -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
+            .copyReplacingDeclaredDeps(cxxLinkAndCompileRules.deps)
             .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
     testParams = CxxStrip.restoreStripStyleFlavorInParams(testParams, flavoredStripStyle);
     testParams =

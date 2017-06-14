@@ -113,7 +113,7 @@ public class DummyRDotJava extends AbstractBuildRule
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
-    super(params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
+    super(params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiInputs)));
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.

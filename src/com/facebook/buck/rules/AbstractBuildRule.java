@@ -33,8 +33,8 @@ import java.util.SortedSet;
 public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
-  private final Supplier<? extends SortedSet<BuildRule>> declaredDeps;
-  private final Supplier<? extends SortedSet<BuildRule>> extraDeps;
+  private final Supplier<SortedSet<BuildRule>> declaredDeps;
+  private final Supplier<SortedSet<BuildRule>> extraDeps;
   private final Supplier<SortedSet<BuildRule>> buildDeps;
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
@@ -45,7 +45,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
-    this.buildDeps = buildRuleParams.getTotalBuildDeps();
+    this.buildDeps = () -> buildRuleParams.getBuildDeps();
     this.targetGraphOnlyDeps = buildRuleParams.getTargetGraphOnlyDeps();
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }

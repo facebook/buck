@@ -42,7 +42,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -126,20 +125,16 @@ public class RustCompileRule extends AbstractBuildRule implements SupportsInputB
       boolean hasOutput) {
     return new RustCompileRule(
         params.copyReplacingExtraDeps(
-            Suppliers.memoize(
-                () ->
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(compiler.getDeps(ruleFinder))
-                        .addAll(linker.getDeps(ruleFinder))
-                        .addAll(
-                            Stream.of(args, depArgs, linkerArgs)
-                                .flatMap(
-                                    a ->
-                                        a.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()))
-                                .iterator())
-                        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
-                        .addAll(ruleFinder.filterBuildRuleInputs(sources))
-                        .build())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(compiler.getDeps(ruleFinder))
+                .addAll(linker.getDeps(ruleFinder))
+                .addAll(
+                    Stream.of(args, depArgs, linkerArgs)
+                        .flatMap(a -> a.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()))
+                        .iterator())
+                .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
+                .addAll(ruleFinder.filterBuildRuleInputs(sources))
+                .build()),
         filename,
         compiler,
         linker,

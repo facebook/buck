@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Set;
@@ -60,8 +59,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     BuildRuleParams params =
         new BuildRuleParams(
             targetNode.getBuildTarget(),
-            Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
-            Suppliers.ofInstance(ruleResolver.requireAllRules(extraDeps)),
+            ruleResolver.requireAllRules(targetNode.getDeclaredDeps()),
+            ruleResolver.requireAllRules(extraDeps),
             ruleResolver.requireAllRules(targetGraphOnlyDeps),
             targetNode.getFilesystem());
 

@@ -43,7 +43,6 @@ import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -97,7 +96,7 @@ public class AndroidResource extends AbstractBuildRule
 
   @AddToRuleKey @Nullable private final SourcePath manifestFile;
 
-  @AddToRuleKey private final Supplier<ImmutableSortedSet<? extends SourcePath>> symbolsOfDeps;
+  @AddToRuleKey private final ImmutableSortedSet<? extends SourcePath> symbolsOfDeps;
 
   @AddToRuleKey private final boolean hasWhitelistedStrings;
 
@@ -139,13 +138,13 @@ public class AndroidResource extends AbstractBuildRule
       @Nullable SourcePath assets,
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
-      Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
+      ImmutableSortedSet<? extends SourcePath> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     super(
         buildRuleParams.copyAppendingExtraDeps(
-            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
+            ruleFinder.filterBuildRuleInputs(symbolFilesFromDeps)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
           "When the 'res' is specified for android_resource() %s, at least one of 'package' or "
@@ -239,12 +238,11 @@ public class AndroidResource extends AbstractBuildRule
         assets,
         assetsSrcs,
         manifestFile,
-        () ->
-            FluentIterable.from(buildRuleParams.getBuildDeps())
-                .filter(HasAndroidResourceDeps.class)
-                .filter(input -> input.getRes() != null)
-                .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
-                .toSortedSet(Ordering.natural()),
+        FluentIterable.from(buildRuleParams.getBuildDeps())
+            .filter(HasAndroidResourceDeps.class)
+            .filter(input -> input.getRes() != null)
+            .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
+            .toSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion,
         isGrayscaleImageProcessingEnabled);
@@ -317,7 +315,6 @@ public class AndroidResource extends AbstractBuildRule
 
     ImmutableSet<Path> pathsToSymbolsOfDeps =
         symbolsOfDeps
-            .get()
             .stream()
             .map(context.getSourcePathResolver()::getAbsolutePath)
             .collect(MoreCollectors.toImmutableSet());

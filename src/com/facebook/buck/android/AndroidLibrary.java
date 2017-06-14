@@ -255,10 +255,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   initialParams
                       .withBuildTarget(buildTarget)
                       .copyReplacingExtraDeps(
-                          () ->
-                              ImmutableSortedSet.copyOf(
-                                  Iterables.concat(
-                                      queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
+                          ImmutableSortedSet.copyOf(
+                              Iterables.concat(
+                                  queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
                   getJavac(),
                   javacOptions,
                   DependencyMode.FIRST_ORDER,

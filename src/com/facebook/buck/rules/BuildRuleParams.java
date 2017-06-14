@@ -21,10 +21,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -32,55 +31,45 @@ import java.util.SortedSet;
 public class BuildRuleParams {
 
   private final BuildTarget buildTarget;
-  private final Supplier<? extends SortedSet<BuildRule>> declaredDeps;
-  private final Supplier<? extends SortedSet<BuildRule>> extraDeps;
-  private final Supplier<SortedSet<BuildRule>> totalBuildDeps;
+  private final Optional<? extends SortedSet<BuildRule>> declaredDeps;
+  private final Optional<? extends SortedSet<BuildRule>> extraDeps;
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
   private final ProjectFilesystem projectFilesystem;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
-      final Supplier<? extends SortedSet<BuildRule>> declaredDeps,
-      final Supplier<? extends SortedSet<BuildRule>> extraDeps,
+      SortedSet<BuildRule> declaredDeps,
+      SortedSet<BuildRule> extraDeps,
       ImmutableSortedSet<BuildRule> targetGraphOnlyDeps,
       ProjectFilesystem projectFilesystem) {
-    this.buildTarget = buildTarget;
-    this.declaredDeps = Suppliers.memoize(declaredDeps);
-    this.extraDeps = Suppliers.memoize(extraDeps);
-    this.projectFilesystem = projectFilesystem;
-    this.targetGraphOnlyDeps = targetGraphOnlyDeps;
-
-    this.totalBuildDeps =
-        Suppliers.memoize(() -> SortedSets.union(declaredDeps.get(), extraDeps.get()));
+    this(
+        buildTarget,
+        Optional.of(declaredDeps),
+        Optional.of(extraDeps),
+        targetGraphOnlyDeps,
+        projectFilesystem);
   }
 
   private BuildRuleParams(
-      BuildRuleParams baseForDeps, BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+      BuildTarget buildTarget,
+      Optional<? extends SortedSet<BuildRule>> declaredDeps,
+      Optional<? extends SortedSet<BuildRule>> extraDeps,
+      ImmutableSortedSet<BuildRule> targetGraphOnlyDeps,
+      ProjectFilesystem projectFilesystem) {
     this.buildTarget = buildTarget;
+    this.declaredDeps = declaredDeps;
+    this.extraDeps = extraDeps;
     this.projectFilesystem = projectFilesystem;
-    this.declaredDeps = baseForDeps.declaredDeps;
-    this.extraDeps = baseForDeps.extraDeps;
-    this.targetGraphOnlyDeps = baseForDeps.targetGraphOnlyDeps;
-    this.totalBuildDeps = baseForDeps.totalBuildDeps;
+    this.targetGraphOnlyDeps = targetGraphOnlyDeps;
   }
 
-  public BuildRuleParams copyReplacingExtraDeps(Supplier<SortedSet<BuildRule>> extraDeps) {
-    return copyReplacingDeclaredAndExtraDeps(declaredDeps, extraDeps);
-  }
-
-  public BuildRuleParams copyReplacingExtraDeps(ImmutableSortedSet<BuildRule> extraDeps) {
-    return copyReplacingExtraDeps(() -> extraDeps);
-  }
-
-  public BuildRuleParams copyAppendingExtraDeps(
-      final Supplier<? extends Iterable<? extends BuildRule>> additional) {
-    return copyReplacingDeclaredAndExtraDeps(
+  public BuildRuleParams copyReplacingExtraDeps(ImmutableSortedSet<BuildRule> newExtraDeps) {
+    return new BuildRuleParams(
+        buildTarget,
         declaredDeps,
-        () ->
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(extraDeps.get())
-                .addAll(additional.get())
-                .build());
+        Optional.of(newExtraDeps),
+        targetGraphOnlyDeps,
+        projectFilesystem);
   }
 
   /**
@@ -88,62 +77,65 @@ public class BuildRuleParams {
    *     as the deps in constructed {@link BuildRule}s.
    */
   public BuildRuleParams copyInvalidatingDeps() {
-    Supplier<SortedSet<BuildRule>> throwingDeps =
-        () -> {
-          throw new IllegalStateException(
-              String.format(
-                  "%s: Access to target-node level `BuildRuleParam` deps. "
-                      + "Please compose application-specific deps from the constructor arg instead.",
-                  getBuildTarget()));
-        };
-    return copyReplacingDeclaredAndExtraDeps(throwingDeps, throwingDeps);
+    return new BuildRuleParams(
+        buildTarget, Optional.empty(), Optional.empty(), targetGraphOnlyDeps, projectFilesystem);
   }
 
   public BuildRuleParams copyAppendingExtraDeps(Iterable<? extends BuildRule> additional) {
-    return copyAppendingExtraDeps(Suppliers.ofInstance(additional));
+    return new BuildRuleParams(
+        buildTarget,
+        declaredDeps,
+        Optional.of(SortedSets.union(extraDeps.get(), ImmutableSortedSet.copyOf(additional))),
+        targetGraphOnlyDeps,
+        projectFilesystem);
   }
 
   public BuildRuleParams copyAppendingExtraDeps(BuildRule... additional) {
-    return copyAppendingExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
+    return copyAppendingExtraDeps(ImmutableSortedSet.copyOf(additional));
   }
 
   public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
-      SortedSet<BuildRule> declaredDeps, SortedSet<BuildRule> extraDeps) {
+      SortedSet<BuildRule> newDeclaredDeps, SortedSet<BuildRule> newExtraDeps) {
     return new BuildRuleParams(
-        buildTarget, () -> declaredDeps, () -> extraDeps, targetGraphOnlyDeps, projectFilesystem);
+        buildTarget, newDeclaredDeps, newExtraDeps, targetGraphOnlyDeps, projectFilesystem);
   }
 
-  public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
-      Supplier<? extends SortedSet<BuildRule>> declaredDeps,
-      Supplier<? extends SortedSet<BuildRule>> extraDeps) {
+  public BuildRuleParams copyReplacingDeclaredDeps(SortedSet<BuildRule> newDeclaredDeps) {
     return new BuildRuleParams(
-        buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
+        buildTarget,
+        Optional.of(newDeclaredDeps),
+        extraDeps,
+        targetGraphOnlyDeps,
+        projectFilesystem);
   }
 
-  public BuildRuleParams withBuildTarget(BuildTarget target) {
-    return new BuildRuleParams(this, target, projectFilesystem);
+  public BuildRuleParams withBuildTarget(BuildTarget newTarget) {
+    return new BuildRuleParams(
+        newTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
   }
 
   public BuildRuleParams withoutFlavor(Flavor flavor) {
     Set<Flavor> flavors = Sets.newHashSet(getBuildTarget().getFlavors());
     flavors.remove(flavor);
-    BuildTarget target =
+    BuildTarget newTarget =
         BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget())
             .addAllFlavors(flavors)
             .build();
 
-    return new BuildRuleParams(this, target, projectFilesystem);
+    return new BuildRuleParams(
+        newTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
   }
 
   public BuildRuleParams withAppendedFlavor(Flavor flavor) {
     Set<Flavor> flavors = Sets.newHashSet(getBuildTarget().getFlavors());
     flavors.add(flavor);
-    BuildTarget target =
+    BuildTarget newTarget =
         BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget())
             .addAllFlavors(flavors)
             .build();
 
-    return new BuildRuleParams(this, target, projectFilesystem);
+    return new BuildRuleParams(
+        newTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
   }
 
   public BuildTarget getBuildTarget() {
@@ -152,19 +144,23 @@ public class BuildRuleParams {
 
   /** @return all BuildRules which must be built before this one can be. */
   public SortedSet<BuildRule> getBuildDeps() {
-    return totalBuildDeps.get();
+    return SortedSets.union(getDeclaredDeps().get(), getExtraDeps().get());
   }
 
-  public Supplier<SortedSet<BuildRule>> getTotalBuildDeps() {
-    return totalBuildDeps;
+  public Supplier<SortedSet<BuildRule>> getDeclaredDeps() {
+    return () -> declaredDeps.orElseThrow(this::invalidDepsException);
   }
 
-  public Supplier<? extends SortedSet<BuildRule>> getDeclaredDeps() {
-    return declaredDeps;
+  public Supplier<SortedSet<BuildRule>> getExtraDeps() {
+    return () -> extraDeps.orElseThrow(this::invalidDepsException);
   }
 
-  public Supplier<? extends SortedSet<BuildRule>> getExtraDeps() {
-    return extraDeps;
+  private IllegalStateException invalidDepsException() {
+    return new IllegalStateException(
+        String.format(
+            "%s: Access to target-node level `BuildRuleParam` deps. "
+                + "Please compose application-specific deps from the constructor arg instead.",
+            getBuildTarget()));
   }
 
   /** See {@link TargetNode#getTargetGraphOnlyDeps}. */

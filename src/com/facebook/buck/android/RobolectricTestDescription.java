@@ -50,7 +50,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -142,9 +141,7 @@ public class RobolectricTestDescription
               .addAll(params.getDeclaredDeps().get())
               .add(dummyRDotJava.get())
               .build();
-      params =
-          params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(newDeclaredDeps), params.getExtraDeps());
+      params = params.copyReplacingDeclaredDeps(newDeclaredDeps);
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
