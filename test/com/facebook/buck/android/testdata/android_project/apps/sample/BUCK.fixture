@@ -20,6 +20,26 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_res_overrides',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  aapt_mode = 'aapt1',  # app_with_res_overrides
+  deps = [
+    '//res/com/sample/override:override',
+  ],
+)
+
+genrule(
+  name = 'strings_dump_overrides',
+  # Using the DX environment variable here is a total hack.
+  # Ideally, we'd have a special genrule that made the Android
+  # tools available.
+  bash = '`dirname $DX`/aapt dump strings $(location :app_with_res_overrides) > $OUT',
+  out = 'dump_overrides_resources.txt',
+)
+
+
+android_binary(
   name = 'app_reorder_dex',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
