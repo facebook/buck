@@ -194,6 +194,22 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("android_resource_aggregation_with_limit");
   }
 
+  @Test
+  public void testProjectIncludesTestsByDefault() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_tests_by_default", "//modules/lib:lib");
+  }
+
+  @Test
+  public void testProjectExcludesTestsWhenRequested() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_without_tests", "--without-tests", "//modules/lib:lib");
+  }
+
+  @Test
+  public void testProjectExcludesDepTestsWhenRequested() throws InterruptedException, IOException {
+    runBuckProjectAndVerify(
+        "project_without_dep_tests", "--without-dependencies-tests", "//modules/lib:lib");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();

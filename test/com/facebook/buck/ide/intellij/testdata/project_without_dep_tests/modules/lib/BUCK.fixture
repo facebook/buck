@@ -1,0 +1,12 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "Test.java",
+    ],
+    tests = [
+        "//modules/test:test",
+    ],
+    deps = [
+        "//modules/dep:dep",
+    ],
+)

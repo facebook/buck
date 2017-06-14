@@ -1,0 +1,6 @@
+java_library(
+    name = "test",
+    srcs = [
+        "Test.java",
+    ],
+)
