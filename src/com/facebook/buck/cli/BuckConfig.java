@@ -842,9 +842,7 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   private Path convertPathWithError(String pathString, boolean isCellRootRelative, String error) {
-    return isCellRootRelative
-        ? checkPathExists(pathString, error).get()
-        : getPathFromVfs(pathString);
+    return isCellRootRelative ? checkPathExists(pathString, error) : getPathFromVfs(pathString);
   }
 
   private Path convertPath(String pathString, String section, String field) {
@@ -854,10 +852,10 @@ public class BuckConfig implements ConfigPathGetter {
         String.format("Error in %s.%s: Cell-relative path not found: ", section, field));
   }
 
-  public Optional<Path> checkPathExists(String pathString, String errorMsg) {
+  public Path checkPathExists(String pathString, String errorMsg) {
     Path path = getPathFromVfs(pathString);
     if (projectFilesystem.exists(path)) {
-      return Optional.of(projectFilesystem.getPathForRelativePath(path));
+      return projectFilesystem.getPathForRelativePath(path);
     }
     throw new HumanReadableException(errorMsg + path);
   }
