@@ -833,8 +833,8 @@ public class BuckConfig implements ConfigPathGetter {
    * mis-matched underlying filesystem implementations causing grief. This is particularly useful
    * for those times where we're using (eg) JimFs for our testing.
    */
-  private Path getPathFromVfs(String path, String... extra) {
-    return projectFilesystem.getPath(path, extra);
+  private Path getPathFromVfs(String path) {
+    return projectFilesystem.getPath(path);
   }
 
   private Path getPathFromVfs(Path path) {
