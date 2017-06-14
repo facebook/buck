@@ -1491,7 +1491,7 @@ public class ParserTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
-            .setSections("[project]", "read_only_paths = " + rootPath.resolve("foo"))
+            .setSections("[project]", "read_only_paths = foo/bar")
             .build();
     cell = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build();
 

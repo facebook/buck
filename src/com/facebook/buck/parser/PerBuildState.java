@@ -36,6 +36,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -208,60 +209,68 @@ public class PerBuildState implements AutoCloseable {
       throws IOException {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem(), symlinkExistenceCache);
-    if (!newSymlinksEncountered.isEmpty()) {
-      Optional<ImmutableList<Path>> readOnlyPaths =
-          getCell(node.getBuildTarget())
-              .getBuckConfig()
-              .getView(ParserConfig.class)
-              .getReadOnlyPaths();
-      Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
+    Optional<ImmutableList<Path>> readOnlyPaths =
+        getCell(node.getBuildTarget())
+            .getBuckConfig()
+            .getView(ParserConfig.class)
+            .getReadOnlyPaths();
+    Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
 
-      if (readOnlyPaths.isPresent() && currentCell != null) {
-        Path cellRootPath = currentCell.getFilesystem().getRootPath();
-        for (Path readOnlyPath : readOnlyPaths.get()) {
-          if (buildFile.startsWith(cellRootPath.resolve(readOnlyPath))) {
-            LOG.debug(
-                "Target %s is under a symlink (%s). It will be cached because it belongs "
-                    + "under %s, a read-only path white listed in .buckconfing. under [project]"
-                    + " read_only_paths",
-                node.getBuildTarget(), newSymlinksEncountered, readOnlyPath);
-            return;
-          }
-        }
-      }
-
-      ParserConfig.AllowSymlinks allowSymlinks =
-          Preconditions.checkNotNull(
-              cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
-      if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
-        throw new HumanReadableException(
-            "Target %s contains input files under a path which contains a symbolic link "
-                + "(%s). To resolve this, use separate rules and declare dependencies instead of "
-                + "using symbolic links.\n"
-                + "If the symlink points to a read-only filesystem, you can specify it in the "
-                + "project.read_only_paths .buckconfig setting. Buck will assume files under that "
-                + "path will never change.",
-            node.getBuildTarget(), newSymlinksEncountered);
-      }
-
-      // If we're not explicitly forbidding symlinks, either warn to the console or the log file
-      // depending on the config setting.
-      String msg =
-          String.format(
-              "Disabling parser cache for target %s, because one or more input files are under a "
-                  + "symbolic link (%s). This will severely impact the time spent in parsing! To "
-                  + "resolve this, use separate rules and declare dependencies instead of using "
-                  + "symbolic links.",
-              node.getBuildTarget(), newSymlinksEncountered);
-      if (allowSymlinks == ParserConfig.AllowSymlinks.WARN) {
-        eventBus.post(ConsoleEvent.warning(msg));
-      } else {
-        LOG.warn(msg);
-      }
-
-      eventBus.post(ParsingEvent.symlinkInvalidation(buildFile.toString()));
-      buildInputPathsUnderSymlink.add(buildFile);
+    if (readOnlyPaths.isPresent() && currentCell != null) {
+      newSymlinksEncountered =
+          Maps.filterEntries(
+              newSymlinksEncountered,
+              entry -> {
+                for (Path readOnlyPath : readOnlyPaths.get()) {
+                  if (entry.getKey().startsWith(readOnlyPath)) {
+                    LOG.debug(
+                        "Target %s contains input files under a path which contains a symbolic "
+                            + "link (%s). It will be cached because it belongs under %s, a "
+                            + "read-only path white listed in .buckconfig. under [project] "
+                            + "read_only_paths",
+                        node.getBuildTarget(), entry, readOnlyPath);
+                    return false;
+                  }
+                }
+                return true;
+              });
     }
+
+    if (newSymlinksEncountered.isEmpty()) {
+      return;
+    }
+
+    ParserConfig.AllowSymlinks allowSymlinks =
+        Preconditions.checkNotNull(
+            cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
+    if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
+      throw new HumanReadableException(
+          "Target %s contains input files under a path which contains a symbolic link "
+              + "(%s). To resolve this, use separate rules and declare dependencies instead of "
+              + "using symbolic links.\n"
+              + "If the symlink points to a read-only filesystem, you can specify it in the "
+              + "project.read_only_paths .buckconfig setting. Buck will assume files under that "
+              + "path will never change.",
+          node.getBuildTarget(), newSymlinksEncountered);
+    }
+
+    // If we're not explicitly forbidding symlinks, either warn to the console or the log file
+    // depending on the config setting.
+    String msg =
+        String.format(
+            "Disabling parser cache for target %s, because one or more input files are under a "
+                + "symbolic link (%s). This will severely impact the time spent in parsing! To "
+                + "resolve this, use separate rules and declare dependencies instead of using "
+                + "symbolic links.",
+            node.getBuildTarget(), newSymlinksEncountered);
+    if (allowSymlinks == ParserConfig.AllowSymlinks.WARN) {
+      eventBus.post(ConsoleEvent.warning(msg));
+    } else {
+      LOG.warn(msg);
+    }
+
+    eventBus.post(ParsingEvent.symlinkInvalidation(buildFile.toString()));
+    buildInputPathsUnderSymlink.add(buildFile);
   }
 
   private static Map<Path, Path> inputFilesUnderSymlink(

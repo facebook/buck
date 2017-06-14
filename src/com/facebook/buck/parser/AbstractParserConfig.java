@@ -106,13 +106,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public ImmutableList<Path> getBuckPackageBoundaryExceptions() {
     return getDelegate()
-        .getOptionalPathList("project", "package_boundary_exceptions")
+        .getOptionalPathList("project", "package_boundary_exceptions", true)
         .orElse(ImmutableList.of());
   }
 
   @Value.Lazy
   public Optional<ImmutableList<Path>> getReadOnlyPaths() {
-    return getDelegate().getOptionalPathList("project", "read_only_paths");
+    return getDelegate().getOptionalPathList("project", "read_only_paths", false);
   }
 
   @Value.Lazy

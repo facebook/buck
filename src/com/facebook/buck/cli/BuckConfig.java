@@ -231,7 +231,8 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getOptionalListWithoutComments(section, field, splitChar);
   }
 
-  public Optional<ImmutableList<Path>> getOptionalPathList(String section, String field) {
+  public Optional<ImmutableList<Path>> getOptionalPathList(
+      String section, String field, boolean resolve) {
     Optional<ImmutableList<String>> rawPaths =
         config.getOptionalListWithoutComments(section, field);
 
@@ -240,7 +241,13 @@ public class BuckConfig implements ConfigPathGetter {
           rawPaths
               .get()
               .stream()
-              .map(input -> convertPath(input, section, field))
+              .map(
+                  input ->
+                      convertPath(
+                          input,
+                          resolve,
+                          String.format(
+                              "Error in %s.%s: Cell-relative path not found: ", section, field)))
               .collect(MoreCollectors.toImmutableList());
       return Optional.of(paths);
     }
@@ -853,11 +860,10 @@ public class BuckConfig implements ConfigPathGetter {
         : getPathFromVfs(pathString);
   }
 
-  private Path convertPath(String pathString, String section, String field) {
-    return convertPathWithError(
-        pathString,
-        /* isCellRootRelative */ true,
-        String.format("Error in %s.%s: Cell-relative path not found: ", section, field));
+  private Path convertPath(String pathString, boolean resolve, String error) {
+    return resolve
+        ? checkPathExistsAndResolve(pathString, error)
+        : checkPathExists(pathString, error);
   }
 
   public Path checkPathExistsAndResolve(String pathString, String errorMsg) {

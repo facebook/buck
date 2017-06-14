@@ -65,7 +65,7 @@ public class DistBuildConfig {
   }
 
   public Optional<ImmutableList<Path>> getOptionalPathWhitelist() {
-    return buckConfig.getOptionalPathList(STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST);
+    return buckConfig.getOptionalPathList(STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST, true);
   }
 
   public long getFrontendRequestTimeoutMillis() {

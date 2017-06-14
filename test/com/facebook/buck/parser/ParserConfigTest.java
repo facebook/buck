@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -40,7 +42,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -65,7 +66,7 @@ public class ParserConfigTest {
   public void testGetGlobHandler() throws InterruptedException, IOException {
     assertThat(
         FakeBuckConfig.builder().build().getView(ParserConfig.class).getGlobHandler(),
-        Matchers.equalTo(ParserConfig.GlobHandler.PYTHON));
+        equalTo(ParserConfig.GlobHandler.PYTHON));
 
     for (ParserConfig.GlobHandler handler : ParserConfig.GlobHandler.values()) {
       Reader reader =
@@ -74,7 +75,7 @@ public class ParserConfigTest {
       ParserConfig config =
           BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
               .getView(ParserConfig.class);
-      assertThat(config.getGlobHandler(), Matchers.equalTo(handler));
+      assertThat(config.getGlobHandler(), equalTo(handler));
     }
   }
 
@@ -168,11 +169,9 @@ public class ParserConfigTest {
             .getView(ParserConfig.class);
 
     assertTrue(parserConfig.getReadOnlyPaths().isPresent());
-    assertEquals(
+    assertThat(
         parserConfig.getReadOnlyPaths().get(),
-        ImmutableList.of(
-            filesystem.resolve(Paths.get(existingPath1)),
-            filesystem.resolve(Paths.get(existingPath2))));
+        is(equalTo(ImmutableList.of(Paths.get(existingPath1), Paths.get(existingPath2)))));
 
     String notExistingDir = "not/existing/path";
     parserConfig =
