@@ -33,6 +33,7 @@ import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 final class XcodeToolFinder {
@@ -48,8 +49,8 @@ final class XcodeToolFinder {
               new CacheLoader<Path, ImmutableSet<Path>>() {
                 @Override
                 public ImmutableSet<Path> load(@Nonnull Path key) throws IOException {
-                  try {
-                    return RichStream.from(Files.list(key)).map(Path::getFileName).toImmutableSet();
+                  try (Stream<Path> contents = Files.list(key)) {
+                    return RichStream.from(contents).map(Path::getFileName).toImmutableSet();
                   } catch (NotDirectoryException | NoSuchFileException e) {
                     return ImmutableSet.of();
                   }
