@@ -102,6 +102,12 @@ public class HaskellLibraryDescription
     name = name.replace(File.separatorChar, '-');
     name = name.replace('_', '-');
     name = name.replaceFirst("^-*", "");
+
+    Optional<String> packageNamePrefix = haskellConfig.getPackageNamePrefix();
+    if (packageNamePrefix.isPresent()) {
+      name = packageNamePrefix.get() + "-" + name;
+    }
+
     return HaskellPackageInfo.of(name, "1.0.0", name);
   }
 
@@ -272,11 +278,13 @@ public class HaskellLibraryDescription
         ruleFinder,
         haskellConfig.getPackager().resolve(resolver),
         haskellConfig.getHaskellVersion(),
+        depType,
         getPackageInfo(target),
         depPackages,
         compileRule.getModules(),
         ImmutableSortedSet.of(library.getSourcePathToOutput()),
-        ImmutableSortedSet.of(compileRule.getInterfaces()));
+        ImmutableSortedSet.of(compileRule.getInterfaces()),
+        ImmutableSortedSet.of(compileRule.getObjectsDir()));
   }
 
   private HaskellPackageRule requirePackage(

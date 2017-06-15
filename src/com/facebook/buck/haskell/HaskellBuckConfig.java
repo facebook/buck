@@ -138,4 +138,44 @@ public class HaskellBuckConfig implements HaskellConfig {
   public Optional<Boolean> shouldUsedOldBinaryOutputLocation() {
     return delegate.getBoolean(SECTION, "old_binary_output_location");
   }
+
+  @Override
+  public Path getGhciScriptTemplate() {
+    return delegate.getRequiredPath(SECTION, "ghci_script_template");
+  }
+
+  @Override
+  public Path getGhciBinutils() {
+    return delegate.getRequiredPath(SECTION, "ghci_binutils_path");
+  }
+
+  @Override
+  public Path getGhciGhc() {
+    return delegate.getRequiredPath(SECTION, "ghci_ghc_path");
+  }
+
+  @Override
+  public Path getGhciLib() {
+    return delegate.getRequiredPath(SECTION, "ghci_lib_path");
+  }
+
+  @Override
+  public Path getGhciCxx() {
+    return delegate.getRequiredPath(SECTION, "ghci_cxx_path");
+  }
+
+  @Override
+  public Path getGhciCc() {
+    return delegate.getRequiredPath(SECTION, "ghci_cc_path");
+  }
+
+  @Override
+  public Path getGhciCpp() {
+    return delegate.getRequiredPath(SECTION, "ghci_cpp_path");
+  }
+
+  @Override
+  public Optional<String> getPackageNamePrefix() {
+    return delegate.getValue(SECTION, "package_name_prefix");
+  }
 }

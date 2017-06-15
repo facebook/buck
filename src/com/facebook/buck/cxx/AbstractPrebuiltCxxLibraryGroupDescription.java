@@ -328,7 +328,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     };
   }
 
-  private abstract static class CustomPrebuiltCxxLibrary
+  public abstract static class CustomPrebuiltCxxLibrary
       extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibrary {
     public CustomPrebuiltCxxLibrary(BuildRuleParams params) {
       super(params);

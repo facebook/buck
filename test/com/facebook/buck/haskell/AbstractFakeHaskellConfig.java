@@ -21,6 +21,8 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -63,5 +65,45 @@ abstract class AbstractFakeHaskellConfig implements HaskellConfig {
   @Value.Default
   public boolean shouldCacheLinks() {
     return true;
+  }
+
+  @Override
+  public Path getGhciScriptTemplate() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Path getGhciBinutils() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Path getGhciGhc() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Path getGhciLib() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Path getGhciCxx() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Path getGhciCc() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Path getGhciCpp() {
+    throw new RuntimeException("Not supported for system compiler.");
+  }
+
+  @Override
+  public Optional<String> getPackageNamePrefix() {
+    return Optional.empty();
   }
 }

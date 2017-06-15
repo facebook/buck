@@ -46,6 +46,10 @@ abstract class AbstractHaskellPackage implements RuleKeyAppendable {
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<SourcePath> getInterfaces();
 
+  /** @return the path to all interface directories included in the package. */
+  @Value.NaturalOrder
+  protected abstract ImmutableSortedSet<SourcePath> getObjects();
+
   /**
    * Adds information to the rule key that affects compilations that build using this package as a
    * dependency.

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
@@ -55,6 +56,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   private final HaskellVersion haskellVersion;
 
+  @AddToRuleKey Linker.LinkableDepType depType;
+
   @AddToRuleKey private final HaskellPackageInfo packageInfo;
 
   @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> depPackages;
@@ -65,23 +68,29 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> interfaces;
 
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> objects;
+
   public HaskellPackageRule(
       BuildRuleParams buildRuleParams,
       Tool ghcPkg,
       HaskellVersion haskellVersion,
+      Linker.LinkableDepType depType,
       HaskellPackageInfo packageInfo,
       ImmutableSortedMap<String, HaskellPackage> depPackages,
       ImmutableSortedSet<String> modules,
       ImmutableSortedSet<SourcePath> libraries,
-      ImmutableSortedSet<SourcePath> interfaces) {
+      ImmutableSortedSet<SourcePath> interfaces,
+      ImmutableSortedSet<SourcePath> objects) {
     super(buildRuleParams);
     this.ghcPkg = ghcPkg;
     this.haskellVersion = haskellVersion;
+    this.depType = depType;
     this.packageInfo = packageInfo;
     this.depPackages = depPackages;
     this.modules = modules;
     this.libraries = libraries;
     this.interfaces = interfaces;
+    this.objects = objects;
   }
 
   public static HaskellPackageRule from(
@@ -90,11 +99,13 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       SourcePathRuleFinder ruleFinder,
       final Tool ghcPkg,
       HaskellVersion haskellVersion,
+      Linker.LinkableDepType depType,
       HaskellPackageInfo packageInfo,
       final ImmutableSortedMap<String, HaskellPackage> depPackages,
       ImmutableSortedSet<String> modules,
       final ImmutableSortedSet<SourcePath> libraries,
-      final ImmutableSortedSet<SourcePath> interfaces) {
+      final ImmutableSortedSet<SourcePath> interfaces,
+      ImmutableSortedSet<SourcePath> objects) {
     ImmutableSortedSet<BuildRule> declaredDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(ghcPkg.getDeps(ruleFinder))
@@ -102,17 +113,20 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 depPackages.values().stream().flatMap(pkg -> pkg.getDeps(ruleFinder)).iterator())
             .addAll(ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
             .build();
+
     return new HaskellPackageRule(
         baseParams
             .withBuildTarget(target)
             .copyReplacingDeclaredAndExtraDeps(declaredDeps, ImmutableSortedSet.of()),
         ghcPkg,
         haskellVersion,
+        depType,
         packageInfo,
         depPackages,
         modules,
         libraries,
-        interfaces);
+        interfaces,
+        objects);
   }
 
   private Path getPackageDb() {
@@ -156,9 +170,12 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       libs.add(MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib"));
     }
     entries.put("library-dirs", Joiner.on(", ").join(libDirs));
-    // Use extra libraries here, so GHC won't try to find libraries with any extra suffices
-    // (e.g. lib<name>-ghc7.10.3.dylib).
-    entries.put("extra-libraries", Joiner.on(", ").join(libs));
+
+    if (Linker.LinkableDepType.STATIC == depType) {
+      entries.put("hs-libraries", Joiner.on(", ").join(libs));
+    } else {
+      entries.put("extra-libraries", Joiner.on(", ").join(libs));
+    }
 
     entries.put("depends", Joiner.on(", ").join(depPackages.keySet()));
 
@@ -248,6 +265,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .setPackageDb(new ExplicitBuildTargetSourcePath(getBuildTarget(), getPackageDb()))
         .addAllLibraries(libraries)
         .addAllInterfaces(interfaces)
+        .addAllObjects(objects)
         .build();
   }
 

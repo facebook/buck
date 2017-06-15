@@ -91,6 +91,7 @@ import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.haskell.HaskellBinaryDescription;
 import com.facebook.buck.haskell.HaskellBuckConfig;
+import com.facebook.buck.haskell.HaskellGhciDescription;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
@@ -501,10 +502,14 @@ public class KnownBuildRuleTypes {
     builder.register(
         new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new HaskellPrebuiltLibraryDescription());
+    builder.register(
+        new HaskellGhciDescription(
+            haskellBuckConfig, cxxBuckConfig, cxxPlatforms, defaultCxxPlatform));
 
     if (javaConfig.getDxThreadCount().isPresent()) {
       LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
     }
+
     // Create an executor service exclusively for the smart dexing step.
     ListeningExecutorService dxExecutorService =
         MoreExecutors.listeningDecorator(
