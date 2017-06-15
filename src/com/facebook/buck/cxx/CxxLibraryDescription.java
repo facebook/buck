@@ -710,7 +710,10 @@ public class CxxLibraryDescription
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          platform.isPresent() ? params : params.withAppendedFlavor(defaultCxxPlatform.getFlavor()),
+          platform.isPresent()
+              ? params.getBuildTarget()
+              : params.getBuildTarget().withAppendedFlavors(defaultCxxPlatform.getFlavor()),
+          params.getProjectFilesystem(),
           resolver);
     } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(
         params.getBuildTarget().getFlavors())) {

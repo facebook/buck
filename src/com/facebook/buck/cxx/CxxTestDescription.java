@@ -184,8 +184,9 @@ public class CxxTestDescription
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           cxxPlatforms.getValue(params.getBuildTarget()).isPresent()
-              ? params
-              : params.withAppendedFlavor(cxxPlatform.getFlavor()),
+              ? params.getBuildTarget()
+              : params.getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()),
+          params.getProjectFilesystem(),
           resolver);
     }
 

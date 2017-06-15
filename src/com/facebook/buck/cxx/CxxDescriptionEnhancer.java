@@ -1086,22 +1086,26 @@ public class CxxDescriptionEnhancer {
   }
 
   public static BuildRule createUberCompilationDatabase(
-      BuildRuleParams params, BuildRuleResolver ruleResolver) throws NoSuchBuildTargetException {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleResolver ruleResolver)
+      throws NoSuchBuildTargetException {
     Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
         ruleResolver.requireMetadata(
-            params
-                .withoutFlavor(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
-                .withAppendedFlavor(CxxCompilationDatabase.COMPILATION_DATABASE)
-                .getBuildTarget(),
+            buildTarget
+                .withoutFlavors(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
+                .withAppendedFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
             CxxCompilationDatabaseDependencies.class);
     Preconditions.checkState(compilationDatabases.isPresent());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JsonConcatenate(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.copyOf(
-                ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),
-            ImmutableSortedSet.of()),
+        new BuildRuleParams(
+            buildTarget,
+            () ->
+                ImmutableSortedSet.copyOf(
+                    ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),
+            () -> ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            projectFilesystem),
         pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",

@@ -195,8 +195,9 @@ public class CxxBinaryDescription
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           cxxPlatforms.getValue(flavors).isPresent()
-              ? params
-              : params.withAppendedFlavor(defaultCxxPlatform.getFlavor()),
+              ? params.getBuildTarget()
+              : params.getBuildTarget().withAppendedFlavors(defaultCxxPlatform.getFlavor()),
+          params.getProjectFilesystem(),
           resolver);
     }
 
