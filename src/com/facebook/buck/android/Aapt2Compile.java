@@ -57,8 +57,7 @@ public class Aapt2Compile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(
         new Aapt2CompileStep(
             getProjectFilesystem().getRootPath(),
-            getProjectFilesystem().relativize(context
-                .getSourcePathResolver().getAbsolutePath(resDir)),
+            context.getSourcePathResolver().getAbsolutePath(resDir),
             getOutputPath()));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getOutputPath())));
     buildableContext.recordArtifact(getOutputPath());
