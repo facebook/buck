@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
+import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -25,53 +27,51 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * Responsible for gathering logs and other interesting information from buck without user
- * interaction.
+ * Responsible for gathering logs and other interesting information from buck when part of the
+ * information is already available when calling the constructor.
  */
-public class AutomatedReport extends AbstractReport {
-  private final BuildLogHelper buildLogHelper;
-  private final boolean gatherVcsInfo;
+public class DoctorInteractiveReport extends AbstractReport {
 
-  public AutomatedReport(
+  private final ImmutableSet<BuildLogEntry> buildLogEntries;
+  private final UserInput input;
+
+  public DoctorInteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       Console console,
+      UserInput input,
       BuildEnvironmentDescription buildEnvironmentDescription,
       VersionControlStatsGenerator versionControlStatsGenerator,
-      boolean gatherVcsInfo,
-      RageConfig rageConfig,
-      ExtraInfoCollector extraInfoCollector) {
+      DoctorConfig doctorConfig,
+      ExtraInfoCollector extraInfoCollector,
+      ImmutableSet<BuildLogEntry> buildLogEntries,
+      Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
     super(
         filesystem,
         defectReporter,
         buildEnvironmentDescription,
         versionControlStatsGenerator,
         console,
-        rageConfig,
+        doctorConfig,
         extraInfoCollector,
-        Optional.empty());
-    this.buildLogHelper = new BuildLogHelper(filesystem);
-    this.gatherVcsInfo = gatherVcsInfo;
+        watchmanDiagReportCollector);
+    this.input = input;
+    this.buildLogEntries = buildLogEntries;
   }
 
   @Override
   public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
-    return ImmutableSet.copyOf(buildLogHelper.getBuildLogs());
+    return buildLogEntries;
   }
 
   @Override
-  protected Optional<SourceControlInfo> getSourceControlInfo()
+  protected Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
       throws IOException, InterruptedException {
-    return gatherVcsInfo ? super.getSourceControlInfo() : Optional.empty();
+    return runWatchmanDiagReportCollector(input);
   }
 
   @Override
-  protected Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport() {
-    return Optional.empty();
-  }
-
-  @Override
-  protected Optional<UserReport> getUserReport() throws IOException {
+  protected Optional<UserReport> getUserReport() {
     return Optional.empty();
   }
 }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;

@@ -1587,6 +1587,15 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'doctor' /}
+  {param name: 'protocol' /}
+  {param example_value: 'json' /}
+  {param description}
+    The protocol of communication, it can be either simple or json.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
   {param name: 'endpoint_url' /}
   {param example_value: 'http://localhost:4545' /}
   {param description}
@@ -1597,11 +1606,66 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'doctor' /}
-  {param name: 'extra_request_args' /}
+  {param name: 'endpoint_timeout_ms' /}
+  {param example_value: '15' /}
+  {param description}
+    The timeout in milliseconds before giving up contacting the analysis endpoint.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'endpoint_extra_request_args' /}
   {param example_value: 'ref=>1245,token=>42' /}
   {param description}
     This sections of keys and values is added as parameters to the POST request send to the doctor
     remote endpoint.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'report_upload_path' /}
+  {param example_value: 'http://localhost:4546' /}
+  {param description}
+    The address of the remote endpoint the report will be uploaded.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'report_max_size' /}
+  {param example_value: '512MB' /}
+  {param description}
+    The maximum size that the report endpoint can handle before giving up and storing it only
+    locally.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'report_timeout_ms' /}
+  {param example_value: '15' /}
+  {param description}
+    The timeout in milliseconds before giving up contacting the report endpoint.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'report_max_upload_retries' /}
+  {param example_value: '2' /}
+  {param description}
+    Times to try to upload to the report endpoint.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'report_extra_info_command' /}
+  {param example_value: '/custom/script/to/run.sh' /}
+  {param description}
+    An extra command that the report should and attach the information to the uploaded report.
   {/param}
 {/call}
 

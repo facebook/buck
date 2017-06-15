@@ -14,32 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
-import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.collect.ImmutableMap;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -54,7 +46,6 @@ public class InteractiveReportIntegrationTest {
   private static final String DEPS_PATH =
       "buck-out/log/"
           + "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
-  private static final String WATCHMAN_DIAG_COMMAND = "watchman-diag";
   private static final ImmutableMap<String, String> TIMESTAMPS =
       ImmutableMap.of(
           BUILD_PATH, "2016-06-21T16:16:24.00Z",
@@ -71,7 +62,7 @@ public class InteractiveReportIntegrationTest {
     tracePath1 = BUILD_PATH + "file.trace";
     tracePath2 = DEPS_PATH + "file.trace";
     traceWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", temporaryFolder);
     traceWorkspace.setUp();
     traceWorkspace.writeContentsToPath(new String(new char[32 * 1024]), tracePath1);
     traceWorkspace.writeContentsToPath(new String(new char[64 * 1024]), tracePath2);
@@ -88,27 +79,52 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testReport() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", temporaryFolder);
     workspace.setUp();
 
-    DefectSubmitResult report =
-        createDefectReport(
-            workspace, new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
+    UserInputFixture userInputFixture = new UserInputFixture("1");
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
+    DoctorReportHelper helper =
+        DoctorTestUtils.createDoctorHelper(
+            traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(traceWorkspace.asCell().getFilesystem());
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
+    DefectSubmitResult report =
+        DoctorTestUtils.createDefectReport(
+            traceWorkspace,
+            ImmutableSet.of(entry.get()),
+            userInputFixture.getUserInput(),
+            doctorConfig);
     Path reportFile =
         workspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists("report.json");
-    zipInspector.assertFileExists(BUILD_PATH + "buck.log");
+    zipInspector.assertFileExists("buckconfig.local");
+    zipInspector.assertFileExists(DEPS_PATH + "buck-machine-log");
     zipInspector.assertFileExists(DEPS_PATH + "buck.log");
+    zipInspector.assertFileExists(DEPS_PATH + "file.trace");
   }
 
   @Test
   public void testTraceInReport() throws Exception {
+    UserInputFixture userInputFixture = new UserInputFixture("1");
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
+    DoctorReportHelper helper =
+        DoctorTestUtils.createDoctorHelper(
+            traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(traceWorkspace.asCell().getFilesystem());
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+
     DefectSubmitResult report =
-        createDefectReport(
-            traceWorkspace, new ByteArrayInputStream("1\nreport text\n".getBytes("UTF-8")));
+        DoctorTestUtils.createDefectReport(
+            traceWorkspace,
+            ImmutableSet.of(entry.get()),
+            userInputFixture.getUserInput(),
+            doctorConfig);
     Path reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
@@ -118,9 +134,21 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testTraceRespectReportSize() throws Exception {
+    UserInputFixture userInputFixture = new UserInputFixture("0");
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
+    DoctorReportHelper helper =
+        DoctorTestUtils.createDoctorHelper(
+            traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(traceWorkspace.asCell().getFilesystem());
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+
     DefectSubmitResult report =
-        createDefectReport(
-            traceWorkspace, new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
+        DoctorTestUtils.createDefectReport(
+            traceWorkspace,
+            ImmutableSet.of(entry.get()),
+            userInputFixture.getUserInput(),
+            doctorConfig);
     Path reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
@@ -132,9 +160,21 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testLocalConfigurationReport() throws Exception {
+    UserInputFixture userInputFixture = new UserInputFixture("0");
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
+    DoctorReportHelper helper =
+        DoctorTestUtils.createDoctorHelper(
+            traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(traceWorkspace.asCell().getFilesystem());
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+
     DefectSubmitResult report =
-        createDefectReport(
-            traceWorkspace, new ByteArrayInputStream("0,1\nreport text\n\n".getBytes("UTF-8")));
+        DoctorTestUtils.createDefectReport(
+            traceWorkspace,
+            ImmutableSet.of(entry.get()),
+            userInputFixture.getUserInput(),
+            doctorConfig);
     Path reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
@@ -146,9 +186,21 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testWatchmanDiagReport() throws Exception {
+    UserInputFixture userInputFixture = new UserInputFixture("1\n\n\ny");
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
+    DoctorReportHelper helper =
+        DoctorTestUtils.createDoctorHelper(
+            traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(traceWorkspace.asCell().getFilesystem());
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+
     DefectSubmitResult report =
-        createDefectReport(
-            traceWorkspace, new ByteArrayInputStream("0,1\nreport text\n\n\n".getBytes("UTF-8")));
+        DoctorTestUtils.createDefectReport(
+            traceWorkspace,
+            ImmutableSet.of(entry.get()),
+            userInputFixture.getUserInput(),
+            doctorConfig);
     Path reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
@@ -156,45 +208,5 @@ public class InteractiveReportIntegrationTest {
     assertThat(
         zipInspector.getZipFileEntries(),
         Matchers.hasItem(Matchers.stringContainsInOrder("watchman-diag-report")));
-  }
-
-  private static FakeProcessExecutor createFakeWatchmanDiagProcessExecutor(Console console) {
-    return new FakeProcessExecutor(
-        params -> {
-          if (params.getCommand().get(0).equals(WATCHMAN_DIAG_COMMAND)) {
-            return new FakeProcess(0, "fake watchman diag", "");
-          } else {
-            return new FakeProcess(33);
-          }
-        },
-        console);
-  }
-
-  private static DefectSubmitResult createDefectReport(
-      ProjectWorkspace workspace, ByteArrayInputStream inputStream)
-      throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = workspace.asCell().getFilesystem();
-    RageConfig rageConfig = RageConfig.of(workspace.asCell().getBuckConfig());
-    Clock clock = new DefaultClock();
-    ExtraInfoCollector extraInfoCollector = Optional::empty;
-    TestConsole console = new TestConsole();
-    DefectReporter defectReporter =
-        new DefaultDefectReporter(
-            filesystem, rageConfig, BuckEventBusForTests.newInstance(clock), clock);
-    WatchmanDiagReportCollector watchmanDiagReportCollector =
-        new WatchmanDiagReportCollector(
-            filesystem, WATCHMAN_DIAG_COMMAND, createFakeWatchmanDiagProcessExecutor(console));
-    InteractiveReport interactiveReport =
-        new InteractiveReport(
-            defectReporter,
-            filesystem,
-            console,
-            inputStream,
-            TestBuildEnvironmentDescription.INSTANCE,
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
-            rageConfig,
-            extraInfoCollector,
-            Optional.of(watchmanDiagReportCollector));
-    return interactiveReport.collectAndSubmitResult().get();
   }
 }

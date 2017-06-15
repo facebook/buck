@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

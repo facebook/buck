@@ -16,22 +16,21 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.doctor.BuildLogHelper;
+import com.facebook.buck.doctor.DefaultDefectReporter;
+import com.facebook.buck.doctor.DefaultExtraInfoCollector;
+import com.facebook.buck.doctor.DefectSubmitResult;
+import com.facebook.buck.doctor.DoctorInteractiveReport;
 import com.facebook.buck.doctor.DoctorReportHelper;
+import com.facebook.buck.doctor.UserInput;
+import com.facebook.buck.doctor.WatchmanDiagReportCollector;
+import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
-import com.facebook.buck.rage.BuildLogEntry;
-import com.facebook.buck.rage.BuildLogHelper;
-import com.facebook.buck.rage.DefaultDefectReporter;
-import com.facebook.buck.rage.DefaultExtraInfoCollector;
-import com.facebook.buck.rage.DefectSubmitResult;
-import com.facebook.buck.rage.DoctorInteractiveReport;
-import com.facebook.buck.rage.RageConfig;
-import com.facebook.buck.rage.UserInput;
-import com.facebook.buck.rage.WatchmanDiagReportCollector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
@@ -65,25 +64,25 @@ public class DoctorCommand extends AbstractCommand {
       return 0;
     }
 
-    Optional<DefectSubmitResult> rageResult = generateRageReport(params, userInput, entry.get());
-    if (!rageResult.isPresent()) {
+    Optional<DefectSubmitResult> reportResult = generateReport(params, userInput, entry.get());
+    if (!reportResult.isPresent()) {
       params.getConsole().printErrorText("Failed to generate report to send.");
       return 1;
     }
 
-    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), rageResult.get());
+    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), reportResult.get());
     DoctorEndpointResponse response = helper.uploadRequest(request);
 
     helper.presentResponse(response);
-    helper.presentRageResult(rageResult);
+    helper.presentRageResult(reportResult);
 
     return 0;
   }
 
-  private Optional<DefectSubmitResult> generateRageReport(
+  private Optional<DefectSubmitResult> generateReport(
       CommandRunnerParams params, UserInput userInput, BuildLogEntry entry)
       throws IOException, InterruptedException {
-    RageConfig rageConfig = RageConfig.of(params.getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(params.getBuckConfig());
 
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(
@@ -97,7 +96,7 @@ public class DoctorCommand extends AbstractCommand {
         new DoctorInteractiveReport(
             new DefaultDefectReporter(
                 params.getCell().getFilesystem(),
-                rageConfig,
+                doctorConfig,
                 params.getBuckEventBus(),
                 params.getClock()),
             params.getCell().getFilesystem(),
@@ -105,9 +104,9 @@ public class DoctorCommand extends AbstractCommand {
             userInput,
             params.getBuildEnvironmentDescription(),
             params.getVersionControlStatsGenerator(),
-            rageConfig,
+            doctorConfig,
             new DefaultExtraInfoCollector(
-                rageConfig,
+                doctorConfig,
                 params.getCell().getFilesystem(),
                 new DefaultProcessExecutor(params.getConsole())),
             ImmutableSet.of(entry),

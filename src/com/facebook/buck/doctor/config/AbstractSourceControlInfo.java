@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.annotation.JsonIgnore;

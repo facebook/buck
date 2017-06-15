@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
+import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -31,13 +32,15 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
 
   private static final long PROCESS_TIMEOUT_MS = 5 * 60 * 1000; // 5min.
 
-  private final RageConfig rageConfig;
+  private final DoctorConfig doctorConfig;
   private final ProjectFilesystem projectFilesystem;
   private final ProcessExecutor processExecutor;
 
   public DefaultExtraInfoCollector(
-      RageConfig rageConfig, ProjectFilesystem projectFilesystem, ProcessExecutor processExecutor) {
-    this.rageConfig = rageConfig;
+      DoctorConfig doctorConfig,
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor) {
+    this.doctorConfig = doctorConfig;
     this.projectFilesystem = projectFilesystem;
     this.processExecutor = processExecutor;
   }
@@ -45,7 +48,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
   @Override
   public Optional<ExtraInfoResult> run()
       throws IOException, InterruptedException, ExtraInfoExecutionException {
-    ImmutableList<String> extraInfoCommand = rageConfig.getExtraInfoCommand();
+    ImmutableList<String> extraInfoCommand = doctorConfig.getExtraInfoCommand();
     if (extraInfoCommand.isEmpty()) {
       return Optional.empty();
     }

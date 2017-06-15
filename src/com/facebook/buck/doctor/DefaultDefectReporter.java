@@ -14,10 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
+import com.facebook.buck.doctor.config.DoctorConfig;
+import com.facebook.buck.doctor.config.DoctorJsonResponse;
+import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -65,14 +68,17 @@ public class DefaultDefectReporter implements DefectReporter {
   private static final String REQUEST_PROTOCOL_VERSION = "x-buck-protocol-version";
 
   private final ProjectFilesystem filesystem;
-  private final RageConfig rageConfig;
+  private final DoctorConfig doctorConfig;
   private final BuckEventBus buckEventBus;
   private final Clock clock;
 
   public DefaultDefectReporter(
-      ProjectFilesystem filesystem, RageConfig rageConfig, BuckEventBus buckEventBus, Clock clock) {
+      ProjectFilesystem filesystem,
+      DoctorConfig doctorConfig,
+      BuckEventBus buckEventBus,
+      Clock clock) {
     this.filesystem = filesystem;
-    this.rageConfig = rageConfig;
+    this.doctorConfig = doctorConfig;
     this.buckEventBus = buckEventBus;
     this.clock = clock;
   }
@@ -109,8 +115,8 @@ public class DefaultDefectReporter implements DefectReporter {
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
     DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
-    defectSubmitResult.setRequestProtocol(rageConfig.getProtocolVersion());
-    Optional<SlbBuckConfig> frontendConfig = rageConfig.getFrontendConfig();
+    defectSubmitResult.setRequestProtocol(doctorConfig.getProtocolVersion());
+    Optional<SlbBuckConfig> frontendConfig = doctorConfig.getFrontendConfig();
 
     if (frontendConfig.isPresent()) {
       Optional<ClientSideSlb> slb =
@@ -162,7 +168,7 @@ public class DefaultDefectReporter implements DefectReporter {
       DefectSubmitResult.Builder defectSubmitResult,
       ClientSideSlb slb)
       throws IOException {
-    long timeout = rageConfig.getHttpTimeout();
+    long timeout = doctorConfig.getReportTimeoutMs();
     OkHttpClient httpClient =
         new OkHttpClient.Builder()
             .connectTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -173,12 +179,12 @@ public class DefaultDefectReporter implements DefectReporter {
         new RetryingHttpService(
             buckEventBus,
             new LoadBalancedService(slb, httpClient, buckEventBus),
-            rageConfig.getMaxUploadRetries());
+            doctorConfig.getReportMaxUploadRetries());
 
     try {
       Request.Builder requestBuilder = new Request.Builder();
       requestBuilder.addHeader(
-          REQUEST_PROTOCOL_VERSION, rageConfig.getProtocolVersion().name().toLowerCase());
+          REQUEST_PROTOCOL_VERSION, doctorConfig.getProtocolVersion().name().toLowerCase());
       requestBuilder.post(
           new RequestBody() {
             @Override
@@ -193,7 +199,7 @@ public class DefaultDefectReporter implements DefectReporter {
           });
 
       HttpResponse response =
-          httpService.makeRequest(rageConfig.getReportUploadPath(), requestBuilder);
+          httpService.makeRequest(doctorConfig.getReportUploadPath(), requestBuilder);
       String responseBody;
       try (InputStream inputStream = response.getBody()) {
         responseBody = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
@@ -201,17 +207,17 @@ public class DefaultDefectReporter implements DefectReporter {
 
       if (response.statusCode() == HTTP_SUCCESS_CODE) {
         defectSubmitResult.setIsRequestSuccessful(true);
-        if (rageConfig.getProtocolVersion().equals(AbstractRageConfig.RageProtocolVersion.SIMPLE)) {
+        if (doctorConfig.getProtocolVersion().equals(DoctorProtocolVersion.SIMPLE)) {
           return defectSubmitResult
               .setReportSubmitMessage(responseBody)
               .setReportSubmitLocation(responseBody)
               .build();
         } else {
           // Decode Json response.
-          RageJsonResponse json =
+          DoctorJsonResponse json =
               ObjectMappers.READER.readValue(
                   ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
-                  RageJsonResponse.class);
+                  DoctorJsonResponse.class);
           return defectSubmitResult
               .setIsRequestSuccessful(json.getRequestSuccessful())
               .setReportSubmitErrorMessage(json.getErrorMessage())

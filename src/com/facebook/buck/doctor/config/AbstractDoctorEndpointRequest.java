@@ -41,11 +41,11 @@ abstract class AbstractDoctorEndpointRequest {
   @Value.Parameter
   abstract Optional<String> getMachineReadableLog();
 
-  /** @return the contents of the message that rage returned. */
+  /** @return the contents of the message that endpoint returned. */
   @Value.Parameter
-  abstract Optional<String> getRageMessage();
+  abstract Optional<String> getEndpointMessage();
 
-  /** @return if rage command returned a redirect link this will be saved here. */
+  /** @return if report command returned a redirect link this will be saved here. */
   @Value.Parameter
-  abstract Optional<String> getRageUrl();
+  abstract Optional<String> getReportUrl();
 }

@@ -14,31 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import java.util.Optional;
+import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-@JsonDeserialize(as = RageJsonResponse.class)
-abstract class AbstractRageJsonResponse {
+abstract class AbstractUserLocalConfiguration {
 
-  /** @return if the request and processing was successful from the server side. */
   @Value.Parameter
-  abstract boolean getRequestSuccessful();
+  abstract boolean isNoBuckCheckPresent();
 
-  /** @return get the error message if it exists. */
   @Value.Parameter
-  abstract Optional<String> getErrorMessage();
-
-  /** @return if the server wants to redirect or point to a remote url it will be here. */
-  @Value.Parameter
-  abstract Optional<String> getRageUrl();
-
-  /** @return the message which is Json in the format/content that the server uses. */
-  @Value.Parameter
-  abstract Optional<String> getMessage();
+  abstract ImmutableMap<Path, String> getLocalConfigsContents();
 }

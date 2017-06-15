@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.Cell;
@@ -38,7 +39,7 @@ public class BuildLogHelperIntegrationTest {
   @Test
   public void findsLogFiles() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", temporaryFolder);
     workspace.setUp();
 
     Cell cell = workspace.asCell();

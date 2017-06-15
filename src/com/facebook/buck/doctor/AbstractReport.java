@@ -14,11 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
-
-import static com.facebook.buck.rage.AbstractRageConfig.RageProtocolVersion;
+package com.facebook.buck.doctor;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.doctor.config.DoctorConfig;
+import com.facebook.buck.doctor.config.SourceControlInfo;
+import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.log.Logger;
@@ -29,6 +31,7 @@ import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +56,7 @@ public abstract class AbstractReport {
   private final BuildEnvironmentDescription buildEnvironmentDescription;
   private final VersionControlStatsGenerator versionControlStatsGenerator;
   private final Console output;
-  private final RageConfig rageConfig;
+  private final DoctorConfig doctorConfig;
   private final ExtraInfoCollector extraInfoCollector;
   private final Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector;
 
@@ -63,7 +66,7 @@ public abstract class AbstractReport {
       BuildEnvironmentDescription buildEnvironmentDescription,
       VersionControlStatsGenerator versionControlStatsGenerator,
       Console output,
-      RageConfig rageBuckConfig,
+      DoctorConfig doctorBuckConfig,
       ExtraInfoCollector extraInfoCollector,
       Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
     this.filesystem = filesystem;
@@ -71,7 +74,7 @@ public abstract class AbstractReport {
     this.buildEnvironmentDescription = buildEnvironmentDescription;
     this.versionControlStatsGenerator = versionControlStatsGenerator;
     this.output = output;
-    this.rageConfig = rageBuckConfig;
+    this.doctorConfig = doctorBuckConfig;
     this.extraInfoCollector = extraInfoCollector;
     this.watchmanDiagReportCollector = watchmanDiagReportCollector;
   }
@@ -120,7 +123,7 @@ public abstract class AbstractReport {
         extraInfoPaths = extraInfoResultOptional.get().getExtraFiles();
         extraInfo = Optional.of(extraInfoResultOptional.get().getOutput());
       }
-    } catch (DefaultExtraInfoCollector.ExtraInfoExecutionException e) {
+    } catch (ExtraInfoCollector.ExtraInfoExecutionException e) {
       output.printErrorText(
           "There was a problem gathering additional information: %s. "
               + "The results will not be attached to the report.",
@@ -173,49 +176,6 @@ public abstract class AbstractReport {
     return Optional.of(defectReporter.submitReport(defectReport));
   }
 
-  public void presentDefectSubmitResult(
-      Optional<DefectSubmitResult> defectSubmitResult, boolean showJson) {
-    if (!defectSubmitResult.isPresent()) {
-      output.printErrorText(
-          "No logs of interesting commands were found. Check if buck-out/log "
-              + "contains commands except buck launch & buck rage.");
-      return;
-    }
-    DefectSubmitResult result = defectSubmitResult.get();
-    LOG.debug("Got defect submit result %s", result);
-
-    // If request has an empty isRequestSuccessful, it means we did not try to upload it somewhere.
-    if (!result.getIsRequestSuccessful().isPresent()) {
-      if (result.getReportSubmitLocation().isPresent()) {
-        output.printSuccess("Report saved at %s", result.getReportSubmitLocation().get());
-      } else {
-        output.printErrorText(
-            "=> Failed to save report locally. Reason: %s",
-            result.getReportSubmitErrorMessage().orElse("Unknown"));
-      }
-      return;
-    }
-
-    if (result.getIsRequestSuccessful().get()) {
-      if (result.getRequestProtocol().equals(RageProtocolVersion.SIMPLE)) {
-        output.getStdOut().printf("%s", result.getReportSubmitMessage().get());
-      } else {
-        String message = "=> Upload was successful.\n";
-        if (result.getReportSubmitLocation().isPresent()) {
-          message += "=> Report was uploaded to " + result.getReportSubmitLocation().get() + "\n";
-        }
-        if (result.getReportSubmitMessage().isPresent() && showJson) {
-          message += "=> Full Response was: " + result.getReportSubmitMessage().get() + "\n";
-        }
-        output.getStdOut().print(message);
-      }
-    } else {
-      output.printErrorText(
-          "=> Failed to upload report because of error: %s.\n=> Report was saved locally at %s",
-          result.getReportSubmitErrorMessage().get(), result.getReportSubmitLocation());
-    }
-  }
-
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractUserReport {
@@ -264,8 +224,8 @@ public abstract class AbstractReport {
         try {
           Path traceFile = filesystem.getPathForRelativeExistingPath(entry.getTraceFile().get());
           long traceFileSizeBytes = Files.size(traceFile);
-          if (rageConfig.getReportMaxSizeBytes().isPresent()) {
-            if (reportSizeBytes + traceFileSizeBytes < rageConfig.getReportMaxSizeBytes().get()) {
+          if (doctorConfig.getReportMaxSizeBytes().isPresent()) {
+            if (reportSizeBytes + traceFileSizeBytes < doctorConfig.getReportMaxSizeBytes().get()) {
               tracePaths.add(entry.getTraceFile().get());
               reportSizeBytes += traceFileSizeBytes;
             }
@@ -285,7 +245,8 @@ public abstract class AbstractReport {
     return Files.exists(filesystem.getRootPath().resolve(".nobuckcheck"));
   }
 
-  protected Optional<FileChangesIgnoredReport> runWatchmanDiagReportCollector(UserInput input)
+  @VisibleForTesting
+  Optional<FileChangesIgnoredReport> runWatchmanDiagReportCollector(UserInput input)
       throws IOException, InterruptedException {
     if (!watchmanDiagReportCollector.isPresent()
         || !input.confirm(

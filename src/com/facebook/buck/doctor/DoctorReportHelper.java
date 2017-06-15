@@ -16,17 +16,15 @@
 
 package com.facebook.buck.doctor;
 
+import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
+import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rage.BuildLogEntry;
-import com.facebook.buck.rage.DefectSubmitResult;
-import com.facebook.buck.rage.RageConfig;
-import com.facebook.buck.rage.UserInput;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ObjectMappers;
@@ -99,7 +97,7 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
-      BuildLogEntry entry, DefectSubmitResult rageResult) throws IOException {
+      BuildLogEntry entry, DefectSubmitResult reportResult) throws IOException {
     Optional<String> machineLog;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
@@ -117,8 +115,8 @@ public class DoctorReportHelper {
         entry.getBuildId(),
         entry.getRelativePath().toString(),
         machineLog,
-        rageResult.getReportSubmitMessage(),
-        rageResult.getReportSubmitLocation());
+        reportResult.getReportSubmitMessage(),
+        reportResult.getReportSubmitLocation());
   }
 
   public DoctorEndpointResponse uploadRequest(DoctorEndpointRequest request) {
@@ -126,7 +124,7 @@ public class DoctorReportHelper {
       String errorMsg =
           String.format(
               "Doctor endpoint URL is not set. Please set [%s] %s on your .buckconfig",
-              DoctorConfig.DOCTOR_SECTION, DoctorConfig.URL_FIELD);
+              DoctorConfig.DOCTOR_SECTION, DoctorConfig.ENDPOINT_URL_FIELD);
       return createErrorDoctorEndpointResponse(errorMsg);
     }
 
@@ -140,15 +138,15 @@ public class DoctorReportHelper {
 
     OkHttpClient httpClient =
         new OkHttpClient.Builder()
-            .connectTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-            .readTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-            .writeTimeout(doctorConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
+            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
             .build();
 
     Response httpResponse;
     try {
       RequestBody requestBody;
-      ImmutableMap<String, String> extraArgs = doctorConfig.getExtraRequestArgs();
+      ImmutableMap<String, String> extraArgs = doctorConfig.getEndpointExtraRequestArgs();
       if (extraArgs.isEmpty()) {
         requestBody = RequestBody.create(JSON, requestJson);
       } else {
@@ -202,14 +200,14 @@ public class DoctorReportHelper {
 
   public final void presentRageResult(Optional<DefectSubmitResult> result) {
     if (!result.isPresent()) {
-      console.getStdOut().println("=> Failed to generate a rage DefectSubmitResult.");
+      console.getStdOut().println("=> Failed to generate a report DefectSubmitResult.");
       return;
     }
 
     DefectSubmitResult submitResult = result.get();
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
-        if (submitResult.getRequestProtocol().equals(RageConfig.RageProtocolVersion.JSON)) {
+        if (submitResult.getRequestProtocol().equals(DoctorProtocolVersion.JSON)) {
           console
               .getStdOut()
               .printf(

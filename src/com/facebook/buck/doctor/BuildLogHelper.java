@@ -14,19 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
 
+import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import org.immutables.value.Value;
 
 /** Methods for finding and inspecting buck log files. */
 public class BuildLogHelper {
@@ -102,7 +100,8 @@ public class BuildLogHelper {
                     " ", (List<String>) invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS)));
       }
 
-      builder.setBuildId(new BuildId((String) invocationInfo.get(("buildId"))));
+      String buildId = (String) invocationInfo.get("buildId");
+      builder.setBuildId(Optional.of(new BuildId(buildId != null ? buildId : "unknown")));
       builder.setCommandArgs(commandArgs);
       builder.setMachineReadableLogFile(machineReadableLogFile);
       builder.setExitCode(readExitCode(machineReadableLogFile));
@@ -187,38 +186,5 @@ public class BuildLogHelper {
         });
 
     return logfiles;
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractBuildLogEntry {
-    public abstract Path getRelativePath();
-
-    public abstract Optional<BuildId> getBuildId();
-
-    public abstract Optional<String> getCommandArgs();
-
-    public abstract OptionalInt getExitCode();
-
-    public abstract Optional<Path> getRuleKeyLoggerLogFile();
-
-    public abstract Optional<Path> getMachineReadableLogFile();
-
-    public abstract Optional<Path> getTraceFile();
-
-    public abstract long getSize();
-
-    public abstract Date getLastModifiedTime();
-
-    @Value.Check
-    void pathIsRelative() {
-      Preconditions.checkState(!getRelativePath().isAbsolute());
-      if (getRuleKeyLoggerLogFile().isPresent()) {
-        Preconditions.checkState(!getRuleKeyLoggerLogFile().get().isAbsolute());
-      }
-      if (getTraceFile().isPresent()) {
-        Preconditions.checkState(!getTraceFile().get().isAbsolute());
-      }
-    }
   }
 }

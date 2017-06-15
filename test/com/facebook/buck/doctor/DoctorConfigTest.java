@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.timing.Clock;
@@ -30,7 +31,7 @@ import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class RageConfigTest {
+public class DoctorConfigTest {
 
   private static Clock clock;
   private static BuckEventBus eventBus;
@@ -44,8 +45,9 @@ public class RageConfigTest {
   @Test
   public void testEmpty() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    RageConfig config = RageConfig.of(buckConfig);
-    assertThat(config.getReportUploadPath(), Matchers.equalTo(RageConfig.UPLOAD_PATH));
+    DoctorConfig config = DoctorConfig.of(buckConfig);
+    assertThat(
+        config.getReportUploadPath(), Matchers.equalTo(DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH));
     assertThat(
         config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),
         Matchers.equalTo(Optional.empty()));
@@ -53,19 +55,19 @@ public class RageConfigTest {
 
   @Test
   public void testUploadConfigs() {
-    String testPath = "rage/upload/test";
+    String testPath = "/doctor/upload";
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
-                    "rage",
+                    "doctor",
                     ImmutableMap.of(
                         "report_upload_path",
                         testPath,
                         "slb_server_pool",
                         "http://buck-frontend-dual.05.atn1.facebook.com")))
             .build();
-    RageConfig config = RageConfig.of(buckConfig);
+    DoctorConfig config = DoctorConfig.of(buckConfig);
     assertThat(config.getReportUploadPath(), Matchers.equalTo(testPath));
     assertThat(
         config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),

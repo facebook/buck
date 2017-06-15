@@ -14,11 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.doctor.config.DoctorConfig;
+import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -61,7 +63,7 @@ public class DefectReporterTest {
   @Test
   public void testAttachesPaths() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
+    DoctorConfig config = DoctorConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter =
         new DefaultDefectReporter(
@@ -88,7 +90,7 @@ public class DefectReporterTest {
   @Test
   public void testAttachesReport() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
+    DoctorConfig config = DoctorConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter =
         new DefaultDefectReporter(

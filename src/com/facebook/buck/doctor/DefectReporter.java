@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rage;
+package com.facebook.buck.doctor;
 
+import com.facebook.buck.doctor.config.DoctorProtocolVersion;
+import com.facebook.buck.doctor.config.SourceControlInfo;
+import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -40,11 +43,8 @@ public interface DefectReporter {
      */
     Optional<Boolean> getIsRequestSuccessful();
 
-    /**
-     * Returns the protocol version of the request based on {@link
-     * AbstractRageConfig.RageProtocolVersion}.
-     */
-    AbstractRageConfig.RageProtocolVersion getRequestProtocol();
+    /** Returns the protocol version of the request based on {@link DoctorProtocolVersion}. */
+    DoctorProtocolVersion getRequestProtocol();
 
     /** @return The location where the report was saved, it can be a remote link or a local path */
     Optional<String> getReportSubmitLocation();

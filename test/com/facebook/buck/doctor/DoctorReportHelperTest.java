@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
-import com.facebook.buck.rage.UserInputFixture;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -54,7 +53,7 @@ public class DoctorReportHelperTest {
                 .setSections(
                     ImmutableMap.of(
                         DoctorConfig.DOCTOR_SECTION,
-                        ImmutableMap.of(DoctorConfig.URL_FIELD, "url")))
+                        ImmutableMap.of(DoctorConfig.ENDPOINT_URL_FIELD, "url")))
                 .build());
 
     DoctorReportHelper helper =
@@ -81,7 +80,7 @@ public class DoctorReportHelperTest {
                 .setSections(
                     ImmutableMap.of(
                         DoctorConfig.DOCTOR_SECTION,
-                        ImmutableMap.of(DoctorConfig.URL_FIELD, "url")))
+                        ImmutableMap.of(DoctorConfig.ENDPOINT_URL_FIELD, "url")))
                 .build());
 
     DoctorReportHelper helper =

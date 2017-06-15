@@ -218,8 +218,6 @@ standard_java_test(
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/query:query",
-        "//src/com/facebook/buck/rage:config",
-        "//src/com/facebook/buck/rage:rage",
         "//src/com/facebook/buck/rules:action_graph_cache",
         "//src/com/facebook/buck/rules:build_event",
         "//src/com/facebook/buck/rules:build_rule",
