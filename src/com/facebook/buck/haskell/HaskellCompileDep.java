@@ -28,6 +28,7 @@ public interface HaskellCompileDep {
   Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform);
 
   /** @return the {@link HaskellCompileInput} object that contributes to compilation. */
-  HaskellCompileInput getCompileInput(CxxPlatform cxxPlatform, Linker.LinkableDepType depType)
+  HaskellCompileInput getCompileInput(
+      CxxPlatform cxxPlatform, Linker.LinkableDepType depType, boolean hsProfile)
       throws NoSuchBuildTargetException;
 }

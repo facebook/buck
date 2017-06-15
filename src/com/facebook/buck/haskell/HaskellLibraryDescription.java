@@ -119,7 +119,8 @@ public class HaskellLibraryDescription
       CxxPlatform cxxPlatform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      Linker.LinkableDepType depType)
+      Linker.LinkableDepType depType,
+      boolean hsProfile)
       throws NoSuchBuildTargetException {
     return HaskellDescriptionUtils.requireCompileRule(
         params,
@@ -129,6 +130,7 @@ public class HaskellLibraryDescription
         cxxPlatform,
         haskellConfig,
         depType,
+        hsProfile,
         Optional.empty(),
         Optional.of(getPackageInfo(params.getBuildTarget())),
         args.getCompilerFlags(),
@@ -151,11 +153,20 @@ public class HaskellLibraryDescription
       CxxPlatform cxxPlatform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      Linker.LinkableDepType depType)
+      Linker.LinkableDepType depType,
+      boolean hsProfile)
       throws NoSuchBuildTargetException {
     HaskellCompileRule compileRule =
         requireCompileRule(
-            baseParams, resolver, pathResolver, ruleFinder, cxxPlatform, args, deps, depType);
+            baseParams,
+            resolver,
+            pathResolver,
+            ruleFinder,
+            cxxPlatform,
+            args,
+            deps,
+            depType,
+            hsProfile);
     return Archive.from(
         target,
         baseParams.getProjectFilesystem(),
@@ -164,12 +175,13 @@ public class HaskellLibraryDescription
         cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
             baseParams.getProjectFilesystem(),
-            target,
+            target.withoutFlavors(HaskellDescriptionUtils.PROF),
             cxxPlatform.getFlavor(),
             depType == Linker.LinkableDepType.STATIC
                 ? CxxSourceRuleFactory.PicType.PDC
                 : CxxSourceRuleFactory.PicType.PIC,
-            cxxPlatform.getStaticLibraryExtension()),
+            cxxPlatform.getStaticLibraryExtension(),
+            hsProfile ? "_p" : ""),
         compileRule.getObjects());
   }
 
@@ -182,7 +194,8 @@ public class HaskellLibraryDescription
       CxxPlatform cxxPlatform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      Linker.LinkableDepType depType)
+      Linker.LinkableDepType depType,
+      boolean hsProfile)
       throws NoSuchBuildTargetException {
     Preconditions.checkArgument(
         Sets.intersection(
@@ -194,10 +207,18 @@ public class HaskellLibraryDescription
                 ? Type.STATIC.getFlavor()
                 : Type.STATIC_PIC.getFlavor(),
             cxxPlatform.getFlavor());
+
+    if (hsProfile) {
+      target = target.withAppendedFlavors(HaskellDescriptionUtils.PROF);
+    } else {
+      target = target.withoutFlavors(HaskellDescriptionUtils.PROF);
+    }
+
     Optional<Archive> archive = resolver.getRuleOptionalWithType(target, Archive.class);
     if (archive.isPresent()) {
       return archive.get();
     }
+
     return resolver.addToIndex(
         createStaticLibrary(
             target,
@@ -208,7 +229,8 @@ public class HaskellLibraryDescription
             cxxPlatform,
             args,
             deps,
-            depType));
+            depType,
+            hsProfile));
   }
 
   private HaskellPackageRule createPackage(
@@ -220,9 +242,11 @@ public class HaskellLibraryDescription
       CxxPlatform cxxPlatform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      Linker.LinkableDepType depType)
+      Linker.LinkableDepType depType,
+      boolean hsProfile)
       throws NoSuchBuildTargetException {
 
+    ImmutableSortedSet<SourcePath> libraries;
     BuildRule library;
     switch (depType) {
       case SHARED:
@@ -236,6 +260,7 @@ public class HaskellLibraryDescription
                 cxxPlatform,
                 args,
                 deps);
+        libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
         break;
       case STATIC:
       case STATIC_PIC:
@@ -249,7 +274,35 @@ public class HaskellLibraryDescription
                 cxxPlatform,
                 args,
                 deps,
-                depType);
+                depType,
+                false);
+
+        if (hsProfile) {
+          if (!(Linker.LinkableDepType.STATIC == depType
+              || Linker.LinkableDepType.STATIC_PIC == depType)) {
+            throw new IllegalStateException();
+          }
+
+          BuildRule profiledLibrary =
+              requireStaticLibrary(
+                  getBaseBuildTarget(target),
+                  baseParams,
+                  resolver,
+                  pathResolver,
+                  ruleFinder,
+                  cxxPlatform,
+                  args,
+                  deps,
+                  depType,
+                  true);
+
+          libraries =
+              ImmutableSortedSet.of(
+                  library.getSourcePathToOutput(), profiledLibrary.getSourcePathToOutput());
+
+        } else {
+          libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
+        }
         break;
       default:
         throw new IllegalStateException();
@@ -260,17 +313,52 @@ public class HaskellLibraryDescription
     for (BuildRule rule : deps) {
       if (rule instanceof HaskellCompileDep) {
         ImmutableList<HaskellPackage> packages =
-            ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType).getPackages();
+            ((HaskellCompileDep) rule)
+                .getCompileInput(cxxPlatform, depType, hsProfile)
+                .getPackages();
         for (HaskellPackage pkg : packages) {
           depPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
         }
       }
     }
+
     ImmutableSortedMap<String, HaskellPackage> depPackages = depPackagesBuilder.build();
 
+    ImmutableSortedSet<SourcePath> interfaces;
+    ImmutableSortedSet<SourcePath> objects;
     HaskellCompileRule compileRule =
         requireCompileRule(
-            baseParams, resolver, pathResolver, ruleFinder, cxxPlatform, args, deps, depType);
+            baseParams,
+            resolver,
+            pathResolver,
+            ruleFinder,
+            cxxPlatform,
+            args,
+            deps,
+            depType,
+            false);
+
+    if (hsProfile) {
+      HaskellCompileRule profiledCompileRule =
+          requireCompileRule(
+              baseParams,
+              resolver,
+              pathResolver,
+              ruleFinder,
+              cxxPlatform,
+              args,
+              deps,
+              depType,
+              true);
+
+      interfaces =
+          ImmutableSortedSet.of(compileRule.getInterfaces(), profiledCompileRule.getInterfaces());
+      objects =
+          ImmutableSortedSet.of(compileRule.getObjectsDir(), profiledCompileRule.getObjectsDir());
+    } else {
+      interfaces = ImmutableSortedSet.of(compileRule.getInterfaces());
+      objects = ImmutableSortedSet.of(compileRule.getObjectsDir());
+    }
 
     return HaskellPackageRule.from(
         target,
@@ -282,9 +370,9 @@ public class HaskellLibraryDescription
         getPackageInfo(target),
         depPackages,
         compileRule.getModules(),
-        ImmutableSortedSet.of(library.getSourcePathToOutput()),
-        ImmutableSortedSet.of(compileRule.getInterfaces()),
-        ImmutableSortedSet.of(compileRule.getObjectsDir()));
+        libraries,
+        interfaces,
+        objects);
   }
 
   private HaskellPackageRule requirePackage(
@@ -296,7 +384,8 @@ public class HaskellLibraryDescription
       CxxPlatform cxxPlatform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      Linker.LinkableDepType depType)
+      Linker.LinkableDepType depType,
+      boolean hsProfile)
       throws NoSuchBuildTargetException {
     Preconditions.checkArgument(
         Sets.intersection(
@@ -316,6 +405,11 @@ public class HaskellLibraryDescription
       default:
         throw new IllegalStateException();
     }
+
+    if (hsProfile) {
+      target = target.withAppendedFlavors(HaskellDescriptionUtils.PROF);
+    }
+
     Optional<HaskellPackageRule> packageRule =
         resolver.getRuleOptionalWithType(target, HaskellPackageRule.class);
     if (packageRule.isPresent()) {
@@ -331,7 +425,8 @@ public class HaskellLibraryDescription
             cxxPlatform,
             args,
             deps,
-            depType));
+            depType,
+            hsProfile));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -353,7 +448,8 @@ public class HaskellLibraryDescription
             cxxPlatform,
             args,
             deps,
-            Linker.LinkableDepType.SHARED);
+            Linker.LinkableDepType.SHARED,
+            false);
     return HaskellDescriptionUtils.createLinkRule(
         target,
         baseParams,
@@ -365,7 +461,8 @@ public class HaskellLibraryDescription
         ImmutableList.of(),
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
-        Linker.LinkableDepType.SHARED);
+        Linker.LinkableDepType.SHARED,
+        false);
   }
 
   private HaskellLinkRule requireSharedLibrary(
@@ -384,6 +481,7 @@ public class HaskellLibraryDescription
             .isEmpty());
     BuildTarget target =
         baseTarget.withAppendedFlavors(Type.SHARED.getFlavor(), cxxPlatform.getFlavor());
+
     Optional<HaskellLinkRule> linkRule =
         resolver.getRuleOptionalWithType(target, HaskellLinkRule.class);
     if (linkRule.isPresent()) {
@@ -445,7 +543,8 @@ public class HaskellLibraryDescription
               cxxPlatform.get(),
               args,
               deps,
-              depType);
+              depType,
+              false);
         case SHARED:
           return requireSharedLibrary(
               baseTarget,
@@ -469,7 +568,8 @@ public class HaskellLibraryDescription
               deps,
               type.get().getValue() == Type.STATIC
                   ? Linker.LinkableDepType.STATIC
-                  : Linker.LinkableDepType.STATIC_PIC);
+                  : Linker.LinkableDepType.STATIC_PIC,
+              false);
       }
 
       throw new IllegalStateException(
@@ -488,7 +588,7 @@ public class HaskellLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType depType)
+          CxxPlatform cxxPlatform, Linker.LinkableDepType depType, boolean hsProfile)
           throws NoSuchBuildTargetException {
         HaskellPackageRule rule =
             requirePackage(
@@ -500,7 +600,8 @@ public class HaskellLibraryDescription
                 cxxPlatform,
                 args,
                 allDeps.get(resolver, cxxPlatform),
-                depType);
+                depType,
+                hsProfile);
         return HaskellCompileInput.builder().addPackages(rule.getPackage()).build();
       }
 
@@ -545,7 +646,8 @@ public class HaskellLibraryDescription
                     cxxPlatform,
                     args,
                     allDeps.get(resolver, cxxPlatform),
-                    type);
+                    type,
+                    false);
             linkArgs =
                 args.getLinkWhole()
                     ? cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg())

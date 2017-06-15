@@ -42,6 +42,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,8 +82,20 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType depType)
+          CxxPlatform cxxPlatform, Linker.LinkableDepType depType, boolean hsProfile)
           throws NoSuchBuildTargetException {
+
+        ImmutableCollection<SourcePath> libs = null;
+        if (Linker.LinkableDepType.SHARED == depType) {
+          libs = args.getSharedLibs().values();
+        } else {
+          if (hsProfile) {
+            libs = args.getProfiledStaticLibs();
+          } else {
+            libs = args.getStaticLibs();
+          }
+        }
+
         return HaskellCompileInput.builder()
             .addAllFlags(args.getExportedCompilerFlags())
             .addPackages(
@@ -92,10 +105,7 @@ public class HaskellPrebuiltLibraryDescription
                             getBuildTarget().getShortName(), args.getVersion(), args.getId()))
                     .setPackageDb(args.getDb())
                     .addAllInterfaces(args.getImportDirs())
-                    .addAllLibraries(
-                        depType == Linker.LinkableDepType.SHARED
-                            ? args.getSharedLibs().values()
-                            : args.getStaticLibs())
+                    .addAllLibraries(libs)
                     .build())
             .build();
       }
@@ -176,6 +186,8 @@ public class HaskellPrebuiltLibraryDescription
     ImmutableList<SourcePath> getImportDirs();
 
     ImmutableList<SourcePath> getStaticLibs();
+
+    ImmutableList<SourcePath> getProfiledStaticLibs();
 
     ImmutableMap<String, SourcePath> getSharedLibs();
 

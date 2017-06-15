@@ -215,6 +215,7 @@ public class HaskellBinaryDescription
                 cxxPlatform,
                 haskellConfig,
                 depType,
+                false,
                 args.getMain(),
                 Optional.empty(),
                 args.getCompilerFlags(),
@@ -244,7 +245,8 @@ public class HaskellBinaryDescription
             linkFlags,
             linkArgs,
             RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
-            depType);
+            depType,
+            false);
 
     return new HaskellBinary(
         params.copyAppendingExtraDeps(linkRule),

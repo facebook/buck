@@ -47,7 +47,7 @@ public class HaskellBinaryDescriptionTest {
     builder.build(resolver);
     BuildTarget compileTarget =
         HaskellDescriptionUtils.getCompileBuildTarget(
-            target, CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
+            target, CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     HaskellCompileRule rule = resolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
     assertThat(rule.getFlags(), Matchers.hasItem(flag));
   }

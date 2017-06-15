@@ -65,10 +65,11 @@ public class HaskellLibraryDescriptionTest {
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     HaskellLibrary library = builder.build(resolver);
-    library.getCompileInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
+    library.getCompileInput(
+        CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     BuildTarget compileTarget =
         HaskellDescriptionUtils.getCompileBuildTarget(
-            target, CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
+            target, CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     HaskellCompileRule rule = resolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
     assertThat(rule.getFlags(), Matchers.hasItem(flag));
   }
@@ -235,7 +236,8 @@ public class HaskellLibraryDescriptionTest {
             HaskellDescriptionUtils.getCompileBuildTarget(
                 library.getBuildTarget(),
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                Linker.LinkableDepType.STATIC)));
+                Linker.LinkableDepType.STATIC,
+                false)));
   }
 
   @Test

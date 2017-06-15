@@ -35,6 +35,7 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -65,6 +66,12 @@ public class HaskellDescriptionUtils {
 
   private HaskellDescriptionUtils() {}
 
+  static final Flavor PROF = InternalFlavor.of("prof");
+  static final ImmutableList<String> PROF_FLAGS =
+      ImmutableList.of("-prof", "-osuf", "p_o", "-hisuf", "p_hi");
+  static final ImmutableList<String> PIC_FLAGS =
+      ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi");
+
   /**
    * Create a Haskell compile rule that compiles all the given haskell sources in one step and pulls
    * interface files from all transitive haskell dependencies.
@@ -78,6 +85,7 @@ public class HaskellDescriptionUtils {
       final CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       final Linker.LinkableDepType depType,
+      boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
@@ -100,7 +108,7 @@ public class HaskellDescriptionUtils {
           HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
           ruleDeps = haskellCompileDep.getCompileDeps(cxxPlatform);
           HaskellCompileInput compileInput =
-              haskellCompileDep.getCompileInput(cxxPlatform, depType);
+              haskellCompileDep.getCompileInput(cxxPlatform, depType, hsProfile);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
           depIncludes.put(rule.getBuildTarget(), compileInput.getIncludes());
 
@@ -158,6 +166,7 @@ public class HaskellDescriptionUtils {
         depType == Linker.LinkableDepType.STATIC
             ? CxxSourceRuleFactory.PicType.PDC
             : CxxSourceRuleFactory.PicType.PIC,
+        hsProfile,
         main,
         packageInfo,
         includes,
@@ -168,10 +177,21 @@ public class HaskellDescriptionUtils {
   }
 
   protected static BuildTarget getCompileBuildTarget(
-      BuildTarget target, CxxPlatform cxxPlatform, Linker.LinkableDepType depType) {
-    return target.withFlavors(
-        cxxPlatform.getFlavor(),
-        InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType depType,
+      boolean hsProfile) {
+
+    target =
+        target.withFlavors(
+            cxxPlatform.getFlavor(),
+            InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
+
+    if (hsProfile) {
+      target = target.withAppendedFlavors(PROF);
+    }
+
+    return target;
   }
 
   public static HaskellCompileRule requireCompileRule(
@@ -182,13 +202,15 @@ public class HaskellDescriptionUtils {
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkableDepType depType,
+      boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
       HaskellSources srcs)
       throws NoSuchBuildTargetException {
 
-    BuildTarget target = getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, depType);
+    BuildTarget target =
+        getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, depType, hsProfile);
 
     // If this rule has already been generated, return it.
     Optional<HaskellCompileRule> existing =
@@ -207,6 +229,7 @@ public class HaskellDescriptionUtils {
             cxxPlatform,
             haskellConfig,
             depType,
+            hsProfile,
             main,
             packageInfo,
             flags,
@@ -228,7 +251,8 @@ public class HaskellDescriptionUtils {
       ImmutableList<String> extraFlags,
       Iterable<Arg> linkerInputs,
       Iterable<? extends NativeLinkable> deps,
-      Linker.LinkableDepType depType)
+      Linker.LinkableDepType depType,
+      boolean hsProfile)
       throws NoSuchBuildTargetException {
 
     Tool linker = haskellConfig.getLinker().resolve(resolver);
@@ -292,6 +316,7 @@ public class HaskellDescriptionUtils {
                 cxxPlatform,
                 haskellConfig,
                 depType,
+                hsProfile,
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableList.of(),

@@ -78,7 +78,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final PreprocessorFlags ppFlags;
   private final CxxPlatform cxxPlatform;
 
-  @AddToRuleKey private final CxxSourceRuleFactory.PicType picType;
+  @AddToRuleKey private boolean pic;
+
+  @AddToRuleKey private final boolean hsProfile;
 
   @AddToRuleKey private final Optional<String> main;
 
@@ -111,6 +113,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType,
+      boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<SourcePath> includes,
@@ -124,7 +127,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.flags = flags;
     this.ppFlags = ppFlags;
     this.cxxPlatform = cxxPlatform;
-    this.picType = picType;
+    this.pic = (picType == CxxSourceRuleFactory.PicType.PIC);
+    this.hsProfile = hsProfile;
     this.main = main;
     this.packageInfo = packageInfo;
     this.includes = includes;
@@ -132,6 +136,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.packages = packages;
     this.sources = sources;
     this.preprocessor = preprocessor;
+
+    Preconditions.checkState(!(pic && hsProfile), "Currently don't support profiled PIC.");
   }
 
   public static HaskellCompileRule from(
@@ -144,6 +150,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType,
+      boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       final ImmutableList<SourcePath> includes,
@@ -173,6 +180,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         ppFlags,
         cxxPlatform,
         picType,
+        hsProfile,
         main,
         packageInfo,
         includes,
@@ -257,73 +265,92 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return MoreIterables.zipAndConcat(Iterables.cycle("-optP"), cxxToolFlags.getAllFlags());
   }
 
+  private class GhcStep extends ShellStep {
+
+    private BuildContext buildContext;
+
+    public GhcStep(Path rootPath, BuildContext buildContext) {
+      super(rootPath);
+      this.buildContext = buildContext;
+    }
+
+    @Override
+    public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+      return ImmutableMap.<String, String>builder()
+          .putAll(super.getEnvironmentVariables(context))
+          .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
+          .build();
+    }
+
+    @Override
+    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+      ImmutableList<String> extraArgs = null;
+      if (pic) {
+        extraArgs = HaskellDescriptionUtils.PIC_FLAGS;
+      } else if (hsProfile) {
+        extraArgs = HaskellDescriptionUtils.PROF_FLAGS;
+      } else {
+        extraArgs = ImmutableList.of();
+      }
+
+      return getCommandWithExtraArgs(extraArgs);
+    }
+
+    private ImmutableList<String> getCommandWithExtraArgs(ImmutableList<String> extraArgs) {
+      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+
+      return ImmutableList.<String>builder()
+          .addAll(compiler.getCommandPrefix(resolver))
+          .addAll(flags)
+          .add("-no-link")
+          .addAll(extraArgs)
+          .addAll(
+              MoreIterables.zipAndConcat(Iterables.cycle("-main-is"), OptionalCompat.asSet(main)))
+          .addAll(getPackageNameArgs())
+          .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
+          .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
+          .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
+          .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
+          .add(
+              "-i"
+                  + includes
+                      .stream()
+                      .map(resolver::getAbsolutePath)
+                      .map(Object::toString)
+                      .collect(Collectors.joining(":")))
+          .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
+          .addAll(
+              sources
+                  .getSourcePaths()
+                  .stream()
+                  .map(resolver::getAbsolutePath)
+                  .map(Object::toString)
+                  .iterator())
+          .build();
+    }
+
+    @Override
+    public String getShortName() {
+      return "haskell-compile";
+    }
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
     buildableContext.recordArtifact(getStubDir());
-    String interfaceSuffix = picType == CxxSourceRuleFactory.PicType.PIC ? "dyn_hi" : "hi";
-    return new ImmutableList.Builder<Step>()
-        .add(prepareOutputDir("object", getObjectDir(), "o"))
-        .add(prepareOutputDir("interface", getInterfaceDir(), interfaceSuffix))
+
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    steps
+        .add(prepareOutputDir("object", getObjectDir(), getInterfaceSuffix()))
+        .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
-        .add(
-            new ShellStep(getProjectFilesystem().getRootPath()) {
+        .add(new GhcStep(getProjectFilesystem().getRootPath(), buildContext));
 
-              @Override
-              public ImmutableMap<String, String> getEnvironmentVariables(
-                  ExecutionContext context) {
-                return ImmutableMap.<String, String>builder()
-                    .putAll(super.getEnvironmentVariables(context))
-                    .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
-                    .build();
-              }
-
-              @Override
-              protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-                SourcePathResolver resolver = buildContext.getSourcePathResolver();
-                return ImmutableList.<String>builder()
-                    .addAll(compiler.getCommandPrefix(resolver))
-                    .addAll(flags)
-                    .add("-no-link")
-                    .add("-hisuf", interfaceSuffix)
-                    .addAll(
-                        picType == CxxSourceRuleFactory.PicType.PIC
-                            ? ImmutableList.of("-dynamic", "-fPIC")
-                            : ImmutableList.of())
-                    .addAll(
-                        MoreIterables.zipAndConcat(
-                            Iterables.cycle("-main-is"), OptionalCompat.asSet(main)))
-                    .addAll(getPackageNameArgs())
-                    .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
-                    .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
-                    .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
-                    .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
-                    .add(
-                        "-i"
-                            + includes
-                                .stream()
-                                .map(resolver::getAbsolutePath)
-                                .map(Object::toString)
-                                .collect(Collectors.joining(":")))
-                    .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
-                    .addAll(
-                        sources
-                            .getSourcePaths()
-                            .stream()
-                            .map(resolver::getAbsolutePath)
-                            .map(Object::toString)
-                            .iterator())
-                    .build();
-              }
-
-              @Override
-              public String getShortName() {
-                return "haskell-compile";
-              }
-            })
-        .build();
+    return steps.build();
   }
 
   @Override
@@ -336,13 +363,33 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), getInterfaceDir());
   }
 
+  private String getObjectSuffix() {
+    if (hsProfile) {
+      return "p_o";
+    } else {
+      return "o";
+    }
+  }
+
+  private String getInterfaceSuffix() {
+    if (pic) {
+      return "dyn_hi";
+    } else if (hsProfile) {
+      return "p_hi";
+    } else {
+      return "hi";
+    }
+  }
+
   public ImmutableList<SourcePath> getObjects() {
+    final String suffix = "." + getObjectSuffix();
+
     ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
     for (String module : sources.getModuleNames()) {
       objects.add(
           new ExplicitBuildTargetSourcePath(
               getBuildTarget(),
-              getObjectDir().resolve(module.replace('.', File.separatorChar) + ".o")));
+              getObjectDir().resolve(module.replace('.', File.separatorChar) + suffix)));
     }
     return objects.build();
   }

@@ -597,7 +597,17 @@ public class CxxDescriptionEnhancer {
       Flavor platform,
       CxxSourceRuleFactory.PicType pic,
       String extension) {
-    String name = String.format("lib%s.%s", target.getShortName(), extension);
+    return getStaticLibraryPath(filesystem, target, platform, pic, extension, "");
+  }
+
+  public static Path getStaticLibraryPath(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      Flavor platform,
+      CxxSourceRuleFactory.PicType pic,
+      String extension,
+      String suffix) {
+    String name = String.format("lib%s%s.%s", target.getShortName(), suffix, extension);
     return BuildTargets.getGenPath(
             filesystem, createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);

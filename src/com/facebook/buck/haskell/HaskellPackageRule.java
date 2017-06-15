@@ -44,10 +44,10 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -151,7 +151,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     Path pkgRoot = getProjectFilesystem().getPath("${pkgroot}");
 
     if (!modules.isEmpty()) {
-      List<String> importDirs = new ArrayList<>();
+      Set<String> importDirs = new LinkedHashSet<>();
       for (SourcePath interfaceDir : interfaces) {
         Path relInterfaceDir =
             pkgRoot.resolve(
@@ -161,13 +161,15 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       entries.put("import-dirs", Joiner.on(", ").join(importDirs));
     }
 
-    List<String> libDirs = new ArrayList<>();
-    List<String> libs = new ArrayList<>();
+    Set<String> libDirs = new LinkedHashSet<>();
+    Set<String> libs = new LinkedHashSet<>();
     for (SourcePath library : libraries) {
       Path relLibPath =
           pkgRoot.resolve(packageDb.getParent().relativize(resolver.getRelativePath(library)));
       libDirs.add('"' + relLibPath.getParent().toString() + '"');
-      libs.add(MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib"));
+
+      String libName = MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib");
+      libs.add(libName.replaceAll("_p$", ""));
     }
     entries.put("library-dirs", Joiner.on(", ").join(libDirs));
 

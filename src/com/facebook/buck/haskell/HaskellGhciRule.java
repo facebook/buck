@@ -75,6 +75,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey ImmutableSet<HaskellPackage> prebuiltHaskellPackages;
 
+  @AddToRuleKey boolean enableProfiling;
+
   @AddToRuleKey(stringify = true)
   Path ghciScriptTemplate;
 
@@ -108,6 +110,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableSet<HaskellPackage> firstOrderHaskellPackages,
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
+      boolean enableProfiling,
       Path ghciScriptTemplate,
       Path ghciBinutils,
       Path ghciGhc,
@@ -126,6 +129,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.firstOrderHaskellPackages = firstOrderHaskellPackages;
     this.haskellPackages = haskellPackages;
     this.prebuiltHaskellPackages = prebuiltHaskellPackages;
+    this.enableProfiling = enableProfiling;
     this.ghciScriptTemplate = ghciScriptTemplate;
     this.ghciBinutils = ghciBinutils;
     this.ghciGhc = ghciGhc;
@@ -162,6 +166,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableSet<HaskellPackage> firstOrderHaskellPackages,
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
+      boolean enableProfiling,
       Path ghciScriptTemplate,
       Path ghciBinutils,
       Path ghciGhc,
@@ -201,6 +206,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         firstOrderHaskellPackages,
         haskellPackages,
         prebuiltHaskellPackages,
+        enableProfiling,
         ghciScriptTemplate,
         ghciBinutils,
         ghciGhc,
@@ -393,6 +399,11 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                         MoreIterables.zipAndConcat(
                             Iterables.cycle("-expose-package"), exposedPkgs.build()))
                     .build());
+
+    if (enableProfiling) {
+      compilerFlags =
+          ImmutableList.copyOf(Iterables.concat(compilerFlags, HaskellDescriptionUtils.PROF_FLAGS));
+    }
 
     String ghc = ghcPath;
     ImmutableMap.Builder<String, String> templateArgs = ImmutableMap.builder();

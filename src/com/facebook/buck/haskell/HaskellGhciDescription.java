@@ -215,7 +215,8 @@ public class HaskellGhciDescription
             if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
               HaskellCompileInput ci =
                   ((HaskellCompileDep) rule)
-                      .getCompileInput(cxxPlatform, Linker.LinkableDepType.STATIC);
+                      .getCompileInput(
+                          cxxPlatform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
@@ -299,6 +300,7 @@ public class HaskellGhciDescription
             firstOrderHaskellPackages.build(),
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
+            args.getEnableProfiling(),
             haskellConfig.getGhciScriptTemplate(),
             haskellConfig.getGhciBinutils(),
             haskellConfig.getGhciGhc(),
