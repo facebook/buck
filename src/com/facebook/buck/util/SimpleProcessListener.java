@@ -98,7 +98,7 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
     this.process = process;
     if (nextStdInToWrite == null) {
-      this.process.closeStdin(/* force */ true);
+      this.process.closeStdin(/* force */ false);
     }
   }
 

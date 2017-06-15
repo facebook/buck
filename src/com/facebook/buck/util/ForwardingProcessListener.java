@@ -31,7 +31,9 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
   }
 
   @Override
-  public void onStart(ListeningProcessExecutor.LaunchedProcess process) {}
+  public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
+    process.closeStdin(false);
+  }
 
   @Override
   public void onExit(int exitCode) {}
