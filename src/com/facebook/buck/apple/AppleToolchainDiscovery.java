@@ -111,11 +111,11 @@ public class AppleToolchainDiscovery {
   private static Optional<AppleToolchain> toolchainFromPlist(Path toolchainDir, String plistName)
       throws IOException {
     Path toolchainInfoPlistPath = toolchainDir.resolve(plistName);
-    InputStream toolchainInfoPlist = Files.newInputStream(toolchainInfoPlistPath);
-    BufferedInputStream bufferedToolchainInfoPlist = new BufferedInputStream(toolchainInfoPlist);
 
     NSDictionary parsedToolchainInfoPlist;
-    try {
+    try (InputStream toolchainInfoPlist = Files.newInputStream(toolchainInfoPlistPath);
+        BufferedInputStream bufferedToolchainInfoPlist =
+            new BufferedInputStream(toolchainInfoPlist)) {
       parsedToolchainInfoPlist =
           (NSDictionary) PropertyListParser.parse(bufferedToolchainInfoPlist);
     } catch (PropertyListFormatException
