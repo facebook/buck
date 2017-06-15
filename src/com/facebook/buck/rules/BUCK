@@ -373,6 +373,7 @@ java_immutables_library(
         "IndividualTestEvent.java",
         "InitializableFromDisk.java",
         "Manifest.java",
+        "NoopBuildRule.java",
         "NoopBuildRuleWithDeclaredAndExtraDeps.java",
         "OverrideScheduleRule.java",
         "RuleDepsCache.java",
