@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -228,7 +229,8 @@ public class CxxLibraryDescription
 
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            params,
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
@@ -243,7 +245,9 @@ public class CxxLibraryDescription
 
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree = CxxDescriptionEnhancer.createSandboxTree(params, ruleResolver, cxxPlatform);
+      sandboxTree =
+          CxxDescriptionEnhancer.createSandboxTree(
+              params.getBuildTarget(), ruleResolver, cxxPlatform);
     }
 
     // Create rule to build the object files.
@@ -423,7 +427,8 @@ public class CxxLibraryDescription
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ library. */
   private HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args)
@@ -434,23 +439,20 @@ public class CxxLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            resolver,
-            ruleFinder,
-            pathResolver,
-            Optional.of(cxxPlatform),
-            args),
+            buildTarget, resolver, ruleFinder, pathResolver, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         shouldCreatePrivateHeaderSymlinks);
   }
 
   /** @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library. */
   private HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPreprocessables.HeaderMode mode,
       CxxLibraryDescriptionArg args)
@@ -458,17 +460,19 @@ public class CxxLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
-            params.getBuildTarget(), resolver, ruleFinder, pathResolver, Optional.empty(), args),
+            buildTarget, resolver, ruleFinder, pathResolver, Optional.empty(), args),
         HeaderVisibility.PUBLIC);
   }
 
   /** @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library. */
   private HeaderSymlinkTree createExportedPlatformHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args)
@@ -478,11 +482,12 @@ public class CxxLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedPlatformHeaders(
-            params.getBuildTarget(), resolver, ruleFinder, pathResolver, cxxPlatform, args),
+            buildTarget, resolver, ruleFinder, pathResolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC,
         shouldCreatePublicHeaderSymlinks);
   }
@@ -698,7 +703,8 @@ public class CxxLibraryDescription
               args,
               cxxDeps.get(resolver, cxxPlatform),
               transitiveCxxPreprocessorInputFunction);
-      return CxxCompilationDatabase.createCompilationDatabase(params, objects.keySet());
+      return CxxCompilationDatabase.createCompilationDatabase(
+          params.getBuildTarget(), params.getProjectFilesystem(), objects.keySet());
     } else if (params
         .getBuildTarget()
         .getFlavors()
@@ -716,14 +722,14 @@ public class CxxLibraryDescription
           args,
           inferBuckConfig);
     } else if (type.isPresent() && !platform.isPresent()) {
-      BuildRuleParams untypedParams = getUntypedParams(params);
+      BuildTarget untypedBuildTarget = getUntypedBuildTarget(buildTarget);
       switch (type.get().getValue()) {
         case EXPORTED_HEADERS:
           Optional<CxxPreprocessables.HeaderMode> mode =
               HEADER_MODE.getValue(params.getBuildTarget());
           if (mode.isPresent()) {
             return createExportedHeaderSymlinkTreeBuildRule(
-                untypedParams, resolver, mode.get(), args);
+                untypedBuildTarget, params.getProjectFilesystem(), resolver, mode.get(), args);
           }
           break;
           // $CASES-OMITTED$
@@ -734,13 +740,15 @@ public class CxxLibraryDescription
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.
 
-      BuildRuleParams untypedParams = getUntypedParams(params);
+      BuildTarget untypedBuildTarget = getUntypedBuildTarget(buildTarget);
+      BuildRuleParams untypedParams = params.withBuildTarget(untypedBuildTarget);
       switch (type.get().getValue()) {
         case HEADERS:
-          return createHeaderSymlinkTreeBuildRule(untypedParams, resolver, platform.get(), args);
+          return createHeaderSymlinkTreeBuildRule(
+              untypedBuildTarget, params.getProjectFilesystem(), resolver, platform.get(), args);
         case EXPORTED_HEADERS:
           return createExportedPlatformHeaderSymlinkTreeBuildRule(
-              untypedParams, resolver, platform.get(), args);
+              untypedBuildTarget, params.getProjectFilesystem(), resolver, platform.get(), args);
         case SHARED:
           return createSharedLibraryBuildRule(
               untypedParams,
@@ -871,18 +879,16 @@ public class CxxLibraryDescription
     return LIBRARY_TYPE.getFlavorAndValue(buildTarget);
   }
 
-  static BuildRuleParams getUntypedParams(BuildRuleParams params) {
-    Optional<Map.Entry<Flavor, Type>> type = getLibType(params.getBuildTarget());
+  static BuildTarget getUntypedBuildTarget(BuildTarget buildTarget) {
+    Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
     if (!type.isPresent()) {
-      return params;
+      return buildTarget;
     }
-    Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
+    Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
     flavors.remove(type.get().getKey());
     BuildTarget target =
-        BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
-            .addAllFlavors(flavors)
-            .build();
-    return params.withBuildTarget(target);
+        BuildTarget.builder(buildTarget.getUnflavoredBuildTarget()).addAllFlavors(flavors).build();
+    return target;
   }
 
   @Override

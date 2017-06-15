@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -76,7 +77,8 @@ public class CxxBinaryDescription
    * @return a {@link com.facebook.buck.cxx.HeaderSymlinkTree} for the headers of this C/C++ binary.
    */
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescriptionArg args)
@@ -84,16 +86,12 @@ public class CxxBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            resolver,
-            ruleFinder,
-            pathResolver,
-            Optional.of(cxxPlatform),
-            args),
+            buildTarget, resolver, ruleFinder, pathResolver, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         true);
   }
@@ -169,9 +167,8 @@ public class CxxBinaryDescription
           BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
               .addAllFlavors(flavors)
               .build();
-      BuildRuleParams typeParams = params.withBuildTarget(target);
-
-      return createHeaderSymlinkTreeBuildRule(typeParams, resolver, cxxPlatform, args);
+      return createHeaderSymlinkTreeBuildRule(
+          target, params.getProjectFilesystem(), resolver, cxxPlatform, args);
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
@@ -190,7 +187,9 @@ public class CxxBinaryDescription
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params, cxxLinkAndCompileRules.compileRules);
+          params.getBuildTarget(),
+          params.getProjectFilesystem(),
+          cxxLinkAndCompileRules.compileRules);
     }
 
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {

@@ -300,7 +300,13 @@ public class HalideLibraryDescription
       headersBuilder.put(
           outputPath.getFileName(), new ExplicitBuildTargetSourcePath(compileTarget, outputPath));
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-          params, resolver, cxxPlatform, headersBuilder.build(), HeaderVisibility.PUBLIC, true);
+          params.getBuildTarget(),
+          params.getProjectFilesystem(),
+          resolver,
+          cxxPlatform,
+          headersBuilder.build(),
+          HeaderVisibility.PUBLIC,
+          true);
     } else if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(

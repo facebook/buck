@@ -113,7 +113,8 @@ public class CxxDescriptionEnhancer {
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPreprocessables.HeaderMode mode,
       ImmutableMap<Path, SourcePath> headers,
@@ -121,13 +122,13 @@ public class CxxDescriptionEnhancer {
       Flavor... flavors) {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-            params.getBuildTarget(), headerVisibility, flavors);
+            buildTarget, headerVisibility, flavors);
     Path headerSymlinkTreeRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-            params.getProjectFilesystem(), params.getBuildTarget(), headerVisibility, flavors);
+            projectFilesystem, buildTarget, headerVisibility, flavors);
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         headerSymlinkTreeTarget,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         headerSymlinkTreeRoot,
         headers,
         mode,
@@ -135,14 +136,16 @@ public class CxxDescriptionEnhancer {
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
       boolean shouldCreateHeadersSymlinks) {
     return createHeaderSymlinkTree(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
         getHeaderModeForPlatform(resolver, cxxPlatform, shouldCreateHeadersSymlinks),
         headers,
@@ -171,16 +174,17 @@ public class CxxDescriptionEnhancer {
   }
 
   public static HeaderSymlinkTree requireHeaderSymlinkTree(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
       boolean shouldCreateHeadersSymlinks) {
-    BuildRuleParams untypedParams = CxxLibraryDescription.getUntypedParams(params);
+    BuildTarget untypedTarget = CxxLibraryDescription.getUntypedBuildTarget(buildTarget);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-            untypedParams.getBuildTarget(), headerVisibility, cxxPlatform.getFlavor());
+            untypedTarget, headerVisibility, cxxPlatform.getFlavor());
 
     // Check the cache...
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerSymlinkTreeTarget);
@@ -191,7 +195,8 @@ public class CxxDescriptionEnhancer {
 
     HeaderSymlinkTree symlinkTree =
         createHeaderSymlinkTree(
-            untypedParams,
+            untypedTarget,
+            projectFilesystem,
             ruleResolver,
             cxxPlatform,
             headers,
@@ -204,12 +209,12 @@ public class CxxDescriptionEnhancer {
   }
 
   private static SymlinkTree requireSandboxSymlinkTree(
-      BuildRuleParams params, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform)
+      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    BuildRuleParams untypedParams = CxxLibraryDescription.getUntypedParams(params);
+    BuildTarget untypedTarget = CxxLibraryDescription.getUntypedBuildTarget(buildTarget);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
-            untypedParams.getBuildTarget(), cxxPlatform.getFlavor());
+            untypedTarget, cxxPlatform.getFlavor());
     BuildRule rule = ruleResolver.requireRule(headerSymlinkTreeTarget);
     Preconditions.checkState(
         rule instanceof SymlinkTree, rule.getBuildTarget() + " " + rule.getClass().toString());
@@ -831,7 +836,8 @@ public class CxxDescriptionEnhancer {
         xcodePrivateHeadersSymlinks.orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled());
     HeaderSymlinkTree headerSymlinkTree =
         requireHeaderSymlinkTree(
-            params,
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
             resolver,
             cxxPlatform,
             headers,
@@ -839,7 +845,7 @@ public class CxxDescriptionEnhancer {
             shouldCreatePrivateHeadersSymlinks);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree = createSandboxTree(params, resolver, cxxPlatform);
+      sandboxTree = createSandboxTree(params.getBuildTarget(), resolver, cxxPlatform);
     }
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         collectCxxPreprocessorInput(
@@ -1137,9 +1143,9 @@ public class CxxDescriptionEnhancer {
   }
 
   public static Optional<SymlinkTree> createSandboxTree(
-      BuildRuleParams params, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform)
+      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    return Optional.of(requireSandboxSymlinkTree(params, ruleResolver, cxxPlatform));
+    return Optional.of(requireSandboxSymlinkTree(buildTarget, ruleResolver, cxxPlatform));
   }
 
   /**

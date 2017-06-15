@@ -161,10 +161,18 @@ public class CxxPythonExtensionDescription
     // and all dependencies.
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            params, ruleResolver, cxxPlatform, headers, HeaderVisibility.PRIVATE, true);
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
+            ruleResolver,
+            cxxPlatform,
+            headers,
+            HeaderVisibility.PRIVATE,
+            true);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree = CxxDescriptionEnhancer.createSandboxTree(params, ruleResolver, cxxPlatform);
+      sandboxTree =
+          CxxDescriptionEnhancer.createSandboxTree(
+              params.getBuildTarget(), ruleResolver, cxxPlatform);
     }
 
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =

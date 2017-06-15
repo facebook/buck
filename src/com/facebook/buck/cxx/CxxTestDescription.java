@@ -173,7 +173,9 @@ public class CxxTestDescription
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params, cxxLinkAndCompileRules.compileRules);
+          params.getBuildTarget(),
+          params.getProjectFilesystem(),
+          cxxLinkAndCompileRules.compileRules);
     }
 
     if (params

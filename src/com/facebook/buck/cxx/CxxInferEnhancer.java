@@ -325,7 +325,8 @@ public final class CxxInferEnhancer {
     }
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            params,
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
             headers,
@@ -333,7 +334,9 @@ public final class CxxInferEnhancer {
             shouldCreateHeadersSymlinks);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree = CxxDescriptionEnhancer.createSandboxTree(params, ruleResolver, cxxPlatform);
+      sandboxTree =
+          CxxDescriptionEnhancer.createSandboxTree(
+              params.getBuildTarget(), ruleResolver, cxxPlatform);
     }
 
     ImmutableList<CxxPreprocessorInput> preprocessorInputs;

@@ -307,7 +307,8 @@ public class PrebuiltCxxLibraryDescription
       PrebuiltCxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
+        params.getBuildTarget(),
+        params.getProjectFilesystem(),
         resolver,
         cxxPlatform,
         parseExportedHeaders(params, resolver, cxxPlatform, args),

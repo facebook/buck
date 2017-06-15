@@ -67,9 +67,6 @@ public class CxxCompilationDatabaseTest {
     final Path fakeRoot = Paths.get(root);
     ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
-    BuildRuleParams testBuildRuleParams =
-        new FakeBuildRuleParamsBuilder(testBuildTarget).setProjectFilesystem(filesystem).build();
-
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver =
@@ -77,7 +74,8 @@ public class CxxCompilationDatabaseTest {
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
-            testBuildRuleParams,
+            testBuildTarget,
+            filesystem,
             testBuildRuleResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMap.of(),
@@ -86,7 +84,8 @@ public class CxxCompilationDatabaseTest {
     testBuildRuleResolver.addToIndex(privateSymlinkTree);
     HeaderSymlinkTree exportedSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
-            testBuildRuleParams,
+            testBuildTarget,
+            filesystem,
             testBuildRuleResolver,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMap.of(),
@@ -95,7 +94,7 @@ public class CxxCompilationDatabaseTest {
     testBuildRuleResolver.addToIndex(exportedSymlinkTree);
 
     BuildTarget compileTarget =
-        BuildTarget.builder(testBuildRuleParams.getBuildTarget().getUnflavoredBuildTarget())
+        BuildTarget.builder(testBuildTarget.getUnflavoredBuildTarget())
             .addFlavors(InternalFlavor.of("compile-test.cpp"))
             .build();
 
@@ -151,7 +150,8 @@ public class CxxCompilationDatabaseTest {
                 Optional.empty())));
 
     CxxCompilationDatabase compilationDatabase =
-        CxxCompilationDatabase.createCompilationDatabase(testBuildRuleParams, rules.build());
+        CxxCompilationDatabase.createCompilationDatabase(
+            testBuildTarget, filesystem, rules.build());
     testBuildRuleResolver.addToIndex(compilationDatabase);
 
     assertThat(

@@ -23,11 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -49,8 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class CxxCompilationDatabase extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasRuntimeDeps {
+public class CxxCompilationDatabase extends AbstractBuildRule implements HasRuntimeDeps {
   private static final Logger LOG = Logger.get(CxxCompilationDatabase.class);
   public static final Flavor COMPILATION_DATABASE = InternalFlavor.of("compilation-database");
   public static final Flavor UBER_COMPILATION_DATABASE =
@@ -64,7 +62,9 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithDeclaredAndExtr
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   public static CxxCompilationDatabase createCompilationDatabase(
-      BuildRuleParams params, Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules =
         ImmutableSortedSet.naturalOrder();
@@ -74,23 +74,18 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithDeclaredAndExtr
     }
 
     return new CxxCompilationDatabase(
-        params.copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
-        compileRules.build(),
-        deps.build());
+        buildTarget, projectFilesystem, compileRules.build(), deps.build());
   }
 
   CxxCompilationDatabase(
-      BuildRuleParams buildRuleParams,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
-    super(buildRuleParams);
-    LOG.debug(
-        "Creating compilation database %s with runtime deps %s",
-        buildRuleParams.getBuildTarget(), runtimeDeps);
+    super(buildTarget, projectFilesystem);
+    LOG.debug("Creating compilation database %s with runtime deps %s", buildTarget, runtimeDeps);
     this.compileRules = compileRules;
-    this.outputJsonFile =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__%s.json");
+    this.outputJsonFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s.json");
     this.runtimeDeps = runtimeDeps;
   }
 
@@ -120,6 +115,11 @@ public class CxxCompilationDatabase extends AbstractBuildRuleWithDeclaredAndExtr
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJsonFile);
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.of();
   }
 
   @Override
