@@ -247,7 +247,8 @@ public class CxxLibraryDescription
 
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-        params,
+        params.getProjectFilesystem(),
+        params.getBuildTarget(),
         ruleResolver,
         sourcePathResolver,
         ruleFinder,

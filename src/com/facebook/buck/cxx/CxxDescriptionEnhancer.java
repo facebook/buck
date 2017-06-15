@@ -857,7 +857,8 @@ public class CxxDescriptionEnhancer {
     // resolver and get the `SourcePath`s representing the generated object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            params,
+            params.getProjectFilesystem(),
+            params.getBuildTarget(),
             resolver,
             sourcePathResolver,
             ruleFinder,

@@ -190,7 +190,8 @@ public class CxxBinaryDescriptionTest {
     CxxLink rule = (CxxLink) binRule.getLinkRule();
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactory.builder()
-            .setParams(cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem))
+            .setBaseBuildTarget(target)
+            .setProjectFilesystem(projectFilesystem)
             .setResolver(resolver)
             .setPathResolver(pathResolver)
             .setRuleFinder(ruleFinder)

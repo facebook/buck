@@ -363,7 +363,8 @@ public final class CxxInferEnhancer {
 
     CxxSourceRuleFactory factory =
         CxxSourceRuleFactory.of(
-            params,
+            params.getProjectFilesystem(),
+            params.getBuildTarget(),
             ruleResolver,
             pathResolver,
             ruleFinder,

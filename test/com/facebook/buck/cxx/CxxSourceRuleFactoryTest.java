@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -96,7 +95,6 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void createPreprocessAndCompileBuildRulePropagatesCxxPreprocessorDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -109,7 +107,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -133,7 +132,6 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void preprocessFlagsFromPlatformArePropagated() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -154,7 +152,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -194,7 +193,6 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void createCompileBuildRulePropagatesBuildRuleSourcePathDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -208,7 +206,8 @@ public class CxxSourceRuleFactoryTest {
       SourcePath input = dep.getSourcePathToOutput();
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -236,7 +235,6 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void createCompileBuildRulePicOption() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -245,7 +243,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory.Builder cxxSourceRuleFactoryBuilder =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -318,7 +317,6 @@ public class CxxSourceRuleFactoryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
       Path scratchDir = Paths.get("scratchDir");
 
@@ -335,7 +333,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(buildRuleResolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -366,7 +365,6 @@ public class CxxSourceRuleFactoryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
@@ -374,7 +372,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(buildRuleResolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -399,7 +398,6 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void createPreprocessAndCompileBuildRulePropagatesToolDeps() throws Exception {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -427,7 +425,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -502,7 +501,6 @@ public class CxxSourceRuleFactoryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
@@ -510,7 +508,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(buildRuleResolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -599,7 +598,6 @@ public class CxxSourceRuleFactoryTest {
     private SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
     private SourcePathResolver sourcePathResolver = new SourcePathResolver(sourcePathRuleFinder);
     private BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    private BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     private Joiner space = Joiner.on(" ");
 
     @Test
@@ -632,7 +630,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(buildRuleResolver)
               .setPathResolver(sourcePathResolver)
               .setRuleFinder(sourcePathRuleFinder)
@@ -678,7 +677,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(buildRuleResolver)
               .setPathResolver(sourcePathResolver)
               .setRuleFinder(sourcePathRuleFinder)
@@ -742,7 +742,8 @@ public class CxxSourceRuleFactoryTest {
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(ruleResolver)
               .setRuleFinder(ruleFinder)
               .setPathResolver(pathResolver)
@@ -807,11 +808,11 @@ public class CxxSourceRuleFactoryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
       Path scratchDir = Paths.get("scratchDir");
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(params)
+              .setProjectFilesystem(PROJECT_FILESYSTEM)
+              .setBaseBuildTarget(target)
               .setResolver(buildRuleResolver)
               .setPathResolver(sourcePathResolver)
               .setRuleFinder(ruleFinder)

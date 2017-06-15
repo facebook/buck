@@ -56,6 +56,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -112,7 +113,8 @@ public class NdkCxxPlatformTest {
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(new FakeBuildRuleParamsBuilder(target).build())
+              .setBaseBuildTarget(target)
+              .setProjectFilesystem(new FakeProjectFilesystem())
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)

@@ -201,7 +201,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            getBaseParams(),
+            getBaseParams().getProjectFilesystem(),
+            getBaseParams().getBuildTarget(),
             getRuleResolver(),
             getPathResolver(),
             getRuleFinder(),

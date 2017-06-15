@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -42,10 +41,8 @@ public class CxxSourceRuleFactoryHelper {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxSourceRuleFactory.builder()
-        .setParams(
-            new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
-                .build())
+        .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
+        .setBaseBuildTarget(target)
         .setResolver(resolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
@@ -74,10 +71,8 @@ public class CxxSourceRuleFactoryHelper {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxSourceRuleFactory.builder()
-        .setParams(
-            new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
-                .build())
+        .setBaseBuildTarget(target)
+        .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
         .setResolver(resolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)

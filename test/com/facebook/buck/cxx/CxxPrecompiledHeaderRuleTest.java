@@ -134,7 +134,8 @@ public class CxxPrecompiledHeaderRuleTest {
   public CxxSourceRuleFactory.Builder newFactoryBuilder(BuildRuleParams params) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     return CxxSourceRuleFactory.builder()
-        .setParams(params)
+        .setBaseBuildTarget(params.getBuildTarget())
+        .setProjectFilesystem(params.getProjectFilesystem())
         .setResolver(ruleResolver)
         .setRuleFinder(ruleFinder)
         .setPathResolver(new SourcePathResolver(ruleFinder))

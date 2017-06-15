@@ -74,6 +74,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -744,7 +745,7 @@ public class AppleCxxPlatformsTest {
 
   // Create and return some rule keys from a dummy source for the given platforms.
   private ImmutableMap<Flavor, RuleKey> constructCompileRuleKeys(
-      Operation operation, ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) {
+      Operation operation, ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws IOException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -753,18 +754,20 @@ public class AppleCxxPlatformsTest {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.<String, String>builder()
-                    .put("source.cpp", Strings.repeat("a", 40))
+            new FakeFileHashCache(
+                ImmutableMap.<Path, HashCode>builder()
+                    .put(projectFilesystem.resolve("source.cpp"), HashCode.fromInt(0))
                     .build()),
             pathResolver,
             ruleFinder);
-    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildTarget target =
+        BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
-              .setParams(new FakeBuildRuleParamsBuilder(target).build())
+              .setProjectFilesystem(projectFilesystem)
+              .setBaseBuildTarget(target)
               .setResolver(resolver)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
@@ -778,7 +781,10 @@ public class AppleCxxPlatformsTest {
           rule =
               cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
                   source,
-                  CxxSource.of(CxxSource.Type.CXX, new FakeSourcePath(source), ImmutableList.of()));
+                  CxxSource.of(
+                      CxxSource.Type.CXX,
+                      new FakeSourcePath(projectFilesystem, source),
+                      ImmutableList.of()));
           break;
         case COMPILE:
           rule =
@@ -786,7 +792,7 @@ public class AppleCxxPlatformsTest {
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
-                      new FakeSourcePath(source),
+                      new FakeSourcePath(projectFilesystem, source),
                       ImmutableList.of()));
           break;
         default:

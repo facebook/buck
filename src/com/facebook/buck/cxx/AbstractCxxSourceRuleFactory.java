@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.function.Function;
 import javax.annotation.Nonnull;
 import org.immutables.value.Value;
@@ -67,7 +69,10 @@ abstract class AbstractCxxSourceRuleFactory {
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
 
   @Value.Parameter
-  protected abstract BuildRuleParams getParams();
+  protected abstract ProjectFilesystem getProjectFilesystem();
+
+  @Value.Parameter
+  protected abstract BuildTarget getBaseBuildTarget();
 
   @Value.Parameter
   protected abstract BuildRuleResolver getResolver();
@@ -186,7 +191,7 @@ abstract class AbstractCxxSourceRuleFactory {
   /** @return the output path for an object file compiled from the source with the given name. */
   @VisibleForTesting
   Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s")
+    return BuildTargets.getGenPath(getProjectFilesystem(), target, "%s")
         .resolve(getCompileOutputName(name));
   }
 
@@ -197,7 +202,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   public BuildTarget createCompileBuildTarget(String name) {
     String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
-    return BuildTarget.builder(getParams().getBuildTarget())
+    return BuildTarget.builder(getBaseBuildTarget())
         .addFlavors(getCxxPlatform().getFlavor())
         .addFlavors(
             InternalFlavor.of(
@@ -210,8 +215,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
   public BuildTarget createInferCaptureBuildTarget(String name) {
     String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
-    return BuildTarget.builder(getParams().getBuildTarget())
-        .addAllFlavors(getParams().getBuildTarget().getFlavors())
+    return BuildTarget.builder(getBaseBuildTarget())
+        .addAllFlavors(getBaseBuildTarget().getFlavors())
         .addFlavors(getCxxPlatform().getFlavor())
         .addFlavors(
             InternalFlavor.of(
@@ -291,9 +296,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
         CxxPreprocessAndCompile.compile(
-            getParams()
-                .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of()),
+            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             compilerDelegate,
             getCompileOutputPath(target, name),
             source.getPath(),
@@ -390,9 +393,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxInferCapture result =
         new CxxInferCapture(
-            getParams()
-                .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of()),
+            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             ppFlags,
             cFlags,
             source.getPath(),
@@ -444,7 +445,7 @@ abstract class AbstractCxxSourceRuleFactory {
         && !canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor, source.getType())) {
       throw new HumanReadableException(
           "Precompiled header was requested for rule \""
-              + this.getParams().getBuildTarget().toString()
+              + this.getBaseBuildTarget().toString()
               + "\", but PCH's are not possible under "
               + "the current environment (preprocessor/compiler, source file's language, "
               + "and/or 'cxx.pch_enabled' option).");
@@ -468,7 +469,7 @@ abstract class AbstractCxxSourceRuleFactory {
               preprocessorDelegate.withLeadingIncludePaths(
                   precompiledHeaderRule.get().getCxxIncludePaths());
         } catch (PreprocessorDelegate.ConflictingHeadersException e) {
-          throw e.getHumanReadableExceptionForBuildTarget(getParams().getBuildTarget());
+          throw e.getHumanReadableExceptionForBuildTarget(getBaseBuildTarget());
         }
       }
     }
@@ -476,9 +477,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
         CxxPreprocessAndCompile.preprocessAndCompile(
-            getParams()
-                .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of()),
+            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             preprocessorDelegate,
             compilerDelegate,
             getCompileOutputPath(target, name),
@@ -571,7 +570,7 @@ abstract class AbstractCxxSourceRuleFactory {
         compilerFlags,
         headerPath,
         depsBuilder,
-        getParams().getBuildTarget().getUnflavoredBuildTarget(),
+        getBaseBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
             getCxxPlatform().getFlavor(),
             InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))));
@@ -671,7 +670,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends ".gch" to
     // automagically use the precompiled header in place of the original header.  Of course in
     // our case we'll only have the ".gch" file, which is alright; the ".h" isn't truly needed.
-    Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.h.gch");
+    Path output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
 
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
@@ -685,14 +684,9 @@ abstract class AbstractCxxSourceRuleFactory {
 
     depsBuilder.add(headerPath);
 
-    BuildRuleParams params =
-        getParams()
-            .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(depsBuilder.build(), ImmutableSortedSet.of());
-
     CxxPrecompiledHeader rule =
         new CxxPrecompiledHeader(
-            params,
+            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             output,
             preprocessorDelegate,
             compilerDelegate,
@@ -766,11 +760,9 @@ abstract class AbstractCxxSourceRuleFactory {
     if (getSandboxTree().isPresent()) {
       SymlinkTree sandboxTree = getSandboxTree().get();
       Path sourcePath =
-          Paths.get(
-              getPathResolver().getSourcePathName(getParams().getBuildTarget(), source.getPath()));
+          Paths.get(getPathResolver().getSourcePathName(getBaseBuildTarget(), source.getPath()));
       Path sandboxPath =
-          BuildTargets.getGenPath(
-              getParams().getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
+          BuildTargets.getGenPath(getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
       ExplicitBuildTargetSourcePath path =
           new ExplicitBuildTargetSourcePath(
               sandboxTree.getBuildTarget(), sandboxPath.resolve(sourcePath));
@@ -794,8 +786,12 @@ abstract class AbstractCxxSourceRuleFactory {
         : getCxxPlatform().getCompilerDebugPathSanitizer();
   }
 
+  /**
+   * Shorthand to create a {@code CxxSourceRuleFactory} and use it to generate compilation rules.
+   */
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
-      BuildRuleParams params,
+      ProjectFilesystem filesystem,
+      BuildTarget baseBuildTarget,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -810,7 +806,8 @@ abstract class AbstractCxxSourceRuleFactory {
       Optional<SymlinkTree> sandboxTree) {
     CxxSourceRuleFactory factory =
         CxxSourceRuleFactory.of(
-            params,
+            filesystem,
+            baseBuildTarget,
             resolver,
             pathResolver,
             ruleFinder,
@@ -823,6 +820,12 @@ abstract class AbstractCxxSourceRuleFactory {
             pic,
             sandboxTree);
     return factory.requirePreprocessAndCompileRules(sources);
+  }
+
+  private BuildRuleParams buildRuleParamsWithTargetAndDeps(
+      BuildTarget target, SortedSet<BuildRule> deps) {
+    return new BuildRuleParams(
+        target, deps, ImmutableSortedSet.of(), ImmutableSortedSet.of(), getProjectFilesystem());
   }
 
   public enum PicType {
@@ -945,7 +948,7 @@ abstract class AbstractCxxSourceRuleFactory {
                 getPathResolver(),
                 getCxxPlatform().getCompilerDebugPathSanitizer(),
                 getCxxPlatform().getHeaderVerification(),
-                getParams().getProjectFilesystem().getRootPath(),
+                getProjectFilesystem().getRootPath(),
                 preprocessor,
                 PreprocessorFlags.of(
                     getPrefixHeader(),
@@ -958,7 +961,7 @@ abstract class AbstractCxxSourceRuleFactory {
                 /* leadingIncludePaths */ Optional.empty());
         return new PreprocessorDelegateCacheValue(delegate);
       } catch (PreprocessorDelegate.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(getParams().getBuildTarget());
+        throw e.getHumanReadableExceptionForBuildTarget(getBaseBuildTarget());
       }
     }
   }
