@@ -134,8 +134,13 @@ public class HalideLibraryDescription
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
-    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            CxxStrip.removeStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
 
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
@@ -187,8 +192,13 @@ public class HalideLibraryDescription
             includeDirs,
             Optional.empty());
 
-    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
-    params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            CxxStrip.restoreStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
     CxxBinary cxxBinary =
         new CxxBinary(
             params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),

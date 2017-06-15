@@ -20,7 +20,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.BuildRuleParams;
 import java.util.Optional;
 
 /** Defines if linker map should be generated or not. */
@@ -46,19 +45,19 @@ public enum LinkerMapMode implements FlavorConvertible {
     return !buildTarget.getFlavors().contains(NO_LINKER_MAP.getFlavor());
   }
 
-  public static BuildRuleParams removeLinkerMapModeFlavorInParams(
-      BuildRuleParams params, Optional<LinkerMapMode> flavoredLinkerMapMode) {
+  public static BuildTarget removeLinkerMapModeFlavorInTarget(
+      BuildTarget buildTarget, Optional<LinkerMapMode> flavoredLinkerMapMode) {
     if (flavoredLinkerMapMode.isPresent()) {
-      params = params.withoutFlavor(flavoredLinkerMapMode.get().getFlavor());
+      return buildTarget.withoutFlavors(flavoredLinkerMapMode.get().getFlavor());
     }
-    return params;
+    return buildTarget;
   }
 
-  public static BuildRuleParams restoreLinkerMapModeFlavorInParams(
-      BuildRuleParams params, Optional<LinkerMapMode> flavoredLinkerMapMode) {
+  public static BuildTarget restoreLinkerMapModeFlavorInTarget(
+      BuildTarget buildTarget, Optional<LinkerMapMode> flavoredLinkerMapMode) {
     if (flavoredLinkerMapMode.isPresent()) {
-      params = params.withAppendedFlavor(flavoredLinkerMapMode.get().getFlavor());
+      return buildTarget.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
     }
-    return params;
+    return buildTarget;
   }
 }

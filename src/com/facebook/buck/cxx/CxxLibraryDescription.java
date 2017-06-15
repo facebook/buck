@@ -359,7 +359,10 @@ public class CxxLibraryDescription
       throws NoSuchBuildTargetException {
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -378,7 +381,10 @@ public class CxxLibraryDescription
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode)
+            params
+                .withBuildTarget(
+                    LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                        params.getBuildTarget(), flavoredLinkerMapMode))
                 .getBuildTarget(),
             cxxPlatform.getFlavor(),
             linkType);
@@ -395,7 +401,9 @@ public class CxxLibraryDescription
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
+        params.withBuildTarget(
+            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode)),
         ruleResolver,
         pathResolver,
         ruleFinder,

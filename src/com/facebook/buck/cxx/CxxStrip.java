@@ -83,23 +83,23 @@ public class CxxStrip extends AbstractBuildRuleWithDeclaredAndExtraDeps
         StripStyle.FLAVOR_DOMAIN.getFlavors());
   }
 
-  public static BuildRuleParams removeStripStyleFlavorInParams(
-      BuildRuleParams params, Optional<StripStyle> flavoredStripStyle) {
-    params = params.withoutFlavor(CxxStrip.RULE_FLAVOR);
+  public static BuildTarget removeStripStyleFlavorInTarget(
+      BuildTarget buildTarget, Optional<StripStyle> flavoredStripStyle) {
+    buildTarget = buildTarget.withoutFlavors(CxxStrip.RULE_FLAVOR);
     if (flavoredStripStyle.isPresent()) {
-      params = params.withoutFlavor(flavoredStripStyle.get().getFlavor());
+      return buildTarget.withoutFlavors(flavoredStripStyle.get().getFlavor());
     }
-    return params;
+    return buildTarget;
   }
 
-  public static BuildRuleParams restoreStripStyleFlavorInParams(
-      BuildRuleParams params, Optional<StripStyle> flavoredStripStyle) {
+  public static BuildTarget restoreStripStyleFlavorInTarget(
+      BuildTarget buildTarget, Optional<StripStyle> flavoredStripStyle) {
     if (flavoredStripStyle.isPresent()) {
       // we should not append CxxStrip.RULE_FLAVOR here because it must be appended
       // to CxxStrip rule only. Other users of CxxStrip flavors must not append it.
-      params = params.withAppendedFlavor(flavoredStripStyle.get().getFlavor());
+      return buildTarget.withAppendedFlavors(flavoredStripStyle.get().getFlavor());
     }
-    return params;
+    return buildTarget;
   }
 
   @Override

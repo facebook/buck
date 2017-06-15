@@ -146,7 +146,10 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
 
     final BuildTarget buildTarget = params.getBuildTarget();
 
@@ -260,7 +263,10 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     }
 
     // Otherwise, we return the generic placeholder of this library.
-    params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
     return new SwiftLibrary(
         params,
         resolver,
@@ -311,7 +317,9 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxBuckConfig,
             cxxPlatform,
-            LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
+            params.withBuildTarget(
+                LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                    params.getBuildTarget(), flavoredLinkerMapMode)),
             resolver,
             sourcePathResolver,
             ruleFinder,

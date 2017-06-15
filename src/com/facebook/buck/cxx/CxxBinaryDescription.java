@@ -151,8 +151,13 @@ public class CxxBinaryDescription
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
-    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            CxxStrip.removeStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -234,8 +239,13 @@ public class CxxBinaryDescription
     //     By using another BuildRule, we can keep the original target graph dependency tree while
     //     preventing it from affecting link parallelism.
 
-    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
-    params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+    params =
+        params.withBuildTarget(
+            CxxStrip.restoreStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
+    params =
+        params.withBuildTarget(
+            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                params.getBuildTarget(), flavoredLinkerMapMode));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxBinary cxxBinary =
         new CxxBinary(

@@ -146,9 +146,14 @@ public class CxxTestDescription
         StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
-    inputParams = CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
     inputParams =
-        LinkerMapMode.removeLinkerMapModeFlavorInParams(inputParams, flavoredLinkerMapMode);
+        inputParams.withBuildTarget(
+            CxxStrip.removeStripStyleFlavorInTarget(
+                inputParams.getBuildTarget(), flavoredStripStyle));
+    inputParams =
+        inputParams.withBuildTarget(
+            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
+                inputParams.getBuildTarget(), flavoredLinkerMapMode));
     final BuildRuleParams params = inputParams;
 
     CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
@@ -215,9 +220,14 @@ public class CxxTestDescription
             .copyReplacingDeclaredAndExtraDeps(
                 () -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
             .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
-    testParams = CxxStrip.restoreStripStyleFlavorInParams(testParams, flavoredStripStyle);
     testParams =
-        LinkerMapMode.restoreLinkerMapModeFlavorInParams(testParams, flavoredLinkerMapMode);
+        testParams.withBuildTarget(
+            CxxStrip.restoreStripStyleFlavorInTarget(
+                testParams.getBuildTarget(), flavoredStripStyle));
+    testParams =
+        testParams.withBuildTarget(
+            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
+                testParams.getBuildTarget(), flavoredLinkerMapMode));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, String> testEnv =

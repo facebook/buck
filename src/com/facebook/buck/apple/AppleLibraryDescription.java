@@ -277,7 +277,9 @@ public class AppleLibraryDescription
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
+    params =
+        params.withBuildTarget(
+            CxxStrip.removeStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
 
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
@@ -312,7 +314,9 @@ public class AppleLibraryDescription
                         params.getBuildTarget().getFlavors()),
                     defaultCxxPlatform.getFlavor()));
 
-    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
+    params =
+        params.withBuildTarget(
+            CxxStrip.restoreStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
 
     BuildRule strippedBinaryRule =
         CxxDescriptionEnhancer.createCxxStripRule(
