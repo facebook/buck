@@ -38,6 +38,8 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -106,18 +108,25 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final ImmutableSortedSet<SourcePath> libraries,
       final ImmutableSortedSet<SourcePath> interfaces,
       ImmutableSortedSet<SourcePath> objects) {
-    ImmutableSortedSet<BuildRule> declaredDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(ghcPkg.getDeps(ruleFinder))
-            .addAll(
-                depPackages.values().stream().flatMap(pkg -> pkg.getDeps(ruleFinder)).iterator())
-            .addAll(ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
-            .build();
-
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
+        Suppliers.memoize(
+            () ->
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ghcPkg.getDeps(ruleFinder))
+                    .addAll(
+                        depPackages
+                            .values()
+                            .stream()
+                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
+                            .iterator())
+                    .addAll(
+                        ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
+                    .build());
     return new HaskellPackageRule(
         baseParams
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(declaredDeps, ImmutableSortedSet.of()),
+            .copyReplacingDeclaredAndExtraDeps(
+                declaredDeps, Suppliers.ofInstance(ImmutableSortedSet.of())),
         ghcPkg,
         haskellVersion,
         depType,

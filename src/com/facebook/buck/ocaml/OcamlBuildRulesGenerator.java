@@ -34,6 +34,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -173,19 +174,21 @@ public class OcamlBuildRulesGenerator {
       BuildRuleParams cCompileParams =
           params
               .withBuildTarget(target)
-              .copyReplacingDeclaredDeps(
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      // Depend on the rule that generates the sources and headers we're compiling.
-                      .addAll(ruleFinder.filterBuildRuleInputs(cSrc))
-                      // Add any deps from the C/C++ preprocessor input.
-                      .addAll(cxxPreprocessorInput.getDeps(resolver, ruleFinder))
-                      // Add the clean rule, to ensure that any shared output folders shared with
-                      // OCaml build artifacts are properly cleaned.
-                      .add(this.cleanRule)
-                      // Add deps from the C compiler, since we're calling it.
-                      .addAll(cCompiler.getDeps(ruleFinder))
-                      .addAll(params.getDeclaredDeps().get())
-                      .build());
+              .copyReplacingDeclaredAndExtraDeps(
+                  Suppliers.ofInstance(
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          // Depend on the rule that generates the sources and headers we're compiling.
+                          .addAll(ruleFinder.filterBuildRuleInputs(cSrc))
+                          // Add any deps from the C/C++ preprocessor input.
+                          .addAll(cxxPreprocessorInput.getDeps(resolver, ruleFinder))
+                          // Add the clean rule, to ensure that any shared output folders shared with
+                          // OCaml build artifacts are properly cleaned.
+                          .add(this.cleanRule)
+                          // Add deps from the C compiler, since we're calling it.
+                          .addAll(cCompiler.getDeps(ruleFinder))
+                          .addAll(params.getDeclaredDeps().get())
+                          .build()),
+                  params.getExtraDeps());
 
       Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc));
       OcamlCCompile compileRule =
@@ -465,14 +468,16 @@ public class OcamlBuildRulesGenerator {
     BuildRuleParams compileParams =
         params
             .withBuildTarget(buildTarget)
-            .copyReplacingDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps().get())
-                    .add(this.cleanRule)
-                    .addAll(deps)
-                    .addAll(ocamlContext.getNativeCompileDeps())
-                    .addAll(cCompiler.getDeps(ruleFinder))
-                    .build());
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(params.getDeclaredDeps().get())
+                        .add(this.cleanRule)
+                        .addAll(deps)
+                        .addAll(ocamlContext.getNativeCompileDeps())
+                        .addAll(cCompiler.getDeps(ruleFinder))
+                        .build()),
+                params.getExtraDeps());
 
     String outputFileName = getMLNativeOutputName(name);
     Path outputPath = ocamlContext.getCompileNativeOutputDir().resolve(outputFileName);
@@ -545,14 +550,16 @@ public class OcamlBuildRulesGenerator {
     BuildRuleParams compileParams =
         params
             .withBuildTarget(buildTarget)
-            .copyReplacingDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .add(this.cleanRule)
-                    .addAll(params.getDeclaredDeps().get())
-                    .addAll(deps)
-                    .addAll(ocamlContext.getBytecodeCompileDeps())
-                    .addAll(cCompiler.getDeps(ruleFinder))
-                    .build());
+            .copyReplacingDeclaredAndExtraDeps(
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .add(this.cleanRule)
+                        .addAll(params.getDeclaredDeps().get())
+                        .addAll(deps)
+                        .addAll(ocamlContext.getBytecodeCompileDeps())
+                        .addAll(cCompiler.getDeps(ruleFinder))
+                        .build()),
+                params.getExtraDeps());
 
     String outputFileName = getMLBytecodeOutputName(name);
     Path outputPath = ocamlContext.getCompileBytecodeOutputDir().resolve(outputFileName);

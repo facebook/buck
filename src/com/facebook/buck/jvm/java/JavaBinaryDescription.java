@@ -38,6 +38,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -122,11 +123,12 @@ public class JavaBinaryDescription
       rule =
           new JarFattener(
               params.copyAppendingExtraDeps(
-                  ruleFinder.filterBuildRuleInputs(
-                      ImmutableList.<SourcePath>builder()
-                          .add(innerJar)
-                          .addAll(nativeLibraries.values())
-                          .build())),
+                  Suppliers.<Iterable<BuildRule>>ofInstance(
+                      ruleFinder.filterBuildRuleInputs(
+                          ImmutableList.<SourcePath>builder()
+                              .add(innerJar)
+                              .addAll(nativeLibraries.values())
+                              .build()))),
               ruleFinder,
               JavacFactory.create(ruleFinder, javaBuckConfig, null),
               javacOptions,

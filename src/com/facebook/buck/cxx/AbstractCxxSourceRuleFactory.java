@@ -825,7 +825,11 @@ abstract class AbstractCxxSourceRuleFactory {
   private BuildRuleParams buildRuleParamsWithTargetAndDeps(
       BuildTarget target, SortedSet<BuildRule> deps) {
     return new BuildRuleParams(
-        target, deps, ImmutableSortedSet.of(), ImmutableSortedSet.of(), getProjectFilesystem());
+        target,
+        () -> deps,
+        () -> ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
+        getProjectFilesystem());
   }
 
   public enum PicType {

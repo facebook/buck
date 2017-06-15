@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -494,8 +495,8 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams buildConfigParams =
           new BuildRuleParams(
               buildTargetWithFlavors,
-              /* declaredDeps */ ImmutableSortedSet.of(),
-              /* extraDeps */ ImmutableSortedSet.of(),
+              /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
+              /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
               ImmutableSortedSet.of(),
               originalParams.getProjectFilesystem());
       JavaLibrary buildConfigJavaLibrary =

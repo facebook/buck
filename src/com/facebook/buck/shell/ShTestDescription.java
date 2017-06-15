@@ -96,9 +96,10 @@ public class ShTestDescription
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg));
     return new ShTest(
         params.copyAppendingExtraDeps(
-            FluentIterable.from(testArgs)
-                .append(testEnv.values())
-                .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
+            () ->
+                FluentIterable.from(testArgs)
+                    .append(testEnv.values())
+                    .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
         ruleFinder,
         testArgs,
         testEnv,

@@ -60,6 +60,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -117,7 +118,11 @@ public class AndroidBinaryGraphEnhancerTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
-            apkTarget, originalDeps, originalDeps, ImmutableSortedSet.of(), filesystem);
+            apkTarget,
+            Suppliers.ofInstance(originalDeps),
+            Suppliers.ofInstance(originalDeps),
+            ImmutableSortedSet.of(),
+            filesystem);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             originalParams,

@@ -64,6 +64,7 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -259,11 +260,13 @@ public class AppleTestDescription
                             debugFormat.getFlavor(),
                             LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR))
-                .copyReplacingDeclaredDeps(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .add(library)
-                        .addAll(params.getDeclaredDeps().get())
-                        .build()),
+                .copyReplacingDeclaredAndExtraDeps(
+                    Suppliers.ofInstance(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .add(library)
+                            .addAll(params.getDeclaredDeps().get())
+                            .build()),
+                    params.getExtraDeps()),
             resolver,
             codeSignIdentityStore,
             provisioningProfileStore,

@@ -32,8 +32,8 @@ import java.util.SortedSet;
  */
 public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRule {
 
-  private final Supplier<SortedSet<BuildRule>> declaredDeps;
-  private final Supplier<SortedSet<BuildRule>> extraDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> declaredDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> extraDeps;
   private final Supplier<SortedSet<BuildRule>> buildDeps;
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
 

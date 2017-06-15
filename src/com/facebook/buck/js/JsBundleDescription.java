@@ -175,7 +175,7 @@ public class JsBundleDescription
 
     return new JsBundleAndroid(
         params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(), ImmutableSortedSet.of(jsBundle, resource)),
+            ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle, resource)),
         jsBundle,
         resolver.getRuleWithType(resourceTarget, AndroidResource.class));
   }
@@ -190,13 +190,13 @@ public class JsBundleDescription
         .contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       return new Aapt2Compile(
           params.copyReplacingDeclaredAndExtraDeps(
-              ImmutableSortedSet.of(), ImmutableSortedSet.of(jsBundle)),
+              ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle)),
           jsBundle.getSourcePathToResources());
     }
 
     return new AndroidResource(
         params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(), ImmutableSortedSet.of(jsBundle)),
+            ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle)),
         new SourcePathRuleFinder(resolver),
         ImmutableSortedSet.of(), // deps
         jsBundle.getSourcePathToResources(),

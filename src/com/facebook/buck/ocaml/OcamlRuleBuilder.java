@@ -47,6 +47,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -291,11 +292,13 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
-          params.copyReplacingDeclaredDeps(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(params.getDeclaredDeps().get())
-                  .add(ocamlLibraryBuild)
-                  .build()),
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(params.getDeclaredDeps().get())
+                      .add(ocamlLibraryBuild)
+                      .build()),
+              params.getExtraDeps()),
           compileParams,
           linkerFlags,
           FluentIterable.from(srcs)
@@ -313,11 +316,13 @@ public class OcamlRuleBuilder {
           ImmutableSortedSet.of(ocamlLibraryBuild));
     } else {
       return new OcamlBinary(
-          params.copyReplacingDeclaredDeps(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(params.getDeclaredDeps().get())
-                  .add(ocamlLibraryBuild)
-                  .build()),
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(params.getDeclaredDeps().get())
+                      .add(ocamlLibraryBuild)
+                      .build()),
+              params.getExtraDeps()),
           ocamlLibraryBuild);
     }
   }
@@ -447,11 +452,13 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
-          params.copyReplacingDeclaredDeps(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(params.getDeclaredDeps().get())
-                  .addAll(result.getRules())
-                  .build()),
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(params.getDeclaredDeps().get())
+                      .addAll(result.getRules())
+                      .build()),
+              params.getExtraDeps()),
           compileParams,
           linkerFlags,
           result.getObjectFiles(),
@@ -465,11 +472,13 @@ public class OcamlRuleBuilder {
               .build());
     } else {
       return new OcamlBinary(
-          params.copyReplacingDeclaredDeps(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(params.getDeclaredDeps().get())
-                  .addAll(result.getRules())
-                  .build()),
+          params.copyReplacingDeclaredAndExtraDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(params.getDeclaredDeps().get())
+                      .addAll(result.getRules())
+                      .build()),
+              params.getExtraDeps()),
           result.getRules().get(0));
     }
   }

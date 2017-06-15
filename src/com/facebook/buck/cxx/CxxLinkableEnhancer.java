@@ -36,6 +36,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -105,18 +107,20 @@ public class CxxLinkableEnhancer {
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
     // Build the C/C++ link step.
-    ImmutableSortedSet<BuildRule> declaredDeps =
-        FluentIterable.from(allArgs)
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
-            .append(linker.getDeps(ruleFinder))
-            .toSortedSet(Ordering.natural());
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
+        () ->
+            FluentIterable.from(allArgs)
+                .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+                .append(linker.getDeps(ruleFinder))
+                .toSortedSet(Ordering.natural());
     return new CxxLink(
         // Construct our link build rule params.  The important part here is combining the build
         // rules that construct our object file inputs and also the deps that build our
         // dependencies.
         params
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(declaredDeps, ImmutableSortedSet.of()),
+            .copyReplacingDeclaredAndExtraDeps(
+                declaredDeps, Suppliers.ofInstance(ImmutableSortedSet.of())),
         linker,
         output,
         allArgs,

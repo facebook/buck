@@ -24,7 +24,11 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.SortedSet;
 import org.immutables.value.Value;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescriptionArg> {
@@ -52,9 +56,17 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
     }
     HasInstallableApk installableApk = (HasInstallableApk) apk;
 
+    final Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new ApkGenrule(
-        params.copyAppendingExtraDeps(installableApk),
+        params.copyReplacingExtraDeps(
+            Suppliers.memoize(
+                () ->
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(originalExtraDeps.get())
+                        .add(installableApk)
+                        .build())),
         ruleFinder,
         args.getSrcs(),
         cmd,

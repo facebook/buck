@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -70,7 +71,10 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
             .build();
 
     return new AndroidManifest(
-        params.copyReplacingDeclaredDeps(newDeps), args.getSkeleton(), manifestFiles);
+        params.copyReplacingDeclaredAndExtraDeps(
+            Suppliers.ofInstance(newDeps), params.getExtraDeps()),
+        args.getSkeleton(),
+        manifestFiles);
   }
 
   @BuckStyleImmutable

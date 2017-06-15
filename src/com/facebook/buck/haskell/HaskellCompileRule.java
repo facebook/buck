@@ -48,6 +48,8 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -158,22 +160,25 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final ImmutableSortedMap<String, HaskellPackage> packages,
       final HaskellSources sources,
       Preprocessor preprocessor) {
-    ImmutableSortedSet<BuildRule> declaredDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(compiler.getDeps(ruleFinder))
-            .addAll(ppFlags.getDeps(ruleFinder))
-            .addAll(ruleFinder.filterBuildRuleInputs(includes))
-            .addAll(sources.getDeps(ruleFinder))
-            .addAll(
-                Stream.of(exposedPackages, packages)
-                    .flatMap(packageMap -> packageMap.values().stream())
-                    .flatMap(pkg -> pkg.getDeps(ruleFinder))
-                    .iterator())
-            .build();
+    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
+        Suppliers.memoize(
+            () ->
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(ppFlags.getDeps(ruleFinder))
+                    .addAll(ruleFinder.filterBuildRuleInputs(includes))
+                    .addAll(sources.getDeps(ruleFinder))
+                    .addAll(
+                        Stream.of(exposedPackages, packages)
+                            .flatMap(packageMap -> packageMap.values().stream())
+                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
+                            .iterator())
+                    .build());
     return new HaskellCompileRule(
         baseParams
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(declaredDeps, ImmutableSortedSet.of()),
+            .copyReplacingDeclaredAndExtraDeps(
+                declaredDeps, Suppliers.ofInstance(ImmutableSortedSet.of())),
         compiler,
         haskellVersion,
         flags,
