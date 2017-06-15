@@ -116,7 +116,11 @@ public class JsBundleDescription
     // an `AndroidResource`. The `AndroidResource` rule also depends on the `JsBundle`
     // if the `FORCE_JS_BUNDLE` flavor is present, we create the `JsBundle` instance itself.
     if (flavors.contains(JsFlavors.ANDROID) && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)) {
-      return createAndroidRule(params.copyInvalidatingDeps(), resolver, args.getAndroidPackage());
+      return createAndroidRule(
+          params.getBuildTarget(),
+          params.getProjectFilesystem(),
+          resolver,
+          args.getAndroidPackage());
     }
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
@@ -141,62 +145,75 @@ public class JsBundleDescription
   }
 
   private static BuildRule createAndroidRule(
-      BuildRuleParams params, BuildRuleResolver resolver, Optional<String> rDotJavaPackage)
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      Optional<String> rDotJavaPackage)
       throws NoSuchBuildTargetException {
     final BuildTarget bundleTarget =
-        params
-            .getBuildTarget()
+        buildTarget
             .withAppendedFlavors(JsFlavors.FORCE_JS_BUNDLE)
             .withoutFlavors(JsFlavors.ANDROID_RESOURCES)
             .withoutFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR);
     resolver.requireRule(bundleTarget);
 
     final JsBundle jsBundle = resolver.getRuleWithType(bundleTarget, JsBundle.class);
-    if (params.getBuildTarget().getFlavors().contains(JsFlavors.ANDROID_RESOURCES)) {
+    if (buildTarget.getFlavors().contains(JsFlavors.ANDROID_RESOURCES)) {
       final String rDot =
           rDotJavaPackage.orElseThrow(
               () ->
                   new HumanReadableException(
                       "Specify `android_package` when building %s for Android.",
-                      params.getBuildTarget().getUnflavoredBuildTarget()));
-      return createAndroidResources(params, resolver, jsBundle, rDot);
+                      buildTarget.getUnflavoredBuildTarget()));
+      return createAndroidResources(buildTarget, projectFilesystem, resolver, jsBundle, rDot);
     } else {
-      return createAndroidBundle(params, resolver, jsBundle);
+      return createAndroidBundle(buildTarget, projectFilesystem, resolver, jsBundle);
     }
   }
 
   private static JsBundleAndroid createAndroidBundle(
-      BuildRuleParams params, BuildRuleResolver resolver, JsBundle jsBundle)
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      JsBundle jsBundle)
       throws NoSuchBuildTargetException {
 
-    final BuildTarget resourceTarget =
-        params.getBuildTarget().withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
+    final BuildTarget resourceTarget = buildTarget.withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
     final BuildRule resource = resolver.requireRule(resourceTarget);
 
     return new JsBundleAndroid(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle, resource)),
+        new BuildRuleParams(
+            buildTarget,
+            () -> ImmutableSortedSet.of(),
+            () -> ImmutableSortedSet.of(jsBundle, resource),
+            ImmutableSortedSet.of(),
+            projectFilesystem),
         jsBundle,
         resolver.getRuleWithType(resourceTarget, AndroidResource.class));
   }
 
   private static BuildRule createAndroidResources(
-      BuildRuleParams params, BuildRuleResolver resolver, JsBundle jsBundle, String rDotJavaPackage)
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      JsBundle jsBundle,
+      String rDotJavaPackage)
       throws NoSuchBuildTargetException {
 
-    if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      return new Aapt2Compile(
-          params.copyReplacingDeclaredAndExtraDeps(
-              ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle)),
-          jsBundle.getSourcePathToResources());
+    BuildRuleParams params =
+        new BuildRuleParams(
+            buildTarget,
+            () -> ImmutableSortedSet.of(),
+            () -> ImmutableSortedSet.of(jsBundle),
+            ImmutableSortedSet.of(),
+            projectFilesystem);
+
+    if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      return new Aapt2Compile(params, jsBundle.getSourcePathToResources());
     }
 
     return new AndroidResource(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle)),
+        params,
         new SourcePathRuleFinder(resolver),
         ImmutableSortedSet.of(), // deps
         jsBundle.getSourcePathToResources(),
