@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.sqlite.SQLiteUtils;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -27,7 +28,6 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 import org.sqlite.BusyHandler;
-import org.sqlite.SQLiteJDBCLoader;
 
 public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final Connection connection;
@@ -36,12 +36,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final PreparedStatement deleteStmt;
 
   static {
-    try {
-      // sqlite-jdbc loads its JNI library in a thread-unsafe manner, so initialize it statically.
-      SQLiteJDBCLoader.initialize();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    SQLiteUtils.initialize();
   }
 
   public SQLiteBuildInfoStore(ProjectFilesystem filesystem) throws IOException {

@@ -1,0 +1,8 @@
+java_library(
+    name = "sqlite",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/sqlite:sqlite",
+    ],
+)
