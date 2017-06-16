@@ -219,41 +219,40 @@ abstract class DDescriptionUtils {
       SourcePath src,
       DIncludes includes)
       throws NoSuchBuildTargetException {
-    Optional<BuildRule> existingRule = buildRuleResolver.getRuleOptional(compileTarget);
-    if (existingRule.isPresent()) {
-      return (DCompileBuildRule) existingRule.get();
-    } else {
-      Tool compiler = dBuckConfig.getDCompiler();
+    return (DCompileBuildRule)
+        buildRuleResolver.computeIfAbsentThrowing(
+            compileTarget,
+            () -> {
+              Tool compiler = dBuckConfig.getDCompiler();
 
-      Map<BuildTarget, DIncludes> transitiveIncludes = new TreeMap<>();
-      transitiveIncludes.put(baseParams.getBuildTarget(), includes);
-      for (Map.Entry<BuildTarget, DLibrary> library :
-          getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
-        transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
-      }
+              Map<BuildTarget, DIncludes> transitiveIncludes = new TreeMap<>();
+              transitiveIncludes.put(baseParams.getBuildTarget(), includes);
+              for (Map.Entry<BuildTarget, DLibrary> library :
+                  getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
+                transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
+              }
 
-      ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-      depsBuilder.addAll(compiler.getDeps(ruleFinder));
-      depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
-      for (DIncludes dIncludes : transitiveIncludes.values()) {
-        depsBuilder.addAll(dIncludes.getDeps(ruleFinder));
-      }
-      ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
+              ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+              depsBuilder.addAll(compiler.getDeps(ruleFinder));
+              depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
+              for (DIncludes dIncludes : transitiveIncludes.values()) {
+                depsBuilder.addAll(dIncludes.getDeps(ruleFinder));
+              }
+              ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
-      return buildRuleResolver.addToIndex(
-          new DCompileBuildRule(
-              baseParams
-                  .withBuildTarget(compileTarget)
-                  .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
-              compiler,
-              ImmutableList.<String>builder()
-                  .addAll(dBuckConfig.getBaseCompilerFlags())
-                  .addAll(compilerFlags)
-                  .build(),
-              name,
-              ImmutableSortedSet.of(src),
-              ImmutableList.copyOf(transitiveIncludes.values())));
-    }
+              return new DCompileBuildRule(
+                  baseParams
+                      .withBuildTarget(compileTarget)
+                      .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
+                  compiler,
+                  ImmutableList.<String>builder()
+                      .addAll(dBuckConfig.getBaseCompilerFlags())
+                      .addAll(compilerFlags)
+                      .build(),
+                  name,
+                  ImmutableSortedSet.of(src),
+                  ImmutableList.copyOf(transitiveIncludes.values()));
+            });
   }
 
   /**
