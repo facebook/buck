@@ -2048,6 +2048,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     private BuildableContext buildableContext;
     private CacheResult rulekeyCacheResult;
     private WeightedListeningExecutorService serviceForBuild;
+    private @SuppressWarnings("PMD.PrematureDeclaration") long start = -1;
 
     public BuildLocally(
         BuildRule rule,
@@ -2066,42 +2067,51 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     public ListenableFuture<Optional<BuildResult>> buildAsync() {
       return Futures.catching(
-          serviceForBuild.submit(
-              () -> {
-                try (BuildLocallyScope scope = new BuildLocallyScope()) {
-                  LOG.debug("Building locally: %s", rule);
-                  // Attempt to get an approximation of how long it takes to actually run the command.
-                  @SuppressWarnings("PMD.PrematureDeclaration")
-                  long start = System.nanoTime();
+          Futures.transform(
+              serviceForBuild.submit(
+                  () -> {
+                    try (BuildLocallyScope scope = new BuildLocallyScope()) {
+                      rule.buildLocally(
+                          buildContext.getBuildContext(),
+                          buildableContext,
+                          executionContext.withProcessExecutor(
+                              new ContextualProcessExecutor(
+                                  executionContext.getProcessExecutor(),
+                                  ImmutableMap.of(
+                                      BUILD_RULE_TYPE_CONTEXT_KEY,
+                                      rule.getType(),
+                                      STEP_TYPE_CONTEXT_KEY,
+                                      StepType.BUILD_STEP.toString()))),
+                          CachingBuildEngine.this.stepRunner);
+                      return null;
+                    }
+                  }),
+              (v) -> {
+                onSuccess();
 
-                  buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-                  cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-
-                  rule.buildLocally(
-                      buildContext.getBuildContext(),
-                      buildableContext,
-                      executionContext.withProcessExecutor(
-                          new ContextualProcessExecutor(
-                              executionContext.getProcessExecutor(),
-                              ImmutableMap.of(
-                                  BUILD_RULE_TYPE_CONTEXT_KEY,
-                                  rule.getType(),
-                                  STEP_TYPE_CONTEXT_KEY,
-                                  StepType.BUILD_STEP.toString()))),
-                      CachingBuildEngine.this.stepRunner);
-
-                  long end = System.nanoTime();
-                  LOG.debug(
-                      "Build completed: %s %s (%dns)",
-                      rule.getType(), rule.getFullyQualifiedName(), end - start);
-                  return Optional.of(
-                      BuildResult.success(
-                          rule, BuildRuleSuccessType.BUILT_LOCALLY, rulekeyCacheResult));
-                }
+                return Optional.of(
+                    BuildResult.success(
+                        rule, BuildRuleSuccessType.BUILT_LOCALLY, rulekeyCacheResult));
               }),
           CancellationException.class,
           (exception) ->
               Optional.of(BuildResult.canceled(rule, Preconditions.checkNotNull(firstFailure))));
+    }
+
+    private void onSuccess() {
+      long end = System.nanoTime();
+      LOG.debug(
+          "Build completed: %s %s (%dns)",
+          rule.getType(), rule.getFullyQualifiedName(), end - start);
+    }
+
+    private void onStart() {
+      LOG.debug("Building locally: %s", rule);
+      // Attempt to get an approximation of how long it takes to actually run the command.
+      start = System.nanoTime();
+
+      buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+      cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
     }
 
     private class BuildLocallyScope implements AutoCloseable {
@@ -2119,6 +2129,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 rule,
                 buildRuleDurationTracker,
                 ruleKeyFactories.getDefaultRuleKeyFactory());
+
+        onStart();
       }
 
       @Override
