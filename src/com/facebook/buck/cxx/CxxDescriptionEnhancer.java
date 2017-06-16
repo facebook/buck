@@ -187,25 +187,18 @@ public class CxxDescriptionEnhancer {
             untypedTarget, headerVisibility, cxxPlatform.getFlavor());
 
     // Check the cache...
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerSymlinkTreeTarget);
-    if (rule.isPresent()) {
-      Preconditions.checkState(rule.get() instanceof HeaderSymlinkTree);
-      return (HeaderSymlinkTree) rule.get();
-    }
-
-    HeaderSymlinkTree symlinkTree =
-        createHeaderSymlinkTree(
-            untypedTarget,
-            projectFilesystem,
-            ruleResolver,
-            cxxPlatform,
-            headers,
-            headerVisibility,
-            shouldCreateHeadersSymlinks);
-
-    ruleResolver.addToIndex(symlinkTree);
-
-    return symlinkTree;
+    return (HeaderSymlinkTree)
+        ruleResolver.computeIfAbsent(
+            headerSymlinkTreeTarget,
+            () ->
+                createHeaderSymlinkTree(
+                    untypedTarget,
+                    projectFilesystem,
+                    ruleResolver,
+                    cxxPlatform,
+                    headers,
+                    headerVisibility,
+                    shouldCreateHeadersSymlinks));
   }
 
   private static SymlinkTree requireSandboxSymlinkTree(
@@ -1014,41 +1007,35 @@ public class CxxDescriptionEnhancer {
       ImmutableList.Builder<Arg> argsBuilder,
       BuildTarget linkRuleTarget)
       throws NoSuchBuildTargetException {
-    CxxLink cxxLink;
-    Optional<BuildRule> existingCxxLinkRule = resolver.getRuleOptional(linkRuleTarget);
-    if (existingCxxLinkRule.isPresent()) {
-      Preconditions.checkArgument(existingCxxLinkRule.get() instanceof CxxLink);
-      cxxLink = (CxxLink) existingCxxLinkRule.get();
-    } else {
-      // Generate the final link rule.  We use the top-level target as the link rule's
-      // target, so that it corresponds to the actual binary we build.
-      cxxLink =
-          CxxLinkableEnhancer.createCxxLinkableBuildRule(
-              cxxBuckConfig,
-              cxxPlatform,
-              params,
-              resolver,
-              sourcePathResolver,
-              ruleFinder,
-              linkRuleTarget,
-              Linker.LinkType.EXECUTABLE,
-              Optional.empty(),
-              linkOutput,
-              linkStyle,
-              thinLto,
-              deps,
-              cxxRuntimeType,
-              Optional.empty(),
-              ImmutableSet.of(),
-              NativeLinkableInput.builder()
-                  .setArgs(argsBuilder.build())
-                  .setFrameworks(frameworks)
-                  .setLibraries(libraries)
-                  .build(),
-              Optional.empty());
-      resolver.addToIndex(cxxLink);
-    }
-    return cxxLink;
+    return (CxxLink)
+        resolver.computeIfAbsentThrowing(
+            linkRuleTarget,
+            () ->
+                // Generate the final link rule.  We use the top-level target as the link rule's
+                // target, so that it corresponds to the actual binary we build.
+                CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                    cxxBuckConfig,
+                    cxxPlatform,
+                    params,
+                    resolver,
+                    sourcePathResolver,
+                    ruleFinder,
+                    linkRuleTarget,
+                    Linker.LinkType.EXECUTABLE,
+                    Optional.empty(),
+                    linkOutput,
+                    linkStyle,
+                    thinLto,
+                    deps,
+                    cxxRuntimeType,
+                    Optional.empty(),
+                    ImmutableSet.of(),
+                    NativeLinkableInput.builder()
+                        .setArgs(argsBuilder.build())
+                        .setFrameworks(frameworks)
+                        .setLibraries(libraries)
+                        .build(),
+                    Optional.empty()));
   }
 
   public static CxxStrip createCxxStripRule(
@@ -1065,24 +1052,19 @@ public class CxxDescriptionEnhancer {
                     .withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()))
             .copyReplacingDeclaredAndExtraDeps(
                 ImmutableSortedSet.of(unstrippedBinaryRule), ImmutableSortedSet.of());
-    Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());
-    if (exisitingRule.isPresent()) {
-      Preconditions.checkArgument(exisitingRule.get() instanceof CxxStrip);
-      return (CxxStrip) exisitingRule.get();
-    } else {
-      CxxStrip cxxStrip =
-          new CxxStrip(
-              stripRuleParams,
-              stripStyle,
-              Preconditions.checkNotNull(unstrippedBinaryRule.getSourcePathToOutput()),
-              cxxPlatform.getStrip(),
-              CxxDescriptionEnhancer.getBinaryOutputPath(
-                  stripRuleParams.getBuildTarget(),
-                  params.getProjectFilesystem(),
-                  cxxPlatform.getBinaryExtension()));
-      resolver.addToIndex(cxxStrip);
-      return cxxStrip;
-    }
+    return (CxxStrip)
+        resolver.computeIfAbsent(
+            stripRuleParams.getBuildTarget(),
+            () ->
+                new CxxStrip(
+                    stripRuleParams,
+                    stripStyle,
+                    Preconditions.checkNotNull(unstrippedBinaryRule.getSourcePathToOutput()),
+                    cxxPlatform.getStrip(),
+                    CxxDescriptionEnhancer.getBinaryOutputPath(
+                        stripRuleParams.getBuildTarget(),
+                        params.getProjectFilesystem(),
+                        cxxPlatform.getBinaryExtension())));
   }
 
   public static BuildRule createUberCompilationDatabase(
