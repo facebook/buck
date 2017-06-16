@@ -21,15 +21,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -137,5 +140,43 @@ public class BuildRuleResolverTest {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("not of expected type"));
     resolver.getRuleWithType(BuildTargetFactory.newInstance("//foo:bar"), JavaBinary.class);
+  }
+
+  @Test
+  public void computeIfAbsentComputesOnlyIfAbsent() {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    AtomicInteger supplierInvoked = new AtomicInteger(0);
+    BuildRule buildRule = emptyBuildRuleWithTarget(target);
+    BuildRule returnedBuildRule =
+        resolver.computeIfAbsent(
+            target,
+            () -> {
+              supplierInvoked.incrementAndGet();
+              return buildRule;
+            });
+    assertEquals("supplier was called once", supplierInvoked.get(), 1);
+    assertSame("returned the same build rule that was generated", returnedBuildRule, buildRule);
+    assertSame("the rule can be retrieved again", resolver.getRule(target), buildRule);
+    returnedBuildRule =
+        resolver.computeIfAbsent(
+            target,
+            () -> {
+              supplierInvoked.incrementAndGet();
+              return buildRule;
+            });
+    assertEquals("supplier is not called again", supplierInvoked.get(), 1);
+    assertSame("recorded rule is still returned", returnedBuildRule, buildRule);
+  }
+
+  private static BuildRule emptyBuildRuleWithTarget(BuildTarget target) {
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(
+        new BuildRuleParams(
+            target,
+            ImmutableSortedSet::of,
+            ImmutableSortedSet::of,
+            ImmutableSortedSet.of(),
+            new FakeProjectFilesystem()));
   }
 }

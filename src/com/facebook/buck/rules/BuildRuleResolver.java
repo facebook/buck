@@ -34,6 +34,7 @@ import com.google.common.collect.Ordering;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -41,6 +42,11 @@ import javax.annotation.Nullable;
  * represents. Once parsing is complete, instances of this class can be considered immutable.
  */
 public class BuildRuleResolver {
+
+  @FunctionalInterface
+  public interface BuildRuleSupplier {
+    BuildRule get() throws NoSuchBuildTargetException;
+  }
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
@@ -124,17 +130,26 @@ public class BuildRuleResolver {
     return Optional.ofNullable(buildRuleIndex.get(buildTarget));
   }
 
-  public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
+  /**
+   * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
+   * with the target, compute the rule using the given supplier and update the mapping.
+   *
+   * @param target target with which the BuildRule is associated.
+   * @param ruleSupplier supplier to compute the rule.
+   * @return the current value associated with the rule
+   * @throws NoSuchBuildTargetException if the supplier does so.
+   */
+  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleSupplier ruleSupplier)
+      throws NoSuchBuildTargetException {
     BuildRule rule = buildRuleIndex.get(target);
     if (rule != null) {
       return rule;
     }
-    TargetNode<?, ?> node = targetGraph.get(target);
-    rule = buildRuleGenerator.transform(targetGraph, this, node);
+    rule = ruleSupplier.get();
     Preconditions.checkState(
         // TODO(jakubzika): This should hold for flavored build targets as well.
         rule.getBuildTarget().getUnflavoredBuildTarget().equals(target.getUnflavoredBuildTarget()),
-        "Description returned rule for '%s' instead of '%s'.",
+        "Computed rule for '%s' instead of '%s'.",
         rule.getBuildTarget(),
         target);
     BuildRule oldRule = buildRuleIndex.put(target, rule);
@@ -149,6 +164,37 @@ public class BuildRuleResolver {
         rule,
         oldRule);
     return rule;
+  }
+
+  public BuildRule computeIfAbsent(BuildTarget target, Supplier<BuildRule> ruleSupplier) {
+    try {
+      return computeIfAbsentThrowing(target, ruleSupplier::get);
+    } catch (NoSuchBuildTargetException e) {
+      throw new IllegalStateException("Supplier should not throw NoSuchBuildTargetException.", e);
+    }
+  }
+
+  /**
+   * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
+   * with the target, compute it by transforming the {@code TargetNode} associated with this build
+   * target using the {@link TargetNodeToBuildRuleTransformer} associated with this instance.
+   */
+  public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
+    return computeIfAbsentThrowing(
+        target,
+        () -> {
+          TargetNode<?, ?> node = targetGraph.get(target);
+          BuildRule rule = buildRuleGenerator.transform(targetGraph, this, node);
+          Preconditions.checkState(
+              // TODO(jakubzika): This should hold for flavored build targets as well.
+              rule.getBuildTarget()
+                  .getUnflavoredBuildTarget()
+                  .equals(target.getUnflavoredBuildTarget()),
+              "Description returned rule for '%s' instead of '%s'.",
+              rule.getBuildTarget(),
+              target);
+          return rule;
+        });
   }
 
   public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets)
