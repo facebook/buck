@@ -131,8 +131,6 @@ class NativeLibraryMergeEnhancer {
             .addAll(linkablesAssets.keySet())
             .build();
 
-    ImmutableSortedMap.Builder<String, String> sonameMapBuilder = ImmutableSortedMap.naturalOrder();
-
     Stream<? extends NativeLinkable> allModulesLinkables = Stream.empty();
     ImmutableSet.Builder<NativeLinkable> linkableAssetSetBuilder = ImmutableSet.builder();
     for (APKModule module : modules) {
@@ -152,11 +150,14 @@ class NativeLibraryMergeEnhancer {
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
         makeConstituentMap(buildRuleParams, mergeMap, allLinkables, linkableAssetSet);
 
-    sonameMapBuilder.putAll(
-        makeSonameMap(
-            // sonames can *theoretically* differ per-platform, but right now they don't on Android,
-            // so just pick the first platform and use that to get all the sonames.
-            nativePlatforms.values().iterator().next().getCxxPlatform(), linkableMembership));
+    ImmutableSortedMap.Builder<String, String> sonameMapBuilder = ImmutableSortedMap.naturalOrder();
+    makeSonameMap(
+        // sonames can *theoretically* differ per-platform, but right now they don't on Android,
+        // so just pick the first platform and use that to get all the sonames.
+        nativePlatforms.values().iterator().next().getCxxPlatform(),
+        linkableMembership,
+        sonameMapBuilder);
+    builder.setSonameMapping(sonameMapBuilder.build());
 
     Iterable<MergedNativeLibraryConstituents> orderedConstituents =
         getOrderedMergedConstituents(buildRuleParams, linkableMembership);
@@ -206,7 +207,6 @@ class NativeLibraryMergeEnhancer {
       }
     }
 
-    builder.setSonameMapping(sonameMapBuilder.build());
     return builder.build();
   }
 
@@ -312,12 +312,11 @@ class NativeLibraryMergeEnhancer {
     return linkableMembership;
   }
 
-  private static ImmutableSortedMap<String, String> makeSonameMap(
+  private static void makeSonameMap(
       CxxPlatform anyAndroidCxxPlatform,
-      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership)
+      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership,
+      ImmutableSortedMap.Builder<String, String> sonameMapBuilder)
       throws NoSuchBuildTargetException {
-    ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
-
     for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
         linkableMembership.entrySet()) {
       if (!entry.getValue().isActuallyMerged()) {
@@ -325,11 +324,9 @@ class NativeLibraryMergeEnhancer {
       }
       String mergedName = entry.getValue().getSoname().get();
       for (String origName : entry.getKey().getSharedLibraries(anyAndroidCxxPlatform).keySet()) {
-        builder.put(origName, mergedName);
+        sonameMapBuilder.put(origName, mergedName);
       }
     }
-
-    return builder.build();
   }
 
   /** Topo-sort the constituents objects so we can process deps first. */
