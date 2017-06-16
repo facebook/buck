@@ -1553,30 +1553,18 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
     cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
-    // Get and run all of the commands.
-    List<? extends Step> steps =
-        rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
-
-    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
-    for (Step step : steps) {
-      stepRunner.runStepForBuildTarget(
-          executionContext.withProcessExecutor(
-              new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(),
-                  ImmutableMap.of(
-                      BUILD_RULE_TYPE_CONTEXT_KEY,
-                      rule.getType(),
-                      STEP_TYPE_CONTEXT_KEY,
-                      StepType.BUILD_STEP.toString()))),
-          step,
-          optionalTarget);
-
-      // Check for interruptions that may have been ignored by step.
-      if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
-        throw new InterruptedException();
-      }
-    }
+    rule.buildLocally(
+        buildContext.getBuildContext(),
+        buildableContext,
+        executionContext.withProcessExecutor(
+            new ContextualProcessExecutor(
+                executionContext.getProcessExecutor(),
+                ImmutableMap.of(
+                    BUILD_RULE_TYPE_CONTEXT_KEY,
+                    rule.getType(),
+                    STEP_TYPE_CONTEXT_KEY,
+                    StepType.BUILD_STEP.toString()))),
+        this.stepRunner);
 
     long end = System.nanoTime();
     LOG.debug(
