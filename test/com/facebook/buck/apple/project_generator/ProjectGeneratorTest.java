@@ -74,6 +74,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.CxxPrecompiledHeaderBuilder;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -1495,6 +1496,36 @@ public class ProjectGeneratorTest {
     assertEquals(
         "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME", settings.get("BUILT_PRODUCTS_DIR"));
     assertEquals("$BUILT_PRODUCTS_DIR", settings.get("CONFIGURATION_BUILD_DIR"));
+  }
+
+  @Test
+  public void testAppleLibraryConfiguresPrecompiledHeader() throws IOException {
+    BuildTarget pchTarget = BuildTarget.builder(rootPath, "//foo", "pch").build();
+    TargetNode<?, ?> pchNode =
+        CxxPrecompiledHeaderBuilder.createBuilder(pchTarget)
+            .setSrc(new FakeSourcePath("Foo/Foo-Prefix.pch"))
+            .build();
+
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?, ?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setPrecompiledHeader(Optional.of(new DefaultBuildTargetSourcePath(pchTarget)))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(libraryNode, pchNode), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+
+    ImmutableMap<String, String> settings = getBuildSettings(libraryTarget, target, "Debug");
+    assertEquals("../Foo/Foo-Prefix.pch", settings.get("GCC_PREFIX_HEADER"));
   }
 
   @Test

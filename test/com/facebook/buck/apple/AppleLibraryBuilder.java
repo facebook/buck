@@ -161,6 +161,11 @@ public class AppleLibraryBuilder
     return this;
   }
 
+  public AppleLibraryBuilder setPrecompiledHeader(Optional<SourcePath> precompiledHeader) {
+    getArgForPopulating().setPrecompiledHeader(precompiledHeader);
+    return this;
+  }
+
   public AppleLibraryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
     getArgForPopulating().setTests(tests);
     return this;

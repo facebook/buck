@@ -72,6 +72,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.HeaderVisibility;
@@ -99,6 +100,7 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
@@ -942,7 +944,7 @@ public class ProjectGenerator {
         mutator
             .setLangPreprocessorFlags(langPreprocessorFlags)
             .setPublicHeaders(exportedHeaders)
-            .setPrefixHeader(arg.getPrefixHeader())
+            .setPrefixHeader(getPrefixHeaderSourcePath(arg))
             .setSourcesWithFlags(ImmutableSet.copyOf(arg.getSrcs()))
             .setPrivateHeaders(headers)
             .setRecursiveResources(recursiveResources)
@@ -1126,7 +1128,9 @@ public class ProjectGenerator {
       }
       Optional<String> swiftVersion = swiftBuckConfig.getVersion();
       swiftVersion.ifPresent(s -> extraSettingsBuilder.put("SWIFT_VERSION", s));
-      Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().getPrefixHeader();
+
+      Optional<SourcePath> prefixHeaderOptional =
+          getPrefixHeaderSourcePath(targetNode.getConstructorArg());
       if (prefixHeaderOptional.isPresent()) {
         Path prefixHeaderRelative = resolveSourcePath(prefixHeaderOptional.get());
         Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
@@ -2711,6 +2715,32 @@ public class ProjectGenerator {
           .equals(Optional.of(ProductType.WATCH_APPLICATION.getIdentifier()));
     }
     return false;
+  }
+
+  private Optional<SourcePath> getPrefixHeaderSourcePath(CxxLibraryDescription.CommonArg arg) {
+    // The prefix header could be stored in either the `prefix_header` or the `precompiled_header`
+    // field. Use either, but prefer the prefix_header.
+    if (arg.getPrefixHeader().isPresent()) {
+      return arg.getPrefixHeader();
+    }
+
+    if (!arg.getPrecompiledHeader().isPresent()) {
+      return Optional.empty();
+    }
+
+    SourcePath pchPath = arg.getPrecompiledHeader().get();
+    // `precompiled_header` requires a cxx_precompiled_header target, but we want to give Xcode the
+    // path to the pch file itself. Resolve our target reference into a path
+    Preconditions.checkArgument(pchPath instanceof BuildTargetSourcePath);
+    BuildTargetSourcePath pchTargetSourcePath = (BuildTargetSourcePath) pchPath;
+    BuildTarget pchTarget = pchTargetSourcePath.getTarget();
+    TargetNode<?, ?> node = targetGraph.get(pchTarget);
+    BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    BuildRule rule = ruleFinder.getRuleOrThrow(pchTargetSourcePath);
+    Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
+    CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;
+    return Optional.of(pch.sourcePath);
   }
 
   private Path getPathToHeaderMapsRoot() {
