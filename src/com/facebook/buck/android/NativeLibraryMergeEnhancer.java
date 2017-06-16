@@ -319,12 +319,11 @@ class NativeLibraryMergeEnhancer {
       throws NoSuchBuildTargetException {
     for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
         linkableMembership.entrySet()) {
-      if (!entry.getValue().isActuallyMerged()) {
-        continue;
-      }
-      String mergedName = entry.getValue().getSoname().get();
+      Optional<String> mergedName = entry.getValue().getSoname();
       for (String origName : entry.getKey().getSharedLibraries(anyAndroidCxxPlatform).keySet()) {
-        sonameMapBuilder.put(origName, mergedName);
+        if (entry.getValue().isActuallyMerged()) {
+          sonameMapBuilder.put(origName, mergedName.get());
+        }
       }
     }
   }
