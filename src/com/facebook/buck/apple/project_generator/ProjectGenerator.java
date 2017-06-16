@@ -864,11 +864,13 @@ public class ProjectGenerator {
           public String expandFrom(
               BuildTarget target,
               CellPathResolver cellNames,
-              BuildRuleResolver resolver,
+              BuildRuleResolver ignored,
               LocationMacro input)
               throws MacroException {
             BuildTarget locationMacroTarget = input.getTarget();
 
+            BuildRuleResolver resolver =
+                buildRuleResolverForNode.apply(targetGraph.get(locationMacroTarget));
             try {
               resolver.requireRule(locationMacroTarget);
             } catch (NoSuchBuildTargetException | TargetGraph.NoSuchNodeException e) {
@@ -883,6 +885,8 @@ public class ProjectGenerator {
           }
         };
 
+    BuildRuleResolver emptyBuildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     for (StringWithMacros flag : flags) {
       StringWithMacrosArg.of(
@@ -890,7 +894,7 @@ public class ProjectGenerator {
               ImmutableList.of(locationMacroExpander),
               node.getBuildTarget(),
               node.getCellNames(),
-              buildRuleResolverForNode.apply(node))
+              emptyBuildRuleResolver)
           .appendToCommandLine(result, defaultPathResolver);
     }
     return result.build();
