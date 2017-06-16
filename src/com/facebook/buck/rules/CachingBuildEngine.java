@@ -100,6 +100,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -337,47 +338,42 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildableContext buildableContext,
       CacheResult ruleKeyCacheResult,
       WeightedListeningExecutorService service) {
-    return service.submit(
-        () -> {
-          if (!shouldKeepGoing(buildContext)) {
-            Preconditions.checkNotNull(firstFailure);
-            return Optional.of(BuildResult.canceled(rule, firstFailure));
-          }
-          try (BuildRuleEvent.Scope scope =
-              BuildRuleEvent.resumeSuspendScope(
-                  buildContext.getEventBus(),
-                  rule,
-                  buildRuleDurationTracker,
-                  ruleKeyFactories.getDefaultRuleKeyFactory())) {
-            LOG.debug("Building locally: %s", rule);
-            // Attempt to get an approximation of how long it takes to actually run the command.
-            @SuppressWarnings("PMD.PrematureDeclaration")
-            long start = System.nanoTime();
+    return Futures.catching(
+        service.submit(
+            () -> {
+              try (BuildLocallyScope scope = new BuildLocallyScope(rule, buildContext)) {
+                LOG.debug("Building locally: %s", rule);
+                // Attempt to get an approximation of how long it takes to actually run the command.
+                @SuppressWarnings("PMD.PrematureDeclaration")
+                long start = System.nanoTime();
 
-            buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-            cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+                buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+                cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
-            rule.buildLocally(
-                buildContext.getBuildContext(),
-                buildableContext,
-                executionContext.withProcessExecutor(
-                    new ContextualProcessExecutor(
-                        executionContext.getProcessExecutor(),
-                        ImmutableMap.of(
-                            BUILD_RULE_TYPE_CONTEXT_KEY,
-                            rule.getType(),
-                            STEP_TYPE_CONTEXT_KEY,
-                            StepType.BUILD_STEP.toString()))),
-                this.stepRunner);
+                rule.buildLocally(
+                    buildContext.getBuildContext(),
+                    buildableContext,
+                    executionContext.withProcessExecutor(
+                        new ContextualProcessExecutor(
+                            executionContext.getProcessExecutor(),
+                            ImmutableMap.of(
+                                BUILD_RULE_TYPE_CONTEXT_KEY,
+                                rule.getType(),
+                                STEP_TYPE_CONTEXT_KEY,
+                                StepType.BUILD_STEP.toString()))),
+                    this.stepRunner);
 
-            long end = System.nanoTime();
-            LOG.debug(
-                "Build completed: %s %s (%dns)",
-                rule.getType(), rule.getFullyQualifiedName(), end - start);
-            return Optional.of(
-                BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, ruleKeyCacheResult));
-          }
-        });
+                long end = System.nanoTime();
+                LOG.debug(
+                    "Build completed: %s %s (%dns)",
+                    rule.getType(), rule.getFullyQualifiedName(), end - start);
+                return Optional.of(
+                    BuildResult.success(
+                        rule, BuildRuleSuccessType.BUILT_LOCALLY, ruleKeyCacheResult));
+              }
+            }),
+        CancellationException.class,
+        (exception) -> Optional.of(BuildResult.canceled(rule, firstFailure)));
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -2075,5 +2071,28 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           return function.call();
         },
         MoreExecutors.directExecutor());
+  }
+
+  private class BuildLocallyScope implements AutoCloseable {
+    private final BuildRuleEvent.Scope scope;
+
+    public BuildLocallyScope(BuildRule rule, BuildEngineBuildContext buildContext) {
+      if (!shouldKeepGoing(buildContext)) {
+        Preconditions.checkNotNull(firstFailure);
+        throw new CancellationException();
+      }
+
+      scope =
+          BuildRuleEvent.resumeSuspendScope(
+              buildContext.getEventBus(),
+              rule,
+              buildRuleDurationTracker,
+              ruleKeyFactories.getDefaultRuleKeyFactory());
+    }
+
+    @Override
+    public void close() {
+      scope.close();
+    }
   }
 }
