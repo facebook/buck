@@ -29,26 +29,13 @@ import java.util.Optional;
 class ExopackageAgent {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
-  /** Prefix of the path to the agent apk on the device. */
-  private static final String AGENT_DEVICE_PATH = "/data/app/" + AgentUtil.AGENT_PACKAGE_NAME;
-  /** Command line to invoke the agent on the device. */
-  static final String JAVA_AGENT_COMMAND =
-      "dalvikvm -classpath "
-          + AGENT_DEVICE_PATH
-          + "-1.apk:"
-          + AGENT_DEVICE_PATH
-          + "-2.apk:"
-          + AGENT_DEVICE_PATH
-          + "-1/base.apk:"
-          + AGENT_DEVICE_PATH
-          + "-2/base.apk "
-          + "com.facebook.buck.android.agent.AgentMain ";
-
   private boolean useNativeAgent;
+  private final String classPath;
   private final String nativeAgentPath;
 
-  public ExopackageAgent(boolean useNativeAgent, String nativeAgentPath) {
+  public ExopackageAgent(boolean useNativeAgent, String classPath, String nativeAgentPath) {
     this.useNativeAgent = useNativeAgent;
+    this.classPath = classPath;
     this.nativeAgentPath = nativeAgentPath;
   }
 
@@ -72,7 +59,7 @@ class ExopackageAgent {
     if (useNativeAgent) {
       return nativeAgentPath + "/libagent.so ";
     } else {
-      return JAVA_AGENT_COMMAND;
+      return "dalvikvm -classpath " + classPath + " com.facebook.buck.android.agent.AgentMain ";
     }
   }
 
@@ -99,7 +86,8 @@ class ExopackageAgent {
         installAgentApk(eventBus, device, agentApkPath);
         agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       }
-      return new ExopackageAgent(determineBestAgent(device), agentInfo.get().nativeLibPath);
+      return new ExopackageAgent(
+          determineBestAgent(device), agentInfo.get().apkPath, agentInfo.get().nativeLibPath);
     } catch (Exception e) {
       Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);
