@@ -72,7 +72,7 @@ class ExopackageAgent {
     try {
       Optional<PackageInfo> agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       if (agentInfo.isPresent()
-          && agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
+          && !agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
         LOG.debug(
             "Agent version mismatch. Wanted %s, got %s.",
             AgentUtil.AGENT_VERSION_CODE, agentInfo.get().versionCode);
