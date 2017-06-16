@@ -267,6 +267,7 @@ public class AndroidBinaryGraphEnhancer {
                   .copyReplacingDeclaredAndExtraDeps(
                       ImmutableSortedSet.of(generatorRule), ImmutableSortedSet.of()),
               sonameMergeMap.get(),
+              nativeLibsEnhancementResult.getSharedObjectTargets().get(),
               generatorRule);
       ruleResolver.addToIndex(generateCodeForMergedLibraryMap);
 

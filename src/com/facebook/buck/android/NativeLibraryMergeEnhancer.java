@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,6 +64,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -151,13 +153,23 @@ class NativeLibraryMergeEnhancer {
         makeConstituentMap(buildRuleParams, mergeMap, allLinkables, linkableAssetSet);
 
     ImmutableSortedMap.Builder<String, String> sonameMapBuilder = ImmutableSortedMap.naturalOrder();
+    ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder =
+        ImmutableSetMultimap.builder();
     makeSonameMap(
         // sonames can *theoretically* differ per-platform, but right now they don't on Android,
         // so just pick the first platform and use that to get all the sonames.
         nativePlatforms.values().iterator().next().getCxxPlatform(),
         linkableMembership,
-        sonameMapBuilder);
+        sonameMapBuilder,
+        sonameTargetsBuilder);
     builder.setSonameMapping(sonameMapBuilder.build());
+    ImmutableSortedMap.Builder<String, ImmutableSortedSet<String>> finalSonameTargetsBuilder =
+        ImmutableSortedMap.naturalOrder();
+    sonameTargetsBuilder
+        .build()
+        .asMap()
+        .forEach((k, v) -> finalSonameTargetsBuilder.put(k, ImmutableSortedSet.copyOf(v)));
+    builder.setSharedObjectTargets(finalSonameTargetsBuilder.build());
 
     Iterable<MergedNativeLibraryConstituents> orderedConstituents =
         getOrderedMergedConstituents(buildRuleParams, linkableMembership);
@@ -315,14 +327,28 @@ class NativeLibraryMergeEnhancer {
   private static void makeSonameMap(
       CxxPlatform anyAndroidCxxPlatform,
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership,
-      ImmutableSortedMap.Builder<String, String> sonameMapBuilder)
+      ImmutableSortedMap.Builder<String, String> sonameMapBuilder,
+      ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder)
       throws NoSuchBuildTargetException {
     for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
         linkableMembership.entrySet()) {
       Optional<String> mergedName = entry.getValue().getSoname();
-      for (String origName : entry.getKey().getSharedLibraries(anyAndroidCxxPlatform).keySet()) {
-        if (entry.getValue().isActuallyMerged()) {
+      for (Map.Entry<String, SourcePath> sonameEntry :
+          entry.getKey().getSharedLibraries(anyAndroidCxxPlatform).entrySet()) {
+        String origName = sonameEntry.getKey();
+        SourcePath sourcePath = sonameEntry.getValue();
+        boolean isActuallyMerged = entry.getValue().isActuallyMerged();
+        if (isActuallyMerged) {
           sonameMapBuilder.put(origName, mergedName.get());
+        }
+        if (sourcePath instanceof BuildTargetSourcePath) {
+          String actualName = isActuallyMerged ? mergedName.get() : origName;
+          sonameTargetsBuilder.put(
+              actualName,
+              ((BuildTargetSourcePath) sourcePath)
+                  .getTarget()
+                  .getUnflavoredBuildTarget()
+                  .toString());
         }
       }
     }
@@ -517,6 +543,9 @@ class NativeLibraryMergeEnhancer {
     public abstract ImmutableMultimap<APKModule, NativeLinkable> getMergedLinkablesAssets();
 
     public abstract ImmutableSortedMap<String, String> getSonameMapping();
+
+    /** This is for human consumption only. */
+    public abstract ImmutableSortedMap<String, ImmutableSortedSet<String>> getSharedObjectTargets();
   }
 
   /**

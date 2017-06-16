@@ -106,6 +106,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
 
     Optional<ImmutableSortedMap<String, String>> getSonameMergeMap();
+
+    Optional<ImmutableSortedMap<String, ImmutableSortedSet<String>>> getSharedObjectTargets();
   }
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
@@ -168,6 +170,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       nativeLinkables = enhancement.getMergedLinkables();
       nativeLinkablesAssets = enhancement.getMergedLinkablesAssets();
       resultBuilder.setSonameMergeMap(enhancement.getSonameMapping());
+      resultBuilder.setSharedObjectTargets(enhancement.getSharedObjectTargets());
     }
 
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared

@@ -40,6 +40,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -55,12 +56,17 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   @AddToRuleKey private final ImmutableSortedMap<String, String> mergeResult;
   @AddToRuleKey private final BuildRule codeGenerator;
 
+  @AddToRuleKey
+  private final ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets;
+
   GenerateCodeForMergedLibraryMap(
       BuildRuleParams buildRuleParams,
       ImmutableSortedMap<String, String> mergeResult,
+      ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets,
       BuildRule codeGenerator) {
     super(buildRuleParams);
     this.mergeResult = mergeResult;
+    this.sharedObjectTargets = sharedObjectTargets;
     this.codeGenerator = codeGenerator;
 
     if (!(codeGenerator instanceof BinaryBuildRule)) {
@@ -77,12 +83,14 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     buildableContext.recordArtifact(output);
     buildableContext.recordArtifact(getMappingPath());
+    buildableContext.recordArtifact(getTargetsPath());
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(new WriteMapDataStep())
+        .add(new WriteTargetsFileStep())
         .add(new RunCodeGenStep(context.getSourcePathResolver()))
         .build();
   }
@@ -98,6 +106,15 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   private Path getMappingPath() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/merged_library_map.txt");
+  }
+
+  /**
+   * This file shows which targets went into which libraries. It's just meant for human consumption
+   * when writing merge configs.
+   */
+  private Path getTargetsPath() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/shared_object_targets.txt");
   }
 
   private class WriteMapDataStep implements Step {
@@ -122,6 +139,38 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     @Override
     public String getShortName() {
       return "write_merged_library_map";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return String.format("%s > %s", getShortName(), getMappingPath());
+    }
+  }
+
+  private class WriteTargetsFileStep implements Step {
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      final ProjectFilesystem projectFilesystem = getProjectFilesystem();
+      try (Writer out =
+          new BufferedWriter(
+              new OutputStreamWriter(projectFilesystem.newFileOutputStream(getTargetsPath())))) {
+        for (Map.Entry<String, ImmutableSortedSet<String>> entry : sharedObjectTargets.entrySet()) {
+          out.write(entry.getKey());
+          for (String target : entry.getValue()) {
+            out.write(' ');
+            out.write(target);
+          }
+          out.write('\n');
+        }
+      }
+
+      return StepExecutionResult.SUCCESS;
+    }
+
+    @Override
+    public String getShortName() {
+      return "write_shared_objects_target";
     }
 
     @Override
