@@ -338,16 +338,46 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       CacheResult ruleKeyCacheResult,
       WeightedListeningExecutorService service) {
     return service.submit(
-        wrapWithTracingAndCancellation(
-            rule,
-            buildContext,
-            () -> {
-              executeCommandsNowThatDepsAreBuilt(
-                  rule, buildContext, executionContext, buildableContext);
-              return Optional.of(
-                  BuildResult.success(
-                      rule, BuildRuleSuccessType.BUILT_LOCALLY, ruleKeyCacheResult));
-            }));
+        () -> {
+          if (!shouldKeepGoing(buildContext)) {
+            Preconditions.checkNotNull(firstFailure);
+            return Optional.of(BuildResult.canceled(rule, firstFailure));
+          }
+          try (BuildRuleEvent.Scope scope =
+              BuildRuleEvent.resumeSuspendScope(
+                  buildContext.getEventBus(),
+                  rule,
+                  buildRuleDurationTracker,
+                  ruleKeyFactories.getDefaultRuleKeyFactory())) {
+            LOG.debug("Building locally: %s", rule);
+            // Attempt to get an approximation of how long it takes to actually run the command.
+            @SuppressWarnings("PMD.PrematureDeclaration")
+            long start = System.nanoTime();
+
+            buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+            cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+
+            rule.buildLocally(
+                buildContext.getBuildContext(),
+                buildableContext,
+                executionContext.withProcessExecutor(
+                    new ContextualProcessExecutor(
+                        executionContext.getProcessExecutor(),
+                        ImmutableMap.of(
+                            BUILD_RULE_TYPE_CONTEXT_KEY,
+                            rule.getType(),
+                            STEP_TYPE_CONTEXT_KEY,
+                            StepType.BUILD_STEP.toString()))),
+                this.stepRunner);
+
+            long end = System.nanoTime();
+            LOG.debug(
+                "Build completed: %s %s (%dns)",
+                rule.getType(), rule.getFullyQualifiedName(), end - start);
+            return Optional.of(
+                BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, ruleKeyCacheResult));
+          }
+        });
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -1532,43 +1562,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     return cacheResult;
-  }
-
-  /**
-   * Execute the commands for this build rule. Requires all dependent rules are already built
-   * successfully.
-   */
-  private void executeCommandsNowThatDepsAreBuilt(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      BuildableContext buildableContext)
-      throws InterruptedException, StepFailedException {
-
-    LOG.debug("Building locally: %s", rule);
-    // Attempt to get an approximation of how long it takes to actually run the command.
-    @SuppressWarnings("PMD.PrematureDeclaration")
-    long start = System.nanoTime();
-
-    buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-    cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-
-    rule.buildLocally(
-        buildContext.getBuildContext(),
-        buildableContext,
-        executionContext.withProcessExecutor(
-            new ContextualProcessExecutor(
-                executionContext.getProcessExecutor(),
-                ImmutableMap.of(
-                    BUILD_RULE_TYPE_CONTEXT_KEY,
-                    rule.getType(),
-                    STEP_TYPE_CONTEXT_KEY,
-                    StepType.BUILD_STEP.toString()))),
-        this.stepRunner);
-
-    long end = System.nanoTime();
-    LOG.debug(
-        "Build completed: %s %s (%dns)", rule.getType(), rule.getFullyQualifiedName(), end - start);
   }
 
   private void executePostBuildSteps(
