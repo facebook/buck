@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.SortedSet;
 
 /** Puts together multiple thin library/binaries into a multi-arch file. */
 public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -60,7 +59,7 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       Tool lipo,
-      SortedSet<SourcePath> thinBinaries,
+      ImmutableSortedSet<SourcePath> thinBinaries,
       Path output) {
     super(buildRuleParams);
     this.ruleFinder = ruleFinder;

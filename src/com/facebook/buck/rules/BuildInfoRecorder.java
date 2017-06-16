@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -57,6 +58,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
@@ -229,11 +231,8 @@ public class BuildInfoRecorder {
     return paths.build();
   }
 
-  private ImmutableSortedSet<Path> getRecordedDirsAndFiles() throws IOException {
-    return ImmutableSortedSet.<Path>naturalOrder()
-        .addAll(getRecordedMetadataFiles())
-        .addAll(getRecordedOutputDirsAndFiles())
-        .build();
+  private SortedSet<Path> getRecordedDirsAndFiles() throws IOException {
+    return SortedSets.union(getRecordedMetadataFiles(), getRecordedOutputDirsAndFiles());
   }
 
   /** @return the outputs paths as recorded by the rule. */
@@ -285,7 +284,7 @@ public class BuildInfoRecorder {
     eventBus.post(started);
 
     final Path zip;
-    ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
+    SortedSet<Path> pathsToIncludeInZip = ImmutableSortedSet.of();
     ImmutableMap<String, String> buildMetadata;
     try {
       pathsToIncludeInZip = getRecordedDirsAndFiles();

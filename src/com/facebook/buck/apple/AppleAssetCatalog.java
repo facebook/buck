@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -67,7 +66,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String applePlatformName,
       String targetSDKVersion,
       Tool actool,
-      SortedSet<SourcePath> assetCatalogDirs,
+      ImmutableSortedSet<SourcePath> assetCatalogDirs,
       Optional<String> appIcon,
       Optional<String> launchImage,
       AppleAssetCatalogDescription.Optimization optimization,
@@ -76,7 +75,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.actool = actool;
-    this.assetCatalogDirs = ImmutableSortedSet.copyOf(assetCatalogDirs);
+    this.assetCatalogDirs = assetCatalogDirs;
     this.outputDir =
         BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
             .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);

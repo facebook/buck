@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
@@ -49,10 +50,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import javax.xml.bind.JAXBException;
 
 /** Build a fat JAR that packages an inner JAR along with any required native libraries. */
@@ -135,7 +134,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(writeFatJarInfo(fatJarInfo, sonameToResourceMap));
 
     // Build up the resource and src collections.
-    Set<Path> javaSourceFilePaths = new HashSet<>();
+    ImmutableSortedSet.Builder<Path> javaSourceFilePaths =
+        new ImmutableSortedSet.Builder<>(Ordering.natural());
     for (String srcResource : FAT_JAR_SRC_RESOURCES) {
       Path fatJarSource = outputDir.resolve(Paths.get(srcResource).getFileName());
       javaSourceFilePaths.add(fatJarSource);
@@ -187,7 +187,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     compileStepFactory.createCompileStep(
         context,
-        ImmutableSortedSet.copyOf(javaSourceFilePaths),
+        javaSourceFilePaths.build(),
         getBuildTarget(),
         context.getSourcePathResolver(),
         ruleFinder,
