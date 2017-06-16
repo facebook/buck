@@ -330,15 +330,24 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return rulesList;
   }
 
-  private BuildResult buildLocally(
-      final BuildRule rule,
-      final BuildEngineBuildContext buildContext,
-      final ExecutionContext executionContext,
-      final BuildableContext buildableContext,
-      final CacheResult cacheResult)
-      throws StepFailedException, InterruptedException {
-    executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
-    return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
+  private ListenableFuture<Optional<BuildResult>> buildLocally(
+      BuildRule rule,
+      BuildEngineBuildContext buildContext,
+      ExecutionContext executionContext,
+      BuildableContext buildableContext,
+      CacheResult ruleKeyCacheResult,
+      WeightedListeningExecutorService service) {
+    return service.submit(
+        wrapWithTracingAndCancellation(
+            rule,
+            buildContext,
+            () -> {
+              executeCommandsNowThatDepsAreBuilt(
+                  rule, buildContext, executionContext, buildableContext);
+              return Optional.of(
+                  BuildResult.success(
+                      rule, BuildRuleSuccessType.BUILT_LOCALLY, ruleKeyCacheResult));
+            }));
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -551,22 +560,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildContext,
             buildResultFuture,
             () ->
-                service
+                buildLocally(
+                    rule,
+                    buildContext,
+                    executionContext,
+                    buildableContext,
+                    Preconditions.checkNotNull(rulekeyCacheResult.get()),
                     // This needs to adjust the default amounts even in the non-resource-aware scheduling
                     // case so that RuleScheduleInfo works correctly.
-                    .withDefaultAmounts(getRuleResourceAmounts(rule))
-                    .submit(
-                        wrapWithTracingAndCancellation(
-                            rule,
-                            buildContext,
-                            () ->
-                                Optional.of(
-                                    buildLocally(
-                                        rule,
-                                        buildContext,
-                                        executionContext,
-                                        buildableContext,
-                                        Preconditions.checkNotNull(rulekeyCacheResult.get()))))));
+                    service.withDefaultAmounts(getRuleResourceAmounts(rule))));
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
