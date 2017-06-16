@@ -263,42 +263,46 @@ abstract class GoDescriptors {
     // doesn't vary per test.
     BuildTarget generatorTarget =
         sourceParams.getBuildTarget().withFlavors(InternalFlavor.of("make-test-main-gen"));
-    Optional<BuildRule> generator = resolver.getRuleOptional(generatorTarget);
-    if (generator.isPresent()) {
-      return ((BinaryBuildRule) generator.get()).getExecutableCommand();
-    }
+    BuildRule generator =
+        resolver.computeIfAbsentThrowing(
+            generatorTarget,
+            () -> {
+              BuildTarget generatorSourceTarget =
+                  sourceParams
+                      .getBuildTarget()
+                      .withAppendedFlavors(InternalFlavor.of("test-main-gen-source"));
+              WriteFile writeFile =
+                  (WriteFile)
+                      resolver.computeIfAbsent(
+                          generatorSourceTarget,
+                          () ->
+                              new WriteFile(
+                                  sourceParams
+                                      .withBuildTarget(generatorSourceTarget)
+                                      .copyReplacingDeclaredAndExtraDeps(
+                                          ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+                                  extractTestMainGenerator(),
+                                  BuildTargets.getGenPath(
+                                      sourceParams.getProjectFilesystem(),
+                                      generatorSourceTarget,
+                                      "%s/main.go"),
+                                  /* executable */ false));
 
-    BuildTarget generatorSourceTarget =
-        sourceParams
-            .getBuildTarget()
-            .withAppendedFlavors(InternalFlavor.of("test-main-gen-source"));
-    WriteFile writeFile =
-        resolver.addToIndex(
-            new WriteFile(
-                sourceParams
-                    .withBuildTarget(generatorSourceTarget)
-                    .copyReplacingDeclaredAndExtraDeps(
-                        ImmutableSortedSet.of(), ImmutableSortedSet.of()),
-                extractTestMainGenerator(),
-                BuildTargets.getGenPath(
-                    sourceParams.getProjectFilesystem(), generatorSourceTarget, "%s/main.go"),
-                /* executable */ false));
+              return createGoBinaryRule(
+                  sourceParams
+                      .withBuildTarget(generatorTarget)
+                      .copyReplacingDeclaredAndExtraDeps(
+                          ImmutableSortedSet.of(), ImmutableSortedSet.of(writeFile)),
+                  resolver,
+                  goBuckConfig,
+                  ImmutableSet.of(writeFile.getSourcePathToOutput()),
+                  ImmutableList.of(),
+                  ImmutableList.of(),
+                  ImmutableList.of(),
+                  goBuckConfig.getDefaultPlatform());
+            });
 
-    GoBinary binary =
-        resolver.addToIndex(
-            createGoBinaryRule(
-                sourceParams
-                    .withBuildTarget(generatorTarget)
-                    .copyReplacingDeclaredAndExtraDeps(
-                        ImmutableSortedSet.of(), ImmutableSortedSet.of(writeFile)),
-                resolver,
-                goBuckConfig,
-                ImmutableSet.of(writeFile.getSourcePathToOutput()),
-                ImmutableList.of(),
-                ImmutableList.of(),
-                ImmutableList.of(),
-                goBuckConfig.getDefaultPlatform()));
-    return binary.getExecutableCommand();
+    return ((BinaryBuildRule) generator).getExecutableCommand();
   }
 
   private static String extractTestMainGenerator() {
