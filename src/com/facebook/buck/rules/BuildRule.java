@@ -21,13 +21,14 @@ import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -114,24 +115,28 @@ public interface BuildRule extends Comparable<BuildRule> {
     return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
 
-  default void buildLocally(
+  default ListenableFuture<Void> buildLocally(
       BuildContext buildContext,
       BuildableContext buildableContext,
       ExecutionContext executionContext,
-      StepRunner stepRunner)
-      throws StepFailedException, InterruptedException {
-    // Get and run all of the commands.
-    List<? extends Step> steps = getBuildSteps(buildContext, buildableContext);
+      StepRunner stepRunner,
+      ListeningExecutorService service) {
+    return service.submit(
+        () -> {
+          // Get and run all of the commands.
+          List<? extends Step> steps = getBuildSteps(buildContext, buildableContext);
 
-    Optional<BuildTarget> optionalTarget = Optional.of(getBuildTarget());
-    for (Step step : steps) {
-      stepRunner.runStepForBuildTarget(executionContext, step, optionalTarget);
+          Optional<BuildTarget> optionalTarget = Optional.of(getBuildTarget());
+          for (Step step : steps) {
+            stepRunner.runStepForBuildTarget(executionContext, step, optionalTarget);
 
-      // Check for interruptions that may have been ignored by step.
-      if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
-        throw new InterruptedException();
-      }
-    }
+            // Check for interruptions that may have been ignored by step.
+            if (Thread.interrupted()) {
+              Thread.currentThread().interrupt();
+              throw new InterruptedException();
+            }
+          }
+          return null;
+        });
   }
 }

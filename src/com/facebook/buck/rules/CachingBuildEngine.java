@@ -59,6 +59,7 @@ import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.concurrent.WrappingListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
@@ -492,6 +493,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     getDepResults(rule, buildContext, executionContext, asyncCallbacks),
                     (depResults) -> handleDepsResults(rule, depResults),
                     serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
+
+    /*
+    TODO: Wrap our service with a tracing one
+    Then those get adjusted as appropriate
+
+     */
 
     // 4. Return to the current rule and check caches to see if we can avoid building
     // locally. Start with input-based.
@@ -2048,7 +2055,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     private BuildableContext buildableContext;
     private CacheResult rulekeyCacheResult;
     private WeightedListeningExecutorService serviceForBuild;
-    private @SuppressWarnings("PMD.PrematureDeclaration") long start = -1;
+    boolean started = false;
+    private long start;
 
     public BuildLocally(
         BuildRule rule,
@@ -2068,25 +2076,35 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     public ListenableFuture<Optional<BuildResult>> buildAsync() {
       return Futures.catching(
           Futures.transform(
-              serviceForBuild.submit(
-                  () -> {
-                    try (BuildLocallyScope scope = new BuildLocallyScope()) {
-                      rule.buildLocally(
-                          buildContext.getBuildContext(),
-                          buildableContext,
-                          executionContext.withProcessExecutor(
-                              new ContextualProcessExecutor(
-                                  executionContext.getProcessExecutor(),
-                                  ImmutableMap.of(
-                                      BUILD_RULE_TYPE_CONTEXT_KEY,
-                                      rule.getType(),
-                                      STEP_TYPE_CONTEXT_KEY,
-                                      StepType.BUILD_STEP.toString()))),
-                          CachingBuildEngine.this.stepRunner);
-                      return null;
+              rule.buildLocally(
+                  buildContext.getBuildContext(),
+                  buildableContext,
+                  executionContext.withProcessExecutor(
+                      new ContextualProcessExecutor(
+                          executionContext.getProcessExecutor(),
+                          ImmutableMap.of(
+                              BUILD_RULE_TYPE_CONTEXT_KEY,
+                              rule.getType(),
+                              STEP_TYPE_CONTEXT_KEY,
+                              StepType.BUILD_STEP.toString()))),
+                  CachingBuildEngine.this.stepRunner,
+                  new WrappingListeningExecutorService(serviceForBuild) {
+                    @Override
+                    protected <T> Callable<T> wrap(Callable<T> inner) {
+                      return () -> {
+                        try (BuildLocallyScope scope = new BuildLocallyScope()) {
+                          return inner.call();
+                        }
+                      };
                     }
                   }),
               (v) -> {
+                if (!started) {
+                  // An override of BuildRule.builtLocally is not required to actually run any
+                  // code; it might return a ListenableFuture that it got from elsewhere. We still
+                  // want to do all the logging associated with start, however.
+                  onStart();
+                }
                 onSuccess();
 
                 return Optional.of(
@@ -2112,6 +2130,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
       cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+      started = true;
     }
 
     private class BuildLocallyScope implements AutoCloseable {

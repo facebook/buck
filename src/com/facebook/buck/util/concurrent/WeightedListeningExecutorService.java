@@ -68,7 +68,7 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     return new WeightedListeningExecutorService(semaphore, newDefaultAmounts, delegate);
   }
 
-  private <T> ListenableFuture<T> submitWithSemaphore(
+  protected <T> ListenableFuture<T> submitWithSemaphore(
       final Callable<T> callable, final ResourceAmounts amounts) {
     ListenableFuture<T> future =
         Futures.transformAsync(
