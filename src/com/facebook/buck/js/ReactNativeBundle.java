@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -243,6 +244,10 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
     for (String line : getProjectFilesystem().readLines(depFile)) {
       Path path = getProjectFilesystem().getPath(line);
+      if (!path.isAbsolute()) {
+        // The packager returns the paths relative to the root cell, so make them absolute.
+        path = cellPathResolver.getCellPath(Optional.empty()).resolve(path);
+      }
       SourcePath sourcePath = pathToSourceMap.get(path);
       if (sourcePath == null) {
         throw new IOException(
