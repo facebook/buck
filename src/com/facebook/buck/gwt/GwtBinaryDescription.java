@@ -100,25 +100,32 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
         BuildTarget gwtModuleTarget =
             BuildTargets.createFlavoredBuildTarget(
                 javaLibrary.getBuildTarget().checkUnflavored(), JavaLibrary.GWT_MODULE_FLAVOR);
-        Optional<BuildRule> gwtModule = resolver.getRuleOptional(gwtModuleTarget);
-        if (!gwtModule.isPresent() && javaLibrary.getSourcePathToOutput() != null) {
-          ImmutableSortedSet<SourcePath> filesForGwtModule =
-              ImmutableSortedSet.<SourcePath>naturalOrder()
-                  .addAll(javaLibrary.getSources())
-                  .addAll(javaLibrary.getResources())
-                  .build();
-          ImmutableSortedSet<BuildRule> deps =
-              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(filesForGwtModule));
 
-          BuildRule module =
-              resolver.addToIndex(
-                  new GwtModule(
-                      params
-                          .withBuildTarget(gwtModuleTarget)
-                          .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
-                      ruleFinder,
-                      filesForGwtModule));
-          gwtModule = Optional.of(module);
+        Optional<BuildRule> gwtModule;
+        if (javaLibrary.getSourcePathToOutput() != null) {
+          gwtModule =
+              Optional.of(
+                  resolver.computeIfAbsent(
+                      gwtModuleTarget,
+                      () -> {
+                        ImmutableSortedSet<SourcePath> filesForGwtModule =
+                            ImmutableSortedSet.<SourcePath>naturalOrder()
+                                .addAll(javaLibrary.getSources())
+                                .addAll(javaLibrary.getResources())
+                                .build();
+                        ImmutableSortedSet<BuildRule> deps =
+                            ImmutableSortedSet.copyOf(
+                                ruleFinder.filterBuildRuleInputs(filesForGwtModule));
+
+                        return new GwtModule(
+                            params
+                                .withBuildTarget(gwtModuleTarget)
+                                .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
+                            ruleFinder,
+                            filesForGwtModule);
+                      }));
+        } else {
+          gwtModule = Optional.empty();
         }
 
         // Note that gwtModule could be absent if javaLibrary is a rule with no srcs of its own,
