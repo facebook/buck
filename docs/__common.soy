@@ -287,6 +287,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'lua_binary',
             'lua_library',
         ],
+        'ocaml': [
+            'ocaml_binary',
+            'ocaml_library',
+        ],
         'python': [
             'prebuilt_python_library',
             'python_binary',
@@ -506,6 +510,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         {param currentnavid: $navid /}
         {param platform: 'Lua' /}
         {param rules: $platformRulesMap['lua'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
+        {param platform: 'OCaml' /}
+        {param rules: $platformRulesMap['ocaml'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param currentnavid: $navid /}

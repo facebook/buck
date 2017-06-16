@@ -1,0 +1,79 @@
+{namespace ocaml_common}
+
+/***/
+{template .supported_language_version}
+Note: Buck is currently tested with 4.X OCaml series.
+{/template}
+
+/***/
+{template .deps_arg}
+{call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of dependencies of this rule. It could include references to ocaml_library and cxx_library rules.
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param desc}
+  <p>
+    The set of source files to be compiled by this rule. It supports *.ml, *.mli, *.mly, *.mll, and *.c files.
+    (see <a href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/ocaml/clib/BUCK.fixture"> this test </a> as C interop example and
+     <a href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/ocaml/calc/BUCK.fixture"> this test </a> as parser and lexer example).
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .compiler_flags_arg}
+{call buck.arg}
+  {param name : 'compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional compiler flags to pass to ocaml compiler. It supports
+  specifying ppx (see <a
+  href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/compiler_flag_macros/BUCK.fixture">
+  for example</a>).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .bytecode_only_arg}
+{call buck.arg}
+  {param name : 'bytecode_only' /}
+  {param default : 'False' /}
+  {param desc}
+  Produce only bytecode outputs.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .native_plugin_arg}
+{call buck.arg}
+  {param name: 'native_plugin' /}
+  {param default: 'False' /}
+  {param desc}
+  Pass <code>True</code> to create native plugin. See <a
+  href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/ocaml/ocaml_native_plugin/BUCK.fixture">
+  this test</a> for example.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .more_examples}
+<p>
+  For more examples, check out our <a
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/ocaml/testdata/">
+  integration tests</a>.
+</p>
+{/template}
+

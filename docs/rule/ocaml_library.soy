@@ -1,0 +1,66 @@
+{namespace ocaml_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'ocaml_library()' /}
+    {param navid: 'rule_ocaml_library' /}
+    {param prettify: true /}
+    {param description}
+      A ocaml_library() rule builds OCaml linkable artifacts.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A ocaml_library() rule builds a native and a bytecode libraries from the
+  supplied set of OCaml source files and dependencies.
+</p>
+<p>
+  {call ocaml_common.supported_language_version /}
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call ocaml_common.srcs_arg /}
+
+{call ocaml_common.deps_arg /}
+
+{call ocaml_common.compiler_flags_arg /}
+
+{call buck.tests_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{call ocaml_common.more_examples /}
+
+{literal}<pre class="prettyprint lang-py">
+ocaml_library(
+  name='greeting',
+  srcs=[
+    'greeting.ml',
+  ],
+  deps=[
+    ':join',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
