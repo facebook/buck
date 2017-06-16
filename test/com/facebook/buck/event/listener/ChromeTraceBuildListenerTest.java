@@ -295,10 +295,10 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
     listener.outputTrace(new BuildId("BUILD_ID"));
 
-    File resultFile = new File(tmpDir.getRoot(), "buck-out/log/build.trace");
-
     List<ChromeTraceEvent> originalResultList =
-        ObjectMappers.readValue(resultFile, new TypeReference<List<ChromeTraceEvent>>() {});
+        ObjectMappers.readValue(
+            tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
+            new TypeReference<List<ChromeTraceEvent>>() {});
     List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
     resultListCopy.addAll(originalResultList);
     ImmutableMap<String, String> emptyArgs = ImmutableMap.of();

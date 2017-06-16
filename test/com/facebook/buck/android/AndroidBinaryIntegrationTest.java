@@ -1158,7 +1158,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // We use a fake ReDex binary that writes out the arguments it received as JSON so that we can
     // verify that it was called in the right way.
     @SuppressWarnings("unchecked")
-    Map<String, Object> userData = ObjectMappers.readValue(unzippedApk.toFile(), Map.class);
+    Map<String, Object> userData = ObjectMappers.readValue(unzippedApk, Map.class);
 
     String androidSdk = (String) userData.get("ANDROID_SDK");
     assertTrue(

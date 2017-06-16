@@ -107,7 +107,7 @@ public class CxxGtestTestTest {
       Path results = workspace.resolve(Paths.get(sample)).resolve("results");
       Path summaries = workspace.resolve(Paths.get(sample)).resolve("summaries");
       List<TestResultSummary> expectedSummaries =
-          ObjectMappers.readValue(summaries.toFile(), SUMMARIES_REFERENCE);
+          ObjectMappers.readValue(summaries, SUMMARIES_REFERENCE);
       ImmutableList<TestResultSummary> actualSummaries =
           test.parseResults(exitCode, output, results);
       assertEquals(sample, expectedSummaries, actualSummaries);

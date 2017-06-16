@@ -252,8 +252,7 @@ public class LuaBinaryIntegrationTest {
             "-c", "lua.package_style=standalone", "-c", "lua.packager=//:packager", "//:simple");
     ImmutableMap<String, ImmutableMap<String, String>> components =
         ObjectMappers.readValue(
-            output.toFile(),
-            new TypeReference<ImmutableMap<String, ImmutableMap<String, String>>>() {});
+            output, new TypeReference<ImmutableMap<String, ImmutableMap<String, String>>>() {});
     assertThat(components.get("modules").keySet(), Matchers.equalTo(ImmutableSet.of("simple.lua")));
   }
 

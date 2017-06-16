@@ -101,13 +101,11 @@ public class JavaSymbolsRuleTest {
 
     try (JsonParser parser =
         ObjectMappers.createParser(
-            projectFilesystem
-                .resolve(
-                    BuildTargets.getGenPath(
-                        javaSymbolsRule.getProjectFilesystem(),
-                        buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
-                        "__%s__.json"))
-                .toFile())) {
+            projectFilesystem.resolve(
+                BuildTargets.getGenPath(
+                    javaSymbolsRule.getProjectFilesystem(),
+                    buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
+                    "__%s__.json")))) {
       JsonNode jsonNode = ObjectMappers.READER.readTree(parser);
       assertTrue(jsonNode instanceof ObjectNode);
       assertEquals(

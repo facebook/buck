@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -140,8 +139,8 @@ public class ArtifactConfig {
 
     // If the -config argument was specified, load a config from JSON.
     if (parsedArgs.artifactConfigJson != null) {
-      File jsonFile = new File(parsedArgs.artifactConfigJson);
-      artifactConfig = ObjectMappers.readValue(jsonFile, ArtifactConfig.class);
+      artifactConfig =
+          ObjectMappers.readValue(Paths.get(parsedArgs.artifactConfigJson), ArtifactConfig.class);
     } else {
       artifactConfig = new ArtifactConfig();
     }

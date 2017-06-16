@@ -42,7 +42,7 @@ class DefaultClassUsageFileReader {
   private static ImmutableMap<String, ImmutableList<String>> loadClassUsageMap(Path mapFilePath)
       throws IOException {
     return ObjectMappers.readValue(
-        mapFilePath.toFile(), new TypeReference<ImmutableMap<String, ImmutableList<String>>>() {});
+        mapFilePath, new TypeReference<ImmutableMap<String, ImmutableList<String>>>() {});
   }
 
   /**

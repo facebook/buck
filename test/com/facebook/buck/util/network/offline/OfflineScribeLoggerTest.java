@@ -45,14 +45,11 @@ import com.google.common.collect.ObjectArrays;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,11 +134,10 @@ public class OfflineScribeLoggerTest {
     // Check that last logger logged correct data.
     assertEquals(3, fakeLogger.getAttemptStoringCategoriesWithLinesCount());
 
-    InputStream logFile = fakeLogger.getStoredLog();
     String[] whitelistedCategories = {whitelistedCategory, whitelistedCategory2};
     String[][] whitelistedLines = {{"hello world 3", "hello world 4"}, {longLine, longLine}};
 
-    try (JsonParser jsonParser = ObjectMappers.createParser(logFile)) {
+    try (JsonParser jsonParser = ObjectMappers.createParser(fakeLogger.getStoredLog())) {
       Iterator<ScribeData> it = ObjectMappers.READER.readValues(jsonParser, ScribeData.class);
       int dataNum = 0;
       try {
@@ -162,8 +158,6 @@ public class OfflineScribeLoggerTest {
       } catch (Exception e) {
         fail("Reading stored offline log failed.");
       }
-
-      logFile.close();
       assertEquals(2, dataNum);
     } catch (Exception e) {
       fail("Obtaining iterator for reading the log failed.");
@@ -318,10 +312,8 @@ public class OfflineScribeLoggerTest {
       return storedCategoriesWithLines.get();
     }
 
-    BufferedInputStream getStoredLog() throws FileNotFoundException {
-      return new BufferedInputStream(
-          new FileInputStream(
-              filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX)).toFile()));
+    Path getStoredLog() throws FileNotFoundException {
+      return filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX));
     }
   }
 }
