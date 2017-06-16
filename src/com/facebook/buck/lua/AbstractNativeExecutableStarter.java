@@ -114,37 +114,34 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
         BuildTarget.builder(getBaseParams().getBuildTarget())
             .addFlavors(InternalFlavor.of("native-starter-cxx-source"))
             .build();
-    BuildRule rule;
-    Optional<BuildRule> maybeRule = getRuleResolver().getRuleOptional(target);
-    if (maybeRule.isPresent()) {
-      rule = maybeRule.get();
-    } else {
-      BuildTarget templateTarget =
-          BuildTarget.builder(getBaseParams().getBuildTarget())
-              .addFlavors(InternalFlavor.of("native-starter-cxx-source-template"))
-              .build();
-      WriteFile templateRule =
-          getRuleResolver()
-              .addToIndex(
-                  new WriteFile(
-                      getBaseParams()
-                          .withBuildTarget(templateTarget)
-                          .copyReplacingDeclaredAndExtraDeps(
-                              ImmutableSortedSet.of(), ImmutableSortedSet.of()),
-                      getNativeStarterCxxSourceTemplate(),
-                      BuildTargets.getGenPath(
-                          getBaseParams().getProjectFilesystem(),
-                          templateTarget,
-                          "%s/native-starter.cpp.in"),
-                      /* executable */ false));
+    BuildRule rule =
+        getRuleResolver()
+            .computeIfAbsent(
+                target,
+                () -> {
+                  BuildTarget templateTarget =
+                      BuildTarget.builder(getBaseParams().getBuildTarget())
+                          .addFlavors(InternalFlavor.of("native-starter-cxx-source-template"))
+                          .build();
+                  WriteFile templateRule =
+                      getRuleResolver()
+                          .addToIndex(
+                              new WriteFile(
+                                  getBaseParams()
+                                      .withBuildTarget(templateTarget)
+                                      .copyReplacingDeclaredAndExtraDeps(
+                                          ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+                                  getNativeStarterCxxSourceTemplate(),
+                                  BuildTargets.getGenPath(
+                                      getBaseParams().getProjectFilesystem(),
+                                      templateTarget,
+                                      "%s/native-starter.cpp.in"),
+                                  /* executable */ false));
 
-      Path output =
-          BuildTargets.getGenPath(
-              getBaseParams().getProjectFilesystem(), target, "%s/native-starter.cpp");
-      rule =
-          getRuleResolver()
-              .addToIndex(
-                  WriteStringTemplateRule.from(
+                  Path output =
+                      BuildTargets.getGenPath(
+                          getBaseParams().getProjectFilesystem(), target, "%s/native-starter.cpp");
+                  return WriteStringTemplateRule.from(
                       getBaseParams(),
                       getRuleFinder(),
                       target,
@@ -166,8 +163,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                           "EXT_SUFFIX",
                           Escaper.escapeAsPythonString(
                               getCxxPlatform().getSharedLibraryExtension())),
-                      /* executable */ false));
-    }
+                      /* executable */ false);
+                });
 
     return CxxSource.of(
         CxxSource.Type.CXX,
