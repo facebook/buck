@@ -338,42 +338,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildableContext buildableContext,
       CacheResult ruleKeyCacheResult,
       WeightedListeningExecutorService service) {
-    return Futures.catching(
-        service.submit(
-            () -> {
-              try (BuildLocallyScope scope = new BuildLocallyScope(rule, buildContext)) {
-                LOG.debug("Building locally: %s", rule);
-                // Attempt to get an approximation of how long it takes to actually run the command.
-                @SuppressWarnings("PMD.PrematureDeclaration")
-                long start = System.nanoTime();
-
-                buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-                cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-
-                rule.buildLocally(
-                    buildContext.getBuildContext(),
-                    buildableContext,
-                    executionContext.withProcessExecutor(
-                        new ContextualProcessExecutor(
-                            executionContext.getProcessExecutor(),
-                            ImmutableMap.of(
-                                BUILD_RULE_TYPE_CONTEXT_KEY,
-                                rule.getType(),
-                                STEP_TYPE_CONTEXT_KEY,
-                                StepType.BUILD_STEP.toString()))),
-                    this.stepRunner);
-
-                long end = System.nanoTime();
-                LOG.debug(
-                    "Build completed: %s %s (%dns)",
-                    rule.getType(), rule.getFullyQualifiedName(), end - start);
-                return Optional.of(
-                    BuildResult.success(
-                        rule, BuildRuleSuccessType.BUILT_LOCALLY, ruleKeyCacheResult));
-              }
-            }),
-        CancellationException.class,
-        (exception) -> Optional.of(BuildResult.canceled(rule, firstFailure)));
+    BuildLocally buildLocally =
+        new BuildLocally(
+            rule, buildContext, executionContext, buildableContext, ruleKeyCacheResult, service);
+    return buildLocally.buildAsync();
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -2073,26 +2041,90 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         MoreExecutors.directExecutor());
   }
 
-  private class BuildLocallyScope implements AutoCloseable {
-    private final BuildRuleEvent.Scope scope;
+  private class BuildLocally {
+    private BuildRule rule;
+    private BuildEngineBuildContext buildContext;
+    private ExecutionContext executionContext;
+    private BuildableContext buildableContext;
+    private CacheResult rulekeyCacheResult;
+    private WeightedListeningExecutorService serviceForBuild;
 
-    public BuildLocallyScope(BuildRule rule, BuildEngineBuildContext buildContext) {
-      if (!shouldKeepGoing(buildContext)) {
-        Preconditions.checkNotNull(firstFailure);
-        throw new CancellationException();
-      }
-
-      scope =
-          BuildRuleEvent.resumeSuspendScope(
-              buildContext.getEventBus(),
-              rule,
-              buildRuleDurationTracker,
-              ruleKeyFactories.getDefaultRuleKeyFactory());
+    public BuildLocally(
+        BuildRule rule,
+        BuildEngineBuildContext buildContext,
+        ExecutionContext executionContext,
+        BuildableContext buildableContext,
+        CacheResult rulekeyCacheResult,
+        WeightedListeningExecutorService serviceForBuild) {
+      this.rule = rule;
+      this.buildContext = buildContext;
+      this.executionContext = executionContext;
+      this.buildableContext = buildableContext;
+      this.rulekeyCacheResult = rulekeyCacheResult;
+      this.serviceForBuild = serviceForBuild;
     }
 
-    @Override
-    public void close() {
-      scope.close();
+    public ListenableFuture<Optional<BuildResult>> buildAsync() {
+      return Futures.catching(
+          serviceForBuild.submit(
+              () -> {
+                try (BuildLocallyScope scope = new BuildLocallyScope()) {
+                  LOG.debug("Building locally: %s", rule);
+                  // Attempt to get an approximation of how long it takes to actually run the command.
+                  @SuppressWarnings("PMD.PrematureDeclaration")
+                  long start = System.nanoTime();
+
+                  buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+                  cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+
+                  rule.buildLocally(
+                      buildContext.getBuildContext(),
+                      buildableContext,
+                      executionContext.withProcessExecutor(
+                          new ContextualProcessExecutor(
+                              executionContext.getProcessExecutor(),
+                              ImmutableMap.of(
+                                  BUILD_RULE_TYPE_CONTEXT_KEY,
+                                  rule.getType(),
+                                  STEP_TYPE_CONTEXT_KEY,
+                                  StepType.BUILD_STEP.toString()))),
+                      CachingBuildEngine.this.stepRunner);
+
+                  long end = System.nanoTime();
+                  LOG.debug(
+                      "Build completed: %s %s (%dns)",
+                      rule.getType(), rule.getFullyQualifiedName(), end - start);
+                  return Optional.of(
+                      BuildResult.success(
+                          rule, BuildRuleSuccessType.BUILT_LOCALLY, rulekeyCacheResult));
+                }
+              }),
+          CancellationException.class,
+          (exception) ->
+              Optional.of(BuildResult.canceled(rule, Preconditions.checkNotNull(firstFailure))));
+    }
+
+    private class BuildLocallyScope implements AutoCloseable {
+      private final BuildRuleEvent.Scope scope;
+
+      public BuildLocallyScope() {
+        if (!shouldKeepGoing(buildContext)) {
+          Preconditions.checkNotNull(firstFailure);
+          throw new CancellationException();
+        }
+
+        scope =
+            BuildRuleEvent.resumeSuspendScope(
+                buildContext.getEventBus(),
+                rule,
+                buildRuleDurationTracker,
+                ruleKeyFactories.getDefaultRuleKeyFactory());
+      }
+
+      @Override
+      public void close() {
+        scope.close();
+      }
     }
   }
 }
