@@ -546,21 +546,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // 8. Build the current rule locally, if we have to.
     buildResultFuture =
-        transformBuildResultIfNotPresent(
+        transformBuildResultAsyncIfNotPresent(
             rule,
             buildContext,
             buildResultFuture,
             () ->
-                Optional.of(
-                    buildLocally(
-                        rule,
-                        buildContext,
-                        executionContext,
-                        buildableContext,
-                        Preconditions.checkNotNull(rulekeyCacheResult.get()))),
-            // This needs to adjust the default amounts even in the non-resource-aware scheduling
-            // case so that RuleScheduleInfo works correctly.
-            service.withDefaultAmounts(getRuleResourceAmounts(rule)));
+                service
+                    // This needs to adjust the default amounts even in the non-resource-aware scheduling
+                    // case so that RuleScheduleInfo works correctly.
+                    .withDefaultAmounts(getRuleResourceAmounts(rule))
+                    .submit(
+                        wrapWithTracingAndCancellation(
+                            rule,
+                            buildContext,
+                            () ->
+                                Optional.of(
+                                    buildLocally(
+                                        rule,
+                                        buildContext,
+                                        executionContext,
+                                        buildableContext,
+                                        Preconditions.checkNotNull(rulekeyCacheResult.get()))))));
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
@@ -2045,22 +2051,25 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         rule,
         context,
         future,
-        () ->
-            executor.submit(
-                () -> {
-                  if (!shouldKeepGoing(context)) {
-                    Preconditions.checkNotNull(firstFailure);
-                    return Optional.of(BuildResult.canceled(rule, firstFailure));
-                  }
-                  try (BuildRuleEvent.Scope scope =
-                      BuildRuleEvent.resumeSuspendScope(
-                          context.getEventBus(),
-                          rule,
-                          buildRuleDurationTracker,
-                          ruleKeyFactories.getDefaultRuleKeyFactory())) {
-                    return function.call();
-                  }
-                }));
+        () -> executor.submit(wrapWithTracingAndCancellation(rule, context, function)));
+  }
+
+  private Callable<Optional<BuildResult>> wrapWithTracingAndCancellation(
+      BuildRule rule, BuildEngineBuildContext context, Callable<Optional<BuildResult>> function) {
+    return () -> {
+      if (!shouldKeepGoing(context)) {
+        Preconditions.checkNotNull(firstFailure);
+        return Optional.of(BuildResult.canceled(rule, firstFailure));
+      }
+      try (BuildRuleEvent.Scope scope =
+          BuildRuleEvent.resumeSuspendScope(
+              context.getEventBus(),
+              rule,
+              buildRuleDurationTracker,
+              ruleKeyFactories.getDefaultRuleKeyFactory())) {
+        return function.call();
+      }
+    };
   }
 
   private ListenableFuture<Optional<BuildResult>> transformBuildResultAsyncIfNotPresent(
