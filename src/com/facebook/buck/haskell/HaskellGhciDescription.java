@@ -137,48 +137,46 @@ public class HaskellGhciDescription
             .build()
             .withAppendedFlavors(params.getBuildTarget().getFlavors());
 
-    BuildRule rule = resolver.getRuleOptional(ruleTarget).orElse(null);
-    if (null != rule) {
-      return rule;
-    }
+    return resolver.computeIfAbsentThrowing(
+        ruleTarget,
+        () -> {
+          ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
 
-    ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
+          for (NativeLinkable nativeLinkable : sortedNativeLinkables) {
+            if (nativeLinkable instanceof CxxLibrary) {
+              NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+              nativeLinkableInputs.add(
+                  nativeLinkable.getNativeLinkableInput(
+                      cxxPlatform,
+                      NativeLinkables.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
+                      true,
+                      ImmutableSet.of()));
+            } else if (nativeLinkable instanceof PrebuiltCxxLibrary) {
+              if (isPrebuiltSO(nativeLinkable, cxxPlatform)) {
+                nativeLinkableInputs.add(
+                    NativeLinkables.getNativeLinkableInput(
+                        cxxPlatform, Linker.LinkableDepType.SHARED, nativeLinkable));
+              } else {
+                nativeLinkableInputs.add(
+                    NativeLinkables.getNativeLinkableInput(
+                        cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable));
+              }
+            }
+          }
 
-    for (NativeLinkable nativeLinkable : sortedNativeLinkables) {
-      if (nativeLinkable instanceof CxxLibrary) {
-        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
-        nativeLinkableInputs.add(
-            nativeLinkable.getNativeLinkableInput(
-                cxxPlatform,
-                NativeLinkables.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
-                true,
-                ImmutableSet.of()));
-      } else if (nativeLinkable instanceof PrebuiltCxxLibrary) {
-        if (isPrebuiltSO(nativeLinkable, cxxPlatform)) {
-          nativeLinkableInputs.add(
-              NativeLinkables.getNativeLinkableInput(
-                  cxxPlatform, Linker.LinkableDepType.SHARED, nativeLinkable));
-        } else {
-          nativeLinkableInputs.add(
-              NativeLinkables.getNativeLinkableInput(
-                  cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable));
-        }
-      }
-    }
-
-    NativeLinkableInput nli = NativeLinkableInput.concat(nativeLinkableInputs.build());
-    return resolver.addToIndex(
-        CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
-            cxxBuckConfig,
-            cxxPlatform,
-            params,
-            resolver,
-            new SourcePathRuleFinder(resolver),
-            ruleTarget,
-            BuildTargets.getGenPath(params.getProjectFilesystem(), ruleTarget, "%s")
-                .resolve("libghci_dependencies.so"),
-            Optional.of("libghci_dependencies.so"),
-            nli.getArgs()));
+          NativeLinkableInput nli = NativeLinkableInput.concat(nativeLinkableInputs.build());
+          return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+              cxxBuckConfig,
+              cxxPlatform,
+              params,
+              resolver,
+              new SourcePathRuleFinder(resolver),
+              ruleTarget,
+              BuildTargets.getGenPath(params.getProjectFilesystem(), ruleTarget, "%s")
+                  .resolve("libghci_dependencies.so"),
+              Optional.of("libghci_dependencies.so"),
+              nli.getArgs());
+        });
   }
 
   @Override
