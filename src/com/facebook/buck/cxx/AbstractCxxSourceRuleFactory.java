@@ -115,7 +115,8 @@ abstract class AbstractCxxSourceRuleFactory {
     }
   }
 
-  private ImmutableSortedSet<BuildRule> getPreprocessDeps() {
+  @Value.Lazy
+  protected ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
       builder.addAll(input.getDeps(getResolver(), getRuleFinder()));
