@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.DirCacheEntry;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.MoreCollectors;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
@@ -35,7 +36,6 @@ import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /** Cleans out any unwanted IntelliJ IDEA project files. */
 public class IJProjectCleaner {
@@ -73,7 +73,7 @@ public class IJProjectCleaner {
             .map(Paths::get)
             .map(projectFilesystem::relativize)
             .map(Path::toString)
-            .collect(Collectors.toSet()));
+            .collect(MoreCollectors.toImmutableSortedSet()));
   }
 
   private File convertPathToFile(Path path) {
