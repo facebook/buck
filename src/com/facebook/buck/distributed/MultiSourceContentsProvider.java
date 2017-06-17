@@ -61,13 +61,13 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
       throws IOException {
 
     if (inlineProvider.materializeFileContents(entry, targetAbsPath)) {
-      fileMaterializationStatsTracker.recordLocalFileMaterialized();
       LOG.info("Materialized source file using Inline Data: [%s]", targetAbsPath);
       return true;
     }
 
     if (localFsProvider.isPresent()
         && localFsProvider.get().materializeFileContents(entry, targetAbsPath)) {
+      fileMaterializationStatsTracker.recordLocalFileMaterialized();
       LOG.info("Materialized source file using Local Source File Cache: [%s]", targetAbsPath);
       return true;
     }
