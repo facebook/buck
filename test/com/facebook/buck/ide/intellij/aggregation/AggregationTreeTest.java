@@ -104,39 +104,18 @@ public class AggregationTreeTest {
 
     assertEquals(
         ImmutableSet.of(
-            createModule(
-                Paths.get("a/b"),
-                IjModuleType.ANDROID_MODULE,
-                "tag1",
-                ImmutableSet.of(Paths.get("d"))),
+            createModule(Paths.get("a/b"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/b/d"), IjModuleType.JAVA_MODULE, "tag2"),
-            createModule(
-                Paths.get("a/c"),
-                IjModuleType.ANDROID_MODULE,
-                "tag1",
-                ImmutableSet.of(Paths.get("a"))),
-            createModule(
-                Paths.get("a/c/a"),
-                IjModuleType.JAVA_MODULE,
-                "tag2",
-                ImmutableSet.of(
-                    Paths.get("a"), Paths.get("c"), Paths.get("b/a"), Paths.get("b/b"))),
+            createModule(Paths.get("a/c"), IjModuleType.ANDROID_MODULE, "tag1"),
+            createModule(Paths.get("a/c/a"), IjModuleType.JAVA_MODULE, "tag2"),
             createModule(Paths.get("a/c/a/a"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/c/a/c"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/c/a/b/a"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/c/a/b/b"), IjModuleType.ANDROID_MODULE, "tag1"),
-            createModule(
-                Paths.get("a/d"),
-                IjModuleType.JAVA_MODULE,
-                "tag2",
-                ImmutableSet.of(Paths.get("e"), Paths.get("f"))),
+            createModule(Paths.get("a/d"), IjModuleType.JAVA_MODULE, "tag2"),
             createModule(Paths.get("a/d/e"), IjModuleType.ANDROID_RESOURCES_MODULE, "tag1"),
             createModule(Paths.get("a/d/f"), IjModuleType.ANDROID_RESOURCES_MODULE, "tag1"),
-            createModule(
-                Paths.get("a/e"),
-                IjModuleType.JAVA_MODULE,
-                "tag3",
-                ImmutableSet.of(Paths.get("e"), Paths.get("f"))),
+            createModule(Paths.get("a/e"), IjModuleType.JAVA_MODULE, "tag3"),
             createModule(Paths.get("a/e/e"), IjModuleType.ANDROID_MODULE, "tag1"),
             createModule(Paths.get("a/e/f"), IjModuleType.ANDROID_MODULE, "tag2"),
             createModule(Paths.get(""), IjModuleType.UNKNOWN_MODULE)),

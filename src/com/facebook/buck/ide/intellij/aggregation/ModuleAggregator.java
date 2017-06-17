@@ -27,15 +27,13 @@ class ModuleAggregator {
   private ModuleAggregator() {}
 
   public static AggregationModule aggregate(
-      AggregationModule rootModule,
-      Collection<AggregationModule> modulesToAggregate,
-      ImmutableSet<Path> excludes) {
+      AggregationModule rootModule, Collection<AggregationModule> modulesToAggregate) {
 
     ImmutableSet.Builder<TargetNode<?, ?>> targets =
         ImmutableSet.<TargetNode<?, ?>>builder().addAll(rootModule.getTargets());
     modulesToAggregate.forEach(module -> targets.addAll(module.getTargets()));
 
-    ImmutableSet.Builder<Path> excludesBuilder = ImmutableSet.<Path>builder().addAll(excludes);
+    ImmutableSet.Builder<Path> excludesBuilder = ImmutableSet.builder();
     modulesToAggregate.forEach(
         module -> {
           Path modulePath = rootModule.getModuleBasePath().relativize(module.getModuleBasePath());
@@ -53,8 +51,7 @@ class ModuleAggregator {
       Path moduleBasePath,
       IjModuleType moduleType,
       String aggregationTag,
-      Collection<AggregationModule> modulesToAggregate,
-      ImmutableSet<Path> excludes) {
+      Collection<AggregationModule> modulesToAggregate) {
 
     return aggregate(
         AggregationModule.builder()
@@ -62,7 +59,6 @@ class ModuleAggregator {
             .setModuleType(moduleType)
             .setAggregationTag(aggregationTag)
             .build(),
-        modulesToAggregate,
-        excludes);
+        modulesToAggregate);
   }
 }

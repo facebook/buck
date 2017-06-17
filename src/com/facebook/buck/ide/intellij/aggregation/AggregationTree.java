@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -198,8 +197,6 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
     Map<Path, AggregationModule> modulesToAggregate =
         collectModulesToAggregate(rootModuleType, parentNode, modulePathsToAggregate);
 
-    ImmutableSet<Path> excludes = findExcludes(parentNode, modulesToAggregate.keySet());
-
     modulesToAggregate.keySet().forEach(parentNode::removeChild);
 
     if (nodeModule == null) {
@@ -210,11 +207,9 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
               aggregationTag == null
                   ? modulesToAggregate.values().iterator().next().getAggregationTag()
                   : aggregationTag,
-              modulesToAggregate.values(),
-              excludes));
+              modulesToAggregate.values()));
     } else {
-      parentNode.setModule(
-          ModuleAggregator.aggregate(nodeModule, modulesToAggregate.values(), excludes));
+      parentNode.setModule(ModuleAggregator.aggregate(nodeModule, modulesToAggregate.values()));
     }
     LOG.verbose("Module after aggregation: %s", parentNode.getModule());
   }
@@ -251,15 +246,6 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
       }
     }
     return filteredModules.build();
-  }
-
-  private ImmutableSet<Path> findExcludes(
-      AggregationTreeNode parentNode, Set<Path> modulePathsToAggregate) {
-    return parentNode
-        .getChildrenPaths()
-        .stream()
-        .filter(path -> !modulePathsToAggregate.contains(path))
-        .collect(MoreCollectors.toImmutableSet());
   }
 
   public Collection<AggregationModule> getModules() {

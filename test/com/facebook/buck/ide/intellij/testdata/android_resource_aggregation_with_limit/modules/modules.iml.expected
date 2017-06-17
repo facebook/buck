@@ -21,10 +21,8 @@
       <sourceFolder url="file://$MODULE_DIR$/../buck-out/android/modules/gen" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/android_res1" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/android_res2/res" isTestSource="false" packagePrefix="com.test" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/android_res3/res" isTestSource="false" packagePrefix="com.test" type="java-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/android_res_custom_package" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
