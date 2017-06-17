@@ -83,7 +83,6 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -1350,14 +1349,11 @@ public final class Main {
                   new CommandThreadFactory(getClass().getName()))));
     }
 
-    if (buckConfig.getRuleKeyDiagnosticsMode() != RuleKeyDiagnosticsMode.NEVER) {
-      eventListenersBuilder.add(
-          new RuleKeyDiagnosticsListener(
-              projectFilesystem,
-              invocationInfo,
-              MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(getClass().getName()))));
-    }
+    eventListenersBuilder.add(
+        new RuleKeyDiagnosticsListener(
+            projectFilesystem,
+            invocationInfo,
+            MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()))));
 
     if (buckConfig.isMachineReadableLoggerEnabled()) {
       try {

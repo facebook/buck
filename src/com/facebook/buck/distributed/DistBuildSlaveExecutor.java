@@ -33,7 +33,6 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -331,7 +330,7 @@ public class DistBuildSlaveExecutor {
                   /* isInclNoLocationClassesEnabled */ false,
                   /* isDebugEnabled */ false,
                   /* shouldReportAbsolutePaths */ false,
-                  RuleKeyDiagnosticsMode.NEVER,
+                  distBuildConfig.getRuleKeyDiagnosticsMode(),
                   args.getBuckEventBus(),
                   args.getPlatform(),
                   ImmutableMap.of(),
