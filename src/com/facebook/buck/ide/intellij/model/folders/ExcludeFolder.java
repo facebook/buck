@@ -30,7 +30,7 @@ public class ExcludeFolder extends IjFolder {
         return new ExcludeFolder(path, inputs);
       };
 
-  private static final String FOLDER_IJ_NAME = "excludeFolder";
+  public static final String FOLDER_IJ_NAME = "excludeFolder";
 
   ExcludeFolder(Path path, ImmutableSortedSet<Path> inputs) {
     super(path, false, inputs);

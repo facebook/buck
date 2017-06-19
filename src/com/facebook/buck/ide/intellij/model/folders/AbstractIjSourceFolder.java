@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -26,6 +27,8 @@ abstract class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
   public abstract String getType();
 
   public abstract String getUrl();
+
+  public abstract Path getPath();
 
   public abstract boolean getIsTestSource();
 

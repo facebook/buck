@@ -16,14 +16,20 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.stringtemplate.v4.ST;
 
@@ -48,8 +54,11 @@ public class IjProjectWriter {
 
     writeProjectSettings(cleaner, projectConfig);
 
+    ImmutableList.Builder<ContentRoot> contentRootBuilder = ImmutableList.builder();
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      Path generatedModuleFile = writeModule(module);
+      ContentRoot contentRoot = projectDataPreparer.getContentRoot(module);
+      contentRootBuilder.add(contentRoot);
+      Path generatedModuleFile = writeModule(module, contentRoot);
       cleaner.doNotDelete(generatedModuleFile);
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
@@ -58,14 +67,17 @@ public class IjProjectWriter {
     }
     Path indexFile = writeModulesIndex();
     cleaner.doNotDelete(indexFile);
+
+    Path workspaceFile = writeWorkspace(projectFilesystem, contentRootBuilder.build());
+    cleaner.doNotDelete(workspaceFile);
   }
 
-  private Path writeModule(IjModule module) throws IOException {
+  private Path writeModule(IjModule module, ContentRoot contentRoot) throws IOException {
     Path path = module.getModuleImlFilePath();
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
 
-    moduleContents.add("contentRoot", projectDataPreparer.getContentRoot(module));
+    moduleContents.add("contentRoot", contentRoot);
     moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
     moduleContents.add(
         "generatedSourceFolders", projectDataPreparer.getGeneratedSourceFolders(module));
@@ -172,5 +184,23 @@ public class IjProjectWriter {
 
     StringTemplateFile.writeToFile(projectFilesystem, moduleIndexContents, path);
     return path;
+  }
+
+  private Path writeWorkspace(
+      ProjectFilesystem projectFilesystem, ImmutableList<ContentRoot> contentRoots)
+      throws IOException {
+    ImmutableSortedSet<String> excludedPaths =
+        contentRoots
+            .stream()
+            .flatMap(contentRoot -> contentRoot.getFolders().stream())
+            .filter(ijSourceFolder -> ExcludeFolder.FOLDER_IJ_NAME.equals(ijSourceFolder.getType()))
+            .map(IjSourceFolder::getPath)
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableSortedSet());
+
+    WorkspaceUpdater workspaceUpdater = new WorkspaceUpdater(projectFilesystem);
+    workspaceUpdater.updateOrCreateWorkspace(excludedPaths);
+
+    return Paths.get(workspaceUpdater.getWorkspaceFile().toString());
   }
 }

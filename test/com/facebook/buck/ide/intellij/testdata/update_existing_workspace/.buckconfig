@@ -1,0 +1,10 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true
+[intellij]
+  excluded_resource_paths = values-en

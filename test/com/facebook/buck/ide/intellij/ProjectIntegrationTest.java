@@ -210,6 +210,21 @@ public class ProjectIntegrationTest {
         "project_without_dep_tests", "--without-dependencies-tests", "//modules/lib:lib");
   }
 
+  @Test
+  public void testUpdatingExistingWorkspace() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("update_existing_workspace");
+  }
+
+  @Test
+  public void testCreateNewWorkspace() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("create_new_workspace");
+  }
+
+  @Test
+  public void testUpdateMalformedWorkspace() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("update_malformed_workspace");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();

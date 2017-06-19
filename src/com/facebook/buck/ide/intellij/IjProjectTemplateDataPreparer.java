@@ -471,6 +471,7 @@ public class IjProjectTemplateDataPreparer {
           .setType(folder.getIjName())
           .setUrl(
               IjProjectPaths.toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
+          .setPath(folder.getPath())
           .setIsTestSource(folder instanceof TestFolder)
           .setIsAndroidResources(folder instanceof AndroidResourceFolder)
           .setPackagePrefix(packagePrefix)
