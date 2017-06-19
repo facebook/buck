@@ -34,7 +34,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
 import org.immutables.value.Value;
 
@@ -61,11 +60,11 @@ abstract class AbstractSetExpression extends QueryExpression {
   abstract ImmutableList<TargetLiteral> getWords();
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env)
       throws QueryException, InterruptedException {
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (TargetLiteral expr : getWords()) {
-      result.addAll(expr.eval(env, executor));
+      result.addAll(expr.eval(env));
     }
     return result.build();
   }

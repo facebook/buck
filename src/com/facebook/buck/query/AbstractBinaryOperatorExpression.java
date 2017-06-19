@@ -35,7 +35,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -105,13 +104,13 @@ abstract class AbstractBinaryOperatorExpression extends QueryExpression {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env)
       throws QueryException, InterruptedException {
     ImmutableList<QueryExpression> operands = getOperands();
-    Set<QueryTarget> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env, executor));
+    Set<QueryTarget> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env));
 
     for (int i = 1; i < operands.size(); i++) {
-      Set<QueryTarget> rhsValue = operands.get(i).eval(env, executor);
+      Set<QueryTarget> rhsValue = operands.get(i).eval(env);
       switch (getOperator()) {
         case INTERSECT:
           lhsValue.retainAll(rhsValue);

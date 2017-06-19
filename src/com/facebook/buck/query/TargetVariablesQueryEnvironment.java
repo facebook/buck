@@ -20,7 +20,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Set;
 
 /**
@@ -39,21 +38,18 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
-      String pattern, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
       throws QueryException, InterruptedException {
-    return delegate.getTargetsMatchingPattern(pattern, executor);
+    return delegate.getTargetsMatchingPattern(pattern);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
     return delegate.getFwdDeps(targets);
   }
 
   @Override
-  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
-      throws QueryException, InterruptedException {
+  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
     return delegate.getReverseDeps(targets);
   }
 
@@ -63,26 +59,23 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
-      throws QueryException, InterruptedException {
+  public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) throws QueryException {
     return delegate.getTransitiveClosure(targets);
   }
 
   @Override
-  public void buildTransitiveClosure(
-      Set<QueryTarget> targetNodes, int maxDepth, ListeningExecutorService executor)
+  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth)
       throws InterruptedException, QueryException {
-    delegate.buildTransitiveClosure(targetNodes, maxDepth, executor);
+    delegate.buildTransitiveClosure(targetNodes, maxDepth);
   }
 
   @Override
-  public String getTargetKind(QueryTarget target) throws InterruptedException, QueryException {
+  public String getTargetKind(QueryTarget target) throws QueryException {
     return delegate.getTargetKind(target);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target)
-      throws InterruptedException, QueryException {
+  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
     return delegate.getTestsForTarget(target);
   }
 
@@ -92,22 +85,20 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(
-      ImmutableList<String> files, ListeningExecutorService executor)
-      throws InterruptedException, QueryException {
-    return delegate.getFileOwners(files, executor);
+  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
+      throws QueryException {
+    return delegate.getFileOwners(files);
   }
 
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
-      throws InterruptedException, QueryException {
+      throws QueryException {
     return delegate.getTargetsInAttribute(target, attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate)
-      throws InterruptedException, QueryException {
+      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
     return delegate.filterAttributeContents(target, attribute, predicate);
   }
 

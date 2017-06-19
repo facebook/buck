@@ -37,8 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -48,12 +46,10 @@ import java.util.stream.Stream;
 public abstract class QueryMacroExpander<T extends QueryMacro>
     extends AbstractMacroExpander<T, QueryMacroExpander.QueryResults> {
 
-  private ListeningExecutorService executorService;
   private Optional<TargetGraph> targetGraph;
 
   public QueryMacroExpander(Optional<TargetGraph> targetGraph) {
     this.targetGraph = targetGraph;
-    this.executorService = MoreExecutors.newDirectExecutorService();
   }
 
   private Stream<BuildTarget> extractTargets(
@@ -78,8 +74,8 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
           .flatMap(
               pattern -> {
                 try {
-                  return env.getTargetsMatchingPattern(pattern, executorService).stream();
-                } catch (Exception e) {
+                  return env.getTargetsMatchingPattern(pattern).stream();
+                } catch (QueryException e) {
                   throw new HumanReadableException(
                       e, "Error parsing target expression %s for target %s", pattern, target);
                 }
@@ -114,7 +110,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             "target",
             target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env.getFunctions());
-      Set<QueryTarget> queryTargets = parsedExp.eval(env, executorService);
+      Set<QueryTarget> queryTargets = parsedExp.eval(env);
       return queryTargets.stream();
     } catch (QueryException e) {
       throw new MacroException("Error parsing/executing query from macro", e);

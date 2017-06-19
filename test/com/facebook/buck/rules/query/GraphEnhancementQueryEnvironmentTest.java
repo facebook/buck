@@ -42,8 +42,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -55,13 +53,11 @@ import org.junit.Test;
 public class GraphEnhancementQueryEnvironmentTest {
 
   private CellPathResolver cellRoots;
-  private ListeningExecutorService executor;
   private static final Path ROOT = Paths.get("/fake/cell/root");
 
   @Before
   public void setUp() throws Exception {
     cellRoots = new DefaultCellPathResolver(ROOT, ImmutableMap.of());
-    executor = MoreExecutors.newDirectExecutorService();
   }
 
   @Test
@@ -75,7 +71,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
     try {
-      envWithoutDeps.getTargetsMatchingPattern("::", executor);
+      envWithoutDeps.getTargetsMatchingPattern("::");
       fail("Expected a QueryException to be thrown!");
     } catch (Exception e) {
       assertThat("Exception should contain a cause!", e.getCause(), Matchers.notNullValue());
@@ -94,15 +90,15 @@ public class GraphEnhancementQueryEnvironmentTest {
             ImmutableSet.of());
 
     // No deps in == no deps out
-    assertTrue(envWithoutDeps.getTargetsMatchingPattern("$declared_deps", executor).isEmpty());
+    assertTrue(envWithoutDeps.getTargetsMatchingPattern("$declared_deps").isEmpty());
     // Check that returned path is resolved
     assertThat(
-        envWithoutDeps.getTargetsMatchingPattern("//another/target:target", executor),
+        envWithoutDeps.getTargetsMatchingPattern("//another/target:target"),
         Matchers.contains(
             QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, "//another/target:target"))));
     // Check that the returned path is relative to the contextual path
     assertThat(
-        envWithoutDeps.getTargetsMatchingPattern(":relative_name", executor),
+        envWithoutDeps.getTargetsMatchingPattern(":relative_name"),
         Matchers.contains(
             QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, "//foo/bar:relative_name"))));
   }
@@ -123,7 +119,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
     // Check that the macro resolves
     assertThat(
-        env.getTargetsMatchingPattern("$declared_deps", executor),
+        env.getTargetsMatchingPattern("$declared_deps"),
         Matchers.hasItems(QueryBuildTarget.of(dep1), QueryBuildTarget.of(dep2)));
   }
 

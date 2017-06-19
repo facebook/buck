@@ -97,10 +97,11 @@ public class BuckQueryEnvironmentTest {
             cell, FakeBuckConfig.builder().build(), parser, eventBus, /* enableProfiling */ false);
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builder(cell, parser, eventBus, console);
-    buckQueryEnvironment =
-        BuckQueryEnvironment.from(cell, ownersReportBuilder, parserState, targetPatternEvaluator);
-    cellRoot = workspace.getDestPath();
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+    buckQueryEnvironment =
+        BuckQueryEnvironment.from(
+            cell, ownersReportBuilder, parserState, executor, targetPatternEvaluator);
+    cellRoot = workspace.getDestPath();
   }
 
   @After
@@ -114,11 +115,11 @@ public class BuckQueryEnvironmentTest {
     ImmutableSet<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six", executor);
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example", "six"));
     assertThat(targets, is(equalTo(expectedTargets)));
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven", executor);
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven");
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example/app", "seven"));
     assertThat(targets, is(equalTo(expectedTargets)));
   }
@@ -139,7 +140,6 @@ public class BuckQueryEnvironmentTest {
             createQueryBuildTarget("//example", "four-application-tests"),
             createQueryBuildTarget("//example", "six-tests"));
     assertThat(
-        buckQueryEnvironment.getTargetsMatchingPattern("//example:", executor),
-        is(equalTo(expectedTargets)));
+        buckQueryEnvironment.getTargetsMatchingPattern("//example:"), is(equalTo(expectedTargets)));
   }
 }

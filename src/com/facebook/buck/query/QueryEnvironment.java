@@ -34,7 +34,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -169,8 +168,7 @@ public interface QueryEnvironment {
      * @param args the input arguments. These are type-checked against the specification returned by
      *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
      */
-    ImmutableSet<QueryTarget> eval(
-        QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+    ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
         throws QueryException, InterruptedException;
   }
 
@@ -178,13 +176,11 @@ public interface QueryEnvironment {
    * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
    * syntax.
    */
-  ImmutableSet<QueryTarget> getTargetsMatchingPattern(
-      String pattern, ListeningExecutorService executor)
+  ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
       throws QueryException, InterruptedException;
 
   /** Returns the direct forward dependencies of the specified targets. */
-  ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
-      throws QueryException, InterruptedException;
+  ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException;
 
   /**
    * Applies {@code action} to each forward dependencies of the specified targets.
@@ -197,8 +193,7 @@ public interface QueryEnvironment {
   }
 
   /** Returns the direct reverse dependencies of the specified targets. */
-  Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
-      throws QueryException, InterruptedException;
+  Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException;
 
   Set<QueryTarget> getInputs(QueryTarget target) throws QueryException;
 
@@ -206,8 +201,7 @@ public interface QueryEnvironment {
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure
    * that {@link #buildTransitiveClosure} has been called for the relevant subgraph.
    */
-  Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
-      throws QueryException, InterruptedException;
+  Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) throws QueryException;
 
   /**
    * Construct the dependency graph for a depth-bounded forward transitive closure of all nodes in
@@ -216,32 +210,28 @@ public interface QueryEnvironment {
    * <p>If a larger transitive closure was already built, returns it to improve incrementality,
    * since all depth-constrained methods filter it after it is built anyway.
    */
-  void buildTransitiveClosure(
-      Set<QueryTarget> targetNodes, int maxDepth, ListeningExecutorService executor)
+  void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth)
       throws InterruptedException, QueryException;
 
-  String getTargetKind(QueryTarget target) throws InterruptedException, QueryException;
+  String getTargetKind(QueryTarget target) throws QueryException;
 
   /** Returns the tests associated with the given target. */
-  ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target)
-      throws InterruptedException, QueryException;
+  ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException;
 
   /** Returns the build files that define the given targets. */
   ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
-  ImmutableSet<QueryTarget> getFileOwners(
-      ImmutableList<String> files, ListeningExecutorService executor)
-      throws InterruptedException, QueryException;
+  ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) throws QueryException;
 
   /** Returns the existing targets in the value of `attribute` of the given `target`. */
   ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
-      throws InterruptedException, QueryException;
+      throws QueryException;
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
   ImmutableSet<Object> filterAttributeContents(
       QueryTarget target, String attribute, final Predicate<Object> predicate)
-      throws InterruptedException, QueryException;
+      throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction> getFunctions();

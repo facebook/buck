@@ -31,8 +31,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +61,6 @@ public final class QueryUtils {
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             declaredDeps);
-    ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             Optional.ofNullable(resolver.getEventBus()),
@@ -71,7 +68,7 @@ public final class QueryUtils {
             "target",
             target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env.getFunctions());
-      Set<QueryTarget> queryTargets = parsedExp.eval(env, executorService);
+      Set<QueryTarget> queryTargets = parsedExp.eval(env);
       return queryTargets
           .stream()
           .map(
@@ -95,7 +92,6 @@ public final class QueryUtils {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(), Optional.empty(), cellPathResolver, parserPattern, ImmutableSet.of());
-    ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env.getFunctions());
     List<String> targetLiterals = new ArrayList<>();
     parsedExp.collectTargetPatterns(targetLiterals);
@@ -104,7 +100,7 @@ public final class QueryUtils {
         .flatMap(
             pattern -> {
               try {
-                return env.getTargetsMatchingPattern(pattern, executorService).stream();
+                return env.getTargetsMatchingPattern(pattern).stream();
               } catch (Exception e) {
                 throw new RuntimeException("Error parsing target expression", e);
               }

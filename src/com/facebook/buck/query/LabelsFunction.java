@@ -36,7 +36,6 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Set;
 
 /**
@@ -68,11 +67,10 @@ public class LabelsFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException, InterruptedException {
     String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-    Set<QueryTarget> inputs = args.get(1).getExpression().eval(env, executor);
+    Set<QueryTarget> inputs = args.get(1).getExpression().eval(env);
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget input : inputs) {
       result.addAll(env.getTargetsInAttribute(input, label));

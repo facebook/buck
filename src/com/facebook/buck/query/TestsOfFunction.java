@@ -20,7 +20,6 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Set;
 
 /**
@@ -53,10 +52,9 @@ public class TestsOfFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException, InterruptedException {
-    Set<QueryTarget> targets = args.get(0).getExpression().eval(env, executor);
+    Set<QueryTarget> targets = args.get(0).getExpression().eval(env);
     ImmutableSet.Builder<QueryTarget> tests = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {
       tests.addAll(env.getTestsForTarget(target));

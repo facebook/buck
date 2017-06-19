@@ -38,7 +38,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -80,18 +79,17 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException, InterruptedException {
-    Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env, executor);
-    env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE, executor);
+    Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env);
+    env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
     Predicate<QueryTarget> inUniversePredicate = env.getTransitiveClosure(universeSet)::contains;
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
     Set<QueryTarget> visited = new LinkedHashSet<>();
-    Set<QueryTarget> argumentSet = args.get(1).getExpression().eval(env, executor);
+    Set<QueryTarget> argumentSet = args.get(1).getExpression().eval(env);
     Collection<QueryTarget> current = argumentSet;
 
     int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;

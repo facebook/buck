@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -30,8 +29,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -39,7 +36,6 @@ import org.junit.Test;
 
 public class DepsFunctionTest {
 
-  private static final ListeningExecutorService EXECUTOR = MoreExecutors.newDirectExecutorService();
   private static final DepsFunction DEPS_FUNCTION = new DepsFunction();
   private static final QueryEnvironment.Argument FIRST_ORDER_DEPS =
       QueryEnvironment.Argument.of(
@@ -63,8 +59,7 @@ public class DepsFunctionTest {
                 QueryEnvironment.Argument.of(
                     TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
                 DEPTH,
-                FIRST_ORDER_DEPS),
-            EXECUTOR),
+                FIRST_ORDER_DEPS)),
         Matchers.containsInAnyOrder(
             QueryBuildTarget.of(a.getBuildTarget()), QueryBuildTarget.of(b.getBuildTarget())));
   }
@@ -94,8 +89,7 @@ public class DepsFunctionTest {
                     FunctionExpression.of(
                         new FilterFunction(),
                         ImmutableList.of(
-                            QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS)))),
-            EXECUTOR),
+                            QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS))))),
         Matchers.contains(QueryBuildTarget.of(a.getBuildTarget())));
   }
 
@@ -103,7 +97,7 @@ public class DepsFunctionTest {
     QueryEnvironment env = createNiceMock(QueryEnvironment.class);
 
     final Capture<String> stringCapture = Capture.newInstance();
-    expect(env.getTargetsMatchingPattern(EasyMock.capture(stringCapture), anyObject()))
+    expect(env.getTargetsMatchingPattern(EasyMock.capture(stringCapture)))
         .andStubAnswer(
             () ->
                 ImmutableSet.of(

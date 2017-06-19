@@ -42,7 +42,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -94,9 +93,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(
-      String pattern, ListeningExecutorService executor)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern) throws QueryException {
     if ("$declared_deps".equals(pattern)
         || "$declared".equals(pattern)
         || "first_order_deps()".equals(pattern)) {
@@ -114,8 +111,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
     for (QueryTarget target : targets) {
       List<QueryBuildTarget> deps =
@@ -131,7 +127,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     for (QueryTarget target : targets) {
       TargetNode<?, ?> node = getNode(target);
       for (BuildTarget dep : node.getDeclaredDeps()) {
@@ -147,13 +143,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
-      throws QueryException, InterruptedException {
+  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
+  public Set<QueryTarget> getInputs(QueryTarget target) {
     TargetNode<?, ?> node = getNode(target);
     return node.getInputs()
         .stream()
@@ -162,51 +157,43 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
-      throws QueryException, InterruptedException {
+  public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void buildTransitiveClosure(
-      Set<QueryTarget> targetNodes, int maxDepth, ListeningExecutorService executor)
-      throws InterruptedException, QueryException {
+  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) {
     // No-op, since the closure should have already been built during parsing
   }
 
   @Override
-  public String getTargetKind(QueryTarget target) throws InterruptedException, QueryException {
+  public String getTargetKind(QueryTarget target) {
     return Description.getBuildRuleType(getNode(target).getDescription()).getName();
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target)
-      throws InterruptedException, QueryException {
+  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException {
+  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(
-      ImmutableList<String> files, ListeningExecutorService executor)
-      throws InterruptedException, QueryException {
+  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
-      throws InterruptedException, QueryException {
+  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate)
-      throws InterruptedException, QueryException {
+      QueryTarget target, String attribute, Predicate<Object> predicate) {
     return QueryTargetAccessor.filterAttributeContents(getNode(target), attribute, predicate);
   }
 

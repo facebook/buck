@@ -37,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -81,7 +80,6 @@ public class DepsFunction implements QueryFunction {
 
   private void forEachDep(
       QueryEnvironment env,
-      ListeningExecutorService executor,
       QueryExpression depsExpression,
       Iterable<QueryTarget> targets,
       Consumer<? super QueryTarget> consumer)
@@ -93,8 +91,7 @@ public class DepsFunction implements QueryFunction {
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
                       ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target)))),
-                  env),
-              executor);
+                  env));
       deps.forEach(consumer);
     }
   }
@@ -105,14 +102,13 @@ public class DepsFunction implements QueryFunction {
    * supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException, InterruptedException {
-    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
+    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     Optional<QueryExpression> deps =
         args.size() > 2 ? Optional.of(args.get(2).getExpression()) : Optional.empty();
-    env.buildTransitiveClosure(argumentSet, depthBound, executor);
+    env.buildTransitiveClosure(argumentSet, depthBound);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
@@ -131,7 +127,7 @@ public class DepsFunction implements QueryFunction {
             }
           };
       if (deps.isPresent()) {
-        forEachDep(env, executor, deps.get(), current, consumer);
+        forEachDep(env, deps.get(), current, consumer);
       } else {
         env.forEachFwdDep(current, consumer);
       }
@@ -167,8 +163,7 @@ public class DepsFunction implements QueryFunction {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> eval(
-        QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+    public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
         throws QueryException, InterruptedException {
       Preconditions.checkArgument(args.size() == 0);
       return env.resolveTargetVariable(getName());

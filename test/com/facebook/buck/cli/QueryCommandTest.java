@@ -35,16 +35,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockRule;
 import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,7 +51,6 @@ public class QueryCommandTest {
 
   private QueryCommand queryCommand;
   private CommandRunnerParams params;
-  private ListeningExecutorService executor;
 
   @Mock private BuckQueryEnvironment env;
 
@@ -91,21 +86,15 @@ public class QueryCommandTest {
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),
             Optional.empty());
-    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-  }
-
-  @After
-  public void tearDown() {
-    executor.shutdown();
   }
 
   @Test
   public void testRunMultiQueryWithSet() throws Exception {
     queryCommand.setArguments(ImmutableList.of("deps(%Ss)", "//foo:bar", "//foo:baz"));
-    EasyMock.expect(env.evaluateQuery("deps(set('//foo:bar' '//foo:baz'))", executor))
+    EasyMock.expect(env.evaluateQuery("deps(set('//foo:bar' '//foo:baz'))"))
         .andReturn(ImmutableSet.of());
     EasyMock.replay(env);
-    queryCommand.formatAndRunQuery(params, env, executor);
+    queryCommand.formatAndRunQuery(params, env);
     EasyMock.verify(env);
   }
 
@@ -115,11 +104,11 @@ public class QueryCommandTest {
     EasyMock.expect(env.getFunctions())
         .andReturn(BuckQueryEnvironment.DEFAULT_QUERY_FUNCTIONS)
         .anyTimes();
-    env.preloadTargetPatterns(ImmutableSet.of("//foo:bar", "//foo:baz"), executor);
-    EasyMock.expect(env.evaluateQuery("deps(//foo:bar)", executor)).andReturn(ImmutableSet.of());
-    EasyMock.expect(env.evaluateQuery("deps(//foo:baz)", executor)).andReturn(ImmutableSet.of());
+    env.preloadTargetPatterns(ImmutableSet.of("//foo:bar", "//foo:baz"));
+    EasyMock.expect(env.evaluateQuery("deps(//foo:bar)")).andReturn(ImmutableSet.of());
+    EasyMock.expect(env.evaluateQuery("deps(//foo:baz)")).andReturn(ImmutableSet.of());
     EasyMock.replay(env);
-    queryCommand.formatAndRunQuery(params, env, executor);
+    queryCommand.formatAndRunQuery(params, env);
     EasyMock.verify(env);
   }
 }

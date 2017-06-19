@@ -20,7 +20,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -39,8 +38,7 @@ abstract class RegexFilterFunction implements QueryFunction {
       throws QueryException, InterruptedException;
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException, InterruptedException {
     Pattern compiledPattern;
     try {
@@ -50,7 +48,7 @@ abstract class RegexFilterFunction implements QueryFunction {
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<QueryTarget> targets = getExpressionToEval(args).eval(env, executor);
+    Set<QueryTarget> targets = getExpressionToEval(args).eval(env);
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {
       String attributeValue = getStringToFilter(env, args, target);

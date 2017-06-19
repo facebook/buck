@@ -31,7 +31,6 @@
 package com.facebook.buck.query;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
 
 /**
@@ -69,8 +68,7 @@ public abstract class QueryExpression {
    *
    * <p>Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  public abstract ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ListeningExecutorService executor)
+  public abstract ImmutableSet<QueryTarget> eval(QueryEnvironment env)
       throws QueryException, InterruptedException;
 
   /**

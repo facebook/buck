@@ -20,7 +20,6 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Set;
 
 /**
@@ -51,10 +50,9 @@ public class BuildFileFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<Argument> args, ListeningExecutorService executor)
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException, InterruptedException {
-    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
+    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
     return env.getBuildFiles(argumentSet);
   }
 }
