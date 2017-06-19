@@ -34,10 +34,13 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider {
   private final SourcePath compiler;
   @Nullable private final String compilerClassName;
   @Nullable private Javac javac;
+  private Javac.Location javacLocation;
 
-  public ExternalOrJarBackedJavacProvider(SourcePath compiler, @Nullable String compilerClassName) {
+  public ExternalOrJarBackedJavacProvider(
+      SourcePath compiler, @Nullable String compilerClassName, Javac.Location javacLocation) {
     this.compiler = compiler;
     this.compilerClassName = compilerClassName;
+    this.javacLocation = javacLocation;
   }
 
   @Override
@@ -61,9 +64,7 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider {
 
         javac =
             new JarBackedJavacProvider(
-                    javacJarPath,
-                    Preconditions.checkNotNull(compilerClassName),
-                    Javac.Location.IN_PROCESS)
+                    javacJarPath, Preconditions.checkNotNull(compilerClassName), javacLocation)
                 .resolve(ruleFinder);
       } else {
         javac = new ExternalJavac(Either.ofRight(compiler));

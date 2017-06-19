@@ -91,9 +91,14 @@ public class JavacDirectToJarStep implements Step {
 
   @Override
   public String getShortName() {
-    return buildTimeOptions.getCompilationMode() != JavacCompilationMode.ABI
-        ? "javac_jar"
-        : "calculate_abi_from_source";
+    String name =
+        buildTimeOptions.getCompilationMode() != JavacCompilationMode.ABI
+            ? "javac_jar"
+            : "calculate_abi_from_source";
+    if (javac instanceof OutOfProcessJsr199Javac) {
+      name += "(oop)";
+    }
+    return name;
   }
 
   @Override

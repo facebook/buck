@@ -46,7 +46,8 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
       return new ExternalOrJarBackedJavacProvider(
           getCompiler().get().getRight(),
           // compiler_class_name has no effect when compiler is specified
-          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
+          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
+          getJavacLocation());
     }
 
     String compilerClassName = getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
