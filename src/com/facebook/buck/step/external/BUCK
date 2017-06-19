@@ -5,6 +5,7 @@ java_immutables_library(
         "//test/com/facebook/buck/step/external:external",
     ],
     visibility = [
+        "//src/com/facebook/buck/jvm/java:support",
         "//test/...",
     ],
     deps = [
@@ -22,6 +23,7 @@ java_immutables_library(
         "//test/com/facebook/buck/step/external:external",
     ],
     deps = [
+        "//src/com/facebook/buck/oop_javac:oop_javac",
         "//src/com/facebook/buck/worker:worker_process",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",

@@ -21,6 +21,7 @@ import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -33,11 +34,51 @@ import java.util.List;
 /** Provides methods for launching a java binary bundled within the buck binary. */
 public class BundledExternalProcessLauncher {
 
-  public ImmutableList<String> getCommandForStepExecutor() {
-    return getCommand("com.facebook.buck.step.external.executor.ExternalStepExecutorMain");
+  enum EntryPoints {
+    EXTERNAL_STEP_EXECUTOR("com.facebook.buck.step.external.executor.ExternalStepExecutorMain"),
+    OOP_JAVAC("com.facebook.buck.oop_javac.Main"),
+    ;
+
+    private final String entryPointName;
+
+    EntryPoints(String entryPointName) {
+      this.entryPointName = entryPointName;
+    }
+
+    public String getEntryPointName() {
+      return entryPointName;
+    }
   }
 
-  private ImmutableList<String> getCommand(String entryPoint) {
+  public ImmutableList<String> getCommandForStepExecutor() {
+    return getCommand(EntryPoints.EXTERNAL_STEP_EXECUTOR);
+  }
+
+  public ImmutableList<String> getCommandForOutOfProcessJavac() {
+    return getCommand(EntryPoints.OOP_JAVAC);
+  }
+
+  public ImmutableMap<String, String> getEnvForOutOfProcessJavac() {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    builder.put("JAVA_HOME", System.getenv().get("JAVA_HOME"));
+
+    BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
+    switch (buildType) {
+      case LOCAL_ANT:
+        return builder.put("BUCK_CLASSPATH", getClassPathForAntBuild()).build();
+      case UNKNOWN:
+        return builder
+            .put("BUCK_CLASSPATH", getClasspathArgumentForUnknownBuild(EntryPoints.OOP_JAVAC))
+            .build();
+      case RELEASE_PEX:
+      case LOCAL_PEX:
+        return builder.build();
+      default:
+        throw new RuntimeException("Unknown build type " + buildType.toString());
+    }
+  }
+
+  private ImmutableList<String> getCommand(EntryPoints entryPoint) {
     BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
     switch (buildType) {
       case RELEASE_PEX:
@@ -52,15 +93,31 @@ public class BundledExternalProcessLauncher {
     }
   }
 
-  private ImmutableList<String> getCommandForPexBuild(String entryPoint) {
-    String oopExecutorJarPath = System.getProperty("buck.external_executor_jar");
+  private ImmutableList<String> getCommandForPexBuild(EntryPoints entryPoint) {
+    String jarPath = System.getProperty("buck.external_executor_jar");
     Preconditions.checkNotNull(
-        oopExecutorJarPath,
-        "The buck.oop_executor property is not set despite this being a PEX build.");
-    return ImmutableList.of("java", "-jar", oopExecutorJarPath, entryPoint);
+        jarPath,
+        "The buck.external_executor_jar property is not set despite this being a PEX build.");
+    return ImmutableList.of("java", "-cp", jarPath, entryPoint.getEntryPointName());
   }
 
-  private ImmutableList<String> getCommandForAntBuild(String entryPoint) {
+  private ImmutableList<String> getCommandForAntBuild(EntryPoints entryPoint) {
+    return ImmutableList.of(
+        "java", "-cp", getClassPathForAntBuild(), entryPoint.getEntryPointName());
+  }
+
+  private ImmutableList<String> getCommandForWhenProbablyRunningUnderTest(EntryPoints entryPoint) {
+    // When running tests with Buck we inject the path to the step runner into the environment.
+    String runnerJar = System.getenv("EXTERNAL_STEP_RUNNER_JAR_FOR_BUCK_TEST");
+    if (runnerJar != null) {
+      return ImmutableList.of("java", "-cp", runnerJar, entryPoint.getEntryPointName());
+    }
+    // Right, this means we're running in an ant or intellij test, hold on tight..
+    String classPath = getClasspathArgumentForUnknownBuild(entryPoint);
+    return ImmutableList.of("java", "-cp", classPath, entryPoint.getEntryPointName());
+  }
+
+  private String getClassPathForAntBuild() {
     // In this case we do want System.getenv, to get at the buckd env variables rather than
     // at the env that was used when the buck command is invoked.
     String classPath = System.getenv("BUCK_CLASSPATH");
@@ -76,17 +133,10 @@ public class BundledExternalProcessLauncher {
         "A short BUCK_CLASSPATH [%s] means that either it "
             + " was not configured by the launcher correctly or we're in the wrong build mode.",
         classPath);
-    return ImmutableList.of("java", "-cp", classPath, entryPoint);
+    return classPath;
   }
 
-  private ImmutableList<String> getCommandForWhenProbablyRunningUnderTest(String entryPoint) {
-    // When running tests with Buck we inject the path to the step runner into the environment.
-    String stepRunnerJar = System.getenv("EXTERNAL_STEP_RUNNER_JAR_FOR_BUCK_TEST");
-    if (stepRunnerJar != null) {
-      return ImmutableList.of("java", "-jar", stepRunnerJar);
-    }
-    // Right, this means we're running in an ant or intellij test, hold on tight..
-
+  private String getClasspathArgumentForUnknownBuild(EntryPoints entryPoint) {
     // CLASSPATH entries need to be absolute paths, mostly because the JVM gets exec'd with
     // IntelliJ's CWD when running tests from there.
     Path cwd = Paths.get("").toAbsolutePath();
@@ -99,7 +149,7 @@ public class BundledExternalProcessLauncher {
         myLocation =
             this.getClass()
                 .getClassLoader()
-                .loadClass(entryPoint)
+                .loadClass(entryPoint.getEntryPointName())
                 .getProtectionDomain()
                 .getCodeSource()
                 .getLocation();
@@ -127,6 +177,6 @@ public class BundledExternalProcessLauncher {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    return ImmutableList.of("java", "-cp", classPath, entryPoint);
+    return classPath;
   }
 }

@@ -45,4 +45,7 @@ public interface OutOfProcessJavacConnectionInterface {
       @Nullable String workingDirectory,
       List<JavacPluginJsr199Fields> pluginFields,
       String javaCompilationModeAsString);
+
+  /** For testing purposes. Just returns the given value. */
+  int ping(int valueToReturn);
 }

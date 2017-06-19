@@ -19,6 +19,9 @@ public class Main {
   private Main() {}
 
   public static void main(String[] args) throws Exception {
-    System.out.print("java oop entry point hit");
+    MainOutOfProcessJavac javac = new MainOutOfProcessJavac();
+    javac.ensureHandshake();
+    javac.waitForJobAndExecute();
+    javac.close();
   }
 }

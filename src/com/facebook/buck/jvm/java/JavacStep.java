@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -119,7 +120,10 @@ public class JavacStep implements Step {
     try (CapturingPrintStream stdout = new CapturingPrintStream();
         CapturingPrintStream stderr = new CapturingPrintStream();
         ExecutionContext firstOrderContext =
-            context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
+            context.createSubContext(stdout, stderr, Optional.of(verbosity));
+        Connection<OutOfProcessJavacConnectionInterface> connection =
+            OutOfProcessConnectionFactory.connectionForOutOfProcessBuild(
+                context, filesystem, getJavac(), invokingRule)) {
       JavacExecutionContext javacExecutionContext =
           JavacExecutionContext.of(
               new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
@@ -135,6 +139,8 @@ public class JavacStep implements Step {
               getAbsolutePathsForJavacInputs(getJavac()),
               directToJarOutputSettings);
       return performBuild(context, stdout, stderr, getJavac(), javacExecutionContext);
+    } catch (Exception e) {
+      throw new RuntimeException("out of process javac connection failure during build", e);
     }
   }
 

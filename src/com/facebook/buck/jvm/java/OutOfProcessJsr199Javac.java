@@ -68,7 +68,6 @@ public abstract class OutOfProcessJsr199Javac implements Javac {
   }
 
   public Connection<OutOfProcessJavacConnectionInterface> getConnection() {
-    return Preconditions.checkNotNull(
-        connection, "Cannot get connection before calling setConnection");
+    return Preconditions.checkNotNull(connection, "setConnection() is expected to be called first");
   }
 }

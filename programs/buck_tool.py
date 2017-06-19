@@ -87,11 +87,6 @@ class CommandLineArgs:
     def is_help(self):
         return self.command is None or "--help" in self.command_options
 
-    # Whether this buck invocation is a normal buck or oop compilation mode
-    # TODO: remove this if oop javac is not good thing, or move to a truly independent jar
-    def is_oop_javac(self):
-        return self.command is None and "--oop-javac" in self.buck_options
-
 
 class RestartBuck(Exception):
     pass
@@ -188,7 +183,7 @@ class BuckTool(object):
 
     @property
     def _use_buckd(self):
-        return not os.environ.get('NO_BUCKD') and not self._command_line.is_oop_javac()
+        return not os.environ.get('NO_BUCKD')
 
     def _environ_for_buck(self):
         env = os.environ.copy()
@@ -201,14 +196,13 @@ class BuckTool(object):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
                 if self._command_line.command == "clean" and \
-                        not self._command_line.is_help() and \
-                        not self._command_line.is_oop_javac():
+                        not self._command_line.is_help():
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
 
                 use_buckd = self._use_buckd
-                if not self._command_line.is_help() and not self._command_line.is_oop_javac():
+                if not self._command_line.is_help():
                     has_watchman = bool(which('watchman'))
                     if use_buckd and has_watchman:
                         running_version = self._buck_project.get_running_buckd_version()
@@ -262,10 +256,7 @@ class BuckTool(object):
                 ]
                 command.extend(self._get_java_args(buck_version_uid, extra_default_options))
                 command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-                if self._command_line.is_oop_javac():
-                    command.append("com.facebook.buck.oop_javac.Main")
-                else:
-                    command.append("com.facebook.buck.cli.Main")
+                command.append("com.facebook.buck.cli.Main")
                 command.extend(sys.argv[1:])
 
                 now = int(round(time.time() * 1000))
