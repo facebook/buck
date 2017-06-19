@@ -19,9 +19,11 @@ public class Main {
   private Main() {}
 
   public static void main(String[] args) throws Exception {
-    MainOutOfProcessJavac javac = new MainOutOfProcessJavac();
-    javac.ensureHandshake();
-    javac.waitForJobAndExecute();
-    javac.close();
+    try (MainOutOfProcessJavac javac = new MainOutOfProcessJavac()) {
+      javac.ensureHandshake();
+      while (true) {
+        javac.waitForJobAndExecute();
+      }
+    }
   }
 }

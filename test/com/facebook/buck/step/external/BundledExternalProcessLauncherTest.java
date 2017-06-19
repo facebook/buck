@@ -85,7 +85,8 @@ public class BundledExternalProcessLauncherTest {
             .build();
 
     WorkerProcess process = new WorkerProcess(processExecutor, params, projectFilesystem, tmpPath);
-    MessageTransport transport = new MessageTransport(process, new MessageSerializer());
+    MessageTransport transport =
+        new MessageTransport(process, new MessageSerializer(), () -> process.close());
     try (Connection<OutOfProcessJavacConnectionInterface> conn = new Connection<>(transport)) {
       conn.setRemoteInterface(
           OutOfProcessJavacConnectionInterface.class,

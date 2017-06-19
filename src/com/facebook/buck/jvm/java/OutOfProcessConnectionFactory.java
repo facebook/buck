@@ -23,10 +23,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.external.BundledExternalProcessLauncher;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.worker.WorkerProcess;
+import com.facebook.buck.worker.WorkerProcessParams;
+import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class OutOfProcessConnectionFactory {
@@ -38,7 +41,7 @@ public class OutOfProcessConnectionFactory {
   @Nullable
   public static Connection<OutOfProcessJavacConnectionInterface> connectionForOutOfProcessBuild(
       ExecutionContext context, ProjectFilesystem filesystem, Javac javac, BuildTarget invokingRule)
-      throws IOException {
+      throws IOException, InterruptedException {
     Connection<OutOfProcessJavacConnectionInterface> connection = null;
     if (javac instanceof OutOfProcessJsr199Javac) {
       OutOfProcessJsr199Javac outOfProcessJsr199Javac = (OutOfProcessJsr199Javac) javac;
@@ -47,16 +50,21 @@ public class OutOfProcessConnectionFactory {
       Path relativeTmpDir =
           BuildTargets.getScratchPath(filesystem, invokingRule, "%s_oop_javac__tmp");
       filesystem.mkdirs(relativeTmpDir);
-      ProcessExecutorParams params =
-          ProcessExecutorParams.builder()
-              .setCommand(LAUNCHER.getCommandForOutOfProcessJavac())
-              .setEnvironment(LAUNCHER.getEnvForOutOfProcessJavac())
-              .setDirectory(filesystem.getRootPath())
-              .build();
-      WorkerProcess process =
-          new WorkerProcess(
-              context.getProcessExecutor(), params, filesystem, filesystem.resolve(relativeTmpDir));
-      MessageTransport transport = new MessageTransport(process, serializer);
+
+      WorkerProcessPoolFactory factory = new WorkerProcessPoolFactory(filesystem);
+      WorkerProcessParams workerProcessParams =
+          WorkerProcessParams.of(
+              relativeTmpDir,
+              LAUNCHER.getCommandForOutOfProcessJavac(),
+              LAUNCHER.getEnvForOutOfProcessJavac(),
+              Runtime.getRuntime().availableProcessors(),
+              Optional.empty());
+      WorkerProcessPool processPool = factory.getWorkerProcessPool(context, workerProcessParams);
+      WorkerProcess workerProcess = processPool.borrowWorkerProcess();
+
+      MessageTransport transport =
+          new MessageTransport(
+              workerProcess, serializer, () -> processPool.returnWorkerProcess(workerProcess));
       connection = new Connection<>(transport);
       connection.setRemoteInterface(
           OutOfProcessJavacConnectionInterface.class,

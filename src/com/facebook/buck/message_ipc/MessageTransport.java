@@ -23,11 +23,14 @@ import com.google.common.base.Preconditions;
 public class MessageTransport implements AutoCloseable {
   private final WorkerProcess workerProcess;
   private final MessageSerializer serializer;
+  private final Runnable onClose;
   private boolean isClosed = false;
 
-  public MessageTransport(WorkerProcess workerProcess, MessageSerializer serializer) {
+  public MessageTransport(
+      WorkerProcess workerProcess, MessageSerializer serializer, Runnable onClose) {
     this.workerProcess = workerProcess;
     this.serializer = serializer;
+    this.onClose = onClose;
   }
 
   public ReturnResultMessage sendMessageAndWaitForResponse(InvocationMessage message)
@@ -43,7 +46,7 @@ public class MessageTransport implements AutoCloseable {
   @Override
   public void close() throws Exception {
     checkNotClose();
-    workerProcess.close();
+    onClose.run();
     isClosed = true;
   }
 
