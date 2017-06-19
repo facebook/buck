@@ -101,7 +101,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           HG_CMD_TEMPLATE,
           "log",
           "--rev",
-          ". + ancestor(.,remote/master)",
+          ". + ancestor(.,present(remote/master))",
           "--template",
           "{node|short} {date|hgdate} {remotebookmarks}\\n");
 
