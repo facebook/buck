@@ -84,6 +84,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -97,7 +98,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -2079,7 +2079,7 @@ public class SuperConsoleEventBusListenerTest {
                     .put(ProgressEstimator.EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES, 10)
                     .build())
             .build();
-    String contents = new Gson().toJson(storageContents);
+    String contents = ObjectMappers.WRITER.writeValueAsString(storageContents);
     Files.createDirectories(storagePath.getParent());
     Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 

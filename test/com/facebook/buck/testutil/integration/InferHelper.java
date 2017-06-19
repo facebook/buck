@@ -17,11 +17,11 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
-import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,8 +32,8 @@ public class InferHelper {
   public static List<Object> loadInferReport(ProjectWorkspace workspace, String jsonReport)
       throws IOException {
     String reportContent = workspace.getFileContents(jsonReport);
-    Object[] records = new GsonBuilder().create().fromJson(reportContent, Object[].class);
-    return Arrays.asList(records);
+    return ObjectMappers.createParser(reportContent)
+        .readValueAs(new TypeReference<List<Object>>() {});
   }
 
   public static ProjectWorkspace setupWorkspace(

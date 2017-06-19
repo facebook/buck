@@ -18,20 +18,12 @@ package com.facebook.buck.cxx;
 
 import static java.nio.charset.Charset.defaultCharset;
 
-import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,26 +32,14 @@ public class CxxCompilationDatabaseUtils {
 
   private CxxCompilationDatabaseUtils() {}
 
-  private static class ArgsJsonDeserializer implements JsonDeserializer<ImmutableList<String>> {
-    @Override
-    public ImmutableList<String> deserialize(
-        JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
-      Type listType = new TypeToken<Collection<String>>() {}.getType();
-      List<String> list = context.deserialize(json, listType);
-      return ImmutableList.copyOf(list);
-    }
-  }
-
   public static Map<String, CxxCompilationDatabaseEntry> parseCompilationDatabaseJsonFile(
       Path compilationDatabase) throws IOException {
-    Gson gson =
-        new GsonBuilder()
-            .registerTypeAdapter(ImmutableList.class, new ArgsJsonDeserializer())
-            .create();
     try (Reader fileReader = Files.newBufferedReader(compilationDatabase, defaultCharset())) {
       List<CxxCompilationDatabaseEntry> entries =
-          gson.fromJson(
-              fileReader, new TypeToken<List<CxxCompilationDatabaseEntry>>() {}.getType());
+          ObjectMappers.READER
+              .forType(new TypeReference<CxxCompilationDatabaseEntry>() {})
+              .<CxxCompilationDatabaseEntry>readValues(fileReader)
+              .readAll();
       Map<String, CxxCompilationDatabaseEntry> fileToEntry = new HashMap<>();
       for (CxxCompilationDatabaseEntry entry : entries) {
         fileToEntry.put(entry.getFile(), entry);

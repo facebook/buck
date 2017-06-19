@@ -182,6 +182,7 @@ java_immutables_library(
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/stringtemplate:stringtemplate",
     ],

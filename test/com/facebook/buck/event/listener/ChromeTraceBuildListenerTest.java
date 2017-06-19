@@ -16,6 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -70,11 +72,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.gson.Gson;
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -522,13 +522,14 @@ public class ChromeTraceBuildListenerTest {
 
     assertTrue(projectFilesystem.exists(tracePath));
 
-    BufferedReader reader =
-        new BufferedReader(
-            new InputStreamReader(
-                new GZIPInputStream(projectFilesystem.newFileInputStream(tracePath))));
+    BufferedInputStream stream =
+        new BufferedInputStream(
+            new GZIPInputStream(projectFilesystem.newFileInputStream(tracePath)));
 
-    List<?> elements = new Gson().fromJson(reader, List.class);
+    List<Object> elements =
+        ObjectMappers.createParser(stream).readValueAs(new TypeReference<List<Object>>() {});
     assertThat(elements, notNullValue());
+    assertThat(elements, not(empty()));
   }
 
   private static ChromeTraceBuckConfig chromeTraceConfig(int tracesToKeep, boolean compressTraces) {
