@@ -112,6 +112,7 @@ public class DefaultJavaLibraryBuilder {
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
         .setExportedDeps(args.getExportedDeps())
         .setProvidedDeps(args.getProvidedDeps())
+        .setTests(args.getTests())
         .setManifestFile(args.getManifestFile())
         .setMavenCoords(args.getMavenCoords());
   }
