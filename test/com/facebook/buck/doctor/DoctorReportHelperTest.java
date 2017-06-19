@@ -20,7 +20,6 @@ import static com.facebook.buck.doctor.DoctorTestUtils.createDoctorConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
@@ -29,7 +28,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -51,15 +49,7 @@ public class DoctorReportHelperTest {
   @Test
   public void testErrorMessage() throws Exception {
     TestConsole console = new TestConsole();
-    DoctorConfig doctorConfig =
-        DoctorConfig.of(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of(
-                        DoctorConfig.DOCTOR_SECTION,
-                        ImmutableMap.of(DoctorConfig.ENDPOINT_URL_FIELD, "url")))
-                .build());
-
+    DoctorConfig doctorConfig = createDoctorConfig(0, "", DoctorProtocolVersion.SIMPLE);
     DoctorReportHelper helper =
         new DoctorReportHelper(
             workspace.asCell().getFilesystem(),
@@ -78,15 +68,7 @@ public class DoctorReportHelperTest {
   @Test
   public void testNoAvailableSuggestions() throws Exception {
     TestConsole console = new TestConsole();
-    DoctorConfig doctorConfig =
-        DoctorConfig.of(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of(
-                        DoctorConfig.DOCTOR_SECTION,
-                        ImmutableMap.of(DoctorConfig.ENDPOINT_URL_FIELD, "url")))
-                .build());
-
+    DoctorConfig doctorConfig = createDoctorConfig(0, "", DoctorProtocolVersion.SIMPLE);
     DoctorReportHelper helper =
         new DoctorReportHelper(
             workspace.asCell().getFilesystem(),
