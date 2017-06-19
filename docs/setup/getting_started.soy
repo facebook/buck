@@ -58,7 +58,7 @@
 <span><block class="windows android" /></span>
 <p>
 <blockquote>
-  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <a href="https://chocolatey.org/packages/android-sdk">Chocolatey</a> or manually downloaded and installed.
+  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a> and the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>, which can be installed via <a href="https://chocolatey.org/packages/android-sdk">Chocolatey</a> or manually downloaded and installed.
 </blockquote>
 </p>
 
@@ -73,11 +73,11 @@
 </p>
 <span><block class="mac android" /></span>
 <blockquote>
-  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <a href="http://brewformulas.org/Android-sdk">Homebrew</a> or manually downloaded and installed.
+  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a> and the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>, which can be installed via <a href="http://brewformulas.org/Android-sdk">Homebrew</a> or manually downloaded and installed.
 </blockquote>
 <span><block class="linux android" /></span>
 <blockquote>
-  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a>, which can be installed via <code>apt-get</code> (or your distro's package manager)</a> or manually downloaded and installed.
+  While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a> and the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>, which can be installed via <code>apt-get</code> (or your distro's package manager)</a> or manually downloaded and installed.
 </blockquote>
 </p>
 
@@ -521,6 +521,39 @@ cd bucksamples/cross-platform-scale-2015-demo/
   <li>
     <p><code>.buckconfig</code>: A {call buck.concept_buckconfig /} file allows for various flag and alias settings for any project (even beyond Android) within the root directory.</p>
   </li>
+</ul>
+
+<h3>Configure the Environment</h3>
+
+<p>
+  Before building an app you need to configure environment variables to let Buck know the locations of Android SDK and Android NDK.
+</p>
+
+<p>
+  First of all, check for existing variables:
+</p>
+
+{literal}
+<pre>
+$ env | grep ANDROID_
+ANDROID_HOME=&lt;path-to-sdk&gt;
+ANDROID_NDK_REPOSITORY=&lt;path-to-ndk&gt;
+ANDROID_SDK=&lt;path-to-sdk&gt;
+</pre>
+{/literal}
+
+<p>
+  Set the missing variables to the locations of Android SDK and Android NDK.
+</p>
+
+<p>
+  Before building make sure you installed correct build tools and a target in Android SDK and correct version of Android NDK. You can find the required versions of these tools in {call buck.concept_buckconfig /}:
+</p>
+
+<ul>
+  <li>See {call buckconfig.android_build_tools_version /} to get the version of build tools in Android SDK.</li>
+  <li>{call buckconfig.android_target /} points to the target.</li>
+  <li>{call buckconfig.ndk_version /} points to the version of Android NDK.</li>
 </ul>
 
 <h3>Build the Android Sample</h3>
