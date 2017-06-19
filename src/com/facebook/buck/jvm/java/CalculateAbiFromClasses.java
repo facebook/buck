@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -61,7 +62,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
     super(buildRuleParams);
     this.binaryJar = binaryJar;
     this.sourceAbiCompatible = sourceAbiCompatible;
-    this.outputPath = getAbiJarPath();
+    this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
     this.abiJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
   }
 
@@ -89,9 +90,9 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
         sourceAbiCompatible);
   }
 
-  private Path getAbiJarPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
-        .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
+  public static Path getAbiJarPath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "%s")
+        .resolve(String.format("%s-abi.jar", buildTarget.getShortName()));
   }
 
   @Override
@@ -100,17 +101,15 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getAbiJarPath().getParent())),
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent())),
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getAbiJarPath())),
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
         new CalculateAbiFromClassesStep(
             buildableContext,
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(binaryJar),
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            outputPath,
             sourceAbiCompatible));
   }
 
