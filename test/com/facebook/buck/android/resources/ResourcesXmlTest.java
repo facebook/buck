@@ -24,16 +24,21 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipFile;
 import org.junit.Before;
 import org.junit.Rule;
@@ -144,6 +149,42 @@ public class ResourcesXmlTest {
       Path xmltreeOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".manifest.reversed"));
       String expected = new String(Files.readAllBytes(xmltreeOutput));
       MoreAsserts.assertLargeStringsEqual(expected, content);
+    }
+  }
+
+  @Test
+  public void testRewrittenAttrsAreSorted() throws Exception {
+    try (InputStream inputStream =
+        Files.newInputStream(filesystem.resolve("row_with_button.xml"))) {
+      ByteBuffer buf = ResChunk.wrap(ByteStreams.toByteArray(inputStream));
+      ResourcesXml xml = ResourcesXml.get(buf);
+      Map<Integer, Integer> mapping =
+          ImmutableMap.of(0x7f010000, 0x7f010001, 0x7f010001, 0x7f010000);
+
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      xml.dump(new PrintStream(baos));
+      String original = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      xml.transformReferences((i) -> mapping.getOrDefault(i, i));
+
+      baos = new ByteArrayOutputStream();
+      xml.dump(new PrintStream(baos));
+      String mapped = new String(baos.toByteArray(), Charsets.UTF_8);
+
+      // Just look at the last three lines.
+      original = Joiner.on("\n").join(Arrays.asList(original.split("\\r?\\n")).subList(9, 12));
+      mapped = Joiner.on("\n").join(Arrays.asList(mapped.split("\\r?\\n")).subList(9, 12));
+
+      assertEquals(
+          "        A: buck:actionType(0x7f010000)=\"glyph\" (Raw: \"glyph\")\n"
+              + "        A: buck:actionName(0x7f010001)=\"large_size\" (Raw: \"large_size\")\n"
+              + "        A: buck:actionColor(0x7f010002)=\"red\" (Raw: \"red\")",
+          original);
+      assertEquals(
+          "        A: buck:actionName(0x7f010000)=\"large_size\" (Raw: \"large_size\")\n"
+              + "        A: buck:actionType(0x7f010001)=\"glyph\" (Raw: \"glyph\")\n"
+              + "        A: buck:actionColor(0x7f010002)=\"red\" (Raw: \"red\")",
+          mapped);
     }
   }
 }

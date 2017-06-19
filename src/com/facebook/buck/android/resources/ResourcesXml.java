@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
 /**
@@ -51,6 +52,8 @@ import javax.annotation.Nullable;
  * StringRef name StringRef rawValue Res_value typedValue
  */
 public class ResourcesXml extends ResChunk {
+  private static final boolean DEBUG = true;
+
   public static final int HEADER_SIZE = 8;
 
   private static final int XML_FIRST_TYPE = 0x100;
@@ -60,6 +63,7 @@ public class ResourcesXml extends ResChunk {
   private static final int XML_END_ELEMENT = 0x103;
   private static final int XML_CDATA = 0x104;
   private static final int XML_LAST_TYPE = 0x104;
+  public static final int ATTRIBUTE_SIZE = 20;
 
   private final StringPool strings;
   private final Optional<RefMap> refMap;
@@ -114,6 +118,7 @@ public class ResourcesXml extends ResChunk {
   }
 
   public void transformReferences(RefTransformer visitor) {
+    // Make sure to rewrite the refMap first so that fixupAttrs works correctly.
     refMap.ifPresent(m -> m.visitReferences(visitor));
     int offset = 0;
     while (offset < nodeBuf.limit()) {
@@ -124,9 +129,13 @@ public class ResourcesXml extends ResChunk {
         int extOffset = offset + nodeHeaderSize;
         int attrStart = extOffset + nodeBuf.getShort(extOffset + 8);
         Preconditions.checkState(attrStart == extOffset + 20);
+        if (DEBUG) {
+          int attrSize = nodeBuf.getShort(extOffset + 10);
+          Preconditions.checkState(attrSize == ATTRIBUTE_SIZE);
+        }
         int attrCount = nodeBuf.getShort(extOffset + 12);
         for (int i = 0; i < attrCount; i++) {
-          int attrOffset = attrStart + i * 20;
+          int attrOffset = attrStart + i * ATTRIBUTE_SIZE;
           int attrType = nodeBuf.get(attrOffset + 15);
           switch (attrType) {
             case RES_REFERENCE:
@@ -140,10 +149,78 @@ public class ResourcesXml extends ResChunk {
               break;
           }
         }
+        fixupAttrs(attrStart, attrCount);
       }
       int chunkSize = nodeBuf.getInt(offset + 4);
       offset += chunkSize;
     }
+  }
+
+  private int getAttributeNameResId(int attrOffset) {
+    if (!refMap.isPresent()) {
+      return -1;
+    }
+    int id = nodeBuf.getInt(attrOffset + 4);
+    return refMap.get().getRef(id);
+  }
+
+  // Android resource handling makes several assumptions about xml node attribute ordering:
+  //
+  // > 1) The input has the same sorting rules applied to it as
+  // >    the attribute data contained by this class.
+  // > 2) Attributes are grouped by package ID.
+  // > 3) Among attributes with the same package ID, the attributes are
+  // >    sorted by increasing resource ID.
+  //
+  // After reassigning ids, we need to make sure that these assumptions still
+  // hold.
+  //
+  // See https://android.googlesource.com/platform/frameworks/base/+/nougat-release/include/androidfw/AttributeFinder.h
+  //
+  // If there's no refmap, this doesn't ensure that the attributes are sorted correctly, but in
+  // that case, Android doesn't need them sorted anyway.
+  private void fixupAttrs(int attrStart, int attrCount) {
+    if (!refMap.isPresent()) {
+      return;
+    }
+
+    while (attrCount > 0 && getAttributeNameResId(attrStart) == -1) {
+      --attrCount;
+      attrStart += ATTRIBUTE_SIZE;
+    }
+
+    while (attrCount > 0
+        && getAttributeNameResId(attrStart + ATTRIBUTE_SIZE * (attrCount - 1)) == -1) {
+      --attrCount;
+    }
+
+    if (attrCount < 2) {
+      return;
+    }
+
+    class AttrRef implements Comparable<AttrRef> {
+      final int offset;
+      final int resId;
+
+      AttrRef(int offset) {
+        this.offset = offset;
+        this.resId = getAttributeNameResId(offset);
+      }
+
+      @Override
+      public int compareTo(AttrRef other) {
+        return resId - other.resId;
+      }
+    }
+
+    byte[] newData = new byte[ATTRIBUTE_SIZE * attrCount];
+    ByteBuffer newBuf = wrap(newData);
+    int finalAttrStart = attrStart;
+    IntStream.range(0, attrCount)
+        .mapToObj(i -> new AttrRef(finalAttrStart + ATTRIBUTE_SIZE * i))
+        .sorted()
+        .forEachOrdered(ref -> newBuf.put(slice(nodeBuf, ref.offset, ATTRIBUTE_SIZE)));
+    slice(nodeBuf, attrStart).put(newData);
   }
 
   public void visitReferences(RefVisitor visitor) {
@@ -159,7 +236,7 @@ public class ResourcesXml extends ResChunk {
     final Map<String, String> nsMap = new HashMap<>();
     nodeBuf.position(0);
     while (nodeBuf.position() < nodeBuf.limit()) {
-      int nodeSize = nodeBuf.get(nodeBuf.position() + 4);
+      int nodeSize = nodeBuf.get(nodeBuf.position() + 4) & 0xFF;
       indent =
           dumpNode(
               out, strings, refMap, indent, nsMap, slice(nodeBuf, nodeBuf.position(), nodeSize));
