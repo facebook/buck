@@ -33,19 +33,14 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymCopyStep;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-
-  private CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules;
 
   private final Path resultsDir;
   private final Path reportFile;
@@ -53,28 +48,30 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path specsPathList;
 
   @AddToRuleKey private final InferBuckConfig inferConfig;
+  private final ImmutableSet<CxxInferCapture> captureRules;
+  private final ImmutableSet<CxxInferAnalyze> transitiveAnalyzeRules;
 
   CxxInferAnalyze(
       BuildRuleParams buildRuleParams,
       InferBuckConfig inferConfig,
-      CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAnalyzeRules) {
+      ImmutableSet<CxxInferCapture> captureRules,
+      ImmutableSet<CxxInferAnalyze> transitiveAnalyzeRules) {
     super(buildRuleParams);
-    this.captureAndAnalyzeRules = captureAndAnalyzeRules;
     this.resultsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-analysis-%s");
     this.reportFile = this.resultsDir.resolve("report.json");
     this.specsDir = this.resultsDir.resolve("specs");
     this.specsPathList = this.resultsDir.resolve("specs_path_list.txt");
     this.inferConfig = inferConfig;
+    this.captureRules = captureRules;
+    this.transitiveAnalyzeRules = transitiveAnalyzeRules;
   }
 
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
-    return FluentIterable.from(captureAndAnalyzeRules.aggregatingRules)
-        .transform(
-            (Function<CxxInferAnalyze, SourcePath>)
-                input ->
-                    new ExplicitBuildTargetSourcePath(input.getBuildTarget(), input.getSpecsDir()))
-        .toSortedSet(Ordering.natural());
+    return transitiveAnalyzeRules
+        .stream()
+        .map(rule -> new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), rule.getSpecsDir()))
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   public Path getSpecsDir() {
@@ -86,11 +83,11 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public ImmutableSet<CxxInferCapture> getCaptureRules() {
-    return captureAndAnalyzeRules.captureRules;
+    return captureRules;
   }
 
   public ImmutableSet<CxxInferAnalyze> getTransitiveAnalyzeRules() {
-    return captureAndAnalyzeRules.aggregatingRules;
+    return transitiveAnalyzeRules;
   }
 
   private ImmutableList<String> getAnalyzeCommand() {
@@ -119,8 +116,7 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),
-                captureAndAnalyzeRules
-                    .captureRules
+                captureRules
                     .stream()
                     .map(CxxInferCapture::getSourcePathToOutput)
                     .map(context.getSourcePathResolver()::getRelativePath)

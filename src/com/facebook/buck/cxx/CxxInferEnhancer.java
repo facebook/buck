@@ -400,7 +400,8 @@ public final class CxxInferEnhancer {
                         .build())
                 .withoutExtraDeps(),
             inferBuckConfig,
-            captureAnalyzeRules));
+            captureAnalyzeRules.captureRules,
+            captureAnalyzeRules.aggregatingRules));
   }
 
   private CxxInferCaptureRulesAggregator createInferCaptureAggregatorRule(

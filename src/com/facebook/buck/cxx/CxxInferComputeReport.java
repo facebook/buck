@@ -29,10 +29,9 @@ import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 /**
@@ -61,10 +60,12 @@ public class CxxInferComputeReport extends AbstractBuildRuleWithDeclaredAndExtra
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(reportOutput);
     ImmutableSortedSet<Path> reportsToMergeFromDeps =
-        FluentIterable.from(analysisToReport.getTransitiveAnalyzeRules())
-            .transform(CxxInferAnalyze::getSourcePathToOutput)
-            .transform(context.getSourcePathResolver()::getAbsolutePath)
-            .toSortedSet(Ordering.natural());
+        analysisToReport
+            .getTransitiveAnalyzeRules()
+            .stream()
+            .map(CxxInferAnalyze::getSourcePathToOutput)
+            .map(context.getSourcePathResolver()::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSortedSet());
 
     ImmutableSortedSet<Path> reportsToMerge =
         ImmutableSortedSet.<Path>naturalOrder()

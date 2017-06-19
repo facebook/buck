@@ -128,12 +128,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
-    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
-        new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(), ImmutableSet.<CxxInferAnalyze>of());
-
     CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(testBuildRuleParams, inferBuckConfig, captureAndAggregatingRules);
+        new CxxInferAnalyze(
+            testBuildRuleParams, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
@@ -170,12 +167,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
-    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
-        new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(), ImmutableSet.<CxxInferAnalyze>of());
-
     CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(testBuildRuleParams, inferBuckConfig, captureAndAggregatingRules);
+        new CxxInferAnalyze(
+            testBuildRuleParams, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
@@ -234,12 +228,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     CxxInferCapture captureRule =
         createCaptureRule(buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
-    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
-        new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(captureRule), ImmutableSet.<CxxInferAnalyze>of());
-
     CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(buildRuleParams1, inferBuckConfig, captureAndAggregatingRules);
+        new CxxInferAnalyze(
+            buildRuleParams1, inferBuckConfig, ImmutableSet.of(captureRule), ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
@@ -301,12 +292,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     CxxInferCapture captureRule =
         createCaptureRule(buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
-    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
-        new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.of(captureRule), ImmutableSet.<CxxInferAnalyze>of());
-
     CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(buildRuleParams1, inferBuckConfig, captureAndAggregatingRules);
+        new CxxInferAnalyze(
+            buildRuleParams1, inferBuckConfig, ImmutableSet.of(captureRule), ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
