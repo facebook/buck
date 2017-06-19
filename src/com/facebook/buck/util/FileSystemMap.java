@@ -75,7 +75,7 @@ public class FileSystemMap<T> {
     //       get() or put() on its path: in this case, its value will be computed and stored.
     //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
     //       a `null` value.
-    private @Nullable T value;
+    private volatile @Nullable T value;
     private final Path key;
 
     Entry(Path path) {
@@ -93,22 +93,27 @@ public class FileSystemMap<T> {
       this.value = value;
     }
 
-    synchronized void set(@Nullable T value) {
+    void set(@Nullable T value) {
       this.value = value;
     }
 
-    synchronized @Nullable T getWithoutLoading() {
+    @Nullable
+    T getWithoutLoading() {
       return this.value;
     }
 
-    synchronized T load(ValueLoader<T> loader) {
+    T load(ValueLoader<T> loader) {
       if (this.value == null) {
-        this.value = loader.load(this.key);
+        synchronized (this) {
+          if (this.value == null) {
+            this.value = loader.load(this.key);
+          }
+        }
       }
       return this.value;
     }
 
-    synchronized int size() {
+    int size() {
       return subLevels.size();
     }
   }
@@ -251,9 +256,13 @@ public class FileSystemMap<T> {
         maybe = map.computeIfAbsent(path, this::putEntry);
       }
     }
+    // Maybe here we receive a request for getting an intermediate node (a folder) whose
+    // value was never computed before (or has been removed).
     if (maybe.value == null) {
-      // Maybe here we receive a request for getting an intermediate node (a folder) whose
-      // value was never computed before (or has been removed).
+      // It is possible that maybe.load() will call back into other methods on this FileSystemMap.
+      // Those methods might acquire the root lock. If there's any flow that calls maybe.load()
+      // while already holding that lock, there's likely a flow w/ lock inversion.
+      Preconditions.checkState(!Thread.holdsLock(root));
       maybe.load(loader);
     }
     return maybe.value;
