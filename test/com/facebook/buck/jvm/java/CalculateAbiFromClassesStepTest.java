@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -53,9 +52,7 @@ public class CalculateAbiFromClassesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-    FakeBuildableContext context = new FakeBuildableContext();
-    new CalculateAbiFromClassesStep(context, filesystem, binJar, abiJar, false)
-        .execute(executionContext);
+    new CalculateAbiFromClassesStep(filesystem, binJar, abiJar, false).execute(executionContext);
 
     String seenHash = filesystem.computeSha1(Paths.get("abi.jar")).getHash();
 

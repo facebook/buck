@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.abi.StubJar;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -27,19 +26,13 @@ import java.nio.file.Path;
 
 public class CalculateAbiFromClassesStep implements Step {
 
-  private final BuildableContext buildableContext;
   private final ProjectFilesystem filesystem;
   private final Path binaryJar;
   private final Path abiJar;
   private final boolean sourceAbiCompatible;
 
   public CalculateAbiFromClassesStep(
-      BuildableContext buildableContext,
-      ProjectFilesystem filesystem,
-      Path binaryJar,
-      Path abiJar,
-      boolean sourceAbiCompatible) {
-    this.buildableContext = buildableContext;
+      ProjectFilesystem filesystem, Path binaryJar, Path abiJar, boolean sourceAbiCompatible) {
     this.filesystem = filesystem;
     this.binaryJar = binaryJar;
     this.abiJar = abiJar;
@@ -51,7 +44,6 @@ public class CalculateAbiFromClassesStep implements Step {
     try {
       Path binJar = filesystem.resolve(binaryJar);
       new StubJar(binJar).setSourceAbiCompatible(sourceAbiCompatible).writeTo(filesystem, abiJar);
-      buildableContext.recordArtifact(abiJar);
     } catch (IOException | IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return StepExecutionResult.ERROR;

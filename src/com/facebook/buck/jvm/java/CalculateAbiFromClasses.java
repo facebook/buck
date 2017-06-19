@@ -98,19 +98,25 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent())),
-        RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
-        new CalculateAbiFromClassesStep(
-            buildableContext,
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(binaryJar),
-            outputPath,
-            sourceAbiCompatible));
+    ImmutableList<Step> result =
+        ImmutableList.of(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    outputPath.getParent())),
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
+            new CalculateAbiFromClassesStep(
+                getProjectFilesystem(),
+                context.getSourcePathResolver().getAbsolutePath(binaryJar),
+                outputPath,
+                sourceAbiCompatible));
+
+    buildableContext.recordArtifact(outputPath);
+
+    return result;
   }
 
   @Override
