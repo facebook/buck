@@ -173,8 +173,9 @@ public final class CxxInferEnhancer {
 
     Flavor inferAnalyze = InferFlavors.INFER_ANALYZE.getFlavor();
 
-    BuildRuleParams paramsWithInferAnalyzeFlavor =
-        InferFlavors.paramsWithoutAnyInferFlavor(params).withAppendedFlavor(inferAnalyze);
+    BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
+
+    BuildRuleParams paramsWithInferAnalyzeFlavor = cleanParams.withAppendedFlavor(inferAnalyze);
 
     Optional<CxxInferAnalyze> existingRule =
         ruleResolver.getRuleOptionalWithType(
@@ -183,11 +184,16 @@ public final class CxxInferEnhancer {
       return existingRule.get();
     }
 
-    CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> cxxInferCaptureAndAnalyzeRules =
-        requireTransitiveCaptureAndAggregatingRules(
-            params, args, inferAnalyze, CxxInferAnalyze.class);
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
 
-    return createInferAnalyzeRule(paramsWithInferAnalyzeFlavor, cxxInferCaptureAndAnalyzeRules);
+    ImmutableSet<CxxInferAnalyze> transitiveDepsLibraryRules =
+        requireTransitiveDependentLibraries(cxxPlatform, deps, inferAnalyze, CxxInferAnalyze.class);
+
+    return createInferAnalyzeRule(
+        paramsWithInferAnalyzeFlavor,
+        requireInferCaptureBuildRules(
+            cleanParams, collectSources(cleanParams.getBuildTarget(), args), args),
+        transitiveDepsLibraryRules);
   }
 
   private CxxInferCaptureRulesAggregator requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
@@ -389,19 +395,20 @@ public final class CxxInferEnhancer {
 
   private CxxInferAnalyze createInferAnalyzeRule(
       BuildRuleParams params,
-      CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAnalyzeRules) {
+      ImmutableSet<CxxInferCapture> captureRules,
+      ImmutableSet<CxxInferAnalyze> analyzeRules) {
     return ruleResolver.addToIndex(
         new CxxInferAnalyze(
             params
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(captureAnalyzeRules.captureRules)
-                        .addAll(captureAnalyzeRules.aggregatingRules)
+                        .addAll(captureRules)
+                        .addAll(analyzeRules)
                         .build())
                 .withoutExtraDeps(),
             inferBuckConfig,
-            captureAnalyzeRules.captureRules,
-            captureAnalyzeRules.aggregatingRules));
+            captureRules,
+            analyzeRules));
   }
 
   private CxxInferCaptureRulesAggregator createInferCaptureAggregatorRule(
