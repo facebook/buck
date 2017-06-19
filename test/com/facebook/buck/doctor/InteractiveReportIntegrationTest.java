@@ -46,10 +46,13 @@ public class InteractiveReportIntegrationTest {
   private static final String DEPS_PATH =
       "buck-out/log/"
           + "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
+  private static final String SERVER_PATH =
+      "buck-out/log/" + "2017-05-02_12h22m53s_servercommand_c0d07334-7c18-4b91-93d0-214c52bbd373";
   private static final ImmutableMap<String, String> TIMESTAMPS =
       ImmutableMap.of(
           BUILD_PATH, "2016-06-21T16:16:24.00Z",
-          DEPS_PATH, "2016-06-21T16:18:51.00Z");
+          DEPS_PATH, "2016-06-21T16:18:51.00Z",
+          SERVER_PATH, "2017-05-02T12:22:53.00Z");
 
   private ProjectWorkspace traceWorkspace;
   private String tracePath1;
@@ -78,11 +81,7 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testReport() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", temporaryFolder);
-    workspace.setUp();
-
-    UserInputFixture userInputFixture = new UserInputFixture("1");
+    UserInputFixture userInputFixture = new UserInputFixture("0");
     DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
@@ -98,7 +97,7 @@ public class InteractiveReportIntegrationTest {
             userInputFixture.getUserInput(),
             doctorConfig);
     Path reportFile =
-        workspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
+        traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists("report.json");

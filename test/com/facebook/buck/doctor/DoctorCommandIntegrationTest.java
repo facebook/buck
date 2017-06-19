@@ -55,6 +55,8 @@ import com.google.common.io.ByteStreams;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -181,6 +183,12 @@ public class DoctorCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", tempFolder);
     workspace.setUp();
+    // Set the last-modified time of the build command first so our user input will select it
+    Path buildCommandLogDir = filesystem.resolve(LOG_PATH).getParent();
+    filesystem.setLastModifiedTime(buildCommandLogDir, FileTime.from(Instant.now()));
+    for (Path path : filesystem.getDirectoryContents(buildCommandLogDir)) {
+      filesystem.setLastModifiedTime(path, FileTime.from(Instant.now()));
+    }
 
     final AtomicReference<String> requestMethod = new AtomicReference<>();
     final AtomicReference<String> requestPath = new AtomicReference<>();
