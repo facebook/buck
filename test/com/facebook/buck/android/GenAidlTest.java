@@ -33,12 +33,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -68,8 +68,7 @@ public class GenAidlTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(stubFilesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target, stubFilesystem);
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new SourcePathRuleFinder(

@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -42,6 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -495,10 +495,8 @@ public class DefaultRuleKeyFactoryTest {
     // Create a dummy build rule that uses the input.
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(
-            new FakeBuildRuleParamsBuilder("//:target")
-                .setProjectFilesystem(filesystem)
-                .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build()) {
+            TestBuildRuleParams.create("//:target", filesystem)
+                .withDeclaredDeps(ImmutableSortedSet.of(dep))) {
 
           @AddToRuleKey private final SourcePath inputField = input;
 
@@ -558,7 +556,7 @@ public class DefaultRuleKeyFactoryTest {
     // Create a dummy build rule that uses the input.
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(
-            new FakeBuildRuleParamsBuilder("//:target").setProjectFilesystem(filesystem).build()) {
+            TestBuildRuleParams.create("//:target", filesystem)) {
 
           @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;
         };

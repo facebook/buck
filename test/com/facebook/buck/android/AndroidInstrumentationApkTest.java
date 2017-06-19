@@ -32,12 +32,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
@@ -120,10 +120,9 @@ public class AndroidInstrumentationApkTest {
             .build();
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(buildTarget)
-            .setDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
-            .setExtraDeps(ImmutableSortedSet.of(androidBinary))
-            .build();
+        TestBuildRuleParams.create(buildTarget)
+            .withDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
+            .withExtraDeps(ImmutableSortedSet.of(androidBinary));
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(

@@ -25,11 +25,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
@@ -59,9 +59,8 @@ public class AndroidManifestDescriptionTest {
         AndroidManifestDescriptionArg.builder().setName("baz").setSkeleton(skeleton).build();
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder("//foo:baz")
-            .setDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()))
-            .build();
+        TestBuildRuleParams.create("//foo:baz")
+            .withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
         new AndroidManifestDescription()
             .createBuildRule(

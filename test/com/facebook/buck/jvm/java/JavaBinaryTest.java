@@ -24,11 +24,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -76,10 +76,8 @@ public class JavaBinaryTest {
     BuildRule libraryRule = ruleResolver.requireRule(libraryNode.getBuildTarget());
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(
-                BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-            .setDeclaredDeps(ImmutableSortedSet.of(libraryRule))
-            .build();
+        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
+            .withDeclaredDeps(ImmutableSortedSet.of(libraryRule));
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary =
         ruleResolver.addToIndex(

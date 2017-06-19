@@ -27,8 +27,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -111,7 +111,7 @@ public class AndroidBuildConfigTest {
 
   private static AndroidBuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(BUILD_TARGET).build();
+    BuildRuleParams params = TestBuildRuleParams.create(BUILD_TARGET);
     return new AndroidBuildConfig(
         params,
         /* javaPackage */ "com.example",

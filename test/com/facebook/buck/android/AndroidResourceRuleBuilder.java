@@ -19,9 +19,9 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -74,7 +74,7 @@ public class AndroidResourceRuleBuilder {
     }
 
     public Builder setBuildTarget(BuildTarget buildTarget) {
-      buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
+      buildRuleParams = TestBuildRuleParams.create(buildTarget);
       return this;
     }
 

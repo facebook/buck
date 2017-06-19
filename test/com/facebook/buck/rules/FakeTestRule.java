@@ -41,7 +41,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
-    this(new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(deps).build(), resolver, labels);
+    this(TestBuildRuleParams.create(target).withDeclaredDeps(deps), resolver, labels);
   }
 
   public FakeTestRule(

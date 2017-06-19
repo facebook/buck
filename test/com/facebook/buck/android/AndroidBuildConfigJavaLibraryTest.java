@@ -26,8 +26,8 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +40,7 @@ public class AndroidBuildConfigJavaLibraryTest {
   @Test
   public void testAddToCollector() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
@@ -68,7 +68,7 @@ public class AndroidBuildConfigJavaLibraryTest {
 
   @Test
   public void testBuildConfigHasCorrectProperties() throws NoSuchBuildTargetException {
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
+    BuildRuleParams params = TestBuildRuleParams.create("//foo:bar");
     BuildConfigFields fields =
         BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
     BuildRuleResolver buildRuleResolver =

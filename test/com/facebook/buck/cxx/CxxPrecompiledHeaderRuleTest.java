@@ -37,13 +37,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -109,7 +109,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   public BuildRuleParams newParams(BuildTarget target) {
-    return new FakeBuildRuleParamsBuilder(target).build();
+    return TestBuildRuleParams.create(target);
   }
 
   /** Note: creates the {@link CxxPrecompiledHeaderTemplate}, add to ruleResolver index. */

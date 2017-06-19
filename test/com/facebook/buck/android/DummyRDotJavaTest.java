@@ -35,12 +35,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -87,9 +87,8 @@ public class DummyRDotJavaTest {
 
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
-            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
-                .setProjectFilesystem(filesystem)
-                .build(),
+            TestBuildRuleParams.create(
+                BuildTargetFactory.newInstance("//java/base:rule"), filesystem),
             ruleFinder,
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
@@ -178,9 +177,8 @@ public class DummyRDotJavaTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
-            new FakeBuildRuleParamsBuilder(
-                    BuildTargetFactory.newInstance("//java/com/example:library"))
-                .build(),
+            TestBuildRuleParams.create(
+                BuildTargetFactory.newInstance("//java/com/example:library")),
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(

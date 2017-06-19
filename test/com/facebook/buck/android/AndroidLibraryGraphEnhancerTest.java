@@ -38,11 +38,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +61,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
-            new FakeBuildRuleParamsBuilder(buildTarget).build(),
+            TestBuildRuleParams.create(buildTarget),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -82,7 +82,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
-            new FakeBuildRuleParamsBuilder(buildTarget).build(),
+            TestBuildRuleParams.create(buildTarget),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -125,9 +125,8 @@ public class AndroidLibraryGraphEnhancerTest {
                 .build());
 
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(buildTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
-            .build();
+        TestBuildRuleParams.create(buildTarget)
+            .withDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
@@ -188,9 +187,8 @@ public class AndroidLibraryGraphEnhancerTest {
                 .build());
 
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(buildTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
-            .build();
+        TestBuildRuleParams.create(buildTarget)
+            .withDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
@@ -240,9 +238,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             target,
-            new FakeBuildRuleParamsBuilder(target)
-                .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .build(),
+            TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(dep)),
             JavacFactory.create(ruleFinder, javaConfig, null),
             options,
             DependencyMode.FIRST_ORDER,

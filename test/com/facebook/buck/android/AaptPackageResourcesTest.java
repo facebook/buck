@@ -25,7 +25,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -34,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -97,7 +97,7 @@ public class AaptPackageResourcesTest {
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = new SourcePathResolver(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
-    params = new FakeBuildRuleParamsBuilder(aaptTarget).build();
+    params = TestBuildRuleParams.create(aaptTarget);
 
     hashCache = new FakeFileHashCache(new HashMap<>());
     createPathSourcePath("res1", "resources1");

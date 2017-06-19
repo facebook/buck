@@ -31,11 +31,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -563,8 +563,7 @@ public class RemoteFileTest {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toAbsolutePath());
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder("//cake:walk").setProjectFilesystem(filesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create("//cake:walk", filesystem);
     RemoteFile remoteFile =
         new RemoteFile(
             params, downloader, new URI("http://example.com"), hashCode, "output.txt", type);

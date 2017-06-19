@@ -40,7 +40,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -48,6 +47,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -109,8 +109,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(buildTarget).setProjectFilesystem(filesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create(buildTarget, filesystem);
     DexProducedFromJavaLibrary preDex = new DexProducedFromJavaLibrary(params, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
@@ -175,8 +174,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(buildTarget).setProjectFilesystem(projectFilesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create(buildTarget, projectFilesystem);
     DexProducedFromJavaLibrary preDex = new DexProducedFromJavaLibrary(params, javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
@@ -212,7 +210,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
                 ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"))));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(params, accumulateClassNames);
     assertNull(preDexWithClasses.getSourcePathToOutput());
@@ -240,7 +238,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             .build(ruleResolver);
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:target")).build();
+        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:target"));
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
         new DexProducedFromJavaLibrary(params, javaLibrary);
 

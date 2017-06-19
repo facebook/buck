@@ -24,11 +24,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -66,7 +66,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
@@ -114,7 +114,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
@@ -168,7 +168,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
@@ -230,7 +230,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
@@ -290,7 +290,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
@@ -342,7 +342,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule")).build(),
+                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,

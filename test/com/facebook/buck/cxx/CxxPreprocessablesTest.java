@@ -29,12 +29,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -91,9 +91,7 @@ public class CxxPreprocessablesTest {
       CxxPreprocessorInput input,
       BuildRule... deps) {
     return new FakeCxxPreprocessorDep(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-            .build(),
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
         resolver,
         input);
   }
@@ -107,9 +105,7 @@ public class CxxPreprocessablesTest {
   private static FakeBuildRule createFakeBuildRule(
       BuildTarget target, SourcePathResolver resolver, BuildRule... deps) {
     return new FakeBuildRule(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-            .build(),
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
         resolver);
   }
 
@@ -199,10 +195,7 @@ public class CxxPreprocessablesTest {
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//random:dep"), pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .setProjectFilesystem(filesystem)
-            .build();
+        TestBuildRuleParams.create(target, filesystem).withDeclaredDeps(ImmutableSortedSet.of(dep));
     Path root = Paths.get("root");
 
     // Setup a simple genrule we can wrap in a ExplicitBuildTargetSourcePath to model a input source

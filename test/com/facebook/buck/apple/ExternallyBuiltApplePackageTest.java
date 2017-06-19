@@ -30,12 +30,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -56,7 +56,7 @@ public class ExternallyBuiltApplePackageTest {
 
   private String bundleLocation = "Fake/Bundle/Location";
   private BuildTarget buildTarget = BuildTarget.builder(Paths.get("."), "//foo", "package").build();
-  private BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+  private BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
   private BuildRuleResolver resolver =
       new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   private ApplePackageConfigAndPlatformInfo config =

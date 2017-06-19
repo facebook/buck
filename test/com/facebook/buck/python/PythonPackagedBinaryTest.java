@@ -24,13 +24,13 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -71,7 +71,7 @@ public class PythonPackagedBinaryTest {
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary =
         PythonPackagedBinary.from(
-            new FakeBuildRuleParamsBuilder("//:bin").build(),
+            TestBuildRuleParams.create("//:bin"),
             ruleFinder,
             PythonTestUtils.PYTHON_PLATFORM,
             PEX,

@@ -28,10 +28,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
@@ -85,7 +85,7 @@ public class AndroidBinaryDescriptionTest {
     Keystore keystore =
         ruleResolver.addToIndex(
             new Keystore(
-                new FakeBuildRuleParamsBuilder("//:keystore").build(),
+                TestBuildRuleParams.create("//:keystore"),
                 new FakeSourcePath("store"),
                 new FakeSourcePath("properties")));
     Locale originalLocale = Locale.getDefault();

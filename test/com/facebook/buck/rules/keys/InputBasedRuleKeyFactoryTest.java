@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
@@ -38,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -182,8 +182,7 @@ public class InputBasedRuleKeyFactoryTest {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create("//:rule", filesystem);
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
           @AddToRuleKey
@@ -223,10 +222,8 @@ public class InputBasedRuleKeyFactoryTest {
             .build(resolver, filesystem);
 
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder("//:rule")
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .setProjectFilesystem(filesystem)
-            .build();
+        TestBuildRuleParams.create("//:rule", filesystem)
+            .withDeclaredDeps(ImmutableSortedSet.of(dep));
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
           @AddToRuleKey
@@ -298,8 +295,7 @@ public class InputBasedRuleKeyFactoryTest {
     Path inputFile = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[1024], inputFile);
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder("//:rule").setProjectFilesystem(filesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create("//:rule", filesystem);
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
           @AddToRuleKey

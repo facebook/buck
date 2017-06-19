@@ -33,12 +33,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -89,7 +89,7 @@ public class SwiftLibraryIntegrationTest {
     resolver.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
-    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
     FakeCxxLibrary depRule =
         new FakeCxxLibrary(
             libParams,
@@ -105,9 +105,7 @@ public class SwiftLibraryIntegrationTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(buildTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(depRule))
-            .build();
+        TestBuildRuleParams.create(buildTarget).withDeclaredDeps(ImmutableSortedSet.of(depRule));
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
 
@@ -132,7 +130,7 @@ public class SwiftLibraryIntegrationTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(swiftCompileTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget);
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
     SwiftCompile buildRule =

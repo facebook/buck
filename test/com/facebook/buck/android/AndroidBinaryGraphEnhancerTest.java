@@ -46,13 +46,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -174,7 +174,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
     BuildRuleParams aaptPackageResourcesParams =
-        new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
+        TestBuildRuleParams.create(aaptPackageResourcesTarget);
     AaptPackageResources aaptPackageResources =
         new AaptPackageResources(
             aaptPackageResourcesParams,
@@ -212,8 +212,7 @@ public class AndroidBinaryGraphEnhancerTest {
         BuildTargetFactory.newInstance("//fake:uber_r_dot_java#dex");
     DexProducedFromJavaLibrary fakeUberRDotJavaDex =
         new DexProducedFromJavaLibrary(
-            new FakeBuildRuleParamsBuilder(fakeUberRDotJavaDexTarget).build(),
-            fakeUberRDotJavaCompile);
+            TestBuildRuleParams.create(fakeUberRDotJavaDexTarget), fakeUberRDotJavaCompile);
     ruleResolver.addToIndex(fakeUberRDotJavaDex);
 
     BuildRule preDexMergeRule =
@@ -252,8 +251,7 @@ public class AndroidBinaryGraphEnhancerTest {
   public void testAllBuildablesExceptPreDexRule() throws Exception {
     // Create an android_build_config() as a dependency of the android_binary().
     BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
-    BuildRuleParams buildConfigParams =
-        new FakeBuildRuleParamsBuilder(buildConfigBuildTarget).build();
+    BuildRuleParams buildConfigParams = TestBuildRuleParams.create(buildConfigBuildTarget);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
@@ -269,9 +267,8 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =
-        new FakeBuildRuleParamsBuilder(apkTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(buildConfigJavaLibrary))
-            .build();
+        TestBuildRuleParams.create(apkTarget)
+            .withDeclaredDeps(ImmutableSortedSet.of(buildConfigJavaLibrary));
 
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
@@ -419,9 +416,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(resource))
-            .build();
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             originalParams,
@@ -483,7 +478,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams originalParams = TestBuildRuleParams.create(target);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             originalParams,
@@ -557,8 +552,7 @@ public class AndroidBinaryGraphEnhancerTest {
     AndroidResource resource =
         ruleResolver.addToIndex(
             new AndroidResource(
-                new FakeBuildRuleParamsBuilder("//:resources")
-                    .build()
+                TestBuildRuleParams.create("//:resources")
                     .copyAppendingExtraDeps(ImmutableSortedSet.of(resourcesDep)),
                 ruleFinder,
                 ImmutableSortedSet.of(),
@@ -573,9 +567,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(resource))
-            .build();
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             originalParams,

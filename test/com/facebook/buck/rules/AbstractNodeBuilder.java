@@ -161,11 +161,9 @@ public abstract class AbstractNodeBuilder<
   public BuildRuleParams createBuildRuleParams(
       BuildRuleResolver resolver, ProjectFilesystem filesystem) {
     TargetNode<?, ?> node = build();
-    return new FakeBuildRuleParamsBuilder(target)
-        .setProjectFilesystem(filesystem)
-        .setDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
-        .setExtraDeps(resolver.getAllRules(node.getExtraDeps()))
-        .build();
+    return TestBuildRuleParams.create(target, filesystem)
+        .withDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
+        .withExtraDeps(resolver.getAllRules(node.getExtraDeps()));
   }
 
   @SuppressWarnings("unchecked")

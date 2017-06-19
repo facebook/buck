@@ -37,13 +37,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.slb.ThriftUtil;
@@ -264,9 +264,7 @@ public class DistBuildFileHashesTest {
 
       resolver.addToIndex(
           new BuildRuleWithToolAndPath(
-              new FakeBuildRuleParamsBuilder("//:with_tool")
-                  .setProjectFilesystem(projectFilesystem)
-                  .build(),
+              TestBuildRuleParams.create("//:with_tool", projectFilesystem),
               null,
               ArchiveMemberSourcePath.of(
                   new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));

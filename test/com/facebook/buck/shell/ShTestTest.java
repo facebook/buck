@@ -25,11 +25,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
@@ -62,10 +62,9 @@ public class ShTestTest extends EasyMockSupport {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ShTest shTest =
         new ShTest(
-            new FakeBuildRuleParamsBuilder(target)
-                .setDeclaredDeps(ImmutableSortedSet.of(dep))
-                .setExtraDeps(ImmutableSortedSet.of(extraDep))
-                .build(),
+            TestBuildRuleParams.create(target)
+                .withDeclaredDeps(ImmutableSortedSet.of(dep))
+                .withExtraDeps(ImmutableSortedSet.of(extraDep)),
             ruleFinder,
             /* args */ ImmutableList.of(SourcePathArg.of(new FakeSourcePath("run_test.sh"))),
             /* env */ ImmutableMap.of(),

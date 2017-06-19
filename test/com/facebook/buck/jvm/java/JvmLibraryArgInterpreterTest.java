@@ -25,9 +25,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Paths;
@@ -168,7 +168,7 @@ public class JvmLibraryArgInterpreterTest {
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
     return JavacOptionsFactory.create(
-        defaults, new FakeBuildRuleParamsBuilder("//not:real").build(), ruleResolver, arg);
+        defaults, TestBuildRuleParams.create("//not:real"), ruleResolver, arg);
   }
 
   @BuckStyleImmutable

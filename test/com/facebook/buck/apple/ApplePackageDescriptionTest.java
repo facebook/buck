@@ -30,9 +30,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.shell.ExportFileBuilder;
@@ -67,7 +67,7 @@ public class ApplePackageDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(packageBuildTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget);
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
@@ -79,7 +79,7 @@ public class ApplePackageDescriptionTest {
     BuildRule rule =
         description.createBuildRule(
             graph,
-            new FakeBuildRuleParamsBuilder(packageBuildTarget).build(),
+            TestBuildRuleParams.create(packageBuildTarget),
             resolver,
             TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
             arg);
@@ -118,7 +118,7 @@ public class ApplePackageDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(packageBuildTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget);
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,

@@ -33,11 +33,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -169,7 +169,7 @@ public class ExecutableMacroExpanderTest {
             .build(ruleResolver, filesystem);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     ruleResolver.addToIndex(
         new NoopBinaryBuildRule(params) {
           @Override
@@ -211,7 +211,7 @@ public class ExecutableMacroExpanderTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     final Tool tool = new CommandTool.Builder().addArg("command").build();
     ruleResolver.addToIndex(
         new NoopBinaryBuildRule(params) {

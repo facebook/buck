@@ -35,13 +35,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -86,9 +86,8 @@ public class CxxSourceRuleFactoryTest {
     private static FakeBuildRule createFakeBuildRule(
         String target, SourcePathResolver resolver, BuildRule... deps) {
       return new FakeBuildRule(
-          new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target))
-              .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-              .build(),
+          TestBuildRuleParams.create(BuildTargetFactory.newInstance(target))
+              .withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
           resolver);
     }
 

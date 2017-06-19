@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -54,6 +53,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
@@ -1092,9 +1092,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(buildTarget)
-            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-            .build();
+        TestBuildRuleParams.create(buildTarget).withDeclaredDeps(ImmutableSortedSet.copyOf(deps));
 
     JavacOptions javacOptions =
         spoolMode.isPresent()
@@ -1340,9 +1338,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           return CalculateAbiFromClasses.of(
               target,
               new SourcePathRuleFinder(ruleResolver),
-              new FakeBuildRuleParamsBuilder(target)
-                  .setProjectFilesystem(new FakeProjectFilesystem())
-                  .build(),
+              TestBuildRuleParams.create(target),
               new FakeSourcePath("java/src/com/facebook/somejava/library/library-abi.jar"));
         }
       };
@@ -1404,10 +1400,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       JavacOptions options =
           JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setAnnotationProcessingParams(params).build();
 
-      BuildRuleParams buildRuleParams =
-          new FakeBuildRuleParamsBuilder(buildTarget)
-              .setProjectFilesystem(projectFilesystem)
-              .build();
+      BuildRuleParams buildRuleParams = TestBuildRuleParams.create(buildTarget, projectFilesystem);
 
       DefaultJavaLibrary javaLibrary =
           DefaultJavaLibrary.builder(

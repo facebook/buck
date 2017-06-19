@@ -32,12 +32,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -193,10 +193,8 @@ public class PomIntegrationTest {
         @Nullable SourcePath pomTemplate,
         BuildRule... deps) {
       super(
-          new FakeBuildRuleParamsBuilder(target)
-              .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
-              .setProjectFilesystem(filesystem)
-              .build(),
+          TestBuildRuleParams.create(target, filesystem)
+              .withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
           new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
       this.coords = coords;
       this.pomTemplate = pomTemplate;

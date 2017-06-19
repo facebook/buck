@@ -26,13 +26,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -219,7 +219,7 @@ public class RustCompileTest {
     private FakeRustCompileRule(
         BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
       super(
-          new FakeBuildRuleParamsBuilder(target).build(),
+          TestBuildRuleParams.create(target),
           String.format("lib%s.rlib", target),
           fakeTool(),
           fakeLinker(),

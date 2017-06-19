@@ -25,13 +25,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -107,9 +107,7 @@ public class TrimUberRDotJavaTest {
 
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
         new DexProducedFromJavaLibrary(
-            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dex"))
-                .setProjectFilesystem(filesystem)
-                .build(),
+            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:dex"), filesystem),
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary
         .getBuildOutputInitializer()
@@ -125,9 +123,7 @@ public class TrimUberRDotJavaTest {
 
     TrimUberRDotJava trimUberRDotJava =
         new TrimUberRDotJava(
-            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:trim"))
-                .setProjectFilesystem(filesystem)
-                .build(),
+            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:trim"), filesystem),
             Optional.of(new PathSourcePath(filesystem, rDotJavaDir)),
             ImmutableList.of(dexProducedFromJavaLibrary),
             keepResourcePattern);

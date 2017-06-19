@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -41,10 +40,7 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   public FakeDepFileBuildRule(BuildTarget target) {
-    this(
-        new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new FakeProjectFilesystem())
-            .build());
+    this(TestBuildRuleParams.create(target));
   }
 
   public FakeDepFileBuildRule(BuildRuleParams buildRuleParams) {

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -42,6 +41,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -126,7 +126,7 @@ public class CxxPreprocessAndCompileTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>builder()
@@ -280,7 +280,7 @@ public class CxxPreprocessAndCompileTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    final BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    final BuildRuleParams params = TestBuildRuleParams.create(target);
     final FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>builder()
@@ -341,7 +341,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
             .addPlatformFlags("-ffunction-sections")
@@ -397,8 +397,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target, filesystem);
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     filesystem.writeContentsToPath(
@@ -459,7 +458,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     Path output = Paths.get("test.o");
     Path input = Paths.get("test.ii");
     Path scratchDir = Paths.get("scratch");
@@ -502,7 +501,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
     Path scratchDir = Paths.get("scratch");

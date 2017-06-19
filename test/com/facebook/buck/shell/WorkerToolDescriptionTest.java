@@ -26,9 +26,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import org.junit.Test;
 
@@ -71,7 +71,7 @@ public class WorkerToolDescriptionTest {
 
     WorkerToolDescription workerToolDescription =
         new WorkerToolDescription(FakeBuckConfig.builder().build());
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//arbitrary:target").build();
+    BuildRuleParams params = TestBuildRuleParams.create("//arbitrary:target");
     return (WorkerTool)
         workerToolDescription.createBuildRule(
             targetGraph,

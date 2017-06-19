@@ -110,8 +110,7 @@ public class KnownBuildRuleTypesTest {
 
   @BeforeClass
   public static void setupBuildParams() throws IOException {
-    buildRuleParams =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build();
+    buildRuleParams = TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo"));
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)

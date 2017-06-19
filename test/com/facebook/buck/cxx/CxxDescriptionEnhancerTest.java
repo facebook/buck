@@ -30,11 +30,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +60,7 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libParams,
@@ -114,7 +114,7 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget otherlibTarget = BuildTargetFactory.newInstance("//:otherlib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams otherlibParams = new FakeBuildRuleParamsBuilder(otherlibTarget).build();
+    BuildRuleParams otherlibParams = TestBuildRuleParams.create(otherlibTarget);
     FakeCxxLibrary otherlibRule =
         new FakeCxxLibrary(
             otherlibParams,
@@ -130,9 +130,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSortedSet.of());
 
     BuildRuleParams libParams =
-        new FakeBuildRuleParamsBuilder(libTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(otherlibRule))
-            .build();
+        TestBuildRuleParams.create(libTarget).withDeclaredDeps(ImmutableSortedSet.of(otherlibRule));
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libParams,
@@ -190,7 +188,7 @@ public class CxxDescriptionEnhancerTest {
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
+    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libParams,

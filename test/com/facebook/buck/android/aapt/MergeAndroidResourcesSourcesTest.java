@@ -23,13 +23,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -102,8 +102,7 @@ public class MergeAndroidResourcesSourcesTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testRuleStepCreation() throws IOException, InterruptedException {
-    BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder("//:output_folder").setProjectFilesystem(filesystem).build();
+    BuildRuleParams buildRuleParams = TestBuildRuleParams.create("//:output_folder", filesystem);
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             new FakeSourcePath(filesystem, "res_in_1"), new FakeSourcePath(filesystem, "res_in_2"));

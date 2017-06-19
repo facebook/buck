@@ -574,7 +574,7 @@ public class RuleKeyTest {
   @Test
   public void changingRuleKeyFieldChangesKeyWhenClassImplementsAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -600,7 +600,7 @@ public class RuleKeyTest {
   @Test
   public void changingRuleKeyFieldOfDepChangesKeyWhenClassImplementsAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -618,14 +618,12 @@ public class RuleKeyTest {
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//cheese:milk");
 
     BuildRuleParams parentParams1 =
-        new FakeBuildRuleParamsBuilder(parentTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(buildRule1))
-            .build();
+        TestBuildRuleParams.create(parentTarget)
+            .withDeclaredDeps(ImmutableSortedSet.of(buildRule1));
     BuildRule parentRule1 = new NoopBuildRuleWithDeclaredAndExtraDeps(parentParams1);
     BuildRuleParams parentParams2 =
-        new FakeBuildRuleParamsBuilder(parentTarget)
-            .setDeclaredDeps(ImmutableSortedSet.of(buildRule2))
-            .build();
+        TestBuildRuleParams.create(parentTarget)
+            .withDeclaredDeps(ImmutableSortedSet.of(buildRule2));
     BuildRule parentRule2 = new NoopBuildRuleWithDeclaredAndExtraDeps(parentParams2);
 
     RuleKey ruleKey1 =
@@ -688,25 +686,24 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//a:target");
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
-    BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
+    BuildRuleParams depParams = TestBuildRuleParams.create(depTarget);
     NoopBuildRuleWithDeclaredAndExtraDeps dep =
         new NoopBuildRuleWithDeclaredAndExtraDeps(depParams);
 
     BuildRuleParams paramsWithDeclaredDep =
-        new FakeBuildRuleParamsBuilder(target).setDeclaredDeps(ImmutableSortedSet.of(dep)).build();
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(dep));
     NoopBuildRuleWithDeclaredAndExtraDeps ruleWithDeclaredDep =
         new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithDeclaredDep);
 
     BuildRuleParams paramsWithExtraDep =
-        new FakeBuildRuleParamsBuilder(target).setExtraDeps(ImmutableSortedSet.of(dep)).build();
+        TestBuildRuleParams.create(target).withExtraDeps(ImmutableSortedSet.of(dep));
     NoopBuildRuleWithDeclaredAndExtraDeps ruleWithExtraDep =
         new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithExtraDep);
 
     BuildRuleParams paramsWithBothDeps =
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .setExtraDeps(ImmutableSortedSet.of(dep))
-            .build();
+        TestBuildRuleParams.create(target)
+            .withDeclaredDeps(ImmutableSortedSet.of(dep))
+            .withExtraDeps(ImmutableSortedSet.of(dep));
     NoopBuildRuleWithDeclaredAndExtraDeps ruleWithBothDeps =
         new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithBothDeps);
 
