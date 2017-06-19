@@ -37,7 +37,7 @@ before_install:
   - export PATH=$(pwd)/travis-cxx:$PATH
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
   - export ANT_OPTS='-Xmx500m'
-  - export BUCK_EXTRA_JAVA_ARGS='-Xmx500m'
+  - echo '-Xmx500m' > .buckjavaargs.local
   # Set up the Android environment.
   - export NDK_HOME=${HOME}/android-ndk-linux
   - ./scripts/travisci_install_android_ndk.sh

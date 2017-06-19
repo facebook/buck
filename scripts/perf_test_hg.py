@@ -155,11 +155,9 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
         'BUCK_REPOSITORY_DIRTY': '0'
     })
     if log_as_perftest:
-        env.update({
-            'BUCK_EXTRA_JAVA_ARGS':
-            '-Dbuck.perftest_id=%s, -Dbuck.perftest_side=new' %
-            args.perftest_id
-        })
+        with open('.buckjavaargs.local', 'a') as f:
+            f.write('-Dbuck.perftest_id=%s\n' % (args.perftest_id,))
+            f.write('-Dbuck.perftest_side=new\n')
     start = datetime.now()
     tmpFile = tempfile.TemporaryFile()
     try:
