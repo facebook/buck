@@ -16,25 +16,32 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Preconditions;
 
-interface CommonVersionControlStats {
-
-  /* Commit hash of the current revision. */
+public class FastVersionControlStatsEvent extends AbstractBuckEvent {
   @JsonView(JsonViews.MachineReadableLog.class)
-  String getCurrentRevisionId();
+  private CommonFastVersionControlStats versionControlStats;
 
-  /* A list of bookmarks that the current commit is based and also exist in TRACKED_BOOKMARKS */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  ImmutableSet<String> getBaseBookmarks();
+  public FastVersionControlStatsEvent(CommonFastVersionControlStats versionControlStats) {
+    super(EventKey.unique());
+    this.versionControlStats = Preconditions.checkNotNull(versionControlStats);
+  }
 
-  /* Commit hash of the revision that is the common base between current revision and master. */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  String getBranchedFromMasterRevisionId();
+  public CommonFastVersionControlStats getVersionControlStats() {
+    return versionControlStats;
+  }
 
-  /* The timestamp of the base revision */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  Long getBranchedFromMasterTS();
+  @Override
+  protected String getValueString() {
+    return versionControlStats.toString();
+  }
+
+  @Override
+  public String getEventName() {
+    return "VersionControlStatsEvent";
+  }
 }

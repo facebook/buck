@@ -21,4 +21,4 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractFastVersionControlStats extends CommonVersionControlStats {}
+interface AbstractFastVersionControlStats extends CommonFastVersionControlStats {}

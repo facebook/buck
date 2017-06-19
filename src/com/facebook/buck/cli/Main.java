@@ -787,12 +787,11 @@ public final class Main {
           if (command.subcommand instanceof AbstractCommand) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
-              VersionControlStatsGenerator.Mode mode =
+              vcStatsGenerator.generateStatsAsync(
                   subcommand.isSourceControlStatsGatheringEnabled()
-                          || vcBuckConfig.shouldGenerateStatistics()
-                      ? VersionControlStatsGenerator.Mode.FAST
-                      : VersionControlStatsGenerator.Mode.PREGENERATED;
-              vcStatsGenerator.generateStatsAsync(mode, diskIoExecutorService, buildEventBus);
+                      || vcBuckConfig.shouldGenerateStatistics(),
+                  diskIoExecutorService,
+                  buildEventBus);
             }
           }
 

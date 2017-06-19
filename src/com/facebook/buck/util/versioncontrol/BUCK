@@ -5,11 +5,14 @@ CONFIG_SRCS = [
 VALUE_TYPES_SRCS = [
     "AbstractFullVersionControlStats.java",
     "AbstractFastVersionControlStats.java",
+    "AbstractSlowVersionControlStats.java",
     "AbstractSparseSummary.java",
-    "CommonVersionControlStats.java",
+    "CommonFastVersionControlStats.java",
+    "CommonSlowVersionControlStats.java",
 ]
 
 GENERATOR_SRCS = [
+    "FastVersionControlStatsEvent.java",
     "VersionControlStatsEvent.java",
     "VersionControlStatsGenerator.java",
 ]
