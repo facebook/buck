@@ -72,6 +72,7 @@ final class DoctorTestUtils {
             filesystem,
             console,
             userInput,
+            Optional.empty(),
             TestBuildEnvironmentDescription.INSTANCE,
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
             doctorConfig,

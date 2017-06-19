@@ -20,6 +20,7 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
+import com.facebook.buck.doctor.config.DoctorIssueCategory;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -36,11 +37,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -94,6 +97,15 @@ public class DoctorReportHelper {
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
+  }
+
+  public Optional<String> promptForIssue() throws IOException {
+    return input.selectOne(
+        "What is the category of the issue?",
+        Arrays.stream(DoctorIssueCategory.values())
+            .map(DoctorIssueCategory::getName)
+            .collect(Collectors.toList()),
+        issue -> String.format("%s", issue));
   }
 
   public DoctorEndpointRequest generateEndpointRequest(

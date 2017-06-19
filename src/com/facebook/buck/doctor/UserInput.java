@@ -110,7 +110,6 @@ public class UserInput {
   public <T> Optional<T> selectOne(
       String prompt, List<T> entries, Function<T, String> entryFormatter) throws IOException {
     Preconditions.checkArgument(entries.size() > 0);
-
     output.println();
     output.println(prompt);
     output.println();

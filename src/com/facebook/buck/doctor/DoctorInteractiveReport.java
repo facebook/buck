@@ -34,12 +34,14 @@ public class DoctorInteractiveReport extends AbstractReport {
 
   private final ImmutableSet<BuildLogEntry> buildLogEntries;
   private final UserInput input;
+  private final Optional<String> issueDescription;
 
   public DoctorInteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       Console console,
       UserInput input,
+      Optional<String> issueDescription,
       BuildEnvironmentDescription buildEnvironmentDescription,
       VersionControlStatsGenerator versionControlStatsGenerator,
       DoctorConfig doctorConfig,
@@ -56,6 +58,7 @@ public class DoctorInteractiveReport extends AbstractReport {
         extraInfoCollector,
         watchmanDiagReportCollector);
     this.input = input;
+    this.issueDescription = issueDescription;
     this.buildLogEntries = buildLogEntries;
   }
 
@@ -72,6 +75,9 @@ public class DoctorInteractiveReport extends AbstractReport {
 
   @Override
   protected Optional<UserReport> getUserReport() {
+    if (issueDescription.isPresent()) {
+      return Optional.of(UserReport.of("", issueDescription.get()));
+    }
     return Optional.empty();
   }
 }

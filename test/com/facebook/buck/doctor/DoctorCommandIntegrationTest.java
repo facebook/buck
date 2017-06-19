@@ -333,6 +333,7 @@ public class DoctorCommandIntegrationTest {
             filesystem,
             console,
             userInputFixture.getUserInput(),
+            Optional.empty(),
             TestBuildEnvironmentDescription.INSTANCE,
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
             doctorConfig,

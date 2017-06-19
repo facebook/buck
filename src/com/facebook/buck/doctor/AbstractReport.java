@@ -179,7 +179,12 @@ public abstract class AbstractReport {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractUserReport {
+
+    @Value.Parameter
     String getUserIssueDescription();
+
+    @Value.Parameter
+    String getIssueCategory();
   }
 
   private ImmutableMap<Path, String> getLocalConfigs() {

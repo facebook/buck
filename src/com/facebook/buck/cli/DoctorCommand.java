@@ -63,8 +63,10 @@ public class DoctorCommand extends AbstractCommand {
       params.getConsole().getStdOut().println("No interesting commands found in buck-out/log.");
       return 0;
     }
+    Optional<String> issueDescription = helper.promptForIssue();
 
-    Optional<DefectSubmitResult> reportResult = generateReport(params, userInput, entry.get());
+    Optional<DefectSubmitResult> reportResult =
+        generateReport(params, userInput, entry.get(), issueDescription);
     if (!reportResult.isPresent()) {
       params.getConsole().printErrorText("Failed to generate report to send.");
       return 1;
@@ -80,7 +82,10 @@ public class DoctorCommand extends AbstractCommand {
   }
 
   private Optional<DefectSubmitResult> generateReport(
-      CommandRunnerParams params, UserInput userInput, BuildLogEntry entry)
+      CommandRunnerParams params,
+      UserInput userInput,
+      BuildLogEntry entry,
+      Optional<String> issueDescription)
       throws IOException, InterruptedException {
     DoctorConfig doctorConfig = DoctorConfig.of(params.getBuckConfig());
 
@@ -102,6 +107,7 @@ public class DoctorCommand extends AbstractCommand {
             params.getCell().getFilesystem(),
             params.getConsole(),
             userInput,
+            issueDescription,
             params.getBuildEnvironmentDescription(),
             params.getVersionControlStatsGenerator(),
             doctorConfig,
