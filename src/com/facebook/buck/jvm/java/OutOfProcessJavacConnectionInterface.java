@@ -26,13 +26,15 @@ public interface OutOfProcessJavacConnectionInterface {
    *
    * @param compilerClassNameForJarBackedJavacMode String value of compilerClassName for Jar-backed
    *     mode, or null
-   * @param serializedJavacExecutionContext JavacExecutionContext converted to String
+   * @param serializedJavacExecutionContext {@link JavacExecutionContext} converted to String
    * @param invokingRuleBuildTargetAsString BuildTarget converted to String
    * @param options Immutable list of string options
    * @param sortedSetOfJavaSourceFilePathsAsStringsAsList ImmutableSortedSet<Path> represented as
    *     List of String objects.
    * @param pathToSrcsListAsString Path represented as String.
    * @param workingDirectory Path represented as String, or null.
+   * @param pluginFields Serialized instance of {@link JavacPluginJsr199Fields} as a map.
+   * @param javaCompilationModeAsString String representation of {@link JavacCompilationMode} enum.
    * @return Resulting code, 0 if build finished without issues, non-zero otherwise.
    */
   int buildWithClasspath(
@@ -43,7 +45,7 @@ public interface OutOfProcessJavacConnectionInterface {
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectory,
-      List<JavacPluginJsr199Fields> pluginFields,
+      List<Map<String, Object>> pluginFields,
       String javaCompilationModeAsString);
 
   /** For testing purposes. Just returns the given value. */

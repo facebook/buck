@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.JavacCompilationMode;
 import com.facebook.buck.jvm.java.JavacExecutionContext;
 import com.facebook.buck.jvm.java.JavacExecutionContextSerializer;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
+import com.facebook.buck.jvm.java.JavacPluginJsr199FieldsSerializer;
 import com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac;
 import com.facebook.buck.jvm.java.OutOfProcessJavacConnectionInterface;
 import com.facebook.buck.model.BuildTarget;
@@ -39,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnectionInterface {
@@ -61,7 +63,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectoryAsString,
-      List<JavacPluginJsr199Fields> pluginFields,
+      List<Map<String, Object>> pluginFields,
       String javaCompilationModeAsString) {
 
     PrintStream printStreamForStdErr = new PrintStream(new ByteArrayOutputStream());
@@ -100,13 +102,19 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       workingDirectory = Optional.of(Paths.get(workingDirectoryAsString));
     }
 
+    List<JavacPluginJsr199Fields> deserializedFields =
+        pluginFields
+            .stream()
+            .map(JavacPluginJsr199FieldsSerializer::deserialize)
+            .collect(Collectors.toList());
+
     Javac javac = createJavac(className);
     try {
       return javac.buildWithClasspath(
           javacExecutionContext,
           invokingRule,
           ImmutableList.copyOf(options),
-          ImmutableList.copyOf(pluginFields),
+          ImmutableList.copyOf(deserializedFields),
           javaSourceFilePaths,
           pathToSrcsList,
           workingDirectory,

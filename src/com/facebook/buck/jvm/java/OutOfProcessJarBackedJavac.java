@@ -69,7 +69,10 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
             javaSourceFilePaths.stream().map(Path::toString).collect(Collectors.toList()),
             pathToSrcsList.toString(),
             workingDirectory.isPresent() ? workingDirectory.get().toString() : null,
-            pluginFields,
+            pluginFields
+                .stream()
+                .map(JavacPluginJsr199FieldsSerializer::serialize)
+                .collect(Collectors.toList()),
             compilationMode.toString());
   }
 
