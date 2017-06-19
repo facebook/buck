@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -56,11 +57,10 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 public class RemoteFileTest {
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void ensureOutputIsAddedToBuildableContextSoItIsCached() throws Exception {
@@ -561,7 +561,7 @@ public class RemoteFileTest {
           };
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath().toAbsolutePath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toAbsolutePath());
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//cake:walk").setProjectFilesystem(filesystem).build();
