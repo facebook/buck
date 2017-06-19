@@ -78,12 +78,12 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
             new UndefinedSymbolsFile(
                 baseParams
                     .withBuildTarget(target)
-                    .copyReplacingDeclaredAndExtraDeps(
+                    .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(nm.getDeps(ruleFinder))
                             .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
-                            .build(),
-                        ImmutableSortedSet.of()),
+                            .build())
+                    .withoutExtraDeps(),
                 nm,
                 linkerInputs));
     return rule.getSourcePathToOutput();

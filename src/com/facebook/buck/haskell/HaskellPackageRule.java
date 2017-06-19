@@ -123,10 +123,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                         ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
                     .build());
     return new HaskellPackageRule(
-        baseParams
-            .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
-                declaredDeps, Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         ghcPkg,
         haskellVersion,
         depType,

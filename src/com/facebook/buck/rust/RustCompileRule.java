@@ -126,7 +126,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath rootModule,
       boolean hasOutput) {
     return new RustCompileRule(
-        params.copyReplacingExtraDeps(
+        params.withExtraDeps(
             Suppliers.memoize(
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()

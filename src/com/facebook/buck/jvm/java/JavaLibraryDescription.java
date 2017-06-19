@@ -124,8 +124,7 @@ public class JavaLibraryDescription
               .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());
-      BuildRuleParams emptyParams =
-          params.copyReplacingDeclaredAndExtraDeps(deps.build(), ImmutableSortedSet.of());
+      BuildRuleParams emptyParams = params.withDeclaredDeps(deps.build()).withoutExtraDeps();
 
       return new Javadoc(
           emptyParams,

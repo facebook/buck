@@ -106,10 +106,7 @@ public class PythonBinaryDescription
     WriteFile rule =
         resolver.addToIndex(
             new WriteFile(
-                params
-                    .withBuildTarget(emptyInitTarget)
-                    .copyReplacingDeclaredAndExtraDeps(
-                        ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+                params.withBuildTarget(emptyInitTarget).withoutDeclaredDeps().withoutExtraDeps(),
                 "",
                 emptyInitPath,
                 /* executable */ false));

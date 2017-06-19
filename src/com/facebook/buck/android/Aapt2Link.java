@@ -67,13 +67,14 @@ public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       SourcePath manifest,
       ManifestEntries manifestEntries) {
     super(
-        buildRuleParams.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(compileRules)
-                .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
-                .addAll(ruleFinder.filterBuildRuleInputs(manifest))
-                .build(),
-            ImmutableSortedSet.of()));
+        buildRuleParams
+            .withDeclaredDeps(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compileRules)
+                    .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
+                    .addAll(ruleFinder.filterBuildRuleInputs(manifest))
+                    .build())
+            .withoutExtraDeps());
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;

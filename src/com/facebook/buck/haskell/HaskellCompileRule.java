@@ -175,10 +175,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                             .iterator())
                     .build());
     return new HaskellCompileRule(
-        baseParams
-            .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
-                declaredDeps, Suppliers.ofInstance(ImmutableSortedSet.of())),
+        baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
         haskellVersion,
         flags,

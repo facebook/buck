@@ -344,7 +344,7 @@ public class HaskellDescriptionUtils {
         new HaskellLinkRule(
             baseParams
                 .withBuildTarget(target)
-                .copyReplacingDeclaredAndExtraDeps(
+                .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(linker.getDeps(ruleFinder))
                         .addAll(
@@ -352,8 +352,8 @@ public class HaskellDescriptionUtils {
                                 .flatMap(Collection::stream)
                                 .flatMap(arg -> arg.getDeps(ruleFinder).stream())
                                 .iterator())
-                        .build(),
-                    ImmutableSortedSet.of()),
+                        .build())
+                .withoutExtraDeps(),
             linker,
             name,
             args,

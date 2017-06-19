@@ -120,7 +120,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
                         return new GwtModule(
                             params
                                 .withBuildTarget(gwtModuleTarget)
-                                .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
+                                .withDeclaredDeps(deps)
+                                .withoutExtraDeps(),
                             ruleFinder,
                             filesForGwtModule);
                       }));
@@ -142,7 +143,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
     }.start();
 
     return new GwtBinary(
-        params.copyReplacingExtraDeps(extraDeps.build()),
+        params.withExtraDeps(extraDeps.build()),
         args.getModules(),
         javaOptions.getJavaRuntimeLauncher(),
         args.getVmArgs(),

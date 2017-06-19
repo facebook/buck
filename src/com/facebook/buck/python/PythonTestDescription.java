@@ -146,7 +146,8 @@ public class PythonTestDescription
     BuildRuleParams newParams =
         params
             .withAppendedFlavor(InternalFlavor.of("test_module"))
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of());
+            .withoutDeclaredDeps()
+            .withoutExtraDeps();
 
     String contents = getTestModulesListContents(testModules);
 

@@ -143,9 +143,9 @@ public class GnuLinker implements Linker {
             new UndefinedSymbolsLinkerScript(
                 baseParams
                     .withBuildTarget(target)
-                    .copyReplacingDeclaredAndExtraDeps(
-                        ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles)),
-                        ImmutableSortedSet.of()),
+                    .withDeclaredDeps(
+                        ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles)))
+                    .withoutExtraDeps(),
                 symbolFiles));
     return ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));
   }

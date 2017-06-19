@@ -243,7 +243,8 @@ abstract class DDescriptionUtils {
               return new DCompileBuildRule(
                   baseParams
                       .withBuildTarget(compileTarget)
-                      .copyReplacingDeclaredAndExtraDeps(deps, ImmutableSortedSet.of()),
+                      .withDeclaredDeps(deps)
+                      .withoutExtraDeps(),
                   compiler,
                   ImmutableList.<String>builder()
                       .addAll(dBuckConfig.getBaseCompilerFlags())

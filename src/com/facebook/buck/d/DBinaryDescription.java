@@ -115,7 +115,7 @@ public class DBinaryDescription
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params.copyReplacingExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
+        params.withExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
         ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getSourcePathToOutput());

@@ -42,7 +42,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -110,7 +109,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       Tool python) {
     return new PythonInPlaceBinary(
         // The actual steps of a in-place binary doesn't actually have any build-time deps.
-        params.copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+        params.withoutDeclaredDeps().withoutExtraDeps(),
         params.getDeclaredDeps(),
         pythonPlatform,
         mainModule,

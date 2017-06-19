@@ -141,9 +141,10 @@ public final class CxxInferEnhancer {
 
     return ruleResolver.addToIndex(
         new CxxInferCaptureTransitive(
-            params.copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder().addAll(captureRules).build(),
-                ImmutableSortedSet.of()),
+            params
+                .withDeclaredDeps(
+                    ImmutableSortedSet.<BuildRule>naturalOrder().addAll(captureRules).build())
+                .withoutExtraDeps(),
             captureRules));
   }
 
@@ -391,12 +392,13 @@ public final class CxxInferEnhancer {
       CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAnalyzeRules) {
     return ruleResolver.addToIndex(
         new CxxInferAnalyze(
-            params.copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(captureAnalyzeRules.captureRules)
-                    .addAll(captureAnalyzeRules.aggregatingRules)
-                    .build(),
-                ImmutableSortedSet.of()),
+            params
+                .withDeclaredDeps(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(captureAnalyzeRules.captureRules)
+                        .addAll(captureAnalyzeRules.aggregatingRules)
+                        .build())
+                .withoutExtraDeps(),
             inferBuckConfig,
             captureAnalyzeRules));
   }
@@ -412,12 +414,13 @@ public final class CxxInferEnhancer {
       BuildRuleParams buildRuleParams, CxxInferAnalyze analysisToReport) {
     return ruleResolver.addToIndex(
         new CxxInferComputeReport(
-            buildRuleParams.copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(analysisToReport.getTransitiveAnalyzeRules())
-                    .add(analysisToReport)
-                    .build(),
-                ImmutableSortedSet.of()),
+            buildRuleParams
+                .withDeclaredDeps(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(analysisToReport.getTransitiveAnalyzeRules())
+                        .add(analysisToReport)
+                        .build())
+                .withoutExtraDeps(),
             analysisToReport));
   }
 }

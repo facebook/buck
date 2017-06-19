@@ -57,7 +57,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.IOException;
@@ -129,8 +128,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                               new WriteFile(
                                   getBaseParams()
                                       .withBuildTarget(templateTarget)
-                                      .copyReplacingDeclaredAndExtraDeps(
-                                          ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+                                      .withoutDeclaredDeps()
+                                      .withoutExtraDeps(),
                                   getNativeStarterCxxSourceTemplate(),
                                   BuildTargets.getGenPath(
                                       getBaseParams().getProjectFilesystem(),

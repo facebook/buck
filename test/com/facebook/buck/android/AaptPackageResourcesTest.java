@@ -207,8 +207,8 @@ public class AaptPackageResourcesTest {
         new ResourcesFilter(
             params
                 .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-                .copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.of(resource1, resource2), ImmutableSortedSet.of()),
+                .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
+                .withoutExtraDeps(),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -222,8 +222,8 @@ public class AaptPackageResourcesTest {
         new ResourcesFilter(
             params
                 .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-                .copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.of(resource1, resource2), ImmutableSortedSet.of()),
+                .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
+                .withoutExtraDeps(),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),

@@ -111,8 +111,7 @@ public class JsUtil {
   }
 
   static BuildRuleParams copyParamsWithDependencies(BuildRuleParams params, BuildRule... rules) {
-    return params.copyReplacingDeclaredAndExtraDeps(
-        ImmutableSortedSet.of(), ImmutableSortedSet.copyOf(rules));
+    return params.withoutDeclaredDeps().withExtraDeps(ImmutableSortedSet.copyOf(rules));
   }
 
   static SourcePath relativeToOutputRoot(

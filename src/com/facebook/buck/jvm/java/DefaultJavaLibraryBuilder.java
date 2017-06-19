@@ -268,8 +268,9 @@ public class DefaultJavaLibraryBuilder {
         buildRuleResolver.addToIndex(sourceAbi);
 
         return new CompareAbis(
-            initialParams.copyReplacingDeclaredAndExtraDeps(
-                () -> ImmutableSortedSet.of(classAbi, sourceAbi), ImmutableSortedSet::of),
+            initialParams
+                .withDeclaredDeps(ImmutableSortedSet.of(classAbi, sourceAbi))
+                .withoutExtraDeps(),
             sourcePathResolver,
             classAbi.getSourcePathToOutput(),
             sourceAbi.getSourcePathToOutput(),
@@ -476,7 +477,7 @@ public class DefaultJavaLibraryBuilder {
               .addAll(getCompileStepFactory().getExtraDeps(ruleFinder))
               .build();
 
-      return initialParams.copyReplacingDeclaredAndExtraDeps(() -> declaredDeps, () -> extraDeps);
+      return initialParams.withDeclaredDeps(declaredDeps).withExtraDeps(extraDeps);
     }
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {

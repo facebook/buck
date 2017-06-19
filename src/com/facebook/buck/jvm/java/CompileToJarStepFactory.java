@@ -41,13 +41,15 @@ import java.util.regex.Pattern;
 public interface CompileToJarStepFactory extends RuleKeyAppendable {
 
   default BuildRuleParams addInputs(BuildRuleParams params, SourcePathRuleFinder ruleFinder) {
-    return params.copyReplacingDeclaredAndExtraDeps(
-        () ->
-            ImmutableSortedSet.copyOf(
-                Iterables.concat(params.getDeclaredDeps().get(), getDeclaredDeps(ruleFinder))),
-        () ->
-            ImmutableSortedSet.copyOf(
-                Iterables.concat(params.getExtraDeps().get(), getExtraDeps(ruleFinder))));
+    return params
+        .withDeclaredDeps(
+            () ->
+                ImmutableSortedSet.copyOf(
+                    Iterables.concat(params.getDeclaredDeps().get(), getDeclaredDeps(ruleFinder))))
+        .withExtraDeps(
+            () ->
+                ImmutableSortedSet.copyOf(
+                    Iterables.concat(params.getExtraDeps().get(), getExtraDeps(ruleFinder))));
   }
 
   Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder);

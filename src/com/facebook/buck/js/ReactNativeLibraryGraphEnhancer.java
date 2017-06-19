@@ -67,13 +67,13 @@ public class ReactNativeLibraryGraphEnhancer {
     return new ReactNativeBundle(
         baseParams
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
+            .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(args.getEntryPath()))
                     .addAll(ruleFinder.filterBuildRuleInputs(args.getSrcs()))
                     .addAll(jsPackager.getDeps(ruleFinder))
-                    .build(),
-                ImmutableSortedSet.of()),
+                    .build())
+            .withoutExtraDeps(),
         args.getEntryPath(),
         args.getSrcs(),
         ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
@@ -109,7 +109,7 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRuleParams paramsForResource =
           params
               .withAppendedFlavor(REACT_NATIVE_ANDROID_RES_FLAVOR)
-              .copyReplacingExtraDeps(ImmutableSortedSet.of(bundle));
+              .withExtraDeps(ImmutableSortedSet.of(bundle));
 
       SourcePath resources =
           new ExplicitBuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources());

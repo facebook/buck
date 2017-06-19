@@ -170,7 +170,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                         .getUnflavoredBuildTarget()
                         .equals(buildTarget.getUnflavoredBuildTarget()))
             .collect(MoreCollectors.toImmutableSortedSet());
-    params = params.copyReplacingExtraDeps(filteredExtraDeps);
+    params = params.withExtraDeps(filteredExtraDeps);
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();

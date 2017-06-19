@@ -119,8 +119,7 @@ public class GroovyTestDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(testsLibrary), ImmutableSortedSet.of()),
+        params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),

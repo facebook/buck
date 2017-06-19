@@ -64,7 +64,6 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -260,13 +259,11 @@ public class AppleTestDescription
                             debugFormat.getFlavor(),
                             LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR))
-                .copyReplacingDeclaredAndExtraDeps(
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .add(library)
-                            .addAll(params.getDeclaredDeps().get())
-                            .build()),
-                    params.getExtraDeps()),
+                .withDeclaredDeps(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .add(library)
+                        .addAll(params.getDeclaredDeps().get())
+                        .build()),
             resolver,
             codeSignIdentityStore,
             provisioningProfileStore,
@@ -293,8 +290,7 @@ public class AppleTestDescription
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         Optional.of(args.getDestinationSpecifier()),
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(bundle), ImmutableSortedSet.of()),
+        params.withDeclaredDeps(ImmutableSortedSet.of(bundle)).withoutExtraDeps(),
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
         args.getContacts(),
@@ -326,8 +322,8 @@ public class AppleTestDescription
         BuildRuleParams unzipXctoolParams =
             params
                 .withBuildTarget(unzipXctoolTarget)
-                .copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.of(xctoolZipBuildRule), ImmutableSortedSet.of());
+                .withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule))
+                .withoutExtraDeps();
         resolver.addToIndex(
             new AbstractBuildRuleWithDeclaredAndExtraDeps(unzipXctoolParams) {
               @Override

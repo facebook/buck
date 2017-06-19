@@ -141,9 +141,8 @@ public class GoTestDescription
         new GoTestMain(
             params
                 .withAppendedFlavor(InternalFlavor.of("test-main-src"))
-                .copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder)),
-                    ImmutableSortedSet.of()),
+                .withDeclaredDeps(ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder)))
+                .withoutExtraDeps(),
             testMainGenerator,
             srcs,
             packageName);
@@ -174,8 +173,7 @@ public class GoTestDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(testMain), ImmutableSortedSet.of()),
+        params.withDeclaredDeps(ImmutableSortedSet.of(testMain)).withoutExtraDeps(),
         ruleFinder,
         testMain,
         args.getLabels(),
@@ -203,8 +201,8 @@ public class GoTestDescription
         GoDescriptors.createGoBinaryRule(
             params
                 .withAppendedFlavor(InternalFlavor.of("test-main"))
-                .copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.of(testLibrary), ImmutableSortedSet.of(generatedTestMain)),
+                .withDeclaredDeps(ImmutableSortedSet.of(testLibrary))
+                .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             resolver,
             goBuckConfig,
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
@@ -270,20 +268,22 @@ public class GoTestDescription
 
       final BuildRuleParams originalParams = params;
       BuildRuleParams testTargetParams =
-          params.copyReplacingDeclaredAndExtraDeps(
-              () ->
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(originalParams.getDeclaredDeps().get())
-                      .addAll(resolver.getAllRules(libraryArg.getDeps()))
-                      .build(),
-              () -> {
-                SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-                return ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(originalParams.getExtraDeps().get())
-                    // Make sure to include dynamically generated sources as deps.
-                    .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
-                    .build();
-              });
+          params
+              .withDeclaredDeps(
+                  () ->
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(originalParams.getDeclaredDeps().get())
+                          .addAll(resolver.getAllRules(libraryArg.getDeps()))
+                          .build())
+              .withExtraDeps(
+                  () -> {
+                    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+                    return ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(originalParams.getExtraDeps().get())
+                        // Make sure to include dynamically generated sources as deps.
+                        .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
+                        .build();
+                  });
 
       testLibrary =
           GoDescriptors.createGoCompileRule(

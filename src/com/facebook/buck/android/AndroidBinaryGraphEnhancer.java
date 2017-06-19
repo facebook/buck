@@ -264,8 +264,8 @@ public class AndroidBinaryGraphEnhancer {
           new GenerateCodeForMergedLibraryMap(
               buildRuleParams
                   .withAppendedFlavor(GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR)
-                  .copyReplacingDeclaredAndExtraDeps(
-                      ImmutableSortedSet.of(generatorRule), ImmutableSortedSet.of()),
+                  .withDeclaredDeps(ImmutableSortedSet.of(generatorRule))
+                  .withoutExtraDeps(),
               sonameMergeMap.get(),
               nativeLibsEnhancementResult.getSharedObjectTargets().get(),
               generatorRule);
@@ -274,8 +274,8 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForCompileGenCode =
           buildRuleParams
               .withAppendedFlavor(COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR)
-              .copyReplacingDeclaredAndExtraDeps(
-                  ImmutableSortedSet.of(generateCodeForMergedLibraryMap), ImmutableSortedSet.of());
+              .withDeclaredDeps(ImmutableSortedSet.of(generateCodeForMergedLibraryMap))
+              .withoutExtraDeps();
       DefaultJavaLibrary compileMergedNativeLibMapGenCode =
           DefaultJavaLibrary.builder(
                   targetGraph, paramsForCompileGenCode, ruleResolver, cellRoots, javaBuckConfig)
@@ -330,14 +330,14 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForTrimUberRDotJava =
         buildRuleParams
             .withAppendedFlavor(TRIM_UBER_R_DOT_JAVA_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
+            .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(
                         ruleFinder.filterBuildRuleInputs(
                             resourcesEnhancementResult.getRDotJavaDir().orElse(null)))
                     .addAll(preDexedLibrariesForResourceIdFiltering)
-                    .build(),
-                ImmutableSortedSet.of());
+                    .build())
+            .withoutExtraDeps();
     TrimUberRDotJava trimUberRDotJava =
         new TrimUberRDotJava(
             paramsForTrimUberRDotJava,
@@ -350,8 +350,8 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForCompileUberRDotJava =
         buildRuleParams
             .withAppendedFlavor(COMPILE_UBER_R_DOT_JAVA_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.of(trimUberRDotJava), ImmutableSortedSet.of());
+            .withDeclaredDeps(ImmutableSortedSet.of(trimUberRDotJava))
+            .withoutExtraDeps();
     JavaLibrary compileUberRDotJava =
         DefaultJavaLibrary.builder(
                 targetGraph, paramsForCompileUberRDotJava, ruleResolver, cellRoots, javaBuckConfig)
@@ -365,8 +365,8 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForDexUberRDotJava =
         buildRuleParams
             .withAppendedFlavor(DEX_UBER_R_DOT_JAVA_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.of(compileUberRDotJava), ImmutableSortedSet.of());
+            .withDeclaredDeps(ImmutableSortedSet.of(compileUberRDotJava))
+            .withoutExtraDeps();
     DexProducedFromJavaLibrary dexUberRDotJava =
         new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, compileUberRDotJava);
     ruleResolver.addToIndex(dexUberRDotJava);
@@ -391,7 +391,8 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForComputeExopackageAbi =
           buildRuleParams
               .withAppendedFlavor(CALCULATE_ABI_FLAVOR)
-              .copyReplacingDeclaredAndExtraDeps(enhancedDeps.build(), ImmutableSortedSet.of());
+              .withDeclaredDeps(enhancedDeps.build())
+              .withoutExtraDeps();
       computeExopackageDepsAbi =
           Optional.of(
               new ComputeExopackageDepsAbi(
@@ -437,7 +438,8 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForNativeLibraryProguardGenerator =
         buildRuleParams
             .withAppendedFlavor(NATIVE_LIBRARY_PROGUARD_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of());
+            .withoutDeclaredDeps()
+            .withoutExtraDeps();
 
     return new NativeLibraryProguardGenerator(
         paramsForNativeLibraryProguardGenerator,
@@ -534,13 +536,13 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForPreDexMerge =
         buildRuleParams
             .withAppendedFlavor(DEX_MERGE_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
+            .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(
                         getDexMergeDeps(
                             dexForUberRDotJava, ImmutableSet.copyOf(allPreDexDeps.values())))
-                    .build(),
-                ImmutableSortedSet.of());
+                    .build())
+            .withoutExtraDeps();
     PreDexMerge preDexMerge =
         new PreDexMerge(
             paramsForPreDexMerge,
@@ -600,9 +602,9 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForPreDex =
           buildRuleParams
               .withBuildTarget(preDexTarget)
-              .copyReplacingDeclaredAndExtraDeps(
-                  ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget())),
-                  ImmutableSortedSet.of());
+              .withDeclaredDeps(
+                  ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget())))
+              .withoutExtraDeps();
       DexProducedFromJavaLibrary preDex =
           new DexProducedFromJavaLibrary(paramsForPreDex, javaLibrary);
       ruleResolver.addToIndex(preDex);

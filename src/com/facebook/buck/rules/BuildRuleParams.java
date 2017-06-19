@@ -64,62 +64,6 @@ public class BuildRuleParams {
     this.totalBuildDeps = baseForDeps.totalBuildDeps;
   }
 
-  public BuildRuleParams copyReplacingExtraDeps(Supplier<SortedSet<BuildRule>> extraDeps) {
-    return copyReplacingDeclaredAndExtraDeps(declaredDeps, extraDeps);
-  }
-
-  public BuildRuleParams copyReplacingExtraDeps(ImmutableSortedSet<BuildRule> extraDeps) {
-    return copyReplacingExtraDeps(() -> extraDeps);
-  }
-
-  public BuildRuleParams copyAppendingExtraDeps(
-      final Supplier<? extends Iterable<? extends BuildRule>> additional) {
-    return copyReplacingDeclaredAndExtraDeps(
-        declaredDeps,
-        () ->
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(extraDeps.get())
-                .addAll(additional.get())
-                .build());
-  }
-
-  /**
-   * @return a copy of these {@link BuildRuleParams} with the deps removed to prevent using them to
-   *     as the deps in constructed {@link BuildRule}s.
-   */
-  public BuildRuleParams copyInvalidatingDeps() {
-    Supplier<SortedSet<BuildRule>> throwingDeps =
-        () -> {
-          throw new IllegalStateException(
-              String.format(
-                  "%s: Access to target-node level `BuildRuleParam` deps. "
-                      + "Please compose application-specific deps from the constructor arg instead.",
-                  getBuildTarget()));
-        };
-    return copyReplacingDeclaredAndExtraDeps(throwingDeps, throwingDeps);
-  }
-
-  public BuildRuleParams copyAppendingExtraDeps(Iterable<? extends BuildRule> additional) {
-    return copyAppendingExtraDeps(Suppliers.ofInstance(additional));
-  }
-
-  public BuildRuleParams copyAppendingExtraDeps(BuildRule... additional) {
-    return copyAppendingExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
-  }
-
-  public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
-      SortedSet<BuildRule> declaredDeps, SortedSet<BuildRule> extraDeps) {
-    return new BuildRuleParams(
-        buildTarget, () -> declaredDeps, () -> extraDeps, targetGraphOnlyDeps, projectFilesystem);
-  }
-
-  public BuildRuleParams copyReplacingDeclaredAndExtraDeps(
-      Supplier<? extends SortedSet<BuildRule>> declaredDeps,
-      Supplier<? extends SortedSet<BuildRule>> extraDeps) {
-    return new BuildRuleParams(
-        buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
-  }
-
   public BuildRuleParams withBuildTarget(BuildTarget target) {
     return new BuildRuleParams(this, target, projectFilesystem);
   }
@@ -146,6 +90,67 @@ public class BuildRuleParams {
     return new BuildRuleParams(this, target, projectFilesystem);
   }
 
+  public BuildRuleParams withDeclaredDeps(SortedSet<BuildRule> declaredDeps) {
+    return withDeclaredDeps(() -> declaredDeps);
+  }
+
+  public BuildRuleParams withDeclaredDeps(Supplier<? extends SortedSet<BuildRule>> declaredDeps) {
+    return new BuildRuleParams(
+        buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
+  }
+
+  public BuildRuleParams withoutDeclaredDeps() {
+    return withDeclaredDeps(ImmutableSortedSet.of());
+  }
+
+  public BuildRuleParams withExtraDeps(Supplier<? extends SortedSet<BuildRule>> extraDeps) {
+    return new BuildRuleParams(
+        buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
+  }
+
+  public BuildRuleParams withExtraDeps(SortedSet<BuildRule> extraDeps) {
+    return withExtraDeps(() -> extraDeps);
+  }
+
+  public BuildRuleParams copyAppendingExtraDeps(
+      final Supplier<? extends Iterable<? extends BuildRule>> additional) {
+    Supplier<? extends SortedSet<BuildRule>> extraDeps1 =
+        () ->
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(extraDeps.get())
+                .addAll(additional.get())
+                .build();
+    return withDeclaredDeps(declaredDeps).withExtraDeps(extraDeps1);
+  }
+
+  public BuildRuleParams copyAppendingExtraDeps(Iterable<? extends BuildRule> additional) {
+    return copyAppendingExtraDeps(Suppliers.ofInstance(additional));
+  }
+
+  public BuildRuleParams copyAppendingExtraDeps(BuildRule... additional) {
+    return copyAppendingExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
+  }
+
+  public BuildRuleParams withoutExtraDeps() {
+    return withExtraDeps(ImmutableSortedSet.of());
+  }
+
+  /**
+   * @return a copy of these {@link BuildRuleParams} with the deps removed to prevent using them to
+   *     as the deps in constructed {@link BuildRule}s.
+   */
+  public BuildRuleParams copyInvalidatingDeps() {
+    Supplier<SortedSet<BuildRule>> throwingDeps =
+        () -> {
+          throw new IllegalStateException(
+              String.format(
+                  "%s: Access to target-node level `BuildRuleParam` deps. "
+                      + "Please compose application-specific deps from the constructor arg instead.",
+                  getBuildTarget()));
+        };
+    return withDeclaredDeps(throwingDeps).withExtraDeps(throwingDeps);
+  }
+
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
@@ -153,10 +158,6 @@ public class BuildRuleParams {
   /** @return all BuildRules which must be built before this one can be. */
   public SortedSet<BuildRule> getBuildDeps() {
     return totalBuildDeps.get();
-  }
-
-  public Supplier<SortedSet<BuildRule>> getTotalBuildDeps() {
-    return totalBuildDeps;
   }
 
   public Supplier<? extends SortedSet<BuildRule>> getDeclaredDeps() {

@@ -91,7 +91,7 @@ public class ApplePackageDescription
                 resolver));
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
-          params.copyReplacingExtraDeps(
+          params.withExtraDeps(
               () ->
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .add(bundle)

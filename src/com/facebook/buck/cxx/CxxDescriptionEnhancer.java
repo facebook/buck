@@ -1050,8 +1050,8 @@ public class CxxDescriptionEnhancer {
                 params
                     .getBuildTarget()
                     .withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()))
-            .copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.of(unstrippedBinaryRule), ImmutableSortedSet.of());
+            .withDeclaredDeps(ImmutableSortedSet.of(unstrippedBinaryRule))
+            .withoutExtraDeps();
     return (CxxStrip)
         resolver.computeIfAbsent(
             stripRuleParams.getBuildTarget(),

@@ -122,7 +122,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
           args.getCmdExe().map(macroArgFunction);
       return createBuildRule(
-          params.copyReplacingExtraDeps(
+          params.withExtraDeps(
               Stream.concat(
                       ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
                       Stream.of(cmd, bash, cmdExe)

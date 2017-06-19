@@ -34,7 +34,6 @@ import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -122,9 +121,7 @@ public class AndroidLibraryGraphEnhancer {
             .addInputs(
                 // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
                 // that is used to build it
-                originalBuildRuleParams.copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.of(), ImmutableSortedSet.of()),
-                ruleFinder)
+                originalBuildRuleParams.withoutDeclaredDeps().withoutExtraDeps(), ruleFinder)
             .withBuildTarget(dummyRDotJavaBuildTarget);
 
     DummyRDotJava dummyRDotJava =

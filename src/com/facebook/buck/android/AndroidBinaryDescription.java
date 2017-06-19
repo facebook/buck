@@ -330,7 +330,7 @@ public class AndroidBinaryDescription
 
       return new AndroidBinary(
           params
-              .copyReplacingExtraDeps(result.getFinalDeps())
+              .withExtraDeps(result.getFinalDeps())
               .copyAppendingExtraDeps(
                   ruleFinder.filterBuildRuleInputs(
                       result.getPackageableCollection().getProguardConfigs()))

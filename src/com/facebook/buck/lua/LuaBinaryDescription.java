@@ -676,14 +676,14 @@ public class LuaBinaryDescription
             new LuaStandaloneBinary(
                 params
                     .withAppendedFlavor(BINARY_FLAVOR)
-                    .copyReplacingDeclaredAndExtraDeps(
+                    .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(ruleFinder.filterBuildRuleInputs(starter))
                             .addAll(components.getDeps(ruleFinder))
                             .addAll(lua.getDeps(ruleFinder))
                             .addAll(packager.getDeps(ruleFinder))
-                            .build(),
-                        ImmutableSortedSet.of()),
+                            .build())
+                    .withoutExtraDeps(),
                 packager,
                 ImmutableList.of(),
                 output,

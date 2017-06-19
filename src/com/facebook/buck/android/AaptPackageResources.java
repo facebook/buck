@@ -93,15 +93,16 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(
-        params.copyReplacingDeclaredAndExtraDeps(
-            getAllDeps(
-                params.getBuildTarget(),
-                ruleFinder,
-                ruleResolver,
-                manifest,
-                filteredResourcesProvider,
-                resourceDeps),
-            ImmutableSortedSet.of()));
+        params
+            .withDeclaredDeps(
+                getAllDeps(
+                    params.getBuildTarget(),
+                    ruleFinder,
+                    ruleResolver,
+                    manifest,
+                    filteredResourcesProvider,
+                    resourceDeps))
+            .withoutExtraDeps());
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.skipCrunchPngs = skipCrunchPngs;

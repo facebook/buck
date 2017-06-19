@@ -143,7 +143,7 @@ public class MultiarchFileInfos {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     MultiarchFile multiarchFile =
         new MultiarchFile(
-            params.copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), thinRules),
+            params.withoutDeclaredDeps().withExtraDeps(thinRules),
             ruleFinder,
             info.getRepresentativePlatform().getLipo(),
             inputs,

@@ -82,9 +82,8 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
     return new CalculateAbiFromClasses(
         libraryParams
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library)),
-                ImmutableSortedSet.of()),
+            .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library)))
+            .withoutExtraDeps(),
         new SourcePathResolver(ruleFinder),
         library,
         sourceAbiCompatible);

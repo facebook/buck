@@ -102,8 +102,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     return new PythonTest(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(binary), ImmutableSortedSet.of()),
+        params.withDeclaredDeps(ImmutableSortedSet.of(binary)).withoutExtraDeps(),
         ruleFinder,
         params.getDeclaredDeps(),
         env,

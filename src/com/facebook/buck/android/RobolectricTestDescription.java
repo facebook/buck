@@ -50,7 +50,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -122,7 +121,7 @@ public class RobolectricTestDescription
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             params.getBuildTarget(),
-            params.copyReplacingExtraDeps(resolver.getAllRules(args.getExportedDeps())),
+            params.withExtraDeps(resolver.getAllRules(args.getExportedDeps())),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
@@ -142,9 +141,7 @@ public class RobolectricTestDescription
               .addAll(params.getDeclaredDeps().get())
               .add(dummyRDotJava.get())
               .build();
-      params =
-          params.copyReplacingDeclaredAndExtraDeps(
-              Suppliers.ofInstance(newDeclaredDeps), params.getExtraDeps());
+      params = params.withDeclaredDeps(newDeclaredDeps);
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -175,8 +172,7 @@ public class RobolectricTestDescription
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
 
     return new RobolectricTest(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(testsLibrary), ImmutableSortedSet.of()),
+        params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         ruleFinder,
         testsLibrary,
         args.getLabels(),

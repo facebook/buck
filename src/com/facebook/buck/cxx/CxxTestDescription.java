@@ -217,8 +217,7 @@ public class CxxTestDescription
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
         params
-            .copyReplacingDeclaredAndExtraDeps(
-                () -> cxxLinkAndCompileRules.deps, params.getExtraDeps())
+            .withDeclaredDeps(cxxLinkAndCompileRules.deps)
             .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
     testParams =
         testParams.withBuildTarget(

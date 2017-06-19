@@ -277,7 +277,7 @@ public class HalideLibraryDescription
             resolver.requireRule(params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
 
     return new HalideCompile(
-        params.copyReplacingExtraDeps(ImmutableSortedSet.of(halideCompiler)),
+        params.withExtraDeps(ImmutableSortedSet.of(halideCompiler)),
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
@@ -330,8 +330,8 @@ public class HalideLibraryDescription
       return createHalideCompiler(
           params
               .withAppendedFlavor(HALIDE_COMPILER_FLAVOR)
-              .copyReplacingDeclaredAndExtraDeps(
-                  resolver.getAllRules(compilerDeps), ImmutableSortedSet.of()),
+              .withDeclaredDeps(resolver.getAllRules(compilerDeps))
+              .withoutExtraDeps(),
           resolver,
           pathResolver,
           ruleFinder,
@@ -355,8 +355,7 @@ public class HalideLibraryDescription
           params.getBuildTarget());
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
-          params.copyReplacingDeclaredAndExtraDeps(
-              ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+          params.withoutDeclaredDeps().withoutExtraDeps(),
           resolver,
           cxxPlatform,
           Optional.of(args.getCompilerInvocationFlags()),

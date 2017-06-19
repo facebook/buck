@@ -285,7 +285,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new SplitResources(
         buildRuleParams
             .withAppendedFlavor(SPLIT_RESOURCES_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+            .withoutDeclaredDeps()
+            .withoutExtraDeps(),
         ruleFinder,
         aaptOutputPath,
         aaptRDotTxtPath);
@@ -303,7 +304,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new Aapt2Link(
         buildRuleParams
             .withAppendedFlavor(AAPT2_LINK_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+            .withoutDeclaredDeps()
+            .withoutExtraDeps(),
         ruleFinder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
@@ -318,7 +320,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new GenerateRDotJava(
         buildRuleParams
             .withAppendedFlavor(GENERATE_RDOT_JAVA_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+            .withoutDeclaredDeps()
+            .withoutExtraDeps(),
         ruleFinder,
         bannedDuplicateResourceTypes,
         pathToRDotTxtFile,
@@ -335,12 +338,12 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new ResourcesFilter(
         buildRuleParams
             .withAppendedFlavor(RESOURCES_FILTER_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
+            .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(resourceRules)
                     .addAll(rulesWithResourceDirectories)
-                    .build(),
-                ImmutableSortedSet.of()),
+                    .build())
+            .withoutExtraDeps(),
         resourceDetails.getResourceDirectories(),
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
         locales,
@@ -355,7 +358,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new AaptPackageResources(
         buildRuleParams
             .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+            .withoutDeclaredDeps()
+            .withoutExtraDeps(),
         ruleFinder,
         ruleResolver,
         manifest,
@@ -374,7 +378,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new PackageStringAssets(
         buildRuleParams
             .withAppendedFlavor(PACKAGE_STRING_ASSETS_FLAVOR)
-            .copyReplacingDeclaredAndExtraDeps(
+            .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getPathToRDotTxt()))
                     .addAll(resourceRules)
@@ -384,8 +388,8 @@ class AndroidBinaryResourcesGraphEnhancer {
                     .addAll(
                         Iterables.filter(
                             ImmutableList.of(filteredResourcesProvider), BuildRule.class))
-                    .build(),
-                ImmutableSortedSet.of()),
+                    .build())
+            .withoutExtraDeps(),
         locales,
         filteredResourcesProvider,
         aaptOutputInfo.getPathToRDotTxt());
@@ -397,8 +401,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         new MergeAssets(
             buildRuleParams
                 .withAppendedFlavor(MERGE_ASSETS_FLAVOR)
-                .copyReplacingDeclaredAndExtraDeps(
-                    ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+                .withoutDeclaredDeps()
+                .withoutExtraDeps(),
             ruleFinder,
             baseApk,
             ImmutableSortedSet.copyOf(assetsDirectories));

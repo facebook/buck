@@ -66,9 +66,9 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private static BuildRuleParams adjustParams(BuildRuleParams params, TraversedDeps traversedDeps) {
-    return params.copyReplacingDeclaredAndExtraDeps(
-        ImmutableSortedSet.copyOf(Ordering.natural(), traversedDeps.packagedDeps),
-        ImmutableSortedSet.of());
+    return params
+        .withDeclaredDeps(ImmutableSortedSet.copyOf(Ordering.natural(), traversedDeps.packagedDeps))
+        .withoutExtraDeps();
   }
 
   /**

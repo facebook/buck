@@ -40,6 +40,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import org.immutables.value.Value;
 
 public class CxxBinaryDescription
@@ -247,11 +249,12 @@ public class CxxBinaryDescription
             LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
                 params.getBuildTarget(), flavoredLinkerMapMode));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    Supplier<? extends SortedSet<BuildRule>> declaredDeps = () -> cxxLinkAndCompileRules.deps;
     CxxBinary cxxBinary =
         new CxxBinary(
             params
-                .copyReplacingDeclaredAndExtraDeps(
-                    () -> cxxLinkAndCompileRules.deps, metadataRuleParams.getExtraDeps())
+                .withDeclaredDeps(declaredDeps)
+                .withExtraDeps(metadataRuleParams.getExtraDeps())
                 .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
             resolver,
             ruleFinder,

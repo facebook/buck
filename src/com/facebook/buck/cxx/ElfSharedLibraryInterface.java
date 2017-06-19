@@ -73,12 +73,12 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
     return new ElfSharedLibraryInterface(
         baseParams
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
+            .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(objcopy.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(input))
-                    .build(),
-                ImmutableSortedSet.of()),
+                    .build())
+            .withoutExtraDeps(),
         resolver,
         objcopy,
         input);

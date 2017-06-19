@@ -235,13 +235,14 @@ abstract class GoDescriptors {
     LOG.verbose("Symlink tree for linking of %s: %s", params.getBuildTarget(), symlinkTree);
 
     return new GoBinary(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
-                .add(symlinkTree)
-                .add(library)
-                .build(),
-            ImmutableSortedSet.of()),
+        params
+            .withDeclaredDeps(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
+                    .add(symlinkTree)
+                    .add(library)
+                    .build())
+            .withoutExtraDeps(),
         platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
         symlinkTree,
         library,
@@ -279,8 +280,8 @@ abstract class GoDescriptors {
                               new WriteFile(
                                   sourceParams
                                       .withBuildTarget(generatorSourceTarget)
-                                      .copyReplacingDeclaredAndExtraDeps(
-                                          ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+                                      .withoutDeclaredDeps()
+                                      .withoutExtraDeps(),
                                   extractTestMainGenerator(),
                                   BuildTargets.getGenPath(
                                       sourceParams.getProjectFilesystem(),
@@ -291,8 +292,8 @@ abstract class GoDescriptors {
               return createGoBinaryRule(
                   sourceParams
                       .withBuildTarget(generatorTarget)
-                      .copyReplacingDeclaredAndExtraDeps(
-                          ImmutableSortedSet.of(), ImmutableSortedSet.of(writeFile)),
+                      .withoutDeclaredDeps()
+                      .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   resolver,
                   goBuckConfig,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),

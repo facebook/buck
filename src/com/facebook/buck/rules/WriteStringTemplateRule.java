@@ -100,9 +100,8 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
     return new WriteStringTemplateRule(
         baseParams
             .withBuildTarget(target)
-            .copyReplacingDeclaredAndExtraDeps(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template)),
-                ImmutableSortedSet.of()),
+            .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template)))
+            .withoutExtraDeps(),
         output,
         template,
         values,

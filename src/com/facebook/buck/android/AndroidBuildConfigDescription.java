@@ -158,8 +158,7 @@ public class AndroidBuildConfigDescription
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams =
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(androidBuildConfig), ImmutableSortedSet.of());
+        params.withDeclaredDeps(ImmutableSortedSet.of(androidBuildConfig)).withoutExtraDeps();
     return new AndroidBuildConfigJavaLibrary(
         javaLibraryParams,
         pathResolver,

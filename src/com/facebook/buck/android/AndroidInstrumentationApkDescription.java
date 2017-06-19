@@ -178,7 +178,7 @@ public class AndroidInstrumentationApkDescription
 
     return new AndroidInstrumentationApk(
         params
-            .copyReplacingExtraDeps(enhancementResult.getFinalDeps())
+            .withExtraDeps(enhancementResult.getFinalDeps())
             .copyAppendingExtraDeps(rulesToExcludeFromDex),
         ruleFinder,
         proGuardConfig.getProguardJarOverride(),

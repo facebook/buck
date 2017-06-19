@@ -127,8 +127,7 @@ public class KotlinTestDescription
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
     return new JavaTest(
-        params.copyReplacingDeclaredAndExtraDeps(
-            ImmutableSortedSet.of(testsLibrary), ImmutableSortedSet.of()),
+        params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
         testsLibrary,
         ImmutableSet.of(Either.ofRight(kotlinBuckConfig.getPathToStdlibJar())),

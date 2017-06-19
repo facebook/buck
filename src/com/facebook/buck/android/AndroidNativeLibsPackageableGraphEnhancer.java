@@ -249,7 +249,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         && (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
       NativeRelinker relinker =
           new NativeRelinker(
-              buildRuleParams.copyReplacingExtraDeps(
+              buildRuleParams.withExtraDeps(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
                       .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
@@ -314,14 +314,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       BuildRuleParams paramsForCopyNativeLibraries =
           buildRuleParams
               .withAppendedFlavor(InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
-              .copyReplacingDeclaredAndExtraDeps(
+              .withDeclaredDeps(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(nativeLibsRules)
                       .addAll(ruleFinder.filterBuildRuleInputs(nativeLibsDirectories))
                       .addAll(filteredStrippedLibsMap.keySet())
                       .addAll(filteredStrippedLibsAssetsMap.keySet())
-                      .build(),
-                  ImmutableSortedSet.of());
+                      .build())
+              .withoutExtraDeps();
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
@@ -385,11 +385,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         BuildRuleParams paramsForStripLinkable =
             buildRuleParams
                 .withBuildTarget(targetForStripRule)
-                .copyReplacingDeclaredAndExtraDeps(
+                .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
-                        .build(),
-                    ImmutableSortedSet.of());
+                        .build())
+                .withoutExtraDeps();
 
         stripLinkable =
             new StripLinkable(
