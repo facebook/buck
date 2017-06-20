@@ -23,3 +23,89 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .resources_arg}
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default: '[]' /}
+  {param desc}
+  Static files to include among the compiled <code>.class</code>
+  {sp}files. These files can be loaded via <a
+  href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)"
+  target="_blank">Class.getResource()</a>.
+  <p>
+  <strong>Note:</strong> If <code>resources_root</code> isn't set, Buck uses
+  the <code>{call buckconfig.java_src_roots /}</code> property in <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> to help
+  determine where resources should be placed within the generated JAR file.
+  <p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources_root' /}
+  {param default: 'None' /}
+  {param desc}
+  The path that resources are resolved against. For example, if{sp}
+  <code>resources_root</code> is <code>"res"</code> and
+  {sp}<code>resources</code>{sp} contains the file{sp}
+  <code>"res/com/example/foo.txt"</code>, that file will end up as{sp}
+  <code>"com/example/foo.txt"</code> in the output JAR. This parameter
+  overrides the <code>{call buckconfig.java_src_roots /}</code> property in <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .remove_classes_arg}
+{call buck.arg}
+  {param name: 'remove_classes' /}
+  {param default: '[]' /}
+  {param desc}
+  Specifies a list of <code>Patterns</code> that are used to exclude
+  <code>classes</code> from the <code>JAR</code>. The pattern matching is
+  based on the name of the class. This can be used to exclude a member
+  class or delete a local view of a class that will be replaced during
+  a later stage of the build.
+  {/param}
+{/call}
+{/template}
+
+/**
+ * @param binary the binary target name
+ */
+{template .provided_deps}
+{call buck.arg}
+  {param name: 'provided_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  These represent dependencies that are known to be provided at run
+  time, but are required in order for the code to compile. Examples of
+  {sp}<code>provided_deps</code> include the JEE servlet APIs. When this
+  rule is included in a <code>{$binary}</code>, the
+  {sp}<code>provided_deps</code> will not be packaged into the output.
+  {/param}
+{/call}
+{/template}
+
+/**
+ * @param library the library target name
+ */
+{template .exported_deps}
+{call buck.arg}
+  {param name: 'exported_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  Other <code>{$library}</code> rules that depend on this rule will also
+  include its <code>exported_deps</code> in their classpaths. This is useful
+  when the public API of a rule has return types or checked exceptions that are
+  defined in another rule, which would otherwise require callers to add an
+  extra dependency. It's also useful for exposing e.g. a collection of
+  {sp}<code>prebuilt_jar</code> rules as a single target for callers to depend
+  on. Targets in <code>exported_deps</code> are implicitly included in the
+  {sp}<code>deps</code> of this rule, so they don't need to be repeated there.
+  {/param}
+{/call}
+{/template}
