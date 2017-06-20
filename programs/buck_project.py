@@ -135,7 +135,11 @@ class BuckProject:
     def __exit__(self, exc_type, exc_val, exc_tb):
         with Tracing('BuckProject.__exit__'):
             if os.path.exists(self.tmp_dir):
-                shutil.rmtree(self.tmp_dir)
+                try:
+                    shutil.rmtree(self.tmp_dir)
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise
 
 
 class NoBuckConfigFoundException(Exception):
