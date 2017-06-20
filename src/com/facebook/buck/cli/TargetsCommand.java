@@ -553,18 +553,12 @@ public class TargetsCommand extends AbstractCommand {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add(entry.getKey().getFullyQualifiedName());
       ShowOptions showOptions = entry.getValue();
-      if (showOptions.getRuleKey().isPresent()) {
-        builder.add(showOptions.getRuleKey().get());
-      }
+      showOptions.getRuleKey().ifPresent(builder::add);
       if (isShowCellPath()) {
         builder.add(entry.getKey().getCellPath().toString());
       }
-      if (showOptions.getOutputPath().isPresent()) {
-        builder.add(showOptions.getOutputPath().get());
-      }
-      if (showOptions.getTargetHash().isPresent()) {
-        builder.add(showOptions.getTargetHash().get());
-      }
+      showOptions.getOutputPath().ifPresent(builder::add);
+      showOptions.getTargetHash().ifPresent(builder::add);
       params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
     }
   }
@@ -1090,10 +1084,7 @@ public class TargetsCommand extends AbstractCommand {
 
       ImmutableSet.Builder<Path> basePathOfTargetsBuilder = ImmutableSet.builder();
       for (Path input : referencedInputs) {
-        Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(input);
-        if (path.isPresent()) {
-          basePathOfTargetsBuilder.add(path.get());
-        }
+        buildFileTree.getBasePathOfAncestorTarget(input).ifPresent(basePathOfTargetsBuilder::add);
       }
       this.basePathOfTargets = basePathOfTargetsBuilder.build();
       this.buildFileName = buildFileName;
