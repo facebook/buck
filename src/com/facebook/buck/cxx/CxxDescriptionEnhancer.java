@@ -498,7 +498,7 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       CxxPlatform cxxPlatform,
       Iterable<BuildRule> deps,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableMultimap<CxxSource.Type, ? extends Arg> preprocessorFlags,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<FrameworkPath> frameworks,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps,
@@ -847,8 +847,14 @@ public class CxxDescriptionEnhancer {
             params.getBuildTarget(),
             cxxPlatform,
             deps,
-            CxxFlags.getLanguageFlags(
-                preprocessorFlags, platformPreprocessorFlags, langPreprocessorFlags, cxxPlatform),
+            ImmutableListMultimap.copyOf(
+                Multimaps.transformValues(
+                    CxxFlags.getLanguageFlags(
+                        preprocessorFlags,
+                        platformPreprocessorFlags,
+                        langPreprocessorFlags,
+                        cxxPlatform),
+                    StringArg::of)),
             ImmutableList.of(headerSymlinkTree),
             frameworks,
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(

@@ -53,6 +53,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -152,11 +153,14 @@ public class CxxLuaExtensionDescription
                     params.getBuildTarget(),
                     cxxPlatform,
                     deps,
-                    CxxFlags.getLanguageFlags(
-                        args.getPreprocessorFlags(),
-                        args.getPlatformPreprocessorFlags(),
-                        args.getLangPreprocessorFlags(),
-                        cxxPlatform),
+                    ImmutableListMultimap.copyOf(
+                        Multimaps.transformValues(
+                            CxxFlags.getLanguageFlags(
+                                args.getPreprocessorFlags(),
+                                args.getPlatformPreprocessorFlags(),
+                                args.getLangPreprocessorFlags(),
+                                cxxPlatform),
+                            StringArg::of)),
                     ImmutableList.of(headerSymlinkTree),
                     ImmutableSet.of(),
                     CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),

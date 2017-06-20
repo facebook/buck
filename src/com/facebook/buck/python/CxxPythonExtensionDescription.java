@@ -182,11 +182,14 @@ public class CxxPythonExtensionDescription
             params.getBuildTarget(),
             cxxPlatform,
             deps,
-            CxxFlags.getLanguageFlags(
-                args.getPreprocessorFlags(),
-                args.getPlatformPreprocessorFlags(),
-                args.getLangPreprocessorFlags(),
-                cxxPlatform),
+            ImmutableListMultimap.copyOf(
+                Multimaps.transformValues(
+                    CxxFlags.getLanguageFlags(
+                        args.getPreprocessorFlags(),
+                        args.getPlatformPreprocessorFlags(),
+                        args.getLangPreprocessorFlags(),
+                        cxxPlatform),
+                    StringArg::of)),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),

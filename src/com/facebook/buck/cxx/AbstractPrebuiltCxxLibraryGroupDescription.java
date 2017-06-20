@@ -47,9 +47,11 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimaps;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
@@ -192,11 +194,14 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         builder.putAllPreprocessorFlags(
-            CxxFlags.getLanguageFlags(
-                args.getExportedPreprocessorFlags(),
-                PatternMatchedCollection.of(),
-                ImmutableMap.of(),
-                cxxPlatform));
+            ImmutableListMultimap.copyOf(
+                Multimaps.transformValues(
+                    CxxFlags.getLanguageFlags(
+                        args.getExportedPreprocessorFlags(),
+                        PatternMatchedCollection.of(),
+                        ImmutableMap.of(),
+                        cxxPlatform),
+                    StringArg::of)));
         for (SourcePath includeDir : args.getIncludeDirs()) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
         }

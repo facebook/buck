@@ -43,6 +43,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.Escaper;
@@ -178,7 +179,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       // Add in the transitive preprocessor flags contributed by C/C++ library rules into the
       // NDK build.
       ImmutableList.Builder<String> ppFlags = ImmutableList.builder();
-      ppFlags.addAll(cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C));
+      ppFlags.addAll(
+          Arg.stringify(
+              cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C), pathResolver));
       Preprocessor preprocessor =
           CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(resolver);
       ppFlags.addAll(
@@ -212,8 +215,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
               .join(
                   escapeForMakefile(
                       params.getProjectFilesystem(),
-                      com.facebook.buck.rules.args.Arg.stringify(
-                          nativeLinkableInput.getArgs(), pathResolver)));
+                      Arg.stringify(nativeLinkableInput.getArgs(), pathResolver)));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {

@@ -181,9 +181,9 @@ public class OcamlBuildStep implements Step {
       ExecutionContext context, ImmutableList.Builder<Path> linkerInputs)
       throws IOException, InterruptedException {
 
-    ImmutableList.Builder<String> cCompileFlags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> cCompileFlags = ImmutableList.builder();
     cCompileFlags.addAll(ocamlContext.getCCompileFlags());
-    cCompileFlags.addAll(ocamlContext.getCommonCFlags());
+    cCompileFlags.addAll(StringArg.from(ocamlContext.getCommonCFlags()));
 
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 

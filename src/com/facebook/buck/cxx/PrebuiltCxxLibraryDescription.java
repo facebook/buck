@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -71,6 +72,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -634,13 +636,16 @@ public class PrebuiltCxxLibraryDescription
         return false;
       }
 
-      private ImmutableListMultimap<CxxSource.Type, String> getExportedPreprocessorFlags(
+      private ImmutableListMultimap<CxxSource.Type, Arg> getExportedPreprocessorFlags(
           CxxPlatform cxxPlatform) {
-        return CxxFlags.getLanguageFlags(
-            args.getExportedPreprocessorFlags(),
-            args.getExportedPlatformPreprocessorFlags(),
-            args.getExportedLangPreprocessorFlags(),
-            cxxPlatform);
+        return ImmutableListMultimap.copyOf(
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlags(
+                    args.getExportedPreprocessorFlags(),
+                    args.getExportedPlatformPreprocessorFlags(),
+                    args.getExportedLangPreprocessorFlags(),
+                    cxxPlatform),
+                StringArg::of));
       }
 
       @Override
@@ -766,8 +771,7 @@ public class PrebuiltCxxLibraryDescription
               HeaderVisibility.PUBLIC,
               CxxPreprocessables.IncludeType.SYSTEM);
         }
-        builder.putAllPreprocessorFlags(
-            Preconditions.checkNotNull(getExportedPreprocessorFlags(cxxPlatform)));
+        builder.putAllPreprocessorFlags(getExportedPreprocessorFlags(cxxPlatform));
         builder.addAllFrameworks(args.getFrameworks());
         final Iterable<SourcePath> includePaths =
             args.getIncludeDirs()

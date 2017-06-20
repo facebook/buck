@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -149,7 +150,8 @@ public class CxxPrecompiledHeaderRuleTest {
         .setCxxPreprocessorInput(
             ImmutableList.of(
                 CxxPreprocessorInput.builder()
-                    .setPreprocessorFlags(ImmutableMultimap.of(CxxSource.Type.C, flag))
+                    .setPreprocessorFlags(
+                        ImmutableMultimap.of(CxxSource.Type.C, StringArg.of(flag)))
                     .build()));
   }
 

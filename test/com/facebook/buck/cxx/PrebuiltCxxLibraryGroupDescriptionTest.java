@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,12 +52,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .build(resolver);
     assertThat(
         lib.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM).getPreprocessorFlags(),
-        Matchers.equalTo(
-            CxxFlags.getLanguageFlags(
-                ImmutableList.of("-flag"),
-                PatternMatchedCollection.of(),
-                ImmutableMap.of(),
-                CxxPlatformUtils.DEFAULT_PLATFORM)));
+        Matchers.equalTo(CxxFlags.toLanguageFlags(StringArg.from("-flag"))));
   }
 
   @Test

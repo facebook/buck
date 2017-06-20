@@ -593,8 +593,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       for (CxxPreprocessorInput input : transitivePreprocessorInput) {
         ppFlagsBuilder.addAllIncludes(input.getIncludes());
         ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
-        toolFlagsBuilder.addAllRuleFlags(
-            StringArg.from(input.getPreprocessorFlags().get(sourceType)));
+        toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(sourceType));
       }
       ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
       return ppFlagsBuilder.build();

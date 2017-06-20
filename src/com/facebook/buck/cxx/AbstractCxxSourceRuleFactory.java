@@ -154,13 +154,13 @@ abstract class AbstractCxxSourceRuleFactory {
         .collect(MoreCollectors.toImmutableList());
   }
 
-  private final LoadingCache<CxxSource.Type, ImmutableList<String>> preprocessorFlags =
+  private final LoadingCache<CxxSource.Type, ImmutableList<Arg>> preprocessorFlags =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<CxxSource.Type, ImmutableList<String>>() {
+              new CacheLoader<CxxSource.Type, ImmutableList<Arg>>() {
                 @Override
-                public ImmutableList<String> load(@Nonnull CxxSource.Type type) {
-                  ImmutableList.Builder<String> builder = ImmutableList.builder();
+                public ImmutableList<Arg> load(@Nonnull CxxSource.Type type) {
+                  ImmutableList.Builder<Arg> builder = ImmutableList.builder();
                   for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
                     builder.addAll(input.getPreprocessorFlags().get(type));
                   }
@@ -246,7 +246,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   private ImmutableList<Arg> getRulePreprocessorFlags(CxxSource.Type type) {
-    return sanitizedArgs(preprocessorFlags.getUnchecked(type));
+    return preprocessorFlags.getUnchecked(type);
   }
 
   private ImmutableList<Arg> getPlatformCompileFlags(CxxSource.Type type) {

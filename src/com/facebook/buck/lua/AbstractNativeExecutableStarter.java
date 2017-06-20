@@ -211,7 +211,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                             CxxSource.Type.CXX,
                             getNativeStarterLibrary().isPresent()
                                 ? ImmutableList.of()
-                                : ImmutableList.of("-DBUILTIN_NATIVE_STARTER"))
+                                : StringArg.from("-DBUILTIN_NATIVE_STARTER"))
                         .build())
                 .addAll(getTransitiveCxxPreprocessorInput(getCxxPlatform(), nativeStarterDeps))
                 .build(),

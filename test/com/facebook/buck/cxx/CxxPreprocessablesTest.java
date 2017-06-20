@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -146,8 +147,8 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput input1 =
         CxxPreprocessorInput.builder()
             .addRules(cppDepTarget1)
-            .putPreprocessorFlags(CxxSource.Type.C, "-Dtest=yes")
-            .putPreprocessorFlags(CxxSource.Type.CXX, "-Dtest=yes")
+            .putPreprocessorFlags(CxxSource.Type.C, StringArg.of("-Dtest=yes"))
+            .putPreprocessorFlags(CxxSource.Type.CXX, StringArg.of("-Dtest=yes"))
             .build();
     BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep1");
     FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, pathResolver, input1);
@@ -157,8 +158,8 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput input2 =
         CxxPreprocessorInput.builder()
             .addRules(cppDepTarget2)
-            .putPreprocessorFlags(CxxSource.Type.C, "-DBLAH")
-            .putPreprocessorFlags(CxxSource.Type.CXX, "-DBLAH")
+            .putPreprocessorFlags(CxxSource.Type.C, StringArg.of("-DBLAH"))
+            .putPreprocessorFlags(CxxSource.Type.CXX, StringArg.of("-DBLAH"))
             .build();
     BuildTarget depTarget2 = BuildTargetFactory.newInstance("//:dep2");
     FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, pathResolver, input2);
@@ -243,7 +244,7 @@ public class CxxPreprocessablesTest {
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Create a native linkable that sits at the bottom of the dep chain.
-    String sentinal = "bottom";
+    StringArg sentinal = StringArg.of("bottom");
     CxxPreprocessorInput bottomInput =
         CxxPreprocessorInput.builder().putPreprocessorFlags(CxxSource.Type.C, sentinal).build();
     BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", pathResolver, bottomInput);

@@ -271,7 +271,8 @@ public class PrecompiledHeaderFeatureTest {
                   .setCxxPreprocessorInput(
                       ImmutableList.of(
                           CxxPreprocessorInput.builder()
-                              .setPreprocessorFlags(ImmutableMultimap.of(CxxSource.Type.C, flags))
+                              .setPreprocessorFlags(
+                                  ImmutableMultimap.of(CxxSource.Type.C, StringArg.of(flags)))
                               .build()))
                   .setPrefixHeader(new FakeSourcePath(("foo.h")))
                   .build();

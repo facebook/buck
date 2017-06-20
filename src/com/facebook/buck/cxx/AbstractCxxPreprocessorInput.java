@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +36,7 @@ import org.immutables.value.Value;
 abstract class AbstractCxxPreprocessorInput {
 
   @Value.Parameter
-  public abstract Multimap<CxxSource.Type, String> getPreprocessorFlags();
+  public abstract Multimap<CxxSource.Type, Arg> getPreprocessorFlags();
 
   @Value.Parameter
   public abstract ImmutableList<CxxHeaders> getIncludes();
@@ -65,14 +66,17 @@ abstract class AbstractCxxPreprocessorInput {
       }
     }
 
+    for (Arg arg : getPreprocessorFlags().values()) {
+      builder.addAll(arg.getDeps(ruleFinder));
+    }
+
     return builder.build();
   }
 
   public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
-    ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
-        ImmutableMultimap.builder();
+    ImmutableMultimap.Builder<CxxSource.Type, Arg> preprocessorFlags = ImmutableMultimap.builder();
     ImmutableList.Builder<CxxHeaders> headers = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();

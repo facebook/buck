@@ -612,11 +612,12 @@ public class CxxSourceRuleFactoryTest {
 
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.builder()
-              .putAllPreprocessorFlags(CxxSource.Type.C, explicitCppflags)
-              .putAllPreprocessorFlags(CxxSource.Type.OBJC, explicitCppflags)
-              .putAllPreprocessorFlags(CxxSource.Type.ASSEMBLER_WITH_CPP, explicitCppflags)
-              .putAllPreprocessorFlags(CxxSource.Type.CXX, explicitCxxppflags)
-              .putAllPreprocessorFlags(CxxSource.Type.OBJCXX, explicitCxxppflags)
+              .putAllPreprocessorFlags(CxxSource.Type.C, StringArg.from(explicitCppflags))
+              .putAllPreprocessorFlags(CxxSource.Type.OBJC, StringArg.from(explicitCppflags))
+              .putAllPreprocessorFlags(
+                  CxxSource.Type.ASSEMBLER_WITH_CPP, StringArg.from(explicitCppflags))
+              .putAllPreprocessorFlags(CxxSource.Type.CXX, StringArg.from(explicitCxxppflags))
+              .putAllPreprocessorFlags(CxxSource.Type.OBJCXX, StringArg.from(explicitCxxppflags))
               .build();
       BuckConfig buckConfig =
           FakeBuckConfig.builder()

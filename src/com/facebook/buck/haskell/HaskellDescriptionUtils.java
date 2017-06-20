@@ -136,8 +136,7 @@ public class HaskellDescriptionUtils {
     for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
       ppFlagsBuilder.addAllIncludes(input.getIncludes());
       ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
-      toolFlagsBuilder.addAllRuleFlags(
-          StringArg.from(input.getPreprocessorFlags().get(CxxSource.Type.C)));
+      toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
     }
     ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
     PreprocessorFlags ppFlags = ppFlagsBuilder.build();

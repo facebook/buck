@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -35,9 +36,11 @@ import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -236,7 +239,9 @@ public class CxxPreprocessables {
           builder, params.getBuildTarget(), ruleResolver, platform, headerVisibility, includeType);
     }
     return builder
-        .putAllPreprocessorFlags(exportedPreprocessorFlags)
+        .putAllPreprocessorFlags(
+            ImmutableListMultimap.copyOf(
+                Multimaps.transformValues(exportedPreprocessorFlags, StringArg::of)))
         .addAllFrameworks(frameworks)
         .build();
   }

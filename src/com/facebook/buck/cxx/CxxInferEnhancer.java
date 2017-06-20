@@ -32,9 +32,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -300,11 +302,14 @@ public final class CxxInferEnhancer {
         params.getBuildTarget(),
         cxxPlatform,
         deps,
-        CxxFlags.getLanguageFlags(
-            args.getPreprocessorFlags(),
-            args.getPlatformPreprocessorFlags(),
-            args.getLangPreprocessorFlags(),
-            cxxPlatform),
+        ImmutableListMultimap.copyOf(
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlags(
+                    args.getPreprocessorFlags(),
+                    args.getPlatformPreprocessorFlags(),
+                    args.getLangPreprocessorFlags(),
+                    cxxPlatform),
+                StringArg::of)),
         ImmutableList.of(headerSymlinkTree),
         args.getFrameworks(),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(

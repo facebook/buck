@@ -22,6 +22,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
@@ -70,7 +71,7 @@ public class OcamlCCompileStep extends ShellStep {
         .add("-ccopt", "-Wall")
         .add("-ccopt", "-Wextra")
         .add("-ccopt", String.format("-o %s", args.output.toString()))
-        .addAll(args.flags)
+        .addAll(Arg.stringify(args.flags, resolver))
         .add(resolver.getAbsolutePath(args.input).toString())
         .build();
   }
@@ -84,7 +85,7 @@ public class OcamlCCompileStep extends ShellStep {
     public final ImmutableMap<String, String> environment;
     public final Tool ocamlCompiler;
     public final ImmutableList<String> cCompiler;
-    public final ImmutableList<String> flags;
+    public final ImmutableList<Arg> flags;
     public final Optional<String> stdlib;
     public final Path output;
     public final SourcePath input;
@@ -97,7 +98,7 @@ public class OcamlCCompileStep extends ShellStep {
         Optional<String> stdlib,
         Path output,
         SourcePath input,
-        ImmutableList<String> flags,
+        ImmutableList<Arg> flags,
         ImmutableList<CxxHeaders> includes) {
       this.environment = environment;
       this.cCompiler = cCompiler;

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -161,9 +162,9 @@ public class OcamlBuildRulesGenerator {
 
     ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
 
-    ImmutableList.Builder<String> cCompileFlags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> cCompileFlags = ImmutableList.builder();
     cCompileFlags.addAll(ocamlContext.getCCompileFlags());
-    cCompileFlags.addAll(ocamlContext.getCommonCFlags());
+    cCompileFlags.addAll(StringArg.from(ocamlContext.getCommonCFlags()));
 
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
@@ -187,6 +188,10 @@ public class OcamlBuildRulesGenerator {
                           // Add deps from the C compiler, since we're calling it.
                           .addAll(cCompiler.getDeps(ruleFinder))
                           .addAll(params.getDeclaredDeps().get())
+                          .addAll(
+                              RichStream.from(ocamlContext.getCCompileFlags())
+                                  .flatMap(f -> f.getDeps(ruleFinder).stream())
+                                  .toImmutableList())
                           .build()));
 
       Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc));

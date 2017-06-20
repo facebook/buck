@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -189,11 +190,14 @@ public class CxxLibraryDescription
         target,
         cxxPlatform,
         deps,
-        CxxFlags.getLanguageFlags(
-            args.getPreprocessorFlags(),
-            args.getPlatformPreprocessorFlags(),
-            args.getLangPreprocessorFlags(),
-            cxxPlatform),
+        ImmutableListMultimap.copyOf(
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlags(
+                    args.getPreprocessorFlags(),
+                    args.getPlatformPreprocessorFlags(),
+                    args.getLangPreprocessorFlags(),
+                    cxxPlatform),
+                StringArg::of)),
         ImmutableList.of(headerSymlinkTree),
         ImmutableSet.of(),
         RichStream.from(
@@ -1026,11 +1030,14 @@ public class CxxLibraryDescription
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
           cxxPreprocessorInputBuilder.putAllPreprocessorFlags(
-              CxxFlags.getLanguageFlags(
-                  args.getExportedPreprocessorFlags(),
-                  args.getExportedPlatformPreprocessorFlags(),
-                  args.getExportedLangPreprocessorFlags(),
-                  platform.getValue()));
+              ImmutableListMultimap.copyOf(
+                  Multimaps.transformValues(
+                      CxxFlags.getLanguageFlags(
+                          args.getExportedPreprocessorFlags(),
+                          args.getExportedPlatformPreprocessorFlags(),
+                          args.getExportedLangPreprocessorFlags(),
+                          platform.getValue()),
+                      StringArg::of)));
           cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE && !args.getHeaders().isEmpty()) {
