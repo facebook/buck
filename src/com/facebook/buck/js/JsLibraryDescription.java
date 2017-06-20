@@ -41,6 +41,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +52,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -57,6 +61,17 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
 
   static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(JsFlavors.PLATFORM_DOMAIN, JsFlavors.OPTIMIZATION_DOMAIN);
+  private final Cache<
+          ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>>,
+          ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>>
+      sourcesToFlavorsCache =
+          CacheBuilder.newBuilder()
+              .weakKeys()
+              .maximumWeight(1 << 16)
+              .weigher(
+                  (Weigher<ImmutableSet<?>, ImmutableBiMap<?, ?>>)
+                      (sources, flavors) -> sources.size())
+              .build();
 
   @Override
   public Class<JsLibraryDescriptionArg> getConstructorArgType() {
@@ -79,15 +94,21 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     // For the JsFile case, we only want to depend on the worker, not on any libraries
     params = JsUtil.withWorkerDependencyOnly(params, resolver, args.getWorker());
 
-    final WorkerTool worker = resolver.getRuleWithType(args.getWorker(), WorkerTool.class);
     final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
-    final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors =
-        mapSourcesToFlavors(sourcePathResolver, args.getSrcs());
+    final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
+    try {
+      sourcesToFlavors =
+          sourcesToFlavorsCache.get(
+              args.getSrcs(), () -> mapSourcesToFlavors(sourcePathResolver, args.getSrcs()));
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
     final Optional<Either<SourcePath, Pair<SourcePath, String>>> file =
         JsFlavors.extractSourcePath(
             sourcesToFlavors.inverse(), params.getBuildTarget().getFlavors().stream());
 
+    final WorkerTool worker = resolver.getRuleWithType(args.getWorker(), WorkerTool.class);
     if (file.isPresent()) {
       return params.getBuildTarget().getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(params, resolver, args, worker)
