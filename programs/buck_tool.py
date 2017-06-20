@@ -251,6 +251,7 @@ class BuckTool(object):
                 command = ["buck"]
                 extra_default_options = [
                     "-Djava.io.tmpdir={0}".format(self._tmp_dir),
+                    "-Dfile.encoding=UTF-8",
                     "-XX:SoftRefLRUPolicyMSPerMB=0",
                     "-XX:+UseG1GC",
                 ]
@@ -317,6 +318,7 @@ class BuckTool(object):
             command = ["buckd"]
             extra_default_options = [
                 "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
+                "-Dfile.encoding=UTF-8",
                 "-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET),
                 "-XX:SoftRefLRUPolicyMSPerMB=0",
                 # Stop Java waking up every 50ms to collect thread
