@@ -34,6 +34,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -152,6 +153,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         packageableCollection.getNativeLinkables();
     ImmutableMultimap<APKModule, NativeLinkable> nativeLinkablesAssets =
         packageableCollection.getNativeLinkablesAssets();
+
+    if (nativePlatforms.isEmpty()
+        && (!nativeLinkables.isEmpty() || !nativeLinkablesAssets.isEmpty())) {
+      throw new HumanReadableException(
+          "No native platforms detected. Probably Android NDK is not configured properly.");
+    }
 
     if (nativeLibraryMergeMap.isPresent() && !nativeLibraryMergeMap.get().isEmpty()) {
       NativeLibraryMergeEnhancementResult enhancement =

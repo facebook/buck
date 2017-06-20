@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -38,6 +40,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -187,5 +190,90 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         stripRules,
         Matchers.contains(
             Matchers.instanceOf(StripLinkable.class), Matchers.instanceOf(StripLinkable.class)));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testEmptyNativePlatformsWithNativeLinkables() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    CxxLibrary cxxLibrary =
+        (CxxLibrary)
+            new CxxLibraryBuilder(
+                    BuildTargetFactory.newInstance("//:cxxlib"), CxxPlatformUtils.DEFAULT_CONFIG)
+                .build(ruleResolver);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams originalParams =
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
+
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+
+    AndroidNativeLibsPackageableGraphEnhancer enhancer =
+        new AndroidNativeLibsPackageableGraphEnhancer(
+            ruleResolver,
+            originalParams,
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
+            Optional.empty(),
+            AndroidBinary.RelinkerMode.DISABLED,
+            apkModuleGraph);
+
+    AndroidPackageableCollector collector =
+        new AndroidPackageableCollector(
+            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+
+    collector.addNativeLinkable(cxxLibrary);
+
+    enhancer.enhance(collector.build());
+  }
+
+  @Test
+  public void testEmptyNativePlatformsWithNativeLinkableAssets() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    CxxLibrary cxxLibrary =
+        (CxxLibrary)
+            new CxxLibraryBuilder(
+                    BuildTargetFactory.newInstance("//:cxxlib"), CxxPlatformUtils.DEFAULT_CONFIG)
+                .build(ruleResolver);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams originalParams =
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
+
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+
+    AndroidNativeLibsPackageableGraphEnhancer enhancer =
+        new AndroidNativeLibsPackageableGraphEnhancer(
+            ruleResolver,
+            originalParams,
+            ImmutableMap.of(),
+            ImmutableSet.of(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
+            Optional.empty(),
+            AndroidBinary.RelinkerMode.DISABLED,
+            apkModuleGraph);
+
+    AndroidPackageableCollector collector =
+        new AndroidPackageableCollector(
+            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+
+    collector.addNativeLinkableAsset(cxxLibrary);
+
+    try {
+      enhancer.enhance(collector.build());
+      fail();
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "No native platforms detected. Probably Android NDK is not configured properly.",
+          e.getHumanReadableErrorMessage());
+    }
   }
 }
