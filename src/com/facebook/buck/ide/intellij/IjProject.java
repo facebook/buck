@@ -118,7 +118,7 @@ public class IjProject {
 
     cleaner.clean(
         projectConfig.getBuckConfig(),
-        IjProjectPaths.LIBRARIES_DIR,
+        projectConfig.getProjectPaths().getLibrariesDir(),
         projectConfig.isCleanerEnabled(),
         projectConfig.isRemovingUnusedLibrariesEnabled());
 

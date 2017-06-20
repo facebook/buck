@@ -99,7 +99,11 @@ public class PregeneratedCodeWriter {
 
     cleaner.doNotDelete(fileToWrite);
 
-    StringTemplateFile.writeToFile(projectFilesystem, contents, fileToWrite);
+    StringTemplateFile.writeToFile(
+        projectFilesystem,
+        contents,
+        fileToWrite,
+        projectConfig.getProjectPaths().getIdeaConfigDir());
   }
 
   private Optional<String> getResourcePackage(IjModule module, IjModuleAndroidFacet androidFacet) {

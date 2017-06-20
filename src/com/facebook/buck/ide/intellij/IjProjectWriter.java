@@ -22,7 +22,6 @@ import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
@@ -36,9 +35,9 @@ import org.stringtemplate.v4.ST;
 /** Writes the serialized representations of IntelliJ project components to disk. */
 public class IjProjectWriter {
 
-  private IjProjectTemplateDataPreparer projectDataPreparer;
-  private IjProjectConfig projectConfig;
-  private ProjectFilesystem projectFilesystem;
+  private final IjProjectTemplateDataPreparer projectDataPreparer;
+  private final IjProjectConfig projectConfig;
+  private final ProjectFilesystem projectFilesystem;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
@@ -50,7 +49,7 @@ public class IjProjectWriter {
   }
 
   public void write(IJProjectCleaner cleaner) throws IOException {
-    projectFilesystem.mkdirs(IjProjectPaths.IDEA_CONFIG_DIR);
+    projectFilesystem.mkdirs(projectConfig.getProjectPaths().getIdeaConfigDir());
 
     writeProjectSettings(cleaner, projectConfig);
 
@@ -96,7 +95,11 @@ public class IjProjectWriter {
             .map((dir) -> module.getModuleBasePath().relativize(dir))
             .orElse(null));
 
-    StringTemplateFile.writeToFile(projectFilesystem, moduleContents, path);
+    StringTemplateFile.writeToFile(
+        projectFilesystem,
+        moduleContents,
+        path,
+        projectConfig.getProjectPaths().getIdeaConfigDir());
     return path;
   }
 
@@ -110,7 +113,7 @@ public class IjProjectWriter {
       return;
     }
 
-    Path path = IjProjectPaths.IDEA_CONFIG_DIR.resolve("misc.xml");
+    Path path = projectConfig.getProjectPaths().getIdeaConfigDir().resolve("misc.xml");
 
     ST contents = StringTemplateFile.MISC_TEMPLATE.getST();
 
@@ -121,7 +124,8 @@ public class IjProjectWriter {
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
 
-    StringTemplateFile.writeToFile(projectFilesystem, contents, path);
+    StringTemplateFile.writeToFile(
+        projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
 
     cleaner.doNotDelete(path);
   }
@@ -143,46 +147,53 @@ public class IjProjectWriter {
   }
 
   private Path writeLibrary(IjLibrary library) throws IOException {
-    Path path = IjProjectPaths.LIBRARIES_DIR.resolve(library.getName() + ".xml");
+    Path path =
+        projectConfig.getProjectPaths().getLibrariesDir().resolve(library.getName() + ".xml");
 
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
+    final IjProjectPaths projectPaths = projectConfig.getProjectPaths();
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",
         library
             .getBinaryJars()
             .stream()
-            .map(MorePaths::pathWithUnixSeparators)
+            .map(projectPaths::toProjectDirRelativeString)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add(
         "classPaths",
         library
             .getClassPaths()
             .stream()
-            .map(MorePaths::pathWithUnixSeparators)
+            .map(projectPaths::toProjectDirRelativeString)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add(
         "sourceJars",
         library
             .getSourceJars()
             .stream()
-            .map(MorePaths::pathWithUnixSeparators)
+            .map(projectPaths::toProjectDirRelativeString)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add("javadocUrls", library.getJavadocUrls());
     //TODO(mkosiba): support res and assets for aar.
 
-    StringTemplateFile.writeToFile(projectFilesystem, contents, path);
+    StringTemplateFile.writeToFile(
+        projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
     return path;
   }
 
   private Path writeModulesIndex() throws IOException {
-    projectFilesystem.mkdirs(IjProjectPaths.IDEA_CONFIG_DIR);
-    Path path = IjProjectPaths.IDEA_CONFIG_DIR.resolve("modules.xml");
+    projectFilesystem.mkdirs(projectConfig.getProjectPaths().getIdeaConfigDir());
+    Path path = projectConfig.getProjectPaths().getIdeaConfigDir().resolve("modules.xml");
 
     ST moduleIndexContents = StringTemplateFile.MODULE_INDEX_TEMPLATE.getST();
     moduleIndexContents.add("modules", projectDataPreparer.getModuleIndexEntries());
 
-    StringTemplateFile.writeToFile(projectFilesystem, moduleIndexContents, path);
+    StringTemplateFile.writeToFile(
+        projectFilesystem,
+        moduleIndexContents,
+        path,
+        projectConfig.getProjectPaths().getIdeaConfigDir());
     return path;
   }
 

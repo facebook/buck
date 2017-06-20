@@ -1,0 +1,9 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "Test.java",
+    ],
+    deps = [
+        "//project2/dep:dep",
+    ],
+)

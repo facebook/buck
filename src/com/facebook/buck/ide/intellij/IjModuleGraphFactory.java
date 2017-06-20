@@ -63,7 +63,7 @@ public final class IjModuleGraphFactory {
       final int minimumPathDepth,
       ImmutableSet<String> ignoredTargetLabels) {
 
-    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap =
+    Stream<TargetNode<?, ?>> nodes =
         targetGraph
             .getNodes()
             .stream()
@@ -80,7 +80,14 @@ public final class IjModuleGraphFactory {
             // project. Filter out those cases proactively, so that we don't try to resolve files
             // relative to the wrong ProjectFilesystem.
             // Maybe one day someone will fix this.
-            .filter(targetNode -> isInRootCell(projectFilesystem, targetNode))
+            .filter(targetNode -> isInRootCell(projectFilesystem, targetNode));
+
+    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap =
+        (projectConfig.getProjectRoot().isEmpty()
+                ? nodes
+                : nodes.filter(
+                    targetNode ->
+                        shouldConvertToIjModule(projectConfig.getProjectRoot(), targetNode)))
             .collect(
                 MoreCollectors.toImmutableListMultimap(
                     targetNode -> targetNode.getBuildTarget().getBasePath(),
@@ -110,6 +117,10 @@ public final class IjModuleGraphFactory {
             });
 
     return moduleByBuildTarget.build();
+  }
+
+  private static boolean shouldConvertToIjModule(String projectRoot, TargetNode<?, ?> targetNode) {
+    return targetNode.getBuildTarget().getBasePath().startsWith(projectRoot);
   }
 
   private static AggregationTree createAggregationTree(

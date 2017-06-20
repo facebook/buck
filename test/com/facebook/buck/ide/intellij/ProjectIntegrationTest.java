@@ -225,6 +225,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("update_malformed_workspace");
   }
 
+  public void testProjectWithProjectRoot() throws InterruptedException, IOException {
+    runBuckProjectAndVerify(
+        "project_with_project_root", "--intellij-project-root", "project1", "//project1/lib:lib");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();

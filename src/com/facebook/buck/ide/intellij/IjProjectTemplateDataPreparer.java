@@ -118,11 +118,11 @@ public class IjProjectTemplateDataPreparer {
     return ImmutableSet.copyOf(pathSet);
   }
 
-  public static ImmutableSet<Path> createFilesystemTraversalBoundaryPathSet(
+  public ImmutableSet<Path> createFilesystemTraversalBoundaryPathSet(
       ImmutableSet<IjModule> modules) {
     return Stream.concat(
             modules.stream().map(IjModule::getModuleBasePath),
-            Stream.of(IjProjectPaths.IDEA_CONFIG_DIR))
+            Stream.of(projectConfig.getProjectPaths().getIdeaConfigDir()))
         .collect(MoreCollectors.toImmutableSet());
   }
 
@@ -149,8 +149,8 @@ public class IjProjectTemplateDataPreparer {
     return builder.build();
   }
 
-  private static ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
-    Path rootModuleBasePath = Paths.get("");
+  private ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
+    Path rootModuleBasePath = Paths.get(projectConfig.getProjectRoot());
     boolean hasRootModule =
         graph
             .getModules()
@@ -306,17 +306,27 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
+    boolean needToPutModuleToGroup = projectConfig.getProjectRoot().isEmpty();
     return modulesToBeWritten
         .stream()
         .map(
             module -> {
               Path moduleOutputFilePath = module.getModuleImlFilePath();
-              String fileUrl = IjProjectPaths.toProjectDirRelativeString(moduleOutputFilePath);
+              String fileUrl =
+                  projectConfig.getProjectPaths().toProjectDirRelativeUrl(moduleOutputFilePath);
+              Path moduleOutputFileRelativePath =
+                  Paths.get(
+                      projectConfig
+                          .getProjectPaths()
+                          .toProjectDirRelativeString(moduleOutputFilePath));
               // The root project module cannot belong to any group.
-              String group = (module.getModuleBasePath().toString().isEmpty()) ? null : "modules";
+              String group =
+                  (module.getModuleBasePath().toString().isEmpty() || !needToPutModuleToGroup)
+                      ? null
+                      : "modules";
               return ModuleIndexEntry.builder()
                   .setFileUrl(fileUrl)
-                  .setFilePath(moduleOutputFilePath)
+                  .setFilePath(moduleOutputFileRelativePath)
                   .setGroup(group)
                   .build();
             })

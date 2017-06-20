@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.nio.channels.Channels;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -189,6 +190,15 @@ public class ProjectCommand extends BuildCommand {
   private String modulesToFocusOn = null;
 
   @Option(
+    name = "--intellij-project-root",
+    usage =
+        "Generate an Intellij project at specified folder.  Buck targets under this folder "
+            + "are considered modules, and targets outside this folder are considered libraries."
+  )
+  @Nonnull
+  private String projectRoot = "";
+
+  @Option(
     name = "--file-with-list-of-generated-files",
     usage =
         "If present, forces command to save the list of generated file names to a provided"
@@ -257,6 +267,7 @@ public class ProjectCommand extends BuildCommand {
                     params.getBuckConfig(),
                     intellijAggregationMode,
                     generatedFilesListFilename,
+                    projectRoot,
                     runIjCleaner,
                     removeUnusedLibraries,
                     excludeArtifacts,

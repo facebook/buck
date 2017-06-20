@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.ide.intellij.IjProjectPaths;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -74,6 +75,10 @@ abstract class AbstractIjProjectConfig {
   public abstract AggregationMode getAggregationMode();
 
   public abstract Optional<String> getGeneratedFilesListFilename();
+
+  public abstract String getProjectRoot();
+
+  public abstract IjProjectPaths getProjectPaths();
 
   public abstract boolean isAggregatingAndroidResourceModulesEnabled();
 

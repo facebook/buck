@@ -55,7 +55,8 @@ enum StringTemplateFile {
     return new ST(template, DELIMITER, DELIMITER);
   }
 
-  public static void writeToFile(ProjectFilesystem projectFilesystem, ST contents, Path path)
+  public static void writeToFile(
+      ProjectFilesystem projectFilesystem, ST contents, Path path, Path ideaConfigDir)
       throws IOException {
     StringWriter stringWriter = new StringWriter();
     AutoIndentWriter noIndentWriter = new AutoIndentWriter(stringWriter);
@@ -72,8 +73,7 @@ enum StringTemplateFile {
 
     boolean danglingTempFile = false;
     Path tempFile =
-        projectFilesystem.createTempFile(
-            IjProjectPaths.IDEA_CONFIG_DIR, path.getFileName().toString(), ".tmp");
+        projectFilesystem.createTempFile(ideaConfigDir, path.getFileName().toString(), ".tmp");
     try {
       danglingTempFile = true;
       try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {

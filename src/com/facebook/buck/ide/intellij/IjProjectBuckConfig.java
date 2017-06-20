@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class IjProjectBuckConfig {
@@ -38,6 +39,7 @@ public class IjProjectBuckConfig {
       BuckConfig buckConfig,
       @Nullable AggregationMode aggregationMode,
       @Nullable String generatedFilesListFilename,
+      @Nonnull String projectRoot,
       boolean isCleanerEnabled,
       boolean removeUnusedLibraries,
       boolean excludeArtifacts,
@@ -98,6 +100,8 @@ public class IjProjectBuckConfig {
                 || buckConfig.getBooleanValue(PROJECT_BUCK_CONFIG_SECTION, "skip_build", false))
         .setAggregationMode(getAggregationMode(aggregationMode, buckConfig))
         .setGeneratedFilesListFilename(Optional.ofNullable(generatedFilesListFilename))
+        .setProjectRoot(projectRoot)
+        .setProjectPaths(new IjProjectPaths(projectRoot))
         .setIgnoredTargetLabels(
             buckConfig.getListWithoutComments(
                 INTELLIJ_BUCK_CONFIG_SECTION, "ignored_target_labels"))

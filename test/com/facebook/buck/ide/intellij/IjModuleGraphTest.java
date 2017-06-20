@@ -648,7 +648,8 @@ public class IjModuleGraphTest {
         };
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     IjProjectConfig projectConfig =
-        IjProjectBuckConfig.create(buckConfig, aggregationMode, null, false, false, false, true);
+        IjProjectBuckConfig.create(
+            buckConfig, aggregationMode, null, "", false, false, false, true);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
