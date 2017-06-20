@@ -42,6 +42,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -172,20 +173,24 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocess
-                  .getPreprocessorDelegate()
-                  .get()
-                  .getCommand(CxxToolFlags.of(), Optional.empty()),
+              Arg.stringify(
+                  cxxPreprocess
+                      .getPreprocessorDelegate()
+                      .get()
+                      .getCommand(CxxToolFlags.of(), Optional.empty()),
+                  pathResolver),
               platformFlags));
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(name, cxxSource);
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocessAndCompile
-                  .getPreprocessorDelegate()
-                  .get()
-                  .getCommand(CxxToolFlags.of(), Optional.empty()),
+              Arg.stringify(
+                  cxxPreprocessAndCompile
+                      .getPreprocessorDelegate()
+                      .get()
+                      .getCommand(CxxToolFlags.of(), Optional.empty()),
+                  pathResolver),
               platformFlags));
     }
 
@@ -645,10 +650,12 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(sourceName, cSource);
       ImmutableList<String> cPreprocessCommand =
-          cPreprocess
-              .getPreprocessorDelegate()
-              .get()
-              .getCommand(CxxToolFlags.of(), Optional.empty());
+          Arg.stringify(
+              cPreprocess
+                  .getPreprocessorDelegate()
+                  .get()
+                  .getCommand(CxxToolFlags.of(), Optional.empty()),
+              sourcePathResolver);
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);
       assertContains(cPreprocessCommand, perFileFlags);
@@ -761,8 +768,10 @@ public class CxxSourceRuleFactoryTest {
       CxxSource source =
           CxxSource.of(sourceType, new FakeSourcePath(sourceName), ImmutableList.of("-DFOO=1"));
 
-      ImmutableList<String> withPaths = cxxSourceRuleFactory.getFlagsForSource(source, true);
-      ImmutableList<String> withoutPaths = cxxSourceRuleFactory.getFlagsForSource(source, false);
+      ImmutableList<String> withPaths =
+          Arg.stringify(cxxSourceRuleFactory.getFlagsForSource(source, true), pathResolver);
+      ImmutableList<String> withoutPaths =
+          Arg.stringify(cxxSourceRuleFactory.getFlagsForSource(source, false), pathResolver);
 
       // these should differ by include path flags:
       assertNotEquals(-1, Joiner.on("#").join(withPaths).indexOf("-isystem#/tmp/sys"));

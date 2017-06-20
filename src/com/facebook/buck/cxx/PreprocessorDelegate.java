@@ -17,13 +17,17 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
@@ -141,7 +145,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     sink.setReflectively("preprocessor", preprocessor);
     sink.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
     sink.setReflectively("headerVerification", headerVerification);
-    preprocessorFlags.appendToRuleKey(sink, sanitizer);
+    preprocessorFlags.appendToRuleKey(sink);
   }
 
   public HeaderPathNormalizer getHeaderPathNormalizer() {
@@ -153,10 +157,10 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
    *
    * @param compilerFlags flags to append.
    */
-  public ImmutableList<String> getCommand(
+  public ImmutableList<Arg> getCommand(
       CxxToolFlags compilerFlags, Optional<CxxPrecompiledHeader> pch) {
-    return ImmutableList.<String>builder()
-        .addAll(getCommandPrefix())
+    return ImmutableList.<Arg>builder()
+        .addAll(StringArg.from(getCommandPrefix()))
         .addAll(getArguments(compilerFlags, pch))
         .build();
   }
@@ -165,7 +169,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessor.getCommandPrefix(resolver);
   }
 
-  public ImmutableList<String> getArguments(
+  public ImmutableList<Arg> getArguments(
       CxxToolFlags compilerFlags, Optional<CxxPrecompiledHeader> pch) {
     return ImmutableList.copyOf(
         CxxToolFlags.concat(getFlagsWithSearchPaths(pch), compilerFlags).getAllFlags());
@@ -292,11 +296,19 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     return hashCommand(getCommand(flags, pch));
   }
 
-  public String hashCommand(ImmutableList<String> flags) {
+  public String hashCommand(ImmutableList<Arg> flags) {
     Hasher hasher = Hashing.murmur3_128().newHasher();
     String workingDirString = workingDir.toString();
     // Skips the executable argument (the first one) as that is not sanitized.
-    for (String part : sanitizer.sanitizeFlags(Iterables.skip(flags, 1))) {
+    //
+    // TODO(#14644005): This currently won't support macros in the input flags.  I think we probably
+    // need to change the hasher here to use `RuleKeyObjectSink` so that it can handle `Arg`s
+    // directly and hash it appropriately.
+    for (Arg flag : flags) {
+      Preconditions.checkArgument(
+          flag.getInputs().isEmpty(), "precompiled header hashing does not support source paths");
+    }
+    for (String part : sanitizer.sanitizeFlags(Iterables.skip(Arg.stringify(flags, resolver), 1))) {
       // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
       if (part.startsWith(workingDirString)) {
         part = "<WORKINGDIR>" + part.substring(workingDirString.length());
@@ -321,5 +333,12 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
 
   public PreprocessorFlags getPreprocessorFlags() {
     return preprocessorFlags;
+  }
+
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ImmutableList.<BuildRule>builder()
+        .addAll(getPreprocessor().getDeps(ruleFinder))
+        .addAll(getPreprocessorFlags().getDeps(ruleFinder))
+        .build();
   }
 }

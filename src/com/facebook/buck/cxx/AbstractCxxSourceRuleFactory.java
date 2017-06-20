@@ -32,6 +32,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SanitizedArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -233,11 +236,24 @@ abstract class AbstractCxxSourceRuleFactory {
         .anyMatch(flavor -> flavor.getName().startsWith(COMPILE_FLAVOR_PREFIX));
   }
 
-  private ImmutableList<String> getPlatformCompileFlags(CxxSource.Type type) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
+  private ImmutableList<Arg> sanitizedArgs(Iterable<String> flags) {
+    return SanitizedArg.from(
+        getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty()), flags);
+  }
+
+  private ImmutableList<Arg> getPlatformPreprocessorFlags(CxxSource.Type type) {
+    return sanitizedArgs(CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), type));
+  }
+
+  private ImmutableList<Arg> getRulePreprocessorFlags(CxxSource.Type type) {
+    return sanitizedArgs(preprocessorFlags.getUnchecked(type));
+  }
+
+  private ImmutableList<Arg> getPlatformCompileFlags(CxxSource.Type type) {
+    ImmutableList.Builder<Arg> args = ImmutableList.builder();
 
     // Add in the source-type specific platform compiler flags.
-    args.addAll(CxxSourceTypes.getPlatformCompilerFlags(getCxxPlatform(), type));
+    args.addAll(sanitizedArgs(CxxSourceTypes.getPlatformCompilerFlags(getCxxPlatform(), type)));
 
     // These source types require assembling, so add in platform-specific assembler flags.
     //
@@ -249,14 +265,19 @@ abstract class AbstractCxxSourceRuleFactory {
         || type == CxxSource.Type.CXX_CPP_OUTPUT
         || type == CxxSource.Type.OBJCXX_CPP_OUTPUT
         || type == CxxSource.Type.CUDA_CPP_OUTPUT) {
-      args.addAll(getCxxPlatform().getAsflags());
+      args.addAll(
+          SanitizedArg.from(
+              getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+              getCxxPlatform().getAsflags()));
     }
 
     return args.build();
   }
 
-  private ImmutableList<String> getRuleCompileFlags(CxxSource.Type type) {
-    return ImmutableList.copyOf(getCompilerFlags().get(type));
+  private Iterable<Arg> getRuleCompileFlags(CxxSource.Type type) {
+    return SanitizedArg.from(
+        getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+        getCompilerFlags().get(type));
   }
 
   /**
@@ -278,13 +299,13 @@ abstract class AbstractCxxSourceRuleFactory {
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
             // If we're using pic, add in the appropriate flag.
-            .addAllPlatformFlags(getPicType().getFlags(compiler))
+            .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
             // Add in the platform specific compiler flags.
             .addAllPlatformFlags(getPlatformCompileFlags(source.getType()))
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(source.getFlags())
+            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
             .build();
 
     CompilerDelegate compilerDelegate =
@@ -331,11 +352,11 @@ abstract class AbstractCxxSourceRuleFactory {
         CxxSourceTypes.getCompiler(getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(type))
             .resolve(getResolver());
     return CxxToolFlags.explicitBuilder()
-        .addAllPlatformFlags(getPicType().getFlags(compiler))
-        .addAllPlatformFlags(CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), type))
-        .addAllRuleFlags(preprocessorFlags.getUnchecked(type))
+        .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
+        .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
+        .addAllRuleFlags(getRulePreprocessorFlags(type))
         // Add custom per-file flags.
-        .addAllRuleFlags(sourceFlags)
+        .addAllRuleFlags(sanitizedArgs(sourceFlags))
         .build();
   }
 
@@ -345,14 +366,15 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxToolFlags.explicitBuilder()
         // If we're using pic, add in the appropriate flag.
         .addAllPlatformFlags(
-            getPicType()
-                .getFlags(
-                    CxxSourceTypes.getCompiler(getCxxPlatform(), outputType)
-                        .resolve(getResolver())))
+            StringArg.from(
+                getPicType()
+                    .getFlags(
+                        CxxSourceTypes.getCompiler(getCxxPlatform(), outputType)
+                            .resolve(getResolver()))))
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(outputType))
         .addAllRuleFlags(getRuleCompileFlags(outputType))
-        .addAllRuleFlags(sourceFlags)
+        .addAllRuleFlags(sanitizedArgs(sourceFlags))
         .build();
   }
 
@@ -385,8 +407,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxToolFlags ppFlags =
         CxxToolFlags.copyOf(
-            CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), source.getType()),
-            preprocessorFlags.getUnchecked(source.getType()));
+            getPlatformPreprocessorFlags(source.getType()),
+            getRulePreprocessorFlags(source.getType()));
 
     CxxToolFlags cFlags = computeCompilerFlags(source.getType(), source.getFlags());
 
@@ -401,8 +423,7 @@ abstract class AbstractCxxSourceRuleFactory {
             source.getType(),
             getCompileOutputPath(target, name),
             preprocessorDelegateValue.getPreprocessorDelegate(),
-            inferConfig,
-            getCxxPlatform().getCompilerDebugPathSanitizer());
+            inferConfig);
     getResolver().addToIndex(result);
     return result;
   }
@@ -863,7 +884,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   @VisibleForTesting
-  public ImmutableList<String> getFlagsForSource(CxxSource source, boolean allowIncludePathFlags) {
+  public ImmutableList<Arg> getFlagsForSource(CxxSource source, boolean allowIncludePathFlags) {
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
         preprocessorDelegates.getUnchecked(
             PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
@@ -878,18 +899,18 @@ abstract class AbstractCxxSourceRuleFactory {
 
     class HashStrings {
       /** List of build flags (as strings), except for those related to header search paths. */
-      public final ImmutableList<String> baseFlags;
+      public final ImmutableList<Arg> baseFlags;
       /** Complete list of all build flags (as strings), including header search paths. */
-      public final ImmutableList<String> fullFlags;
+      public final ImmutableList<Arg> fullFlags;
 
       public final String baseHash;
       public final String fullHash;
 
       public HashStrings(CxxToolFlags compilerFlags) {
-        ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
+        ImmutableList.Builder<Arg> builder = ImmutableList.builder();
 
         // Add the build command itself first
-        builder.addAll(preprocessorDelegate.getCommandPrefix());
+        builder.addAll(StringArg.from(preprocessorDelegate.getCommandPrefix()));
         // Then preprocessor + compiler args, not including include path args like -I, -isystem, ...
         builder.addAll(preprocessorDelegate.getNonIncludePathFlags(Optional.empty()).getAllFlags());
         builder.addAll(compilerFlags.getAllFlags());

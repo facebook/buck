@@ -27,17 +27,21 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.SanitizedArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -59,13 +63,13 @@ public class PreprocessorFlagsTest {
             {
               "otherFlags (platform)",
               defaultFlags.withOtherFlags(
-                  CxxToolFlags.explicitBuilder().addPlatformFlags("-DFOO").build()),
+                  CxxToolFlags.explicitBuilder().addPlatformFlags(StringArg.of("-DFOO")).build()),
               true,
             },
             {
               "otherFlags (rule)",
               defaultFlags.withOtherFlags(
-                  CxxToolFlags.explicitBuilder().addRuleFlags("-DFOO").build()),
+                  CxxToolFlags.explicitBuilder().addRuleFlags(StringArg.of("-DFOO")).build()),
               true,
             },
             {
@@ -106,13 +110,13 @@ public class PreprocessorFlagsTest {
       builder =
           new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
               .newBuilderForTesting(fakeBuildRule);
-      defaultFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+      defaultFlags.appendToRuleKey(builder);
       RuleKey defaultRuleKey = builder.build(RuleKey::new);
 
       builder =
           new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
               .newBuilderForTesting(fakeBuildRule);
-      alteredFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+      alteredFlags.appendToRuleKey(builder);
       RuleKey alteredRuleKey = builder.build(RuleKey::new);
 
       if (shouldDiffer) {
@@ -146,17 +150,20 @@ public class PreprocessorFlagsTest {
 
           CxxToolFlags flags =
               CxxToolFlags.explicitBuilder()
-                  .addPlatformFlags("-I" + prefix + "/foo")
-                  .addRuleFlags("-I" + prefix + "/bar")
+                  .addAllPlatformFlags(
+                      SanitizedArg.from(
+                          sanitizer.sanitize(Optional.empty()),
+                          ImmutableList.of("-I" + prefix + "/foo")))
+                  .addAllRuleFlags(
+                      SanitizedArg.from(
+                          sanitizer.sanitize(Optional.empty()),
+                          ImmutableList.of("-I" + prefix + "/bar")))
                   .build();
 
           DefaultRuleKeyFactory.Builder<HashCode> builder =
               new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
                   .newBuilderForTesting(fakeBuildRule);
-          PreprocessorFlags.builder()
-              .setOtherFlags(flags)
-              .build()
-              .appendToRuleKey(builder, sanitizer);
+          PreprocessorFlags.builder().setOtherFlags(flags).build().appendToRuleKey(builder);
           return builder.build(RuleKey::new);
         }
       }

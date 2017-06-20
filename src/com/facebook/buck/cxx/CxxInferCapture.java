@@ -25,8 +25,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -48,8 +49,8 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsDependencyFileRuleKey {
 
   @AddToRuleKey private final InferBuckConfig inferConfig;
-  private final CxxToolFlags preprocessorFlags;
-  private final CxxToolFlags compilerFlags;
+  @AddToRuleKey private final CxxToolFlags preprocessorFlags;
+  @AddToRuleKey private final CxxToolFlags compilerFlags;
   @AddToRuleKey private final SourcePath input;
   private final CxxSource.Type inputType;
 
@@ -59,7 +60,6 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final PreprocessorDelegate preprocessorDelegate;
 
   private final Path resultsDir;
-  private final DebugPathSanitizer sanitizer;
 
   CxxInferCapture(
       BuildRuleParams buildRuleParams,
@@ -69,8 +69,7 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
       AbstractCxxSource.Type inputType,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
-      InferBuckConfig inferConfig,
-      DebugPathSanitizer sanitizer) {
+      InferBuckConfig inferConfig) {
     super(buildRuleParams);
     this.preprocessorFlags = preprocessorFlags;
     this.compilerFlags = compilerFlags;
@@ -81,7 +80,6 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.inferConfig = inferConfig;
     this.resultsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-out-%s");
-    this.sanitizer = sanitizer;
   }
 
   private CxxToolFlags getSearchPathFlags() {
@@ -119,7 +117,7 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
-        .add(new WriteArgFileStep(inputRelativePath))
+        .add(new WriteArgFileStep(context.getSourcePathResolver(), inputRelativePath))
         .add(
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(), frontendCommand, ImmutableMap.of()))
@@ -133,21 +131,6 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public Path getAbsolutePathToOutput() {
     return getProjectFilesystem().resolve(resultsDir);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
-    // from contributing to the rule key.
-    sink.setReflectively(
-            "platformPreprocessorFlags",
-            sanitizer.sanitizeFlags(preprocessorFlags.getPlatformFlags()))
-        .setReflectively(
-            "rulePreprocessorFlags", sanitizer.sanitizeFlags(preprocessorFlags.getRuleFlags()))
-        .setReflectively(
-            "platformCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()))
-        .setReflectively(
-            "ruleCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 
   @Override
@@ -207,9 +190,11 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private class WriteArgFileStep implements Step {
 
+    private final SourcePathResolver pathResolver;
     private final Path inputRelativePath;
 
-    public WriteArgFileStep(Path inputRelativePath) {
+    public WriteArgFileStep(SourcePathResolver pathResolver, Path inputRelativePath) {
+      this.pathResolver = pathResolver;
       this.inputRelativePath = inputRelativePath;
     }
 
@@ -237,8 +222,10 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
       return commandBuilder
           .add("-MD", "-MF", getDepFilePath().toString())
           .addAll(
-              CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
-                  .getAllFlags())
+              Arg.stringify(
+                  CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
+                      .getAllFlags(),
+                  pathResolver))
           .add("-x", inputType.getLanguage())
           .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
           .add("-c")

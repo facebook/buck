@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -100,7 +101,9 @@ abstract class AbstractCxxIncludePaths {
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
-        .addAllRuleFlags(getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor))
+        .addAllRuleFlags(
+            StringArg.from(
+                getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor)))
         .build();
   }
 
@@ -118,6 +121,8 @@ abstract class AbstractCxxIncludePaths {
   }
 
   public CxxToolFlags toToolFlags(SourcePathResolver resolver, Preprocessor preprocessor) {
-    return CxxToolFlags.explicitBuilder().addAllRuleFlags(getFlags(resolver, preprocessor)).build();
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(StringArg.from(getFlags(resolver, preprocessor)))
+        .build();
   }
 }

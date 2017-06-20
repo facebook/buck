@@ -21,6 +21,8 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -68,21 +70,21 @@ abstract class AbstractPreprocessorFlags {
     for (FrameworkPath frameworkPath : getFrameworkPaths()) {
       deps.addAll(frameworkPath.getDeps(ruleFinder));
     }
+    for (Arg arg : getOtherFlags().getAllFlags()) {
+      deps.addAll(arg.getDeps(ruleFinder));
+    }
     return deps.build();
   }
 
   /** Append to rule key the members which are not handled elsewhere. */
-  public void appendToRuleKey(RuleKeyObjectSink sink, DebugPathSanitizer sanitizer) {
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("prefixHeader", getPrefixHeader());
     sink.setReflectively("includes", getIncludes());
     sink.setReflectively("frameworkRoots", getFrameworkPaths());
 
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
-    sink.setReflectively(
-        "platformPreprocessorFlags", sanitizer.sanitizeFlags(getOtherFlags().getPlatformFlags()));
-    sink.setReflectively(
-        "rulePreprocessorFlags", sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
+    sink.setReflectively("preprocessorFlags", getOtherFlags());
   }
 
   public CxxToolFlags getIncludePathFlags(
@@ -92,8 +94,9 @@ abstract class AbstractPreprocessorFlags {
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
         .addAllRuleFlags(
-            getCxxIncludePaths()
-                .getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor))
+            StringArg.from(
+                getCxxIncludePaths()
+                    .getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor)))
         .build();
   }
 
@@ -102,10 +105,12 @@ abstract class AbstractPreprocessorFlags {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
     builder.addAllRuleFlags(
-        preprocessor.prefixOrPCHArgs(
-            resolver,
-            getPrefixHeader(),
-            pch.map(CxxPrecompiledHeader::getSourcePathToOutput).map(resolver::getRelativePath)));
+        StringArg.from(
+            preprocessor.prefixOrPCHArgs(
+                resolver,
+                getPrefixHeader(),
+                pch.map(CxxPrecompiledHeader::getSourcePathToOutput)
+                    .map(resolver::getRelativePath))));
     return builder.build();
   }
 

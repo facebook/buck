@@ -105,8 +105,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         AbstractCxxSource.Type.C,
         Paths.get("src.o"),
         preprocessorDelegate,
-        inferBuckConfig,
-        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+        inferBuckConfig);
   }
 
   @Test

@@ -28,6 +28,8 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -84,7 +86,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
   @AddToRuleKey private final CxxSource.Type inputType;
 
   // Fields that added to the rule key with some processing.
-  private final CxxToolFlags compilerFlags;
+  @AddToRuleKey private final CxxToolFlags compilerFlags;
 
   // Fields that are not added to the rule key.
   private final DebugPathSanitizer compilerSanitizer;
@@ -121,10 +123,6 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
-    sink.setReflectively(
-        "compilerFlagsPlatform", compilerSanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
-    sink.setReflectively(
-        "compilerFlagsRule", compilerSanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 
   @Override
@@ -250,16 +248,19 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
             preprocessorDelegate.getCommandPrefix(),
-            ImmutableList.copyOf(
-                CxxToolFlags.explicitBuilder()
-                    .addAllRuleFlags(
-                        getCxxIncludePaths()
-                            .getFlags(resolver, preprocessorDelegate.getPreprocessor()))
-                    .addAllRuleFlags(
-                        preprocessorDelegate.getArguments(
-                            compilerFlags, /* no pch */ Optional.empty()))
-                    .build()
-                    .getAllFlags()),
+            Arg.stringify(
+                ImmutableList.copyOf(
+                    CxxToolFlags.explicitBuilder()
+                        .addAllRuleFlags(
+                            StringArg.from(
+                                getCxxIncludePaths()
+                                    .getFlags(resolver, preprocessorDelegate.getPreprocessor())))
+                        .addAllRuleFlags(
+                            preprocessorDelegate.getArguments(
+                                compilerFlags, /* no pch */ Optional.empty()))
+                        .build()
+                        .getAllFlags()),
+                resolver),
             preprocessorDelegate.getEnvironment()),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,

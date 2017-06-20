@@ -589,11 +589,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
       ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
       toolFlagsBuilder.setPlatformFlags(
-          CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType));
+          StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType)));
       for (CxxPreprocessorInput input : transitivePreprocessorInput) {
         ppFlagsBuilder.addAllIncludes(input.getIncludes());
         ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
-        toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(sourceType));
+        toolFlagsBuilder.addAllRuleFlags(
+            StringArg.from(input.getPreprocessorFlags().get(sourceType)));
       }
       ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
       return ppFlagsBuilder.build();
@@ -618,7 +619,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor,
               /* pch */ Optional.empty());
-      return Joiner.on(' ').join(Iterables.transform(flags.getAllFlags(), Escaper.SHELL_ESCAPER));
+      return Joiner.on(' ')
+          .join(
+              Iterables.transform(
+                  com.facebook.buck.rules.args.Arg.stringify(flags.getAllFlags(), pathResolver),
+                  Escaper.SHELL_ESCAPER));
     }
 
     @Override
@@ -645,7 +650,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
       return (RuleKeyAppendable)
           sink -> {
-            ppFlags.appendToRuleKey(sink, cxxPlatform.getCompilerDebugPathSanitizer());
+            ppFlags.appendToRuleKey(sink);
             sink.setReflectively(
                 "headers",
                 FluentIterable.from(transitivePreprocessorInput)

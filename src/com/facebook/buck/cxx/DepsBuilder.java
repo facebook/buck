@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,11 +42,6 @@ public class DepsBuilder {
     return SortedSets.union(builder.build(), commonDeps);
   }
 
-  private DepsBuilder add(Tool tool) {
-    builder.addAll(tool.getDeps(ruleFinder));
-    return this;
-  }
-
   public DepsBuilder add(CxxSource source) {
     return add(source.getPath());
   }
@@ -63,12 +57,12 @@ public class DepsBuilder {
   }
 
   public DepsBuilder add(PreprocessorDelegate delegate) {
-    add(delegate.getPreprocessor());
+    builder.addAll(delegate.getDeps(ruleFinder));
     return this;
   }
 
   public DepsBuilder add(CompilerDelegate delegate) {
-    add(delegate.getCompiler());
+    builder.addAll(delegate.getDeps(ruleFinder));
     return this;
   }
 

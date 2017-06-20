@@ -16,10 +16,15 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
@@ -51,16 +56,14 @@ class CompilerDelegate implements RuleKeyAppendable {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("compiler", compiler);
-    sink.setReflectively(
-        "platformCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
-    sink.setReflectively(
-        "ruleCompilerFlags", sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
+    sink.setReflectively("platformCompilerFlags", compilerFlags.getPlatformFlags());
+    sink.setReflectively("ruleCompilerFlags", compilerFlags.getRuleFlags());
   }
 
   /** Returns the argument list for executing the compiler. */
-  public ImmutableList<String> getCommand(CxxToolFlags prependedFlags, Path cellPath) {
-    return ImmutableList.<String>builder()
-        .addAll(getCommandPrefix())
+  public ImmutableList<Arg> getCommand(CxxToolFlags prependedFlags, Path cellPath) {
+    return ImmutableList.<Arg>builder()
+        .addAll(StringArg.from(getCommandPrefix()))
         .addAll(getArguments(prependedFlags, cellPath))
         .build();
   }
@@ -69,11 +72,13 @@ class CompilerDelegate implements RuleKeyAppendable {
     return compiler.getCommandPrefix(resolver);
   }
 
-  public ImmutableList<String> getArguments(CxxToolFlags prependedFlags, Path cellPath) {
-    return ImmutableList.<String>builder()
+  public ImmutableList<Arg> getArguments(CxxToolFlags prependedFlags, Path cellPath) {
+    return ImmutableList.<Arg>builder()
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
-            compiler.getFlagsForReproducibleBuild(sanitizer.getCompilationDirectory(), cellPath))
+            StringArg.from(
+                compiler.getFlagsForReproducibleBuild(
+                    sanitizer.getCompilationDirectory(), cellPath)))
         .build();
   }
 
@@ -99,5 +104,14 @@ class CompilerDelegate implements RuleKeyAppendable {
 
   public Compiler getCompiler() {
     return compiler;
+  }
+
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.addAll(getCompiler().getDeps(ruleFinder));
+    RichStream.from(getCompilerFlags().getAllFlags())
+        .flatMap(a -> a.getDeps(ruleFinder).stream())
+        .forEach(deps::add);
+    return deps.build();
   }
 }

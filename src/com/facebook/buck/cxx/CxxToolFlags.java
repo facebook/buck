@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
@@ -31,18 +34,24 @@ import org.immutables.value.Value;
  *
  * <p>Users should use the API in this class instead of the concrete implementations.
  */
-public abstract class CxxToolFlags {
+public abstract class CxxToolFlags implements RuleKeyAppendable {
   private static final CxxToolFlags EMPTY_FLAGS = CxxToolFlags.explicitBuilder().build();
 
   /** Flags that precede flags from {@code #getRuleFlags()}. */
-  public abstract Iterable<String> getPlatformFlags();
+  public abstract Iterable<Arg> getPlatformFlags();
 
   /** Flags that succeed flags from {@code #getPlatformFlags()}. */
-  public abstract Iterable<String> getRuleFlags();
+  public abstract Iterable<Arg> getRuleFlags();
 
   /** Returns all flags in the appropriate order. */
-  public final Iterable<String> getAllFlags() {
+  public final Iterable<Arg> getAllFlags() {
     return Iterables.concat(getPlatformFlags(), getRuleFlags());
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("platformFlags", getPlatformFlags());
+    sink.setReflectively("ruleFlags", getRuleFlags());
   }
 
   /** Returns a builder for explicitly specifying the flags. */
@@ -56,14 +65,14 @@ public abstract class CxxToolFlags {
   }
 
   /** Directly construct an instance from the given members. */
-  public static CxxToolFlags copyOf(Iterable<String> platformFlags, Iterable<String> ruleFlags) {
+  public static CxxToolFlags copyOf(Iterable<Arg> platformFlags, Iterable<Arg> ruleFlags) {
     return ExplicitCxxToolFlags.of(platformFlags, ruleFlags);
   }
 
   /** Concatenate multiple flags in a pairwise manner. */
   public static CxxToolFlags concat(CxxToolFlags... parts) {
-    Iterable<String> platformFlags = ImmutableList.of();
-    Iterable<String> ruleFlags = ImmutableList.of();
+    Iterable<Arg> platformFlags = ImmutableList.of();
+    Iterable<Arg> ruleFlags = ImmutableList.of();
     for (CxxToolFlags part : parts) {
       platformFlags = Iterables.concat(platformFlags, part.getPlatformFlags());
       ruleFlags = Iterables.concat(ruleFlags, part.getRuleFlags());
@@ -84,11 +93,11 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
 
   @Override
   @Value.Parameter
-  public abstract ImmutableList<String> getPlatformFlags();
+  public abstract ImmutableList<Arg> getPlatformFlags();
 
   @Override
   @Value.Parameter
-  public abstract ImmutableList<String> getRuleFlags();
+  public abstract ImmutableList<Arg> getRuleFlags();
 
   public static void addCxxToolFlags(ExplicitCxxToolFlags.Builder builder, CxxToolFlags flags) {
     builder.addAllPlatformFlags(flags.getPlatformFlags());
@@ -105,8 +114,8 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
 @BuckStyleTuple
 abstract class AbstractIterableCxxToolFlags extends CxxToolFlags {
   @Override
-  public abstract Iterable<String> getPlatformFlags();
+  public abstract Iterable<Arg> getPlatformFlags();
 
   @Override
-  public abstract Iterable<String> getRuleFlags();
+  public abstract Iterable<Arg> getRuleFlags();
 }

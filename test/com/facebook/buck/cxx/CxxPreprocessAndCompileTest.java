@@ -45,6 +45,7 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -97,8 +98,8 @@ public class CxxPreprocessAndCompileTest {
       new CompilerWithColorSupport(new HashedFileTool(Paths.get("compiler")));
   private static final CxxToolFlags DEFAULT_TOOL_FLAGS =
       CxxToolFlags.explicitBuilder()
-          .addPlatformFlags("-fsanitize=address")
-          .addRuleFlags("-O3")
+          .addPlatformFlags(StringArg.of("-fsanitize=address"))
+          .addRuleFlags(StringArg.of("-O3"))
           .build();
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
@@ -219,7 +220,7 @@ public class CxxPreprocessAndCompileTest {
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         CxxToolFlags.explicitBuilder()
-                            .addPlatformFlags("-different")
+                            .addPlatformFlags(StringArg.of("-different"))
                             .setRuleFlags(DEFAULT_TOOL_FLAGS.getRuleFlags())
                             .build()),
                     DEFAULT_OUTPUT,
@@ -242,7 +243,7 @@ public class CxxPreprocessAndCompileTest {
                         DEFAULT_COMPILER,
                         CxxToolFlags.explicitBuilder()
                             .setPlatformFlags(DEFAULT_TOOL_FLAGS.getPlatformFlags())
-                            .addRuleFlags("-other", "flags")
+                            .addAllRuleFlags(StringArg.from("-other", "flags"))
                             .build()),
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUT,
@@ -344,8 +345,8 @@ public class CxxPreprocessAndCompileTest {
     BuildRuleParams params = TestBuildRuleParams.create(target);
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
-            .addPlatformFlags("-ffunction-sections")
-            .addRuleFlags("-O3")
+            .addPlatformFlags(StringArg.of("-ffunction-sections"))
+            .addRuleFlags(StringArg.of("-O3"))
             .build();
     Path output = Paths.get("test.o");
     Path input = Paths.get("test.ii");

@@ -38,6 +38,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -194,7 +195,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    ppFlags.appendToRuleKey(sink, cxxPlatform.getCompilerDebugPathSanitizer());
+    ppFlags.appendToRuleKey(sink);
     sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
@@ -264,7 +265,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
             preprocessor,
             /* pch */ Optional.empty());
-    return MoreIterables.zipAndConcat(Iterables.cycle("-optP"), cxxToolFlags.getAllFlags());
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
   }
 
   private class GhcStep extends ShellStep {

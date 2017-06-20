@@ -30,6 +30,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -178,7 +179,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
             .map(PreprocessorDelegate::getHeaderPathNormalizer)
             .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
 
-    ImmutableList<String> arguments =
+    ImmutableList<Arg> arguments =
         compilerDelegate.getArguments(
             preprocessDelegate
                 .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderRule))
@@ -198,7 +199,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
         getRelativeInputPath(resolver),
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
-            compilerDelegate.getCommandPrefix(), arguments, compilerDelegate.getEnvironment()),
+            compilerDelegate.getCommandPrefix(),
+            Arg.stringify(arguments, resolver),
+            compilerDelegate.getEnvironment()),
         headerPathNormalizer,
         sanitizer,
         scratchDir,
@@ -223,7 +226,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
-    for (String flag : compilerDelegate.getCompilerFlags().getAllFlags()) {
+    for (String flag :
+        Arg.stringify(
+            compilerDelegate.getCompilerFlags().getAllFlags(), context.getSourcePathResolver())) {
       if (flag.equals("-ftest-coverage")) {
         buildableContext.recordArtifact(getGcnoPath(output));
         break;

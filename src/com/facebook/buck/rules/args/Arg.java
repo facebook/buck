@@ -63,8 +63,7 @@ public interface Arg extends RuleKeyAppendable {
     return builder.build();
   }
 
-  static ImmutableList<String> stringify(
-      ImmutableCollection<Arg> args, SourcePathResolver pathResolver) {
+  static ImmutableList<String> stringify(Iterable<Arg> args, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       arg.appendToCommandLine(builder, pathResolver);
