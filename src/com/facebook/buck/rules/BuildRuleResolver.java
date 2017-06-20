@@ -102,6 +102,7 @@ public class BuildRuleResolver {
                     return metadataProvidingDescription.createMetadata(
                         node.getBuildTarget(),
                         BuildRuleResolver.this,
+                        node.getCellNames(),
                         arg,
                         node.getSelectedVersions(),
                         metadataClass);

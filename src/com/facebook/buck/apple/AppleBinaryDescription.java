@@ -445,6 +445,7 @@ public class AppleBinaryDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       AppleBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
@@ -457,7 +458,7 @@ public class AppleBinaryDescription
           args,
           buildTarget);
       return delegate.createMetadata(
-          buildTarget, resolver, delegateArg.build(), selectedVersions, metadataClass);
+          buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
     }
 
     Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);

@@ -468,6 +468,7 @@ public class AppleLibraryDescription
   <U> Optional<U> createMetadataForLibrary(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass)
@@ -482,7 +483,7 @@ public class AppleLibraryDescription
           args,
           buildTarget);
       return delegate.createMetadata(
-          buildTarget, resolver, delegateArg.build(), selectedVersions, metadataClass);
+          buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
     }
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
@@ -520,11 +521,13 @@ public class AppleLibraryDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       AppleLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
-    return createMetadataForLibrary(buildTarget, resolver, selectedVersions, args, metadataClass);
+    return createMetadataForLibrary(
+        buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
   }
 
   @Override

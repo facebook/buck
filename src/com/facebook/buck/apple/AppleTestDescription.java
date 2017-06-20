@@ -470,12 +470,13 @@ public class AppleTestDescription
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       AppleTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass)
       throws NoSuchBuildTargetException {
     return appleLibraryDescription.createMetadataForLibrary(
-        buildTarget, resolver, selectedVersions, args, metadataClass);
+        buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
   }
 
   @Value.Immutable
