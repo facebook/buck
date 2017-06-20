@@ -67,6 +67,11 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem()));
   }
 
+  @Override
+  public boolean isCacheable() {
+    return false;
+  }
+
   static class JsFileDev extends JsFile {
     @AddToRuleKey private final SourcePath src;
 
