@@ -38,6 +38,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -133,13 +134,29 @@ public class JsBundleDescription
         new TransitiveLibraryDependencies(params.getBuildTarget(), targetGraph, resolver)
             .collect(args.getDeps());
 
-    return new JsBundle(
-        params.copyAppendingExtraDeps(libraryDeps),
+    BuildRuleParams paramsWithLibraries = params.copyAppendingExtraDeps(libraryDeps);
+    ImmutableSortedSet<SourcePath> libraries =
         libraryDeps
             .stream()
             .map(JsLibrary::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet()),
-        entryPoint.isLeft() ? entryPoint.getLeft() : ImmutableSet.of(entryPoint.getRight()),
+            .collect(MoreCollectors.toImmutableSortedSet());
+    ImmutableSet<String> entryPoints =
+        entryPoint.isLeft() ? entryPoint.getLeft() : ImmutableSet.of(entryPoint.getRight());
+
+    // If {@link JsFlavors.DEPENDENCY_FILE} is specified, the worker will output a file containing
+    // all dependencies between files that go into the final bundle
+    if (flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
+      return new JsDependenciesFile(
+          paramsWithLibraries,
+          libraries,
+          entryPoints,
+          resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
+    }
+
+    return new JsBundle(
+        paramsWithLibraries,
+        libraries,
+        entryPoints,
         args.getBundleName(),
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
   }

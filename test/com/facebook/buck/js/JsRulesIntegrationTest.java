@@ -170,4 +170,10 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(Paths.get("ios_app.expected"), genPath);
   }
+
+  @Test
+  public void dependencyFile() throws IOException {
+    workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#dependencies,ios,release").assertSuccess();
+    workspace.verify(Paths.get("dependencies.expected"), genPath);
+  }
 }
