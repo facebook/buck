@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -218,7 +219,9 @@ public final class CxxInferEnhancer {
                 params, args, inferCaptureOnly, CxxInferCaptureRulesAggregator.class);
 
     return createInferCaptureAggregatorRule(
-        paramsWithInferCaptureOnlyFlavor, cxxInferCaptureAndAnalyzeRules);
+        paramsWithInferCaptureOnlyFlavor.getBuildTarget(),
+        paramsWithInferCaptureOnlyFlavor.getProjectFilesystem(),
+        cxxInferCaptureAndAnalyzeRules);
   }
 
   private <T extends BuildRule>
@@ -412,10 +415,11 @@ public final class CxxInferEnhancer {
   }
 
   private CxxInferCaptureRulesAggregator createInferCaptureAggregatorRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator> captureAggregatorRules) {
     return ruleResolver.addToIndex(
-        new CxxInferCaptureRulesAggregator(params, captureAggregatorRules));
+        new CxxInferCaptureRulesAggregator(buildTarget, projectFilesystem, captureAggregatorRules));
   }
 
   private CxxInferComputeReport createInferReportRule(

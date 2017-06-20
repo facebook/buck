@@ -16,19 +16,35 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.SortedSet;
 
-public class CxxInferCaptureRulesAggregator extends NoopBuildRuleWithDeclaredAndExtraDeps {
+/**
+ * CxxInferCaptureRulesAggregator is used to aggregate all of the per-source CxxInferCapture rules
+ * per-library, so that we can look them up in the build graph while only having a reference to our
+ * cxx_library dependencies, rather than needing to traverse into per-source details of our
+ * dependencies.
+ *
+ * <p>This is a pure metadata rule - all of the information in it could either be derived by
+ * traversing the action graph, or could be kept in-memory using the correct datastructures, but
+ * actually doing that refactoring is non-trivial. It cannot actually be built (nor even depended
+ * on), but the CxxInferEnhancer relies on being able to look it up.
+ */
+public class CxxInferCaptureRulesAggregator extends NoopBuildRule {
   private CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
       captureAndTransitiveAggregatingRules;
 
   public CxxInferCaptureRulesAggregator(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
           captureAndTransitiveAggregatingRules) {
-    super(params);
+    super(buildTarget, projectFilesystem);
     this.captureAndTransitiveAggregatingRules = captureAndTransitiveAggregatingRules;
   }
 
@@ -44,5 +60,10 @@ public class CxxInferCaptureRulesAggregator extends NoopBuildRuleWithDeclaredAnd
       captureBuilder.addAll(aggregator.getCaptureRules());
     }
     return captureBuilder.build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.of();
   }
 }
