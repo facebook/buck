@@ -121,6 +121,7 @@ import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
@@ -294,6 +295,10 @@ public final class Main {
 
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
+
+  static {
+    MacIpv6BugWorkaround.apply();
+  }
 
   @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {

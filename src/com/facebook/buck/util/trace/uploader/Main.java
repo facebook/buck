@@ -17,6 +17,7 @@
 package com.facebook.buck.util.trace.uploader;
 
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
+import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
@@ -53,6 +54,10 @@ public final class Main {
   private File logFile;
 
   private PrintWriter log;
+
+  static {
+    MacIpv6BugWorkaround.apply();
+  }
 
   public static void main(String[] args) throws IOException {
     Main main = new Main();
