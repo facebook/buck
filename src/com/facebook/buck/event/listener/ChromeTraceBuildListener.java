@@ -26,6 +26,7 @@ import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
@@ -350,6 +351,28 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.of(
             "description", finished.getDescription(),
             "exit_code", Integer.toString(finished.getExitCode())),
+        finished);
+  }
+
+  // TODO(cjhopman): We should introduce a simple LeafEvent-like thing that everything that logs
+  // step-like things can subscribe to.
+  @Subscribe
+  public void simpleLeafEventStarted(LeafEvents.SimpleLeafEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        started.getEventName(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("description", started.toString()),
+        started);
+  }
+
+  @Subscribe
+  public void simpleLeafEventFinished(LeafEvents.SimpleLeafEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        finished.getEventName(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("description", finished.toString()),
         finished);
   }
 

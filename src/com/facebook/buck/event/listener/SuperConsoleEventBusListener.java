@@ -25,6 +25,7 @@ import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
@@ -633,6 +634,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void stepFinished(StepEvent.Finished finished) {
+    threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
+  }
+
+  // TODO(cjhopman): We should introduce a simple LeafEvent-like thing that everything that logs
+  // step-like things can subscribe to.
+  @Subscribe
+  public void simpleLeafEventStarted(LeafEvents.SimpleLeafEvent.Started started) {
+    threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
+  }
+
+  @Subscribe
+  public void simpleLeafEventFinished(LeafEvents.SimpleLeafEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
   }
 
