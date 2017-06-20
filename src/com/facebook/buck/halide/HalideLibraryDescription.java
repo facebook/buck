@@ -122,9 +122,9 @@ public class HalideLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> halideSources,
-      ImmutableList<String> compilerFlags,
-      PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
-      ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
+      ImmutableList<StringWithMacros> compilerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langCompilerFlags,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       ImmutableList<String> includeDirs)

@@ -210,7 +210,7 @@ public class CxxBinaryDescription
 
     if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return CxxInferEnhancer.requireInferRule(
-          params, resolver, cxxBuckConfig, cxxPlatform, args, inferBuckConfig);
+          params, resolver, cellRoots, cxxBuckConfig, cxxPlatform, args, inferBuckConfig);
     }
 
     if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {

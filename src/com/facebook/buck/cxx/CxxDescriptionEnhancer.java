@@ -60,11 +60,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -795,9 +797,9 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
       ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSortedSet<FrameworkPath> libraries,
-      ImmutableList<String> compilerFlags,
-      ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
-      PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
+      ImmutableList<StringWithMacros> compilerFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langCompilerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
       ImmutableList<StringWithMacros> linkerFlags,
@@ -857,11 +859,20 @@ public class CxxDescriptionEnhancer {
             includeDirs,
             sandboxTree);
 
-    ImmutableList.Builder<String> compilerFlagsWithLto = ImmutableList.builder();
-    compilerFlagsWithLto.addAll(compilerFlags);
+    ImmutableListMultimap.Builder<CxxSource.Type, Arg> allCompilerFlagsBuilder =
+        ImmutableListMultimap.builder();
+    allCompilerFlagsBuilder.putAll(
+        Multimaps.transformValues(
+            CxxFlags.getLanguageFlagsWithMacros(
+                compilerFlags, platformCompilerFlags, langCompilerFlags, cxxPlatform),
+            f ->
+                toStringWithMacrosArgs(
+                    params.getBuildTarget(), cellRoots, resolver, cxxPlatform, f)));
     if (thinLto) {
-      compilerFlagsWithLto.add("-flto=thin");
+      allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));
     }
+    ImmutableListMultimap<CxxSource.Type, Arg> allCompilerFlags = allCompilerFlagsBuilder.build();
+
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -874,11 +885,7 @@ public class CxxDescriptionEnhancer {
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
-            CxxFlags.getLanguageFlags(
-                compilerFlagsWithLto.build(),
-                platformCompilerFlags,
-                langCompilerFlags,
-                cxxPlatform),
+            allCompilerFlags,
             prefixHeader,
             precompiledHeader,
             srcs,
@@ -888,14 +895,14 @@ public class CxxDescriptionEnhancer {
             sandboxTree);
 
     // Build up the linker flags, which support macro expansion.
-    argsBuilder.addAll(
-        toStringWithMacrosArgs(
-            target,
-            cellRoots,
-            resolver,
-            cxxPlatform,
-            CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                linkerFlags, platformLinkerFlags, cxxPlatform)));
+    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            linkerFlags, platformLinkerFlags, cxxPlatform)
+        .stream()
+        .map(
+            f ->
+                toStringWithMacrosArgs(
+                    params.getBuildTarget(), cellRoots, resolver, cxxPlatform, f))
+        .forEach(argsBuilder::add);
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {
@@ -1301,23 +1308,18 @@ public class CxxDescriptionEnhancer {
     return cxxSources.build();
   }
 
-  public static ImmutableList<StringWithMacrosArg> toStringWithMacrosArgs(
+  public static Arg toStringWithMacrosArgs(
       BuildTarget target,
       CellPathResolver cellPathResolver,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      Iterable<StringWithMacros> flags) {
-    ImmutableList.Builder<StringWithMacrosArg> args = ImmutableList.builder();
-    for (StringWithMacros flag : flags) {
-      args.add(
-          StringWithMacrosArg.of(
-              flag,
-              ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform)),
-              target,
-              cellPathResolver,
-              resolver));
-    }
-    return args.build();
+      StringWithMacros flag) {
+    return StringWithMacrosArg.of(
+        flag,
+        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform)),
+        target,
+        cellPathResolver,
+        resolver);
   }
 
   public static String normalizeModuleName(String moduleName) {

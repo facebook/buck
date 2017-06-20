@@ -388,4 +388,12 @@ public class CxxLibraryIntegrationTest {
     // auto-reexport is on, but not reexporting via exported_deps
     workspace.runBuckBuild("//:bin-auto-reexport").assertSuccess();
   }
+
+  @Test
+  public void locationMacroInCompilerFlags() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "compiler_flags", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:lib#default,static").assertSuccess();
+  }
 }

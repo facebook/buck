@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -257,7 +258,12 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           args.getModuleName().orElse(buildTarget.getShortName()),
           BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s"),
           args.getSrcs(),
-          args.getCompilerFlags(),
+          RichStream.from(args.getCompilerFlags())
+              .map(
+                  f ->
+                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                          buildTarget, cellRoots, resolver, cxxPlatform, f))
+              .toImmutableList(),
           args.getEnableObjcInterop(),
           args.getBridgingHeader());
     }
@@ -386,7 +392,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
     Optional<String> getModuleName();
 
-    ImmutableList<String> getCompilerFlags();
+    ImmutableList<StringWithMacros> getCompilerFlags();
 
     @Value.NaturalOrder
     ImmutableSortedSet<FrameworkPath> getFrameworks();

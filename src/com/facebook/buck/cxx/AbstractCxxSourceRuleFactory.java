@@ -96,7 +96,7 @@ abstract class AbstractCxxSourceRuleFactory {
   protected abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
 
   @Value.Parameter
-  protected abstract ImmutableMultimap<CxxSource.Type, String> getCompilerFlags();
+  protected abstract ImmutableMultimap<CxxSource.Type, Arg> getCompilerFlags();
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
   @Value.Parameter
   protected abstract Optional<SourcePath> getPrefixHeader();
@@ -275,9 +275,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   private Iterable<Arg> getRuleCompileFlags(CxxSource.Type type) {
-    return SanitizedArg.from(
-        getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
-        getCompilerFlags().get(type));
+    return getCompilerFlags().get(type);
   }
 
   /**
@@ -820,7 +818,7 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
-      ImmutableMultimap<CxxSource.Type, String> compilerFlags,
+      ImmutableMultimap<CxxSource.Type, Arg> compilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
       ImmutableMap<String, CxxSource> sources,

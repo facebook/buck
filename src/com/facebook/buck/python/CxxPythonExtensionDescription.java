@@ -65,9 +65,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -202,11 +204,16 @@ public class CxxPythonExtensionDescription
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
-            CxxFlags.getLanguageFlags(
-                args.getCompilerFlags(),
-                args.getPlatformCompilerFlags(),
-                args.getLangCompilerFlags(),
-                cxxPlatform),
+            ImmutableListMultimap.copyOf(
+                Multimaps.transformValues(
+                    CxxFlags.getLanguageFlagsWithMacros(
+                        args.getCompilerFlags(),
+                        args.getPlatformCompilerFlags(),
+                        args.getLangCompilerFlags(),
+                        cxxPlatform),
+                    f ->
+                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                            params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))),
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
             srcs,
@@ -214,14 +221,14 @@ public class CxxPythonExtensionDescription
             sandboxTree);
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
-    argsBuilder.addAll(
-        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-            params.getBuildTarget(),
-            cellRoots,
-            ruleResolver,
-            cxxPlatform,
-            CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)));
+    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+        .stream()
+        .map(
+            f ->
+                CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                    params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))
+        .forEach(argsBuilder::add);
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
     argsBuilder.addAll(

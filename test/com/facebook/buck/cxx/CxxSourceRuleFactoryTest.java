@@ -43,7 +43,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -690,12 +690,7 @@ public class CxxSourceRuleFactoryTest {
               .setRuleFinder(sourcePathRuleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
-              .setCompilerFlags(
-                  CxxFlags.getLanguageFlags(
-                      expectedCompilerFlags,
-                      PatternMatchedCollection.of(),
-                      ImmutableMap.of(),
-                      platform))
+              .setCompilerFlags(CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)))
               .setPicType(CxxSourceRuleFactory.PicType.PDC)
               .build();
 
@@ -756,12 +751,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setCompilerFlags(
-                  CxxFlags.getLanguageFlags(
-                      expectedCompilerFlags,
-                      PatternMatchedCollection.of(),
-                      ImmutableMap.of(),
-                      platform))
+              .setCompilerFlags(CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)))
               .setPicType(CxxSourceRuleFactory.PicType.PIC)
               .build();
 

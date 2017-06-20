@@ -61,12 +61,12 @@ public interface CxxConstructorArg
 
   Optional<SourcePath> getPrecompiledHeader();
 
-  ImmutableList<String> getCompilerFlags();
+  ImmutableList<StringWithMacros> getCompilerFlags();
 
-  ImmutableMap<CxxSource.Type, ImmutableList<String>> getLangCompilerFlags();
+  ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> getLangCompilerFlags();
 
   @Value.Default
-  default PatternMatchedCollection<ImmutableList<String>> getPlatformCompilerFlags() {
+  default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformCompilerFlags() {
     return PatternMatchedCollection.of();
   }
 

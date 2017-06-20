@@ -75,7 +75,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
-  @AddToRuleKey private final ImmutableList<String> compilerFlags;
+  @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
   private final Path headerPath;
   private final CxxPlatform cxxPlatform;
@@ -96,7 +96,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
-      ImmutableList<String> compilerFlags,
+      ImmutableList<? extends Arg> compilerFlags,
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader)
       throws NoSuchBuildTargetException {
@@ -185,7 +185,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         objectPath.toString(),
         "-emit-objc-header-path",
         headerPath.toString());
-    compilerCommand.addAll(compilerFlags);
+    compilerCommand.addAll(Arg.stringify(compilerFlags, resolver));
     for (SourcePath sourcePath : srcs) {
       compilerCommand.add(resolver.getRelativePath(sourcePath).toString());
     }

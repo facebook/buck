@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -232,7 +233,7 @@ public class PrecompiledHeaderFeatureTest {
               preconfiguredSourceRuleFactoryBuilder(resolver)
                   .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
-                  .putAllCompilerFlags(CxxSource.Type.C_CPP_OUTPUT, flags)
+                  .putAllCompilerFlags(CxxSource.Type.C_CPP_OUTPUT, StringArg.from(flags))
                   .setPrefixHeader(new FakeSourcePath(("foo.h")))
                   .build();
           BuildRule rule =

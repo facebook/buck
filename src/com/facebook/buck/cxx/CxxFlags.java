@@ -93,10 +93,9 @@ public class CxxFlags {
     return result.build();
   }
 
-  private static ImmutableListMultimap<CxxSource.Type, String> toLanguageFlags(
-      ImmutableList<String> flags) {
+  static <T> ImmutableListMultimap<CxxSource.Type, T> toLanguageFlags(Iterable<T> flags) {
 
-    ImmutableListMultimap.Builder<CxxSource.Type, String> result = ImmutableListMultimap.builder();
+    ImmutableListMultimap.Builder<CxxSource.Type, T> result = ImmutableListMultimap.builder();
 
     for (CxxSource.Type type : CxxSource.Type.values()) {
       result.putAll(type, flags);
@@ -121,6 +120,30 @@ public class CxxFlags {
         languageFlags.entrySet()) {
       langFlags.putAll(
           entry.getKey(), Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));
+    }
+
+    return langFlags.build();
+  }
+
+  public static ImmutableListMultimap<CxxSource.Type, StringWithMacros> getLanguageFlagsWithMacros(
+      ImmutableList<StringWithMacros> flags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> languageFlags,
+      CxxPlatform platform) {
+
+    ImmutableListMultimap.Builder<CxxSource.Type, StringWithMacros> langFlags =
+        ImmutableListMultimap.builder();
+
+    langFlags.putAll(
+        toLanguageFlags(
+            getFlagsWithMacrosWithPlatformMacroExpansion(flags, platformFlags, platform)));
+
+    for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<StringWithMacros>> entry :
+        languageFlags.entrySet()) {
+      RuleKeyAppendableFunction<String, String> translateMacrosFn = getTranslateMacrosFn(platform);
+      langFlags.putAll(
+          entry.getKey(),
+          entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn::apply))::iterator);
     }
 
     return langFlags.build();

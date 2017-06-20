@@ -55,10 +55,11 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -215,6 +216,7 @@ public class CxxLibraryDescription
       BuildRuleResolver ruleResolver,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType pic,
@@ -268,11 +270,16 @@ public class CxxLibraryDescription
             transitivePreprocessorInputs,
             headerSymlinkTree,
             sandboxTree),
-        CxxFlags.getLanguageFlags(
-            args.getCompilerFlags(),
-            args.getPlatformCompilerFlags(),
-            args.getLangCompilerFlags(),
-            cxxPlatform),
+        ImmutableListMultimap.copyOf(
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlagsWithMacros(
+                    args.getCompilerFlags(),
+                    args.getPlatformCompilerFlags(),
+                    args.getLangCompilerFlags(),
+                    cxxPlatform),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))),
         args.getPrefixHeader(),
         args.getPrecompiledHeader(),
         CxxDescriptionEnhancer.parseCxxSources(
@@ -310,6 +317,7 @@ public class CxxLibraryDescription
             ruleResolver,
             pathResolver,
             ruleFinder,
+            cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             CxxSourceRuleFactory.PicType.PIC,
@@ -319,12 +327,14 @@ public class CxxLibraryDescription
 
     return NativeLinkableInput.builder()
         .addAllArgs(
-            CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                params.getBuildTarget(),
-                cellRoots,
-                ruleResolver,
-                cxxPlatform,
-                Iterables.concat(linkerFlags, exportedLinkerFlags)))
+            RichStream.<StringWithMacros>empty()
+                .concat(linkerFlags.stream())
+                .concat(exportedLinkerFlags.stream())
+                .map(
+                    f ->
+                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                            params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))
+                .toImmutableList())
         .addAllArgs(SourcePathArg.from(objects.values()))
         .setFrameworks(frameworks)
         .setLibraries(libraries)
@@ -357,12 +367,11 @@ public class CxxLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
-    Optional<LinkerMapMode> flavoredLinkerMapMode =
-        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    BuildTarget target = params.getBuildTarget();
+    Optional<LinkerMapMode> flavoredLinkerMapMode = LinkerMapMode.FLAVOR_DOMAIN.getValue(target);
     params =
         params.withBuildTarget(
-            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
-                params.getBuildTarget(), flavoredLinkerMapMode));
+            LinkerMapMode.removeLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode));
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -371,6 +380,7 @@ public class CxxLibraryDescription
             ruleResolver,
             pathResolver,
             ruleFinder,
+            cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             CxxSourceRuleFactory.PicType.PIC,
@@ -383,14 +393,13 @@ public class CxxLibraryDescription
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
             params
                 .withBuildTarget(
-                    LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
-                        params.getBuildTarget(), flavoredLinkerMapMode))
+                    LinkerMapMode.restoreLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode))
                 .getBuildTarget(),
             cxxPlatform.getFlavor(),
             linkType);
 
     String sharedLibrarySoname =
-        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, params.getBuildTarget(), cxxPlatform);
+        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, target, cxxPlatform);
     Path sharedLibraryPath =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             params.getProjectFilesystem(), sharedTarget, sharedLibrarySoname);
@@ -402,8 +411,7 @@ public class CxxLibraryDescription
         cxxBuckConfig,
         cxxPlatform,
         params.withBuildTarget(
-            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
-                params.getBuildTarget(), flavoredLinkerMapMode)),
+            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode)),
         ruleResolver,
         pathResolver,
         ruleFinder,
@@ -419,8 +427,12 @@ public class CxxLibraryDescription
         blacklist,
         NativeLinkableInput.builder()
             .addAllArgs(
-                CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                    params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, extraLdFlags))
+                RichStream.from(extraLdFlags)
+                    .map(
+                        f ->
+                            CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                                target, cellRoots, ruleResolver, cxxPlatform, f))
+                    .toImmutableList())
             .addAllArgs(SourcePathArg.from(objects.values()))
             .setFrameworks(frameworks)
             .setLibraries(libraries)
@@ -508,6 +520,7 @@ public class CxxLibraryDescription
   private static BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
@@ -525,6 +538,7 @@ public class CxxLibraryDescription
             resolver,
             sourcePathResolver,
             ruleFinder,
+            cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             pic,
@@ -705,6 +719,7 @@ public class CxxLibraryDescription
               resolver,
               sourcePathResolver,
               ruleFinder,
+              cellRoots,
               cxxBuckConfig,
               cxxPlatform,
               CxxSourceRuleFactory.PicType.PIC,
@@ -728,6 +743,7 @@ public class CxxLibraryDescription
       return CxxInferEnhancer.requireInferRule(
           params,
           resolver,
+          cellRoots,
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,
@@ -794,6 +810,7 @@ public class CxxLibraryDescription
           return createStaticLibraryBuildRule(
               untypedParams,
               resolver,
+              cellRoots,
               cxxBuckConfig,
               platform.get(),
               args,
@@ -804,6 +821,7 @@ public class CxxLibraryDescription
           return createStaticLibraryBuildRule(
               untypedParams,
               resolver,
+              cellRoots,
               cxxBuckConfig,
               platform.get(),
               args,
@@ -841,8 +859,12 @@ public class CxxLibraryDescription
           ImmutableList<StringWithMacros> flags =
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                   args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input);
-          return CxxDescriptionEnhancer.toStringWithMacrosArgs(
-              params.getBuildTarget(), cellRoots, resolver, input, flags);
+          return RichStream.from(flags)
+              .map(
+                  f ->
+                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                          params.getBuildTarget(), cellRoots, resolver, input, f))
+              .toImmutableList();
         },
         cxxPlatform -> {
           try {

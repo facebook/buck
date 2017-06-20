@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -77,7 +78,7 @@ public final class AppleTestBuilder
   }
 
   public AppleTestBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
-    getArgForPopulating().setCompilerFlags(compilerFlags);
+    getArgForPopulating().setCompilerFlags(StringWithMacrosUtils.fromStrings(compilerFlags));
     return this;
   }
 

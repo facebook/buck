@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.Either;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -45,5 +46,9 @@ public class StringWithMacrosUtils {
     }
 
     return StringWithMacros.of(partsBuilder.build());
+  }
+
+  public static ImmutableList<StringWithMacros> fromStrings(Iterable<String> flags) {
+    return RichStream.from(flags).map(f -> format(f)).toImmutableList();
   }
 }

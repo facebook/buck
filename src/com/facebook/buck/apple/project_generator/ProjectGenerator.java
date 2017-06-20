@@ -172,6 +172,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Generator for xcode project and associated files from a set of xcode/ios rules. */
@@ -1197,13 +1198,15 @@ public class ProjectGenerator {
             Iterables.concat(
                 cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
                 collectRecursiveExportedPreprocessorFlags(targetNode),
-                targetNode.getConstructorArg().getCompilerFlags(),
+                convertStringWithMacros(
+                    targetNode, targetNode.getConstructorArg().getCompilerFlags()),
                 targetNode.getConstructorArg().getPreprocessorFlags());
         Iterable<String> otherCxxFlags =
             Iterables.concat(
                 cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
                 collectRecursiveExportedPreprocessorFlags(targetNode),
-                targetNode.getConstructorArg().getCompilerFlags(),
+                convertStringWithMacros(
+                    targetNode, targetNode.getConstructorArg().getCompilerFlags()),
                 targetNode.getConstructorArg().getPreprocessorFlags());
         ImmutableList<String> otherLdFlags =
             convertStringWithMacros(
@@ -1227,7 +1230,16 @@ public class ProjectGenerator {
             ImmutableMultimap.builder();
         for (Pair<Pattern, ImmutableList<String>> flags :
             Iterables.concat(
-                targetNode.getConstructorArg().getPlatformCompilerFlags().getPatternsAndValues(),
+                targetNode
+                    .getConstructorArg()
+                    .getPlatformCompilerFlags()
+                    .getPatternsAndValues()
+                    .stream()
+                    .map(
+                        p ->
+                            new Pair<>(
+                                p.getFirst(), convertStringWithMacros(targetNode, p.getSecond())))
+                    .collect(Collectors.toList()),
                 targetNode
                     .getConstructorArg()
                     .getPlatformPreprocessorFlags()

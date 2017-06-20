@@ -27,6 +27,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -88,13 +90,14 @@ public final class CxxInferEnhancer {
   public static BuildRule requireInferRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
       InferBuckConfig inferBuckConfig)
       throws NoSuchBuildTargetException {
     return new CxxInferEnhancer(resolver, cxxBuckConfig, inferBuckConfig, cxxPlatform)
-        .requireInferRule(params, args);
+        .requireInferRule(cellRoots, params, args);
   }
 
   private final BuildRuleResolver ruleResolver;
@@ -113,30 +116,32 @@ public final class CxxInferEnhancer {
     this.cxxPlatform = cxxPlatform;
   }
 
-  private BuildRule requireInferRule(BuildRuleParams params, CxxConstructorArg args)
+  private BuildRule requireInferRule(
+      CellPathResolver cellRoots, BuildRuleParams params, CxxConstructorArg args)
       throws NoSuchBuildTargetException {
     Optional<InferFlavors> inferFlavor = INFER_FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     Preconditions.checkArgument(
         inferFlavor.isPresent(), "Expected BuildRuleParams to contain infer flavor.");
     switch (inferFlavor.get()) {
       case INFER:
-        return requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(params, args);
+        return requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(cellRoots, params, args);
       case INFER_ANALYZE:
-        return requireInferAnalyzeBuildRuleForCxxDescriptionArg(params, args);
+        return requireInferAnalyzeBuildRuleForCxxDescriptionArg(cellRoots, params, args);
       case INFER_CAPTURE_ALL:
-        return requireAllTransitiveCaptureBuildRules(params, args);
+        return requireAllTransitiveCaptureBuildRules(cellRoots, params, args);
       case INFER_CAPTURE_ONLY:
-        return requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(params, args);
+        return requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(cellRoots, params, args);
     }
     throw new IllegalStateException(
         "All InferFlavor cases should be handled, got: " + inferFlavor.get());
   }
 
   private BuildRule requireAllTransitiveCaptureBuildRules(
-      BuildRuleParams params, CxxConstructorArg args) throws NoSuchBuildTargetException {
+      CellPathResolver cellRoots, BuildRuleParams params, CxxConstructorArg args)
+      throws NoSuchBuildTargetException {
 
     CxxInferCaptureRulesAggregator aggregator =
-        requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(params, args);
+        requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(cellRoots, params, args);
 
     ImmutableSet<CxxInferCapture> captureRules = aggregator.getAllTransitiveCaptures();
 
@@ -150,7 +155,8 @@ public final class CxxInferEnhancer {
   }
 
   private CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-      BuildRuleParams params, CxxConstructorArg args) throws NoSuchBuildTargetException {
+      CellPathResolver cellRoots, BuildRuleParams params, CxxConstructorArg args)
+      throws NoSuchBuildTargetException {
 
     BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
 
@@ -165,12 +171,13 @@ public final class CxxInferEnhancer {
     }
 
     CxxInferAnalyze analysisRule =
-        requireInferAnalyzeBuildRuleForCxxDescriptionArg(cleanParams, args);
+        requireInferAnalyzeBuildRuleForCxxDescriptionArg(cellRoots, cleanParams, args);
     return createInferReportRule(paramsWithInferFlavor, analysisRule);
   }
 
   private CxxInferAnalyze requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-      BuildRuleParams params, CxxConstructorArg args) throws NoSuchBuildTargetException {
+      CellPathResolver cellRoots, BuildRuleParams params, CxxConstructorArg args)
+      throws NoSuchBuildTargetException {
 
     Flavor inferAnalyze = InferFlavors.INFER_ANALYZE.getFlavor();
 
@@ -193,12 +200,13 @@ public final class CxxInferEnhancer {
     return createInferAnalyzeRule(
         paramsWithInferAnalyzeFlavor,
         requireInferCaptureBuildRules(
-            cleanParams, collectSources(cleanParams.getBuildTarget(), args), args),
+            cellRoots, cleanParams, collectSources(cleanParams.getBuildTarget(), args), args),
         transitiveDepsLibraryRules);
   }
 
   private CxxInferCaptureRulesAggregator requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
-      BuildRuleParams params, CxxConstructorArg args) throws NoSuchBuildTargetException {
+      CellPathResolver cellRoots, BuildRuleParams params, CxxConstructorArg args)
+      throws NoSuchBuildTargetException {
 
     Flavor inferCaptureOnly = InferFlavors.INFER_CAPTURE_ONLY.getFlavor();
 
@@ -216,7 +224,7 @@ public final class CxxInferEnhancer {
     CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
         cxxInferCaptureAndAnalyzeRules =
             requireTransitiveCaptureAndAggregatingRules(
-                params, args, inferCaptureOnly, CxxInferCaptureRulesAggregator.class);
+                cellRoots, params, args, inferCaptureOnly, CxxInferCaptureRulesAggregator.class);
 
     return createInferCaptureAggregatorRule(
         paramsWithInferCaptureOnlyFlavor.getBuildTarget(),
@@ -226,6 +234,7 @@ public final class CxxInferEnhancer {
 
   private <T extends BuildRule>
       CxxInferCaptureAndAggregatingRules<T> requireTransitiveCaptureAndAggregatingRules(
+          CellPathResolver cellRoots,
           BuildRuleParams params,
           CxxConstructorArg args,
           Flavor requiredFlavor,
@@ -236,7 +245,7 @@ public final class CxxInferEnhancer {
     ImmutableMap<String, CxxSource> sources = collectSources(cleanParams.getBuildTarget(), args);
 
     ImmutableSet<CxxInferCapture> captureRules =
-        requireInferCaptureBuildRules(cleanParams, sources, args);
+        requireInferCaptureBuildRules(cellRoots, cleanParams, sources, args);
 
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
 
@@ -306,7 +315,10 @@ public final class CxxInferEnhancer {
   }
 
   private ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
-      final BuildRuleParams params, ImmutableMap<String, CxxSource> sources, CxxConstructorArg args)
+      CellPathResolver cellRoots,
+      final BuildRuleParams params,
+      ImmutableMap<String, CxxSource> sources,
+      CxxConstructorArg args)
       throws NoSuchBuildTargetException {
 
     InferFlavors.checkNoInferFlavors(params.getBuildTarget().getFlavors());
@@ -384,11 +396,15 @@ public final class CxxInferEnhancer {
             cxxBuckConfig,
             cxxPlatform,
             preprocessorInputs,
-            CxxFlags.getLanguageFlags(
-                args.getCompilerFlags(),
-                args.getPlatformCompilerFlags(),
-                args.getLangCompilerFlags(),
-                cxxPlatform),
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlagsWithMacros(
+                    args.getCompilerFlags(),
+                    args.getPlatformCompilerFlags(),
+                    args.getLangCompilerFlags(),
+                    cxxPlatform),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f)),
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
             CxxSourceRuleFactory.PicType.PDC,
