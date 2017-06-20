@@ -48,7 +48,6 @@ standard_java_test(
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/timing:testutil",
         "//test/com/facebook/buck/util:testutil",
-        "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/hamcrest:java-hamcrest",

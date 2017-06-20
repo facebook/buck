@@ -63,7 +63,6 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/testutil:testutil",
-        "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",

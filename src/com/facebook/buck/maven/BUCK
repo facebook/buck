@@ -104,7 +104,6 @@ java_binary(
         "//third-party/java/aether:aether-api",
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
-        "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",

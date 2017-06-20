@@ -5,7 +5,14 @@ prebuilt_jar(
         "LICENSE",
     ],
     source_jar = "gson-2.2.4-sources.jar",
+    # Do not used this.
+    # Use Jackson instead.
+    # Jackson keeps a hot cache of serializers and deserializers as a useful optimization.
+    # Plus consistency across the codebase is nice.
     visibility = [
-        "PUBLIC",
+        "//src/com/facebook/buck/intellij/ideabuck:",  # Not inside buck
+        "//src/com/facebook/buck/worker:worker_process",  # Legacy caller which should probably use Jackson
+        "//test/com/facebook/buck/worker:worker",  # Legacy caller
+        "//third-party/java/aosp:aosp",  # Sad transitive deps are sad
     ],
 )
