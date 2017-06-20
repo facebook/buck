@@ -176,7 +176,11 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
+    getArgForPopulating()
+        .setPreprocessorFlags(
+            RichStream.from(preprocessorFlags)
+                .map(StringWithMacrosUtils::format)
+                .toImmutableList());
     return this;
   }
 
@@ -197,7 +201,11 @@ public class CxxLibraryBuilder
 
   public CxxLibraryBuilder setPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
-    getArgForPopulating().setPlatformPreprocessorFlags(platformPreprocessorFlags);
+    getArgForPopulating()
+        .setPlatformPreprocessorFlags(
+            platformPreprocessorFlags.map(
+                flags ->
+                    RichStream.from(flags).map(StringWithMacrosUtils::format).toImmutableList()));
     return this;
   }
 

@@ -396,4 +396,12 @@ public class CxxLibraryIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:lib#default,static").assertSuccess();
   }
+
+  @Test
+  public void locationMacroInPreprocessorFlags() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "preprocessor_flags", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:lib#default,static").assertSuccess();
+  }
 }

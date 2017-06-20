@@ -27,10 +27,12 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.util.Optional;
 
 public class AppleLibraryBuilder
@@ -63,13 +65,21 @@ public class AppleLibraryBuilder
   }
 
   public AppleLibraryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
+    getArgForPopulating()
+        .setPreprocessorFlags(
+            RichStream.from(preprocessorFlags)
+                .map(StringWithMacrosUtils::format)
+                .toImmutableList());
     return this;
   }
 
   public AppleLibraryBuilder setLangPreprocessorFlags(
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
-    getArgForPopulating().setLangPreprocessorFlags(langPreprocessorFlags);
+    getArgForPopulating()
+        .setLangPreprocessorFlags(
+            Maps.transformValues(
+                langPreprocessorFlags,
+                f -> RichStream.from(f).map(StringWithMacrosUtils::format).toImmutableList()));
     return this;
   }
 

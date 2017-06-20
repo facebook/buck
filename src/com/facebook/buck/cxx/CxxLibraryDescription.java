@@ -178,6 +178,7 @@ public class CxxLibraryDescription
    */
   static ImmutableList<CxxPreprocessorInput> getPreprocessorInputsForBuildingLibrarySources(
       BuildRuleResolver ruleResolver,
+      CellPathResolver cellRoots,
       BuildTarget target,
       CommonArg args,
       CxxPlatform cxxPlatform,
@@ -192,12 +193,14 @@ public class CxxLibraryDescription
         deps,
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
-                CxxFlags.getLanguageFlags(
+                CxxFlags.getLanguageFlagsWithMacros(
                     args.getPreprocessorFlags(),
                     args.getPlatformPreprocessorFlags(),
                     args.getLangPreprocessorFlags(),
                     cxxPlatform),
-                StringArg::of)),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        target, cellRoots, ruleResolver, cxxPlatform, f))),
         ImmutableList.of(headerSymlinkTree),
         ImmutableSet.of(),
         RichStream.from(
@@ -267,6 +270,7 @@ public class CxxLibraryDescription
         cxxPlatform,
         getPreprocessorInputsForBuildingLibrarySources(
             ruleResolver,
+            cellRoots,
             params.getBuildTarget(),
             args,
             cxxPlatform,

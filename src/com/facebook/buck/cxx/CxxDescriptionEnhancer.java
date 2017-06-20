@@ -792,9 +792,9 @@ public class CxxDescriptionEnhancer {
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
       boolean thinLto,
-      ImmutableList<String> preprocessorFlags,
-      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags,
-      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
+      ImmutableList<StringWithMacros> preprocessorFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags,
       ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSortedSet<FrameworkPath> libraries,
       ImmutableList<StringWithMacros> compilerFlags,
@@ -849,12 +849,14 @@ public class CxxDescriptionEnhancer {
             deps,
             ImmutableListMultimap.copyOf(
                 Multimaps.transformValues(
-                    CxxFlags.getLanguageFlags(
+                    CxxFlags.getLanguageFlagsWithMacros(
                         preprocessorFlags,
                         platformPreprocessorFlags,
                         langPreprocessorFlags,
                         cxxPlatform),
-                    StringArg::of)),
+                    f ->
+                        toStringWithMacrosArgs(
+                            params.getBuildTarget(), cellRoots, resolver, cxxPlatform, f))),
             ImmutableList.of(headerSymlinkTree),
             frameworks,
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(

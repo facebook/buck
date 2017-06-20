@@ -70,14 +70,14 @@ public interface CxxConstructorArg
     return PatternMatchedCollection.of();
   }
 
-  ImmutableList<String> getPreprocessorFlags();
+  ImmutableList<StringWithMacros> getPreprocessorFlags();
 
   @Value.Default
-  default PatternMatchedCollection<ImmutableList<String>> getPlatformPreprocessorFlags() {
+  default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformPreprocessorFlags() {
     return PatternMatchedCollection.of();
   }
 
-  ImmutableMap<CxxSource.Type, ImmutableList<String>> getLangPreprocessorFlags();
+  ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> getLangPreprocessorFlags();
 
   ImmutableList<StringWithMacros> getLinkerFlags();
 

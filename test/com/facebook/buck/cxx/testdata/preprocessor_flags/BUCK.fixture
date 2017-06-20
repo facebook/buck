@@ -1,0 +1,15 @@
+genrule(
+  name = 'gen',
+  out = 'gen',
+  cmd = 'touch "$OUT"',
+)
+
+cxx_library(
+  name = 'lib',
+  preprocessor_flags = [
+    '-include', '$(location :gen)',
+  ],
+  srcs = [
+    'foo.cpp',
+  ],
+)

@@ -152,10 +152,11 @@ public class HalideLibraryDescription
             halideSources,
             PatternMatchedCollection.of());
 
-    ImmutableList<String> preprocessorFlags = ImmutableList.of();
-    PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags =
+    ImmutableList<StringWithMacros> preprocessorFlags = ImmutableList.of();
+    PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags =
         PatternMatchedCollection.of();
-    ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags = ImmutableMap.of();
+    ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
+        ImmutableMap.of();
     ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
     Optional<SourcePath> prefixHeader = Optional.empty();

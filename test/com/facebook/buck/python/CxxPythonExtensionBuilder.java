@@ -82,11 +82,6 @@ public class CxxPythonExtensionBuilder
     return this;
   }
 
-  public CxxPythonExtensionBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
-    return this;
-  }
-
   public CxxPythonExtensionBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;

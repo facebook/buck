@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -292,6 +291,7 @@ public final class CxxInferEnhancer {
 
   private ImmutableList<CxxPreprocessorInput> computePreprocessorInputForCxxBinaryDescriptionArg(
       BuildRuleParams params,
+      CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.CommonArg args,
       HeaderSymlinkTree headerSymlinkTree,
@@ -304,12 +304,14 @@ public final class CxxInferEnhancer {
         deps,
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
-                CxxFlags.getLanguageFlags(
+                CxxFlags.getLanguageFlagsWithMacros(
                     args.getPreprocessorFlags(),
                     args.getPlatformPreprocessorFlags(),
                     args.getLangPreprocessorFlags(),
                     cxxPlatform),
-                StringArg::of)),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))),
         ImmutableList.of(headerSymlinkTree),
         args.getFrameworks(),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -372,6 +374,7 @@ public final class CxxInferEnhancer {
       preprocessorInputs =
           computePreprocessorInputForCxxBinaryDescriptionArg(
               params,
+              cellRoots,
               cxxPlatform,
               (CxxBinaryDescription.CommonArg) args,
               headerSymlinkTree,
@@ -380,6 +383,7 @@ public final class CxxInferEnhancer {
       preprocessorInputs =
           CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
               ruleResolver,
+              cellRoots,
               params.getBuildTarget(),
               (CxxLibraryDescription.CommonArg) args,
               cxxPlatform,

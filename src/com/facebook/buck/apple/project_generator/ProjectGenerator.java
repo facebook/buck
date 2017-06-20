@@ -144,6 +144,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -930,7 +931,7 @@ public class ProjectGenerator {
     ImmutableSet<SourcePath> exportedHeaders =
         ImmutableSet.copyOf(getHeaderSourcePaths(arg.getExportedHeaders()));
     ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.getHeaders()));
-    ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
+    ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
 
@@ -947,7 +948,10 @@ public class ProjectGenerator {
     if (!shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
         mutator
-            .setLangPreprocessorFlags(langPreprocessorFlags)
+            .setLangPreprocessorFlags(
+                ImmutableMap.copyOf(
+                    Maps.transformValues(
+                        langPreprocessorFlags, f -> convertStringWithMacros(targetNode, f))))
             .setPublicHeaders(exportedHeaders)
             .setPrefixHeader(getPrefixHeaderSourcePath(arg))
             .setSourcesWithFlags(ImmutableSet.copyOf(arg.getSrcs()))
@@ -1200,14 +1204,16 @@ public class ProjectGenerator {
                 collectRecursiveExportedPreprocessorFlags(targetNode),
                 convertStringWithMacros(
                     targetNode, targetNode.getConstructorArg().getCompilerFlags()),
-                targetNode.getConstructorArg().getPreprocessorFlags());
+                convertStringWithMacros(
+                    targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
         Iterable<String> otherCxxFlags =
             Iterables.concat(
                 cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
                 collectRecursiveExportedPreprocessorFlags(targetNode),
                 convertStringWithMacros(
                     targetNode, targetNode.getConstructorArg().getCompilerFlags()),
-                targetNode.getConstructorArg().getPreprocessorFlags());
+                convertStringWithMacros(
+                    targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
         ImmutableList<String> otherLdFlags =
             convertStringWithMacros(
                 targetNode,
@@ -1230,20 +1236,24 @@ public class ProjectGenerator {
             ImmutableMultimap.builder();
         for (Pair<Pattern, ImmutableList<String>> flags :
             Iterables.concat(
-                targetNode
-                    .getConstructorArg()
-                    .getPlatformCompilerFlags()
-                    .getPatternsAndValues()
-                    .stream()
+                RichStream.<Pair<Pattern, ImmutableList<StringWithMacros>>>empty()
+                    .concat(
+                        targetNode
+                            .getConstructorArg()
+                            .getPlatformCompilerFlags()
+                            .getPatternsAndValues()
+                            .stream())
+                    .concat(
+                        targetNode
+                            .getConstructorArg()
+                            .getPlatformPreprocessorFlags()
+                            .getPatternsAndValues()
+                            .stream())
                     .map(
                         p ->
                             new Pair<>(
                                 p.getFirst(), convertStringWithMacros(targetNode, p.getSecond())))
                     .collect(Collectors.toList()),
-                targetNode
-                    .getConstructorArg()
-                    .getPlatformPreprocessorFlags()
-                    .getPatternsAndValues(),
                 collectRecursiveExportedPlatformPreprocessorFlags(targetNode))) {
           String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
           platformFlagsBuilder.put(sdk, flags.getSecond());

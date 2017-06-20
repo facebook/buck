@@ -26,6 +26,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -58,12 +59,20 @@ public class AppleBinaryBuilder
 
   public AppleBinaryBuilder setPlatformCompilerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
-    getArgForPopulating().setPlatformPreprocessorFlags(platformPreprocessorFlags);
+    getArgForPopulating()
+        .setPlatformPreprocessorFlags(
+            platformPreprocessorFlags.map(
+                flags ->
+                    RichStream.from(flags).map(StringWithMacrosUtils::format).toImmutableList()));
     return this;
   }
 
   public AppleBinaryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    getArgForPopulating().setPreprocessorFlags(preprocessorFlags);
+    getArgForPopulating()
+        .setPreprocessorFlags(
+            RichStream.from(preprocessorFlags)
+                .map(StringWithMacrosUtils::format)
+                .toImmutableList());
     return this;
   }
 

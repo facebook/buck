@@ -184,12 +184,14 @@ public class CxxPythonExtensionDescription
             deps,
             ImmutableListMultimap.copyOf(
                 Multimaps.transformValues(
-                    CxxFlags.getLanguageFlags(
+                    CxxFlags.getLanguageFlagsWithMacros(
                         args.getPreprocessorFlags(),
                         args.getPlatformPreprocessorFlags(),
                         args.getLangPreprocessorFlags(),
                         cxxPlatform),
-                    StringArg::of)),
+                    f ->
+                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                            params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
