@@ -66,6 +66,11 @@ abstract class AbstractErrorLogRecord {
             .put("user", System.getProperty("user.name", "unknown"))
             .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
             .put("hostname", hostname)
+            .put(
+                "isSuperConsoleEnabled",
+                getIsSuperConsoleEnabled().map(Object::toString).orElse("null"))
+            .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
+            .put("commandId", getBuildUuid().orElse("null"))
             .build();
     return traits;
   }
