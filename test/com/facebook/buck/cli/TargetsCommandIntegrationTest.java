@@ -132,6 +132,14 @@ public class TargetsCommandIntegrationTest {
         "//:another-test "
             + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output")
             + "\n"
+            + "//:java_lib "
+            + MorePaths.pathWithPlatformSeparators(
+                "buck-out/gen/lib__java_lib__output/java_lib.jar")
+            + " "
+            + MorePaths.pathWithPlatformSeparators("buck-out/annotation/__java_lib_gen__")
+            + "\n"
+            + "//:plugin"
+            + "\n"
             + "//:test "
             + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output")
             + "\n",
@@ -148,7 +156,9 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout().trim(),
-        Matchers.matchesPattern("//:another-test [a-f0-9]{40}\n//:test [a-f0-9]{40}"));
+        Matchers.matchesPattern(
+            "//:another-test [a-f0-9]{40}\n//:java_lib [a-f0-9]{40}\n"
+                + "//:plugin [a-f0-9]{40}\n//:test [a-f0-9]{40}"));
   }
 
   @Test
@@ -214,7 +224,8 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-target-hash");
     result.assertSuccess();
-    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:another-test", "//:test");
+    parseAndVerifyTargetsAndHashes(
+        result.getStdout(), "//:another-test", "//:java_lib", "//:plugin", "//:test");
   }
 
   @Test

@@ -24,6 +24,7 @@ import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -558,6 +559,7 @@ public class TargetsCommand extends AbstractCommand {
         builder.add(entry.getKey().getCellPath().toString());
       }
       showOptions.getOutputPath().ifPresent(builder::add);
+      showOptions.getGeneratedSourcePath().ifPresent(builder::add);
       showOptions.getTargetHash().ifPresent(builder::add);
       params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
     }
@@ -731,6 +733,11 @@ public class TargetsCommand extends AbstractCommand {
             sortedTargetRule,
             attributesPatternsMatcher);
         putIfValuePresentAndMatches(
+            ShowOptionsName.GEN_SRC_PATH.getName(),
+            showOptions.getGeneratedSourcePath(),
+            sortedTargetRule,
+            attributesPatternsMatcher);
+        putIfValuePresentAndMatches(
             ShowOptionsName.TARGET_HASH.getName(),
             showOptions.getTargetHash(),
             sortedTargetRule,
@@ -849,6 +856,19 @@ public class TargetsCommand extends AbstractCommand {
                   path ->
                       isShowFullOutput() ? path : params.getCell().getFilesystem().relativize(path))
               .ifPresent(path -> showOptionsBuilder.setOutputPath(path.toString()));
+          // If the output dir is requested, also calculate the generated src dir
+          if (rule instanceof JavaLibrary) {
+            ((JavaLibrary) rule)
+                .getGeneratedSourcePath()
+                .map(
+                    path -> {
+                      final Path rootPath = params.getCell().getFilesystem().getRootPath();
+                      Path sameFsPath = rootPath.resolve(path.toString());
+                      Path returnPath = isShowFullOutput() ? path : rootPath.relativize(sameFsPath);
+                      return returnPath.toString();
+                    })
+                .ifPresent(showOptionsBuilder::setGeneratedSourcePath);
+          }
         }
       }
     }
@@ -1125,6 +1145,8 @@ public class TargetsCommand extends AbstractCommand {
   abstract static class AbstractShowOptions {
     public abstract Optional<String> getOutputPath();
 
+    public abstract Optional<String> getGeneratedSourcePath();
+
     public abstract Optional<String> getRuleKey();
 
     public abstract Optional<String> getTargetHash();
@@ -1132,6 +1154,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private enum ShowOptionsName {
     OUTPUT_PATH("buck.outputPath"),
+    GEN_SRC_PATH("buck.generatedSourcePath"),
     TARGET_HASH("buck.targetHash"),
     RULE_KEY("buck.ruleKey");
 

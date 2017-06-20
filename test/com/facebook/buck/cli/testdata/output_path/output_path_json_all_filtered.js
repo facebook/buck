@@ -4,6 +4,13 @@
   "name":"another-test"
 },
 {
+  "buck.outputPath":"buck-out/gen/lib__java_lib__output/java_lib.jar",
+  "name":"java_lib"
+},
+{
+  "name":"plugin"
+},
+{
   "buck.outputPath":"buck-out/gen/test/test-output",
   "name":"test"
 }
