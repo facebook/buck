@@ -27,6 +27,7 @@ import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
@@ -646,6 +647,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void simpleLeafEventFinished(LeafEvents.SimpleLeafEvent.Finished finished) {
+    threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
+  }
+
+  @Subscribe
+  public void ruleKeyCalculationStarted(RuleKeyCalculationEvent.Started started) {
+    threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
+  }
+
+  @Subscribe
+  public void ruleKeyCalculationFinished(RuleKeyCalculationEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
   }
 

@@ -225,7 +225,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
-            " |=> //banana:stand...  0.1s (checking_cache)"));
+            " |=> //banana:stand...  0.1s (preparing)"));
 
     BuildRuleCacheEvent.CacheStepStarted cacheStepStarted =
         BuildRuleCacheEvent.started(fakeRule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED);
@@ -255,7 +255,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
-            " |=> //banana:stand...  0.1s (checking_cache)"));
+            " |=> //banana:stand...  0.1s (preparing)"));
 
     ArtifactCompressionEvent.Started compressStarted =
         ArtifactCompressionEvent.started(
@@ -286,7 +286,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
-            " |=> //banana:stand...  0.1s (checking_cache)"));
+            " |=> //banana:stand...  0.1s (preparing)"));
 
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
         new DirArtifactCacheEvent.DirArtifactCacheEventFactory();
@@ -321,7 +321,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
-            " |=> //banana:stand...  0.2s (checking_cache)"));
+            " |=> //banana:stand...  0.2s (preparing)"));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -380,7 +380,7 @@ public class SuperConsoleEventBusListenerTest {
             DOWNLOAD_STRING,
             "[+] BUILDING...0.7s",
             " |=> IDLE",
-            " |=> //chicken:dance...  0.1s (checking_cache)"));
+            " |=> //chicken:dance...  0.1s (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -611,7 +611,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s" + " [0%] (0/10 JOBS, 0 UPDATED, " + "0 [0.0%] CACHE MISS)",
-            " |=> //banana:stand...  0.2s (checking_cache)"));
+            " |=> //banana:stand...  0.2s (preparing)"));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -674,7 +674,7 @@ public class SuperConsoleEventBusListenerTest {
             DOWNLOAD_STRING,
             "[+] BUILDING...0.7s [10%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
             " |=> IDLE",
-            " |=> //chicken:dance...  0.1s (checking_cache)"));
+            " |=> //chicken:dance...  0.1s (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1089,7 +1089,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
-            " |=> //:test...  0.2s (checking_cache)"));
+            " |=> //:test...  0.2s (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1340,7 +1340,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
-            " |=> //:test...  0.2s (checking_cache)"));
+            " |=> //:test...  0.2s (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1605,7 +1605,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
-            " |=> //:test...  0.2s (checking_cache)"));
+            " |=> //:test...  0.2s (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1876,7 +1876,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
-            " |=> //banana:stand...  0.1s (checking_cache)"));
+            " |=> //banana:stand...  0.1s (preparing)"));
 
     // Post events that run another step.
     StepEvent.Started step2EventStarted =

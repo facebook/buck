@@ -101,8 +101,8 @@ public class BuildThreadStateRendererTest {
             equalTo(
                 ImmutableList.of(
                     " |=> //:target2...  4.4s (running step A[2.7s])",
-                    " |=> //:target1...  3.3s (checking_cache)",
-                    " |=> //:target3...  2.6s (checking_cache)",
+                    " |=> //:target1...  3.3s (preparing)",
+                    " |=> //:target3...  2.6s (preparing)",
                     " |=> //:target4...  1.2s (running step B[0.5s])",
                     " |=> IDLE"))));
     assertThat(
@@ -111,8 +111,8 @@ public class BuildThreadStateRendererTest {
             equalTo(
                 ImmutableList.of(
                     " |=> //:target2...  4.4s (running step A[2.7s])",
-                    " |=> //:target3...  2.6s (checking_cache)",
-                    " |=> //:target1...  3.3s (checking_cache)",
+                    " |=> //:target3...  2.6s (preparing)",
+                    " |=> //:target1...  3.3s (preparing)",
                     " |=> IDLE",
                     " |=> //:target4...  1.2s (running step B[0.5s])"))));
     assertThat(
@@ -146,7 +146,7 @@ public class BuildThreadStateRendererTest {
             equalTo(
                 ImmutableList.of(
                     // one missing build rule - no output
-                    " |=> //:target3...  2.6s (checking_cache)", // missing step information
+                    " |=> //:target3...  2.6s (preparing)", // missing step information
                     " |=> //:target4...  1.2s (running step B[0.5s])",
                     " |=> IDLE")))); // missing accumulated time - show as IDLE
     assertThat(

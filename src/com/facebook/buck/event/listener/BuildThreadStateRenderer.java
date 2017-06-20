@@ -106,7 +106,7 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
         threadInformation.getStartEvent(),
         threadInformation.getRunningStep(),
         threadInformation.getRunningStep().map(LeafEvent::getCategory),
-        Optional.of("checking_cache"),
+        Optional.of("preparing"),
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
   }
