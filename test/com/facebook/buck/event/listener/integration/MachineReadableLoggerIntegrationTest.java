@@ -59,5 +59,6 @@ public class MachineReadableLoggerIntegrationTest {
     assertTrue("log contains BuildRuleFinished.", data.contains("BuildRuleEvent.Finished"));
     assertTrue("log contains InvocationInfo.", data.contains("InvocationInfo"));
     assertTrue("log contains ExitCode.", data.contains("ExitCode"));
+    assertTrue("log contains successTypeName.", data.contains("successTypeName"));
   }
 }

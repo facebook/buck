@@ -251,6 +251,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return successType;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public Optional<String> getSuccessTypeName() {
+      return successType.isPresent() ? Optional.of(successType.get().name()) : Optional.empty();
+    }
+
     @JsonIgnore
     public boolean isWillTryUploadToCache() {
       return willTryUploadToCache;

@@ -174,6 +174,7 @@ public class MachineReadableLogJsonViewTest {
             + "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"},"
             + "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"},"
             + "\"inputRuleKey\":{\"hashCode\":\"bbbb\"}},"
+            + "\"successTypeName\":\"BUILT_LOCALLY\","
             + "\"outputHash\":\"abcd42\"},",
         message);
   }

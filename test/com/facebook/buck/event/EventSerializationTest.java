@@ -197,6 +197,7 @@ public class EventSerializationTest {
             + "\"wallMillisDuration\":11,\"nanoDuration\":12,\"threadUserNanoDuration\":13},"
             + "\"ruleRunningAfterThisEvent\":false,"
             + "\"eventKey\":{\"value\":1024186770},"
+            + "\"successTypeName\":\"BUILT_LOCALLY\","
             + "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}}}",
         message);
   }
