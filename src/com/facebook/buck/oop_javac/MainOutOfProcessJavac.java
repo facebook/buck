@@ -26,13 +26,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.worker.WorkerProcessCommand;
 import com.facebook.buck.worker.WorkerProcessProtocol;
 import com.facebook.buck.worker.WorkerProcessProtocolZero;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -47,15 +41,9 @@ public class MainOutOfProcessJavac implements AutoCloseable {
   private boolean handshakePerformed = false;
 
   public MainOutOfProcessJavac() throws IOException {
-    JsonWriter processStdinWriter =
-        new JsonWriter(new BufferedWriter(new OutputStreamWriter(System.out)));
-    JsonReader processStdoutReader =
-        new JsonReader(new BufferedReader(new InputStreamReader(System.in)));
-
     this.receiver = new OutOfProcessInvocationReceiver(Console.createNullConsole());
 
-    this.protocol =
-        new WorkerProcessProtocolZero.CommandReceiver(processStdinWriter, processStdoutReader);
+    this.protocol = new WorkerProcessProtocolZero.CommandReceiver(System.out, System.in);
   }
 
   public void ensureHandshake() throws IOException {

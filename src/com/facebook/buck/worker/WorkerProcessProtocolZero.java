@@ -16,13 +16,18 @@
 package com.facebook.buck.worker;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,14 +42,23 @@ public class WorkerProcessProtocolZero {
     private boolean isClosed = false;
 
     public CommandSender(
-        JsonWriter processStdinWriter,
-        JsonReader processStdoutReader,
-        Path stdErr,
-        Runnable onClose) {
-      this.processStdinWriter = processStdinWriter;
-      this.processStdoutReader = processStdoutReader;
+        OutputStream processStdin, InputStream processStdout, Path stdErr, Runnable onClose) {
+      this.processStdinWriter =
+          new JsonWriter(new BufferedWriter(new OutputStreamWriter(processStdin)));
+      this.processStdoutReader =
+          new JsonReader(new BufferedReader(new InputStreamReader(processStdout)));
       this.stdErr = Optional.of(stdErr);
       this.onClose = onClose;
+    }
+
+    @VisibleForTesting
+    JsonReader getProcessStdoutReader() {
+      return processStdoutReader;
+    }
+
+    @VisibleForTesting
+    JsonWriter getProcessStdinWriter() {
+      return processStdinWriter;
     }
 
     @Override
@@ -177,10 +191,22 @@ public class WorkerProcessProtocolZero {
     private final Optional<Path> stdErr;
     private boolean isClosed = false;
 
-    public CommandReceiver(JsonWriter processStdinWriter, JsonReader processStdoutReader) {
-      this.processStdinWriter = processStdinWriter;
-      this.processStdoutReader = processStdoutReader;
+    public CommandReceiver(OutputStream processStdin, InputStream processStdout) {
+      this.processStdinWriter =
+          new JsonWriter(new BufferedWriter(new OutputStreamWriter(processStdin)));
+      this.processStdoutReader =
+          new JsonReader(new BufferedReader(new InputStreamReader(processStdout)));
       this.stdErr = Optional.empty();
+    }
+
+    @VisibleForTesting
+    JsonReader getProcessStdoutReader() {
+      return processStdoutReader;
+    }
+
+    @VisibleForTesting
+    JsonWriter getProcessStdinWriter() {
+      return processStdinWriter;
     }
 
     @Override
@@ -302,6 +328,11 @@ public class WorkerProcessProtocolZero {
       processStdinWriter.name("exit_code").value(exitCode);
       processStdinWriter.endObject();
       processStdinWriter.flush();
+    }
+
+    @Override
+    public boolean shouldClose() throws IOException {
+      return JsonToken.END_ARRAY == processStdoutReader.peek();
     }
 
     @Override

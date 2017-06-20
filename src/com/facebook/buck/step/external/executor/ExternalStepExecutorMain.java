@@ -18,31 +18,24 @@ package com.facebook.buck.step.external.executor;
 
 import com.facebook.buck.worker.WorkerProcessProtocol;
 import com.facebook.buck.worker.WorkerProcessProtocolZero;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Entry point to out-of-process step executor */
 public class ExternalStepExecutorMain {
 
   public static void main(String[] args) {
-    JsonWriter processStdinWriter = new JsonWriter(new OutputStreamWriter(System.out));
-    JsonReader processStdoutReader = new JsonReader(new InputStreamReader(System.in));
     AtomicInteger messageCounter = new AtomicInteger();
 
     try {
       WorkerProcessProtocol.CommandReceiver workerProcessProtocol = null;
       try {
         workerProcessProtocol =
-            new WorkerProcessProtocolZero.CommandReceiver(processStdinWriter, processStdoutReader);
+            new WorkerProcessProtocolZero.CommandReceiver(System.out, System.in);
 
         workerProcessProtocol.handshake(messageCounter.getAndIncrement());
         while (true) {
-          if (JsonToken.END_ARRAY == processStdoutReader.peek()) {
+          if (workerProcessProtocol.shouldClose()) {
             workerProcessProtocol.close();
             break;
           }

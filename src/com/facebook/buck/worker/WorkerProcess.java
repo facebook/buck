@@ -25,14 +25,8 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,15 +87,10 @@ public class WorkerProcess implements Closeable {
         "Starting up process %d using command: \'%s\'",
         this.hashCode(), Joiner.on(' ').join(processParams.getCommand()));
     launchedProcess = executor.launchProcess(processParams);
-    JsonWriter processStdinWriter =
-        new JsonWriter(
-            new BufferedWriter(new OutputStreamWriter(launchedProcess.getOutputStream())));
-    JsonReader processStdoutReader =
-        new JsonReader(new BufferedReader(new InputStreamReader(launchedProcess.getInputStream())));
     protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            processStdinWriter,
-            processStdoutReader,
+            launchedProcess.getOutputStream(),
+            launchedProcess.getInputStream(),
             stdErr,
             () -> {
               if (launchedProcess != null) {

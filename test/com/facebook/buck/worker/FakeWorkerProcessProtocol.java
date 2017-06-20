@@ -61,6 +61,11 @@ public class FakeWorkerProcessProtocol {
     public void sendResponse(int messageId, String type, int exitCode) throws IOException {}
 
     @Override
+    public boolean shouldClose() throws IOException {
+      return false;
+    }
+
+    @Override
     public void close() throws IOException {
       isClosed = true;
     }
