@@ -173,7 +173,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Generator for xcode project and associated files from a set of xcode/ios rules. */
@@ -1201,7 +1200,8 @@ public class ProjectGenerator {
         Iterable<String> otherCFlags =
             Iterables.concat(
                 cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
-                collectRecursiveExportedPreprocessorFlags(targetNode),
+                convertStringWithMacros(
+                    targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)),
                 convertStringWithMacros(
                     targetNode, targetNode.getConstructorArg().getCompilerFlags()),
                 convertStringWithMacros(
@@ -1209,7 +1209,8 @@ public class ProjectGenerator {
         Iterable<String> otherCxxFlags =
             Iterables.concat(
                 cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
-                collectRecursiveExportedPreprocessorFlags(targetNode),
+                convertStringWithMacros(
+                    targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)),
                 convertStringWithMacros(
                     targetNode, targetNode.getConstructorArg().getCompilerFlags()),
                 convertStringWithMacros(
@@ -1234,29 +1235,16 @@ public class ProjectGenerator {
 
         ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
             ImmutableMultimap.builder();
-        for (Pair<Pattern, ImmutableList<String>> flags :
+        for (Pair<Pattern, ImmutableList<StringWithMacros>> flags :
             Iterables.concat(
-                RichStream.<Pair<Pattern, ImmutableList<StringWithMacros>>>empty()
-                    .concat(
-                        targetNode
-                            .getConstructorArg()
-                            .getPlatformCompilerFlags()
-                            .getPatternsAndValues()
-                            .stream())
-                    .concat(
-                        targetNode
-                            .getConstructorArg()
-                            .getPlatformPreprocessorFlags()
-                            .getPatternsAndValues()
-                            .stream())
-                    .map(
-                        p ->
-                            new Pair<>(
-                                p.getFirst(), convertStringWithMacros(targetNode, p.getSecond())))
-                    .collect(Collectors.toList()),
+                targetNode.getConstructorArg().getPlatformCompilerFlags().getPatternsAndValues(),
+                targetNode
+                    .getConstructorArg()
+                    .getPlatformPreprocessorFlags()
+                    .getPatternsAndValues(),
                 collectRecursiveExportedPlatformPreprocessorFlags(targetNode))) {
           String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
-          platformFlagsBuilder.put(sdk, flags.getSecond());
+          platformFlagsBuilder.put(sdk, convertStringWithMacros(targetNode, flags.getSecond()));
         }
         ImmutableMultimap<String, ImmutableList<String>> platformFlags =
             platformFlagsBuilder.build();
@@ -2404,7 +2392,8 @@ public class ProjectGenerator {
             });
   }
 
-  private Iterable<String> collectRecursiveExportedPreprocessorFlags(TargetNode<?, ?> targetNode) {
+  private Iterable<StringWithMacros> collectRecursiveExportedPreprocessorFlags(
+      TargetNode<?, ?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
@@ -2421,7 +2410,7 @@ public class ProjectGenerator {
                     .orElse(ImmutableList.of()));
   }
 
-  private Iterable<Pair<Pattern, ImmutableList<String>>>
+  private Iterable<Pair<Pattern, ImmutableList<StringWithMacros>>>
       collectRecursiveExportedPlatformPreprocessorFlags(TargetNode<?, ?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(

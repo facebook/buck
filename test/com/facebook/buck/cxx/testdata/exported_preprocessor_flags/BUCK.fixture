@@ -17,3 +17,22 @@ cxx_library(
     '-DLIB',
   ],
 )
+
+genrule(
+  name = 'gen',
+  out = 'gen',
+  cmd = 'touch "$OUT"',
+)
+
+cxx_library(
+  name = 'lib_with_location_macro',
+  exported_preprocessor_flags = [
+    # This is actually a preprocessor flag.  A better example would be the
+    # `-fsanitize-blacklist` compiler, but since this isn't available on older
+    # compilers, use `-include` instead.
+    '-include', '$(location :gen)',
+  ],
+  srcs = [
+    'foo.cpp',
+  ],
+)

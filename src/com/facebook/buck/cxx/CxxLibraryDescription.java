@@ -41,7 +41,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -1035,14 +1034,15 @@ public class CxxLibraryDescription
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
           cxxPreprocessorInputBuilder.putAllPreprocessorFlags(
-              ImmutableListMultimap.copyOf(
-                  Multimaps.transformValues(
-                      CxxFlags.getLanguageFlags(
-                          args.getExportedPreprocessorFlags(),
-                          args.getExportedPlatformPreprocessorFlags(),
-                          args.getExportedLangPreprocessorFlags(),
-                          platform.getValue()),
-                      StringArg::of)));
+              Multimaps.transformValues(
+                  CxxFlags.getLanguageFlagsWithMacros(
+                      args.getExportedPreprocessorFlags(),
+                      args.getExportedPlatformPreprocessorFlags(),
+                      args.getExportedLangPreprocessorFlags(),
+                      platform.getValue()),
+                  f ->
+                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                          buildTarget, cellRoots, resolver, platform.getValue(), f)));
           cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE && !args.getHeaders().isEmpty()) {
@@ -1220,14 +1220,16 @@ public class CxxLibraryDescription
       return PatternMatchedCollection.of();
     }
 
-    ImmutableList<String> getExportedPreprocessorFlags();
+    ImmutableList<StringWithMacros> getExportedPreprocessorFlags();
 
     @Value.Default
-    default PatternMatchedCollection<ImmutableList<String>> getExportedPlatformPreprocessorFlags() {
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>>
+        getExportedPlatformPreprocessorFlags() {
       return PatternMatchedCollection.of();
     }
 
-    ImmutableMap<CxxSource.Type, ImmutableList<String>> getExportedLangPreprocessorFlags();
+    ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>>
+        getExportedLangPreprocessorFlags();
 
     ImmutableList<StringWithMacros> getExportedLinkerFlags();
 

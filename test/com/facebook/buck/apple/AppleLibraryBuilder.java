@@ -85,7 +85,11 @@ public class AppleLibraryBuilder
 
   public AppleLibraryBuilder setExportedPreprocessorFlags(
       ImmutableList<String> exportedPreprocessorFlags) {
-    getArgForPopulating().setExportedPreprocessorFlags(exportedPreprocessorFlags);
+    getArgForPopulating()
+        .setExportedPreprocessorFlags(
+            RichStream.from(exportedPreprocessorFlags)
+                .map(StringWithMacrosUtils::format)
+                .toImmutableList());
     return this;
   }
 
