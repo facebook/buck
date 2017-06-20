@@ -60,6 +60,7 @@ import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -73,6 +74,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -699,6 +701,22 @@ public class PrebuiltCxxLibraryDescription
        *     PIC library.
        */
       private Optional<SourcePath> getStaticPicLibrary(CxxPlatform cxxPlatform) {
+        return getStaticPicLibraryLocations(cxxPlatform)
+            .stream()
+            .filter(
+                staticLibraryPath ->
+                    params
+                        .getProjectFilesystem()
+                        .exists(pathResolver.getAbsolutePath(staticLibraryPath)))
+            .findFirst();
+      }
+
+      /**
+       * @return the {@link List} of {@link SourcePath} representing the locations to look for the
+       *     static PIC library.
+       */
+      private ImmutableList<SourcePath> getStaticPicLibraryLocations(CxxPlatform cxxPlatform) {
+        final ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
         SourcePath staticPicLibraryPath =
             PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
                 getBuildTarget(),
@@ -709,11 +727,7 @@ public class PrebuiltCxxLibraryDescription
                 versionSubdir,
                 args.getLibDir(),
                 args.getLibName());
-        if (params
-            .getProjectFilesystem()
-            .exists(pathResolver.getAbsolutePath(staticPicLibraryPath))) {
-          return Optional.of(staticPicLibraryPath);
-        }
+        builder.add(staticPicLibraryPath);
 
         // If a specific static-pic variant isn't available, then just use the static variant.
         SourcePath staticLibraryPath =
@@ -726,11 +740,8 @@ public class PrebuiltCxxLibraryDescription
                 versionSubdir,
                 args.getLibDir(),
                 args.getLibName());
-        if (params.getProjectFilesystem().exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
-          return Optional.of(staticLibraryPath);
-        }
-
-        return Optional.empty();
+        builder.add(staticLibraryPath);
+        return builder.build();
       }
 
       @Override
@@ -851,7 +862,15 @@ public class PrebuiltCxxLibraryDescription
             Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
             SourcePath staticLibraryPath =
                 type == Linker.LinkableDepType.STATIC_PIC
-                    ? getStaticPicLibrary(cxxPlatform).get()
+                    ? getStaticPicLibrary(cxxPlatform)
+                        .orElseThrow(
+                            () ->
+                                new HumanReadableException(
+                                    "Could not find prebuilt static PIC library for %s. "
+                                        + "Tried the following locations:\n%s",
+                                    getBuildTarget(),
+                                    Joiner.on('\n')
+                                        .join(getStaticPicLibraryLocations(cxxPlatform))))
                     : PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                         getBuildTarget(),
                         cellRoots,

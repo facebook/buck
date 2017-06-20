@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -50,6 +51,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -583,6 +585,29 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Arg.stringify(nativeLinkableInput.getArgs(), pathResolver).get(0),
         Matchers.endsWith(
             getStaticPicLibraryPath(libBuilder.build().getConstructorArg()).toString()));
+  }
+
+  @Test
+  public void missingAllLibFilesThrowsUsefulException() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder libBuilder =
+        new PrebuiltCxxLibraryBuilder(TARGET).setForceStatic(true);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltCxxLibrary lib =
+        (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
+    try {
+      lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
+      fail("Should have thrown a HumanReadableException");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.allOf(
+              Matchers.containsString(
+                  getStaticPicLibraryPath(libBuilder.build().getConstructorArg()).toString()),
+              Matchers.containsString(TARGET.toString())));
+    }
   }
 
   @Test
