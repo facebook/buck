@@ -173,7 +173,11 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void dependencyFile() throws IOException {
-    workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#dependencies,ios,release").assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//js:fruit-salad-in-a-bundle#dependencies,ios,release",
+            "//js:fruit-with-extras#android,dependencies")
+        .assertSuccess();
     workspace.verify(Paths.get("dependencies.expected"), genPath);
   }
 }

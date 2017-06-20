@@ -116,7 +116,9 @@ public class JsBundleDescription
     // To facilitate this, we return a build rule that in turn depends on a `JsBundle` and
     // an `AndroidResource`. The `AndroidResource` rule also depends on the `JsBundle`
     // if the `FORCE_JS_BUNDLE` flavor is present, we create the `JsBundle` instance itself.
-    if (flavors.contains(JsFlavors.ANDROID) && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)) {
+    if (flavors.contains(JsFlavors.ANDROID)
+        && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)
+        && !flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       return createAndroidRule(
           params.getBuildTarget(),
           params.getProjectFilesystem(),

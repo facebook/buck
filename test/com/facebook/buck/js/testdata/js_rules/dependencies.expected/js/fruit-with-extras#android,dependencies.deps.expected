@@ -1,0 +1,13 @@
+dependencies --platform android --lib @/buck-out/gen/js/extras#android.json --lib @/buck-out/gen/js/fruit#android.json --root @ yoghurt banana apple
+library --platform android --root @
+transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+var choclateChips;
+transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+var yoghurt;
+library --platform android --root @
+transform --filename js/apple.js
+var apple;
+transform --filename js/banana.js
+var banana;
+transform --filename js/pear.js
+var pear;
