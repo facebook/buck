@@ -229,7 +229,7 @@ public class RealExopackageDevice implements ExopackageDevice {
               if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
                 LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
                 startedPayload = true;
-                Socket clientSocket = new Socket("localhost", agentPort);
+                Socket clientSocket = new Socket("127.0.0.1", agentPort);
                 closer.register(clientSocket);
                 LOG.verbose("Connected");
                 outToDevice = clientSocket.getOutputStream();
