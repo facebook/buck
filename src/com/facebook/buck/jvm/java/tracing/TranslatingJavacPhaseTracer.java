@@ -102,11 +102,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
 
   @Override
   public void beginAnalyze(@Nullable String filename, @Nullable String typename) {
-    if (isProcessingAnnotations) {
-      logger.endAnnotationProcessingRound(true);
-      logger.endAnnotationProcessing();
-      isProcessingAnnotations = false;
-    }
+    maybeEndAnnotationProcessing();
 
     logger.beginAnalyze(filename, typename);
   }
@@ -128,10 +124,14 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
 
   @Override
   public void close() {
+    // If javac is invoked with -proc:only, the last thing we'll hear from it is the end of
+    // the annotation processing round. We won't get a beginAnalyze (or even a beginEnter) after
+    // the annotation processors run for the last time.
+    maybeEndAnnotationProcessing();
+  }
+
+  private void maybeEndAnnotationProcessing() {
     if (isProcessingAnnotations) {
-      // If javac is invoked with -proc:only, the last thing we'll hear from it is the end of
-      // the annotation processing round. We won't get a beginAnalyze (or even a beginEnter) after
-      // the annotation processors run for the last time.
       logger.endAnnotationProcessingRound(true);
       logger.endAnnotationProcessing();
       isProcessingAnnotations = false;
