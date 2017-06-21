@@ -181,7 +181,7 @@ public class DoctorCommandIntegrationTest {
   public void testReportSuccessfulUpload() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempFolder.getRoot());
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", tempFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
     // Set the last-modified time of the build command first so our user input will select it
     Path buildCommandLogDir = filesystem.resolve(LOG_PATH).getParent();
@@ -247,15 +247,20 @@ public class DoctorCommandIntegrationTest {
       zipInspector.assertFileExists("report.json");
       zipInspector.assertFileExists("buckconfig.local");
       zipInspector.assertFileExists("bucklogging.local.properties");
-      zipInspector.assertFileExists(BUILD_COMMAND_DIR_PATH + "buck.log");
-      zipInspector.assertFileExists(BUILD_COMMAND_DIR_PATH + "buck-machine-log");
+      zipInspector.assertFileExists(BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_LOG_FILE_NAME);
+      zipInspector.assertFileExists(
+          BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+      zipInspector.assertFileExists(
+          BUILD_COMMAND_DIR_PATH + BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME);
+      zipInspector.assertFileExists(
+          BUILD_COMMAND_DIR_PATH + BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME);
     }
   }
 
   @Test
   public void testJsonUpload() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", tempFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
@@ -313,7 +318,7 @@ public class DoctorCommandIntegrationTest {
   public void testExtraInfo() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempFolder.getRoot());
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", tempFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
 
     DoctorConfig doctorConfig =
@@ -358,7 +363,7 @@ public class DoctorCommandIntegrationTest {
   public void testReportUploadFailure() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempFolder.getRoot());
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", tempFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
@@ -395,7 +400,16 @@ public class DoctorCommandIntegrationTest {
       assertFalse(report.getReportSubmitErrorMessage().get().isEmpty());
       ZipInspector zipInspector =
           new ZipInspector(filesystem.resolve(report.getReportSubmitLocation().get()));
-      assertEquals(zipInspector.getZipFileEntries().size(), 5);
+      zipInspector.assertFileExists("report.json");
+      zipInspector.assertFileExists("buckconfig.local");
+      zipInspector.assertFileExists("bucklogging.local.properties");
+      zipInspector.assertFileExists(BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_LOG_FILE_NAME);
+      zipInspector.assertFileExists(
+          BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+      zipInspector.assertFileExists(
+          BUILD_COMMAND_DIR_PATH + BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME);
+      zipInspector.assertFileExists(
+          BUILD_COMMAND_DIR_PATH + BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME);
     }
   }
 

@@ -39,7 +39,7 @@ public class BuildLogHelperIntegrationTest {
   @Test
   public void findsLogFiles() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report-all", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
     workspace.setUp();
 
     Cell cell = workspace.asCell();
@@ -57,10 +57,6 @@ public class BuildLogHelperIntegrationTest {
     assertThat(
         buildIdToCommandMap,
         Matchers.equalTo(
-            ImmutableMap.of(
-                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
-                "build buck",
-                new BuildId("3f874373-f040-448f-964d-e2eb459de37f"),
-                "autodeps")));
+            ImmutableMap.of(new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"), "build buck")));
   }
 }

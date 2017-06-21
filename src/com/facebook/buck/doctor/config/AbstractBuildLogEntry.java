@@ -39,6 +39,10 @@ abstract class AbstractBuildLogEntry {
 
   public abstract Optional<Path> getMachineReadableLogFile();
 
+  public abstract Optional<Path> getRuleKeyDiagKeysFile();
+
+  public abstract Optional<Path> getRuleKeyDiagGraphFile();
+
   public abstract Optional<Path> getTraceFile();
 
   public abstract long getSize();

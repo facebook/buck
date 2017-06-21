@@ -112,6 +112,18 @@ public class BuildLogHelper {
       builder.setRuleKeyLoggerLogFile(ruleKeyLoggerFile);
     }
 
+    Path ruleKeyDiagKeysFile =
+        logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME);
+    if (projectFilesystem.isFile(ruleKeyDiagKeysFile)) {
+      builder.setRuleKeyDiagKeysFile(ruleKeyDiagKeysFile);
+    }
+
+    Path ruleKeyDiagGraphFile =
+        logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME);
+    if (projectFilesystem.isFile(ruleKeyDiagGraphFile)) {
+      builder.setRuleKeyDiagGraphFile(ruleKeyDiagGraphFile);
+    }
+
     Optional<Path> traceFile =
         projectFilesystem
             .getFilesUnderPath(logFile.getParent())

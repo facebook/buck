@@ -144,6 +144,8 @@ public abstract class AbstractReport {
                     ImmutableSet.Builder<Path> result = ImmutableSet.builder();
                     Optionals.addIfPresent(input.getRuleKeyLoggerLogFile(), result);
                     Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
+                    Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
+                    Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
                     result.add(input.getRelativePath());
                     return result.build();
                   }
