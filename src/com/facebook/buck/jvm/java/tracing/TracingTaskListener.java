@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.tracing;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.TaskEventMirror;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -109,6 +110,8 @@ public class TracingTaskListener implements BuckJavacTaskListener {
     private int enterCount = 0;
     private List<String> enteredFiles = new ArrayList<>();
     private int analyzeCount = 0;
+    private List<String> analyzedFiles = new ArrayList<>();
+    private List<String> analyzedTypes = new ArrayList<>();
 
     public TraceCleaner(JavacPhaseTracer tracing) {
       this.tracing = tracing;
@@ -157,18 +160,22 @@ public class TracingTaskListener implements BuckJavacTaskListener {
      * @see #finishAnalyze(String, String)
      */
     void startAnalyze(@Nullable String filename, @Nullable String typename) {
+      analyzedFiles.add(filename);
+      analyzedTypes.add(typename);
+
       analyzeCount += 1;
-      tracing.beginAnalyze(filename, typename);
+      tracing.beginAnalyze();
     }
 
     /** @see #startAnalyze(String, String) */
     void finishAnalyze(@Nullable String filename, @Nullable String typename) {
       if (analyzeCount > 0) {
         analyzeCount -= 1;
-        tracing.endAnalyze();
+        tracing.endAnalyze(analyzedFiles, analyzedTypes);
       } else {
-        tracing.beginAnalyze(filename, typename);
-        tracing.endAnalyze();
+        tracing.beginAnalyze();
+        tracing.endAnalyze(
+            Collections.singletonList(filename), Collections.singletonList(typename));
       }
     }
   }

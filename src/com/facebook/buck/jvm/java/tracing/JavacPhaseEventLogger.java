@@ -80,12 +80,17 @@ public class JavacPhaseEventLogger {
     postFinishedEvent(JavacPhaseEvent.Phase.RUN_ANNOTATION_PROCESSORS, EMPTY_MAP);
   }
 
-  public void beginAnalyze(@Nullable String filename, @Nullable String typename) {
-    postStartedEvent(JavacPhaseEvent.Phase.ANALYZE, getArgs(filename, typename));
+  public void beginAnalyze() {
+    postStartedEvent(JavacPhaseEvent.Phase.ANALYZE, EMPTY_MAP);
   }
 
-  public void endAnalyze() {
-    postFinishedEvent(JavacPhaseEvent.Phase.ANALYZE, EMPTY_MAP);
+  public void endAnalyze(List<String> filenames, List<String> typenames) {
+    ImmutableMap.Builder<String, String> argsBuilder = ImmutableMap.builder();
+    for (int i = 0; i < filenames.size(); i++) {
+      argsBuilder.put(String.format("file %d", i), filenames.get(i));
+      argsBuilder.put(String.format("type %d", i), typenames.get(i));
+    }
+    postFinishedEvent(JavacPhaseEvent.Phase.ANALYZE, argsBuilder.build());
   }
 
   public void beginGenerate(@Nullable String filename, @Nullable String typename) {

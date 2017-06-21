@@ -36,9 +36,9 @@ public interface JavacPhaseTracer {
 
   void endAnnotationProcessingRound();
 
-  void beginAnalyze(@Nullable String filename, @Nullable String typename);
+  void beginAnalyze();
 
-  void endAnalyze();
+  void endAnalyze(List<String> filenames, List<String> typenames);
 
   void beginGenerate(@Nullable String filename, @Nullable String typename);
 
