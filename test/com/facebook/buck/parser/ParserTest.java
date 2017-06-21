@@ -48,6 +48,8 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
+import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -1518,6 +1520,54 @@ public class ParserTest {
               .lookupComputedNode(cell, target)
               .isPresent());
     }
+  }
+
+  @Test
+  public void daemonicParserStateSerialisesAndDeserialisesCorrectly() throws Exception {
+    tempDir.newFolder("foo");
+
+    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    Files.write(
+        testFooBuckFile,
+        "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
+            .getBytes(UTF_8));
+
+    Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(testFooJavaFile, "// Nothing to see here, move along!\n".getBytes(UTF_8));
+
+    Path testBarJavaFile = tempDir.newFile("foo/Bar.java");
+    Files.write(testBarJavaFile, "// Plz, leave me alone!\n".getBytes(UTF_8));
+
+    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+
+    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+
+    DaemonicParserState permState = parser.getPermState();
+    RemoteDaemonicParserState remote = permState.serialiseDaemonicParserState();
+
+    assertTrue(remote.isSetCachedIncludes());
+    assertEquals(remote.cachedIncludes.size(), 1);
+    assertTrue(remote.isSetCellPathToDaemonicState());
+    assertEquals(remote.cellPathToDaemonicState.size(), 1);
+    RemoteDaemonicCellState cellState = remote.cellPathToDaemonicState.get("");
+    assertTrue(cellState.isSetAllRawNodesJsons());
+    assertEquals(cellState.allRawNodesJsons.size(), 1);
+    assertTrue(cellState.isSetBuildFileDependents());
+    assertEquals(cellState.buildFileDependents.size(), 2);
+    assertTrue(cellState.isSetBuildFileEnv());
+    assertEquals(cellState.buildFileEnv.size(), 1);
+    assertTrue(remote.isSetCellPathsToNames());
+    assertEquals(remote.cellPathsToNames.size(), 1);
+
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
+    DaemonicParserState rawParserState =
+        new DaemonicParserState(broadcastEventListener, typeCoercerFactory, this.threads);
+    rawParserState.restoreState(remote);
+    // TODO(rvitale): for now we assert that we deserialise without getting any trouble. Once we'll
+    // have access to the cells we can probably make some more accurate assertion.
+    assertNotNull(rawParserState);
   }
 
   @Test

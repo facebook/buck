@@ -20,19 +20,29 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.thrift.BuildFileEnvProperty;
+import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -239,5 +249,109 @@ class DaemonicCellState {
       }
     }
     return Optional.empty();
+  }
+
+  private Map<String, String> getAllRawNodesForSerialisation() throws IOException {
+    Map<String, String> result = new HashMap<>();
+    Path root = getCellRoot();
+    ObjectMapper objectMapper = new ObjectMapper();
+    for (Path path : allRawNodes.keySet()) {
+      ImmutableSet<Map<String, Object>> v = allRawNodes.getIfPresent(path);
+      if (v != null) {
+        result.put(root.relativize(path).toString(), objectMapper.writeValueAsString(v));
+      }
+    }
+    return result;
+  }
+
+  private Map<String, List<String>> getBuildFileDependentsForSerialisation() {
+    Map<String, List<String>> result = new HashMap<>();
+    Path root = getCellRoot();
+    Map<Path, Collection<Path>> view = buildFileDependents.asMap();
+    for (Path path : view.keySet()) {
+      Collection<Path> paths = view.get(path);
+      if (paths != null) {
+        ImmutableList<String> pathList =
+            paths
+                .stream()
+                .map(v -> root.relativize(v).toString())
+                .collect(MoreCollectors.toImmutableList());
+        result.put(root.relativize(path).toString(), pathList);
+      }
+    }
+
+    return result;
+  }
+
+  private Map<String, Map<String, BuildFileEnvProperty>> getBuildFileEnvForSerialisation() {
+    Map<String, Map<String, BuildFileEnvProperty>> result = new HashMap<>();
+    for (Path path : buildFileEnv.keySet()) {
+      ImmutableMap.Builder<String, BuildFileEnvProperty> buildFileEnvValuesMapBuilder =
+          ImmutableMap.builder();
+      ImmutableMap<String, Optional<String>> values = buildFileEnv.get(path);
+      if (values != null) {
+        values.forEach(
+            (k, v) -> {
+              BuildFileEnvProperty prop = new BuildFileEnvProperty();
+              prop.setValue(v.get());
+              buildFileEnvValuesMapBuilder.put(k, prop);
+            });
+      }
+      result.put(path.toString(), buildFileEnvValuesMapBuilder.build());
+    }
+
+    return result;
+  }
+
+  RemoteDaemonicCellState serialise() throws IOException {
+    RemoteDaemonicCellState result = new RemoteDaemonicCellState();
+    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+      result.allRawNodesJsons = getAllRawNodesForSerialisation();
+      result.buildFileDependents = getBuildFileDependentsForSerialisation();
+      result.buildFileEnv = getBuildFileEnvForSerialisation();
+    }
+    return result;
+  }
+
+  static DaemonicCellState deserialise(
+      RemoteDaemonicCellState remote, Cell cell, int parsingThreads) throws IOException {
+    DaemonicCellState daemonicCellState = new DaemonicCellState(cell, parsingThreads);
+    Path root = cell.getRoot();
+    for (String pathString : remote.buildFileDependents.keySet()) {
+      Path key = root.resolve(pathString);
+      remote
+          .buildFileDependents
+          .get(pathString)
+          .forEach(
+              valuePathString -> {
+                daemonicCellState.buildFileDependents.put(key, root.resolve(valuePathString));
+              });
+    }
+
+    for (String pathString : remote.buildFileEnv.keySet()) {
+      Path key = Paths.get(pathString);
+      Map<String, BuildFileEnvProperty> remoteValues = remote.buildFileEnv.get(pathString);
+      ImmutableMap.Builder<String, Optional<String>> builder = ImmutableMap.builder();
+      for (String k : remoteValues.keySet()) {
+        BuildFileEnvProperty prop = remoteValues.get(k);
+        if (prop != null && !prop.isSetValue()) {
+          builder.put(k, Optional.empty());
+        } else {
+          builder.put(k, Optional.of(prop.value));
+        }
+      }
+      daemonicCellState.buildFileEnv.put(key, builder.build());
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+    for (String pathString : remote.allRawNodesJsons.keySet()) {
+      String json = remote.allRawNodesJsons.get(pathString);
+      ImmutableSet<Map<String, Object>> deserialisedRawNodes =
+          mapper.readValue(json, new TypeReference<ImmutableSet<Map<String, Object>>>() {});
+      Path key = root.resolve(pathString);
+      daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserialisedRawNodes);
+    }
+
+    return daemonicCellState;
   }
 }

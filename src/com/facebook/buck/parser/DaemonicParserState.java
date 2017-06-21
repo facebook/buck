@@ -28,6 +28,8 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
+import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.OptionalCompat;
@@ -44,10 +46,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +72,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * maintained correctly.
  */
 @ThreadSafe
-class DaemonicParserState {
+public class DaemonicParserState {
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
 
   /**
@@ -618,5 +623,45 @@ class DaemonicParserState {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       return String.format("memoized=%s", cellPathToDaemonicState);
     }
+  }
+
+  public RemoteDaemonicParserState serialiseDaemonicParserState() throws IOException {
+    ImmutableMap.Builder<String, String> cellPathsToNamesBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, RemoteDaemonicCellState> cellPathToDaemonicStateBuilder =
+        ImmutableMap.builder();
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      for (Path p : cellPathToDaemonicState.keySet()) {
+        DaemonicCellState daemonicCellState = cellPathToDaemonicState.get(p);
+        Path relPath = daemonicCellState.getCellRoot().relativize(p);
+        Optional<String> name = daemonicCellState.getCell().getCanonicalName();
+        if (name.isPresent()) {
+          cellPathsToNamesBuilder.put(relPath.toString(), name.get());
+        } else {
+          cellPathsToNamesBuilder.put(relPath.toString(), "");
+        }
+        cellPathToDaemonicStateBuilder.put(relPath.toString(), daemonicCellState.serialise());
+      }
+    }
+    RemoteDaemonicParserState remote = new RemoteDaemonicParserState();
+    remote.setCellPathsToNames(cellPathsToNamesBuilder.build());
+    ImmutableMap.Builder<String, List<String>> cachedIncludesBuilder = ImmutableMap.builder();
+    try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
+      cachedIncludes.forEach(
+          (path, iterable) ->
+              cachedIncludesBuilder.put(path.toString(), Lists.newArrayList(iterable)));
+    }
+    remote.setCachedIncludes(cachedIncludesBuilder.build());
+    remote.setCellPathToDaemonicState(cellPathToDaemonicStateBuilder.build());
+
+    return remote;
+  }
+
+  public DaemonicParserState restoreState(RemoteDaemonicParserState remote) {
+    remote.cachedIncludes.forEach(
+        (k, v) -> {
+          Path path = Paths.get(k);
+          cachedIncludes.put(path, v);
+        });
+    return this;
   }
 }

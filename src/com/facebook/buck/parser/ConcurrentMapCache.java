@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -58,5 +59,13 @@ class ConcurrentMapCache<K, V> {
 
   public void invalidate(K key) {
     values.remove(key);
+  }
+
+  public Set<K> keySet() {
+    return this.values.keySet();
+  }
+
+  public Collection<V> values() {
+    return this.values.values();
   }
 }
