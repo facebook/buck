@@ -159,6 +159,42 @@ public final class IjModuleGraphFactory {
     return aggregationTree;
   }
 
+  private static ImmutableSet<IjProjectElement> getProjectElementFromBuildTargets(
+      final ProjectFilesystem projectFilesystem,
+      final TargetGraph targetGraph,
+      final IjLibraryFactory libraryFactory,
+      final ImmutableMap<BuildTarget, IjModule> rulesToModules,
+      final IjModule module,
+      final Stream<BuildTarget> buildTargetStream) {
+    return buildTargetStream
+        .filter(
+            input -> {
+              TargetNode<?, ?> targetNode = targetGraph.get(input);
+              // IntelliJ doesn't support referring to source files which aren't below the root of
+              // the project. Filter out those cases proactively, so that we don't try to resolve
+              // files relative to the wrong ProjectFilesystem.
+              // Maybe one day someone will fix this.
+              return isInRootCell(projectFilesystem, targetNode);
+            })
+        .filter(
+            input -> {
+              // The exported deps closure can contain references back to targets contained
+              // in the module, so filter those out.
+              return !module.getTargets().contains(input);
+            })
+        .map(
+            depTarget -> {
+              IjModule depModule = rulesToModules.get(depTarget);
+              if (depModule != null) {
+                return depModule;
+              }
+              TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
+              return libraryFactory.getLibrary(targetNode).orElse(null);
+            })
+        .filter(Objects::nonNull)
+        .collect(MoreCollectors.toImmutableSet());
+  }
+
   /**
    * @param projectConfig the project config used
    * @param targetGraph input graph.
@@ -188,6 +224,8 @@ public final class IjModuleGraphFactory {
             ignoredTargetLabels);
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph, ignoredTargetLabels);
+    final TransitiveDepsClosureResolver transitiveDepsClosureResolver =
+        new TransitiveDepsClosureResolver(targetGraph, ignoredTargetLabels);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
         depsBuilder = ImmutableMap.builder();
     final Set<IjLibrary> referencedLibraries = new HashSet<>();
@@ -206,6 +244,7 @@ public final class IjModuleGraphFactory {
 
         DependencyType depType = entry.getValue();
         ImmutableSet<IjProjectElement> depElements;
+        ImmutableSet<IjProjectElement> transitiveDepElements = ImmutableSet.of();
 
         if (depType.equals(DependencyType.COMPILED_SHADOW)) {
           Optional<IjLibrary> library = libraryFactory.getLibrary(depTargetNode);
@@ -216,40 +255,38 @@ public final class IjModuleGraphFactory {
           }
         } else {
           depElements =
-              Stream.concat(
+              getProjectElementFromBuildTargets(
+                  projectFilesystem,
+                  targetGraph,
+                  libraryFactory,
+                  rulesToModules,
+                  module,
+                  Stream.concat(
                       exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget).stream(),
-                      Stream.of(depBuildTarget))
-                  .filter(
-                      input -> {
-                        TargetNode<?, ?> targetNode = targetGraph.get(input);
-                        // IntelliJ doesn't support referring to source files which aren't below the root of
-                        // the project. Filter out those cases proactively, so that we don't try to resolve
-                        // files relative to the wrong ProjectFilesystem.
-                        // Maybe one day someone will fix this.
-                        return isInRootCell(projectFilesystem, targetNode);
-                      })
-                  .filter(
-                      input -> {
-                        // The exported deps closure can contain references back to targets contained
-                        // in the module, so filter those out.
-                        return !module.getTargets().contains(input);
-                      })
-                  .map(
-                      depTarget -> {
-                        IjModule depModule = rulesToModules.get(depTarget);
-                        if (depModule != null) {
-                          return depModule;
-                        }
-                        TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
-                        return libraryFactory.getLibrary(targetNode).orElse(null);
-                      })
-                  .filter(Objects::nonNull)
-                  .collect(MoreCollectors.toImmutableSet());
+                      Stream.of(depBuildTarget)));
+          if (!projectConfig.getProjectRoot().isEmpty()) {
+            transitiveDepElements =
+                getProjectElementFromBuildTargets(
+                    projectFilesystem,
+                    targetGraph,
+                    libraryFactory,
+                    rulesToModules,
+                    module,
+                    Stream.concat(
+                        transitiveDepsClosureResolver
+                            .getTransitiveDepsClosure(depBuildTarget)
+                            .stream(),
+                        Stream.of(depBuildTarget)));
+          }
         }
 
         for (IjProjectElement depElement : depElements) {
           Preconditions.checkState(!depElement.equals(module));
           DependencyType.putWithMerge(moduleDeps, depElement, depType);
+        }
+        for (IjProjectElement depElement : transitiveDepElements) {
+          Preconditions.checkState(!depElement.equals(module));
+          DependencyType.putWithMerge(moduleDeps, depElement, DependencyType.RUNTIME);
         }
       }
 

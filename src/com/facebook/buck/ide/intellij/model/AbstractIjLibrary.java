@@ -60,6 +60,8 @@ abstract class AbstractIjLibrary implements IjProjectElement {
       IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
       if (dependencyType.equals(DependencyType.TEST)) {
         scope = IjDependencyListBuilder.Scope.TEST;
+      } else if (dependencyType.equals(DependencyType.RUNTIME)) {
+        scope = IjDependencyListBuilder.Scope.RUNTIME;
       }
       dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
     }

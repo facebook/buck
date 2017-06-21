@@ -6,4 +6,7 @@ java_library(
     deps = [
         "//project2/dep:dep",
     ],
+    visibility = [
+        "PUBLIC",
+    ]
 )

@@ -28,6 +28,8 @@ public enum DependencyType {
   TEST,
   /** The current {@link IjModule} depends on the other element from production (non-test) code. */
   PROD,
+  /** The current {@link IjModule} depends on the other element from runtime only. */
+  RUNTIME,
   /**
    * This dependency means that the other element contains a compiled counterpart to this element.
    * This is used when the current element uses BUCK features which cannot be expressed in IntelliJ.
@@ -42,7 +44,13 @@ public enum DependencyType {
     Preconditions.checkArgument(
         !left.equals(COMPILED_SHADOW) && !right.equals(COMPILED_SHADOW),
         "The COMPILED_SHADOW type cannot be merged with other types.");
-    return DependencyType.PROD;
+    if (left == DependencyType.RUNTIME) {
+      return right;
+    } else if (right == DependencyType.RUNTIME) {
+      return left;
+    } else {
+      return DependencyType.PROD;
+    }
   }
 
   public static <T> void putWithMerge(Map<T, DependencyType> map, T key, DependencyType value) {

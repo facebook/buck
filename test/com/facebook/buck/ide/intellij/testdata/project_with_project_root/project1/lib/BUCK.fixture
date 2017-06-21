@@ -5,6 +5,6 @@ java_library(
     ],
     deps = [
         "//project1/dep:dep",
-        "//project2/dep:dep",
+        "//project2/lib:lib",
     ],
 )

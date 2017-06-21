@@ -225,6 +225,7 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("update_malformed_workspace");
   }
 
+  @Test
   public void testProjectWithProjectRoot() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
         "project_with_project_root", "--intellij-project-root", "project1", "//project1/lib:lib");
