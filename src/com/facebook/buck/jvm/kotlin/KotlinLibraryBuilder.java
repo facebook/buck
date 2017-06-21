@@ -43,6 +43,7 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       JavaBuckConfig javaBuckConfig) {
     super(targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
     this.kotlinBuckConfig = kotlinBuckConfig;
+    setCompileAgainstAbis(false);
   }
 
   @Override
