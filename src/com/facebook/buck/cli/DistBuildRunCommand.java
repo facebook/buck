@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RunId;
@@ -115,12 +116,22 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 String.format(
                     "BuildJob depends on a total of [%d] input deps.",
                     jobState.getFileHashesSize()));
+
+        // Load up the remote build state from the client. Client-side .buckconfig is overlayed
+        // with Stampede build slave .buckconfig.
+        DistBuildState state =
+            DistBuildState.load(
+                Optional.of(params.getBuckConfig()),
+                jobState,
+                params.getCell(),
+                params.getKnownBuildRuleTypesFactory());
+
         try (CommandThreadManager pool =
             new CommandThreadManager(
-                getClass().getName(), getConcurrencyLimit(params.getBuckConfig()))) {
+                getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
-                  jobState,
+                  state,
                   params,
                   pool.getExecutor(),
                   service,

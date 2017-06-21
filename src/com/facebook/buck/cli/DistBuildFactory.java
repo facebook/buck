@@ -27,7 +27,6 @@ import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
-import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
@@ -67,7 +66,7 @@ public abstract class DistBuildFactory {
   }
 
   public static DistBuildSlaveExecutor createDistBuildExecutor(
-      BuildJobState jobState,
+      DistBuildState state,
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
       DistBuildService service,
@@ -77,13 +76,6 @@ public abstract class DistBuildFactory {
       Optional<Path> globalCacheDir,
       FileMaterializationStatsTracker fileMaterializationStatsTracker)
       throws InterruptedException, IOException {
-    DistBuildState state =
-        DistBuildState.load(
-            Optional.of(params.getBuckConfig()),
-            jobState,
-            params.getCell(),
-            params.getKnownBuildRuleTypesFactory());
-
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
