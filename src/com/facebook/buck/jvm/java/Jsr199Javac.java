@@ -254,7 +254,7 @@ public abstract class Jsr199Javac implements Javac {
       return 1;
     }
 
-    boolean isSuccess = false;
+    boolean isSuccess = true;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try (CompilerBundle compilerBundle =
@@ -268,7 +268,20 @@ public abstract class Jsr199Javac implements Javac {
             compilationUnits,
             compilationMode)) {
       // Invoke the compilation and inspect the result.
-      isSuccess = compilerBundle.getJavacTask().call();
+      BuckJavacTaskProxy javacTask = compilerBundle.getJavacTask();
+
+      javacTask.enter();
+      if (compilationMode != JavacCompilationMode.ABI) {
+        javacTask.generate();
+        isSuccess =
+            compilerBundle
+                    .getDiagnostics()
+                    .getDiagnostics()
+                    .stream()
+                    .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+                    .count()
+                == 0;
+      }
       DiagnosticCollector<JavaFileObject> diagnostics = compilerBundle.getDiagnostics();
       for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
         LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
@@ -304,6 +317,9 @@ public abstract class Jsr199Javac implements Javac {
         }
         return 1;
       }
+    } catch (IOException e) {
+      LOG.error(e);
+      throw new HumanReadableException("IOException during compilation: ", e.getMessage());
     } finally {
       // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
       // be using it.
