@@ -112,11 +112,43 @@ public class ArtifactCacheBuckConfigTest {
 
     assertThat(config.getHttpMaxConcurrentWrites(), Matchers.is(5));
     assertThat(config.getHttpWriterShutdownTimeout(), Matchers.is(6));
-    assertThat(cacheEntry.getTimeoutSeconds(), Matchers.is(42));
+    assertThat(cacheEntry.getConnectTimeoutSeconds(), Matchers.is(42));
+    assertThat(cacheEntry.getReadTimeoutSeconds(), Matchers.is(42));
+    assertThat(cacheEntry.getWriteTimeoutSeconds(), Matchers.is(42));
     assertThat(cacheEntry.getUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
     assertThat(cacheEntry.getReadHeaders(), Matchers.equalTo(expectedReadHeaders));
     assertThat(cacheEntry.getWriteHeaders(), Matchers.equalTo(expectedWriteHeaders));
     assertThat(cacheEntry.getCacheReadMode(), Matchers.is(CacheReadMode.READWRITE));
+  }
+
+  @Test
+  public void testHttpCacheSettingsWithExplicitConnectReadWriteTimeout() throws Exception {
+    ArtifactCacheBuckConfig config =
+        createFromText(
+            "[cache]",
+            "http_connect_timeout_seconds = 42",
+            "http_read_timeout_seconds = 242",
+            "http_write_timeout_seconds = 4242");
+    ImmutableSet<HttpCacheEntry> httpCaches = config.getCacheEntries().getHttpCacheEntries();
+    assertThat(httpCaches, Matchers.hasSize(1));
+    HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
+
+    assertThat(cacheEntry.getConnectTimeoutSeconds(), Matchers.is(42));
+    assertThat(cacheEntry.getReadTimeoutSeconds(), Matchers.is(242));
+    assertThat(cacheEntry.getWriteTimeoutSeconds(), Matchers.is(4242));
+  }
+
+  @Test
+  public void testHttpCacheSettingsWithTimeoutDefault() throws Exception {
+    ArtifactCacheBuckConfig config =
+        createFromText("[cache]", "http_timeout_seconds = 42", "http_read_timeout_seconds = 242");
+    ImmutableSet<HttpCacheEntry> httpCaches = config.getCacheEntries().getHttpCacheEntries();
+    assertThat(httpCaches, Matchers.hasSize(1));
+    HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
+
+    assertThat(cacheEntry.getConnectTimeoutSeconds(), Matchers.is(42));
+    assertThat(cacheEntry.getReadTimeoutSeconds(), Matchers.is(242));
+    assertThat(cacheEntry.getWriteTimeoutSeconds(), Matchers.is(42));
   }
 
   @Test

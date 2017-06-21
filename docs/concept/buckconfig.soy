@@ -836,7 +836,42 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '3' /}
   {param description}
     Dictates the timeout per connection when using http-based caching{sp}
-    ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is <code>3</code>.
+    ({call buckconfig.cache_mode /} must contain <code>http</code>).
+    It will be the default value for http_connect_timeout_seconds, http_read_timeout_seconds,
+    http_write_timeout_seconds if they're not set.  The default is <code>3</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_connect_timeout_seconds' /}
+  {param example_value: '3' /}
+  {param description}
+    Dictates the timeout on http connect when using http-based caching{sp}
+    If the value is not set, it will try to use the value set for http_timeout_seconds
+    then use the default value 3</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_read_timeout_seconds' /}
+  {param example_value: '3' /}
+  {param description}
+    Dictates the timeout on http writes when using http-based caching{sp}
+    If the value is not set, it will try to use the value set for http_timeout_seconds
+    then use the default value 3</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_write_timeout_seconds' /}
+  {param example_value: '3' /}
+  {param description}
+    Dictates the timeout on http reads when using http-based caching{sp}
+    If the value is not set, it will try to use the value set for http_timeout_seconds
+    then use the default value 3</code>.
   {/param}
 {/call}
 

@@ -50,6 +50,10 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME = "blacklisted_wifi_ssids";
   private static final String HTTP_MODE_FIELD_NAME = "http_mode";
   private static final String HTTP_TIMEOUT_SECONDS_FIELD_NAME = "http_timeout_seconds";
+  private static final String HTTP_CONNECT_TIMEOUT_SECONDS_FIELD_NAME =
+      "http_connect_timeout_seconds";
+  private static final String HTTP_READ_TIMEOUT_SECONDS_FIELD_NAME = "http_read_timeout_seconds";
+  private static final String HTTP_WRITE_TIMEOUT_SECONDS_FIELD_NAME = "http_write_timeout_seconds";
   private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
@@ -63,6 +67,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
           HTTP_BLACKLISTED_WIFI_SSIDS_FIELD_NAME,
           HTTP_MODE_FIELD_NAME,
           HTTP_TIMEOUT_SECONDS_FIELD_NAME,
+          HTTP_CONNECT_TIMEOUT_SECONDS_FIELD_NAME,
+          HTTP_READ_TIMEOUT_SECONDS_FIELD_NAME,
+          HTTP_WRITE_TIMEOUT_SECONDS_FIELD_NAME,
           HTTP_READ_HEADERS_FIELD_NAME,
           HTTP_WRITE_HEADERS_FIELD_NAME,
           HTTP_CACHE_ERROR_MESSAGE_NAME,
@@ -372,10 +379,24 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     HttpCacheEntry.Builder builder = HttpCacheEntry.builder();
     builder.setUrl(
         buckConfig.getUrl(CACHE_SECTION_NAME, HTTP_URL_FIELD_NAME).orElse(DEFAULT_HTTP_URL));
-    builder.setTimeoutSeconds(
+    long defaultTimeoutValue =
         buckConfig
             .getLong(CACHE_SECTION_NAME, HTTP_TIMEOUT_SECONDS_FIELD_NAME)
-            .orElse(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS)
+            .orElse(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS);
+    builder.setConnectTimeoutSeconds(
+        buckConfig
+            .getLong(CACHE_SECTION_NAME, HTTP_CONNECT_TIMEOUT_SECONDS_FIELD_NAME)
+            .orElse(defaultTimeoutValue)
+            .intValue());
+    builder.setReadTimeoutSeconds(
+        buckConfig
+            .getLong(CACHE_SECTION_NAME, HTTP_READ_TIMEOUT_SECONDS_FIELD_NAME)
+            .orElse(defaultTimeoutValue)
+            .intValue());
+    builder.setWriteTimeoutSeconds(
+        buckConfig
+            .getLong(CACHE_SECTION_NAME, HTTP_WRITE_TIMEOUT_SECONDS_FIELD_NAME)
+            .orElse(defaultTimeoutValue)
             .intValue());
     builder.setReadHeaders(getCacheHeaders(CACHE_SECTION_NAME, HTTP_READ_HEADERS_FIELD_NAME));
     builder.setWriteHeaders(getCacheHeaders(CACHE_SECTION_NAME, HTTP_WRITE_HEADERS_FIELD_NAME));
@@ -439,7 +460,11 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   abstract static class AbstractHttpCacheEntry {
     public abstract URI getUrl();
 
-    public abstract int getTimeoutSeconds();
+    public abstract int getConnectTimeoutSeconds();
+
+    public abstract int getReadTimeoutSeconds();
+
+    public abstract int getWriteTimeoutSeconds();
 
     public abstract ImmutableMap<String, String> getReadHeaders();
 

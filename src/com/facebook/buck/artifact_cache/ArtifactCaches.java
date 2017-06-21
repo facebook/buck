@@ -354,8 +354,10 @@ public class ArtifactCaches implements ArtifactCacheFactory {
                             stripNonAscii(System.getProperty("user.name", "<unknown>")))
                         .addHeader("X-BuckCache-Host", stripNonAscii(hostToReportToRemote))
                         .build()));
-    int timeoutSeconds = cacheDescription.getTimeoutSeconds();
-    setTimeouts(storeClientBuilder, timeoutSeconds);
+    int connectTimeoutSeconds = cacheDescription.getConnectTimeoutSeconds();
+    int readTimeoutSeconds = cacheDescription.getReadTimeoutSeconds();
+    int writeTimeoutSeconds = cacheDescription.getWriteTimeoutSeconds();
+    setTimeouts(storeClientBuilder, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
     storeClientBuilder.connectionPool(
         new ConnectionPool(
             /* maxIdleConnections */ (int) config.getThreadPoolSize(),
@@ -385,7 +387,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     // For fetches, use a client with a read timeout.
     OkHttpClient.Builder fetchClientBuilder = storeClient.newBuilder();
-    setTimeouts(fetchClientBuilder, timeoutSeconds);
+    setTimeouts(fetchClientBuilder, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
 
     // If read headers are specified, add them to every read client request.
     if (!readHeaders.isEmpty()) {
@@ -464,11 +466,14 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   }
 
   private static OkHttpClient.Builder setTimeouts(
-      OkHttpClient.Builder builder, int timeoutSeconds) {
+      OkHttpClient.Builder builder,
+      int connectTimeoutSeconds,
+      int readTimeoutSeconds,
+      int writeTimeoutSeconds) {
     return builder
-        .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
-        .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
-        .writeTimeout(timeoutSeconds, TimeUnit.SECONDS);
+        .connectTimeout(connectTimeoutSeconds, TimeUnit.SECONDS)
+        .readTimeout(readTimeoutSeconds, TimeUnit.SECONDS)
+        .writeTimeout(writeTimeoutSeconds, TimeUnit.SECONDS);
   }
 
   private static class ProgressResponseBody extends ResponseBody {
