@@ -969,6 +969,19 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
   }
 
+  @Test
+  public void testMultidexModular() throws IOException {
+    String target = "//apps/multidex:app_modular_debug";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    String module = "small_with_no_resource_deps";
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+  }
+
   /* Disable @Test */
   public void testMultidexProguardModular() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
