@@ -328,12 +328,15 @@ public class ProjectView {
 
   private void mangledResourceLink(Matcher match, String input) {
     String fileName = basename(input);
-    //its safe to assume input is .xml file
+    // It's safe to assume input is a .xml file
     String name = fileName.substring(0, fileName.length() - DOT_XML.length());
 
     String path = match.group(1).replace('/', '_');
 
-    String configQualifier = match.groupCount() > 2 ? match.group(3) : "";
+    String configQualifier = match.group(3);
+    if (configQualifier == null) {
+      configQualifier = "";
+    }
 
     String directory = fileJoin(viewPath, OUTPUT_RESOURCE_FOLDER, match.group(2));
     mkdir(directory);
