@@ -26,22 +26,22 @@ import com.facebook.buck.rules.TargetNode;
 public abstract class AndroidModuleRule<T extends CommonDescriptionArg>
     extends BaseIjModuleRule<T> {
 
-  private final boolean isAndroidLibrary;
+  private final AndroidProjectType androidProjectType;
 
   protected AndroidModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig,
-      boolean isAndroidLibrary) {
+      AndroidProjectType androidProjectType) {
     super(projectFilesystem, moduleFactoryResolver, projectConfig);
-    this.isAndroidLibrary = isAndroidLibrary;
+    this.androidProjectType = androidProjectType;
   }
 
   @Override
   public void apply(TargetNode<T, ?> target, ModuleBuildContext context) {
     context
         .getOrCreateAndroidFacetBuilder()
-        .setAndroidLibrary(isAndroidLibrary)
+        .setAndroidProjectType(androidProjectType)
         .setAutogenerateSources(projectConfig.isAutogenerateAndroidFacetSourcesEnabled());
   }
 }

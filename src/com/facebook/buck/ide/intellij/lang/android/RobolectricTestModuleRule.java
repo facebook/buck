@@ -32,7 +32,7 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig, true);
+    super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
   }
 
   @Override

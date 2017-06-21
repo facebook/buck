@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.ide.intellij.lang.android.AndroidProjectType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -46,7 +47,11 @@ abstract class AbstractIjModuleAndroidFacet {
    *     is_android_library_project setting in the module iml to allow other modules which depend on
    *     it to inherit assets, resources, etc.
    */
-  public abstract boolean isAndroidLibrary();
+  public boolean isAndroidLibrary() {
+    return getAndroidProjectType() == AndroidProjectType.LIBRARY;
+  }
+
+  public abstract AndroidProjectType getAndroidProjectType();
 
   /**
    * @return The package that the R file should be located in. This is used by android_resources

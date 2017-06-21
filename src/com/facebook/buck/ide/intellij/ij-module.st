@@ -23,6 +23,7 @@
         <option name="APK_PATH" value="%androidFacet.apk_path%" />
 %endif%
         <option name="LIBRARY_PROJECT" value="%androidFacet.is_android_library_project%" />
+        <option name="PROJECT_TYPE" value="%androidFacet.project_type%" />
 %if(androidFacet.keystore)%
         <option name="CUSTOM_DEBUG_KEYSTORE_PATH" value="%androidFacet.keystore%" />
 %endif%

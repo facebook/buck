@@ -39,7 +39,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig, true);
+    super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
   }
 
   @Override

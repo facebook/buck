@@ -9,6 +9,7 @@
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/../../android_res/AndroidManifest.xml" />
         <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/res" />
         <option name="LIBRARY_PROJECT" value="true" />
+        <option name="PROJECT_TYPE" value="1" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />
         <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>

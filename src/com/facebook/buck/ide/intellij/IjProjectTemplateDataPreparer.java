@@ -346,6 +346,7 @@ public class IjProjectTemplateDataPreparer {
     IjModuleAndroidFacet androidFacet = androidFacetOptional.get();
 
     androidProperties.put("is_android_library_project", androidFacet.isAndroidLibrary());
+    androidProperties.put("project_type", androidFacet.getAndroidProjectType().getId());
     androidProperties.put("autogenerate_sources", androidFacet.autogenerateSources());
     androidProperties.put(
         "disallow_user_configuration",
