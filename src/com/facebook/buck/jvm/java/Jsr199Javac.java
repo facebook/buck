@@ -254,133 +254,60 @@ public abstract class Jsr199Javac implements Javac {
       return 1;
     }
 
-    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-    List<String> classNamesForAnnotationProcessing = ImmutableList.of();
-    Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
-    PluginClassLoaderFactory loaderFactory = PluginLoader.newFactory(context.getClassLoaderCache());
-    BuckJavacTaskProxy javacTask;
-
-    if (compilationMode != JavacCompilationMode.ABI) {
-      javacTask =
-          BuckJavacTaskProxy.getTask(
-              loaderFactory,
-              compiler,
-              compilerOutputWriter,
-              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-              diagnostics,
-              options,
-              classNamesForAnnotationProcessing,
-              compilationUnits);
-    } else {
-      javacTask =
-          FrontendOnlyJavacTaskProxy.getTask(
-              loaderFactory,
-              compiler,
-              compilerOutputWriter,
-              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-              diagnostics,
-              options,
-              classNamesForAnnotationProcessing,
-              compilationUnits);
-
-      javacTask.addPostEnterCallback(
-          topLevelTypes -> {
-            StubGenerator stubGenerator =
-                new StubGenerator(
-                    getTargetVersion(options),
-                    javacTask.getElements(),
-                    fileManager,
-                    context.getEventSink());
-            stubGenerator.generate(topLevelTypes);
-          });
-    }
-
-    PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
-
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
-    BuckJavacTaskListener taskListener = null;
-    if (EnumSet.of(
-            JavacCompilationMode.FULL_CHECKING_REFERENCES,
-            JavacCompilationMode.FULL_ENFORCING_REFERENCES)
-        .contains(compilationMode)) {
-      taskListener =
-          SourceBasedAbiStubber.newValidatingTaskListener(
-              pluginLoader,
-              javacTask,
-              new FileManagerBootClasspathOracle(fileManager),
-              compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
-                  ? Diagnostic.Kind.ERROR
-                  : Diagnostic.Kind.WARNING);
-    }
+    try (CompilerBundle compilerBundle =
+        new CompilerBundle(
+            context,
+            invokingRule,
+            options,
+            pluginFields,
+            compiler,
+            fileManager,
+            compilationUnits,
+            compilationMode)) {
+      // Invoke the compilation and inspect the result.
+      isSuccess = compilerBundle.getJavacTask().call();
+      DiagnosticCollector<JavaFileObject> diagnostics = compilerBundle.getDiagnostics();
+      for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+        LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
+      }
 
-    try {
-      try (
-      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
-      // in some unusual situations
-      TranslatingJavacPhaseTracer tracer =
-              new TranslatingJavacPhaseTracer(
-                  new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
+      List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
+          DiagnosticCleaner.clean(diagnostics.getDiagnostics());
 
-          // Ensure annotation processors are loaded from their own classloader. If we don't do
-          // this, then the evidence suggests that they get one polluted with Buck's own classpath,
-          // which means that libraries that have dependencies on different versions of Buck's deps
-          // may choke with novel errors that don't occur on the command line.
-          AnnotationProcessorFactory processorFactory =
-              new AnnotationProcessorFactory(
-                  context.getEventSink(),
-                  compiler.getClass().getClassLoader(),
-                  context.getClassLoaderCache(),
-                  invokingRule)) {
-        taskListener = new TracingTaskListener(tracer, taskListener);
+      if (isSuccess) {
+        context
+            .getUsedClassesFileWriter()
+            .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
+        return 0;
+      } else {
+        if (context.getVerbosity().shouldPrintStandardInformation()) {
+          int numErrors = 0;
+          int numWarnings = 0;
+          for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
+            Diagnostic.Kind kind = diagnostic.getKind();
+            if (kind == Diagnostic.Kind.ERROR) {
+              ++numErrors;
+            } else if (kind == Diagnostic.Kind.WARNING
+                || kind == Diagnostic.Kind.MANDATORY_WARNING) {
+              ++numWarnings;
+            }
 
-        javacTask.setTaskListener(taskListener);
-        javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+            context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
+          }
 
-        // Invoke the compilation and inspect the result.
-        isSuccess = javacTask.call();
-      } catch (IOException e) {
-        LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
+          if (numErrors > 0 || numWarnings > 0) {
+            context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
+          }
+        }
+        return 1;
       }
     } finally {
       // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
       // be using it.
       BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
-    }
-
-    for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-      LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
-    }
-
-    List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
-        DiagnosticCleaner.clean(diagnostics.getDiagnostics());
-
-    if (isSuccess) {
-      context
-          .getUsedClassesFileWriter()
-          .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
-      return 0;
-    } else {
-      if (context.getVerbosity().shouldPrintStandardInformation()) {
-        int numErrors = 0;
-        int numWarnings = 0;
-        for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
-          Diagnostic.Kind kind = diagnostic.getKind();
-          if (kind == Diagnostic.Kind.ERROR) {
-            ++numErrors;
-          } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
-            ++numWarnings;
-          }
-
-          context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
-        }
-
-        if (numErrors > 0 || numWarnings > 0) {
-          context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
-        }
-      }
-      return 1;
     }
   }
 
@@ -463,6 +390,119 @@ public abstract class Jsr199Javac implements Javac {
       }
     }
     return compilationUnits;
+  }
+
+  private class CompilerBundle implements AutoCloseable {
+    private final BuckJavacTaskProxy javacTask;
+    private final TranslatingJavacPhaseTracer tracer;
+    private final AnnotationProcessorFactory processorFactory;
+    private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+
+    public CompilerBundle(
+        JavacExecutionContext context,
+        BuildTarget invokingRule,
+        ImmutableList<String> options,
+        ImmutableList<JavacPluginJsr199Fields> pluginFields,
+        JavaCompiler compiler,
+        StandardJavaFileManager fileManager,
+        Iterable<? extends JavaFileObject> compilationUnits,
+        JavacCompilationMode compilationMode) {
+      List<String> classNamesForAnnotationProcessing = ImmutableList.of();
+      Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
+      PluginClassLoaderFactory loaderFactory =
+          PluginLoader.newFactory(context.getClassLoaderCache());
+
+      if (compilationMode != JavacCompilationMode.ABI) {
+        javacTask =
+            BuckJavacTaskProxy.getTask(
+                loaderFactory,
+                compiler,
+                compilerOutputWriter,
+                context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+                diagnostics,
+                options,
+                classNamesForAnnotationProcessing,
+                compilationUnits);
+      } else {
+        javacTask =
+            FrontendOnlyJavacTaskProxy.getTask(
+                loaderFactory,
+                compiler,
+                compilerOutputWriter,
+                context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+                diagnostics,
+                options,
+                classNamesForAnnotationProcessing,
+                compilationUnits);
+
+        javacTask.addPostEnterCallback(
+            topLevelTypes -> {
+              StubGenerator stubGenerator =
+                  new StubGenerator(
+                      getTargetVersion(options),
+                      javacTask.getElements(),
+                      fileManager,
+                      context.getEventSink());
+              stubGenerator.generate(topLevelTypes);
+            });
+      }
+
+      PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
+
+      BuckJavacTaskListener taskListener = null;
+      if (EnumSet.of(
+              JavacCompilationMode.FULL_CHECKING_REFERENCES,
+              JavacCompilationMode.FULL_ENFORCING_REFERENCES)
+          .contains(compilationMode)) {
+        taskListener =
+            SourceBasedAbiStubber.newValidatingTaskListener(
+                pluginLoader,
+                javacTask,
+                new FileManagerBootClasspathOracle(fileManager),
+                compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
+                    ? Diagnostic.Kind.ERROR
+                    : Diagnostic.Kind.WARNING);
+      }
+
+      tracer =
+          new TranslatingJavacPhaseTracer(
+              new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
+
+      // Ensure annotation processors are loaded from their own classloader. If we don't do
+      // this, then the evidence suggests that they get one polluted with Buck's own classpath,
+      // which means that libraries that have dependencies on different versions of Buck's deps
+      // may choke with novel errors that don't occur on the command line.
+      processorFactory =
+          new AnnotationProcessorFactory(
+              context.getEventSink(),
+              compiler.getClass().getClassLoader(),
+              context.getClassLoaderCache(),
+              invokingRule);
+
+      javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
+      javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+    }
+
+    public BuckJavacTaskProxy getJavacTask() {
+      return javacTask;
+    }
+
+    public DiagnosticCollector<JavaFileObject> getDiagnostics() {
+      return diagnostics;
+    }
+
+    @Override
+    public void close() {
+      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
+      // in some unusual situations
+      tracer.close();
+
+      try {
+        processorFactory.close();
+      } catch (IOException e) {
+        LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
+      }
+    }
   }
 
   private static class FileManagerBootClasspathOracle implements BootClasspathOracle {
