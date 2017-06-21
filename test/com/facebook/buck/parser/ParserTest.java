@@ -1557,16 +1557,14 @@ public class ParserTest {
     assertEquals(cellState.buildFileDependents.size(), 2);
     assertTrue(cellState.isSetBuildFileEnv());
     assertEquals(cellState.buildFileEnv.size(), 1);
-    assertTrue(remote.isSetCellPathsToNames());
-    assertEquals(remote.cellPathsToNames.size(), 1);
+    assertTrue(remote.isSetCellPaths());
+    assertEquals(remote.cellPaths.size(), 1);
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
     DaemonicParserState rawParserState =
         new DaemonicParserState(broadcastEventListener, typeCoercerFactory, this.threads);
-    rawParserState.restoreState(remote);
-    // TODO(rvitale): for now we assert that we deserialise without getting any trouble. Once we'll
-    // have access to the cells we can probably make some more accurate assertion.
+    rawParserState.restoreState(remote, cell);
     assertNotNull(rawParserState);
   }
 

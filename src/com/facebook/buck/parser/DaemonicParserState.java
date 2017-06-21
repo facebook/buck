@@ -61,6 +61,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
@@ -626,24 +628,19 @@ public class DaemonicParserState {
   }
 
   public RemoteDaemonicParserState serialiseDaemonicParserState() throws IOException {
-    ImmutableMap.Builder<String, String> cellPathsToNamesBuilder = ImmutableMap.builder();
+    ImmutableList.Builder<String> cellPathsBuilder = ImmutableList.builder();
     ImmutableMap.Builder<String, RemoteDaemonicCellState> cellPathToDaemonicStateBuilder =
         ImmutableMap.builder();
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       for (Path p : cellPathToDaemonicState.keySet()) {
         DaemonicCellState daemonicCellState = cellPathToDaemonicState.get(p);
         Path relPath = daemonicCellState.getCellRoot().relativize(p);
-        Optional<String> name = daemonicCellState.getCell().getCanonicalName();
-        if (name.isPresent()) {
-          cellPathsToNamesBuilder.put(relPath.toString(), name.get());
-        } else {
-          cellPathsToNamesBuilder.put(relPath.toString(), "");
-        }
+        cellPathsBuilder.add(relPath.toString());
         cellPathToDaemonicStateBuilder.put(relPath.toString(), daemonicCellState.serialise());
       }
     }
     RemoteDaemonicParserState remote = new RemoteDaemonicParserState();
-    remote.setCellPathsToNames(cellPathsToNamesBuilder.build());
+    remote.setCellPaths(cellPathsBuilder.build());
     ImmutableMap.Builder<String, List<String>> cachedIncludesBuilder = ImmutableMap.builder();
     try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
       cachedIncludes.forEach(
@@ -656,7 +653,29 @@ public class DaemonicParserState {
     return remote;
   }
 
-  public DaemonicParserState restoreState(RemoteDaemonicParserState remote) {
+  public DaemonicParserState restoreState(RemoteDaemonicParserState remote, Cell rootCell) {
+    Map<String, Cell> pathsToCell =
+        remote
+            .cellPaths
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    Function.identity(),
+                    path ->
+                        rootCell.getCellIgnoringVisibilityCheck(rootCell.getRoot().resolve(path))));
+    remote.cellPathToDaemonicState.forEach(
+        (path, remoteDaemonicCellState) -> {
+          Cell cell = pathsToCell.get(path);
+          if (cell != null) {
+            try {
+              DaemonicCellState daemonicCellState =
+                  DaemonicCellState.deserialise(remoteDaemonicCellState, cell, parsingThreads);
+              cellPathToDaemonicState.put(cell.getRoot(), daemonicCellState);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        });
     remote.cachedIncludes.forEach(
         (k, v) -> {
           Path path = Paths.get(k);

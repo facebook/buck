@@ -10,7 +10,7 @@ namespace java com.facebook.buck.parser.thrift
 struct RemoteDaemonicParserState {
   1: optional map<string, list<string>> cachedIncludes;
   2: optional map<string, RemoteDaemonicCellState> cellPathToDaemonicState;
-  3: optional map<string, string> cellPathsToNames;
+  3: optional list<string> cellPaths;
 }
 
 struct RemoteDaemonicCellState {

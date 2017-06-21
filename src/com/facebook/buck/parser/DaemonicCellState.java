@@ -24,6 +24,7 @@ import com.facebook.buck.parser.thrift.BuildFileEnvProperty;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -343,11 +344,10 @@ class DaemonicCellState {
       daemonicCellState.buildFileEnv.put(key, builder.build());
     }
 
-    ObjectMapper mapper = new ObjectMapper();
     for (String pathString : remote.allRawNodesJsons.keySet()) {
       String json = remote.allRawNodesJsons.get(pathString);
       ImmutableSet<Map<String, Object>> deserialisedRawNodes =
-          mapper.readValue(json, new TypeReference<ImmutableSet<Map<String, Object>>>() {});
+          ObjectMappers.readValue(json, new TypeReference<ImmutableSet<Map<String, Object>>>() {});
       Path key = root.resolve(pathString);
       daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserialisedRawNodes);
     }
