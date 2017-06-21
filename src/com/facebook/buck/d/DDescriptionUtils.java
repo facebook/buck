@@ -150,6 +150,7 @@ abstract class DDescriptionUtils {
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlags()))
             .addAllArgs(StringArg.from(linkerFlags))

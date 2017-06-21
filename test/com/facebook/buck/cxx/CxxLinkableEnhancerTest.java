@@ -169,6 +169,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(
                     SourcePathArg.from(
@@ -216,6 +217,7 @@ public class CxxLinkableEnhancerTest {
             EMPTY_DEPS,
             Optional.empty(),
             Optional.empty(),
+            ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
@@ -269,6 +271,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
 
@@ -308,6 +311,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
     assertFalse(executable.getArgs().contains(StringArg.of("-shared")));
@@ -332,6 +336,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
     assertTrue(Arg.stringify(shared.getArgs(), pathResolver).contains("-shared"));
@@ -355,6 +360,7 @@ public class CxxLinkableEnhancerTest {
             EMPTY_DEPS,
             Optional.empty(),
             Optional.empty(),
+            ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
@@ -407,6 +413,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
     ImmutableList<String> args = Arg.stringify(staticLink.getArgs(), pathResolver);
@@ -432,6 +439,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.<NativeLinkable>of(nativeLinkable),
             Optional.empty(),
             Optional.empty(),
+            ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
             Optional.empty());
@@ -477,6 +485,7 @@ public class CxxLinkableEnhancerTest {
               EMPTY_DEPS,
               Optional.empty(),
               Optional.empty(),
+              ImmutableSet.of(),
               ImmutableSet.of(),
               NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
               Optional.empty());
@@ -550,6 +559,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
                 .build(),
@@ -587,6 +597,7 @@ public class CxxLinkableEnhancerTest {
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
                 .build(),
@@ -612,6 +623,7 @@ public class CxxLinkableEnhancerTest {
             EMPTY_DEPS,
             Optional.empty(),
             Optional.of(bundleLoaderRule.getSourcePathToOutput()),
+            ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(new FakeSourcePath("another.o")))

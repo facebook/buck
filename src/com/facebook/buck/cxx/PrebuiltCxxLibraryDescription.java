@@ -434,6 +434,7 @@ public class PrebuiltCxxLibraryDescription
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
                 StringArg.from(

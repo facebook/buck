@@ -252,6 +252,7 @@ public class CxxLuaExtensionDescription
         args.getCxxRuntimeType(),
         Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(
                 getExtensionArgs(

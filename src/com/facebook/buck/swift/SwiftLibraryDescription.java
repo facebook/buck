@@ -342,6 +342,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             inputBuilder.build(),
             Optional.empty()));
   }

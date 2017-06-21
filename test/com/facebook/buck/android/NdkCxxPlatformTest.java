@@ -185,6 +185,7 @@ public class NdkCxxPlatformTest {
               Optional.empty(),
               Optional.empty(),
               ImmutableSet.of(),
+              ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(SourcePathArg.from(new FakeSourcePath("input.o")))
                   .build(),

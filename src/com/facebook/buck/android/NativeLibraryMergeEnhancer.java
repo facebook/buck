@@ -903,6 +903,7 @@ class NativeLibraryMergeEnhancer {
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableSet.of(),
+                ImmutableSet.of(),
                 getImmediateNativeLinkableInput(cxxPlatform),
                 constituents.isActuallyMerged()
                     ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)

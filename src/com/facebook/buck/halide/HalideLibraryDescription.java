@@ -173,6 +173,7 @@ public class HalideLibraryDescription
             srcs,
             /* headers */ ImmutableMap.of(),
             params.getBuildDeps(),
+            ImmutableSet.of(),
             flavoredStripStyle,
             flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,

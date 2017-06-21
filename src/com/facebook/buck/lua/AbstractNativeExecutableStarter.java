@@ -259,6 +259,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     Optional.empty(),
                     Optional.empty(),
                     ImmutableSet.of(),
+                    ImmutableSet.of(),
                     getNativeLinkableInput(),
                     Optional.empty()));
     return linkRule.getSourcePathToOutput();

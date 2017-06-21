@@ -311,6 +311,7 @@ public class CxxPythonExtensionDescription
         args.getCxxRuntimeType(),
         Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(
                 getExtensionArgs(

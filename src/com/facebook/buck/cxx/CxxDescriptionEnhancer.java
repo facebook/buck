@@ -76,6 +76,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class CxxDescriptionEnhancer {
@@ -734,17 +735,20 @@ public class CxxDescriptionEnhancer {
     // Add original declared and extra deps.
     args.getCxxDeps().get(resolver, cxxPlatform).forEach(depsBuilder::add);
     // Add in deps found via deps query.
-    args.getDepsQuery()
-        .ifPresent(
-            query ->
-                QueryUtils.resolveDepQuery(
+    ImmutableList<BuildRule> depQueryDeps =
+        args.getDepsQuery()
+            .map(
+                query ->
+                    QueryUtils.resolveDepQuery(
                         params.getBuildTarget(),
                         query,
                         resolver,
                         cellRoots,
                         targetGraph,
-                        args.getDeps())
-                    .forEach(depsBuilder::add));
+                        args.getDeps()))
+            .orElse(Stream.of())
+            .collect(MoreCollectors.toImmutableList());
+    depsBuilder.addAll(depQueryDeps);
     // Add any extra deps passed in.
     extraDeps.stream().map(resolver::getRule).forEach(depsBuilder::add);
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
@@ -758,6 +762,9 @@ public class CxxDescriptionEnhancer {
         srcs,
         headers,
         deps,
+        args.getLinkDepsQueryWhole()
+            ? RichStream.from(depQueryDeps).map(BuildRule::getBuildTarget).toImmutableSet()
+            : ImmutableSet.of(),
         stripStyle,
         flavoredLinkerMapMode,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
@@ -788,6 +795,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
       SortedSet<BuildRule> deps,
+      ImmutableSet<BuildTarget> linkWholeDeps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
@@ -977,7 +985,8 @@ public class CxxDescriptionEnhancer {
             ruleFinder,
             linkOutput,
             argsBuilder,
-            linkRuleTarget);
+            linkRuleTarget,
+            linkWholeDeps);
 
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.empty();
@@ -1020,7 +1029,8 @@ public class CxxDescriptionEnhancer {
       SourcePathRuleFinder ruleFinder,
       Path linkOutput,
       ImmutableList.Builder<Arg> argsBuilder,
-      BuildTarget linkRuleTarget)
+      BuildTarget linkRuleTarget,
+      ImmutableSet<BuildTarget> linkWholeDeps)
       throws NoSuchBuildTargetException {
     return (CxxLink)
         resolver.computeIfAbsentThrowing(
@@ -1045,6 +1055,7 @@ public class CxxDescriptionEnhancer {
                     cxxRuntimeType,
                     Optional.empty(),
                     ImmutableSet.of(),
+                    linkWholeDeps,
                     NativeLinkableInput.builder()
                         .setArgs(argsBuilder.build())
                         .setFrameworks(frameworks)

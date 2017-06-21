@@ -397,6 +397,11 @@ public class CxxBinaryDescription
   public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse {
     Optional<Query> getDepsQuery();
 
+    @Value.Default
+    default boolean getLinkDepsQueryWhole() {
+      return false;
+    }
+
     Optional<Flavor> getDefaultPlatform();
   }
 

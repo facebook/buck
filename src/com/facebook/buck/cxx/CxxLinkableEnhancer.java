@@ -151,6 +151,7 @@ public class CxxLinkableEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<BuildTarget> linkWholeDeps,
       NativeLinkableInput immediateLinkableInput,
       Optional<LinkOutputPostprocessor> postprocessor)
       throws NoSuchBuildTargetException {
@@ -170,8 +171,13 @@ public class CxxLinkableEnhancer {
                 NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType),
                 Predicates.not(blacklist::contains))
             .values()) {
+      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
       NativeLinkableInput input =
-          NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable);
+          nativeLinkable.getNativeLinkableInput(
+              cxxPlatform,
+              NativeLinkables.getLinkStyle(link, depType),
+              linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
+              ImmutableSet.of());
       LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
       nativeLinkableInputs.add(input);
     }

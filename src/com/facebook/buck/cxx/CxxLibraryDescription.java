@@ -432,6 +432,7 @@ public class CxxLibraryDescription
         cxxRuntimeType,
         bundleLoader,
         blacklist,
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
                 RichStream.from(extraLdFlags)
