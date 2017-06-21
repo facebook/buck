@@ -355,6 +355,18 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   /**
+   * @return a {@link SourcePath} identified by a {@link Path}.
+   */
+  public SourcePath getSourcePath(Path path) {
+    if (path == null) {
+      return null;
+    }
+    return new PathSourcePath(
+            projectFilesystem,
+            checkPathExists(path.toString(),"path not found: "));
+  }
+
+  /**
    * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference by the
    *     given section:field, if set.
    */

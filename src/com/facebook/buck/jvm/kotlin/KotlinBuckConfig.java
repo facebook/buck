@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -43,8 +44,9 @@ public class KotlinBuckConfig {
     if (isExternalCompilation()) {
       return new ExternalKotlinc(getPathToCompilerBinary());
     } else {
-      ImmutableSet<Path> classpathEntries =
-          ImmutableSet.of(getPathToStdlibJar(), getPathToCompilerJar());
+      ImmutableSet<SourcePath> classpathEntries =
+          ImmutableSet.of(delegate.getSourcePath(getPathToStdlibJar()),
+              delegate.getSourcePath(getPathToCompilerJar()));
 
       return new JarBackedReflectedKotlinc(classpathEntries);
     }
