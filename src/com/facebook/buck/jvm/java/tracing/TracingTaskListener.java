@@ -155,7 +155,8 @@ public class TracingTaskListener implements BuckJavacTaskListener {
     /**
      * There are some cases in which a finish analyze event can be received without a corresponding
      * start. Rather than output malformed trace data, we detect that case and synthesize a start
-     * event.
+     * event. There are other cases in which all analyze start events are issued together, and then
+     * all analyze finish events. In those cases, we consolidate into one event.
      *
      * @see #finishAnalyze(String, String)
      */
@@ -164,14 +165,18 @@ public class TracingTaskListener implements BuckJavacTaskListener {
       analyzedTypes.add(typename);
 
       analyzeCount += 1;
-      tracing.beginAnalyze();
+      if (analyzeCount == 1) {
+        tracing.beginAnalyze();
+      }
     }
 
     /** @see #startAnalyze(String, String) */
     void finishAnalyze(@Nullable String filename, @Nullable String typename) {
       if (analyzeCount > 0) {
         analyzeCount -= 1;
-        tracing.endAnalyze(analyzedFiles, analyzedTypes);
+        if (analyzeCount == 0) {
+          tracing.endAnalyze(analyzedFiles, analyzedTypes);
+        }
       } else {
         tracing.beginAnalyze();
         tracing.endAnalyze(

@@ -55,6 +55,24 @@ public class TracingTaskListenerCleanerTest {
   }
 
   @Test
+  public void testAnalyzeEventsCombinedIntoOne() {
+    mockTracer.beginAnalyze();
+    mockTracer.endAnalyze(
+        ImmutableList.of("file1", "file2", "file3"), ImmutableList.of("type1", "type2", "type3"));
+
+    replay(mockTracer);
+
+    traceCleaner.startAnalyze("file1", "type1");
+    traceCleaner.startAnalyze("file2", "type2");
+    traceCleaner.startAnalyze("file3", "type3");
+    traceCleaner.finishAnalyze("file1", "type1");
+    traceCleaner.finishAnalyze("file2", "type2");
+    traceCleaner.finishAnalyze("file3", "type3");
+
+    verify(mockTracer);
+  }
+
+  @Test
   public void testUnmatchedAnalyzeFinishAddsAStarted() {
     mockTracer.beginAnalyze();
     mockTracer.endAnalyze(ImmutableList.of("file"), ImmutableList.of("type"));
