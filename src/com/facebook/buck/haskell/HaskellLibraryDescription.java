@@ -649,7 +649,7 @@ public class HaskellLibraryDescription
                     type,
                     false);
             linkArgs =
-                args.getLinkWhole()
+                args.getLinkWhole() || forceLinkWhole
                     ? cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg())
                     : ImmutableList.of(archive.toArg());
             break;

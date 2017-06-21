@@ -27,7 +27,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -615,8 +614,8 @@ public class PrebuiltCxxLibraryDescription
     final boolean forceStatic = args.getForceStatic().orElse(false);
     return new PrebuiltCxxLibrary(params) {
 
-      private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput>
-          nativeLinkableCache = new HashMap<>();
+      private final Map<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
+          new HashMap<>();
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
@@ -837,7 +836,9 @@ public class PrebuiltCxxLibraryDescription
       }
 
       private NativeLinkableInput getNativeLinkableInputUncached(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform, Linker.LinkableDepType type, boolean forceLinkWhole)
+          throws NoSuchBuildTargetException {
+
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();
         }
@@ -885,7 +886,7 @@ public class PrebuiltCxxLibraryDescription
                         args.getLibDir(),
                         args.getLibName());
             SourcePathArg staticLibrary = SourcePathArg.of(staticLibraryPath);
-            if (args.isLinkWhole()) {
+            if (args.isLinkWhole() || forceLinkWhole) {
               Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
               linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary));
             } else {
@@ -906,10 +907,11 @@ public class PrebuiltCxxLibraryDescription
           boolean forceLinkWhole,
           ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
           throws NoSuchBuildTargetException {
-        Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
+        NativeLinkableCacheKey key =
+            NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole);
         NativeLinkableInput input = nativeLinkableCache.get(key);
         if (input == null) {
-          input = getNativeLinkableInputUncached(cxxPlatform, type);
+          input = getNativeLinkableInputUncached(cxxPlatform, type, forceLinkWhole);
           nativeLinkableCache.put(key, input);
         }
         return input;

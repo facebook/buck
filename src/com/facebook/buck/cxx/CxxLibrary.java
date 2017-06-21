@@ -32,7 +32,6 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -48,7 +47,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 /**
  * An action graph representation of a C/C++ library from the target graph, providing the various
@@ -78,16 +76,6 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
    * its link-time dependencies are ignored.
    */
   private final boolean propagateLinkables;
-
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractNativeLinkableCacheKey {
-    public abstract Flavor getFlavor();
-
-    public abstract Linker.LinkableDepType getType();
-
-    public abstract boolean getForceLinkWhole();
-  };
 
   private final Map<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();

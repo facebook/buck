@@ -35,6 +35,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.RichStream;
@@ -132,7 +133,15 @@ public class HaskellPrebuiltLibraryDescription
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(SourcePathArg.from(args.getSharedLibs().values()));
         } else {
-          builder.addAllArgs(SourcePathArg.from(args.getStaticLibs()));
+          Linker linker = cxxPlatform.getLd().resolve(resolver);
+          ImmutableList<Arg> libArgs = SourcePathArg.from(args.getStaticLibs());
+          if (forceLinkWhole) {
+            libArgs =
+                RichStream.from(libArgs)
+                    .flatMap(lib -> RichStream.from(linker.linkWhole(lib)))
+                    .toImmutableList();
+          }
+          builder.addAllArgs(libArgs);
         }
         return builder.build();
       }
