@@ -137,7 +137,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         Path tmp = createTempFileForDownload();
         ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readResult;
         try (OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp)) {
-          readResult = response.readPayload(tmpFile);
+          try {
+            readResult = response.readPayload(tmpFile);
+          } catch (IOException e) {
+            LOG.debug(e, "encountered an exception while receiving the payload for %s", ruleKey);
+            throw e;
+          }
           LOG.verbose("Successfully read payload: %d bytes.", readResult.getBytesRead());
         }
 
