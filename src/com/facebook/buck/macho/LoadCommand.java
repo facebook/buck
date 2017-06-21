@@ -20,5 +20,5 @@ package com.facebook.buck.macho;
  * LoadCommandCommonFields interface. Load Command is expected to contain at least these fields.
  */
 public interface LoadCommand {
-  public LoadCommandCommonFields getLoadCommandCommonFields();
+  LoadCommandCommonFields getLoadCommandCommonFields();
 }

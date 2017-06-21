@@ -25,14 +25,14 @@ public interface AndroidManifestReader {
    * @return list of names (as they appear in the manifest) of activities that should appear in the
    *     Android app drawer.
    */
-  public List<String> getLauncherActivities();
+  List<String> getLauncherActivities();
 
   /** @return the value of the package attribute to the manifest element. */
-  public String getPackage();
+  String getPackage();
 
   /** @return the value of the versionCode attribute to the manifest element. */
-  public String getVersionCode();
+  String getVersionCode();
 
   /** @return the name of the instrumentation test runner. */
-  public String getInstrumentationTestRunner();
+  String getInstrumentationTestRunner();
 }

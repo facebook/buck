@@ -34,8 +34,8 @@ import java.util.Collections;
 public class EstimateDexWeightStep implements Step, Supplier<Integer> {
 
   @VisibleForTesting
-  static interface DexWeightEstimator {
-    public int getEstimate(FileLike fileLike) throws IOException;
+  interface DexWeightEstimator {
+    int getEstimate(FileLike fileLike) throws IOException;
   }
 
   /**

@@ -31,5 +31,5 @@ public interface HasJavaClassHashes extends BuildRule {
    * @return a (possibly empty) map of names of {@code .class} files in the output of this rule to
    *     SHA-1 hashes of their contents.
    */
-  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
+  ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
 }

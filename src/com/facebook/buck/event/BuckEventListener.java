@@ -24,5 +24,5 @@ public interface BuckEventListener {
    *
    * @param buildId for the trace to be written.
    */
-  public void outputTrace(BuildId buildId) throws InterruptedException;
+  void outputTrace(BuildId buildId) throws InterruptedException;
 }

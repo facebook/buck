@@ -30,7 +30,7 @@ public interface FilteredDirectoryCopier {
    * @param sourcesToDestinations mapping from source to destination directories
    * @param pred predicate to test against
    */
-  public abstract void copyDirs(
+  void copyDirs(
       ProjectFilesystem filesystem, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)
       throws IOException;
 
@@ -41,7 +41,6 @@ public interface FilteredDirectoryCopier {
    * @param destDir destination directory
    * @param pred a predicate to determine which files should be copied.
    */
-  public abstract void copyDir(
-      ProjectFilesystem filesystem, Path srcDir, Path destDir, Predicate<Path> pred)
+  void copyDir(ProjectFilesystem filesystem, Path srcDir, Path destDir, Predicate<Path> pred)
       throws IOException;
 }

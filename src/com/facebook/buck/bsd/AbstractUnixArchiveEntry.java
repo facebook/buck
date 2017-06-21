@@ -21,23 +21,23 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractUnixArchiveEntry {
-  public int getFileNameLength();
+  int getFileNameLength();
 
-  public long getFileModificationTimestamp();
+  long getFileModificationTimestamp();
 
-  public int getOwnerId();
+  int getOwnerId();
 
-  public int getGroupId();
+  int getGroupId();
 
-  public int getFileMode();
+  int getFileMode();
 
-  public long getFileSize();
+  long getFileSize();
 
-  public String getFileName();
+  String getFileName();
 
-  public long getHeaderOffset();
+  long getHeaderOffset();
 
-  public long getHeaderSize();
+  long getHeaderSize();
 
-  public long getFileOffset();
+  long getFileOffset();
 }

@@ -32,7 +32,7 @@ public class MacWifiSsidFinder {
   // Utility class, do not instantiate.
   private MacWifiSsidFinder() {}
 
-  public static interface CoreWlan extends Library {}
+  public interface CoreWlan extends Library {}
 
   // Need to hold on to an instance of this library so CoreWLAN.framework is kept resident.
   public static final CoreWlan CORE_WLAN_INSTANCE =

@@ -30,8 +30,8 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})
 public @interface Hint {
-  public static final boolean DEFAULT_IS_DEP = true;
-  public static final boolean DEFAULT_IS_INPUT = true;
+  boolean DEFAULT_IS_DEP = true;
+  boolean DEFAULT_IS_INPUT = true;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;

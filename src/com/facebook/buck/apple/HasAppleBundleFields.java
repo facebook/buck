@@ -22,13 +22,13 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 public interface HasAppleBundleFields {
-  public Either<AppleBundleExtension, String> getExtension();
+  Either<AppleBundleExtension, String> getExtension();
 
-  public SourcePath getInfoPlist();
+  SourcePath getInfoPlist();
 
-  public Optional<String> getProductName();
+  Optional<String> getProductName();
 
-  public Optional<String> getXcodeProductType();
+  Optional<String> getXcodeProductType();
 
-  public ImmutableMap<String, String> getInfoPlistSubstitutions();
+  ImmutableMap<String, String> getInfoPlistSubstitutions();
 }

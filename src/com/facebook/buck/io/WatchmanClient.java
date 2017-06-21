@@ -26,5 +26,5 @@ public interface WatchmanClient extends AutoCloseable {
       long timeoutNanos, Object... query) throws IOException, InterruptedException;
 
   @Override
-  public void close() throws IOException;
+  void close() throws IOException;
 }

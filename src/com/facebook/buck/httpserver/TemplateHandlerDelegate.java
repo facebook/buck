@@ -28,13 +28,13 @@ public interface TemplateHandlerDelegate {
    * @return Set of templates that are available as resources relative to the implementation's
    *     class.
    */
-  public ImmutableSet<String> getTemplates();
+  ImmutableSet<String> getTemplates();
 
   /**
    * @param baseRequest Request that will be served by this handler. This gives the handler the
    *     opportunity to return a different template based on the data in the request.
    */
-  public String getTemplateForRequest(Request baseRequest);
+  String getTemplateForRequest(Request baseRequest);
 
   /**
    * @param baseRequest Request that will be served by this handler.
@@ -43,5 +43,5 @@ public interface TemplateHandlerDelegate {
    *     this method to indicate an error.
    */
   @Nullable
-  public SoyMapData getDataForRequest(Request baseRequest) throws IOException;
+  SoyMapData getDataForRequest(Request baseRequest) throws IOException;
 }

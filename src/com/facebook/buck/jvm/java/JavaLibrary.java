@@ -52,34 +52,34 @@ public interface JavaLibrary
    * binary_jar} and its {@code source_jar}. In that case, the output of the {@link BuildRule} will
    * be the original JAR file, which is why it would contain {@code .class} files.
    */
-  public static final Flavor GWT_MODULE_FLAVOR = InternalFlavor.of("gwt_module");
+  Flavor GWT_MODULE_FLAVOR = InternalFlavor.of("gwt_module");
 
   /**
    * It's possible to ask a {@link JavaLibrary} to collect its own sources and build a source jar.
    */
-  public static final Flavor SRC_JAR = InternalFlavor.of("src");
+  Flavor SRC_JAR = InternalFlavor.of("src");
 
   /**
    * For maven publishing only dependencies containing maven coordinates will be listed as
    * dependencies. Others will be packaged-in, and their first-order dependencies considered in the
    * same manner
    */
-  public static final Flavor MAVEN_JAR = InternalFlavor.of("maven");
+  Flavor MAVEN_JAR = InternalFlavor.of("maven");
 
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.
-  public Set<BuildRule> getDepsForTransitiveClasspathEntries();
+  Set<BuildRule> getDepsForTransitiveClasspathEntries();
 
-  public ImmutableSortedSet<SourcePath> getJavaSrcs();
+  ImmutableSortedSet<SourcePath> getJavaSrcs();
 
   @Override
-  public ImmutableSortedSet<SourcePath> getSources();
+  ImmutableSortedSet<SourcePath> getSources();
 
-  public ImmutableSortedSet<SourcePath> getResources();
+  ImmutableSortedSet<SourcePath> getResources();
 
-  public Optional<Path> getGeneratedSourcePath();
+  Optional<Path> getGeneratedSourcePath();
 
-  public static class Data {
+  class Data {
     private final ImmutableSortedMap<String, HashCode> classNamesToHashes;
 
     public Data(ImmutableSortedMap<String, HashCode> classNamesToHashes) {

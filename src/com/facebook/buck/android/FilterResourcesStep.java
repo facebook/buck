@@ -289,7 +289,7 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface DrawableFinder {
-    public ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
+    ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
         throws IOException;
   }
 

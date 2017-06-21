@@ -91,7 +91,7 @@ public interface ProcessExecutor {
    * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional,
    * Optional, Optional)}.
    */
-  public enum Option {
+  enum Option {
     PRINT_STD_OUT,
     PRINT_STD_ERR,
 
@@ -108,7 +108,7 @@ public interface ProcessExecutor {
   }
 
   /** Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}. */
-  public interface LaunchedProcess {
+  interface LaunchedProcess {
     /** @return false if process is killed, or true if it is alive. */
     boolean isAlive();
 
@@ -129,7 +129,7 @@ public interface ProcessExecutor {
    * this class.
    */
   @VisibleForTesting
-  public static class LaunchedProcessImpl implements LaunchedProcess {
+  class LaunchedProcessImpl implements LaunchedProcess {
     public final Process process;
 
     public LaunchedProcessImpl(Process process) {
@@ -161,7 +161,7 @@ public interface ProcessExecutor {
    * Values from the result of {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set,
    * Optional, Optional, Optional)}.
    */
-  public static class Result {
+  class Result {
 
     private final int exitCode;
     private final boolean timedOut;

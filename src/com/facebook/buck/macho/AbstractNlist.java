@@ -24,19 +24,19 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractNlist {
-  public static final int SIZE_IN_BYTES_32_BIT = 12;
-  public static final int SIZE_IN_BYTES_64_BIT = 16;
+  int SIZE_IN_BYTES_32_BIT = 12;
+  int SIZE_IN_BYTES_64_BIT = 16;
 
-  public int getOffsetInBinary();
+  int getOffsetInBinary();
 
-  public UnsignedInteger getN_strx(); // 32 bit
+  UnsignedInteger getN_strx(); // 32 bit
 
-  public UnsignedInteger getN_type(); // 8 bit
+  UnsignedInteger getN_type(); // 8 bit
 
-  public UnsignedInteger getN_sect(); // 8 bit
+  UnsignedInteger getN_sect(); // 8 bit
 
-  public UnsignedInteger getN_desc(); // 16 bit
+  UnsignedInteger getN_desc(); // 16 bit
 
-  public UnsignedLong getN_value(); // 32 bit for 32 bit arch;  64 bit for 64 bit arch
+  UnsignedLong getN_value(); // 32 bit for 32 bit arch;  64 bit for 64 bit arch
 }
 //CHECKSTYLE.ON: MethodNameCheck

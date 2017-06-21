@@ -30,7 +30,7 @@ import java.util.zip.ZipException;
  */
 public class CustomZipOutputStream extends OutputStream {
 
-  protected static interface Impl {
+  protected interface Impl {
     /**
      * Called by {@link CustomZipOutputStream#putNextEntry(ZipEntry)} and used by impls to put the
      * next entry into the zip file. It is guaranteed that the {@code entry} won't be null and the

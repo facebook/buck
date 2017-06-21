@@ -29,7 +29,7 @@ public interface NativeLibraryBuildRule {
    * @return A boolean indicating whether the {@code .so} files in the directory returned by {@link
    *     #getLibraryPath()} should be included in the {@code assets} folder in the APK.
    */
-  public boolean isAsset();
+  boolean isAsset();
 
   /**
    * Returns the path to the directory containing {@code .so} files organized by target CPU
@@ -43,5 +43,5 @@ public interface NativeLibraryBuildRule {
    * @return A path relative to the project root that should does <em>not</em> include a trailing
    *     slash.
    */
-  public Path getLibraryPath();
+  Path getLibraryPath();
 }

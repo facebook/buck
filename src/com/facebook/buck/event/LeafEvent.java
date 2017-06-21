@@ -24,5 +24,5 @@ package com.facebook.buck.event;
  */
 public interface LeafEvent extends BuckEvent {
   /** @return The category time spent in this event should be accounted under. */
-  public String getCategory();
+  String getCategory();
 }

@@ -62,7 +62,7 @@ public interface NativeLinkable {
    */
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps();
 
-  public enum LanguageExtensions {
+  enum LanguageExtensions {
     HS_PROFILE
   }
 

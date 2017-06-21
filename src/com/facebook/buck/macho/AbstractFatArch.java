@@ -34,17 +34,17 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 interface AbstractFatArch {
   /** @return file offset to this object file */
-  public Integer getCputype(); // 32 bit
+  Integer getCputype(); // 32 bit
 
   /** @return machine specifier (int) */
-  public Integer getCpusubtype(); // 32 bit
+  Integer getCpusubtype(); // 32 bit
 
   /** @return file offset to this object file */
-  public UnsignedInteger getOffset(); // 32 bit
+  UnsignedInteger getOffset(); // 32 bit
 
   /** @return size of this object file */
-  public UnsignedInteger getSize(); // 32 bit
+  UnsignedInteger getSize(); // 32 bit
 
   /** @return alignment as a power of 2 */
-  public UnsignedInteger getAlign(); // 32 bit
+  UnsignedInteger getAlign(); // 32 bit
 }

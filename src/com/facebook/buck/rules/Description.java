@@ -35,17 +35,15 @@ import com.google.common.cache.LoadingCache;
  */
 public interface Description<T> {
 
-  static final LoadingCache<Class<? extends Description<?>>, BuildRuleType>
-      BUILD_RULE_TYPES_BY_CLASS =
-          CacheBuilder.newBuilder()
-              .build(
-                  new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
-                    @Override
-                    public BuildRuleType load(Class<? extends Description<?>> key)
-                        throws Exception {
-                      return Description.getBuildRuleType(key.getSimpleName());
-                    }
-                  });
+  LoadingCache<Class<? extends Description<?>>, BuildRuleType> BUILD_RULE_TYPES_BY_CLASS =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
+                @Override
+                public BuildRuleType load(Class<? extends Description<?>> key) throws Exception {
+                  return Description.getBuildRuleType(key.getSimpleName());
+                }
+              });
 
   /** @return The {@link BuildRuleType} being described. */
   static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {

@@ -39,7 +39,7 @@ public class UnsortedAndroidResourceDeps {
           RobolectricTest.class);
 
   public interface Callback {
-    public void onRuleVisited(BuildRule rule, Set<BuildRule> depsToVisit);
+    void onRuleVisited(BuildRule rule, Set<BuildRule> depsToVisit);
   }
 
   private final ImmutableSet<HasAndroidResourceDeps> resourceDeps;

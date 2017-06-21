@@ -31,7 +31,7 @@ public interface Libc extends Library {
 
   int kill(int pid, int sig) throws LastErrorException;
 
-  public interface OpenPtyLibrary extends Library {
+  interface OpenPtyLibrary extends Library {
     int openpty(
         IntByReference master, IntByReference slave, Pointer name, Pointer terp, Pointer winp);
   }
@@ -42,7 +42,7 @@ public interface Libc extends Library {
 
   int fcntl(int fd, int cmd, Object... args);
 
-  public static final class Constants {
+  final class Constants {
     public static final int LINUX_TIOCSCTTY = 0x540E;
     public static final int DARWIN_TIOCSCTTY = 0x20007461;
     public static int rTIOCSCTTY;

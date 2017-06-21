@@ -49,5 +49,5 @@ public interface BuckEventExternalInterface {
   long getTimestamp();
   /** @return the type of the event. */
   @JsonProperty("type")
-  public String getEventName();
+  String getEventName();
 }
