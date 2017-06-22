@@ -31,6 +31,9 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.ByteArrayOutputStream;
@@ -47,6 +50,24 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
 
   /** The command was interrupted */
   public static final int INTERRUPTED_EXIT_CODE = 130;
+
+  private static final ClassLoaderCache CLASS_LOADER_CACHE = new ClassLoaderCache();
+  private static final OutOfProcessJavacEventSink OUT_OF_PROCESS_JAVAC_EVENT_SINK =
+      new OutOfProcessJavacEventSink();
+
+  private static final LoadingCache<Optional<String>, Javac> cachedJavac =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Optional<String>, Javac>() {
+                @Override
+                public Javac load(Optional<String> key) throws Exception {
+                  if (key.isPresent()) {
+                    return new JarBackedJavac(key.get(), ImmutableList.of());
+                  } else {
+                    return new JdkProvidedInMemoryJavac();
+                  }
+                }
+              });
 
   private final Console console;
 
@@ -73,9 +94,9 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       javacExecutionContext =
           JavacExecutionContextSerializer.deserialize(
               serializedJavacExecutionContext,
-              new OutOfProcessJavacEventSink(),
+              OUT_OF_PROCESS_JAVAC_EVENT_SINK,
               printStreamForStdErr,
-              new ClassLoaderCache(),
+              CLASS_LOADER_CACHE,
               console);
     } catch (InterruptedException e) {
       return INTERRUPTED_EXIT_CODE;
@@ -108,7 +129,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             .map(JavacPluginJsr199FieldsSerializer::deserialize)
             .collect(Collectors.toList());
 
-    Javac javac = createJavac(className);
+    Javac javac = cachedJavac.getUnchecked(className);
     try {
       return javac.buildWithClasspath(
           javacExecutionContext,
@@ -122,16 +143,6 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
     } catch (InterruptedException e) {
       return INTERRUPTED_EXIT_CODE;
     }
-  }
-
-  private Javac createJavac(Optional<String> className) {
-    Javac javac;
-    if (className.isPresent()) {
-      javac = new JarBackedJavac(className.get(), ImmutableList.of());
-    } else {
-      javac = new JdkProvidedInMemoryJavac();
-    }
-    return javac;
   }
 
   @Override

@@ -16,6 +16,9 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
@@ -26,6 +29,17 @@ public class ProcessExecutorSerializer {
   private static final String TYPE_CONTEXTUAL = "contextual";
   private static final String CONTEXT = "context";
   private static final String DELEGATE = "delegate";
+
+  private static final LoadingCache<Console, DefaultProcessExecutor> cachedDefaultProcessExecutor =
+      CacheBuilder.newBuilder()
+          .softValues()
+          .build(
+              new CacheLoader<Console, DefaultProcessExecutor>() {
+                @Override
+                public DefaultProcessExecutor load(Console key) throws Exception {
+                  return new DefaultProcessExecutor(key);
+                }
+              });
 
   private ProcessExecutorSerializer() {}
 
@@ -50,7 +64,7 @@ public class ProcessExecutorSerializer {
     String type = (String) data.get(TYPE);
     Preconditions.checkNotNull(type, "Cannot deserialize without `%s` field", TYPE);
     if (TYPE_DEFAULT.equals(type)) {
-      return new DefaultProcessExecutor(console);
+      return cachedDefaultProcessExecutor.getUnchecked(console);
     } else if (TYPE_CONTEXTUAL.equals(type)) {
       Map<String, Object> delegateData = (Map<String, Object>) data.get(DELEGATE);
       Preconditions.checkNotNull(
