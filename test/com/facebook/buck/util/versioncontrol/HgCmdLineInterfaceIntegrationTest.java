@@ -185,6 +185,24 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
+  public void testExtractRawManifestWithPatterns()
+      throws VersionControlCommandFailedException, InterruptedException, IOException {
+    // This repository has no treemanifest support, but passing paths should not break the extension
+    // and just return the full raw manifest.
+    HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(reposPath.resolve(REPO_TWO_DIR));
+    String path = hgCmdLineInterface.extractRawManifest(ImmutableList.of("change2", "file1"));
+    List<String> lines =
+        Files.readAllLines(
+            Paths.get(path), Charset.forName(System.getProperty("file.encoding", "UTF-8")));
+    List<String> expected =
+        ImmutableList.of(
+            "change2\0b80de5d138758541c5f05265ad144ab9fa86d1db",
+            "file1\0b80de5d138758541c5f05265ad144ab9fa86d1db",
+            "file2\0b80de5d138758541c5f05265ad144ab9fa86d1db");
+    assertEquals(lines, expected);
+  }
+
+  @Test
   public void testExtractRawManifestFileRenamed()
       throws VersionControlCommandFailedException, InterruptedException, IOException {
     // In order to make changes without affecting other tests, extract a new repository copy

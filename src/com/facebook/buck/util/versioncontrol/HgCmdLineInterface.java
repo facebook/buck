@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -216,18 +218,26 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         Long.valueOf(baseRevisionWords[1]));
   }
 
-  public String extractRawManifest()
+  public String extractRawManifest(Iterable<String> patterns)
       throws VersionControlCommandFailedException, InterruptedException {
     try {
       Path hgmanifestDir = Files.createTempDirectory("hgmanifest");
       hgmanifestDir.toFile().deleteOnExit();
       Path hgmanifestOutput = hgmanifestDir.resolve("manifest.raw");
       executeCommand(
-          replaceTemplateValue(RAW_MANIFEST_COMMAND, PATH_TEMPLATE, hgmanifestOutput.toString()));
+          Iterables.concat(
+              replaceTemplateValue(
+                  RAW_MANIFEST_COMMAND, PATH_TEMPLATE, hgmanifestOutput.toString()),
+              patterns));
       return hgmanifestOutput.toString();
     } catch (IOException e) {
       throw new VersionControlCommandFailedException("Unable to load hg manifest");
     }
+  }
+
+  public String extractRawManifest()
+      throws VersionControlCommandFailedException, InterruptedException {
+    return extractRawManifest(Collections.<String>emptyList());
   }
 
   @Nullable
