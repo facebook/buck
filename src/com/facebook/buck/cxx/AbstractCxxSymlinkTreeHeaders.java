@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -32,7 +33,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Encapsulates headers modeled using a {@link HeaderSymlinkTree}. */
-@Value.Immutable
+@Value.Immutable(prehash = true)
 @BuckStyleImmutable
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
 
@@ -55,7 +56,11 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
   @Override
   public abstract Optional<SourcePath> getHeaderMap();
 
+  @Value.Auxiliary
   abstract ImmutableMap<Path, SourcePath> getNameToPathMap();
+
+  /** The build target that this object is modeling. */
+  abstract BuildTarget getBuildTarget();
 
   @Override
   public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
@@ -90,6 +95,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
   public static CxxSymlinkTreeHeaders from(
       HeaderSymlinkTree symlinkTree, CxxPreprocessables.IncludeType includeType) {
     CxxSymlinkTreeHeaders.Builder builder = CxxSymlinkTreeHeaders.builder();
+    builder.setBuildTarget(symlinkTree.getBuildTarget());
     builder.setIncludeType(includeType);
     builder.setRoot(
         new ExplicitBuildTargetSourcePath(symlinkTree.getBuildTarget(), symlinkTree.getRoot()));

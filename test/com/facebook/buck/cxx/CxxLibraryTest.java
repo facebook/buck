@@ -96,6 +96,7 @@ public class CxxLibraryTest {
         CxxPreprocessorInput.builder()
             .addIncludes(
                 CxxSymlinkTreeHeaders.builder()
+                    .setBuildTarget(publicHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                     .putNameToPathMap(
                         Paths.get("header.h"), new DefaultBuildTargetSourcePath(publicHeaderTarget))
@@ -109,6 +110,7 @@ public class CxxLibraryTest {
         CxxPreprocessorInput.builder()
             .addIncludes(
                 CxxSymlinkTreeHeaders.builder()
+                    .setBuildTarget(privateHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                     .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
                     .putNameToPathMap(
