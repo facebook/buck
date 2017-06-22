@@ -59,7 +59,7 @@ public class SourcePathResolver {
       return ((PathSourcePath) sourcePath).getFilesystem();
     }
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath).getProjectFilesystem();
+      return ruleFinder.getRule((BuildTargetSourcePath) sourcePath).getProjectFilesystem();
     }
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       return getFilesystem(((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath());
@@ -78,7 +78,7 @@ public class SourcePathResolver {
     }
 
     if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
+      BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) sourcePath);
       return rule.getProjectFilesystem().resolve(path);
     } else if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getFilesystem().resolve(path);
@@ -153,7 +153,7 @@ public class SourcePathResolver {
       return getPathPrivateImpl(((ForwardingBuildTargetSourcePath) sourcePath).getDelegate());
     } else if (sourcePath instanceof DefaultBuildTargetSourcePath) {
       DefaultBuildTargetSourcePath targetSourcePath = (DefaultBuildTargetSourcePath) sourcePath;
-      SourcePath path = ruleFinder.getRuleOrThrow(targetSourcePath).getSourcePathToOutput();
+      SourcePath path = ruleFinder.getRule(targetSourcePath).getSourcePathToOutput();
       if (path == null) {
         throw new HumanReadableException("No known output for: %s", targetSourcePath.getTarget());
       }
@@ -204,7 +204,7 @@ public class SourcePathResolver {
   public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
     Preconditions.checkArgument(!(sourcePath instanceof ArchiveMemberSourcePath));
     if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildRule rule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
+      BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) sourcePath);
       if (rule instanceof HasOutputName) {
         HasOutputName hasOutputName = (HasOutputName) rule;
         return hasOutputName.getOutputName();

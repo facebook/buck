@@ -75,7 +75,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
 
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
-    BuildRule rule = ruleFinder.getRuleOrThrow(this.apk);
+    BuildRule rule = ruleFinder.getRule(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
     this.isCacheable = isCacheable;

@@ -322,7 +322,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
         hasher.putBuildTargetSourcePath(sourcePath);
       }
       try (Scope elementScope = containerScope.elementScope()) {
-        setBuildRule(ruleFinder.getRuleOrThrow(sourcePath));
+        setBuildRule(ruleFinder.getRule(sourcePath));
       }
     }
     return this;

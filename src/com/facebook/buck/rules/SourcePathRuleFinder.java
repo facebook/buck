@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import java.util.Optional;
@@ -55,14 +54,14 @@ public class SourcePathRuleFinder {
    */
   public Optional<BuildRule> getRule(SourcePath sourcePath) {
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return Optional.of(getRuleOrThrow((BuildTargetSourcePath) sourcePath));
+      return Optional.of(getRule((BuildTargetSourcePath) sourcePath));
     } else {
       return Optional.empty();
     }
   }
 
   /** @return The {@link BuildRule} whose output {@code sourcePath} refers to its output. */
-  public BuildRule getRuleOrThrow(BuildTargetSourcePath sourcePath) {
-    return Preconditions.checkNotNull(ruleResolver.getRule(sourcePath.getTarget()));
+  public BuildRule getRule(BuildTargetSourcePath sourcePath) {
+    return ruleResolver.getRule(sourcePath.getTarget());
   }
 }

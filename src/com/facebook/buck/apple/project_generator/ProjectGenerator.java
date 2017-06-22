@@ -2752,7 +2752,7 @@ public class ProjectGenerator {
     TargetNode<?, ?> node = targetGraph.get(pchTarget);
     BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    BuildRule rule = ruleFinder.getRuleOrThrow(pchTargetSourcePath);
+    BuildRule rule = ruleFinder.getRule(pchTargetSourcePath);
     Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
     CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;
     return Optional.of(pch.sourcePath);
