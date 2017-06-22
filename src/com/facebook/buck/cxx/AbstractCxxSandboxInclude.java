@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -57,8 +58,8 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
   }
 
   @Override
-  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getRoot());
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.getRule(getRoot()).map(Stream::of).orElseGet(Stream::empty);
   }
 
   @Override

@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** Encapsulates headers from a single root location. */
 public abstract class CxxHeaders implements RuleKeyAppendable {
@@ -58,7 +59,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
 
   /** @return all deps required by this header pack. */
-  public abstract Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
+  public abstract Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
   private static Path resolveSourcePathAndShorten(
       SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {

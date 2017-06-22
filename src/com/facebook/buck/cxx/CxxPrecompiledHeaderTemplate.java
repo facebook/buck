@@ -173,7 +173,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
       builder.addAll(input.getDeps(ruleResolver, ruleFinder));
     }
     for (CxxHeaders cxxHeaders : getIncludes(cxxPlatform)) {
-      builder.addAll(cxxHeaders.getDeps(ruleFinder));
+      cxxHeaders.getDeps(ruleFinder).forEachOrdered(builder::add);
     }
     for (FrameworkPath frameworkPath : getFrameworks(cxxPlatform)) {
       builder.addAll(frameworkPath.getDeps(ruleFinder));

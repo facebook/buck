@@ -53,7 +53,7 @@ abstract class AbstractCxxPreprocessorInput {
       BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
     for (CxxHeaders cxxHeaders : getIncludes()) {
-      builder.addAll(cxxHeaders.getDeps(ruleFinder));
+      cxxHeaders.getDeps(ruleFinder).forEachOrdered(builder::add);
     }
     builder.addAll(ruleResolver.getAllRules(getRules()));
 

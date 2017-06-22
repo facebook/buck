@@ -65,7 +65,7 @@ abstract class AbstractPreprocessorFlags {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     deps.addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getPrefixHeader())));
     for (CxxHeaders cxxHeaders : getIncludes()) {
-      deps.addAll(cxxHeaders.getDeps(ruleFinder));
+      cxxHeaders.getDeps(ruleFinder).forEachOrdered(deps::add);
     }
     for (FrameworkPath frameworkPath : getFrameworkPaths()) {
       deps.addAll(frameworkPath.getDeps(ruleFinder));

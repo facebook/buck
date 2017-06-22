@@ -22,14 +22,13 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /** Encapsulates headers modeled using a {@link HeaderSymlinkTree}. */
@@ -69,13 +68,13 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
 
   /** @return all deps required by this header pack. */
   @Override
-  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getNameToPathMap().values()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getRoot()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getIncludeRoot()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getHeaderMap())));
-    return deps.build();
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    Stream.Builder<BuildRule> builder = Stream.builder();
+    getNameToPathMap().values().forEach(value -> ruleFinder.getRule(value).ifPresent(builder));
+    ruleFinder.getRule(getRoot()).ifPresent(builder);
+    ruleFinder.getRule(getIncludeRoot()).ifPresent(builder);
+    getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
+    return builder.build().distinct();
   }
 
   @Override
