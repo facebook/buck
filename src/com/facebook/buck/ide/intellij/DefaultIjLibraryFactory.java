@@ -109,7 +109,6 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     return getRule(targetNode)
         .map(
             rule -> {
-              // Use a "library_" prefix so that the names don't clash with module names.
               String libraryName = Util.intelliJLibraryName(targetNode.getBuildTarget());
               Preconditions.checkState(
                   !uniqueLibraryNamesSet.contains(libraryName),

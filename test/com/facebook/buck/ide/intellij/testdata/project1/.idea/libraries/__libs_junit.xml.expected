@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="library_libs_guava">
+  <library name="//libs:junit">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libs/guava.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/junit.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

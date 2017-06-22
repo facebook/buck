@@ -150,7 +150,10 @@ public class IjProjectWriter {
 
   private Path writeLibrary(IjLibrary library) throws IOException {
     Path path =
-        projectConfig.getProjectPaths().getLibrariesDir().resolve(library.getName() + ".xml");
+        projectConfig
+            .getProjectPaths()
+            .getLibrariesDir()
+            .resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
 
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
     final IjProjectPaths projectPaths = projectConfig.getProjectPaths();

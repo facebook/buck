@@ -7,7 +7,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_modules_tip_library1" scope="COMPILE" level="project" />
-    <orderEntry type="library" name="library_modules_tip_library2" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//modules/tip:library1" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//modules/tip:library2" scope="COMPILE" level="project" />
   </component>
 </module>

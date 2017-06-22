@@ -224,7 +224,7 @@ public class IjProjectDataPreparerTest {
                         Optional.of(
                             DependencyEntryData.builder()
                                 .setExported(true)
-                                .setName("library_java_com_example_base_tests")
+                                .setName("//java/com/example/base:tests")
                                 .setScope(IjDependencyListBuilder.Scope.PROVIDED)
                                 .build()))))));
 

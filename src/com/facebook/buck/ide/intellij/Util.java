@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 
 public abstract class Util {
@@ -26,20 +25,19 @@ public abstract class Util {
     if (name.isEmpty()) {
       return "project_root";
     } else {
-      name = name.replace('/', '_');
       return Util.normalizeIntelliJName(name);
     }
   }
 
   public static String intelliJLibraryName(BuildTarget target) {
-    StringBuilder sb = new StringBuilder("library_");
-    sb.append(intelliJModuleNameFromPath(MorePaths.pathWithUnixSeparators(target.getBasePath())));
-    sb.append("_");
-    sb.append(target.getShortName());
-    return normalizeIntelliJName(sb.toString());
+    return target.getFullyQualifiedName();
   }
 
   public static String normalizeIntelliJName(String name) {
-    return name.replace('.', '_').replace('-', '_').replace(':', '_');
+    return name.replace('.', '_')
+        .replace('-', '_')
+        .replace(':', '_')
+        .replace(' ', '_')
+        .replace('/', '_');
   }
 }

@@ -8,7 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="project1_dep" scope="COMPILE" />
-    <orderEntry type="library" name="library_project2_dep_dep" scope="RUNTIME" level="project" />
-    <orderEntry type="library" name="library_project2_lib_lib" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//project2/dep:dep" scope="RUNTIME" level="project" />
+    <orderEntry type="library" name="//project2/lib:lib" scope="COMPILE" level="project" />
   </component>
 </module>

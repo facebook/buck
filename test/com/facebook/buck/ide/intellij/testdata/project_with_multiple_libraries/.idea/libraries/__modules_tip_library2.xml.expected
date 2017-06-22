@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="library_modules_tip_library2">
+  <library name="//modules/tip:library2">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/modules/tip/library2.jar!/" />
     </CLASSES>

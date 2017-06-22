@@ -114,14 +114,14 @@ public class DefaultIjLibraryFactoryTest {
 
   @Test
   public void testPrebuiltJar() {
-    assertEquals("library_third_party_java_guava_guava", guavaLibrary.getName());
+    assertEquals("//third_party/java/guava:guava", guavaLibrary.getName());
     assertEquals(ImmutableSet.of(guavaJarPath), guavaLibrary.getBinaryJars());
     assertEquals(ImmutableSet.of(guava.getBuildTarget()), guavaLibrary.getTargets());
   }
 
   @Test
   public void testPrebuiltAar() {
-    assertEquals("library_third_party_java_support_support", androidSupportLibrary.getName());
+    assertEquals("//third_party/java/support:support", androidSupportLibrary.getName());
     assertEquals(
         ImmutableSet.of(androidSupportBinaryJarPath.getRelativePath()),
         androidSupportLibrary.getBinaryJars());
@@ -131,7 +131,7 @@ public class DefaultIjLibraryFactoryTest {
 
   @Test
   public void testLibraryFromOtherTargets() {
-    assertEquals("library_java_com_example_base_base", baseLibrary.getName());
+    assertEquals("//java/com/example/base:base", baseLibrary.getName());
     assertEquals(ImmutableSet.of(baseOutputPath.getRelativePath()), baseLibrary.getBinaryJars());
     assertEquals(ImmutableSet.of(base.getBuildTarget()), baseLibrary.getTargets());
   }

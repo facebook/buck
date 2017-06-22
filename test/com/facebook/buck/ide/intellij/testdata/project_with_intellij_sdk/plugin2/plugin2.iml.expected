@@ -8,6 +8,6 @@
     </content>
     <orderEntry type="jdk" jdkName="IDEA SDK" jdkType="IDEA JDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_lib_openapi" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//lib:openapi" scope="COMPILE" level="project" />
   </component>
 </module>

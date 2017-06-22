@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="library_project2_dep_dep">
+  <library name="//project2/dep:dep">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../buck-out/gen/project2/dep/lib__dep__output/dep.jar!/" />
     </CLASSES>
