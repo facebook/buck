@@ -15,7 +15,9 @@ from __future__ import absolute_import
 
 from mercurial import (
     cmdutil,
+    match,
     node,
+    util,
 )
 
 from itertools import chain
@@ -32,11 +34,35 @@ testedwith = 'internal'
          'FILE'],
         ['d', 'deletions', None,
          'add deleted entries (hash set to nullid and flag set to "d")']],
-    '[PREFIX]')
-def rawmanifest(ui, repo, *args, **opts):
-    """Output the raw manifest (optionally updated with working copy status)"""
-    manifestnode = repo['.'].manifestnode()
-    rawmanifest = repo.manifestlog._revlog.revision(manifestnode)
+    '[PATTERN]')
+def rawmanifest(ui, repo, *patterns, **opts):
+    """Output the raw manifest (optionally updated with working copy status)
+
+    If patterns are given and treemanifest is available, filter on paths. This is a best-effort
+    filter, without a treemanifest the whole manifest is produced instead.
+
+    """
+    ctx = repo['.']
+
+    matcher = None
+    rawmanifest = ''
+    if patterns:
+        # can only honour a path filter if there are is a treemanifest available
+        manifest = ctx.manifest()
+        if util.safehasattr(manifest, '_treemanifest'):
+            # Hybrid manifest
+            tmanifest = manifest._treemanifest()
+            if tmanifest is not None:
+                # a treemanifest is available for this revision
+                matcher = match.match(
+                    repo.root, repo.getcwd(),
+                    patterns=patterns)
+                rawmanifest = tmanifest.matches(matcher).text()
+
+    if matcher is None:
+        # no paths or no tree manifest available, dump whole manifest
+        manifestnode = ctx.manifestnode()
+        rawmanifest = repo.manifestlog._revlog.revision(manifestnode)
 
     try:
         output = None
@@ -49,8 +75,11 @@ def rawmanifest(ui, repo, *args, **opts):
 
         if opts['deletions']:
             deletedline = '\x00{0}d\n'.format(node.hex(node.nullid))
+            matchfn = matcher and matcher.matchfn
             status = repo.status()
             for filename in chain(status.removed, status.deleted):
+                if matchfn and not matchfn(filename):
+                    continue
                 output.write(filename)
                 output.write(deletedline)
     finally:
