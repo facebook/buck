@@ -236,9 +236,18 @@ abstract class AbstractCxxSourceRuleFactory {
         .anyMatch(flavor -> flavor.getName().startsWith(COMPILE_FLAVOR_PREFIX));
   }
 
+  // Use a "lazy" method here to memoize the sanitizer function.  This is necessary as it's used to
+  // construct `SanitizedArg` objects for flags which get put in `CxxToolFlags` objects which, in
+  // turn, are used to index a cache for computing precompiled header hashes.  Therefore, the hash
+  // code for this object is important, and since `Function`s use object equality/hash-codes, we
+  // need a stable object each time.
+  @Value.Lazy
+  protected com.google.common.base.Function<String, String> getSanitizeFunction() {
+    return getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty());
+  }
+
   private ImmutableList<Arg> sanitizedArgs(Iterable<String> flags) {
-    return SanitizedArg.from(
-        getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty()), flags);
+    return SanitizedArg.from(getSanitizeFunction(), flags);
   }
 
   private ImmutableList<Arg> getPlatformPreprocessorFlags(CxxSource.Type type) {
@@ -265,10 +274,7 @@ abstract class AbstractCxxSourceRuleFactory {
         || type == CxxSource.Type.CXX_CPP_OUTPUT
         || type == CxxSource.Type.OBJCXX_CPP_OUTPUT
         || type == CxxSource.Type.CUDA_CPP_OUTPUT) {
-      args.addAll(
-          SanitizedArg.from(
-              getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
-              getCxxPlatform().getAsflags()));
+      args.addAll(sanitizedArgs(getCxxPlatform().getAsflags()));
     }
 
     return args.build();
