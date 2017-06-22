@@ -222,25 +222,6 @@ public final class CxxInferEnhancer {
       return existingRule.get();
     }
 
-    CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
-        cxxInferCaptureAndAnalyzeRules =
-            requireTransitiveCaptureAndAggregatingRules(
-                cellRoots, params, args, inferCaptureOnly, CxxInferCaptureRulesAggregator.class);
-
-    return createInferCaptureAggregatorRule(
-        paramsWithInferCaptureOnlyFlavor.getBuildTarget(),
-        paramsWithInferCaptureOnlyFlavor.getProjectFilesystem(),
-        cxxInferCaptureAndAnalyzeRules);
-  }
-
-  private <T extends BuildRule>
-      CxxInferCaptureAndAggregatingRules<T> requireTransitiveCaptureAndAggregatingRules(
-          CellPathResolver cellRoots,
-          BuildRuleParams params,
-          CxxConstructorArg args,
-          Flavor requiredFlavor,
-          Class<T> aggregatingRuleClass)
-          throws NoSuchBuildTargetException {
     BuildRuleParams cleanParams = InferFlavors.paramsWithoutAnyInferFlavor(params);
 
     ImmutableMap<String, CxxSource> sources = collectSources(cleanParams.getBuildTarget(), args);
@@ -248,14 +229,22 @@ public final class CxxInferEnhancer {
     ImmutableSet<CxxInferCapture> captureRules =
         requireInferCaptureBuildRules(cellRoots, cleanParams, sources, args);
 
+    ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatorRules =
+        requireTransitiveCaptureAndAggregatingRules(args, inferCaptureOnly);
+
+    return createInferCaptureAggregatorRule(
+        paramsWithInferCaptureOnlyFlavor.getBuildTarget(),
+        paramsWithInferCaptureOnlyFlavor.getProjectFilesystem(),
+        captureRules,
+        transitiveAggregatorRules);
+  }
+
+  private ImmutableSet<CxxInferCaptureRulesAggregator> requireTransitiveCaptureAndAggregatingRules(
+      CxxConstructorArg args, Flavor requiredFlavor) throws NoSuchBuildTargetException {
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
 
-    // Build all the transitive dependencies build rules with the Infer's flavor
-    ImmutableSet<T> transitiveDepsLibraryRules =
-        requireTransitiveDependentLibraries(
-            cxxPlatform, deps, requiredFlavor, aggregatingRuleClass);
-
-    return new CxxInferCaptureAndAggregatingRules<>(captureRules, transitiveDepsLibraryRules);
+    return requireTransitiveDependentLibraries(
+        cxxPlatform, deps, requiredFlavor, CxxInferCaptureRulesAggregator.class);
   }
 
   private ImmutableMap<String, CxxSource> collectSources(
@@ -442,9 +431,11 @@ public final class CxxInferEnhancer {
   private CxxInferCaptureRulesAggregator createInferCaptureAggregatorRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator> captureAggregatorRules) {
+      ImmutableSet<CxxInferCapture> captureRules,
+      ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatorRules) {
     return ruleResolver.addToIndex(
-        new CxxInferCaptureRulesAggregator(buildTarget, projectFilesystem, captureAggregatorRules));
+        new CxxInferCaptureRulesAggregator(
+            buildTarget, projectFilesystem, captureRules, transitiveAggregatorRules));
   }
 
   private CxxInferComputeReport createInferReportRule(

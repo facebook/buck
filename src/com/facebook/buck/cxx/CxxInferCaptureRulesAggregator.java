@@ -36,27 +36,28 @@ import java.util.SortedSet;
  * on), but the CxxInferEnhancer relies on being able to look it up.
  */
 public class CxxInferCaptureRulesAggregator extends NoopBuildRule {
-  private CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
-      captureAndTransitiveAggregatingRules;
+
+  private final ImmutableSet<CxxInferCapture> captureRules;
+  private final ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatingRules;
 
   public CxxInferCaptureRulesAggregator(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      CxxInferCaptureAndAggregatingRules<CxxInferCaptureRulesAggregator>
-          captureAndTransitiveAggregatingRules) {
+      ImmutableSet<CxxInferCapture> captureRules,
+      ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatingRules) {
     super(buildTarget, projectFilesystem);
-    this.captureAndTransitiveAggregatingRules = captureAndTransitiveAggregatingRules;
+    this.captureRules = captureRules;
+    this.transitiveAggregatingRules = transitiveAggregatingRules;
   }
 
   private ImmutableSet<CxxInferCapture> getCaptureRules() {
-    return captureAndTransitiveAggregatingRules.captureRules;
+    return captureRules;
   }
 
   public ImmutableSet<CxxInferCapture> getAllTransitiveCaptures() {
     ImmutableSet.Builder<CxxInferCapture> captureBuilder = ImmutableSet.builder();
-    captureBuilder.addAll(captureAndTransitiveAggregatingRules.captureRules);
-    for (CxxInferCaptureRulesAggregator aggregator :
-        captureAndTransitiveAggregatingRules.aggregatingRules) {
+    captureBuilder.addAll(captureRules);
+    for (CxxInferCaptureRulesAggregator aggregator : transitiveAggregatingRules) {
       captureBuilder.addAll(aggregator.getCaptureRules());
     }
     return captureBuilder.build();
