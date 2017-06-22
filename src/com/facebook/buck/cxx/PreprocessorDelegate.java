@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -29,20 +28,16 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -106,8 +101,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SymlinkTree> sandbox,
-      Optional<CxxIncludePaths> leadingIncludePaths)
-      throws ConflictingHeadersException {
+      Optional<CxxIncludePaths> leadingIncludePaths) {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
     this.sanitizer = sanitizer;
@@ -118,12 +112,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.sandbox = sandbox;
     this.leadingIncludePaths = leadingIncludePaths;
-
-    checkForConflictingHeaders();
   }
 
-  public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths)
-      throws ConflictingHeadersException {
+  public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths) {
     return new PreprocessorDelegate(
         this.resolver,
         this.sanitizer,
@@ -226,21 +217,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
         resolver, minLengthPathRepresentation, frameworkPathSearchPathFunction, preprocessor);
   }
 
-  private void checkForConflictingHeaders() throws ConflictingHeadersException {
-    Map<Path, SourcePath> headers = new HashMap<>();
-    for (CxxHeaders cxxHeaders : this.preprocessorFlags.getIncludes()) {
-      if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
-        CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
-        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
-          SourcePath original = headers.put(entry.getKey(), entry.getValue());
-          if (original != null && !original.equals(entry.getValue())) {
-            throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
-          }
-        }
-      }
-    }
-  }
-
   /** @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<Path> depFileLines) {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
@@ -317,18 +293,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
       hasher.putBoolean(false); // separator
     }
     return hasher.hash().toString();
-  }
-
-  @SuppressWarnings("serial")
-  public static class ConflictingHeadersException extends Exception {
-    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
-      super(String.format("'%s' maps to both %s.", key, ImmutableSortedSet.of(value1, value2)));
-    }
-
-    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
-      return new HumanReadableException(
-          this, "Target '%s' uses conflicting header file mappings. %s", buildTarget, getMessage());
-    }
   }
 
   public PreprocessorFlags getPreprocessorFlags() {

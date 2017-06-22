@@ -16,17 +16,23 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /** Encapsulates headers from a single root location. */
@@ -109,5 +115,38 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
     }
 
     return args.build();
+  }
+
+  static void checkConflictingHeaders(Iterable<CxxHeaders> allHeaders)
+      throws ConflictingHeadersException {
+    int estimatedSize =
+        RichStream.from(allHeaders)
+            .filter(CxxSymlinkTreeHeaders.class)
+            .mapToInt(cxxHeaders -> cxxHeaders.getNameToPathMap().size())
+            .sum();
+    Map<Path, SourcePath> headers = new HashMap<>(estimatedSize);
+    for (CxxHeaders cxxHeaders : allHeaders) {
+      if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
+        CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
+        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
+          SourcePath original = headers.put(entry.getKey(), entry.getValue());
+          if (original != null && !original.equals(entry.getValue())) {
+            throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
+          }
+        }
+      }
+    }
+  }
+
+  @SuppressWarnings("serial")
+  public static class ConflictingHeadersException extends Exception {
+    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
+      super(String.format("'%s' maps to both %s.", key, ImmutableSortedSet.of(value1, value2)));
+    }
+
+    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
+      return new HumanReadableException(
+          this, "Target '%s' uses conflicting header file mappings. %s", buildTarget, getMessage());
+    }
   }
 }

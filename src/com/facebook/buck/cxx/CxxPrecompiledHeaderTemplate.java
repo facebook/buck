@@ -47,11 +47,11 @@ import java.util.Optional;
 public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements NativeLinkable, CxxPreprocessorDep {
 
-  public final BuildRuleParams params;
-  public final BuildRuleResolver ruleResolver;
+  private final BuildRuleParams params;
+  private final BuildRuleResolver ruleResolver;
   public final SourcePath sourcePath;
-  public final SourcePathRuleFinder ruleFinder;
-  public final SourcePathResolver pathResolver;
+  private final SourcePathRuleFinder ruleFinder;
+  private final SourcePathResolver pathResolver;
 
   /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   CxxPrecompiledHeaderTemplate(
@@ -187,23 +187,25 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   public PreprocessorDelegate buildPreprocessorDelegate(
       CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
+    ImmutableList<CxxHeaders> includes = getIncludes(cxxPlatform);
     try {
-      return new PreprocessorDelegate(
-          pathResolver,
-          cxxPlatform.getCompilerDebugPathSanitizer(),
-          cxxPlatform.getHeaderVerification(),
-          params.getProjectFilesystem().getRootPath(),
-          preprocessor,
-          PreprocessorFlags.of(
-              /* getPrefixHeader() */ Optional.empty(),
-              preprocessorFlags,
-              getIncludes(cxxPlatform),
-              getFrameworks(cxxPlatform)),
-          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
-          /* getSandboxTree() */ Optional.empty(),
-          /* leadingIncludePaths */ Optional.empty());
-    } catch (PreprocessorDelegate.ConflictingHeadersException e) {
-      throw new RuntimeException(e);
+      CxxHeaders.checkConflictingHeaders(includes);
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
+    return new PreprocessorDelegate(
+        pathResolver,
+        cxxPlatform.getCompilerDebugPathSanitizer(),
+        cxxPlatform.getHeaderVerification(),
+        params.getProjectFilesystem().getRootPath(),
+        preprocessor,
+        PreprocessorFlags.of(
+            /* getPrefixHeader() */ Optional.empty(),
+            preprocessorFlags,
+            getIncludes(cxxPlatform),
+            getFrameworks(cxxPlatform)),
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
+        /* getSandboxTree() */ Optional.empty(),
+        /* leadingIncludePaths */ Optional.empty());
   }
 }
