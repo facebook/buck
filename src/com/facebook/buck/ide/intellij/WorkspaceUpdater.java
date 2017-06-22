@@ -16,13 +16,13 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -56,8 +56,8 @@ public class WorkspaceUpdater {
 
   private final File workspaceFile;
 
-  public WorkspaceUpdater(ProjectFilesystem projectFilesystem) {
-    workspaceFile = projectFilesystem.resolve(".idea/workspace.xml").toFile();
+  public WorkspaceUpdater(Path projectIdeaConfigPath) {
+    workspaceFile = projectIdeaConfigPath.resolve("workspace.xml").toFile();
   }
 
   public File getWorkspaceFile() {

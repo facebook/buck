@@ -49,7 +49,8 @@ public class IjProjectWriter {
   }
 
   public void write(IJProjectCleaner cleaner) throws IOException {
-    projectFilesystem.mkdirs(projectConfig.getProjectPaths().getIdeaConfigDir());
+    Path projectIdeaConfigDir = projectConfig.getProjectPaths().getIdeaConfigDir();
+    projectFilesystem.mkdirs(projectIdeaConfigDir);
 
     writeProjectSettings(cleaner, projectConfig);
 
@@ -67,7 +68,8 @@ public class IjProjectWriter {
     Path indexFile = writeModulesIndex();
     cleaner.doNotDelete(indexFile);
 
-    Path workspaceFile = writeWorkspace(projectFilesystem, contentRootBuilder.build());
+    Path workspaceFile =
+        writeWorkspace(projectFilesystem.resolve(projectIdeaConfigDir), contentRootBuilder.build());
     cleaner.doNotDelete(workspaceFile);
   }
 
@@ -197,8 +199,7 @@ public class IjProjectWriter {
     return path;
   }
 
-  private Path writeWorkspace(
-      ProjectFilesystem projectFilesystem, ImmutableList<ContentRoot> contentRoots)
+  private Path writeWorkspace(Path projectIdeaConfigDir, ImmutableList<ContentRoot> contentRoots)
       throws IOException {
     ImmutableSortedSet<String> excludedPaths =
         contentRoots
@@ -209,7 +210,7 @@ public class IjProjectWriter {
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSortedSet());
 
-    WorkspaceUpdater workspaceUpdater = new WorkspaceUpdater(projectFilesystem);
+    WorkspaceUpdater workspaceUpdater = new WorkspaceUpdater(projectIdeaConfigDir);
     workspaceUpdater.updateOrCreateWorkspace(excludedPaths);
 
     return Paths.get(workspaceUpdater.getWorkspaceFile().toString());
