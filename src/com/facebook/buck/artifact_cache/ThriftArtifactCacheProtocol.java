@@ -22,7 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -36,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import javax.annotation.Nullable;
 
 /**
  * All messages generate by this Protocol will be in the following binary format: - int32 Big Endian
@@ -99,7 +99,7 @@ public class ThriftArtifactCacheProtocol {
               ? ImmutableList.copyOf(thriftData.getPayloads())
               : ImmutableList.of();
 
-      Preconditions.checkArgument(
+      assertTrue(
           payloadByteSources.length == this.payloads.size(),
           "Number of payloadStreams provided [%s] does not match number of payloads "
               + "in the thriftData [%d].",
@@ -181,14 +181,14 @@ public class ThriftArtifactCacheProtocol {
     }
 
     public ReadPayloadInfo readPayload(OutputStream outStream) throws IOException {
-      Preconditions.checkState(
+      assertTrue(
           nextPayloadToBeRead < thriftData.getPayloadsSize(),
           "Trying to download payload index=[%s] but the thriftData only contains [%s] payloads.",
           nextPayloadToBeRead,
           thriftData.getPayloadsSize());
 
       long payloadSizeBytes =
-          Preconditions.checkNotNull(thriftData.getPayloads())
+          assertNotNull(thriftData.getPayloads(), "Payloads[] cannot be null.")
               .get(nextPayloadToBeRead)
               .getSizeBytes();
       try (HashingOutputStream wrappedOutputStream =
@@ -246,5 +246,26 @@ public class ThriftArtifactCacheProtocol {
       LOG.error(msg);
       throw new IOException(msg);
     }
+  }
+
+  public static class ProtocolException extends IOException {
+    public ProtocolException(String message) {
+      super(message);
+    }
+  }
+
+  private static void assertTrue(boolean condition, String msgTemplate, Object... msgArgs)
+      throws ProtocolException {
+    if (!condition) {
+      throw new ProtocolException(String.format(msgTemplate, msgArgs));
+    }
+  }
+
+  private static <T> T assertNotNull(@Nullable T object, String message) throws ProtocolException {
+    if (object == null) {
+      throw new ProtocolException(message);
+    }
+
+    return object;
   }
 }

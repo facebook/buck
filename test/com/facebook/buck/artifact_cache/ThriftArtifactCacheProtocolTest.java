@@ -70,7 +70,7 @@ public class ThriftArtifactCacheProtocolTest {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = ThriftArtifactCacheProtocol.ProtocolException.class)
   public void testSendingRequestWithoutPayloadStream() throws IOException {
     int payloadSizeBytes = 42;
     ThriftArtifactCacheProtocol.Request request =
@@ -86,7 +86,7 @@ public class ThriftArtifactCacheProtocolTest {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = ThriftArtifactCacheProtocol.ProtocolException.class)
   public void testSendingRequestWithExtratPayloadStream() throws IOException {
     int payloadSizeBytes = 42;
     ThriftArtifactCacheProtocol.Request request =

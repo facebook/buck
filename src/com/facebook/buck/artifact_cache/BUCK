@@ -139,6 +139,7 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/okhttp:okhttp",
     ],
 )
