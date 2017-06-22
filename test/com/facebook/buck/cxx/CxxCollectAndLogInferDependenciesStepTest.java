@@ -123,13 +123,11 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
-    BuildRuleParams testBuildRuleParams = TestBuildRuleParams.create(testBuildTarget, filesystem);
-
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
-            testBuildRuleParams, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
+            testBuildTarget, filesystem, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
@@ -162,13 +160,11 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
 
-    BuildRuleParams testBuildRuleParams = TestBuildRuleParams.create(testBuildTarget, filesystem);
-
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
-            testBuildRuleParams, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
+            testBuildTarget, filesystem, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
@@ -201,7 +197,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     "short1"))
             .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
-    BuildRuleParams buildRuleParams1 = TestBuildRuleParams.create(buildTarget1, filesystem1);
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
@@ -229,7 +224,11 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
-            buildRuleParams1, inferBuckConfig, ImmutableSet.of(captureRule), ImmutableSet.of());
+            buildTarget1,
+            filesystem1,
+            inferBuckConfig,
+            ImmutableSet.of(captureRule),
+            ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
@@ -265,7 +264,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     "short"))
             .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
             .build();
-    BuildRuleParams buildRuleParams1 = TestBuildRuleParams.create(buildTarget1, filesystem1);
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
@@ -293,7 +291,11 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
-            buildRuleParams1, inferBuckConfig, ImmutableSet.of(captureRule), ImmutableSet.of());
+            buildTarget1,
+            filesystem1,
+            inferBuckConfig,
+            ImmutableSet.of(captureRule),
+            ImmutableSet.of());
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =

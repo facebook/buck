@@ -17,12 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
@@ -32,18 +32,22 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 
-public class CxxInferCaptureTransitive extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class CxxInferCaptureTransitive extends AbstractBuildRule
     implements HasRuntimeDeps, HasPostBuildSteps {
 
   private ImmutableSet<CxxInferCapture> captureRules;
   private Path outputDirectory;
 
   public CxxInferCaptureTransitive(
-      BuildRuleParams params, ImmutableSet<CxxInferCapture> captureRules) {
-    super(params);
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ImmutableSet<CxxInferCapture> captureRules) {
+    super(target, projectFilesystem);
     this.captureRules = captureRules;
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
@@ -51,6 +55,11 @@ public class CxxInferCaptureTransitive extends AbstractBuildRuleWithDeclaredAndE
 
   public ImmutableSet<CxxInferCapture> getCaptureRules() {
     return captureRules;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.copyOf(captureRules);
   }
 
   @Override

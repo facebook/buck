@@ -17,11 +17,13 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -39,8 +41,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
-public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class CxxInferAnalyze extends AbstractBuildRule {
 
   private final Path resultsDir;
   private final Path reportFile;
@@ -50,13 +53,15 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final InferBuckConfig inferConfig;
   private final ImmutableSet<CxxInferCapture> captureRules;
   private final ImmutableSet<CxxInferAnalyze> transitiveAnalyzeRules;
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   CxxInferAnalyze(
-      BuildRuleParams buildRuleParams,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       InferBuckConfig inferConfig,
       ImmutableSet<CxxInferCapture> captureRules,
       ImmutableSet<CxxInferAnalyze> transitiveAnalyzeRules) {
-    super(buildRuleParams);
+    super(buildTarget, projectFilesystem);
     this.resultsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-analysis-%s");
     this.reportFile = this.resultsDir.resolve("report.json");
@@ -65,6 +70,11 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.inferConfig = inferConfig;
     this.captureRules = captureRules;
     this.transitiveAnalyzeRules = transitiveAnalyzeRules;
+    this.buildDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(captureRules)
+            .addAll(transitiveAnalyzeRules)
+            .build();
   }
 
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
@@ -100,6 +110,11 @@ public class CxxInferAnalyze extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     commandBuilder.add("--", "analyze");
 
     return commandBuilder.build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   @Override

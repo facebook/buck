@@ -19,10 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenateStep;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
@@ -33,26 +34,37 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
 /**
  * Merge all the json reports together into one and emit a list of results dirs of each capture and
  * analysis target involved for the analysis itself.
  */
-public class CxxInferComputeReport extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasPostBuildSteps {
+public class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSteps {
 
   private CxxInferAnalyze analysisToReport;
   private ProjectFilesystem projectFilesystem;
   private Path outputDirectory;
   private Path reportOutput;
 
-  public CxxInferComputeReport(BuildRuleParams buildRuleParams, CxxInferAnalyze analysisToReport) {
-    super(buildRuleParams);
+  public CxxInferComputeReport(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      CxxInferAnalyze analysisToReport) {
+    super(buildTarget, projectFilesystem);
     this.analysisToReport = analysisToReport;
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
     this.reportOutput = this.outputDirectory.resolve("report.json");
     this.projectFilesystem = getProjectFilesystem();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(analysisToReport.getTransitiveAnalyzeRules())
+        .add(analysisToReport)
+        .build();
   }
 
   @Override

@@ -749,7 +749,8 @@ public class CxxLibraryDescription
     } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(
         params.getBuildTarget().getFlavors())) {
       return CxxInferEnhancer.requireInferRule(
-          params,
+          buildTarget,
+          params.getProjectFilesystem(),
           resolver,
           cellRoots,
           cxxBuckConfig,
