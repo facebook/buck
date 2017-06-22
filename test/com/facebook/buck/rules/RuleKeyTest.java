@@ -39,6 +39,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -75,7 +76,9 @@ public class RuleKeyTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    filesystem, FileHashCacheMode.PREFIX_TREE)));
     BuildRuleResolver ruleResolver1 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRuleResolver ruleResolver2 =
@@ -584,7 +587,7 @@ public class RuleKeyTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), false)));
+                    new FakeProjectFilesystem(), FileHashCacheMode.PREFIX_TREE)));
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(params, "foo", "bar");
     BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(params, "foo", "xyzzy");
@@ -610,7 +613,7 @@ public class RuleKeyTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), false)));
+                    new FakeProjectFilesystem(), FileHashCacheMode.PREFIX_TREE)));
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(params, "foo", "bar");
     BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(params, "foo", "xyzzy");

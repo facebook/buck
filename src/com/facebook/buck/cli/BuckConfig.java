@@ -43,6 +43,7 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
@@ -1049,6 +1050,12 @@ public class BuckConfig implements ConfigPathGetter {
   /** @return whether to enable new file hash cache engine. */
   public boolean getCompareFileHashCacheEngines() {
     return getBooleanValue("build", "compare_file_hash_cache_engines", false);
+  }
+
+  /** @return whether to enable new file hash cache engine. */
+  public FileHashCacheMode getFileHashCacheMode() {
+    return getEnum("build", "file_hash_cache_mode", FileHashCacheMode.class)
+        .orElse(FileHashCacheMode.LOADING_CACHE);
   }
 
   public Config getConfig() {

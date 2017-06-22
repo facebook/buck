@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
@@ -46,6 +47,7 @@ public class CachingBuildEngineFactory {
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
   private boolean logBuildRuleFailuresInline = true;
   private BuildInfoStoreManager buildInfoStoreManager;
+  private FileHashCacheMode fileHashCacheMode = FileHashCacheMode.PREFIX_TREE;
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver, BuildInfoStoreManager buildInfoStoreManager) {
@@ -57,6 +59,11 @@ public class CachingBuildEngineFactory {
 
   public CachingBuildEngineFactory setBuildMode(CachingBuildEngine.BuildMode buildMode) {
     this.buildMode = buildMode;
+    return this;
+  }
+
+  public CachingBuildEngineFactory setFileHashCachMode(FileHashCacheMode fileHashCachMode) {
+    this.fileHashCacheMode = fileHashCachMode;
     return this;
   }
 
@@ -122,7 +129,8 @@ public class CachingBuildEngineFactory {
           new SourcePathResolver(ruleFinder),
           ruleKeyFactories.get(),
           resourceAwareSchedulingInfo,
-          logBuildRuleFailuresInline);
+          logBuildRuleFailuresInline,
+          fileHashCacheMode);
     }
 
     return new CachingBuildEngine(
@@ -144,7 +152,8 @@ public class CachingBuildEngineFactory {
             cachingBuildEngineDelegate.getFileHashCache(),
             buildRuleResolver,
             inputFileSizeLimit,
-            new DefaultRuleKeyCache<>()));
+            new DefaultRuleKeyCache<>()),
+        fileHashCacheMode);
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

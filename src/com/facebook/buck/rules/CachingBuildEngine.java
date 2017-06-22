@@ -55,6 +55,7 @@ import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -173,6 +174,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final BuildInfoStoreManager buildInfoStoreManager;
 
+  private final FileHashCacheMode fileHashCacheMode;
+
   private final boolean consoleLogBuildFailuresInline;
 
   public CachingBuildEngine(
@@ -189,7 +192,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
-      RuleKeyFactories ruleKeyFactories) {
+      RuleKeyFactories ruleKeyFactories,
+      FileHashCacheMode fileHashCacheMode) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
@@ -213,6 +217,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
+    this.fileHashCacheMode = fileHashCacheMode;
     this.defaultRuleKeyDiagnostics =
         new RuleKeyDiagnostics<>(
             rule ->
@@ -242,7 +247,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       SourcePathResolver pathResolver,
       RuleKeyFactories ruleKeyFactories,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
-      boolean consoleLogBuildFailuresInline) {
+      boolean consoleLogBuildFailuresInline,
+      FileHashCacheMode fileHashCacheMode) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
@@ -261,6 +267,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
+    this.fileHashCacheMode = fileHashCacheMode;
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -637,7 +644,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // Create a new `DefaultFileHashCache` to prevent caching from interfering with verification.
     ProjectFileHashCache fileHashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, false);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
 
     // Verify each path from the recorded path hashes entry matches the actual on-disk version.
     for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {

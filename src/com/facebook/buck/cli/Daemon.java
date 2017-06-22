@@ -92,8 +92,7 @@ final class Daemon implements Closeable {
         subCell -> {
           WatchedFileHashCache watchedCache =
               new WatchedFileHashCache(
-                  subCell.getFilesystem(),
-                  rootCell.getBuckConfig().getCompareFileHashCacheEngines());
+                  subCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode());
           fileEventBus.register(watchedCache);
           hashCachesBuilder.add(watchedCache);
         });
@@ -101,7 +100,7 @@ final class Daemon implements Closeable {
         DefaultFileHashCache.createBuckOutFileHashCache(
             rootCell.getFilesystem().replaceBlacklistedPaths(ImmutableSet.of()),
             rootCell.getFilesystem().getBuckPaths().getBuckOut(),
-            rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
+            rootCell.getBuckConfig().getFileHashCacheMode()));
     this.hashCaches = hashCachesBuilder.build();
 
     this.broadcastEventListener = new BroadcastEventListener();

@@ -144,7 +144,8 @@ final class JavaBuildGraphProcessor {
                   cachingBuildEngineDelegate.getFileHashCache(),
                   buildRuleResolver,
                   cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                  new DefaultRuleKeyCache<>())); ) {
+                  new DefaultRuleKeyCache<>()),
+              params.getBuckConfig().getFileHashCacheMode()); ) {
         // Create a BuildEngine because we store symbol information as build artifacts.
         BuckEventBus eventBus = params.getBuckEventBus();
         ExecutionContext executionContext =

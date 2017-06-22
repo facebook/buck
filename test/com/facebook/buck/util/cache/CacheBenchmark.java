@@ -44,7 +44,7 @@ public class CacheBenchmark {
   @Before
   public void setUpTest() throws Exception {
     setUpBenchmark();
-    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), false);
+    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.PREFIX_TREE);
   }
 
   private static String generateRandomString() {

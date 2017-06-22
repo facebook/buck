@@ -609,14 +609,13 @@ public final class Main {
               .map(
                   cell ->
                       DefaultFileHashCache.createDefaultFileHashCache(
-                          cell.getFilesystem(),
-                          rootCell.getBuckConfig().getCompareFileHashCacheEngines()))
+                          cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()))
               .forEach(allCaches::add);
           allCaches.add(
               DefaultFileHashCache.createBuckOutFileHashCache(
                   rootCellProjectFilesystem,
                   rootCell.getFilesystem().getBuckPaths().getBuckOut(),
-                  rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
+                  rootCell.getBuckConfig().getFileHashCacheMode()));
         }
 
         // A cache which caches hashes of cell-relative paths which may have been ignore by
@@ -624,9 +623,10 @@ public final class Main {
         // times in a single run.
         allCaches.add(
             DefaultFileHashCache.createDefaultFileHashCache(
-                rootCellProjectFilesystem,
-                rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
-        allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
+                rootCellProjectFilesystem, rootCell.getBuckConfig().getFileHashCacheMode()));
+        allCaches.addAll(
+            DefaultFileHashCache.createOsRootDirectoriesCaches(
+                rootCell.getBuckConfig().getFileHashCacheMode()));
 
         StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 

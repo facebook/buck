@@ -41,6 +41,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +127,8 @@ public class JavaLibrarySymbolsFinderTest {
     final FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false)));
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    projectFilesystem, FileHashCacheMode.PREFIX_TREE)));
     final DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =

@@ -212,11 +212,13 @@ public class DistBuildSlaveExecutor {
       Cell cell = rootCell.getCell(cellPath);
       allCachesBuilder.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              cell.getFilesystem(), rootCell.getBuckConfig().getCompareFileHashCacheEngines()));
+              cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
     }
 
     // 2. Add the Operating System roots.
-    allCachesBuilder.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches());
+    allCachesBuilder.addAll(
+        DefaultFileHashCache.createOsRootDirectoriesCaches(
+            rootCell.getBuckConfig().getFileHashCacheMode()));
 
     return new StackedFileHashCache(allCachesBuilder.build());
   }
@@ -314,7 +316,8 @@ public class DistBuildSlaveExecutor {
                       cachingBuildEngineDelegate.getFileHashCache(),
                       actionGraphAndResolver.getResolver(),
                       engineConfig.getBuildInputRuleKeyFileSizeLimit(),
-                      new DefaultRuleKeyCache<>()));
+                      new DefaultRuleKeyCache<>()),
+                  distBuildConfig.getFileHashCacheMode());
           Build build =
               new Build(
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),

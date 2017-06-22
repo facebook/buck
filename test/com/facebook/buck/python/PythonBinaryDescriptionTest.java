@@ -68,6 +68,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -1017,7 +1018,7 @@ public class PythonBinaryDescriptionTest {
             new StackedFileHashCache(
                 ImmutableList.of(
                     DefaultFileHashCache.createDefaultFileHashCache(
-                        rule.getProjectFilesystem(), false))),
+                        rule.getProjectFilesystem(), FileHashCacheMode.PREFIX_TREE))),
             new SourcePathResolver(ruleFinder),
             ruleFinder);
     return ruleKeyFactory.build(rule);

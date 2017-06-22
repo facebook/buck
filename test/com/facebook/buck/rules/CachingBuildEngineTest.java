@@ -86,6 +86,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -221,7 +222,9 @@ public class CachingBuildEngineTest {
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
       fileHashCache =
           new StackedFileHashCache(
-              ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem, false)));
+              ImmutableList.of(
+                  DefaultFileHashCache.createDefaultFileHashCache(
+                      filesystem, FileHashCacheMode.PREFIX_TREE)));
       buildContext =
           BuildEngineBuildContext.builder()
               .setBuildContext(FakeBuildContext.NOOP_CONTEXT)

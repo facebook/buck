@@ -49,7 +49,8 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenNotifiedOfOverflowEventCacheIsCleared() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -65,7 +66,8 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenNotifiedOfCreateEventCacheEntryIsRemoved() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = Paths.get("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -82,7 +84,8 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenNotifiedOfChangeEventCacheEntryIsRemoved() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = Paths.get("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -99,7 +102,8 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenNotifiedOfDeleteEventCacheEntryIsRemoved() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = Paths.get("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -117,7 +121,8 @@ public class WatchedFileHashCacheTest {
   public void directoryHashChangesWhenFileInsideDirectoryChanges()
       throws InterruptedException, IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     tmp.newFolder("foo", "bar");
     Path inputFile = tmp.newFile("foo/bar/baz");
     Files.write(inputFile, "Hello world".getBytes(Charsets.UTF_8));
@@ -135,7 +140,8 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenNotifiedOfChangeToSubPathThenDirCacheEntryIsRemoved() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path dir = Paths.get("foo/bar/baz");
     HashCodeAndFileType value =
         HashCodeAndFileType.ofDirectory(HashCode.fromInt(42), ImmutableSet.of());
@@ -155,7 +161,8 @@ public class WatchedFileHashCacheTest {
   public void whenDirectoryIsPutThenInvalidatedCacheDoesNotContainPathOrChildren()
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path dir = filesystem.getPath("dir");
     filesystem.mkdirs(dir);
@@ -181,7 +188,8 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenNotifiedOfParentChangeEventCacheEntryIsRemoved() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, false);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path parent = filesystem.getPath("directory");
     Path path = parent.resolve("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));

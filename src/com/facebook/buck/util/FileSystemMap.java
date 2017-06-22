@@ -149,10 +149,12 @@ public class FileSystemMap<T> {
   private Entry<T> putEntry(Path path) {
     synchronized (root) {
       Entry<T> parent = root;
+      Path relPath = parent.getKey();
       for (Path p : path) {
+        relPath = Paths.get(relPath.toString(), p.toString());
         // Create the intermediate node only if it's missing.
         if (!parent.subLevels.containsKey(p)) {
-          Entry<T> newEntry = new Entry<>(path);
+          Entry<T> newEntry = new Entry<>(relPath);
           parent.subLevels.put(p, newEntry);
         }
         parent = parent.subLevels.get(p);

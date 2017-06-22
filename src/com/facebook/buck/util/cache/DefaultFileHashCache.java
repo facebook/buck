@@ -51,7 +51,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   DefaultFileHashCache(
       ProjectFilesystem projectFilesystem,
       Optional<Path> buckOutPath,
-      boolean compareFileHashCacheEngines) {
+      FileHashCacheMode fileHashCacheMode) {
     this.projectFilesystem = projectFilesystem;
     this.buckOutPath = buckOutPath;
     final Function<Path, HashCodeAndFileType> hashLoader =
@@ -71,27 +71,34 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
             throw new RuntimeException(e.getCause());
           }
         };
-    if (compareFileHashCacheEngines) {
-      fileHashCacheEngine = new ComboFileHashCache(hashLoader::apply, sizeLoader::apply);
-    } else {
-      fileHashCacheEngine = new LoadingCacheFileHashCache(hashLoader::apply, sizeLoader::apply);
+    switch (fileHashCacheMode) {
+      case PARALLEL_COMPARISON:
+        fileHashCacheEngine = new ComboFileHashCache(hashLoader::apply, sizeLoader::apply);
+        break;
+      case LOADING_CACHE:
+        fileHashCacheEngine = new LoadingCacheFileHashCache(hashLoader::apply, sizeLoader::apply);
+        break;
+      case PREFIX_TREE:
+        fileHashCacheEngine = new FileSystemMapFileHashCache(hashLoader::apply, sizeLoader::apply);
+        break;
+      default:
+        throw new RuntimeException(
+            "Unsupported file hash cache engine: " + fileHashCacheMode.toString());
     }
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem, Path buckOutPath, boolean compareFileHashCacheEngines) {
-    return new DefaultFileHashCache(
-        projectFilesystem, Optional.of(buckOutPath), compareFileHashCacheEngines);
+      ProjectFilesystem projectFilesystem, Path buckOutPath, FileHashCacheMode fileHashCacheMode) {
+    return new DefaultFileHashCache(projectFilesystem, Optional.of(buckOutPath), fileHashCacheMode);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
-      ProjectFilesystem projectFilesystem, boolean compareFileHashCacheEngines) {
-    return new DefaultFileHashCache(
-        projectFilesystem, Optional.empty(), compareFileHashCacheEngines);
+      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
+    return new DefaultFileHashCache(projectFilesystem, Optional.empty(), fileHashCacheMode);
   }
 
-  public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches()
-      throws InterruptedException {
+  public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches(
+      FileHashCacheMode fileHashCacheMode) throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     for (Path root : FileSystems.getDefault().getRootDirectories()) {
       if (!root.toFile().exists()) {
@@ -108,7 +115,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
-      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, false));
+      allCaches.add(
+          DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, fileHashCacheMode));
     }
 
     return allCaches.build();

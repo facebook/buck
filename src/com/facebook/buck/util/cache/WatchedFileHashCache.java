@@ -28,8 +28,9 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   private static final Logger LOG = Logger.get(WatchedFileHashCache.class);
 
-  public WatchedFileHashCache(ProjectFilesystem projectFilesystem, boolean newFileHashCacheEngine) {
-    super(projectFilesystem, Optional.empty(), newFileHashCacheEngine);
+  public WatchedFileHashCache(
+      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
+    super(projectFilesystem, Optional.empty(), fileHashCacheMode);
   }
 
   /**

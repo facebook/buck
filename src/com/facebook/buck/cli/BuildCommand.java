@@ -904,7 +904,8 @@ public class BuildCommand extends AbstractCommand {
                     cachingBuildEngineDelegate.getFileHashCache(),
                     actionGraphAndResolver.getResolver(),
                     cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                    ruleKeyCacheScope.getCache()));
+                    ruleKeyCacheScope.getCache()),
+                rootCellBuckConfig.getFileHashCacheMode());
         Build build =
             createBuild(
                 rootCellBuckConfig,
