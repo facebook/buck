@@ -72,6 +72,25 @@ public class BuckArgsMethodsTest {
     assertThat(
         BuckArgsMethods.expandAtFiles(new String[] {"@" + argWithSpace.toString()}, tmp.getRoot()),
         Matchers.arrayContaining("arg "));
+
+    Path pyArg = tmp.newFile("argsfile.py");
+    Files.write(pyArg, ImmutableList.of("print('arg2'); print('arg3');"));
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            new String[] {"arg1", "@" + pyArg.toString() + "#flavor"}, tmp.getRoot()),
+        Matchers.arrayContaining("arg1", "arg2", "arg3"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + pyArg.toString()}, tmp.getRoot()),
+        Matchers.arrayContaining("arg1", "arg2", "arg3"));
+
+    Path pyArgWithFlavors = tmp.newFile("argsfilewithflavors.py");
+    Files.write(
+        pyArgWithFlavors, ImmutableList.of("import sys; print(sys.argv[1]); print(sys.argv[2])"));
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            new String[] {"arg1", "@" + pyArgWithFlavors.toString() + "#fl1,fl2"}, tmp.getRoot()),
+        Matchers.arrayContaining("arg1", "--flavors", "fl1,fl2"));
   }
 
   @Test
