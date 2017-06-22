@@ -87,17 +87,23 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
     eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
 
+    CacheResult result = null;
     try {
-      CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
-      eventBuilder.getFetchBuilder().setFetchResult(result);
-      buckEventBus.post(eventBuilder.build());
+      result = fetchImpl(ruleKey, output, eventBuilder);
       return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
-      CacheResult cacheResult = CacheResult.error(name, mode, msg);
-      eventBuilder.getFetchBuilder().setFetchResult(cacheResult).setErrorMessage(msg);
+      reportFailure(e, "fetch(%s): %s", ruleKey, msg);
+      result = CacheResult.error(name, mode, msg);
+      return result;
+    } finally {
+      HttpArtifactCacheEventFetchData.Builder fetchBuilder =
+          eventBuilder.getFetchBuilder().setFetchResult(result);
+      if (result.getType() == CacheResultType.ERROR && result.cacheError().isPresent()) {
+        fetchBuilder.setErrorMessage(result.cacheError());
+      }
+
       buckEventBus.post(eventBuilder.build());
-      return cacheResult;
     }
   }
 
