@@ -30,6 +30,9 @@ public interface AutoSparseState {
   /** @return The root path of the working copy this state tracks. */
   Path getSCRoot() throws InterruptedException;
 
+  /** @return the repository revision id for which this state is valid */
+  String getRevisionId();
+
   /**
    * Query the source control manifest for information on a file.
    *

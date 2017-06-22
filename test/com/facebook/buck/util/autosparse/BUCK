@@ -1,6 +1,24 @@
-standard_java_test(
-    name = "autosparse",
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["*Test.java"],
+    ),
+    visibility = [
+        "//test/...",
+    ],
     deps = [
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//test/com/facebook/buck/util:testutil",
+    ],
+)
+
+java_test(
+    name = "autosparse",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",

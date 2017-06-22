@@ -63,6 +63,7 @@ public class HgAutoSparseState implements AutoSparseState {
 
   private final Path hgRoot;
   private final HgCmdLineInterface hgCmdLine;
+  private final String revisionId;
   private final Set<Path> hgSparseSeen;
   private final Set<Path> hgKnownDirectories;
   private final Set<Path> hgDirectParents;
@@ -72,9 +73,13 @@ public class HgAutoSparseState implements AutoSparseState {
   private boolean hgManifestLoaded;
 
   public HgAutoSparseState(
-      HgCmdLineInterface hgCmdLineInterface, Path scRoot, AutoSparseConfig autoSparseConfig) {
+      HgCmdLineInterface hgCmdLineInterface,
+      Path scRoot,
+      String revisionId,
+      AutoSparseConfig autoSparseConfig) {
     this.hgRoot = scRoot;
     this.hgCmdLine = hgCmdLineInterface;
+    this.revisionId = revisionId;
     this.hgSparseSeen = new HashSet<Path>();
     this.hgKnownDirectories = new HashSet<Path>();
     this.hgDirectParents = new HashSet<Path>();
@@ -87,6 +92,11 @@ public class HgAutoSparseState implements AutoSparseState {
   @Override
   public Path getSCRoot() throws InterruptedException {
     return Preconditions.checkNotNull(hgCmdLine.getHgRoot());
+  }
+
+  @Override
+  public String getRevisionId() {
+    return revisionId;
   }
 
   @Override
