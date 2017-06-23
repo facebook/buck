@@ -340,6 +340,9 @@ public final class Main {
               watchmanFreshInstanceAction,
               initTimestamp,
               args);
+    } catch (InterruptedException | ClosedByInterruptException e) {
+      // We're about to exit, so it's acceptable to swallow interrupts here.
+      LOG.debug(e, "Interrupted");
     } catch (IOException e) {
       if (e.getMessage().startsWith("No space left on device")) {
         makeStandardConsole(context).printBuildFailure(e.getMessage());
