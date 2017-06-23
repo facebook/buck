@@ -21,6 +21,7 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -65,9 +66,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   // Used to hang onto the KotlinDaemonShim for the life of the buckd process
   private static final Map<Set<String>, Object> kotlinShims = new ConcurrentHashMap<>();
 
-  private final ImmutableSet<Path> compilerClassPath;
+  private final ImmutableSet<SourcePath> compilerClassPath;
 
-  JarBackedReflectedKotlinc(ImmutableSet<Path> compilerClassPath) {
+  JarBackedReflectedKotlinc(ImmutableSet<SourcePath> compilerClassPath) {
     this.compilerClassPath = compilerClassPath;
   }
 
@@ -120,7 +121,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
             .build();
 
     Set<File> compilerIdPaths =
-        compilerClassPath.stream().map(Path::toFile).collect(Collectors.toSet());
+        compilerClassPath.stream()
+            .map(p -> ((PathSourcePath) p).getRelativePath())
+            .map(Path::toFile).collect(Collectors.toSet());
 
     try {
       Object compilerShim =
@@ -162,7 +165,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("kotlinc", "jar-backed")
         .setReflectively("kotlinc.version", "in-memory")
-        .setReflectively("kotlinc.classpath", compilerClassPath.toString());
+        .setReflectively("kotlinc.classpath", compilerClassPath);
   }
 
   private Object loadCompilerShim(ExecutionContext context) {
@@ -173,7 +176,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       ClassLoader classLoader =
           classLoaderCache.getClassLoaderForClassPath(
               null /* parent classloader */,
-              ImmutableList.copyOf(compilerClassPath.stream().map(PATH_TO_URL).iterator()));
+              ImmutableList.copyOf(compilerClassPath.stream()
+                  .map(p -> ((PathSourcePath) p).getRelativePath())
+                  .map(PATH_TO_URL).iterator()));
 
       return classLoader.loadClass(COMPILER_CLASS).newInstance();
     } catch (Exception ex) {
