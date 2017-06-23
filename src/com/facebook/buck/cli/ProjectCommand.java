@@ -383,6 +383,7 @@ public class ProjectCommand extends BuildCommand {
                 ImmutableMap.<String, String>builder()
                     .putAll(params.getEnvironment())
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()))
+                    .put("SKIP_ARC_FOCUS_MESSAGE", projectView == null ? "" : "Project View")
                     .build())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
