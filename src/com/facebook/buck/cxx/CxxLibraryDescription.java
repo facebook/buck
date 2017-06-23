@@ -637,9 +637,11 @@ public class CxxLibraryDescription
   }
 
   private static BuildRule createSharedLibraryInterface(
-      BuildRuleParams baseParams, BuildRuleResolver resolver, CxxPlatform cxxPlatform)
+      BuildTarget baseTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    BuildTarget baseTarget = baseParams.getBuildTarget();
 
     Optional<SharedLibraryInterfaceFactory> factory =
         cxxPlatform.getSharedLibraryInterfaceFactory();
@@ -661,7 +663,7 @@ public class CxxLibraryDescription
         .createSharedInterfaceLibrary(
             baseTarget.withAppendedFlavors(
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
-            baseParams,
+            projectFilesystem,
             resolver,
             pathResolver,
             ruleFinder,
@@ -802,7 +804,8 @@ public class CxxLibraryDescription
               blacklist,
               transitiveCxxPreprocessorInputFunction);
         case SHARED_INTERFACE:
-          return createSharedLibraryInterface(untypedParams, resolver, platform.get());
+          return createSharedLibraryInterface(
+              untypedBuildTarget, projectFilesystem, resolver, platform.get());
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
               untypedBuildTarget,

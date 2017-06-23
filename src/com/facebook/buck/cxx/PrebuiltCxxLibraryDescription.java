@@ -488,7 +488,7 @@ public class PrebuiltCxxLibraryDescription
 
   private BuildRule createSharedLibraryInterface(
       BuildTarget baseTarget,
-      BuildRuleParams baseParams,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
@@ -519,7 +519,7 @@ public class PrebuiltCxxLibraryDescription
             resolver,
             pathResolver,
             cellRoots,
-            baseParams.getProjectFilesystem(),
+            projectFilesystem,
             cxxPlatform,
             versionSubdir,
             args);
@@ -529,7 +529,7 @@ public class PrebuiltCxxLibraryDescription
         .createSharedInterfaceLibrary(
             baseTarget.withAppendedFlavors(
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
-            baseParams,
+            projectFilesystem,
             resolver,
             pathResolver,
             ruleFinder,
@@ -576,7 +576,7 @@ public class PrebuiltCxxLibraryDescription
       } else if (type.get().getValue() == Type.SHARED_INTERFACE) {
         return createSharedLibraryInterface(
             baseTarget,
-            params,
+            params.getProjectFilesystem(),
             ruleResolver,
             cellRoots,
             platform.get().getValue(),

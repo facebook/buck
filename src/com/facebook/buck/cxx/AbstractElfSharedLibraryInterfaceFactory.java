@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -36,13 +36,18 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
   @Override
   public final BuildRule createSharedInterfaceLibrary(
       BuildTarget target,
-      BuildRuleParams baseParams,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       SourcePath library) {
     return ElfSharedLibraryInterface.from(
-        target, baseParams, pathResolver, ruleFinder, getObjcopy().resolve(resolver), library);
+        target,
+        projectFilesystem,
+        pathResolver,
+        ruleFinder,
+        getObjcopy().resolve(resolver),
+        library);
   }
 
   @Override

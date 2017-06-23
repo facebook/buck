@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -65,20 +66,22 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
 
   public static ElfSharedLibraryInterface from(
       BuildTarget target,
-      BuildRuleParams baseParams,
+      ProjectFilesystem projectFilesystem,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Tool objcopy,
       SourcePath input) {
     return new ElfSharedLibraryInterface(
-        baseParams
-            .withBuildTarget(target)
-            .withDeclaredDeps(
+        new BuildRuleParams(
+            target,
+            () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(objcopy.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(input))
-                    .build())
-            .withoutExtraDeps(),
+                    .build(),
+            () -> ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            projectFilesystem),
         resolver,
         objcopy,
         input);
