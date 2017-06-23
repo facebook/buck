@@ -218,7 +218,8 @@ public class CxxLibraryDescription
   }
 
   private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -237,12 +238,12 @@ public class CxxLibraryDescription
 
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            buildTarget,
+            projectFilesystem,
             ruleResolver,
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
-                params.getBuildTarget(),
+                buildTarget,
                 ruleResolver,
                 ruleFinder,
                 sourcePathResolver,
@@ -254,14 +255,13 @@ public class CxxLibraryDescription
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
       sandboxTree =
-          CxxDescriptionEnhancer.createSandboxTree(
-              params.getBuildTarget(), ruleResolver, cxxPlatform);
+          CxxDescriptionEnhancer.createSandboxTree(buildTarget, ruleResolver, cxxPlatform);
     }
 
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-        params.getProjectFilesystem(),
-        params.getBuildTarget(),
+        projectFilesystem,
+        buildTarget,
         ruleResolver,
         sourcePathResolver,
         ruleFinder,
@@ -270,7 +270,7 @@ public class CxxLibraryDescription
         getPreprocessorInputsForBuildingLibrarySources(
             ruleResolver,
             cellRoots,
-            params.getBuildTarget(),
+            buildTarget,
             args,
             cxxPlatform,
             deps,
@@ -286,22 +286,18 @@ public class CxxLibraryDescription
                     cxxPlatform),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))),
+                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f))),
         args.getPrefixHeader(),
         args.getPrecompiledHeader(),
         CxxDescriptionEnhancer.parseCxxSources(
-            params.getBuildTarget(),
-            ruleResolver,
-            ruleFinder,
-            sourcePathResolver,
-            cxxPlatform,
-            args),
+            buildTarget, ruleResolver, ruleFinder, sourcePathResolver, cxxPlatform, args),
         pic,
         sandboxTree);
   }
 
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -320,7 +316,8 @@ public class CxxLibraryDescription
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         requireObjects(
-            params,
+            buildTarget,
+            projectFilesystem,
             ruleResolver,
             pathResolver,
             ruleFinder,
@@ -340,7 +337,7 @@ public class CxxLibraryDescription
                 .map(
                     f ->
                         CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            params.getBuildTarget(), cellRoots, ruleResolver, cxxPlatform, f))
+                            buildTarget, cellRoots, ruleResolver, cxxPlatform, f))
                 .toImmutableList())
         .addAllArgs(SourcePathArg.from(objects.values()))
         .setFrameworks(frameworks)
@@ -354,7 +351,8 @@ public class CxxLibraryDescription
    * @return the {@link CxxLink} rule representing the actual shared library.
    */
   private static CxxLink createSharedLibrary(
-      BuildRuleParams params,
+      BuildTarget buildTargetMaybeWithLinkerMapMode,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -374,16 +372,16 @@ public class CxxLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
-    BuildTarget target = params.getBuildTarget();
-    Optional<LinkerMapMode> flavoredLinkerMapMode = LinkerMapMode.FLAVOR_DOMAIN.getValue(target);
-    params =
-        params.withBuildTarget(
-            LinkerMapMode.removeLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode));
+    BuildTarget buildTargetWithoutLinkerMapMode =
+        LinkerMapMode.removeLinkerMapModeFlavorInTarget(
+            buildTargetMaybeWithLinkerMapMode,
+            LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTargetMaybeWithLinkerMapMode));
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         requireObjects(
-            params,
+            buildTargetWithoutLinkerMapMode,
+            projectFilesystem,
             ruleResolver,
             pathResolver,
             ruleFinder,
@@ -398,18 +396,14 @@ public class CxxLibraryDescription
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            params
-                .withBuildTarget(
-                    LinkerMapMode.restoreLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode))
-                .getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            linkType);
+            buildTargetMaybeWithLinkerMapMode, cxxPlatform.getFlavor(), linkType);
 
     String sharedLibrarySoname =
-        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, target, cxxPlatform);
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname, buildTargetMaybeWithLinkerMapMode, cxxPlatform);
     Path sharedLibraryPath =
         CxxDescriptionEnhancer.getSharedLibraryPath(
-            params.getProjectFilesystem(), sharedTarget, sharedLibrarySoname);
+            projectFilesystem, sharedTarget, sharedLibrarySoname);
     ImmutableList.Builder<StringWithMacros> extraLdFlagsBuilder = ImmutableList.builder();
     extraLdFlagsBuilder.addAll(linkerFlags);
     ImmutableList<StringWithMacros> extraLdFlags = extraLdFlagsBuilder.build();
@@ -417,7 +411,7 @@ public class CxxLibraryDescription
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         ruleResolver,
         pathResolver,
         ruleFinder,
@@ -438,7 +432,11 @@ public class CxxLibraryDescription
                     .map(
                         f ->
                             CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                                target, cellRoots, ruleResolver, cxxPlatform, f))
+                                buildTargetMaybeWithLinkerMapMode,
+                                cellRoots,
+                                ruleResolver,
+                                cxxPlatform,
+                                f))
                     .toImmutableList())
             .addAllArgs(SourcePathArg.from(objects.values()))
             .setFrameworks(frameworks)
@@ -525,7 +523,8 @@ public class CxxLibraryDescription
    * @return build rule that builds the static library version of this C/C++ library.
    */
   private static BuildRule createStaticLibraryBuildRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
@@ -541,7 +540,8 @@ public class CxxLibraryDescription
     // Create rules for compiling the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         requireObjects(
-            params,
+            buildTarget,
+            projectFilesystem,
             resolver,
             sourcePathResolver,
             ruleFinder,
@@ -556,7 +556,7 @@ public class CxxLibraryDescription
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            params.getBuildTarget(), cxxPlatform.getFlavor(), pic);
+            buildTarget, cxxPlatform.getFlavor(), pic);
 
     if (objects.isEmpty()) {
       return new NoopBuildRuleWithDeclaredAndExtraDeps(
@@ -565,19 +565,19 @@ public class CxxLibraryDescription
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               ImmutableSortedSet.of(),
-              params.getProjectFilesystem()));
+              projectFilesystem));
     }
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
+            projectFilesystem,
+            buildTarget,
             cxxPlatform.getFlavor(),
             pic,
             cxxPlatform.getStaticLibraryExtension());
     return Archive.from(
         staticTarget,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
@@ -587,7 +587,8 @@ public class CxxLibraryDescription
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */
   private static CxxLink createSharedLibraryBuildRule(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
@@ -613,7 +614,8 @@ public class CxxLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     return createSharedLibrary(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
         sourcePathResolver,
         ruleFinder,
@@ -704,6 +706,7 @@ public class CxxLibraryDescription
     BuildRuleParams params = metadataRuleParams.copyInvalidatingDeps();
 
     BuildTarget buildTarget = params.getBuildTarget();
+    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
@@ -718,11 +721,10 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
-      BuildRuleParams paramsWithoutFlavor =
-          params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
       ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
           requireObjects(
-              paramsWithoutFlavor,
+              buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
+              projectFilesystem,
               resolver,
               sourcePathResolver,
               ruleFinder,
@@ -734,7 +736,7 @@ public class CxxLibraryDescription
               cxxDeps.get(resolver, cxxPlatform),
               transitiveCxxPreprocessorInputFunction);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params.getBuildTarget(), params.getProjectFilesystem(), objects.keySet());
+          params.getBuildTarget(), projectFilesystem, objects.keySet());
     } else if (params
         .getBuildTarget()
         .getFlavors()
@@ -743,7 +745,7 @@ public class CxxLibraryDescription
           platform.isPresent()
               ? params.getBuildTarget()
               : params.getBuildTarget().withAppendedFlavors(defaultCxxPlatform.getFlavor()),
-          params.getProjectFilesystem(),
+          projectFilesystem,
           resolver);
     } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(
         params.getBuildTarget().getFlavors())) {
@@ -764,7 +766,7 @@ public class CxxLibraryDescription
               HEADER_MODE.getValue(params.getBuildTarget());
           if (mode.isPresent()) {
             return createExportedHeaderSymlinkTreeBuildRule(
-                untypedBuildTarget, params.getProjectFilesystem(), resolver, mode.get(), args);
+                untypedBuildTarget, projectFilesystem, resolver, mode.get(), args);
           }
           break;
           // $CASES-OMITTED$
@@ -780,13 +782,14 @@ public class CxxLibraryDescription
       switch (type.get().getValue()) {
         case HEADERS:
           return createHeaderSymlinkTreeBuildRule(
-              untypedBuildTarget, params.getProjectFilesystem(), resolver, platform.get(), args);
+              untypedBuildTarget, projectFilesystem, resolver, platform.get(), args);
         case EXPORTED_HEADERS:
           return createExportedPlatformHeaderSymlinkTreeBuildRule(
-              untypedBuildTarget, params.getProjectFilesystem(), resolver, platform.get(), args);
+              untypedBuildTarget, projectFilesystem, resolver, platform.get(), args);
         case SHARED:
           return createSharedLibraryBuildRule(
-              untypedParams,
+              untypedBuildTarget,
+              projectFilesystem,
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -802,7 +805,8 @@ public class CxxLibraryDescription
           return createSharedLibraryInterface(untypedParams, resolver, platform.get());
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
-              untypedParams,
+              untypedBuildTarget,
+              projectFilesystem,
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -816,7 +820,8 @@ public class CxxLibraryDescription
               transitiveCxxPreprocessorInputFunction);
         case STATIC:
           return createStaticLibraryBuildRule(
-              untypedParams,
+              untypedBuildTarget,
+              projectFilesystem,
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -827,7 +832,8 @@ public class CxxLibraryDescription
               transitiveCxxPreprocessorInputFunction);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
-              untypedParams,
+              untypedBuildTarget,
+              projectFilesystem,
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -877,7 +883,8 @@ public class CxxLibraryDescription
         cxxPlatform -> {
           try {
             return getSharedLibraryNativeLinkTargetInput(
-                params,
+                buildTarget,
+                projectFilesystem,
                 resolver,
                 pathResolver,
                 ruleFinder,

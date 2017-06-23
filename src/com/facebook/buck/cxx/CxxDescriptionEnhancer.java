@@ -824,12 +824,14 @@ public class CxxDescriptionEnhancer {
     //        params.getProjectFilesystem());
 
     BuildTarget target = params.getBuildTarget();
-    if (flavoredLinkerMapMode.isPresent()) {
-      target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
-    }
+    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
     Path linkOutput =
         getBinaryOutputPath(
-            target, params.getProjectFilesystem(), cxxPlatform.getBinaryExtension());
+            flavoredLinkerMapMode.isPresent()
+                ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
+                : target,
+            projectFilesystem,
+            cxxPlatform.getBinaryExtension());
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -839,8 +841,8 @@ public class CxxDescriptionEnhancer {
         xcodePrivateHeadersSymlinks.orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled());
     HeaderSymlinkTree headerSymlinkTree =
         requireHeaderSymlinkTree(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            target,
+            projectFilesystem,
             resolver,
             cxxPlatform,
             headers,
@@ -848,11 +850,11 @@ public class CxxDescriptionEnhancer {
             shouldCreatePrivateHeadersSymlinks);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree = createSandboxTree(params.getBuildTarget(), resolver, cxxPlatform);
+      sandboxTree = createSandboxTree(target, resolver, cxxPlatform);
     }
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         collectCxxPreprocessorInput(
-            params.getBuildTarget(),
+            target,
             cxxPlatform,
             deps,
             ImmutableListMultimap.copyOf(
@@ -893,8 +895,8 @@ public class CxxDescriptionEnhancer {
     // resolver and get the `SourcePath`s representing the generated object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
+            projectFilesystem,
+            target,
             resolver,
             sourcePathResolver,
             ruleFinder,
@@ -926,8 +928,8 @@ public class CxxDescriptionEnhancer {
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
           requireSharedLibrarySymlinkTree(
-              params.getBuildTarget(),
-              params.getProjectFilesystem(),
+              target,
+              projectFilesystem,
               resolver,
               ruleFinder,
               cxxPlatform,
@@ -937,7 +939,7 @@ public class CxxDescriptionEnhancer {
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
 
-      Path absLinkOut = params.getBuildTarget().getCellPath().resolve(linkOutput);
+      Path absLinkOut = target.getCellPath().resolve(linkOutput);
 
       argsBuilder.addAll(
           StringArg.from(
@@ -966,12 +968,11 @@ public class CxxDescriptionEnhancer {
             .collect(MoreCollectors.toImmutableList());
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
-    BuildTarget linkRuleTarget =
-        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode);
+    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
 
     CxxLink cxxLink =
         createCxxLinkRule(
-            params.getProjectFilesystem(),
+            projectFilesystem,
             resolver,
             cxxBuckConfig,
             cxxPlatform,
