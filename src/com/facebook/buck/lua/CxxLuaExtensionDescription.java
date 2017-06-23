@@ -235,7 +235,7 @@ public class CxxLuaExtensionDescription
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        params.getProjectFilesystem(),
         ruleResolver,
         pathResolver,
         ruleFinder,

@@ -971,7 +971,7 @@ public class CxxDescriptionEnhancer {
 
     CxxLink cxxLink =
         createCxxLinkRule(
-            params,
+            params.getProjectFilesystem(),
             resolver,
             cxxBuckConfig,
             cxxPlatform,
@@ -1021,7 +1021,7 @@ public class CxxDescriptionEnhancer {
   }
 
   private static CxxLink createCxxLinkRule(
-      BuildRuleParams params,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -1047,7 +1047,7 @@ public class CxxDescriptionEnhancer {
                 CxxLinkableEnhancer.createCxxLinkableBuildRule(
                     cxxBuckConfig,
                     cxxPlatform,
-                    params,
+                    projectFilesystem,
                     resolver,
                     sourcePathResolver,
                     ruleFinder,

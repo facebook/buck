@@ -245,7 +245,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 CxxLinkableEnhancer.createCxxLinkableBuildRule(
                     getCxxBuckConfig(),
                     getCxxPlatform(),
-                    getBaseParams(),
+                    getBaseParams().getProjectFilesystem(),
                     getRuleResolver(),
                     getPathResolver(),
                     getRuleFinder(),

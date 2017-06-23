@@ -198,13 +198,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         switch (type.get().getValue()) {
           case SHARED:
             return createSharedLibraryBuildRule(
-                typeParams,
-                resolver,
-                target,
-                swiftPlatform.get(),
-                cxxPlatform,
-                args.getSoname(),
-                flavoredLinkerMapMode);
+                typeParams, resolver, target, swiftPlatform.get(), cxxPlatform, args.getSoname());
           case STATIC:
           case MACH_O_BUNDLE:
             // TODO(tho@uber.com) create build rule for other types.
@@ -290,8 +284,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildTarget buildTarget,
       SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
-      Optional<String> soname,
-      Optional<LinkerMapMode> flavoredLinkerMapMode)
+      Optional<String> soname)
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -323,9 +316,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxBuckConfig,
             cxxPlatform,
-            params.withBuildTarget(
-                LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
-                    params.getBuildTarget(), flavoredLinkerMapMode)),
+            params.getProjectFilesystem(),
             resolver,
             sourcePathResolver,
             ruleFinder,

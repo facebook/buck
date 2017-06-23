@@ -417,8 +417,7 @@ public class CxxLibraryDescription
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params.withBuildTarget(
-            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode)),
+        params.getProjectFilesystem(),
         ruleResolver,
         pathResolver,
         ruleFinder,

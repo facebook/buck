@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
@@ -120,7 +121,8 @@ public class HaskellGhciDescription
   }
 
   private synchronized BuildRule requireOmnibusSharedObject(
-      BuildRuleParams params,
+      BuildTarget baseTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       ImmutableList<NativeLinkable> sortedNativeLinkables)
@@ -130,12 +132,12 @@ public class HaskellGhciDescription
         BuildTarget.builder()
             .setUnflavoredBuildTarget(
                 UnflavoredBuildTarget.of(
-                    params.getBuildTarget().getCellPath(),
+                    baseTarget.getCellPath(),
                     Optional.empty(),
-                    params.getBuildTarget().getBaseName(),
-                    params.getBuildTarget().getShortName() + ".omnibus-shared-object"))
+                    baseTarget.getBaseName(),
+                    baseTarget.getShortName() + ".omnibus-shared-object"))
             .build()
-            .withAppendedFlavors(params.getBuildTarget().getFlavors());
+            .withAppendedFlavors(baseTarget.getFlavors());
 
     return resolver.computeIfAbsentThrowing(
         ruleTarget,
@@ -168,11 +170,11 @@ public class HaskellGhciDescription
           return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
               cxxBuckConfig,
               cxxPlatform,
-              params,
+              projectFilesystem,
               resolver,
               new SourcePathRuleFinder(resolver),
               ruleTarget,
-              BuildTargets.getGenPath(params.getProjectFilesystem(), ruleTarget, "%s")
+              BuildTargets.getGenPath(projectFilesystem, ruleTarget, "%s")
                   .resolve("libghci_dependencies.so"),
               Optional.of("libghci_dependencies.so"),
               nli.getArgs());
@@ -260,7 +262,12 @@ public class HaskellGhciDescription
         getSortedNativeLinkables(cxxPlatform, nativeLinkables.build());
 
     BuildRule omnibusSharedObject =
-        requireOmnibusSharedObject(params, resolver, cxxPlatform, sortedNativeLinkables);
+        requireOmnibusSharedObject(
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
+            resolver,
+            cxxPlatform,
+            sortedNativeLinkables);
 
     ImmutableSortedMap.Builder<String, SourcePath> solibs = ImmutableSortedMap.naturalOrder();
     for (NativeLinkable nativeLinkable : sortedNativeLinkables) {

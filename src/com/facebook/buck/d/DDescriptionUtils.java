@@ -135,7 +135,7 @@ abstract class DDescriptionUtils {
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        params.getProjectFilesystem(),
         buildRuleResolver,
         sourcePathResolver,
         ruleFinder,

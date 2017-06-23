@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -58,11 +59,10 @@ public class CxxLinkableEnhancer {
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
 
-  /** @param params base params used to build the rule. Target and deps will be overridden. */
   public static CxxLink createCxxLinkableBuildRule(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      BuildRuleParams params,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
@@ -116,7 +116,12 @@ public class CxxLinkableEnhancer {
         // Construct our link build rule params.  The important part here is combining the build
         // rules that construct our object file inputs and also the deps that build our
         // dependencies.
-        params.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
+        new BuildRuleParams(
+            target,
+            declaredDeps,
+            () -> ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            projectFilesystem),
         linker,
         output,
         allArgs,
@@ -130,14 +135,13 @@ public class CxxLinkableEnhancer {
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects and
    * a dependency tree of {@link NativeLinkable} dependencies.
    *
-   * @param params base params used to build the rule. Target and deps will be overridden.
    * @param nativeLinkableDeps library dependencies that the linkable links in
    * @param immediateLinkableInput framework and libraries of the linkable itself
    */
   public static CxxLink createCxxLinkableBuildRule(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      BuildRuleParams params,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -228,7 +232,7 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        projectFilesystem,
         ruleResolver,
         ruleFinder,
         target,
@@ -347,7 +351,7 @@ public class CxxLinkableEnhancer {
   public static CxxLink createCxxLinkableSharedBuildRule(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      BuildRuleParams params,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
@@ -365,7 +369,7 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        projectFilesystem,
         ruleResolver,
         ruleFinder,
         target,

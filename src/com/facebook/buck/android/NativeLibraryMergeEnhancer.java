@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.cxx.elf.ElfSymbolTable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -194,7 +195,8 @@ class NativeLibraryMergeEnhancer {
             ruleResolver,
             pathResolver,
             ruleFinder,
-            buildRuleParams,
+            buildRuleParams.getBuildTarget(),
+            buildRuleParams.getProjectFilesystem(),
             glueLinkable,
             nativeLibraryMergeLocalizedSymbols.map(ImmutableSortedSet::copyOf),
             orderedConstituents);
@@ -423,7 +425,8 @@ class NativeLibraryMergeEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      BuildRuleParams buildRuleParams,
+      BuildTarget baseBuildTarget,
+      ProjectFilesystem projectFilesystem,
       Optional<NativeLinkable> glueLinkable,
       Optional<ImmutableSortedSet<String>> symbolsToLocalize,
       Iterable<MergedNativeLibraryConstituents> orderedConstituents) {
@@ -445,7 +448,8 @@ class NativeLibraryMergeEnhancer {
               ruleResolver,
               pathResolver,
               ruleFinder,
-              buildRuleParams,
+              baseBuildTarget,
+              projectFilesystem,
               constituents,
               orderedDeps,
               orderedExportedDeps,
@@ -557,7 +561,7 @@ class NativeLibraryMergeEnhancer {
     private final BuildRuleResolver ruleResolver;
     private final SourcePathResolver pathResolver;
     private final SourcePathRuleFinder ruleFinder;
-    private final BuildRuleParams baseBuildRuleParams;
+    private final ProjectFilesystem projectFilesystem;
     private final MergedNativeLibraryConstituents constituents;
     private final Optional<NativeLinkable> glueLinkable;
     private final Optional<ImmutableSortedSet<String>> symbolsToLocalize;
@@ -571,7 +575,8 @@ class NativeLibraryMergeEnhancer {
         BuildRuleResolver ruleResolver,
         SourcePathResolver pathResolver,
         SourcePathRuleFinder ruleFinder,
-        BuildRuleParams baseBuildRuleParams,
+        BuildTarget baseBuildTarget,
+        ProjectFilesystem projectFilesystem,
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
         List<MergedLibNativeLinkable> orderedExportedDeps,
@@ -581,7 +586,7 @@ class NativeLibraryMergeEnhancer {
       this.ruleResolver = ruleResolver;
       this.pathResolver = pathResolver;
       this.ruleFinder = ruleFinder;
-      this.baseBuildRuleParams = baseBuildRuleParams;
+      this.projectFilesystem = projectFilesystem;
       this.constituents = constituents;
       this.glueLinkable = glueLinkable;
       this.symbolsToLocalize = symbolsToLocalize;
@@ -606,7 +611,7 @@ class NativeLibraryMergeEnhancer {
 
       buildTarget =
           constructBuildTarget(
-              baseBuildRuleParams,
+              baseBuildTarget,
               constituents,
               orderedDeps,
               orderedExportedDeps,
@@ -655,7 +660,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     private static BuildTarget constructBuildTarget(
-        BuildRuleParams baseBuildRuleParams,
+        BuildTarget baseBuildTarget,
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
         List<MergedLibNativeLinkable> orderedExportedDeps,
@@ -671,7 +676,6 @@ class NativeLibraryMergeEnhancer {
         // If we're merging, construct a base target in the app's directory.
         // This ensure that all apps in this directory will
         // have a chance to share the target.
-        BuildTarget baseBuildTarget = baseBuildRuleParams.getBuildTarget();
         UnflavoredBuildTarget baseUnflavored = baseBuildTarget.getUnflavoredBuildTarget();
         UnflavoredBuildTarget unflavored =
             UnflavoredBuildTarget.builder()
@@ -883,17 +887,14 @@ class NativeLibraryMergeEnhancer {
             CxxLinkableEnhancer.createCxxLinkableBuildRule(
                 cxxBuckConfig,
                 cxxPlatform,
-                baseBuildRuleParams,
+                projectFilesystem,
                 ruleResolver,
                 pathResolver,
                 ruleFinder,
                 target,
                 Linker.LinkType.SHARED,
                 Optional.of(soname),
-                BuildTargets.getGenPath(
-                    baseBuildRuleParams.getProjectFilesystem(),
-                    target,
-                    "%s/" + getSoname(cxxPlatform)),
+                BuildTargets.getGenPath(projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
                 // Android Binaries will use share deps by default.
                 Linker.LinkableDepType.SHARED,
                 /* thinLto */ false,

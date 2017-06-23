@@ -56,7 +56,6 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
@@ -411,16 +410,7 @@ public class PrebuiltCxxLibraryDescription
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params
-            .copyAppendingExtraDeps(
-                getBuildRules(
-                    params.getBuildTarget(),
-                    cellRoots,
-                    ruleResolver,
-                    Optionals.toStream(args.getLibDir()).collect(MoreCollectors.toImmutableList())))
-            .copyAppendingExtraDeps(
-                getBuildRules(
-                    params.getBuildTarget(), cellRoots, ruleResolver, args.getIncludeDirs())),
+        params.getProjectFilesystem(),
         ruleResolver,
         pathResolver,
         ruleFinder,
@@ -1029,24 +1019,6 @@ public class PrebuiltCxxLibraryDescription
       addDepsFromParam(
           buildTarget, cellRoots, include, extraDepsBuilder, targetGraphOnlyDepsBuilder);
     }
-  }
-
-  private ImmutableList<BuildRule> getBuildRules(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver ruleResolver,
-      Iterable<String> paramValues) {
-    ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
-    MacroHandler macroHandler = getMacroHandler(Optional.empty());
-    for (String p : paramValues) {
-      try {
-
-        builder.addAll(macroHandler.extractBuildTimeDeps(target, cellNames, ruleResolver, p));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s : %s in \"%s\"", target, e.getMessage(), p);
-      }
-    }
-    return builder.build();
   }
 
   private void addDepsFromParam(

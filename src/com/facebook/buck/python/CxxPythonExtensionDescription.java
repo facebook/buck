@@ -296,7 +296,7 @@ public class CxxPythonExtensionDescription
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        params.getProjectFilesystem(),
         ruleResolver,
         pathResolver,
         ruleFinder,
