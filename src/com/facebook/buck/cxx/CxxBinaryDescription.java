@@ -129,62 +129,59 @@ public class CxxBinaryDescription
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    return createBuildRule(targetGraph, params, resolver, cellRoots, args, ImmutableSortedSet.of());
+    return createBuildRule(
+        targetGraph,
+        params.getBuildTarget(),
+        params.getProjectFilesystem(),
+        params.getExtraDeps(),
+        resolver,
+        cellRoots,
+        args,
+        ImmutableSortedSet.of());
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams metadataRuleParams,
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      Supplier<? extends SortedSet<BuildRule>> extraDepsFromOriginalParams,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
-      ImmutableSortedSet<BuildTarget> extraDeps)
+      ImmutableSortedSet<BuildTarget> extraCxxDeps)
       throws NoSuchBuildTargetException {
-
-    // Create a copy of the metadata-rule params with the deps removed to pass around into library
-    // code.  This should prevent this code from using the over-specified deps when constructing
-    // build rules.
-    BuildRuleParams params = metadataRuleParams.copyInvalidatingDeps();
 
     // We explicitly remove some flavors below from params to make sure rule
     // has the same output regardless if we will strip or not.
-    Optional<StripStyle> flavoredStripStyle =
-        StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    Optional<LinkerMapMode> flavoredLinkerMapMode =
-        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params =
-        params.withBuildTarget(
-            CxxStrip.removeStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
-    params =
-        params.withBuildTarget(
-            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
-                params.getBuildTarget(), flavoredLinkerMapMode));
+    Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(target);
+    Optional<LinkerMapMode> flavoredLinkerMapMode = LinkerMapMode.FLAVOR_DOMAIN.getValue(target);
+    target = CxxStrip.removeStripStyleFlavorInTarget(target, flavoredStripStyle);
+    target = LinkerMapMode.removeLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode);
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
-    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args.getDefaultPlatform());
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors());
+    CxxPlatform cxxPlatform = getCxxPlatform(target, args.getDefaultPlatform());
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       flavors =
           ImmutableSet.copyOf(
               Sets.difference(
                   flavors, ImmutableSet.of(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)));
-      BuildTarget target =
-          BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
-              .addAllFlavors(flavors)
-              .build();
       return createHeaderSymlinkTreeBuildRule(
-          target, params.getProjectFilesystem(), resolver, cxxPlatform, args);
+          BuildTarget.builder(target.getUnflavoredBuildTarget()).addAllFlavors(flavors).build(),
+          projectFilesystem,
+          resolver,
+          cxxPlatform,
+          args);
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      BuildRuleParams paramsWithoutFlavor =
-          params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
               targetGraph,
-              paramsWithoutFlavor,
+              target.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
+              projectFilesystem,
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -194,24 +191,22 @@ public class CxxBinaryDescription
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params.getBuildTarget(),
-          params.getProjectFilesystem(),
-          cxxLinkAndCompileRules.compileRules);
+          target, projectFilesystem, cxxLinkAndCompileRules.compileRules);
     }
 
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           cxxPlatforms.getValue(flavors).isPresent()
-              ? params.getBuildTarget()
-              : params.getBuildTarget().withAppendedFlavors(defaultCxxPlatform.getFlavor()),
-          params.getProjectFilesystem(),
+              ? target
+              : target.withAppendedFlavors(defaultCxxPlatform.getFlavor()),
+          projectFilesystem,
           resolver);
     }
 
     if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return CxxInferEnhancer.requireInferRule(
-          params.getBuildTarget(),
-          params.getProjectFilesystem(),
+          target,
+          projectFilesystem,
           resolver,
           cellRoots,
           cxxBuckConfig,
@@ -221,19 +216,21 @@ public class CxxBinaryDescription
     }
 
     if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
-      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(resolver, args, cxxPlatform, params);
+      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
+          resolver, args, cxxPlatform, target, projectFilesystem);
     }
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             targetGraph,
-            params,
+            target,
+            projectFilesystem,
             resolver,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             args,
-            extraDeps,
+            extraCxxDeps,
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
@@ -248,21 +245,21 @@ public class CxxBinaryDescription
     //     By using another BuildRule, we can keep the original target graph dependency tree while
     //     preventing it from affecting link parallelism.
 
-    params =
-        params.withBuildTarget(
-            CxxStrip.restoreStripStyleFlavorInTarget(params.getBuildTarget(), flavoredStripStyle));
-    params =
-        params.withBuildTarget(
-            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
-                params.getBuildTarget(), flavoredLinkerMapMode));
+    target = CxxStrip.restoreStripStyleFlavorInTarget(target, flavoredStripStyle);
+    target = LinkerMapMode.restoreLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    Supplier<? extends SortedSet<BuildRule>> declaredDeps = () -> cxxLinkAndCompileRules.deps;
     CxxBinary cxxBinary =
         new CxxBinary(
-            params
-                .withDeclaredDeps(declaredDeps)
-                .withExtraDeps(metadataRuleParams.getExtraDeps())
-                .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+            new BuildRuleParams(
+                target,
+                () -> cxxLinkAndCompileRules.deps,
+                () ->
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(extraDepsFromOriginalParams.get())
+                        .addAll(cxxLinkAndCompileRules.executable.getDeps(ruleFinder))
+                        .build(),
+                ImmutableSortedSet.of(),
+                projectFilesystem),
             resolver,
             ruleFinder,
             cxxPlatform,
@@ -270,7 +267,7 @@ public class CxxBinaryDescription
             cxxLinkAndCompileRules.executable,
             args.getFrameworks(),
             args.getTests(),
-            params.getBuildTarget().withoutFlavors(cxxPlatforms.getFlavors()));
+            target.withoutFlavors(cxxPlatforms.getFlavors()));
     resolver.addToIndex(cxxBinary);
     return cxxBinary;
   }

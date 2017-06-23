@@ -337,7 +337,11 @@ public class CxxPythonExtensionDescription
         cxxPlatforms.getFlavorAndValue(params.getBuildTarget());
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          ruleResolver, args, platform.get().getValue(), params);
+          ruleResolver,
+          args,
+          platform.get().getValue(),
+          params.getBuildTarget(),
+          params.getProjectFilesystem());
     }
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.

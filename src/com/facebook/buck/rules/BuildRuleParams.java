@@ -135,22 +135,6 @@ public class BuildRuleParams {
     return withExtraDeps(ImmutableSortedSet.of());
   }
 
-  /**
-   * @return a copy of these {@link BuildRuleParams} with the deps removed to prevent using them to
-   *     as the deps in constructed {@link BuildRule}s.
-   */
-  public BuildRuleParams copyInvalidatingDeps() {
-    Supplier<SortedSet<BuildRule>> throwingDeps =
-        () -> {
-          throw new IllegalStateException(
-              String.format(
-                  "%s: Access to target-node level `BuildRuleParam` deps. "
-                      + "Please compose application-specific deps from the constructor arg instead.",
-                  getBuildTarget()));
-        };
-    return withDeclaredDeps(throwingDeps).withExtraDeps(throwingDeps);
-  }
-
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }

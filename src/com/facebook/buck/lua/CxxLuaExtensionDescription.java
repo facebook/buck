@@ -225,7 +225,7 @@ public class CxxLuaExtensionDescription
       throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          ruleResolver, args, cxxPlatform, params);
+          ruleResolver, args, cxxPlatform, params.getBuildTarget(), params.getProjectFilesystem());
     }
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);

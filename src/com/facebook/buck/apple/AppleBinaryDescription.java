@@ -417,7 +417,14 @@ public class AppleBinaryDescription
           pathResolver, delegateArg, args, params.getBuildTarget());
       return resolver.addToIndex(
           delegate.createBuildRule(
-              targetGraph, params, resolver, cellRoots, delegateArg.build(), extraCxxDeps));
+              targetGraph,
+              params.getBuildTarget(),
+              params.getProjectFilesystem(),
+              params.getExtraDeps(),
+              resolver,
+              cellRoots,
+              delegateArg.build(),
+              extraCxxDeps));
     }
   }
 

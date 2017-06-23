@@ -165,7 +165,8 @@ public class HalideLibraryDescription
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
-            params,
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
             ruleResolver,
             cellRoots,
             cxxBuckConfig,
@@ -322,7 +323,7 @@ public class HalideLibraryDescription
     } else if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          resolver, args, hostCxxPlatform, params);
+          resolver, args, hostCxxPlatform, params.getBuildTarget(), params.getProjectFilesystem());
     } else if (flavors.contains(HALIDE_COMPILER_FLAVOR)) {
       // We always want to build the halide "compiler" for the host platform, so
       // we use the host flavor here, regardless of the flavors on the build

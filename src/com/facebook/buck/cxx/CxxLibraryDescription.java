@@ -702,23 +702,15 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
 
-    // Create a copy of the metadata-rule params with the deps removed to pass around into library
-    // code.  This should prevent this code from using the over-specified deps when constructing
-    // build rules.
-    BuildRuleParams params = metadataRuleParams.copyInvalidatingDeps();
-
-    BuildTarget buildTarget = params.getBuildTarget();
-    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
+    BuildTarget buildTarget = metadataRuleParams.getBuildTarget();
+    ProjectFilesystem projectFilesystem = metadataRuleParams.getProjectFilesystem();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
     CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraDeps).build();
 
-    if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
       CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -738,22 +730,20 @@ public class CxxLibraryDescription
               cxxDeps.get(resolver, cxxPlatform),
               transitiveCxxPreprocessorInputFunction);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params.getBuildTarget(), projectFilesystem, objects.keySet());
-    } else if (params
-        .getBuildTarget()
+          buildTarget, projectFilesystem, objects.keySet());
+    } else if (buildTarget
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           platform.isPresent()
-              ? params.getBuildTarget()
-              : params.getBuildTarget().withAppendedFlavors(defaultCxxPlatform.getFlavor()),
+              ? buildTarget
+              : buildTarget.withAppendedFlavors(defaultCxxPlatform.getFlavor()),
           projectFilesystem,
           resolver);
-    } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(
-        params.getBuildTarget().getFlavors())) {
+    } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
       return CxxInferEnhancer.requireInferRule(
           buildTarget,
-          params.getProjectFilesystem(),
+          projectFilesystem,
           resolver,
           cellRoots,
           cxxBuckConfig,
@@ -764,8 +754,7 @@ public class CxxLibraryDescription
       BuildTarget untypedBuildTarget = getUntypedBuildTarget(buildTarget);
       switch (type.get().getValue()) {
         case EXPORTED_HEADERS:
-          Optional<CxxPreprocessables.HeaderMode> mode =
-              HEADER_MODE.getValue(params.getBuildTarget());
+          Optional<CxxPreprocessables.HeaderMode> mode = HEADER_MODE.getValue(buildTarget);
           if (mode.isPresent()) {
             return createExportedHeaderSymlinkTreeBuildRule(
                 untypedBuildTarget, projectFilesystem, resolver, mode.get(), args);
@@ -780,7 +769,6 @@ public class CxxLibraryDescription
       // rule builder methods.
 
       BuildTarget untypedBuildTarget = getUntypedBuildTarget(buildTarget);
-      BuildRuleParams untypedParams = params.withBuildTarget(untypedBuildTarget);
       switch (type.get().getValue()) {
         case HEADERS:
           return createHeaderSymlinkTreeBuildRule(
@@ -847,7 +835,7 @@ public class CxxLibraryDescription
               transitiveCxxPreprocessorInputFunction);
         case SANDBOX_TREE:
           return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-              resolver, args, platform.get(), untypedParams);
+              resolver, args, platform.get(), untypedBuildTarget, projectFilesystem);
       }
       throw new RuntimeException("unhandled library build type");
     }
@@ -880,7 +868,7 @@ public class CxxLibraryDescription
               .map(
                   f ->
                       CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          params.getBuildTarget(), cellRoots, resolver, input, f))
+                          buildTarget, cellRoots, resolver, input, f))
               .toImmutableList();
         },
         cxxPlatform -> {
@@ -919,8 +907,7 @@ public class CxxLibraryDescription
         args.getSoname(),
         args.getTests(),
         args.getCanBeAsset().orElse(false),
-        !params
-            .getBuildTarget()
+        !buildTarget
             .getFlavors()
             .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
         args.isReexportAllHeaderDependencies());

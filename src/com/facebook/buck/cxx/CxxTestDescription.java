@@ -163,12 +163,11 @@ public class CxxTestDescription
         .getBuildTarget()
         .getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      BuildRuleParams paramsWithoutFlavor =
-          params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
               targetGraph,
-              paramsWithoutFlavor,
+              params.getBuildTarget().withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
+              params.getProjectFilesystem(),
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -196,14 +195,16 @@ public class CxxTestDescription
     }
 
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
-      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(resolver, args, cxxPlatform, params);
+      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
+          resolver, args, cxxPlatform, params.getBuildTarget(), params.getProjectFilesystem());
     }
 
     // Generate the link rule that builds the test binary.
     final CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             targetGraph,
-            params,
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
             resolver,
             cellRoots,
             cxxBuckConfig,
