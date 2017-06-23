@@ -991,12 +991,18 @@ public class CxxDescriptionEnhancer {
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.empty();
     if (stripStyle.isPresent()) {
-      BuildRuleParams cxxParams = params;
+      BuildTarget cxxTarget = target;
       if (flavoredLinkerMapMode.isPresent()) {
-        cxxParams = params.withAppendedFlavor(flavoredLinkerMapMode.get().getFlavor());
+        cxxTarget = cxxTarget.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
       }
       CxxStrip stripRule =
-          createCxxStripRule(cxxParams, resolver, stripStyle.get(), cxxLink, cxxPlatform);
+          createCxxStripRule(
+              cxxTarget,
+              params.getProjectFilesystem(),
+              resolver,
+              stripStyle.get(),
+              cxxLink,
+              cxxPlatform);
       cxxStrip = Optional.of(stripRule);
       binaryRuleForExecutable = stripRule;
     } else {
@@ -1065,32 +1071,30 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxStrip createCxxStripRule(
-      BuildRuleParams params,
+      BuildTarget baseBuildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       StripStyle stripStyle,
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform) {
-    BuildRuleParams stripRuleParams =
-        params
-            .withBuildTarget(
-                params
-                    .getBuildTarget()
-                    .withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()))
-            .withDeclaredDeps(ImmutableSortedSet.of(unstrippedBinaryRule))
-            .withoutExtraDeps();
+    BuildTarget stripBuildTarget =
+        baseBuildTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor());
     return (CxxStrip)
         resolver.computeIfAbsent(
-            stripRuleParams.getBuildTarget(),
+            stripBuildTarget,
             () ->
                 new CxxStrip(
-                    stripRuleParams,
+                    stripBuildTarget,
+                    projectFilesystem,
+                    Preconditions.checkNotNull(
+                        unstrippedBinaryRule.getSourcePathToOutput(),
+                        "Cannot strip BuildRule with no output (%s)",
+                        unstrippedBinaryRule.getBuildTarget()),
+                    new SourcePathRuleFinder(resolver),
                     stripStyle,
-                    Preconditions.checkNotNull(unstrippedBinaryRule.getSourcePathToOutput()),
                     cxxPlatform.getStrip(),
                     CxxDescriptionEnhancer.getBinaryOutputPath(
-                        stripRuleParams.getBuildTarget(),
-                        params.getProjectFilesystem(),
-                        cxxPlatform.getBinaryExtension())));
+                        stripBuildTarget, projectFilesystem, cxxPlatform.getBinaryExtension())));
   }
 
   public static BuildRule createUberCompilationDatabase(

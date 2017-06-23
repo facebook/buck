@@ -320,7 +320,8 @@ public class AppleLibraryDescription
 
     BuildRule strippedBinaryRule =
         CxxDescriptionEnhancer.createCxxStripRule(
-            params,
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
             resolver,
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
             unstrippedBinaryRule,
