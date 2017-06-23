@@ -77,6 +77,9 @@ public class WatchmanWatcher {
    */
   private static final int OVERFLOW_THRESHOLD = 10000;
 
+  /** Attach changed files to the perf trace, if there aren't too many. */
+  private static final int TRACE_CHANGES_THRESHOLD = 10;
+
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final EventBus fileChangeEventBus;
@@ -214,10 +217,17 @@ public class WatchmanWatcher {
       WatchmanQuery query = queries.get(cellPath);
       WatchmanCursor cursor = cursors.get(cellPath);
       if (query != null && cursor != null) {
-        try (SimplePerfEvent.Scope ignored =
+        try (SimplePerfEvent.Scope perfEvent =
             SimplePerfEvent.scope(
                 buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
-          postEvents(buckEventBus, freshInstanceAction, cellPath, query, cursor, filesHaveChanged);
+          postEvents(
+              buckEventBus,
+              freshInstanceAction,
+              cellPath,
+              query,
+              cursor,
+              filesHaveChanged,
+              perfEvent);
         }
       }
     }
@@ -233,7 +243,8 @@ public class WatchmanWatcher {
       Path cellPath,
       WatchmanQuery query,
       WatchmanCursor cursor,
-      AtomicBoolean filesHaveChanged)
+      AtomicBoolean filesHaveChanged,
+      SimplePerfEvent.Scope perfEvent)
       throws IOException, InterruptedException {
     try {
       Optional<? extends Map<String, ? extends Object>> queryResponse;
@@ -307,6 +318,11 @@ public class WatchmanWatcher {
             postWatchEvent(WatchmanOverflowEvent.of(cellPath, message));
             filesHaveChanged.set(true);
             return;
+          }
+          if (files.size() < TRACE_CHANGES_THRESHOLD) {
+            perfEvent.appendFinishedInfo("files", files);
+          } else {
+            perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
           }
 
           for (Map<String, Object> file : files) {
