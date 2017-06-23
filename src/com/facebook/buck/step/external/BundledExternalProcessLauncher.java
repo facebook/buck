@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Provides methods for launching a java binary bundled within the buck binary. */
 public class BundledExternalProcessLauncher {
@@ -60,7 +61,10 @@ public class BundledExternalProcessLauncher {
 
   public ImmutableMap<String, String> getEnvForOutOfProcessJavac() {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    builder.put("JAVA_HOME", System.getenv().get("JAVA_HOME"));
+    Map<String, String> environment = System.getenv();
+    if (environment.containsKey("JAVA_HOME")) {
+      builder.put("JAVA_HOME", environment.get("JAVA_HOME"));
+    }
 
     BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
     switch (buildType) {
