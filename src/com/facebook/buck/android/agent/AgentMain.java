@@ -47,6 +47,7 @@ public class AgentMain {
 
   public static final int CONNECT_TIMEOUT_MS = 5000;
   public static final int RECEIVE_TIMEOUT_MS = 20000;
+  public static final int TOTAL_RECEIVE_TIMEOUT_MS_PER_MB = 2000;
 
   private static final Logger LOG = Logger.getLogger(AgentMain.class.getName());
 
@@ -215,12 +216,14 @@ public class AgentMain {
     long receiveStartMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
     // Keep track of the total received size to verify the payload.
     long totalSize = 0;
+    long totalReceiveTimeoutMs =
+        RECEIVE_TIMEOUT_MS + TOTAL_RECEIVE_TIMEOUT_MS_PER_MB * (size / 1024 / 1024);
     try {
       final int bufferSize = 128 * 1024;
       byte[] buf = new byte[bufferSize];
       while (true) {
         long currentTimeMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-        if (currentTimeMs - receiveStartMs > RECEIVE_TIMEOUT_MS) {
+        if (currentTimeMs - receiveStartMs > totalReceiveTimeoutMs) {
           throw new RuntimeException("Receive failed to complete before timeout.");
         }
         int remaining = size - (int) totalSize;
