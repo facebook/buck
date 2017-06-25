@@ -36,6 +36,8 @@ import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -45,6 +47,7 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -366,7 +369,7 @@ public class BuildCommand extends AbstractCommand {
       throw new RuntimeException(e);
     }
 
-    return buildCommand.computeDistBuildState(params, graphs, executor);
+    return buildCommand.computeDistBuildState(params, graphs, executor).getFirst();
   }
 
   @Override
@@ -479,7 +482,10 @@ public class BuildCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     int exitCode;
     if (useDistributedBuild) {
-      BuildJobState jobState = computeDistBuildState(params, graphs, executorService);
+      Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
+          computeDistBuildState(params, graphs, executorService);
+      BuildJobState jobState = stateAndCells.getFirst();
+      DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
       DistBuildClientStatsTracker distBuildClientStatsTracker = new DistBuildClientStatsTracker();
       try {
         exitCode =
@@ -490,6 +496,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getCell().getFilesystem(),
                 params.getFileHashCache(),
                 jobState,
+                distBuildCellIndexer,
                 distBuildClientStatsTracker);
       } catch (Throwable ex) {
         distBuildClientStatsTracker.setBuckClientError(true);
@@ -549,7 +556,7 @@ public class BuildCommand extends AbstractCommand {
     return 0;
   }
 
-  private BuildJobState computeDistBuildState(
+  private Pair<BuildJobState, DistBuildCellIndexer> computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
       final WeightedListeningExecutorService executorService)
@@ -608,12 +615,14 @@ public class BuildCommand extends AbstractCommand {
             params.getBuckConfig().getKeySeed(),
             params.getCell());
 
-    return DistBuildState.dump(
-        cellIndexer,
-        distributedBuildFileHashes,
-        targetGraphCodec,
-        targetGraphAndBuildTargets.getTargetGraph(),
-        buildTargets);
+    return new Pair<>(
+        DistBuildState.dump(
+            cellIndexer,
+            distributedBuildFileHashes,
+            targetGraphCodec,
+            targetGraphAndBuildTargets.getTargetGraph(),
+            buildTargets),
+        cellIndexer);
   }
 
   private int executeDistBuild(
@@ -623,10 +632,24 @@ public class BuildCommand extends AbstractCommand {
       ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
       BuildJobState jobState,
+      DistBuildCellIndexer distBuildCellIndexer,
       DistBuildClientStatsTracker distBuildClientStats)
       throws IOException, InterruptedException {
     if (distributedBuildStateFile != null) {
       Path stateDumpPath = Paths.get(distributedBuildStateFile);
+
+      // Read all files inline if we're dumping state to a file.
+      for (BuildJobStateFileHashes cell : jobState.getFileHashes()) {
+        ProjectFilesystem cellFilesystem =
+            Preconditions.checkNotNull(
+                distBuildCellIndexer.getLocalFilesystemsByCellIndex().get(cell.getCellIndex()));
+        for (BuildJobStateFileHashEntry entry : cell.getEntries()) {
+          cellFilesystem
+              .readFileIfItExists(cellFilesystem.resolve(entry.getPath().getPath()))
+              .ifPresent(contents -> entry.setContents(contents.getBytes()));
+        }
+      }
+
       BuildJobStateSerializer.serialize(jobState, filesystem.newFileOutputStream(stateDumpPath));
       return 0;
     }
@@ -646,6 +669,7 @@ public class BuildCommand extends AbstractCommand {
       DistBuildClientExecutor build =
           new DistBuildClientExecutor(
               jobState,
+              distBuildCellIndexer,
               service,
               distBuildLogStateTracker,
               buckVersion,

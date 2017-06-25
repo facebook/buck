@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -37,13 +38,19 @@ public class DistBuildCellIndexer {
   final Cell rootCell;
   final Map<Path, Integer> index;
   final Map<Integer, BuildJobStateCell> state;
+  final Map<Integer, ProjectFilesystem> localFilesystemsByCellIndex;
 
   public DistBuildCellIndexer(Cell rootCell) {
     this.rootCell = rootCell;
     this.index = new HashMap<>();
     this.state = new HashMap<>();
+    this.localFilesystemsByCellIndex = new HashMap<>();
     // Make sure root cell is at index 0.
     Preconditions.checkState(ROOT_CELL_INDEX == this.getCellIndex(rootCell.getRoot()));
+  }
+
+  public Map<Integer, ProjectFilesystem> getLocalFilesystemsByCellIndex() {
+    return localFilesystemsByCellIndex;
   }
 
   public Map<Integer, BuildJobStateCell> getState() {
@@ -59,6 +66,7 @@ public class DistBuildCellIndexer {
 
       Cell cell = rootCell.getCellIgnoringVisibilityCheck(input);
       state.put(i, dumpCell(cell));
+      localFilesystemsByCellIndex.put(i, cell.getFilesystem());
     }
     return i;
   }

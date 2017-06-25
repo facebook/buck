@@ -71,7 +71,9 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -122,24 +124,13 @@ public class DistBuildService implements Closeable {
   }
 
   public void uploadTargetGraph(
-      final BuildJobState buildJobStateArg,
+      final BuildJobState buildJobState,
       final StampedeId stampedeId,
       final DistBuildClientStatsTracker distBuildClientStats)
       throws IOException {
-    // TODO(shivanker): We shouldn't be doing this. Fix after we stop reading all files into memory.
     distBuildClientStats.startUploadTargetGraphTimer();
-    final BuildJobState buildJobState = buildJobStateArg.deepCopy();
-    // Get rid of file contents from buildJobState
-    for (BuildJobStateFileHashes cell : buildJobState.getFileHashes()) {
-      if (!cell.isSetEntries()) {
-        continue;
-      }
-      for (BuildJobStateFileHashEntry file : cell.getEntries()) {
-        file.unsetContents();
-      }
-    }
 
-    // Now serialize and send the whole buildJobState
+    // Serialize and send the whole buildJobState
     StoreBuildGraphRequest storeBuildGraphRequest = new StoreBuildGraphRequest();
     storeBuildGraphRequest.setStampedeId(stampedeId);
     storeBuildGraphRequest.setBuildGraph(BuildJobStateSerializer.serialize(buildJobState));
@@ -153,15 +144,18 @@ public class DistBuildService implements Closeable {
   }
 
   public ListenableFuture<Void> uploadMissingFilesAsync(
+      final Map<Integer, ProjectFilesystem> localFilesystemsByCell,
       final List<BuildJobStateFileHashes> fileHashes,
       final DistBuildClientStatsTracker distBuildClientStats,
       final ListeningExecutorService executorService) {
     distBuildClientStats.startUploadMissingFilesTimer();
-    List<FileInfo> requiredFiles = new ArrayList<>();
+    List<PathInfo> requiredFiles = new ArrayList<>();
     for (BuildJobStateFileHashes filesystem : fileHashes) {
       if (!filesystem.isSetEntries()) {
         continue;
       }
+      ProjectFilesystem cellFilesystem =
+          Preconditions.checkNotNull(localFilesystemsByCell.get(filesystem.getCellIndex()));
       for (BuildJobStateFileHashEntry file : filesystem.entries) {
         if (file.isSetRootSymLink()) {
           LOG.info("File with path [%s] is a symlink. Skipping upload..", file.path.getPath());
@@ -179,15 +173,16 @@ public class DistBuildService implements Closeable {
               String.format("Missing content hash for path [%s].", file.path.getPath()));
         }
 
-        // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
-        // Then change this code to load file contents inline (only for missing files)
-        FileInfo fileInfo = new FileInfo();
-        fileInfo.setContent(file.getContents());
-        fileInfo.setContentHash(file.getHashCode());
-        requiredFiles.add(fileInfo);
+        PathInfo pathInfo = new PathInfo();
+        pathInfo.setPath(cellFilesystem.resolve(file.getPath().getPath()).toString());
+        pathInfo.setContentHash(file.getHashCode());
+        requiredFiles.add(pathInfo);
       }
     }
 
+    LOG.info(
+        "%d files are required to be uploaded. Now checking which ones are already present...",
+        requiredFiles.size());
     distBuildClientStats.setMissingFilesUploadedCount(requiredFiles.size());
 
     return executorService.submit(
@@ -202,14 +197,15 @@ public class DistBuildService implements Closeable {
         });
   }
 
-  private void uploadMissingFilesFromList(final List<FileInfo> fileList) throws IOException {
+  private void uploadMissingFilesFromList(final List<PathInfo> absPathsAndHashes)
+      throws IOException {
 
-    Map<String, FileInfo> sha1ToFileInfo = new HashMap<>();
-    for (FileInfo file : fileList) {
-      sha1ToFileInfo.put(file.getContentHash(), file);
+    Map<String, PathInfo> sha1ToPathInfo = new HashMap<>();
+    for (PathInfo file : absPathsAndHashes) {
+      sha1ToPathInfo.put(file.getContentHash(), file);
     }
 
-    List<String> contentHashes = ImmutableList.copyOf(sha1ToFileInfo.keySet());
+    List<String> contentHashes = ImmutableList.copyOf(sha1ToPathInfo.keySet());
     CASContainsRequest containsReq = new CASContainsRequest();
     containsReq.setContentSha1s(contentHashes);
     FrontendRequest request = new FrontendRequest();
@@ -225,13 +221,19 @@ public class DistBuildService implements Closeable {
       if (isPresent.get(i)) {
         continue;
       }
-      filesToBeUploaded.add(sha1ToFileInfo.get(contentHashes.get(i)));
+
+      // TODO(shivanker): We should upload the missing files in batches, otherwise it might OOM.
+      FileInfo file = new FileInfo();
+      file.setContentHash(contentHashes.get(i));
+      file.setContent(
+          Files.readAllBytes(Paths.get(sha1ToPathInfo.get(contentHashes.get(i)).getPath())));
+      filesToBeUploaded.add(file);
     }
 
     LOG.info(
-        "%d out of %d files already exist in the cache. Uploading %d files..",
-        sha1ToFileInfo.size() - filesToBeUploaded.size(),
-        sha1ToFileInfo.size(),
+        "%d out of %d files already exist in the CAS. Uploading %d files..",
+        sha1ToPathInfo.size() - filesToBeUploaded.size(),
+        sha1ToPathInfo.size(),
         filesToBeUploaded.size());
     request = new FrontendRequest();
     StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
@@ -373,10 +375,11 @@ public class DistBuildService implements Closeable {
     distBuildClientStats.stopSetBuckVersionTimer();
   }
 
-  public void setBuckDotFiles(StampedeId id, List<PathInfo> dotFiles) throws IOException {
+  public void setBuckDotFiles(StampedeId id, List<PathInfo> dotFilesRelativePaths)
+      throws IOException {
     SetBuckDotFilePathsRequest storeBuckDotFilesRequest = new SetBuckDotFilePathsRequest();
     storeBuckDotFilesRequest.setStampedeId(id);
-    storeBuckDotFilesRequest.setDotFiles(dotFiles);
+    storeBuckDotFilesRequest.setDotFiles(dotFilesRelativePaths);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.SET_DOTFILE_PATHS);
     request.setSetBuckDotFilePathsRequest(storeBuckDotFilesRequest);
@@ -391,7 +394,7 @@ public class DistBuildService implements Closeable {
       ListeningExecutorService executorService)
       throws IOException {
     distBuildClientStats.startUploadBuckDotFilesTimer();
-    ListenableFuture<Pair<List<FileInfo>, List<PathInfo>>> filesFuture =
+    ListenableFuture<List<Path>> pathsFuture =
         executorService.submit(
             () -> {
               List<Path> buckDotFilesExceptConfig = new ArrayList<>();
@@ -406,37 +409,39 @@ public class DistBuildService implements Closeable {
                 }
               }
 
-              List<FileInfo> fileEntriesToUpload = new LinkedList<>();
-              List<PathInfo> pathEntriesToUpload = new LinkedList<>();
-              for (Path path : buckDotFilesExceptConfig) {
-                FileInfo fileInfoObject = new FileInfo();
-                fileInfoObject.setContent(filesystem.readFileIfItExists(path).get().getBytes());
-                fileInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
-                fileEntriesToUpload.add(fileInfoObject);
-
-                PathInfo pathInfoObject = new PathInfo();
-                pathInfoObject.setPath(path.toString());
-                pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
-                pathEntriesToUpload.add(pathInfoObject);
-              }
-
-              return new Pair<>(fileEntriesToUpload, pathEntriesToUpload);
+              return buckDotFilesExceptConfig;
             });
 
     ListenableFuture<Void> setFilesFuture =
         Futures.transformAsync(
-            filesFuture,
-            filesAndPaths -> {
-              setBuckDotFiles(id, filesAndPaths.getSecond());
+            pathsFuture,
+            paths -> {
+              List<PathInfo> relativePathEntries = new LinkedList<>();
+              for (Path path : paths) {
+                PathInfo pathInfoObject = new PathInfo();
+                pathInfoObject.setPath(path.toString());
+                pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+                relativePathEntries.add(pathInfoObject);
+              }
+
+              setBuckDotFiles(id, relativePathEntries);
               return Futures.immediateFuture(null);
             },
             executorService);
 
     ListenableFuture<Void> uploadFilesFuture =
         Futures.transformAsync(
-            filesFuture,
-            filesAndPaths -> {
-              uploadMissingFilesFromList(filesAndPaths.getFirst());
+            pathsFuture,
+            paths -> {
+              List<PathInfo> absolutePathEntries = new LinkedList<>();
+              for (Path path : paths) {
+                PathInfo pathInfoObject = new PathInfo();
+                pathInfoObject.setPath(path.toAbsolutePath().toString());
+                pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+                absolutePathEntries.add(pathInfoObject);
+              }
+
+              uploadMissingFilesFromList(absolutePathEntries);
               return Futures.immediateFuture(null);
             },
             executorService);

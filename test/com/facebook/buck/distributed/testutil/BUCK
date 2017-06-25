@@ -1,0 +1,15 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["*Test.java"],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/distributed:distributed",
+        "//src/com/facebook/buck/io:io",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+    ],
+)

@@ -30,7 +30,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -289,14 +288,8 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       fileHashEntry.setHashCode(hashCode.get().toString());
     }
     if (!isDirectory && !pathIsAbsolute && isRealPathInsideProject) {
-      try {
-        // TODO(shivanker, ruibm): Don't read everything in memory right away.
-        Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
-        fileHashEntry.setContents(Files.readAllBytes(absPath));
-        fileHashEntry.setIsExecutable(absPath.toFile().canExecute());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
+      fileHashEntry.setIsExecutable(absPath.toFile().canExecute());
     } else if (isDirectory && !pathIsAbsolute && isRealPathInsideProject) {
       fileHashEntry.setChildren(children);
     }

@@ -70,6 +70,7 @@ public class DistBuildClientExecutor {
   private final DistBuildService distBuildService;
   private final DistBuildLogStateTracker distBuildLogStateTracker;
   private final BuildJobState buildJobState;
+  private final DistBuildCellIndexer distBuildCellIndexer;
   private final BuckVersion buckVersion;
   private final DistBuildClientStatsTracker distBuildClientStats;
   private final ScheduledExecutorService scheduler;
@@ -89,6 +90,7 @@ public class DistBuildClientExecutor {
 
   public DistBuildClientExecutor(
       BuildJobState buildJobState,
+      DistBuildCellIndexer distBuildCellIndexer,
       DistBuildService distBuildService,
       DistBuildLogStateTracker distBuildLogStateTracker,
       BuckVersion buckVersion,
@@ -96,6 +98,7 @@ public class DistBuildClientExecutor {
       ScheduledExecutorService scheduler,
       int statusPollIntervalMillis) {
     this.buildJobState = buildJobState;
+    this.distBuildCellIndexer = distBuildCellIndexer;
     this.distBuildService = distBuildService;
     this.distBuildLogStateTracker = distBuildLogStateTracker;
     this.buckVersion = buckVersion;
@@ -106,6 +109,7 @@ public class DistBuildClientExecutor {
 
   public DistBuildClientExecutor(
       BuildJobState buildJobState,
+      DistBuildCellIndexer distBuildCellIndexer,
       DistBuildService distBuildService,
       DistBuildLogStateTracker distBuildLogStateTracker,
       BuckVersion buckVersion,
@@ -113,6 +117,7 @@ public class DistBuildClientExecutor {
       ScheduledExecutorService scheduler) {
     this(
         buildJobState,
+        distBuildCellIndexer,
         distBuildService,
         distBuildLogStateTracker,
         buckVersion,
@@ -147,7 +152,10 @@ public class DistBuildClientExecutor {
     LOG.info("Uploading local changes.");
     asyncJobs.add(
         distBuildService.uploadMissingFilesAsync(
-            buildJobState.fileHashes, distBuildClientStats, networkExecutorService));
+            distBuildCellIndexer.getLocalFilesystemsByCellIndex(),
+            buildJobState.fileHashes,
+            distBuildClientStats,
+            networkExecutorService));
 
     LOG.info("Uploading target graph.");
     asyncJobs.add(

@@ -48,17 +48,25 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusResponse;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -162,25 +170,34 @@ public class DistBuildServiceTest {
     EasyMock.replay(frontendService);
 
     BuildJobStateFileHashEntry files[] = new BuildJobStateFileHashEntry[3];
+    Map<Integer, ProjectFilesystem> filesystems = new HashMap<>();
+    for (int i = 0; i < 2; i++) {
+      filesystems.put(i, new FakeProjectFilesystem());
+    }
     for (int i = 0; i < 3; i++) {
+      Path path = temporaryFolder.newFile().toAbsolutePath();
+      String content = "content" + i;
+      Files.write(path, content.getBytes(StandardCharsets.UTF_8));
+      filesystems.get(i / 2).writeContentsToPath(content, Paths.get(path.toString()));
+
       files[i] = new BuildJobStateFileHashEntry();
       files[i].setHashCode(Integer.toString(i));
-      files[i].setContents(("content" + Integer.toString(i)).getBytes());
-      files[i].setPath(new PathWithUnixSeparators().setPath("/tmp/" + i));
+      files[i].setPath(new PathWithUnixSeparators().setPath(path.toString()));
     }
 
     List<BuildJobStateFileHashes> fileHashes = new ArrayList<>();
     fileHashes.add(new BuildJobStateFileHashes());
     fileHashes.get(0).setCellIndex(0);
-    fileHashes.get(0).setEntries(new ArrayList<BuildJobStateFileHashEntry>());
+    fileHashes.get(0).setEntries(new ArrayList<>());
     fileHashes.get(0).getEntries().add(files[0]);
     fileHashes.get(0).getEntries().add(files[1]);
     fileHashes.add(new BuildJobStateFileHashes());
     fileHashes.get(1).setCellIndex(1);
-    fileHashes.get(1).setEntries(new ArrayList<BuildJobStateFileHashEntry>());
+    fileHashes.get(1).setEntries(new ArrayList<>());
     fileHashes.get(1).getEntries().add(files[2]);
+
     distBuildService
-        .uploadMissingFilesAsync(fileHashes, distBuildClientStatsTracker, executor)
+        .uploadMissingFilesAsync(filesystems, fileHashes, distBuildClientStatsTracker, executor)
         .get();
 
     Assert.assertEquals(containsRequest.getValue().getType(), FrontendRequestType.CAS_CONTAINS);
@@ -200,7 +217,7 @@ public class DistBuildServiceTest {
     Assert.assertTrue(
         Arrays.equals(
             storeRequest.getValue().getStoreLocalChangesRequest().getFiles().get(0).getContent(),
-            "content1".getBytes()));
+            "content1".getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
