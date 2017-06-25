@@ -183,12 +183,12 @@ public class DistBuildService implements Closeable {
     LOG.info(
         "%d files are required to be uploaded. Now checking which ones are already present...",
         requiredFiles.size());
-    distBuildClientStats.setMissingFilesUploadedCount(requiredFiles.size());
 
     return executorService.submit(
         () -> {
           try {
-            uploadMissingFilesFromList(requiredFiles);
+            distBuildClientStats.setMissingFilesUploadedCount(
+                uploadMissingFilesFromList(requiredFiles));
             distBuildClientStats.stopUploadMissingFilesTimer();
             return null;
           } catch (IOException e) {
@@ -197,7 +197,17 @@ public class DistBuildService implements Closeable {
         });
   }
 
-  private void uploadMissingFilesFromList(final List<PathInfo> absPathsAndHashes)
+  /**
+   * This function takes a list of files which we need to be present in the CAS, and uploads only
+   * the missing files. So it makes 2 requests to the server: {@link CASContainsRequest} and {@link
+   * StoreLocalChangesRequest}.
+   *
+   * @param absPathsAndHashes List of {@link PathInfo} objects with absolute paths and content SHA1
+   *     of the files which need to be uploaded.
+   * @return The number of missing files which were uploaded to the CAS.
+   * @throws IOException
+   */
+  private int uploadMissingFilesFromList(final List<PathInfo> absPathsAndHashes)
       throws IOException {
 
     Map<String, PathInfo> sha1ToPathInfo = new HashMap<>();
@@ -242,6 +252,7 @@ public class DistBuildService implements Closeable {
     request.setStoreLocalChangesRequest(storeReq);
     makeRequestChecked(request);
     // No response expected.
+    return filesToBeUploaded.size();
   }
 
   public BuildJob createBuild(
