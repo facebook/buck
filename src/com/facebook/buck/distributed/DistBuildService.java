@@ -61,6 +61,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -184,17 +185,18 @@ public class DistBuildService implements Closeable {
         "%d files are required to be uploaded. Now checking which ones are already present...",
         requiredFiles.size());
 
-    return executorService.submit(
-        () -> {
-          try {
-            distBuildClientStats.setMissingFilesUploadedCount(
-                uploadMissingFilesFromList(requiredFiles));
+    try {
+      return Futures.transform(
+          uploadMissingFilesAsync(requiredFiles, executorService),
+          uploadCount -> {
+            distBuildClientStats.setMissingFilesUploadedCount(uploadCount);
             distBuildClientStats.stopUploadMissingFilesTimer();
             return null;
-          } catch (IOException e) {
-            throw new RuntimeException("Failed to upload missing source files.", e);
-          }
-        });
+          },
+          executorService);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to upload missing source files.", e);
+    }
   }
 
   /**
@@ -204,10 +206,13 @@ public class DistBuildService implements Closeable {
    *
    * @param absPathsAndHashes List of {@link PathInfo} objects with absolute paths and content SHA1
    *     of the files which need to be uploaded.
-   * @return The number of missing files which were uploaded to the CAS.
+   * @param executorService Executor to enable concurrent file reads and upload request.
+   * @return A Future containing the number of missing files which were uploaded to the CAS. This
+   *     future completes when the upload finishes.
    * @throws IOException
    */
-  private int uploadMissingFilesFromList(final List<PathInfo> absPathsAndHashes)
+  private ListenableFuture<Integer> uploadMissingFilesAsync(
+      final List<PathInfo> absPathsAndHashes, final ListeningExecutorService executorService)
       throws IOException {
 
     Map<String, PathInfo> sha1ToPathInfo = new HashMap<>();
@@ -216,43 +221,82 @@ public class DistBuildService implements Closeable {
     }
 
     List<String> contentHashes = ImmutableList.copyOf(sha1ToPathInfo.keySet());
-    CASContainsRequest containsReq = new CASContainsRequest();
+    final CASContainsRequest containsReq = new CASContainsRequest();
     containsReq.setContentSha1s(contentHashes);
-    FrontendRequest request = new FrontendRequest();
-    request.setType(FrontendRequestType.CAS_CONTAINS);
-    request.setCasContainsRequest(containsReq);
-    FrontendResponse response = makeRequestChecked(request);
+    ListenableFuture<FrontendResponse> responseFuture =
+        executorService.submit(
+            () ->
+                makeRequestChecked(
+                    new FrontendRequest()
+                        .setType(FrontendRequestType.CAS_CONTAINS)
+                        .setCasContainsRequest(containsReq)));
 
-    Preconditions.checkState(
-        response.getCasContainsResponse().exists.size() == contentHashes.size());
-    List<Boolean> isPresent = response.getCasContainsResponse().exists;
-    List<FileInfo> filesToBeUploaded = new LinkedList<>();
-    for (int i = 0; i < isPresent.size(); ++i) {
-      if (isPresent.get(i)) {
-        continue;
-      }
+    ListenableFuture<List<FileInfo>> filesToBeUploaded =
+        Futures.transformAsync(
+            responseFuture,
+            response -> {
+              Preconditions.checkState(
+                  response.getCasContainsResponse().exists.size() == contentHashes.size());
+              List<Boolean> isPresent = response.getCasContainsResponse().exists;
+              List<ListenableFuture<FileInfo>> missingFilesFutureList = new LinkedList<>();
+              for (int i = 0; i < isPresent.size(); ++i) {
+                if (isPresent.get(i)) {
+                  continue;
+                }
 
-      // TODO(shivanker): We should upload the missing files in batches, otherwise it might OOM.
-      FileInfo file = new FileInfo();
-      file.setContentHash(contentHashes.get(i));
-      file.setContent(
-          Files.readAllBytes(Paths.get(sha1ToPathInfo.get(contentHashes.get(i)).getPath())));
-      filesToBeUploaded.add(file);
-    }
+                final String contentHash = contentHashes.get(i);
 
-    LOG.info(
-        "%d out of %d files already exist in the CAS. Uploading %d files..",
-        sha1ToPathInfo.size() - filesToBeUploaded.size(),
-        sha1ToPathInfo.size(),
-        filesToBeUploaded.size());
-    request = new FrontendRequest();
-    StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
-    storeReq.setFiles(filesToBeUploaded);
-    request.setType(FrontendRequestType.STORE_LOCAL_CHANGES);
-    request.setStoreLocalChangesRequest(storeReq);
-    makeRequestChecked(request);
-    // No response expected.
-    return filesToBeUploaded.size();
+                // TODO(shivanker): We should upload the missing files in batches, or it might OOM.
+                missingFilesFutureList.add(
+                    executorService.submit(
+                        () -> {
+                          FileInfo file = new FileInfo();
+                          file.setContentHash(contentHash);
+                          try {
+                            file.setContent(
+                                Files.readAllBytes(
+                                    Paths.get(
+                                        Preconditions.checkNotNull(sha1ToPathInfo.get(contentHash))
+                                            .getPath())));
+                          } catch (IOException e) {
+                            throw new IOException(
+                                String.format(
+                                    "Failed to read file for uploading to server: [%s]",
+                                    sha1ToPathInfo.get(contentHash).getPath()),
+                                e);
+                          }
+                          return file;
+                        }));
+              }
+
+              LOG.info(
+                  "%d out of %d files already exist in the CAS. Uploading %d files..",
+                  sha1ToPathInfo.size() - missingFilesFutureList.size(),
+                  sha1ToPathInfo.size(),
+                  missingFilesFutureList.size());
+
+              return Futures.allAsList(missingFilesFutureList);
+            },
+            executorService);
+
+    return Futures.transform(
+        filesToBeUploaded,
+        fileList -> {
+          StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
+          storeReq.setFiles(fileList);
+          try {
+            makeRequestChecked(
+                new FrontendRequest()
+                    .setType(FrontendRequestType.STORE_LOCAL_CHANGES)
+                    .setStoreLocalChangesRequest(storeReq));
+            // No response expected.
+          } catch (IOException e) {
+            throw new HumanReadableException(
+                e, "Failed to upload [%d] missing files.", fileList.size());
+          }
+          return fileList.size();
+        },
+        executorService);
   }
 
   public BuildJob createBuild(
@@ -440,7 +484,7 @@ public class DistBuildService implements Closeable {
             },
             executorService);
 
-    ListenableFuture<Void> uploadFilesFuture =
+    ListenableFuture<?> uploadFilesFuture =
         Futures.transformAsync(
             pathsFuture,
             paths -> {
@@ -452,8 +496,7 @@ public class DistBuildService implements Closeable {
                 absolutePathEntries.add(pathInfoObject);
               }
 
-              uploadMissingFilesFromList(absolutePathEntries);
-              return Futures.immediateFuture(null);
+              return uploadMissingFilesAsync(absolutePathEntries, executorService);
             },
             executorService);
 
