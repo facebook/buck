@@ -165,7 +165,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         || (projectFilesystem.exists(relativePath) && !isIgnored(relativePath));
   }
 
-  private boolean isIgnored(Path path) {
+  @Override
+  public boolean isIgnored(Path path) {
     if (buckOutPath.isPresent()) {
       return !path.startsWith(buckOutPath.get());
     }

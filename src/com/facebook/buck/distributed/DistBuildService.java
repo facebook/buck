@@ -174,6 +174,11 @@ public class DistBuildService implements Closeable {
           continue;
         }
 
+        if (!file.isSetHashCode()) {
+          throw new RuntimeException(
+              String.format("Missing content hash for path [%s].", file.path.getPath()));
+        }
+
         // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
         // Then change this code to load file contents inline (only for missing files)
         FileInfo fileInfo = new FileInfo();

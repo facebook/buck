@@ -30,7 +30,13 @@ import java.util.Map;
 
 public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   private static final Function<BuildJobStateFileHashEntry, HashCode>
-      HASH_CODE_FROM_FILE_HASH_ENTRY = input -> HashCode.fromString(input.getHashCode());
+      HASH_CODE_FROM_FILE_HASH_ENTRY =
+          input -> {
+            if (input.getHashCode() == null) {
+              return null;
+            }
+            return HashCode.fromString(input.getHashCode());
+          };
 
   private final ProjectFileHashCache delegate;
   private final ProjectFilesystem filesystem;
@@ -109,5 +115,10 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   @Override
   public ProjectFilesystem getFilesystem() {
     return filesystem;
+  }
+
+  @Override
+  public boolean isIgnored(Path path) {
+    return delegate.isIgnored(path);
   }
 }

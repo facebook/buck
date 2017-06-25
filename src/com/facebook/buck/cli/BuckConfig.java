@@ -67,6 +67,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -234,6 +235,11 @@ public class BuckConfig implements ConfigPathGetter {
 
   public Optional<ImmutableList<Path>> getOptionalPathList(
       String section, String field, boolean resolve) {
+    return getOptionalPathList(section, field, resolve, true);
+  }
+
+  public Optional<ImmutableList<Path>> getOptionalPathList(
+      String section, String field, boolean resolve, boolean followSymlinks) {
     Optional<ImmutableList<String>> rawPaths =
         config.getOptionalListWithoutComments(section, field);
 
@@ -247,6 +253,7 @@ public class BuckConfig implements ConfigPathGetter {
                       convertPath(
                           input,
                           resolve,
+                          followSymlinks,
                           String.format(
                               "Error in %s.%s: Cell-relative path not found: ", section, field)))
               .collect(MoreCollectors.toImmutableList());
@@ -351,20 +358,18 @@ public class BuckConfig implements ConfigPathGetter {
               projectFilesystem,
               checkPathExists(
                   value.get(),
+                  true,
                   String.format("Overridden %s:%s path not found: ", section, field))));
     }
   }
 
-  /**
-   * @return a {@link SourcePath} identified by a {@link Path}.
-   */
+  /** @return a {@link SourcePath} identified by a {@link Path}. */
   public SourcePath getSourcePath(Path path) {
     if (path == null) {
       return null;
     }
     return new PathSourcePath(
-            projectFilesystem,
-            checkPathExists(path.toString(),"path not found: "));
+        projectFilesystem, checkPathExists(path.toString(), true, "path not found: "));
   }
 
   /**
@@ -386,6 +391,7 @@ public class BuckConfig implements ConfigPathGetter {
               new HashedFileTool(
                   checkPathExists(
                       value.get(),
+                      true,
                       String.format("Overridden %s:%s path not found: ", section, field)))));
     }
   }
@@ -843,11 +849,17 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
+    return getPath(sectionName, name, true, isCellRootRelative);
+  }
+
+  public Optional<Path> getPath(
+      String sectionName, String name, boolean followSymlinks, boolean isCellRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.isPresent()
         ? Optional.of(
             convertPathWithError(
                 pathString.get(),
+                followSymlinks,
                 isCellRootRelative,
                 String.format("Overridden %s:%s path not found: ", sectionName, name)))
         : Optional.empty();
@@ -867,25 +879,31 @@ public class BuckConfig implements ConfigPathGetter {
     return projectFilesystem.getPath(path.toString());
   }
 
-  private Path convertPathWithError(String pathString, boolean isCellRootRelative, String error) {
+  private Path convertPathWithError(
+      String pathString, boolean followSymlinks, boolean isCellRootRelative, String error) {
     return isCellRootRelative
-        ? checkPathExistsAndResolve(pathString, error)
+        ? checkPathExistsAndResolve(pathString, followSymlinks, error)
         : getPathFromVfs(pathString);
   }
 
-  private Path convertPath(String pathString, boolean resolve, String error) {
+  private Path convertPath(
+      String pathString, boolean resolve, boolean followSymlinks, String error) {
     return resolve
-        ? checkPathExistsAndResolve(pathString, error)
-        : checkPathExists(pathString, error);
+        ? checkPathExistsAndResolve(pathString, followSymlinks, error)
+        : checkPathExists(pathString, followSymlinks, error);
   }
 
-  public Path checkPathExistsAndResolve(String pathString, String errorMsg) {
-    return projectFilesystem.getPathForRelativePath(checkPathExists(pathString, errorMsg));
+  public Path checkPathExistsAndResolve(
+      String pathString, boolean followSymlinks, String errorMsg) {
+    return projectFilesystem.getPathForRelativePath(
+        checkPathExists(pathString, followSymlinks, errorMsg));
   }
 
-  private Path checkPathExists(String pathString, String errorMsg) {
+  private Path checkPathExists(String pathString, boolean followSymlinks, String errorMsg) {
     Path path = getPathFromVfs(pathString);
-    if (projectFilesystem.exists(path)) {
+    if (followSymlinks
+        ? projectFilesystem.exists(path)
+        : projectFilesystem.exists(path, LinkOption.NOFOLLOW_LINKS)) {
       return path;
     }
     throw new HumanReadableException(errorMsg + path);

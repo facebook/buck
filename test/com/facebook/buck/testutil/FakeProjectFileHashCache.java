@@ -62,6 +62,11 @@ public class FakeProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
+  public boolean isIgnored(Path path) {
+    return false;
+  }
+
+  @Override
   public void invalidate(Path path) {
     pathsToHashes.remove(path);
   }

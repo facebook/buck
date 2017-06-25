@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.slb.SlbBuckConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -32,7 +33,8 @@ public class DistBuildConfig {
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
   private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(60);
 
-  private static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
+  @VisibleForTesting
+  static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
 
   private static final String ENABLE_SLOW_LOCAL_BUILD_FALLBACK = "enable_slow_local_build_fallback";
   private static final boolean ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE = false;
@@ -65,7 +67,8 @@ public class DistBuildConfig {
   }
 
   public Optional<ImmutableList<Path>> getOptionalPathWhitelist() {
-    return buckConfig.getOptionalPathList(STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST, true);
+    return buckConfig.getOptionalPathList(
+        STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST, true, false);
   }
 
   public long getFrontendRequestTimeoutMillis() {

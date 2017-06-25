@@ -76,7 +76,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       if (fileHashEntry.isSetMaterializeDuringPreloading()
           && fileHashEntry.isMaterializeDuringPreloading()) {
         Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
-        get(relPath);
+        materializeIfNeeded(relPath);
         continue;
       }
 
@@ -315,5 +315,10 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {
     return delegate.verify();
+  }
+
+  @Override
+  public boolean isIgnored(Path path) {
+    return delegate.isIgnored(path);
   }
 }

@@ -35,6 +35,8 @@ public interface ProjectFileHashCache extends ProjectFileHashLoader {
 
   boolean willGet(ArchiveMemberPath archiveMemberPath);
 
+  boolean isIgnored(Path path);
+
   void invalidate(Path path);
 
   void invalidateAll();
