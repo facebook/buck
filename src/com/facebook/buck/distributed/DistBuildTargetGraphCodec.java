@@ -161,7 +161,12 @@ public class DistBuildTargetGraphCodec {
       mutableTargetGraph.addNode(targetNode);
       for (BuildTarget dep : targetNode.getParseDeps()) {
         mutableTargetGraph.addEdge(
-            targetNode, Preconditions.checkNotNull(targetNodeIndex.get(dep)));
+            targetNode,
+            Preconditions.checkNotNull(
+                targetNodeIndex.get(dep),
+                "Dependency [%s] of target [%s] was not found in the client-side target graph.",
+                dep.getFullyQualifiedName(),
+                targetNode.getBuildTarget().getFullyQualifiedName()));
       }
     }
 
