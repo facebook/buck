@@ -117,9 +117,14 @@ public class DistBuildState {
       Path cellRoot = uniqueBuildRoot.resolve(remoteCell.getNameHint());
       Files.createDirectories(cellRoot);
 
-      Config config = createConfig(remoteCell.getConfig(), localBuckConfig);
+      Config config = createConfigFromRemoteAndOverride(remoteCell.getConfig(), localBuckConfig);
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
-      BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());
+      BuckConfig buckConfig =
+          createBuckConfigFromRawConfigAndEnv(
+              config,
+              projectFilesystem,
+              ImmutableMap.copyOf(remoteCell.getConfig().getUserEnvironment()));
+
       Optional<String> cellName =
           remoteCell.getCanonicalName().isEmpty()
               ? Optional.empty()
@@ -140,8 +145,9 @@ public class DistBuildState {
     return remoteState;
   }
 
-  public static Config createConfig(
-      BuildJobStateBuckConfig remoteBuckConfig, Optional<BuckConfig> overrideConfig) {
+  public static Config createConfigFromRemoteAndOverride(
+      BuildJobStateBuckConfig remoteBuckConfig, Optional<BuckConfig> overrideBuckConfig) {
+
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig =
         ImmutableMap.copyOf(
             Maps.transformValues(
@@ -153,44 +159,27 @@ public class DistBuildState {
                   }
                   return builder.build();
                 }));
+
     RawConfig.Builder rawConfigBuilder = RawConfig.builder();
     rawConfigBuilder.putAll(rawConfig);
 
-    if (overrideConfig.isPresent()) {
-      rawConfigBuilder.putAll(overrideConfig.get().getConfig().getRawConfig());
+    if (overrideBuckConfig.isPresent()) {
+      rawConfigBuilder.putAll(overrideBuckConfig.get().getConfig().getRawConfig());
     }
     return new Config(rawConfigBuilder.build());
   }
 
-  private static BuckConfig createBuckConfig(
-      Config config,
+  private static BuckConfig createBuckConfigFromRawConfigAndEnv(
+      Config rawConfig,
       ProjectFilesystem projectFilesystem,
-      BuildJobStateBuckConfig remoteBuckConfig) {
-
-    Architecture remoteArchitecture = Architecture.valueOf(remoteBuckConfig.getArchitecture());
-    Architecture localArchitecture = Architecture.detect();
-    Preconditions.checkState(
-        remoteArchitecture.equals(localArchitecture),
-        "Trying to load config with architecture %s on a machine that is %s. "
-            + "This is not supported.",
-        remoteArchitecture,
-        localArchitecture);
-
-    Platform remotePlatform = Platform.valueOf(remoteBuckConfig.getPlatform());
-    Platform localPlatform = Platform.detect();
-    Preconditions.checkState(
-        remotePlatform.equals(localPlatform),
-        "Trying to load config with platform %s on a machine that is %s. This is not supported.",
-        remotePlatform,
-        localPlatform);
-
+      ImmutableMap<String, String> environment) {
     return new BuckConfig(
-        config,
+        rawConfig,
         projectFilesystem,
-        remoteArchitecture,
-        remotePlatform,
-        ImmutableMap.copyOf(remoteBuckConfig.getUserEnvironment()),
-        new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
+        Architecture.detect(),
+        Platform.detect(),
+        ImmutableMap.copyOf(environment),
+        new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

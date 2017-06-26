@@ -913,10 +913,6 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getSectionToEntries().keySet();
   }
 
-  public ImmutableMap<String, ImmutableMap<String, String>> getRawConfigForDistBuild() {
-    return config.getSectionToEntries();
-  }
-
   public ImmutableMap<String, ImmutableMap<String, String>> getRawConfigForParser() {
     ImmutableMap<String, ImmutableMap<String, String>> rawSections = config.getSectionToEntries();
 

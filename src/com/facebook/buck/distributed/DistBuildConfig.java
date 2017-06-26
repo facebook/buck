@@ -17,16 +17,23 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 
 public class DistBuildConfig {
+
+  private static final Logger LOG = Logger.get(DistBuildConfig.class);
 
   public static final String STAMPEDE_SECTION = "stampede";
 
@@ -50,6 +57,8 @@ public class DistBuildConfig {
   private static final String TENANT_ID = "tenant_id";
   private static final String DEFAULT_TENANT_ID = "";
 
+  @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -69,6 +78,30 @@ public class DistBuildConfig {
   public Optional<ImmutableList<Path>> getOptionalPathWhitelist() {
     return buckConfig.getOptionalPathList(
         STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST, true, false);
+  }
+
+  public Config getRemoteConfigWithOverride() {
+    Optional<Path> serverConfigPath = getOptionalServerBuckconfigOverride();
+
+    RawConfig.Builder rawConfigBuilder = RawConfig.builder();
+    rawConfigBuilder.putAll(buckConfig.getConfig().getRawConfigForDistBuild());
+    if (serverConfigPath.isPresent()) {
+      try {
+        rawConfigBuilder.putAll(Configs.parseConfigFile(serverConfigPath.get()));
+        LOG.info("Applied server side config override [%s].", serverConfigPath.get().toString());
+      } catch (IOException e) {
+        throw new RuntimeException(
+            String.format(
+                "Unable to parse server-side config file (%s) specified in [%s:%s].",
+                serverConfigPath.get().toString(), STAMPEDE_SECTION, SERVER_BUCKCONFIG_OVERRIDE),
+            e);
+      }
+    }
+    return new Config(rawConfigBuilder.build());
+  }
+
+  public Optional<Path> getOptionalServerBuckconfigOverride() {
+    return buckConfig.getPath(STAMPEDE_SECTION, SERVER_BUCKCONFIG_OVERRIDE);
   }
 
   public long getFrontendRequestTimeoutMillis() {

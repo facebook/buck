@@ -169,6 +169,10 @@ public class Config {
     return expanded.build();
   }
 
+  public ImmutableMap<String, ImmutableMap<String, String>> getRawConfigForDistBuild() {
+    return getSectionToEntries();
+  }
+
   /**
    * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
    *     empty list if the property is not defined or there are no values.

@@ -29,7 +29,6 @@ import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
@@ -80,9 +79,8 @@ public abstract class DistBuildFactory {
 
     // Create a cache factory which uses a combination of the distributed build config,
     // overridden with the local buck config (i.e. the build slave).
-    Cell rootCell = Preconditions.checkNotNull(state.getCells().get(0));
     ArtifactCacheFactory distBuildArtifactCacheFactory =
-        params.getArtifactCacheFactory().cloneWith(rootCell.getBuckConfig());
+        params.getArtifactCacheFactory().cloneWith(state.getRootCell().getBuckConfig());
 
     DistBuildSlaveExecutor executor =
         new DistBuildSlaveExecutor(

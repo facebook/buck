@@ -115,4 +115,13 @@ public final class Configs {
       return ImmutableSortedSet.<Path>naturalOrder().addAll(directory.iterator()).build();
     }
   }
+
+  public static ImmutableMap<String, ImmutableMap<String, String>> parseConfigFile(Path file)
+      throws IOException {
+    try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+      ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration = Inis.read(reader);
+      LOG.debug("Loaded a configuration file %s: %s", file, parsedConfiguration);
+      return parsedConfiguration;
+    }
+  }
 }

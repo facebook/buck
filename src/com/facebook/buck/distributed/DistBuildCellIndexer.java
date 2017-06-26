@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
@@ -81,11 +82,13 @@ public class DistBuildCellIndexer {
 
   private BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
     BuildJobStateBuckConfig jobState = new BuildJobStateBuckConfig();
+    Config serverSideConfigWithOptionalOverride =
+        new DistBuildConfig(buckConfig).getRemoteConfigWithOverride();
 
     jobState.setUserEnvironment(buckConfig.getEnvironment());
     Map<String, List<OrderedStringMapEntry>> rawConfig =
         Maps.transformValues(
-            buckConfig.getRawConfigForDistBuild(),
+            serverSideConfigWithOptionalOverride.getRawConfigForDistBuild(),
             input -> {
               List<OrderedStringMapEntry> result = new ArrayList<>();
               for (Map.Entry<String, String> entry : input.entrySet()) {
