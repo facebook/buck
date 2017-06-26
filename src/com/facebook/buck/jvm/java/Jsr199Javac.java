@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.io.Closeable;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
@@ -293,13 +293,10 @@ public abstract class Jsr199Javac implements Javac {
     private final JavacExecutionContext context;
     private final JavacCompilationMode compilationMode;
     private final JavaCompiler compiler;
-    private final StandardJavaFileManager fileManager;
     @Nullable private final JavaInMemoryFileManager inMemoryFileManager;
     private final BuckJavacTaskProxy javacTask;
-    private final TranslatingJavacPhaseTracer tracer;
-    private final AnnotationProcessorFactory processorFactory;
     private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-    private final Iterable<? extends JavaFileObject> compilationUnits;
+    private final List<AutoCloseable> closeables = new ArrayList<>();
 
     public CompilerBundle(
         Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -315,6 +312,9 @@ public abstract class Jsr199Javac implements Javac {
       compiler = compilerConstructor.apply(context);
       StandardJavaFileManager standardFileManager =
           compiler.getStandardFileManager(null, null, null);
+      addCloseable(standardFileManager);
+
+      StandardJavaFileManager fileManager;
       if (context.getDirectToJarOutputSettings().isPresent()) {
         Path directToJarPath =
             context
@@ -326,16 +326,19 @@ public abstract class Jsr199Javac implements Javac {
                 standardFileManager,
                 directToJarPath,
                 context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+        addCloseable(inMemoryFileManager);
         fileManager = inMemoryFileManager;
       } else {
         inMemoryFileManager = null;
         fileManager = standardFileManager;
       }
 
+      Iterable<? extends JavaFileObject> compilationUnits;
       try {
         compilationUnits =
             createCompilationUnits(
                 fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
+        compilationUnits.forEach(this::addCloseable);
       } catch (IOException e) {
         LOG.warn(e, "Error building compilation units");
         throw e;
@@ -398,23 +401,33 @@ public abstract class Jsr199Javac implements Javac {
                     : Diagnostic.Kind.WARNING);
       }
 
-      tracer =
+      TranslatingJavacPhaseTracer tracer =
           new TranslatingJavacPhaseTracer(
               new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
+      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
+      // in some unusual situations
+      addCloseable(tracer);
 
       // Ensure annotation processors are loaded from their own classloader. If we don't do
       // this, then the evidence suggests that they get one polluted with Buck's own classpath,
       // which means that libraries that have dependencies on different versions of Buck's deps
       // may choke with novel errors that don't occur on the command line.
-      processorFactory =
+      AnnotationProcessorFactory processorFactory =
           new AnnotationProcessorFactory(
               context.getEventSink(),
               compiler.getClass().getClassLoader(),
               context.getClassLoaderCache(),
               invokingRule);
+      addCloseable(processorFactory);
 
       javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
       javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+    }
+
+    private void addCloseable(Object maybeCloseable) {
+      if (maybeCloseable instanceof AutoCloseable) {
+        closeables.add((AutoCloseable) maybeCloseable);
+      }
     }
 
     public BuckJavacTaskProxy getJavacTask() {
@@ -447,44 +460,12 @@ public abstract class Jsr199Javac implements Javac {
 
     @Override
     public void close() {
-      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
-      // in some unusual situations
-      tracer.close();
-
-      close(compilationUnits);
-
-      closeResources(fileManager, inMemoryFileManager);
-
-      try {
-        processorFactory.close();
-      } catch (IOException e) {
-        LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
-      }
-    }
-
-    private void close(Iterable<? extends JavaFileObject> compilationUnits) {
-      for (JavaFileObject unit : compilationUnits) {
-        if (unit instanceof Closeable) {
-          try {
-            ((Closeable) unit).close();
-          } catch (IOException e) {
-            LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
-          }
+      for (AutoCloseable closeable : Lists.reverse(closeables)) {
+        try {
+          closeable.close();
+        } catch (Exception e) {
+          LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
         }
-      }
-    }
-
-    private void closeResources(
-        @Nullable StandardJavaFileManager fileManager,
-        @Nullable JavaInMemoryFileManager inMemoryFileManager) {
-      try {
-        if (inMemoryFileManager != null) {
-          inMemoryFileManager.close();
-        } else if (fileManager != null) {
-          fileManager.close();
-        }
-      } catch (IOException e) {
-        LOG.warn(e, "Unable to close fileManager. We may be leaking memory.");
       }
     }
 
