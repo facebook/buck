@@ -21,7 +21,6 @@ import com.facebook.buck.rules.ExopackageInfo.NativeLibsInfo;
 import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -34,19 +33,19 @@ abstract class AbstractExopackageInfo {
   @Value.Immutable
   interface AbstractDexInfo {
     @Value.Parameter
-    Path getMetadata();
+    SourcePath getMetadata();
 
     @Value.Parameter
-    Path getDirectory();
+    SourcePath getDirectory();
   }
 
   @Value.Immutable
   interface AbstractNativeLibsInfo {
     @Value.Parameter
-    Path getMetadata();
+    SourcePath getMetadata();
 
     @Value.Parameter
-    Path getDirectory();
+    SourcePath getDirectory();
   }
 
   @Value.Immutable

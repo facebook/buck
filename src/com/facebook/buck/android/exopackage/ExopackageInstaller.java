@@ -290,7 +290,9 @@ public class ExopackageInstaller {
       // hashes in the file names (because we use that to skip re-uploads), so just hack
       // the metadata file to have hash-like names.
       return com.google.common.io.Files.toString(
-              projectFilesystem.resolve(exopackageInfo.getDexInfo().get().getMetadata()).toFile(),
+              pathResolver
+                  .getAbsolutePath(exopackageInfo.getDexInfo().get().getMetadata())
+                  .toFile(),
               Charsets.UTF_8)
           .replaceAll(
               "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
@@ -417,7 +419,9 @@ public class ExopackageInstaller {
       ExopackageInfo.DexInfo dexInfo = exopackageInfo.getDexInfo().get();
       ImmutableMultimap<String, Path> multimap =
           parseExopackageInfoMetadata(
-              dexInfo.getMetadata(), dexInfo.getDirectory(), projectFilesystem);
+              pathResolver.getAbsolutePath(dexInfo.getMetadata()),
+              pathResolver.getAbsolutePath(dexInfo.getDirectory()),
+              projectFilesystem);
       // Convert multimap to a map, because every key should have only one value.
       ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
       for (Map.Entry<String, Path> entry : multimap.entries()) {
@@ -530,7 +534,9 @@ public class ExopackageInstaller {
   private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
     ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.getNativeLibsInfo().get();
     return parseExopackageInfoMetadata(
-        nativeLibsInfo.getMetadata(), nativeLibsInfo.getDirectory(), projectFilesystem);
+        pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata()),
+        pathResolver.getAbsolutePath(nativeLibsInfo.getDirectory()),
+        projectFilesystem);
   }
 
   private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
@@ -538,7 +544,7 @@ public class ExopackageInstaller {
       String abi,
       ImmutableSet<String> ignoreLibraries) {
     return filterLibrariesForAbi(
-        exopackageInfo.getNativeLibsInfo().get().getDirectory(),
+        pathResolver.getAbsolutePath(exopackageInfo.getNativeLibsInfo().get().getDirectory()),
         allLibraries,
         abi,
         ignoreLibraries);

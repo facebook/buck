@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
@@ -415,6 +416,14 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Path getDexDirectory() {
     Preconditions.checkState(dexSplitMode.isShouldSplitDex());
     return new SplitDexPaths().jarfilesSubdir;
+  }
+
+  public SourcePath getMetadataTxtSourcePath() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getMetadataTxtPath());
+  }
+
+  public SourcePath getDexDirectorySourcePath() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getDexDirectory());
   }
 
   @Nullable

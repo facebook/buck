@@ -719,7 +719,11 @@ public class ExopackageInstallerIntegrationTest {
         builder.addExoFile("secondary-dex/secondary-" + dexHash + ".dex.jar", dexContent);
       }
       writeFile(dexManifest, dexMetadata);
-      dexInfo = Optional.of(ExopackageInfo.DexInfo.of(dexManifest, dexDirectory));
+      dexInfo =
+          Optional.of(
+              ExopackageInfo.DexInfo.of(
+                  new PathSourcePath(filesystem, dexManifest),
+                  new PathSourcePath(filesystem, dexDirectory)));
 
       builder.addExoFile("secondary-dex/metadata.txt", dexMetadata);
     }
@@ -749,7 +753,10 @@ public class ExopackageInstallerIntegrationTest {
       CopyNativeLibraries.createMetadataStep(filesystem, nativeManifest, nativeDirectory)
           .execute(executionContext);
       nativeLibsInfo =
-          Optional.of(ExopackageInfo.NativeLibsInfo.of(nativeManifest, nativeDirectory));
+          Optional.of(
+              ExopackageInfo.NativeLibsInfo.of(
+                  new PathSourcePath(filesystem, nativeManifest),
+                  new PathSourcePath(filesystem, nativeDirectory)));
       builder.addExoFile("native-libs/" + device.abi + "/metadata.txt", expectedMetadata);
     }
 

@@ -115,6 +115,10 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
     return getBinPath().resolve("metadata.txt");
   }
 
+  public SourcePath getSourcePathToMetadataTxt() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToMetadataTxt());
+  }
+
   private Path getBinPath() {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__native_" + moduleName + "_%s__");

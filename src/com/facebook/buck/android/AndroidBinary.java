@@ -1509,7 +1509,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
       builder.setDexInfo(
           ExopackageInfo.DexInfo.of(
-              preDexMerge.getMetadataTxtPath(), preDexMerge.getDexDirectory()));
+              preDexMerge.getMetadataTxtSourcePath(), preDexMerge.getDexDirectorySourcePath()));
       shouldInstall = true;
     }
 
@@ -1523,8 +1523,8 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
       builder.setNativeLibsInfo(
           ExopackageInfo.NativeLibsInfo.of(
-              copyNativeLibraries.getPathToMetadataTxt(),
-              copyNativeLibraries.getPathToAllLibsDir()));
+              copyNativeLibraries.getSourcePathToMetadataTxt(),
+              copyNativeLibraries.getSourcePathToAllLibsDir()));
       shouldInstall = true;
     }
 
