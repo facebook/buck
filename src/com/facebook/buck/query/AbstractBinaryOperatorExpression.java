@@ -35,7 +35,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -129,9 +128,11 @@ abstract class AbstractBinaryOperatorExpression extends QueryExpression {
   }
 
   @Override
-  public void collectTargetPatterns(Collection<String> literals) {
-    for (QueryExpression subExpression : getOperands()) {
-      subExpression.collectTargetPatterns(literals);
+  public void traverse(QueryExpression.Visitor visitor) {
+    if (visitor.visit(this) == VisitResult.CONTINUE) {
+      for (QueryExpression subExpression : getOperands()) {
+        subExpression.traverse(visitor);
+      }
     }
   }
 

@@ -33,7 +33,6 @@ package com.facebook.buck.query;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
 import org.immutables.value.Value;
 
 /**
@@ -58,8 +57,8 @@ abstract class AbstractTargetLiteral extends QueryExpression {
   }
 
   @Override
-  public void collectTargetPatterns(Collection<String> literals) {
-    literals.add(getPattern());
+  public void traverse(QueryExpression.Visitor visitor) {
+    visitor.visit(this);
   }
 
   @Override

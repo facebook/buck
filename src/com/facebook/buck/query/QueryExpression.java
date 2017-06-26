@@ -75,9 +75,27 @@ public abstract class QueryExpression {
    * Collects all target patterns that are referenced anywhere within this query expression and adds
    * them to the given collection, which must be mutable.
    */
-  public abstract void collectTargetPatterns(Collection<String> literals);
+  public void collectTargetPatterns(Collection<String> literals) {
+    traverse(new TargetPatternCollector(literals));
+  }
+
+  /** Accepts and applies the given visitor. */
+  public abstract void traverse(Visitor visitor);
 
   /** Returns this query expression pretty-printed. */
   @Override
   public abstract String toString();
+
+  /**
+   * Visits a query expression, and returns whether the traversal should continue downwards or stop
+   * and ignore any subexpressions.
+   */
+  interface Visitor {
+    VisitResult visit(QueryExpression exp);
+  }
+
+  enum VisitResult {
+    CONTINUE,
+    SKIP_SUBTREE
+  }
 }

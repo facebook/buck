@@ -34,7 +34,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
 import org.immutables.value.Value;
 
 /**
@@ -70,9 +69,11 @@ abstract class AbstractSetExpression extends QueryExpression {
   }
 
   @Override
-  public void collectTargetPatterns(Collection<String> literals) {
-    for (TargetLiteral expr : getWords()) {
-      expr.collectTargetPatterns(literals);
+  public void traverse(QueryExpression.Visitor visitor) {
+    if (visitor.visit(this) == VisitResult.CONTINUE) {
+      for (TargetLiteral word : getWords()) {
+        word.traverse(visitor);
+      }
     }
   }
 
