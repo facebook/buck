@@ -39,13 +39,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -65,7 +65,7 @@ import org.junit.Test;
 public class DirArtifactCacheTest {
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
-  private FileHashCache fileHashCache = new NullFileHashCache();
+  private FileHashCache fileHashCache = new DummyFileHashCache();
 
   private DirArtifactCache dirArtifactCache;
 

@@ -30,12 +30,12 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
-        new TargetGraphHashing(eventBus, targetGraph, new NullFileHashCache(), ImmutableList.of())
+        new TargetGraphHashing(eventBus, targetGraph, new DummyFileHashCache(), ImmutableList.of())
             .hashTargetGraph()
             .entrySet(),
         empty());

@@ -53,6 +53,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
@@ -61,7 +62,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
@@ -679,7 +679,7 @@ public class GenruleTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.

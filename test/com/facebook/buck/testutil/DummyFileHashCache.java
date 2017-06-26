@@ -14,17 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.util.cache;
+package com.facebook.buck.testutil;
 
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
-// TODO(mbolin): This should be renamed to DummyFileHashCache and moved under the test/
-// directory.
-public class NullFileHashCache implements FileHashCache {
+public class DummyFileHashCache implements FileHashCache {
 
   @Override
   public void invalidate(Path path) {}

@@ -73,6 +73,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -87,7 +88,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
@@ -172,17 +172,23 @@ public class CachingBuildEngineTest {
   private static final RuleKeyFieldLoader FIELD_LOADER = new RuleKeyFieldLoader(0);
   private static final DefaultRuleKeyFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyFactory(
-          FIELD_LOADER, new NullFileHashCache(), DEFAULT_SOURCE_PATH_RESOLVER, DEFAULT_RULE_FINDER);
+          FIELD_LOADER,
+          new DummyFileHashCache(),
+          DEFAULT_SOURCE_PATH_RESOLVER,
+          DEFAULT_RULE_FINDER);
   private static final InputBasedRuleKeyFactory NOOP_INPUT_BASED_RULE_KEY_FACTORY =
       new InputBasedRuleKeyFactory(
           FIELD_LOADER,
-          new NullFileHashCache(),
+          new DummyFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER,
           NO_INPUT_FILE_SIZE_LIMIT);
   private static final DependencyFileRuleKeyFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
       new DefaultDependencyFileRuleKeyFactory(
-          FIELD_LOADER, new NullFileHashCache(), DEFAULT_SOURCE_PATH_RESOLVER, DEFAULT_RULE_FINDER);
+          FIELD_LOADER,
+          new DummyFileHashCache(),
+          DEFAULT_SOURCE_PATH_RESOLVER,
+          DEFAULT_RULE_FINDER);
 
   @RunWith(Parameterized.class)
   public abstract static class CommonFixture extends EasyMockSupport {
@@ -1287,7 +1293,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
               .setCachingBuildEngineDelegate(
-                  new LocalCachingBuildEngineDelegate(new NullFileHashCache()))
+                  new LocalCachingBuildEngineDelegate(new DummyFileHashCache()))
               .build();
 
       assertThat(cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)), equalTo(3));
@@ -1308,7 +1314,7 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
               .setCachingBuildEngineDelegate(
-                  new LocalCachingBuildEngineDelegate(new NullFileHashCache()))
+                  new LocalCachingBuildEngineDelegate(new DummyFileHashCache()))
               .setArtifactCacheSizeLimit(Optional.of(2L))
               .build();
 

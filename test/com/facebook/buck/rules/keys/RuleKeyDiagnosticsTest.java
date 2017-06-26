@@ -26,7 +26,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Assert;
@@ -59,7 +59,7 @@ public class RuleKeyDiagnosticsTest {
         };
 
     RuleKeyFactoryWithDiagnostics<RuleKey> factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), sourcePathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), sourcePathResolver, ruleFinder);
 
     RuleKeyDiagnostics<RuleKey, String> ruleKeyDiagnostics1 =
         new RuleKeyDiagnostics<>(

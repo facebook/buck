@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
@@ -51,7 +51,7 @@ public class CachingBuildEngineFactory {
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver, BuildInfoStoreManager buildInfoStoreManager) {
-    this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new NullFileHashCache());
+    this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new DummyFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
     this.buildInfoStoreManager = buildInfoStoreManager;

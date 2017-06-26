@@ -43,11 +43,11 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Objects;
@@ -87,7 +87,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     RuleKey expected = factory.build(rule);
 
     class UndecoratedFields extends EmptyRule {
@@ -115,7 +115,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "cake-walk");
@@ -146,7 +146,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "sausages");
@@ -184,7 +184,7 @@ public class DefaultRuleKeyFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
-    FileHashCache fileHashCache = new NullFileHashCache();
+    FileHashCache fileHashCache = new DummyFileHashCache();
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
 
@@ -227,7 +227,7 @@ public class DefaultRuleKeyFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRule rule = new EmptyRule(target);
 
-    FileHashCache fileHashCache = new NullFileHashCache();
+    FileHashCache fileHashCache = new DummyFileHashCache();
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
 
@@ -284,7 +284,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("field", "cheddar");
@@ -316,7 +316,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("alpha", "stilton");
@@ -351,7 +351,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(topLevelTarget);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
@@ -393,7 +393,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
 
     builder.setReflectively("key", "child");
@@ -591,7 +591,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
 
     RuleKey key1 =
         factory.newBuilderForTesting(rule).setReflectively("key1", val).build(RuleKey::new);
@@ -614,7 +614,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
 
     RuleKey key1 =
         factory.newBuilderForTesting(rule).setReflectively("key", val1).build(RuleKey::new);
