@@ -85,12 +85,32 @@ public class BuckClient {
                 } catch (RuntimeException e) {
                   if (!mProject.isDisposed()) {
                     BuckModule buckModule = mProject.getComponent(BuckModule.class);
+                    /* FIXME(shemitz) attachIfDetached() adds a lot of listeners to the IJ message
+                       bus. A lot of things don't happen if this is never called!
+
+                       It's really rather weird that it's only called in an exception handler - it
+                       feels a lot like a very minimal bug fix, especially since this code does NOT
+                       fire if you are testing the plugin from within IJ.
+
+                       I don't want to dig in and fix this right now, so be aware that while
+                       listeners will fire if the plugin is installed 'normally' they will NOT fire
+                       if you are running with ^R (Run 'Buck plugin') or ^D (Debug 'Buck plugin').
+                    */
                     buckModule.attachIfDetached();
                     buckModule.getBuckEventsConsumer().consumeConsoleEvent(e.toString());
                   }
                 }
               }
             });
+
+    // region Debugging hint
+    /*  TODO(shemitz) Copying subscription code from BuckEventsConsumer.attach() to this point is a
+    good way to be sure it runs when you're debugging. For example: */
+    //    mProject
+    //        .getMessageBus()
+    //        .connect()
+    //        .subscribe(VirtualFileManager.VFS_CHANGES, new MoveResourceFiles());
+    // endregion Debugging hint
   }
 
   @VisibleForTesting

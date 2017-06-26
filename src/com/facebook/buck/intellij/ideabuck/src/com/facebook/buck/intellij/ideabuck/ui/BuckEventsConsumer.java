@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.ideabuck.ui;
 
 import com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction;
 import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
+import com.facebook.buck.intellij.ideabuck.fixup.MoveResourceFiles;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeBuild;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
@@ -45,6 +46,7 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsSummar
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -74,6 +76,8 @@ public class BuckEventsConsumer
         BuckConsoleEventConsumer,
         CompilerErrorConsumer,
         BuckInstallFinishedConsumer {
+
+  private static final Logger LOG = Logger.getInstance(BuckEventsConsumer.class);
 
   private Project mProject;
 
@@ -171,6 +175,8 @@ public class BuckEventsConsumer
     mConnection.subscribe(TestResultsAvailableConsumer.BUCK_TEST_RESULTS_AVAILABLE, this);
 
     mConnection.subscribe(BuckInstallFinishedConsumer.INSTALL_FINISHED_CONSUMER, this);
+
+    mConnection.subscribe(VirtualFileManager.VFS_CHANGES, new MoveResourceFiles());
 
     attached = true;
   }
