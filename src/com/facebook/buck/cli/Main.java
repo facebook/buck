@@ -22,6 +22,7 @@ import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorS
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
@@ -891,7 +892,7 @@ public final class Main {
             processManager = Optional.of(new PkillProcessManager(processExecutor));
           }
           Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-              createAndroidPlatformTargetSupplier(
+              new AndroidPlatformTargetSupplier(
                   androidDirectoryResolver, androidBuckConfig, buildEventBus);
 
           // At this point, we have parsed options but haven't started
@@ -1137,59 +1138,6 @@ public final class Main {
     } else {
       return newDirectExecutorService();
     }
-  }
-
-  @VisibleForTesting
-  static Supplier<AndroidPlatformTarget> createAndroidPlatformTargetSupplier(
-      final AndroidDirectoryResolver androidDirectoryResolver,
-      final AndroidBuckConfig androidBuckConfig,
-      final BuckEventBus eventBus) {
-    // TODO(mbolin): Only one such Supplier should be created per Cell per Buck execution.
-    // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
-    // and passes it from above all the way through, but it is not parameterized by Cell.
-    //
-    // TODO(mbolin): Every build rule that uses AndroidPlatformTarget must include the result
-    // of its getCacheName() method in its RuleKey.
-    return new Supplier<AndroidPlatformTarget>() {
-
-      @Nullable private AndroidPlatformTarget androidPlatformTarget;
-
-      @Nullable private RuntimeException exception;
-
-      @Override
-      public AndroidPlatformTarget get() {
-        if (androidPlatformTarget != null) {
-          return androidPlatformTarget;
-        } else if (exception != null) {
-          throw exception;
-        }
-
-        String androidPlatformTargetId;
-        Optional<String> target = androidBuckConfig.getAndroidTarget();
-        if (target.isPresent()) {
-          androidPlatformTargetId = target.get();
-        } else {
-          androidPlatformTargetId = AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET;
-          eventBus.post(
-              ConsoleEvent.fine(
-                  "No Android platform target specified. Using default: %s",
-                  androidPlatformTargetId));
-        }
-
-        try {
-          androidPlatformTarget =
-              AndroidPlatformTarget.getTargetForId(
-                  androidPlatformTargetId,
-                  androidDirectoryResolver,
-                  androidBuckConfig.getAaptOverride(),
-                  androidBuckConfig.getAapt2Override());
-          return androidPlatformTarget;
-        } catch (RuntimeException e) {
-          exception = e;
-          throw e;
-        }
-      }
-    };
   }
 
   private static ConsoleHandlerState.Writer createWriterForConsole(

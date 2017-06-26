@@ -16,7 +16,11 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTargetSupplier;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
@@ -223,8 +227,18 @@ public class DistBuildSlaveExecutor {
     return new StackedFileHashCache(allCachesBuilder.build());
   }
 
-  private Supplier<AndroidPlatformTarget> getExplodingAndroidSupplier() {
-    return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
+  private Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier(
+      DistBuildExecutorArgs args) {
+    AndroidBuckConfig androidConfig =
+        new AndroidBuckConfig(args.getRemoteRootCellConfig(), args.getPlatform());
+
+    AndroidDirectoryResolver dirResolver =
+        new DefaultAndroidDirectoryResolver(
+            args.getRootCell().getFilesystem().getRootPath().getFileSystem(),
+            args.getRemoteRootCellConfig().getEnvironment(),
+            androidConfig.getBuildToolsVersion(),
+            androidConfig.getNdkVersion());
+    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig, args.getBuckEventBus());
   }
 
   private List<BuildTarget> fullyQualifiedNameToBuildTarget(Iterable<String> buildTargets) {
@@ -323,7 +337,7 @@ public class DistBuildSlaveExecutor {
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
                   args.getRootCell(),
                   Optional.empty(),
-                  getExplodingAndroidSupplier(),
+                  getAndroidPlatformTargetSupplier(args),
                   buildEngine,
                   args.getArtifactCache(),
                   distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),

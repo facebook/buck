@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -93,7 +94,7 @@ public class CommandRunnerParamsForTesting {
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
         .setCell(cell)
         .setAndroidPlatformTargetSupplier(
-            Main.createAndroidPlatformTargetSupplier(
+            new AndroidPlatformTargetSupplier(
                 androidDirectoryResolver,
                 new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
                 eventBus))
