@@ -162,19 +162,38 @@ public abstract class Jsr199Javac implements Javac {
             return 1;
           }
 
+          // write javaSourceFilePaths to classes file
+          // for buck user to have a list of all .java files to be compiled
+          // since we do not print them out to console in case of error
           try {
-            int result =
-                buildWithClasspath(
-                    context,
-                    invokingRule,
-                    options,
-                    pluginFields,
-                    javaSourceFilePaths,
-                    pathToSrcsList,
-                    compiler,
-                    fileManager,
-                    compilationUnits,
-                    compilationMode);
+            context
+                .getProjectFilesystem()
+                .writeLinesToPath(
+                    FluentIterable.from(javaSourceFilePaths)
+                        .transform(Object::toString)
+                        .transform(ARGFILES_ESCAPER),
+                    pathToSrcsList);
+          } catch (IOException e) {
+            context
+                .getEventSink()
+                .reportThrowable(
+                    e,
+                    "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+                    pathToSrcsList);
+            return 1;
+          }
+
+          try (CompilerBundle compilerBundle =
+              new CompilerBundle(
+                  context,
+                  invokingRule,
+                  options,
+                  pluginFields,
+                  compiler,
+                  fileManager,
+                  compilationUnits,
+                  compilationMode)) {
+            int result = buildWithClasspath(compilerBundle, context, invokingRule, compilationMode);
             if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
               return result;
             }
@@ -240,50 +259,14 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private int buildWithClasspath(
+      CompilerBundle compilerBundle,
       JavacExecutionContext context,
       BuildTarget invokingRule,
-      ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> pluginFields,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      JavaCompiler compiler,
-      StandardJavaFileManager fileManager,
-      Iterable<? extends JavaFileObject> compilationUnits,
       JavacCompilationMode compilationMode) {
-    // write javaSourceFilePaths to classes file
-    // for buck user to have a list of all .java files to be compiled
-    // since we do not print them out to console in case of error
-    try {
-      context
-          .getProjectFilesystem()
-          .writeLinesToPath(
-              FluentIterable.from(javaSourceFilePaths)
-                  .transform(Object::toString)
-                  .transform(ARGFILES_ESCAPER),
-              pathToSrcsList);
-    } catch (IOException e) {
-      context
-          .getEventSink()
-          .reportThrowable(
-              e,
-              "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-              pathToSrcsList);
-      return 1;
-    }
-
     boolean isSuccess = true;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
-    try (CompilerBundle compilerBundle =
-        new CompilerBundle(
-            context,
-            invokingRule,
-            options,
-            pluginFields,
-            compiler,
-            fileManager,
-            compilationUnits,
-            compilationMode)) {
+    try {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = compilerBundle.getJavacTask();
 
