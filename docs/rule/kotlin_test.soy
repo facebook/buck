@@ -1,0 +1,118 @@
+{namespace kotlin_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'kotlin_test()' /}
+    {param navid: 'rule_kotlin_test' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to define a set of kotlin files that contain tests.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>kotlin_test()</code> rule is used to define a set of
+{sp}<code>.kt</code> files that contain tests to run via JUnit.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  Like <code>{call buck.kotlin_library /}</code></a>,
+  all of the <code>.kt</code> files specified by the
+  {sp}<code>srcs</code> argument will be compiled when this rule is
+  built. In addition, all of the corresponding <code>.class</code>{sp}
+  files that are built by this rule will be passed as arguments to
+  JUnit when this rule is run as a test. <code>.class</code> files
+  that are passed to JUnit that do not have any methods annotated with
+  {sp}<code>@Test</code> are considered failed tests, so make sure that
+  only test case classes are specified as <code>srcs</code>. This is
+  frequently done by specifying <code>srcs</code> as
+  {sp}{literal}<code>glob(['**/*Test.kt'])</code>{/literal}.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Same as {call buck.kotlin_library /}.
+  {/param}
+{/call}
+
+{call buck.test_label_arg /}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Same as {call buck.kotlin_library /}.
+  // org.junit.rules.Timeout was not introduced until 4.7.
+  Must include JUnit (version 4.7 or later) as a dependency for JUnit tests.
+  Must include TestNG (version 6.2 or later) and hamcrest as a dependencies for TestNG tests.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'test_type' /}
+  {param default : 'junit' /}
+  {param desc}
+  Specifies which test framework to use.
+  The currently supported options are 'junit' and 'testng'.
+  {/param}
+{/call}
+
+{call buck.run_test_separately_arg /}
+
+{call buck.fork_mode /}
+
+{call buck.test_rule_timeout_ms /}
+
+{call buck.arg}
+  {param name: 'std_out_log_level' /}
+  {param default : 'FINE' /}
+  {param desc}
+  Log level for messages from the source under test that buck will output to
+  std out.
+  <p>Value must be a valid <code>java.util.logging.Level</code> value.</p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'std_err_log_level' /}
+  {param default : 'WARNING' /}
+  {param desc}
+  Same as <code>std_out_log_level</code>, but for std err.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'vm_args' /}
+  {param default : '[]' /}
+  {param desc}
+  Runtime arguments to the JVM running the tests.
+  {/param}
+{/call}
+
+{call jvm_common.test_env /}
+
+{/param} // close args
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
