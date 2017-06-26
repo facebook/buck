@@ -263,10 +263,11 @@ public class DefaultJavaLibraryBuilder {
       } else if (HasJavaAbi.isSourceAbiTarget(buildTarget)) {
         return buildAbiFromSource();
       } else if (HasJavaAbi.isVerifiedSourceAbiTarget(buildTarget)) {
-        BuildRule classAbi = buildAbiFromClasses();
-        BuildRule sourceAbi = buildAbiFromSource();
-        buildRuleResolver.addToIndex(classAbi);
-        buildRuleResolver.addToIndex(sourceAbi);
+        BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(buildTarget);
+        BuildRule classAbi =
+            buildRuleResolver.requireRule(HasJavaAbi.getClassAbiJar(libraryTarget));
+        BuildRule sourceAbi =
+            buildRuleResolver.requireRule(HasJavaAbi.getSourceAbiJar(libraryTarget));
 
         return new CompareAbis(
             initialParams
