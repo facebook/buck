@@ -3,8 +3,7 @@ java_immutables_library(
     srcs = glob(
         ["**/*.java"],
         excludes = [
-            "deprecated/*.java",
-            "projectview/*.*",
+            "projectview/**",
         ],
     ),
     resources = [

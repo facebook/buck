@@ -23,6 +23,7 @@ import static com.facebook.buck.ide.intellij.projectview.Patterns.optional;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -531,7 +532,7 @@ public class ProjectView {
   private static final String NAME = "name";
   private static final String OPTION = "option";
   private static final String ORDER_ENTRY = "orderEntry";
-  private static final String ROOT_IML = "root.iml";
+  private static final String ROOT_IML = SharedConstants.ROOT_MODULE_NAME + ".iml";
   private static final String SOURCE_FOLDER = "sourceFolder";
   private static final String TYPE = "type";
   private static final String URL = "url";
