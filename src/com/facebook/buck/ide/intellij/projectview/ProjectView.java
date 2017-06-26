@@ -384,10 +384,14 @@ public class ProjectView {
     final List<String> paths = helper.getSortedSourcePaths();
 
     for (int index = 0, size = paths.size(); index < size; /*increment in loop*/ ) {
-      final String path = paths.get(index);
+      final String path = pathWithBuck(paths.get(index));
+      if (path == null) {
+        index += 1;
+        continue;
+      }
 
-      // This folder could be a root, but so could any of its parents. The best root is the one that
-      // requires the fewest excludedFolder tags
+      // Any folder with a BUCK file could be a root: the best root is the one that requires the
+      // fewest excludedFolder tags
       int lowestCost = helper.excludesUnder(path);
       String bestRoot = path;
       String parent = dirname(path);
@@ -397,7 +401,7 @@ public class ProjectView {
           lowestCost = cost;
           bestRoot = parent;
         }
-        parent = dirname(parent);
+        parent = pathWithBuck(dirname(parent));
       }
       roots.add(bestRoot);
 
@@ -409,6 +413,17 @@ public class ProjectView {
     }
 
     return roots;
+  }
+
+  /**
+   * Returns path, if it contains a BUCK file. Else returns the closest parent with a BUCK file, or
+   * null if there are no BUCK files 'above' path
+   */
+  private String pathWithBuck(String path) {
+    while (path != null && !Files.exists(Paths.get(repository, path, "BUCK"))) {
+      path = dirname(path);
+    }
+    return path;
   }
 
   private void buildRootLinks(Set<String> roots) {
