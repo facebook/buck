@@ -159,7 +159,11 @@ public class JavacStep implements Step {
                 .stream()
                 .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
                 .collect(Collectors.toList()));
-    Javac.Invocation invocation =
+    int declaredDepsBuildResult;
+    String firstOrderStdout;
+    String firstOrderStderr;
+    Optional<String> returnedStderr;
+    try (Javac.Invocation invocation =
         javac.newBuildInvocation(
             javacExecutionContext,
             invokingRule,
@@ -168,11 +172,11 @@ public class JavacStep implements Step {
             javaSourceFilePaths,
             pathToSrcsList,
             workingDirectory,
-            javacOptions.getCompilationMode());
-    int declaredDepsBuildResult = invocation.buildClasses();
-    String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
-    String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
-    Optional<String> returnedStderr;
+            javacOptions.getCompilationMode())) {
+      declaredDepsBuildResult = invocation.buildClasses();
+    }
+    firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
+    firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
     if (declaredDepsBuildResult != 0) {
       returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
     } else {
