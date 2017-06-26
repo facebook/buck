@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.sqlite.RetryBusyHandler;
 import com.facebook.buck.sqlite.SQLiteUtils;
 import java.io.IOException;
 import java.sql.Connection;
@@ -64,19 +65,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
           connection.prepareStatement(
               "INSERT OR REPLACE INTO metadata (target, key, value) VALUES (?, ?, ?)");
       deleteStmt = connection.prepareStatement("DELETE FROM metadata WHERE target = ?");
-      BusyHandler busyHandler =
-          new BusyHandler() {
-            @Override
-            protected int callback(int retries) throws SQLException {
-              try {
-                Thread.sleep(retries);
-              } catch (InterruptedException e) {
-                throw new SQLException(e);
-              }
-              return 1;
-            }
-          };
-      BusyHandler.setHandler(connection, busyHandler);
+      BusyHandler.setHandler(connection, new RetryBusyHandler());
     } catch (ClassNotFoundException | SQLException e) {
       throw new IOException(e);
     }
