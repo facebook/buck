@@ -124,34 +124,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       return 1;
     }
 
-    try {
-      int result = buildWithClasspath();
-      if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
-        return result;
-      }
-
-      return newJarBuilder()
-          .createJarFile(
-              Preconditions.checkNotNull(
-                  context
-                      .getProjectFilesystem()
-                      .getPathForRelativePath(
-                          context
-                              .getDirectToJarOutputSettings()
-                              .get()
-                              .getDirectToJarOutputPath())));
-    } catch (IOException e) {
-      LOG.warn(e, "Unable to create jarOutputStream");
-    }
-    return 1;
-  }
-
-  // TODO: Break this up some
-  private int buildWithClasspath() {
-    boolean isSuccess = true;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try {
+      boolean isSuccess = true;
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
 
@@ -177,7 +153,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         context
             .getUsedClassesFileWriter()
             .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
-        return 0;
       } else {
         if (context.getVerbosity().shouldPrintStandardInformation()) {
           int numErrors = 0;
@@ -200,6 +175,21 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         }
         return 1;
       }
+
+      if (!context.getDirectToJarOutputSettings().isPresent()) {
+        return 0;
+      }
+
+      return newJarBuilder()
+          .createJarFile(
+              Preconditions.checkNotNull(
+                  context
+                      .getProjectFilesystem()
+                      .getPathForRelativePath(
+                          context
+                              .getDirectToJarOutputSettings()
+                              .get()
+                              .getDirectToJarOutputPath())));
     } catch (IOException e) {
       LOG.error(e);
       throw new HumanReadableException("IOException during compilation: ", e.getMessage());
