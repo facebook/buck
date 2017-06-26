@@ -132,94 +132,80 @@ public abstract class Jsr199Javac implements Javac {
       @Override
       public int buildClasses() throws InterruptedException {
         JavaCompiler compiler = createCompiler(context);
-        CustomJarOutputStream jarOutputStream = null;
         StandardJavaFileManager fileManager = null;
         JavaInMemoryFileManager inMemoryFileManager = null;
         Path directToJarPath = null;
-        try {
-          fileManager = compiler.getStandardFileManager(null, null, null);
-          if (context.getDirectToJarOutputSettings().isPresent()) {
-            directToJarPath =
-                context
-                    .getProjectFilesystem()
-                    .getPathForRelativePath(
-                        context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
-            inMemoryFileManager =
-                new JavaInMemoryFileManager(
-                    fileManager,
-                    directToJarPath,
-                    context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
-            fileManager = inMemoryFileManager;
-          }
-
-          Iterable<? extends JavaFileObject> compilationUnits;
-          try {
-            compilationUnits =
-                createCompilationUnits(
-                    fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
-          } catch (IOException e) {
-            LOG.warn(e, "Error building compilation units");
-            return 1;
-          }
-
-          // write javaSourceFilePaths to classes file
-          // for buck user to have a list of all .java files to be compiled
-          // since we do not print them out to console in case of error
-          try {
-            context
-                .getProjectFilesystem()
-                .writeLinesToPath(
-                    FluentIterable.from(javaSourceFilePaths)
-                        .transform(Object::toString)
-                        .transform(ARGFILES_ESCAPER),
-                    pathToSrcsList);
-          } catch (IOException e) {
-            context
-                .getEventSink()
-                .reportThrowable(
-                    e,
-                    "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-                    pathToSrcsList);
-            return 1;
-          }
-
-          try (CompilerBundle compilerBundle =
-              new CompilerBundle(
-                  context,
-                  invokingRule,
-                  options,
-                  pluginFields,
-                  compiler,
+        fileManager = compiler.getStandardFileManager(null, null, null);
+        if (context.getDirectToJarOutputSettings().isPresent()) {
+          directToJarPath =
+              context
+                  .getProjectFilesystem()
+                  .getPathForRelativePath(
+                      context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+          inMemoryFileManager =
+              new JavaInMemoryFileManager(
                   fileManager,
-                  compilationUnits,
-                  compilationMode)) {
-            int result = buildWithClasspath(compilerBundle, context, invokingRule, compilationMode);
-            if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
-              return result;
-            }
+                  directToJarPath,
+                  context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+          fileManager = inMemoryFileManager;
+        }
 
-            JarBuilder jarBuilder = new JarBuilder();
-            Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
-            return jarBuilder
-                .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
-                .setEntriesToJar(
-                    context
-                        .getDirectToJarOutputSettings()
-                        .get()
-                        .getEntriesToJar()
-                        .stream()
-                        .map(context.getProjectFilesystem()::resolve))
-                .setMainClass(
-                    context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
-                .setManifestFile(
-                    context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
-                .setShouldMergeManifests(true)
-                .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
-                .setEntryPatternBlacklist(ImmutableSet.of())
-                .createJarFile(Preconditions.checkNotNull(directToJarPath));
-          } finally {
-            Jsr199Javac.this.close(compilationUnits);
+        // write javaSourceFilePaths to classes file
+        // for buck user to have a list of all .java files to be compiled
+        // since we do not print them out to console in case of error
+        try {
+          context
+              .getProjectFilesystem()
+              .writeLinesToPath(
+                  FluentIterable.from(javaSourceFilePaths)
+                      .transform(Object::toString)
+                      .transform(ARGFILES_ESCAPER),
+                  pathToSrcsList);
+        } catch (IOException e) {
+          context
+              .getEventSink()
+              .reportThrowable(
+                  e,
+                  "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+                  pathToSrcsList);
+          return 1;
+        }
+
+        CustomJarOutputStream jarOutputStream = null;
+        try (CompilerBundle compilerBundle =
+            new CompilerBundle(
+                context,
+                invokingRule,
+                options,
+                pluginFields,
+                compiler,
+                fileManager,
+                javaSourceFilePaths,
+                compilationMode)) {
+          int result = buildWithClasspath(compilerBundle, context, invokingRule, compilationMode);
+          if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
+            return result;
           }
+
+          JarBuilder jarBuilder = new JarBuilder();
+          Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+          return jarBuilder
+              .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
+              .setEntriesToJar(
+                  context
+                      .getDirectToJarOutputSettings()
+                      .get()
+                      .getEntriesToJar()
+                      .stream()
+                      .map(context.getProjectFilesystem()::resolve))
+              .setMainClass(
+                  context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
+              .setManifestFile(
+                  context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+              .setShouldMergeManifests(true)
+              .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
+              .setEntryPatternBlacklist(ImmutableSet.of())
+              .createJarFile(Preconditions.checkNotNull(directToJarPath));
         } catch (IOException e) {
           LOG.warn(e, "Unable to create jarOutputStream");
         } finally {
@@ -359,60 +345,12 @@ public abstract class Jsr199Javac implements Javac {
     throw new AssertionError("Unreachable code");
   }
 
-  private void close(Iterable<? extends JavaFileObject> compilationUnits) {
-    for (JavaFileObject unit : compilationUnits) {
-      if (unit instanceof Closeable) {
-        try {
-          ((Closeable) unit).close();
-        } catch (IOException e) {
-          LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
-        }
-      }
-    }
-  }
-
-  private Iterable<? extends JavaFileObject> createCompilationUnits(
-      StandardJavaFileManager fileManager,
-      Function<Path, Path> absolutifier,
-      Set<Path> javaSourceFilePaths)
-      throws IOException {
-    List<JavaFileObject> compilationUnits = new ArrayList<>();
-    for (Path path : javaSourceFilePaths) {
-      String pathString = path.toString();
-      if (pathString.endsWith(".java")) {
-        // For an ordinary .java file, create a corresponding JavaFileObject.
-        Iterable<? extends JavaFileObject> javaFileObjects =
-            fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
-        compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
-        boolean hasZipFileBeenUsed = false;
-        for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            entries.hasMoreElements();
-            ) {
-          ZipEntry entry = entries.nextElement();
-          if (!entry.getName().endsWith(".java")) {
-            continue;
-          }
-
-          hasZipFileBeenUsed = true;
-          compilationUnits.add(new ZipEntryJavaFileObject(zipFile, entry));
-        }
-
-        if (!hasZipFileBeenUsed) {
-          zipFile.close();
-        }
-      }
-    }
-    return compilationUnits;
-  }
-
   private class CompilerBundle implements AutoCloseable {
     private final BuckJavacTaskProxy javacTask;
     private final TranslatingJavacPhaseTracer tracer;
     private final AnnotationProcessorFactory processorFactory;
     private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    private final Iterable<? extends JavaFileObject> compilationUnits;
 
     public CompilerBundle(
         JavacExecutionContext context,
@@ -421,8 +359,18 @@ public abstract class Jsr199Javac implements Javac {
         ImmutableList<JavacPluginJsr199Fields> pluginFields,
         JavaCompiler compiler,
         StandardJavaFileManager fileManager,
-        Iterable<? extends JavaFileObject> compilationUnits,
-        JavacCompilationMode compilationMode) {
+        ImmutableSortedSet<Path> javaSourceFilePaths,
+        JavacCompilationMode compilationMode)
+        throws IOException {
+      try {
+        compilationUnits =
+            createCompilationUnits(
+                fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
+      } catch (IOException e) {
+        LOG.warn(e, "Error building compilation units");
+        throw e;
+      }
+
       List<String> classNamesForAnnotationProcessing = ImmutableList.of();
       Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
       PluginClassLoaderFactory loaderFactory =
@@ -513,11 +461,62 @@ public abstract class Jsr199Javac implements Javac {
       // in some unusual situations
       tracer.close();
 
+      close(compilationUnits);
+
       try {
         processorFactory.close();
       } catch (IOException e) {
         LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
       }
+    }
+
+    private void close(Iterable<? extends JavaFileObject> compilationUnits) {
+      for (JavaFileObject unit : compilationUnits) {
+        if (unit instanceof Closeable) {
+          try {
+            ((Closeable) unit).close();
+          } catch (IOException e) {
+            LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
+          }
+        }
+      }
+    }
+
+    private Iterable<? extends JavaFileObject> createCompilationUnits(
+        StandardJavaFileManager fileManager,
+        Function<Path, Path> absolutifier,
+        Set<Path> javaSourceFilePaths)
+        throws IOException {
+      List<JavaFileObject> compilationUnits = new ArrayList<>();
+      for (Path path : javaSourceFilePaths) {
+        String pathString = path.toString();
+        if (pathString.endsWith(".java")) {
+          // For an ordinary .java file, create a corresponding JavaFileObject.
+          Iterable<? extends JavaFileObject> javaFileObjects =
+              fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
+          compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
+        } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
+          // For a Zip of .java files, create a JavaFileObject for each .java entry.
+          ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
+          boolean hasZipFileBeenUsed = false;
+          for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
+              entries.hasMoreElements();
+              ) {
+            ZipEntry entry = entries.nextElement();
+            if (!entry.getName().endsWith(".java")) {
+              continue;
+            }
+
+            hasZipFileBeenUsed = true;
+            compilationUnits.add(new ZipEntryJavaFileObject(zipFile, entry));
+          }
+
+          if (!hasZipFileBeenUsed) {
+            zipFile.close();
+          }
+        }
+      }
+      return compilationUnits;
     }
   }
 
