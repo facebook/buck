@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidAarDescription;
+import com.facebook.buck.android.AndroidAppModularityDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
@@ -529,6 +530,7 @@ public class KnownBuildRuleTypes {
             javaConfig,
             defaultJavacOptions,
             ndkCxxPlatforms));
+    builder.register(new AndroidAppModularityDescription());
     builder.register(
         new AndroidBinaryDescription(
             javaConfig,

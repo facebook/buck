@@ -71,6 +71,8 @@ RULES_SRCS = [
     "AbstractAndroidInstrumentationTestJVMArgs.java",
     "AndroidAar.java",
     "AndroidAarDescription.java",
+    "AndroidAppModularity.java",
+    "AndroidAppModularityDescription.java",
     "AndroidBinary.java",
     "AndroidBinaryDescription.java",
     "AndroidBinaryGraphEnhancer.java",
@@ -139,6 +141,7 @@ RULES_SRCS = [
     # library, but are added here to avoid circular dependencies.
     "ApkInstallStep.java",
     "InstrumentationStep.java",
+    "WriteAppModuleMetadataStep.java",
     "relinker/RelinkerRule.java",
     "relinker/NativeRelinker.java",
     "relinker/Symbols.java",
