@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.PackageInfo;
 import com.facebook.buck.android.exopackage.RealExopackageDevice;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -136,13 +137,12 @@ public class ExopackageInstallerTest {
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("a", 40), Strings.repeat("b", 40)),
-        ExopackageInstaller.NativeExoHelper.filterLibrariesForAbi(
-                libsDir, allLibs, "armeabi-v7a", ImmutableSet.of())
+        NativeExoHelper.filterLibrariesForAbi(libsDir, allLibs, "armeabi-v7a", ImmutableSet.of())
             .keySet());
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("d", 40)),
-        ExopackageInstaller.NativeExoHelper.filterLibrariesForAbi(
+        NativeExoHelper.filterLibrariesForAbi(
                 libsDir, allLibs, "armeabi", ImmutableSet.of("libmy1.so", "libmy2.so"))
             .keySet());
   }

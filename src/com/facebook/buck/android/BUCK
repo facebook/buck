@@ -319,11 +319,15 @@ HELPERS_SRCS = [
     "AdbHelper.java",
     "AndroidPlatformTargetSupplier.java",
     "HasInstallableApk.java",
+    "exopackage/DexExoHelper.java",
     "exopackage/ExopackageAgent.java",
     "exopackage/ExopackageDevice.java",
     "exopackage/ExopackageInstaller.java",
+    "exopackage/ExopackageUtil.java",
+    "exopackage/NativeExoHelper.java",
     "exopackage/PackageInfo.java",
     "exopackage/RealExopackageDevice.java",
+    "exopackage/ResourcesExoHelper.java",
 ]
 
 java_immutables_library(
