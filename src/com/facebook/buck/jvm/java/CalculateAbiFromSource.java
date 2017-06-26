@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,7 +39,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
@@ -55,7 +55,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey private final ImmutableSet<Pattern> classesToRemoveFromJar;
 
-  private final Optional<Path> outputJar;
+  private final Path outputJar;
   private final JarContentsSupplier outputJarContents;
 
   public CalculateAbiFromSource(
@@ -80,14 +80,12 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     this.manifestFile = manifestFile;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
 
-    if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
-      this.outputJar =
-          Optional.of(
-              BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "lib__%s__output")
-                  .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName())));
-    } else {
-      this.outputJar = Optional.empty();
-    }
+    Preconditions.checkArgument(
+        !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent(),
+        "Shouldn't have created a source ABI rule if there is no library jar.");
+    outputJar =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "lib__%s__output")
+            .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
     this.outputJarContents =
         new JarContentsSupplier(new SourcePathResolver(ruleFinder), getSourcePathToOutput());
   }
@@ -102,7 +100,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
         getProjectFilesystem(),
         context,
         buildableContext,
-        outputJar,
+        Optional.of(outputJar),
         ruleFinder,
         srcs,
         resources,
@@ -119,10 +117,9 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     return steps.build();
   }
 
-  @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return outputJar.map(o -> new ExplicitBuildTargetSourcePath(getBuildTarget(), o)).orElse(null);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJar);
   }
 
   @Override

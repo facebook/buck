@@ -283,7 +283,12 @@ public class DefaultJavaLibraryBuilder {
           String.format("%s is not an ABI target but went down the ABI codepath", buildTarget));
     }
 
+    @Nullable
     protected BuildTarget getAbiJar() {
+      if (!willProduceOutputJar()) {
+        return null;
+      }
+
       if (abiJar == null) {
         BuildTarget libraryTarget = initialParams.getBuildTarget();
         if (shouldBuildAbiFromSource()) {
@@ -299,6 +304,10 @@ public class DefaultJavaLibraryBuilder {
       }
 
       return abiJar;
+    }
+
+    private boolean willProduceOutputJar() {
+      return !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent();
     }
 
     private boolean shouldBuildAbiFromSource() {

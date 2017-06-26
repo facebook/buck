@@ -95,7 +95,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       ImmutableSortedSet<SourcePath> abiInputs,
-      BuildTarget abiJar,
+      @Nullable BuildTarget abiJar,
       JavacOptions javacOptions,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
