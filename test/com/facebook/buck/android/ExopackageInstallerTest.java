@@ -56,7 +56,7 @@ public class ExopackageInstallerTest {
             + "    versionName=8.0.0.0.23\r\n"
             + "";
     Optional<PackageInfo> optionalInfo =
-        ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
+        RealExopackageDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertTrue(optionalInfo.isPresent());
     PackageInfo info = optionalInfo.get();
@@ -82,7 +82,7 @@ public class ExopackageInstallerTest {
             + "    versionName=3\r\n"
             + "";
     Optional<PackageInfo> optionalInfo =
-        ExopackageInstaller.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
+        RealExopackageDevice.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
 
     assertTrue(optionalInfo.isPresent());
     PackageInfo info = optionalInfo.get();
@@ -106,7 +106,7 @@ public class ExopackageInstallerTest {
             + "    versionName=8.0.0.0.23\r\n"
             + "";
     Optional<PackageInfo> optionalInfo =
-        ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
+        RealExopackageDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertFalse(optionalInfo.isPresent());
   }

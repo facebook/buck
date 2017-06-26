@@ -108,6 +108,100 @@ public class RealExopackageDevice implements ExopackageDevice {
     return topLevelBuilder.build();
   }
 
+  @VisibleForTesting
+  public static Optional<PackageInfo> parsePathAndPackageInfo(
+      String packageName, String rawOutput) {
+    Iterable<String> lines = Splitter.on(LINE_ENDING).omitEmptyStrings().split(rawOutput);
+    String pmPathPrefix = "package:";
+
+    String pmPath = null;
+    for (String line : lines) {
+      // Ignore silly linker warnings about non-PIC code on emulators
+      if (!line.startsWith("WARNING: linker: ")) {
+        pmPath = line;
+        break;
+      }
+    }
+
+    if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
+      LOG.warn("unable to locate package path for [" + packageName + "]");
+      return Optional.empty();
+    }
+
+    final String packagePrefix = "  Package [" + packageName + "] (";
+    final String otherPrefix = "  Package [";
+    boolean sawPackageLine = false;
+    final Splitter splitter = Splitter.on('=').limit(2);
+
+    String codePath = null;
+    String resourcePath = null;
+    String nativeLibPath = null;
+    String versionCode = null;
+
+    for (String line : lines) {
+      // Just ignore everything until we see the line that says we are in the right package.
+      if (line.startsWith(packagePrefix)) {
+        sawPackageLine = true;
+        continue;
+      }
+      // This should never happen, but if we do see a different package, stop parsing.
+      if (line.startsWith(otherPrefix)) {
+        break;
+      }
+      // Ignore lines before our package.
+      if (!sawPackageLine) {
+        continue;
+      }
+      // Parse key-value pairs.
+      List<String> parts = splitter.splitToList(line.trim());
+      if (parts.size() != 2) {
+        continue;
+      }
+      switch (parts.get(0)) {
+        case "codePath":
+          codePath = parts.get(1);
+          break;
+        case "resourcePath":
+          resourcePath = parts.get(1);
+          break;
+        case "nativeLibraryPath":
+          nativeLibPath = parts.get(1);
+          break;
+          // Lollipop uses this name.  Not sure what's "legacy" about it yet.
+          // Maybe something to do with 64-bit?
+          // Might need to update if people report failures.
+        case "legacyNativeLibraryDir":
+          nativeLibPath = parts.get(1);
+          break;
+        case "versionCode":
+          // Extra split to get rid of the SDK thing.
+          versionCode = parts.get(1).split(" ", 2)[0];
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (!sawPackageLine) {
+      return Optional.empty();
+    }
+
+    Preconditions.checkNotNull(codePath, "Could not find codePath");
+    Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
+    Preconditions.checkNotNull(nativeLibPath, "Could not find nativeLibraryPath");
+    Preconditions.checkNotNull(versionCode, "Could not find versionCode");
+    if (!codePath.equals(resourcePath)) {
+      throw new IllegalStateException("Code and resource path do not match");
+    }
+
+    // Lollipop doesn't give the full path to the apk anymore.  Not sure why it's "base.apk".
+    if (!codePath.endsWith(".apk")) {
+      codePath += "/base.apk";
+    }
+
+    return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
+  }
+
   @Override
   public boolean installApkOnDevice(File apk, boolean installViaSd, boolean quiet) {
     return adbHelper.installApkOnDevice(device, apk, installViaSd, quiet);
@@ -141,7 +235,7 @@ public class RealExopackageDevice implements ExopackageDevice {
         AdbHelper.executeCommandWithErrorChecking(
             device, String.format("pm path %s; dumpsys package %s", packageName, packageName));
 
-    return ExopackageInstaller.parsePathAndPackageInfo(packageName, lines);
+    return parsePathAndPackageInfo(packageName, lines);
   }
 
   @Override
