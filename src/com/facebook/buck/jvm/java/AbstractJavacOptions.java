@@ -28,8 +28,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -188,7 +189,16 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
               .map(ResolvedJavacPluginProperties::getClasspath)
               .flatMap(Arrays::stream)
               .distinct()
-              .map(URL::toString)
+              .map(
+                  url -> {
+                    try {
+                      return url.toURI();
+                    } catch (URISyntaxException e) {
+                      throw new RuntimeException(e);
+                    }
+                  })
+              .map(Paths::get)
+              .map(Path::toString)
               .collect(Collectors.joining(File.pathSeparator)));
 
       // Specify names of processors.
