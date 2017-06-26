@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -27,7 +28,6 @@ import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
-import javax.tools.JavaFileManager;
 
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
@@ -64,9 +64,9 @@ public class StubJar {
     }
   }
 
-  public void writeTo(JavaFileManager fileManager) throws IOException {
+  public void writeTo(JarBuilder jarBuilder) throws IOException {
     try (LibraryReader input = libraryReaderSupplier.get();
-        StubJarWriter writer = new JavaFileManagerStubJarWriter(fileManager)) {
+        StubJarWriter writer = new JarBuilderStubJarWriter(jarBuilder)) {
       writeTo(input, writer);
     }
   }

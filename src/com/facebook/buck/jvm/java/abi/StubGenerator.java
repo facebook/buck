@@ -19,34 +19,31 @@ package com.facebook.buck.jvm.java.abi;
 import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.jvm.java.JavacEventSinkScopedSimplePerfEvent;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.JarBuilder;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
-import javax.tools.JavaFileManager;
 
 public class StubGenerator {
   private final SourceVersion version;
   private final Elements elements;
-  private final JavaFileManager fileManager;
+  private final JarBuilder jarBuilder;
   private final JavacEventSink eventSink;
 
   public StubGenerator(
-      SourceVersion version,
-      Elements elements,
-      JavaFileManager fileManager,
-      JavacEventSink eventSink) {
+      SourceVersion version, Elements elements, JarBuilder jarBuilder, JavacEventSink eventSink) {
     this.version = version;
     this.elements = elements;
-    this.fileManager = fileManager;
+    this.jarBuilder = jarBuilder;
     this.eventSink = eventSink;
   }
 
   public void generate(Set<Element> topLevelElements) {
     try (JavacEventSinkScopedSimplePerfEvent ignored =
         new JavacEventSinkScopedSimplePerfEvent(eventSink, "generate_stubs")) {
-      new StubJar(version, elements, topLevelElements).writeTo(fileManager);
+      new StubJar(version, elements, topLevelElements).writeTo(jarBuilder);
     } catch (IOException e) {
       throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
     }

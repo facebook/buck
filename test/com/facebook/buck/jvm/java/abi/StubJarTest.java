@@ -31,6 +31,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.DeterministicManifest;
+import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -3671,6 +3672,7 @@ public class StubJarTest {
       Path outputDir)
       throws IOException {
     Path stubJar = outputDir.resolve("stub.jar");
+    JarBuilder jarBuilder = new JarBuilder();
 
     try (TestCompiler testCompiler = new TestCompiler()) {
       testCompiler.init();
@@ -3698,14 +3700,14 @@ public class StubJarTest {
           new StubGenerator(
               SourceVersion.RELEASE_8,
               testCompiler.getElements(),
-              testCompiler.getFileManager(),
+              jarBuilder,
               new JavacEventSinkToBuckEventBusBridge(
                   new DefaultBuckEventBus(new FakeClock(0), new BuildId())));
 
       testCompiler.addPostEnterCallback(generator::generate);
-
-      testCompiler.compile();
-      testCompiler.getClasses().createJar(stubJar, true);
+      testCompiler.enter();
+      testCompiler.getClasses().writeToJar(jarBuilder);
+      jarBuilder.createJarFile(stubJar);
     }
     return stubJar;
   }

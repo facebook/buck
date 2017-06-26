@@ -176,7 +176,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         return 1;
       }
 
-      if (!context.getDirectToJarOutputSettings().isPresent()) {
+      if (!context.getDirectToJarOutputSettings().isPresent()
+          || compilationMode == JavacCompilationMode.ABI) {
         return 0;
       }
 
@@ -274,13 +275,27 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
         javacTask.addPostEnterCallback(
             topLevelTypes -> {
-              StubGenerator stubGenerator =
-                  new StubGenerator(
-                      getTargetVersion(options),
-                      Preconditions.checkNotNull(javacTask).getElements(),
-                      fileManager,
-                      context.getEventSink());
-              stubGenerator.generate(topLevelTypes);
+              try {
+                JarBuilder jarBuilder = newJarBuilder().setShouldHashEntries(true);
+                StubGenerator stubGenerator =
+                    new StubGenerator(
+                        getTargetVersion(options),
+                        Preconditions.checkNotNull(javacTask).getElements(),
+                        jarBuilder,
+                        context.getEventSink());
+                stubGenerator.generate(topLevelTypes);
+                jarBuilder.createJarFile(
+                    Preconditions.checkNotNull(
+                        context
+                            .getProjectFilesystem()
+                            .getPathForRelativePath(
+                                context
+                                    .getDirectToJarOutputSettings()
+                                    .get()
+                                    .getDirectToJarOutputPath())));
+              } catch (IOException e) {
+                throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
+              }
             });
       }
 

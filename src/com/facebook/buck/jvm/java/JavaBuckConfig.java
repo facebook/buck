@@ -81,12 +81,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     ImmutableList<String> safeAnnotationProcessors =
         delegate.getListWithoutComments(SECTION, "safe_annotation_processors");
 
-    Optional<AbstractJavacOptions.SpoolMode> spoolMode =
-        delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
-    if (spoolMode.isPresent()) {
-      builder.setSpoolMode(spoolMode.get());
-    }
-
     builder.setTrackClassUsage(trackClassUsage());
 
     AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
@@ -101,6 +95,16 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       case SOURCE:
         builder.setCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
         break;
+    }
+
+    if (abiGenerationMode != AbiGenerationMode.CLASS) {
+      builder.setSpoolMode(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR);
+    } else {
+      Optional<AbstractJavacOptions.SpoolMode> spoolMode =
+          delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
+      if (spoolMode.isPresent()) {
+        builder.setSpoolMode(spoolMode.get());
+      }
     }
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);

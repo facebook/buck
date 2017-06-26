@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.testutil.compiler;
 
+import com.facebook.buck.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.objectweb.asm.ClassVisitor;
@@ -25,4 +26,6 @@ public interface Classes {
   void acceptClassVisitor(String qualifiedName, int flags, ClassVisitor cv) throws IOException;
 
   void createJar(Path jarPath, boolean hashEntries) throws IOException;
+
+  void writeToJar(JarBuilder builder) throws IOException;
 }
