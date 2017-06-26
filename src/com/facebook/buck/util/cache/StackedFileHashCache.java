@@ -35,23 +35,28 @@ import java.util.function.Function;
  * ProjectFilesystem}s, as opposed to paths within the same {@link ProjectFilesystem}, it is a
  * distinct type from {@link ProjectFileHashCache}.
  *
- * <p>This "stacking" approach provides a few appealing properties: 1) It makes it easier to module
- * path roots with differing hash cached lifetime requirements. Hashes of paths from roots watched
- * by watchman can be cached indefinitely, until a watchman event triggers invalidation. Hashes of
- * paths under roots not watched by watchman, however, can only be cached for the duration of a
- * single build (as we have no way to know when these paths are modified). By using separate {@link
- * ProjectFileHashCache}s per path root, we can construct a new {@link StackedFileHashCache} on each
- * build composed of either persistent or ephemeral per-root inner caches that properly manager the
- * lifetime of cached hashes from their root. 2) Modeling the hash cache around path root and
- * sub-paths also works well with a current limitation with our watchman events in which they only
- * store relative paths, with no reference to the path root they originated from. If we stored
- * hashes internally indexed by absolute path, then we wouldn't know where to anchor the search to
- * resolve the path that a watchman event refers to (e.g. a watch event for `foo.h` could refer to
- * `/a/b/foo.h` or `/a/b/c/foo.h`, depending on where the project root is). By indexing hashes by
- * pairs of project root and sub-path, it's easier to identity paths to invalidate (e.g. `foo.h`
- * would invalidate (`/a/b/`,`foo.h`) and not (`/a/b/`,`c/foo.h`)). 3) Since the current
- * implementation of inner caches and callers generally use path root and sub-path pairs, it allows
- * avoiding any overhead converting to/from absolute paths.
+ * <p>This "stacking" approach provides a few appealing properties:
+ *
+ * <ol>
+ *   <li>It makes it easier to module path roots with differing hash cached lifetime requirements.
+ *       Hashes of paths from roots watched by watchman can be cached indefinitely, until a watchman
+ *       event triggers invalidation. Hashes of paths under roots not watched by watchman, however,
+ *       can only be cached for the duration of a single build (as we have no way to know when these
+ *       paths are modified). By using separate {@link ProjectFileHashCache}s per path root, we can
+ *       construct a new {@link StackedFileHashCache} on each build composed of either persistent or
+ *       ephemeral per-root inner caches that properly manager the lifetime of cached hashes from
+ *       their root.
+ *   <li>Modeling the hash cache around path root and sub-paths also works well with a current
+ *       limitation with our watchman events in which they only store relative paths, with no
+ *       reference to the path root they originated from. If we stored hashes internally indexed by
+ *       absolute path, then we wouldn't know where to anchor the search to resolve the path that a
+ *       watchman event refers to (e.g. a watch event for `foo.h` could refer to `/a/b/foo.h` or
+ *       `/a/b/c/foo.h`, depending on where the project root is). By indexing hashes by pairs of
+ *       project root and sub-path, it's easier to identity paths to invalidate (e.g. `foo.h` would
+ *       invalidate (`/a/b/`,`foo.h`) and not (`/a/b/`,`c/foo.h`)).
+ *   <li>Since the current implementation of inner caches and callers generally use path root and
+ *       sub-path pairs, it allows avoiding any overhead converting to/from absolute paths.
+ * </ol>
  */
 public class StackedFileHashCache implements FileHashCache {
 
