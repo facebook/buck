@@ -371,8 +371,24 @@ public class ProjectView {
 
   // region roots
 
+  /**
+   * This is a complex routine that takes a list of source files and builds the best set of roots -
+   * symlinks to directories - that contains the source files.
+   *
+   * <p>Any folder with a {@code BUCK} file could be a root: the best root is the one that requires
+   * the fewest {@code excludedFolder} tags, but sometimes we need to pick a less-good root. If we
+   * have {@code foo/bar/baz/tom}, {@code foo/bar/baz/dick}, and {@code foo/bar/harry}, the best
+   * root for {@code foo/bar/baz/tom} and {@code foo/bar/baz/dick} may be {@code foo/bar/baz} while
+   * the best root for {@code foo/bar/harry} may be {@code foo/bar} ... which would be the directory
+   * containing {@code foo/bar/baz}, so we need to pick {@code foo/bar} for {@code foo/bar/baz/tom}.
+   *
+   * <p>We do this in two passes. The first pass builds a set of candidates and a map from source
+   * directory index to candidate, where a candidate is the best root by {@code excludedFolder}
+   * count. The second pass examines each candidate, and replaces it with the highest ancestor from
+   * the set of candidate values, if any.
+   */
   private Set<String> generateRoots(List<String> sourceFiles) {
-    final Set<String> roots = new HashSet<>();
+    // Setup: Get a sorted (so that a, a/b, and a/c are all together) list of source paths
     final RootsHelper helper = new RootsHelper();
 
     for (String sourceFile : sourceFiles) {
@@ -383,6 +399,9 @@ public class ProjectView {
     }
     final List<String> paths = helper.getSortedSourcePaths();
 
+    // First pass: Build the candidate map
+    final Set<String> candidates = new HashSet<>();
+    final String[] candidateMap = new String[paths.size()]; // paths' index -> candidate
     for (int index = 0, size = paths.size(); index < size; /*increment in loop*/ ) {
       final String path = pathWithBuck(paths.get(index));
       if (path == null) {
@@ -390,11 +409,9 @@ public class ProjectView {
         continue;
       }
 
-      // Any folder with a BUCK file could be a root: the best root is the one that requires the
-      // fewest excludedFolder tags
       int lowestCost = helper.excludesUnder(path);
       String bestRoot = path;
-      String parent = dirname(path);
+      String parent = dirname(bestRoot);
       while (!isNullOrEmpty(parent)) {
         int cost = helper.excludesUnder(parent);
         if (cost < lowestCost) {
@@ -402,6 +419,33 @@ public class ProjectView {
           bestRoot = parent;
         }
         parent = pathWithBuck(dirname(parent));
+      }
+      candidates.add(bestRoot);
+      candidateMap[index] = bestRoot;
+
+      index += 1;
+      String prefix = guaranteeEndsWithFileSeparator(bestRoot);
+      while (index < size && paths.get(index).startsWith(prefix)) {
+        index += 1;
+      }
+    }
+
+    // Second pass: Possibly replace candidates with ancestors
+    final Set<String> roots = new HashSet<>();
+    for (int index = 0, size = paths.size(); index < size; /*increment in loop*/ ) {
+      final String candidate = candidateMap[index];
+      if (candidate == null) {
+        index += 1;
+        continue;
+      }
+
+      String bestRoot = candidate;
+      String parent = dirname(bestRoot);
+      while (!isNullOrEmpty(parent)) {
+        if (candidates.contains(parent)) {
+          bestRoot = parent;
+        }
+        parent = dirname(parent);
       }
       roots.add(bestRoot);
 
@@ -432,7 +476,7 @@ public class ProjectView {
     }
   }
 
-  /** Maintains a set of source pathes, and a map of paths -> excludes */
+  /** Maintains a set of source paths, and a map of paths -> excludes */
   private class RootsHelper {
     private final Set<String> sourcePaths = new HashSet<>();
     private final Map<String, Integer> excludes = new HashMap<>();
