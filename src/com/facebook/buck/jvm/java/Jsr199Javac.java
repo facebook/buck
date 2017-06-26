@@ -120,141 +120,15 @@ public abstract class Jsr199Javac implements Javac {
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
       JavacCompilationMode compilationMode) {
-    return new Invocation() {
-      @Override
-      public int buildSourceAbiJar(Path sourceAbiJar, Path classUsageFile)
-          throws InterruptedException {
-        throw new UnsupportedOperationException("To be implemented soon");
-      }
-
-      @Override
-      public int buildClasses() throws InterruptedException {
-        // write javaSourceFilePaths to classes file
-        // for buck user to have a list of all .java files to be compiled
-        // since we do not print them out to console in case of error
-        try {
-          context
-              .getProjectFilesystem()
-              .writeLinesToPath(
-                  FluentIterable.from(javaSourceFilePaths)
-                      .transform(Object::toString)
-                      .transform(ARGFILES_ESCAPER),
-                  pathToSrcsList);
-        } catch (IOException e) {
-          context
-              .getEventSink()
-              .reportThrowable(
-                  e,
-                  "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-                  pathToSrcsList);
-          return 1;
-        }
-
-        try (CompilerBundle compilerBundle =
-            new CompilerBundle(
-                Jsr199Javac.this::createCompiler,
-                context,
-                invokingRule,
-                options,
-                pluginFields,
-                javaSourceFilePaths,
-                compilationMode)) {
-          int result = buildWithClasspath(compilerBundle, context, invokingRule, compilationMode);
-          if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
-            return result;
-          }
-
-          return compilerBundle
-              .newJarBuilder()
-              .createJarFile(
-                  Preconditions.checkNotNull(
-                      context
-                          .getProjectFilesystem()
-                          .getPathForRelativePath(
-                              context
-                                  .getDirectToJarOutputSettings()
-                                  .get()
-                                  .getDirectToJarOutputPath())));
-        } catch (IOException e) {
-          LOG.warn(e, "Unable to create jarOutputStream");
-        }
-        return 1;
-      }
-
-      @Override
-      public void close() {
-        // Nothing
-      }
-    };
-  }
-
-  private int buildWithClasspath(
-      CompilerBundle compilerBundle,
-      JavacExecutionContext context,
-      BuildTarget invokingRule,
-      JavacCompilationMode compilationMode) {
-    boolean isSuccess = true;
-    BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
-        new Jsr199TracingBridge(context.getEventSink(), invokingRule));
-    try {
-      // Invoke the compilation and inspect the result.
-      BuckJavacTaskProxy javacTask = compilerBundle.getJavacTask();
-
-      javacTask.enter();
-      if (compilationMode != JavacCompilationMode.ABI) {
-        javacTask.generate();
-        isSuccess =
-            compilerBundle
-                    .getDiagnostics()
-                    .getDiagnostics()
-                    .stream()
-                    .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
-                    .count()
-                == 0;
-      }
-      DiagnosticCollector<JavaFileObject> diagnostics = compilerBundle.getDiagnostics();
-      for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-        LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
-      }
-
-      List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
-          DiagnosticCleaner.clean(diagnostics.getDiagnostics());
-
-      if (isSuccess) {
-        context
-            .getUsedClassesFileWriter()
-            .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
-        return 0;
-      } else {
-        if (context.getVerbosity().shouldPrintStandardInformation()) {
-          int numErrors = 0;
-          int numWarnings = 0;
-          for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
-            Diagnostic.Kind kind = diagnostic.getKind();
-            if (kind == Diagnostic.Kind.ERROR) {
-              ++numErrors;
-            } else if (kind == Diagnostic.Kind.WARNING
-                || kind == Diagnostic.Kind.MANDATORY_WARNING) {
-              ++numWarnings;
-            }
-
-            context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
-          }
-
-          if (numErrors > 0 || numWarnings > 0) {
-            context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
-          }
-        }
-        return 1;
-      }
-    } catch (IOException e) {
-      LOG.error(e);
-      throw new HumanReadableException("IOException during compilation: ", e.getMessage());
-    } finally {
-      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
-      // be using it.
-      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
-    }
+    return new Jsr199JavacInvocation(
+        this::createCompiler,
+        context,
+        invokingRule,
+        options,
+        pluginFields,
+        javaSourceFilePaths,
+        pathToSrcsList,
+        compilationMode);
   }
 
   private static SourceVersion getTargetVersion(Iterable<String> options) {
@@ -289,13 +163,14 @@ public abstract class Jsr199Javac implements Javac {
     throw new AssertionError("Unreachable code");
   }
 
-  private static class CompilerBundle implements AutoCloseable {
+  private static class Jsr199JavacInvocation implements Javac.Invocation {
     private final Function<JavacExecutionContext, JavaCompiler> compilerConstructor;
     private final JavacExecutionContext context;
     private final BuildTarget invokingRule;
     private final ImmutableList<String> options;
     private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
     private final ImmutableSortedSet<Path> javaSourceFilePaths;
+    private final Path pathToSrcsList;
     private final JavacCompilationMode compilationMode;
     private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     private final List<AutoCloseable> closeables = new ArrayList<>();
@@ -303,13 +178,14 @@ public abstract class Jsr199Javac implements Javac {
     @Nullable private BuckJavacTaskProxy javacTask;
     @Nullable private JavaInMemoryFileManager inMemoryFileManager;
 
-    public CompilerBundle(
+    public Jsr199JavacInvocation(
         Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
         JavacExecutionContext context,
         BuildTarget invokingRule,
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> pluginFields,
         ImmutableSortedSet<Path> javaSourceFilePaths,
+        Path pathToSrcsList,
         JavacCompilationMode compilationMode) {
       this.compilerConstructor = compilerConstructor;
       this.context = context;
@@ -317,7 +193,122 @@ public abstract class Jsr199Javac implements Javac {
       this.options = options;
       this.pluginFields = pluginFields;
       this.javaSourceFilePaths = javaSourceFilePaths;
+      this.pathToSrcsList = pathToSrcsList;
       this.compilationMode = compilationMode;
+    }
+
+    @Override
+    public int buildSourceAbiJar(Path sourceAbiJar, Path classUsageFile)
+        throws InterruptedException {
+      throw new UnsupportedOperationException("To be implemented soon");
+    }
+
+    @Override
+    public int buildClasses() throws InterruptedException {
+      // write javaSourceFilePaths to classes file
+      // for buck user to have a list of all .java files to be compiled
+      // since we do not print them out to console in case of error
+      try {
+        context
+            .getProjectFilesystem()
+            .writeLinesToPath(
+                FluentIterable.from(javaSourceFilePaths)
+                    .transform(Object::toString)
+                    .transform(ARGFILES_ESCAPER),
+                pathToSrcsList);
+      } catch (IOException e) {
+        context
+            .getEventSink()
+            .reportThrowable(
+                e,
+                "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+                pathToSrcsList);
+        return 1;
+      }
+
+      try {
+        int result = buildWithClasspath();
+        if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
+          return result;
+        }
+
+        return newJarBuilder()
+            .createJarFile(
+                Preconditions.checkNotNull(
+                    context
+                        .getProjectFilesystem()
+                        .getPathForRelativePath(
+                            context
+                                .getDirectToJarOutputSettings()
+                                .get()
+                                .getDirectToJarOutputPath())));
+      } catch (IOException e) {
+        LOG.warn(e, "Unable to create jarOutputStream");
+      }
+      return 1;
+    }
+
+    private int buildWithClasspath() {
+      boolean isSuccess = true;
+      BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
+          new Jsr199TracingBridge(context.getEventSink(), invokingRule));
+      try {
+        // Invoke the compilation and inspect the result.
+        BuckJavacTaskProxy javacTask = getJavacTask();
+
+        javacTask.enter();
+        if (compilationMode != JavacCompilationMode.ABI) {
+          javacTask.generate();
+          isSuccess =
+              diagnostics
+                      .getDiagnostics()
+                      .stream()
+                      .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+                      .count()
+                  == 0;
+        }
+        for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+          LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
+        }
+
+        List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
+            DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+
+        if (isSuccess) {
+          context
+              .getUsedClassesFileWriter()
+              .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
+          return 0;
+        } else {
+          if (context.getVerbosity().shouldPrintStandardInformation()) {
+            int numErrors = 0;
+            int numWarnings = 0;
+            for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
+              Diagnostic.Kind kind = diagnostic.getKind();
+              if (kind == Diagnostic.Kind.ERROR) {
+                ++numErrors;
+              } else if (kind == Diagnostic.Kind.WARNING
+                  || kind == Diagnostic.Kind.MANDATORY_WARNING) {
+                ++numWarnings;
+              }
+
+              context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
+            }
+
+            if (numErrors > 0 || numWarnings > 0) {
+              context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
+            }
+          }
+          return 1;
+        }
+      } catch (IOException e) {
+        LOG.error(e);
+        throw new HumanReadableException("IOException during compilation: ", e.getMessage());
+      } finally {
+        // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
+        // be using it.
+        BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
+      }
     }
 
     private void addCloseable(Object maybeCloseable) {
@@ -326,7 +317,7 @@ public abstract class Jsr199Javac implements Javac {
       }
     }
 
-    public BuckJavacTaskProxy getJavacTask() throws IOException {
+    private BuckJavacTaskProxy getJavacTask() throws IOException {
       if (javacTask == null) {
         JavaCompiler compiler = compilerConstructor.apply(context);
 
@@ -446,11 +437,7 @@ public abstract class Jsr199Javac implements Javac {
       return javacTask;
     }
 
-    public DiagnosticCollector<JavaFileObject> getDiagnostics() {
-      return diagnostics;
-    }
-
-    public JarBuilder newJarBuilder() throws IOException {
+    private JarBuilder newJarBuilder() throws IOException {
       JarBuilder jarBuilder = new JarBuilder();
       Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
       return jarBuilder
