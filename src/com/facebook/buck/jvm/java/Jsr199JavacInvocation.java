@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
-import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
@@ -250,29 +249,17 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       PluginClassLoaderFactory loaderFactory =
           PluginLoader.newFactory(context.getClassLoaderCache());
 
-      if (compilationMode != JavacCompilationMode.ABI) {
-        javacTask =
-            BuckJavacTaskProxy.getTask(
-                loaderFactory,
-                compiler,
-                compilerOutputWriter,
-                context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-                diagnostics,
-                options,
-                classNamesForAnnotationProcessing,
-                compilationUnits);
-      } else {
-        javacTask =
-            FrontendOnlyJavacTaskProxy.getTask(
-                loaderFactory,
-                compiler,
-                compilerOutputWriter,
-                context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-                diagnostics,
-                options,
-                classNamesForAnnotationProcessing,
-                compilationUnits);
-
+      javacTask =
+          BuckJavacTaskProxy.getTask(
+              loaderFactory,
+              compiler,
+              compilerOutputWriter,
+              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+              diagnostics,
+              options,
+              classNamesForAnnotationProcessing,
+              compilationUnits);
+      if (compilationMode == JavacCompilationMode.ABI) {
         javacTask.addPostEnterCallback(
             topLevelTypes -> {
               try {

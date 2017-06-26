@@ -32,7 +32,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,7 +39,6 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
@@ -57,23 +55,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   public void setCompileAbi() {
-    javacOptions =
-        javacOptions
-            .withCompilationMode(JavacCompilationMode.ABI)
-            .withAnnotationProcessingParams(
-                abiProcessorsOnly(javacOptions.getAnnotationProcessingParams()));
-  }
-
-  private AnnotationProcessingParams abiProcessorsOnly(
-      AnnotationProcessingParams annotationProcessingParams) {
-    Preconditions.checkArgument(annotationProcessingParams.getLegacyProcessors().isEmpty());
-
-    return annotationProcessingParams.withModernProcessors(
-        annotationProcessingParams
-            .getModernProcessors()
-            .stream()
-            .filter(processor -> !processor.getDoesNotAffectAbi())
-            .collect(Collectors.toList()));
+    javacOptions = javacOptions.withCompilationMode(JavacCompilationMode.ABI);
   }
 
   @Override

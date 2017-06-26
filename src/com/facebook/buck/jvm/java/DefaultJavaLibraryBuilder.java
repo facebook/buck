@@ -301,10 +301,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean shouldBuildAbiFromSource() {
-      return isCompilingJava()
-          && sourceAbisEnabled()
-          && argsAllowSourceAbis()
-          && pluginsSupportSourceAbis();
+      return isCompilingJava() && sourceAbisEnabled() && argsAllowSourceAbis();
     }
 
     private boolean isCompilingJava() {
@@ -317,23 +314,6 @@ public class DefaultJavaLibraryBuilder {
 
     private boolean argsAllowSourceAbis() {
       return args == null || args.getGenerateAbiFromSource().orElse(true);
-    }
-
-    private boolean pluginsSupportSourceAbis() {
-      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-          Preconditions.checkNotNull(javacOptions)
-              .getAnnotationProcessingParams()
-              .getAnnotationProcessors(initialParams.getProjectFilesystem(), sourcePathResolver);
-
-      for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
-        if (!annotationProcessor.getDoesNotAffectAbi()
-            && !annotationProcessor.getSupportAbiGenerationFromSource()) {
-          // Processor is ABI-affecting but cannot run during ABI generation from source; disallow
-          return false;
-        }
-      }
-
-      return true;
     }
 
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
