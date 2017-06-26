@@ -133,15 +133,17 @@ public class Jsr199JavacIntegrationTest {
             Optional.empty());
 
     int exitCode =
-        javac.buildWithClasspath(
-            javacExecutionContext,
-            BuildTargetFactory.newInstance("//some:example"),
-            ImmutableList.of(),
-            ImmutableList.of(),
-            SOURCE_PATHS,
-            pathToSrcsList,
-            Optional.empty(),
-            JavacCompilationMode.FULL);
+        javac
+            .newBuildInvocation(
+                javacExecutionContext,
+                BuildTargetFactory.newInstance("//some:example"),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                SOURCE_PATHS,
+                pathToSrcsList,
+                Optional.empty(),
+                JavacCompilationMode.FULL)
+            .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -182,15 +184,17 @@ public class Jsr199JavacIntegrationTest {
             Optional.empty());
 
     int exitCode =
-        javac.buildWithClasspath(
-            javacExecutionContext,
-            BuildTargetFactory.newInstance("//some:example"),
-            ImmutableList.of(),
-            ImmutableList.of(),
-            SOURCE_PATHS,
-            pathToSrcsList,
-            Optional.empty(),
-            JavacCompilationMode.FULL);
+        javac
+            .newBuildInvocation(
+                javacExecutionContext,
+                BuildTargetFactory.newInstance("//some:example"),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                SOURCE_PATHS,
+                pathToSrcsList,
+                Optional.empty(),
+                JavacCompilationMode.FULL)
+            .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -280,15 +284,17 @@ public class Jsr199JavacIntegrationTest {
     boolean caught = false;
 
     try {
-      javac.buildWithClasspath(
-          javacExecutionContext,
-          BuildTargetFactory.newInstance("//some:example"),
-          ImmutableList.of(),
-          ImmutableList.of(),
-          SOURCE_PATHS,
-          pathToSrcsList,
-          Optional.empty(),
-          JavacCompilationMode.FULL);
+      javac
+          .newBuildInvocation(
+              javacExecutionContext,
+              BuildTargetFactory.newInstance("//some:example"),
+              ImmutableList.of(),
+              ImmutableList.of(),
+              SOURCE_PATHS,
+              pathToSrcsList,
+              Optional.empty(),
+              JavacCompilationMode.FULL)
+          .buildClasses();
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {

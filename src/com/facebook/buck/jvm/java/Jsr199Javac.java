@@ -113,7 +113,7 @@ public abstract class Jsr199Javac implements Javac {
   protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
 
   @Override
-  public int buildWithClasspath(
+  public Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -122,81 +122,98 @@ public abstract class Jsr199Javac implements Javac {
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
       JavacCompilationMode compilationMode) {
-    JavaCompiler compiler = createCompiler(context);
-    CustomJarOutputStream jarOutputStream = null;
-    StandardJavaFileManager fileManager = null;
-    JavaInMemoryFileManager inMemoryFileManager = null;
-    Path directToJarPath = null;
-    try {
-      fileManager = compiler.getStandardFileManager(null, null, null);
-      if (context.getDirectToJarOutputSettings().isPresent()) {
-        directToJarPath =
-            context
-                .getProjectFilesystem()
-                .getPathForRelativePath(
-                    context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
-        inMemoryFileManager =
-            new JavaInMemoryFileManager(
-                fileManager,
-                directToJarPath,
-                context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
-        fileManager = inMemoryFileManager;
+    return new Invocation() {
+      @Override
+      public int buildSourceAbiJar(Path sourceAbiJar, Path classUsageFile)
+          throws InterruptedException {
+        throw new UnsupportedOperationException("To be implemented soon");
       }
 
-      Iterable<? extends JavaFileObject> compilationUnits;
-      try {
-        compilationUnits =
-            createCompilationUnits(
-                fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
-      } catch (IOException e) {
-        LOG.warn(e, "Error building compilation units");
+      @Override
+      public int buildClasses() throws InterruptedException {
+        JavaCompiler compiler = createCompiler(context);
+        CustomJarOutputStream jarOutputStream = null;
+        StandardJavaFileManager fileManager = null;
+        JavaInMemoryFileManager inMemoryFileManager = null;
+        Path directToJarPath = null;
+        try {
+          fileManager = compiler.getStandardFileManager(null, null, null);
+          if (context.getDirectToJarOutputSettings().isPresent()) {
+            directToJarPath =
+                context
+                    .getProjectFilesystem()
+                    .getPathForRelativePath(
+                        context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+            inMemoryFileManager =
+                new JavaInMemoryFileManager(
+                    fileManager,
+                    directToJarPath,
+                    context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+            fileManager = inMemoryFileManager;
+          }
+
+          Iterable<? extends JavaFileObject> compilationUnits;
+          try {
+            compilationUnits =
+                createCompilationUnits(
+                    fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
+          } catch (IOException e) {
+            LOG.warn(e, "Error building compilation units");
+            return 1;
+          }
+
+          try {
+            int result =
+                buildWithClasspath(
+                    context,
+                    invokingRule,
+                    options,
+                    pluginFields,
+                    javaSourceFilePaths,
+                    pathToSrcsList,
+                    compiler,
+                    fileManager,
+                    compilationUnits,
+                    compilationMode);
+            if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
+              return result;
+            }
+
+            JarBuilder jarBuilder = new JarBuilder();
+            Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+            return jarBuilder
+                .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
+                .setEntriesToJar(
+                    context
+                        .getDirectToJarOutputSettings()
+                        .get()
+                        .getEntriesToJar()
+                        .stream()
+                        .map(context.getProjectFilesystem()::resolve))
+                .setMainClass(
+                    context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
+                .setManifestFile(
+                    context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+                .setShouldMergeManifests(true)
+                .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
+                .setEntryPatternBlacklist(ImmutableSet.of())
+                .createJarFile(Preconditions.checkNotNull(directToJarPath));
+          } finally {
+            Jsr199Javac.this.close(compilationUnits);
+          }
+        } catch (IOException e) {
+          LOG.warn(e, "Unable to create jarOutputStream");
+        } finally {
+          closeResources(fileManager, inMemoryFileManager, jarOutputStream);
+        }
         return 1;
       }
 
-      try {
-        int result =
-            buildWithClasspath(
-                context,
-                invokingRule,
-                options,
-                pluginFields,
-                javaSourceFilePaths,
-                pathToSrcsList,
-                compiler,
-                fileManager,
-                compilationUnits,
-                compilationMode);
-        if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
-          return result;
-        }
-
-        JarBuilder jarBuilder = new JarBuilder();
-        Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
-        return jarBuilder
-            .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
-            .setEntriesToJar(
-                context
-                    .getDirectToJarOutputSettings()
-                    .get()
-                    .getEntriesToJar()
-                    .stream()
-                    .map(context.getProjectFilesystem()::resolve))
-            .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
-            .setManifestFile(
-                context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
-            .setShouldMergeManifests(true)
-            .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
-            .setEntryPatternBlacklist(ImmutableSet.of())
-            .createJarFile(Preconditions.checkNotNull(directToJarPath));
-      } finally {
-        close(compilationUnits);
+      @Override
+      public void close() {
+        // Nothing
       }
-    } catch (IOException e) {
-      LOG.warn(e, "Unable to create jarOutputStream");
-    } finally {
-      closeResources(fileManager, inMemoryFileManager, jarOutputStream);
-    }
-    return 1;
+    };
   }
 
   private void closeResources(

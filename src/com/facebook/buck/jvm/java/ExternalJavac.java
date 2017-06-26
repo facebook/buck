@@ -172,74 +172,92 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public int buildWithClasspath(
+  public Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToArgsList,
+      Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacCompilationMode compilationMode)
-      throws InterruptedException {
+      JavacCompilationMode compilationMode) {
+    return new Invocation() {
+      @Override
+      public int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile)
+          throws InterruptedException {
+        throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
+      }
 
-    Preconditions.checkArgument(
-        compilationMode == JavacCompilationMode.FULL,
-        "Cannot compile ABI jars with external javac");
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.add(
-        pathToJavac.isLeft()
-            ? pathToJavac.getLeft().toString()
-            : context.getAbsolutePathsForInputs().get(0).toString());
+      @Override
+      public int buildClasses() throws InterruptedException {
+        Preconditions.checkArgument(
+            compilationMode == JavacCompilationMode.FULL,
+            "Cannot compile ABI jars with external javac");
+        ImmutableList.Builder<String> command = ImmutableList.builder();
+        command.add(
+            pathToJavac.isLeft()
+                ? pathToJavac.getLeft().toString()
+                : context.getAbsolutePathsForInputs().get(0).toString());
 
-    ImmutableList<Path> expandedSources;
-    try {
-      expandedSources =
-          getExpandedSourcePaths(
-              context.getProjectFilesystem(), invokingRule, javaSourceFilePaths, workingDirectory);
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
-    }
+        ImmutableList<Path> expandedSources;
+        try {
+          expandedSources =
+              getExpandedSourcePaths(
+                  context.getProjectFilesystem(),
+                  invokingRule,
+                  javaSourceFilePaths,
+                  workingDirectory);
+        } catch (IOException e) {
+          throw new HumanReadableException(
+              "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+        }
 
-    try {
-      FluentIterable<String> escapedPaths =
-          FluentIterable.from(expandedSources)
-              .transform(Object::toString)
-              .transform(ARGFILES_ESCAPER);
-      FluentIterable<String> escapedArgs = FluentIterable.from(options).transform(ARGFILES_ESCAPER);
+        try {
+          FluentIterable<String> escapedPaths =
+              FluentIterable.from(expandedSources)
+                  .transform(Object::toString)
+                  .transform(ARGFILES_ESCAPER);
+          FluentIterable<String> escapedArgs =
+              FluentIterable.from(options).transform(ARGFILES_ESCAPER);
 
-      context
-          .getProjectFilesystem()
-          .writeLinesToPath(Iterables.concat(escapedArgs, escapedPaths), pathToArgsList);
-      command.add("@" + pathToArgsList);
-    } catch (IOException e) {
-      context
-          .getEventSink()
-          .reportThrowable(
-              e,
-              "Cannot write list of args/sources to compile to %s file! Terminating compilation.",
-              pathToArgsList);
-      return 1;
-    }
+          context
+              .getProjectFilesystem()
+              .writeLinesToPath(Iterables.concat(escapedArgs, escapedPaths), pathToSrcsList);
+          command.add("@" + pathToSrcsList);
+        } catch (IOException e) {
+          context
+              .getEventSink()
+              .reportThrowable(
+                  e,
+                  "Cannot write list of args/sources to compile to %s file! Terminating compilation.",
+                  pathToSrcsList);
+          return 1;
+        }
 
-    // Run the command
-    int exitCode = -1;
-    try {
-      ProcessExecutorParams params =
-          ProcessExecutorParams.builder()
-              .setCommand(command.build())
-              .setEnvironment(context.getEnvironment())
-              .setDirectory(context.getProjectFilesystem().getRootPath().toAbsolutePath())
-              .build();
-      ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
-      exitCode = result.getExitCode();
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return exitCode;
-    }
+        // Run the command
+        int exitCode = -1;
+        try {
+          ProcessExecutorParams params =
+              ProcessExecutorParams.builder()
+                  .setCommand(command.build())
+                  .setEnvironment(context.getEnvironment())
+                  .setDirectory(context.getProjectFilesystem().getRootPath().toAbsolutePath())
+                  .build();
+          ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
+          exitCode = result.getExitCode();
+        } catch (IOException e) {
+          e.printStackTrace(context.getStdErr());
+          return exitCode;
+        }
 
-    return exitCode;
+        return exitCode;
+      }
+
+      @Override
+      public void close() {
+        // Nothing to do
+      }
+    };
   }
 
   private ImmutableList<Path> getExpandedSourcePaths(

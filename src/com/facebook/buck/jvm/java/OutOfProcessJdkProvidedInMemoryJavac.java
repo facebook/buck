@@ -51,7 +51,7 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
   }
 
   @Override
-  public int buildWithClasspath(
+  public Javac.Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -59,16 +59,16 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacCompilationMode compilationMode)
-      throws InterruptedException {
+      JavacCompilationMode compilationMode) {
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
     if (LOG.isVerboseEnabled()) {
       LOG.verbose("Serialized JavacExecutionContext: %s", serializedContext);
     }
 
-    return getConnection()
-        .getRemoteObjectProxy()
-        .buildWithClasspath(
+    OutOfProcessJavacConnectionInterface proxy = getConnection().getRemoteObjectProxy();
+    return wrapInvocation(
+        proxy,
+        proxy.newBuildInvocation(
             null,
             serializedContext,
             invokingRule.getFullyQualifiedName(),
@@ -80,6 +80,6 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
                 .stream()
                 .map(JavacPluginJsr199FieldsSerializer::serialize)
                 .collect(Collectors.toList()),
-            compilationMode.toString());
+            compilationMode.toString()));
   }
 }

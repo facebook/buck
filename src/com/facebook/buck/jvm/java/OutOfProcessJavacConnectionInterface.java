@@ -35,9 +35,9 @@ public interface OutOfProcessJavacConnectionInterface {
    * @param workingDirectory Path represented as String, or null.
    * @param pluginFields Serialized instance of {@link JavacPluginJsr199Fields} as a map.
    * @param javaCompilationModeAsString String representation of {@link JavacCompilationMode} enum.
-   * @return Resulting code, 0 if build finished without issues, non-zero otherwise.
+   * @return ID of the invocation object
    */
-  int buildWithClasspath(
+  int newBuildInvocation(
       @Nullable String compilerClassNameForJarBackedJavacMode,
       Map<String, Object> serializedJavacExecutionContext,
       String invokingRuleBuildTargetAsString,
@@ -47,6 +47,12 @@ public interface OutOfProcessJavacConnectionInterface {
       @Nullable String workingDirectory,
       List<Map<String, Object>> pluginFields,
       String javaCompilationModeAsString);
+
+  int buildSourceAbiJar(int invocationId, String abiJarPath, String classUsageFilePath);
+
+  int buildClasses(int invocationId);
+
+  int closeBuildInvocation(int invocationId);
 
   /** For testing purposes. Just returns the given value. */
   int ping(int valueToReturn);

@@ -31,6 +31,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -43,6 +44,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -70,13 +73,15 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
               });
 
   private final Console console;
+  private final Map<Integer, Javac.Invocation> invocations = new ConcurrentHashMap<>();
+  private final AtomicInteger nextInvocationId = new AtomicInteger(1);
 
   public OutOfProcessInvocationReceiver(Console console) {
     this.console = console;
   }
 
   @Override
-  public int buildWithClasspath(
+  public int newBuildInvocation(
       @Nullable String compilerClassNameForJarBackedJavacMode,
       Map<String, Object> serializedJavacExecutionContext,
       String invokingRuleBuildTargetAsString,
@@ -130,19 +135,49 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             .collect(Collectors.toList());
 
     Javac javac = cachedJavac.getUnchecked(className);
+    Javac.Invocation invocation =
+        javac.newBuildInvocation(
+            javacExecutionContext,
+            invokingRule,
+            ImmutableList.copyOf(options),
+            ImmutableList.copyOf(deserializedFields),
+            javaSourceFilePaths,
+            pathToSrcsList,
+            workingDirectory,
+            JavacCompilationMode.valueOf(javaCompilationModeAsString));
+    int invocationId = nextInvocationId.getAndIncrement();
+    invocations.put(invocationId, invocation);
+
+    return invocationId;
+  }
+
+  @Override
+  public int buildSourceAbiJar(int invocationId, String abiJarPath, String classUsageFilePath) {
     try {
-      return javac.buildWithClasspath(
-          javacExecutionContext,
-          invokingRule,
-          ImmutableList.copyOf(options),
-          ImmutableList.copyOf(deserializedFields),
-          javaSourceFilePaths,
-          pathToSrcsList,
-          workingDirectory,
-          JavacCompilationMode.valueOf(javaCompilationModeAsString));
+      return getInvocation(invocationId)
+          .buildSourceAbiJar(Paths.get(abiJarPath), Paths.get(classUsageFilePath));
     } catch (InterruptedException e) {
       return INTERRUPTED_EXIT_CODE;
     }
+  }
+
+  @Override
+  public int buildClasses(int invocationId) {
+    try {
+      return getInvocation(invocationId).buildClasses();
+    } catch (InterruptedException e) {
+      return INTERRUPTED_EXIT_CODE;
+    }
+  }
+
+  @Override
+  public int closeBuildInvocation(int invocationId) {
+    Preconditions.checkNotNull(invocations.remove(invocationId)).close();
+    return 0;
+  }
+
+  private Javac.Invocation getInvocation(int invocationId) {
+    return Preconditions.checkNotNull(invocations.get(invocationId));
   }
 
   @Override

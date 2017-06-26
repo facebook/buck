@@ -64,7 +64,7 @@ public class FakeJavac implements Javac {
   }
 
   @Override
-  public int buildWithClasspath(
+  public Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -72,16 +72,31 @@ public class FakeJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacCompilationMode compilationMode)
-      throws InterruptedException {
-    try {
-      return context
-          .getProcessExecutor()
-          .launchAndExecute(ProcessExecutorParams.ofCommand("javac"))
-          .getExitCode();
-    } catch (IOException e) {
-      return 1;
-    }
+      JavacCompilationMode compilationMode) {
+    return new Invocation() {
+      @Override
+      public int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile)
+          throws InterruptedException {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public int buildClasses() throws InterruptedException {
+        try {
+          return context
+              .getProcessExecutor()
+              .launchAndExecute(ProcessExecutorParams.ofCommand("javac"))
+              .getExitCode();
+        } catch (IOException e) {
+          return 1;
+        }
+      }
+
+      @Override
+      public void close() {
+        // Nothing to do
+      }
+    };
   }
 
   @Override

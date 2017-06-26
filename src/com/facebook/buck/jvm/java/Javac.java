@@ -36,7 +36,8 @@ public interface Javac extends RuleKeyAppendable, Tool {
 
   JavacVersion getVersion();
 
-  int buildWithClasspath(
+  /** Prepares an invocation of the compiler with the given parameters. */
+  Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -44,8 +45,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      JavacCompilationMode compilationMode)
-      throws InterruptedException;
+      JavacCompilationMode compilationMode);
 
   String getDescription(
       ImmutableList<String> options,
@@ -68,5 +68,15 @@ public interface Javac extends RuleKeyAppendable, Tool {
     JAR,
     /** Run javac in-process, loading it from the JRE in which Buck is running. */
     JDK,
+  }
+
+  interface Invocation extends AutoCloseable {
+    /** Produces a source ABI jar at the given path. Must be called before {@link #buildClasses} */
+    int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile) throws InterruptedException;
+
+    int buildClasses() throws InterruptedException;
+
+    @Override
+    void close();
   }
 }
