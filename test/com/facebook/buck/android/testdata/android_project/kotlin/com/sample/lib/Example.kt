@@ -8,3 +8,5 @@ fun main(args: Array<String>) {
 fun out(num1: Int) : Float {
     return num1 / .66f
 }
+
+class Example{}
