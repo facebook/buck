@@ -217,19 +217,6 @@ public class ExopackageInstaller {
     }
 
     boolean doInstall() throws Exception {
-      final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
-      // TODO(dreiss): Support SD installation.
-      final boolean installViaSd = false;
-
-      if (shouldAppBeInstalled()) {
-        try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
-          boolean success = device.installApkOnDevice(apk, installViaSd, false);
-          if (!success) {
-            return false;
-          }
-        }
-      }
-
       if (exopackageEnabled()) {
         ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
         ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
@@ -257,6 +244,18 @@ public class ExopackageInstaller {
         installMetadata(metadata.build());
       }
 
+      final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
+      // TODO(dreiss): Support SD installation.
+      final boolean installViaSd = false;
+
+      if (shouldAppBeInstalled()) {
+        try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
+          boolean success = device.installApkOnDevice(apk, installViaSd, false);
+          if (!success) {
+            return false;
+          }
+        }
+      }
       // TODO(dreiss): Make this work on Gingerbread.
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
         device.stopPackage(packageName);
