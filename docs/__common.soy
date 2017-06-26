@@ -282,6 +282,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'prebuilt_jar',
             'prebuilt_native_library',
         ],
+        'kotlin': [
+            'kotlin_library',
+            'kotlin_test',
+        ],
         'lua': [
             'cxx_lua_extension',
             'lua_binary',
@@ -505,6 +509,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         {param currentnavid: $navid /}
         {param platform: 'Java' /}
         {param rules: $platformRulesMap['java'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param currentnavid: $navid /}
+        {param platform: 'Kotlin' /}
+        {param rules: $platformRulesMap['kotlin'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param currentnavid: $navid /}
@@ -964,6 +973,16 @@ docsearch({
 /***/
 {template .java_test}
 {call .ruleLink}{param name : 'java_test' /}{/call}
+{/template}
+
+/***/
+{template .kotlin_library}
+{call .ruleLink}{param name : 'kotlin_library' /}{/call}
+{/template}
+
+/***/
+{template .kotlin_test}
+{call .ruleLink}{param name : 'kotlin_test' /}{/call}
 {/template}
 
 /***/
