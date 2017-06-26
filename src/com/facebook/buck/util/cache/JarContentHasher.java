@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-public class JarContentHasher {
+class JarContentHasher {
 
   private final ProjectFilesystem filesystem;
   private final Path jarRelativePath;

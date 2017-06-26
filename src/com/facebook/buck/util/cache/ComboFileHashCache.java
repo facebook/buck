@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-public class ComboFileHashCache implements FileHashCacheEngine {
+class ComboFileHashCache implements FileHashCacheEngine {
 
   private final List<FileHashCacheEngine> fileHashCacheEngines;
   private long sha1Mismatches = 0;

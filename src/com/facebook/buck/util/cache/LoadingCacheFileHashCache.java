@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
-public class LoadingCacheFileHashCache implements FileHashCacheEngine {
+class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
   private final LoadingCache<Path, HashCodeAndFileType> loadingCache;
   private final LoadingCache<Path, Long> sizeCache;

@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
-public class FileSystemMapFileHashCache implements FileHashCacheEngine {
+class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   private final FileSystemMap<HashCodeAndFileType> loadingCache;
   private final FileSystemMap<Long> sizeCache;
