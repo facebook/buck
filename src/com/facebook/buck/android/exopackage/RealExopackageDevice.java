@@ -215,49 +215,7 @@ public class RealExopackageDevice implements ExopackageDevice {
     Preconditions.checkArgument(source.isAbsolute());
     Preconditions.checkArgument(targetDevicePath.isAbsolute());
     Closer closer = Closer.create();
-    CollectingOutputReceiver receiver =
-        new CollectingOutputReceiver() {
-
-          private boolean startedPayload = false;
-          private boolean wrotePayload = false;
-          @Nullable private OutputStream outToDevice;
-
-          @Override
-          public void addOutput(byte[] data, int offset, int length) {
-            super.addOutput(data, offset, length);
-            try {
-              if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-                LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
-                startedPayload = true;
-                Socket clientSocket = new Socket("localhost", agentPort);
-                closer.register(clientSocket);
-                LOG.verbose("Connected");
-                outToDevice = clientSocket.getOutputStream();
-                closer.register(outToDevice);
-                // Need to wait for client to acknowledge that we've connected.
-              }
-              if (outToDevice == null) {
-                throw new NullPointerException();
-              }
-              if (!wrotePayload && getOutput().contains("z1")) {
-                if (outToDevice == null) {
-                  throw new NullPointerException(
-                      "outToDevice was null when protocol says it cannot be");
-                }
-                LOG.verbose("Got z1");
-                wrotePayload = true;
-                outToDevice.write(
-                    getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-                LOG.verbose("Wrote key");
-                com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-                outToDevice.flush();
-                LOG.verbose("Wrote file");
-              }
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        };
+    FileInstallReceiver receiver = new FileInstallReceiver(closer, source);
 
     String targetFileName = targetDevicePath.toString();
     String command =
@@ -283,6 +241,14 @@ public class RealExopackageDevice implements ExopackageDevice {
 
     // Close the client socket, if we opened it.
     closer.close();
+
+    if (receiver.getError().isPresent()) {
+      Exception prev = shellException;
+      shellException = receiver.getError().get();
+      if (prev != null) {
+        shellException.addSuppressed(prev);
+      }
+    }
 
     try {
       AdbHelper.checkReceiverOutput(command, receiver);
@@ -342,5 +308,66 @@ public class RealExopackageDevice implements ExopackageDevice {
     }
 
     return abis.build();
+  }
+
+  private class FileInstallReceiver extends CollectingOutputReceiver {
+    private final Closer closer;
+    private final Path source;
+    private boolean startedPayload;
+    private boolean wrotePayload;
+    @Nullable private OutputStream outToDevice;
+    private Optional<Exception> error;
+
+    public FileInstallReceiver(Closer closer, Path source) {
+      this.closer = closer;
+      this.source = source;
+      this.startedPayload = false;
+      this.wrotePayload = false;
+      this.error = Optional.empty();
+    }
+
+    @Override
+    public void addOutput(byte[] data, int offset, int length) {
+      super.addOutput(data, offset, length);
+      // On exceptions, we want to still collect the full output of the command (so we can get its
+      // error code and possibly error message), so we just record that there was an error and only
+      // send further output to the base receiver.
+      if (error.isPresent()) {
+        return;
+      }
+      try {
+        if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
+          LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
+          startedPayload = true;
+          Socket clientSocket = new Socket("localhost", agentPort);
+          closer.register(clientSocket);
+          LOG.verbose("Connected");
+          outToDevice = clientSocket.getOutputStream();
+          closer.register(outToDevice);
+          // Need to wait for client to acknowledge that we've connected.
+        }
+        if (outToDevice == null) {
+          throw new NullPointerException();
+        }
+        if (!wrotePayload && getOutput().contains("z1")) {
+          if (outToDevice == null) {
+            throw new NullPointerException("outToDevice was null when protocol says it cannot be");
+          }
+          LOG.verbose("Got z1");
+          wrotePayload = true;
+          outToDevice.write(getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
+          LOG.verbose("Wrote key");
+          com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
+          outToDevice.flush();
+          LOG.verbose("Wrote file");
+        }
+      } catch (IOException e) {
+        error = Optional.of(e);
+      }
+    }
+
+    public Optional<Exception> getError() {
+      return error;
+    }
   }
 }
