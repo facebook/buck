@@ -464,16 +464,6 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
       throws QueryException {
-    for (String file : files) {
-      Optional<String> howToEnablePackageBoundaryChecking =
-          rootCell.howToEnablePackageBoundaryCheckingFor(
-              rootCell.getFilesystem().getPathForRelativePath(file));
-      if (howToEnablePackageBoundaryChecking.isPresent()) {
-        throw new HumanReadableException(
-            "Cannot perform owner(%s) query on a file under a path which doesn't have package boundary checking on. To fix this: %s",
-            file, howToEnablePackageBoundaryChecking.get());
-      }
-    }
     try {
       OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
       return getTargetsFromTargetNodes(report.owners.keySet());
