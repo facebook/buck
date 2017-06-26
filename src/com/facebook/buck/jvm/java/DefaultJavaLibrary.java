@@ -350,10 +350,13 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    BuildTarget buildTarget = this.getBuildTarget();
+    ProjectFilesystem projectFilesystem = this.getProjectFilesystem();
     JavaLibraryRules.addCompileToJarSteps(
+        buildTarget,
+        projectFilesystem,
         context,
         buildableContext,
-        this,
         outputJar,
         ruleFinder,
         srcs,
@@ -369,7 +372,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         steps);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        this, buildableContext, context, getProjectFilesystem(), steps);
+        buildTarget, projectFilesystem, getSourcePathToOutput(), buildableContext, context, steps);
 
     return steps.build();
   }

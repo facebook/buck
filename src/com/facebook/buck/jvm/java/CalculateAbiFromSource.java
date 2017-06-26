@@ -98,9 +98,10 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     JavaLibraryRules.addCompileToJarSteps(
+        getBuildTarget(),
+        getProjectFilesystem(),
         context,
         buildableContext,
-        this,
         outputJar,
         ruleFinder,
         srcs,

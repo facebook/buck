@@ -35,6 +35,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,9 +57,10 @@ public class JavaLibraryRules {
   private JavaLibraryRules() {}
 
   public static void addCompileToJarSteps(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       BuildContext context,
       BuildableContext buildableContext,
-      BuildRule rule,
       Optional<Path> outputJar,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> srcs,
@@ -74,13 +76,12 @@ public class JavaLibraryRules {
       ImmutableList.Builder<Step> steps) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
-    BuildTarget target = rule.getBuildTarget();
-    Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, rule.getProjectFilesystem());
+    Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, filesystem);
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), rule.getProjectFilesystem(), outputDirectory)));
+                context.getBuildCellRootPath(), filesystem, outputDirectory)));
 
     // We don't want to add provided to the declared or transitive deps, since they're only used at
     // compile time.
@@ -98,26 +99,21 @@ public class JavaLibraryRules {
 
     steps.add(
         new CopyResourcesStep(
-            rule.getProjectFilesystem(),
-            context,
-            ruleFinder,
-            target,
-            resources,
-            outputDirectory,
-            finder));
+            filesystem, context, ruleFinder, target, resources, outputDirectory, finder));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
-                rule.getProjectFilesystem(),
-                DefaultJavaLibrary.getOutputJarDirPath(target, rule.getProjectFilesystem()))));
+                filesystem,
+                DefaultJavaLibrary.getOutputJarDirPath(target, filesystem))));
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!srcs.isEmpty()) {
       ClassUsageFileWriter usedClassesFileWriter;
       if (trackClassUsage) {
+        Preconditions.checkNotNull(depFileRelativePath);
         usedClassesFileWriter = new DefaultClassUsageFileWriter(depFileRelativePath);
 
         buildableContext.recordArtifact(depFileRelativePath);
@@ -126,23 +122,18 @@ public class JavaLibraryRules {
       }
 
       // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList =
-          BuildTargets.getGenPath(rule.getProjectFilesystem(), rule.getBuildTarget(), "__%s__srcs");
+      Path pathToSrcsList = BuildTargets.getGenPath(filesystem, target, "__%s__srcs");
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  rule.getProjectFilesystem(),
-                  pathToSrcsList.getParent())));
+                  context.getBuildCellRootPath(), filesystem, pathToSrcsList.getParent())));
 
-      Path scratchDir =
-          BuildTargets.getGenPath(
-              rule.getProjectFilesystem(), target, "lib__%s____working_directory");
+      Path scratchDir = BuildTargets.getGenPath(filesystem, target, "lib__%s____working_directory");
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), rule.getProjectFilesystem(), scratchDir)));
+                  context.getBuildCellRootPath(), filesystem, scratchDir)));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
       ImmutableSortedSet<Path> javaSrcs =
@@ -156,7 +147,7 @@ public class JavaLibraryRules {
           target,
           context.getSourcePathResolver(),
           ruleFinder,
-          rule.getProjectFilesystem(),
+          filesystem,
           compileTimeClasspathPaths,
           outputDirectory,
           workingDirectory,
@@ -179,7 +170,7 @@ public class JavaLibraryRules {
       // No source files, only resources
       if (srcs.isEmpty()) {
         compileStepFactory.createJarStep(
-            rule.getProjectFilesystem(),
+            filesystem,
             outputDirectory,
             Optional.empty(),
             manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
@@ -192,25 +183,22 @@ public class JavaLibraryRules {
   }
 
   static void addAccumulateClassNamesStep(
-      JavaLibrary javaLibrary,
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      @Nullable SourcePath sourcePathToOutput,
       BuildableContext buildableContext,
       BuildContext buildContext,
-      ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<Step> steps) {
 
-    Path pathToClassHashes =
-        JavaLibraryRules.getPathToClassHashes(
-            javaLibrary.getBuildTarget(), javaLibrary.getProjectFilesystem());
+    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(target, filesystem);
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(),
-                projectFilesystem,
-                pathToClassHashes.getParent())));
+                buildContext.getBuildCellRootPath(), filesystem, pathToClassHashes.getParent())));
     steps.add(
         new AccumulateClassNamesStep(
-            javaLibrary.getProjectFilesystem(),
-            Optional.ofNullable(javaLibrary.getSourcePathToOutput())
+            filesystem,
+            Optional.ofNullable(sourcePathToOutput)
                 .map(buildContext.getSourcePathResolver()::getRelativePath),
             pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
