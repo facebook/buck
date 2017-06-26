@@ -290,13 +290,18 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private static class CompilerBundle implements AutoCloseable {
+    private final Function<JavacExecutionContext, JavaCompiler> compilerConstructor;
     private final JavacExecutionContext context;
+    private final BuildTarget invokingRule;
+    private final ImmutableList<String> options;
+    private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
+    private final ImmutableSortedSet<Path> javaSourceFilePaths;
     private final JavacCompilationMode compilationMode;
-    private final JavaCompiler compiler;
-    @Nullable private final JavaInMemoryFileManager inMemoryFileManager;
-    private final BuckJavacTaskProxy javacTask;
     private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     private final List<AutoCloseable> closeables = new ArrayList<>();
+
+    @Nullable private BuckJavacTaskProxy javacTask;
+    @Nullable private JavaInMemoryFileManager inMemoryFileManager;
 
     public CompilerBundle(
         Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -305,123 +310,14 @@ public abstract class Jsr199Javac implements Javac {
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> pluginFields,
         ImmutableSortedSet<Path> javaSourceFilePaths,
-        JavacCompilationMode compilationMode)
-        throws IOException {
+        JavacCompilationMode compilationMode) {
+      this.compilerConstructor = compilerConstructor;
       this.context = context;
+      this.invokingRule = invokingRule;
+      this.options = options;
+      this.pluginFields = pluginFields;
+      this.javaSourceFilePaths = javaSourceFilePaths;
       this.compilationMode = compilationMode;
-      compiler = compilerConstructor.apply(context);
-      StandardJavaFileManager standardFileManager =
-          compiler.getStandardFileManager(null, null, null);
-      addCloseable(standardFileManager);
-
-      StandardJavaFileManager fileManager;
-      if (context.getDirectToJarOutputSettings().isPresent()) {
-        Path directToJarPath =
-            context
-                .getProjectFilesystem()
-                .getPathForRelativePath(
-                    context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
-        inMemoryFileManager =
-            new JavaInMemoryFileManager(
-                standardFileManager,
-                directToJarPath,
-                context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
-        addCloseable(inMemoryFileManager);
-        fileManager = inMemoryFileManager;
-      } else {
-        inMemoryFileManager = null;
-        fileManager = standardFileManager;
-      }
-
-      Iterable<? extends JavaFileObject> compilationUnits;
-      try {
-        compilationUnits =
-            createCompilationUnits(
-                fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
-        compilationUnits.forEach(this::addCloseable);
-      } catch (IOException e) {
-        LOG.warn(e, "Error building compilation units");
-        throw e;
-      }
-
-      List<String> classNamesForAnnotationProcessing = ImmutableList.of();
-      Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
-      PluginClassLoaderFactory loaderFactory =
-          PluginLoader.newFactory(context.getClassLoaderCache());
-
-      if (compilationMode != JavacCompilationMode.ABI) {
-        javacTask =
-            BuckJavacTaskProxy.getTask(
-                loaderFactory,
-                compiler,
-                compilerOutputWriter,
-                context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-                diagnostics,
-                options,
-                classNamesForAnnotationProcessing,
-                compilationUnits);
-      } else {
-        javacTask =
-            FrontendOnlyJavacTaskProxy.getTask(
-                loaderFactory,
-                compiler,
-                compilerOutputWriter,
-                context.getUsedClassesFileWriter().wrapFileManager(fileManager),
-                diagnostics,
-                options,
-                classNamesForAnnotationProcessing,
-                compilationUnits);
-
-        javacTask.addPostEnterCallback(
-            topLevelTypes -> {
-              StubGenerator stubGenerator =
-                  new StubGenerator(
-                      getTargetVersion(options),
-                      javacTask.getElements(),
-                      fileManager,
-                      context.getEventSink());
-              stubGenerator.generate(topLevelTypes);
-            });
-      }
-
-      PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
-
-      BuckJavacTaskListener taskListener = null;
-      if (EnumSet.of(
-              JavacCompilationMode.FULL_CHECKING_REFERENCES,
-              JavacCompilationMode.FULL_ENFORCING_REFERENCES)
-          .contains(compilationMode)) {
-        taskListener =
-            SourceBasedAbiStubber.newValidatingTaskListener(
-                pluginLoader,
-                javacTask,
-                new FileManagerBootClasspathOracle(fileManager),
-                compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
-                    ? Diagnostic.Kind.ERROR
-                    : Diagnostic.Kind.WARNING);
-      }
-
-      TranslatingJavacPhaseTracer tracer =
-          new TranslatingJavacPhaseTracer(
-              new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
-      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
-      // in some unusual situations
-      addCloseable(tracer);
-
-      // Ensure annotation processors are loaded from their own classloader. If we don't do
-      // this, then the evidence suggests that they get one polluted with Buck's own classpath,
-      // which means that libraries that have dependencies on different versions of Buck's deps
-      // may choke with novel errors that don't occur on the command line.
-      AnnotationProcessorFactory processorFactory =
-          new AnnotationProcessorFactory(
-              context.getEventSink(),
-              compiler.getClass().getClassLoader(),
-              context.getClassLoaderCache(),
-              invokingRule);
-      addCloseable(processorFactory);
-
-      javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
-      javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
     }
 
     private void addCloseable(Object maybeCloseable) {
@@ -430,7 +326,123 @@ public abstract class Jsr199Javac implements Javac {
       }
     }
 
-    public BuckJavacTaskProxy getJavacTask() {
+    public BuckJavacTaskProxy getJavacTask() throws IOException {
+      if (javacTask == null) {
+        JavaCompiler compiler = compilerConstructor.apply(context);
+
+        StandardJavaFileManager standardFileManager =
+            compiler.getStandardFileManager(null, null, null);
+        addCloseable(standardFileManager);
+
+        StandardJavaFileManager fileManager;
+        if (context.getDirectToJarOutputSettings().isPresent()) {
+          Path directToJarPath =
+              context
+                  .getProjectFilesystem()
+                  .getPathForRelativePath(
+                      context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+          inMemoryFileManager =
+              new JavaInMemoryFileManager(
+                  standardFileManager,
+                  directToJarPath,
+                  context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+          addCloseable(inMemoryFileManager);
+          fileManager = inMemoryFileManager;
+        } else {
+          inMemoryFileManager = null;
+          fileManager = standardFileManager;
+        }
+
+        Iterable<? extends JavaFileObject> compilationUnits;
+        try {
+          compilationUnits =
+              createCompilationUnits(
+                  fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
+          compilationUnits.forEach(this::addCloseable);
+        } catch (IOException e) {
+          LOG.warn(e, "Error building compilation units");
+          throw e;
+        }
+
+        List<String> classNamesForAnnotationProcessing = ImmutableList.of();
+        Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
+        PluginClassLoaderFactory loaderFactory =
+            PluginLoader.newFactory(context.getClassLoaderCache());
+
+        if (compilationMode != JavacCompilationMode.ABI) {
+          javacTask =
+              BuckJavacTaskProxy.getTask(
+                  loaderFactory,
+                  compiler,
+                  compilerOutputWriter,
+                  context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+                  diagnostics,
+                  options,
+                  classNamesForAnnotationProcessing,
+                  compilationUnits);
+        } else {
+          javacTask =
+              FrontendOnlyJavacTaskProxy.getTask(
+                  loaderFactory,
+                  compiler,
+                  compilerOutputWriter,
+                  context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+                  diagnostics,
+                  options,
+                  classNamesForAnnotationProcessing,
+                  compilationUnits);
+
+          javacTask.addPostEnterCallback(
+              topLevelTypes -> {
+                StubGenerator stubGenerator =
+                    new StubGenerator(
+                        getTargetVersion(options),
+                        Preconditions.checkNotNull(javacTask).getElements(),
+                        fileManager,
+                        context.getEventSink());
+                stubGenerator.generate(topLevelTypes);
+              });
+        }
+
+        PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
+
+        BuckJavacTaskListener taskListener = null;
+        if (EnumSet.of(
+                JavacCompilationMode.FULL_CHECKING_REFERENCES,
+                JavacCompilationMode.FULL_ENFORCING_REFERENCES)
+            .contains(compilationMode)) {
+          taskListener =
+              SourceBasedAbiStubber.newValidatingTaskListener(
+                  pluginLoader,
+                  javacTask,
+                  new FileManagerBootClasspathOracle(fileManager),
+                  compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
+                      ? Diagnostic.Kind.ERROR
+                      : Diagnostic.Kind.WARNING);
+        }
+
+        TranslatingJavacPhaseTracer tracer =
+            new TranslatingJavacPhaseTracer(
+                new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
+        // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
+        // in some unusual situations
+        addCloseable(tracer);
+
+        // Ensure annotation processors are loaded from their own classloader. If we don't do
+        // this, then the evidence suggests that they get one polluted with Buck's own classpath,
+        // which means that libraries that have dependencies on different versions of Buck's deps
+        // may choke with novel errors that don't occur on the command line.
+        AnnotationProcessorFactory processorFactory =
+            new AnnotationProcessorFactory(
+                context.getEventSink(),
+                compiler.getClass().getClassLoader(),
+                context.getClassLoaderCache(),
+                invokingRule);
+        addCloseable(processorFactory);
+
+        javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
+        javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+      }
       return javacTask;
     }
 
