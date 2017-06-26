@@ -129,25 +129,6 @@ public abstract class Jsr199Javac implements Javac {
 
       @Override
       public int buildClasses() throws InterruptedException {
-        JavaCompiler compiler = createCompiler(context);
-        StandardJavaFileManager fileManager = null;
-        JavaInMemoryFileManager inMemoryFileManager = null;
-        Path directToJarPath = null;
-        fileManager = compiler.getStandardFileManager(null, null, null);
-        if (context.getDirectToJarOutputSettings().isPresent()) {
-          directToJarPath =
-              context
-                  .getProjectFilesystem()
-                  .getPathForRelativePath(
-                      context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
-          inMemoryFileManager =
-              new JavaInMemoryFileManager(
-                  fileManager,
-                  directToJarPath,
-                  context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
-          fileManager = inMemoryFileManager;
-        }
-
         // write javaSourceFilePaths to classes file
         // for buck user to have a list of all .java files to be compiled
         // since we do not print them out to console in case of error
@@ -175,8 +156,6 @@ public abstract class Jsr199Javac implements Javac {
                 invokingRule,
                 options,
                 pluginFields,
-                compiler,
-                fileManager,
                 javaSourceFilePaths,
                 compilationMode)) {
           int result = buildWithClasspath(compilerBundle, context, invokingRule, compilationMode);
@@ -184,29 +163,19 @@ public abstract class Jsr199Javac implements Javac {
             return result;
           }
 
-          JarBuilder jarBuilder = new JarBuilder();
-          Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
-          return jarBuilder
-              .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
-              .setEntriesToJar(
-                  context
-                      .getDirectToJarOutputSettings()
-                      .get()
-                      .getEntriesToJar()
-                      .stream()
-                      .map(context.getProjectFilesystem()::resolve))
-              .setMainClass(
-                  context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
-              .setManifestFile(
-                  context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
-              .setShouldMergeManifests(true)
-              .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
-              .setEntryPatternBlacklist(ImmutableSet.of())
-              .createJarFile(Preconditions.checkNotNull(directToJarPath));
+          return compilerBundle
+              .newJarBuilder()
+              .createJarFile(
+                  Preconditions.checkNotNull(
+                      context
+                          .getProjectFilesystem()
+                          .getPathForRelativePath(
+                              context
+                                  .getDirectToJarOutputSettings()
+                                  .get()
+                                  .getDirectToJarOutputPath())));
         } catch (IOException e) {
           LOG.warn(e, "Unable to create jarOutputStream");
-        } finally {
-          closeResources(fileManager, inMemoryFileManager);
         }
         return 1;
       }
@@ -216,20 +185,6 @@ public abstract class Jsr199Javac implements Javac {
         // Nothing
       }
     };
-  }
-
-  private void closeResources(
-      @Nullable StandardJavaFileManager fileManager,
-      @Nullable JavaInMemoryFileManager inMemoryFileManager) {
-    try {
-      if (inMemoryFileManager != null) {
-        inMemoryFileManager.close();
-      } else if (fileManager != null) {
-        fileManager.close();
-      }
-    } catch (IOException e) {
-      LOG.warn(e, "Unable to close fileManager. We may be leaking memory.");
-    }
   }
 
   private int buildWithClasspath(
@@ -334,6 +289,11 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private class CompilerBundle implements AutoCloseable {
+    private final JavacExecutionContext context;
+    private final JavacCompilationMode compilationMode;
+    private final JavaCompiler compiler;
+    private final StandardJavaFileManager fileManager;
+    @Nullable private final JavaInMemoryFileManager inMemoryFileManager;
     private final BuckJavacTaskProxy javacTask;
     private final TranslatingJavacPhaseTracer tracer;
     private final AnnotationProcessorFactory processorFactory;
@@ -345,11 +305,31 @@ public abstract class Jsr199Javac implements Javac {
         BuildTarget invokingRule,
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> pluginFields,
-        JavaCompiler compiler,
-        StandardJavaFileManager fileManager,
         ImmutableSortedSet<Path> javaSourceFilePaths,
         JavacCompilationMode compilationMode)
         throws IOException {
+      this.context = context;
+      this.compilationMode = compilationMode;
+      compiler = createCompiler(context);
+      StandardJavaFileManager standardFileManager =
+          compiler.getStandardFileManager(null, null, null);
+      if (context.getDirectToJarOutputSettings().isPresent()) {
+        Path directToJarPath =
+            context
+                .getProjectFilesystem()
+                .getPathForRelativePath(
+                    context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+        inMemoryFileManager =
+            new JavaInMemoryFileManager(
+                standardFileManager,
+                directToJarPath,
+                context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+        fileManager = inMemoryFileManager;
+      } else {
+        inMemoryFileManager = null;
+        fileManager = standardFileManager;
+      }
+
       try {
         compilationUnits =
             createCompilationUnits(
@@ -443,6 +423,26 @@ public abstract class Jsr199Javac implements Javac {
       return diagnostics;
     }
 
+    public JarBuilder newJarBuilder() throws IOException {
+      JarBuilder jarBuilder = new JarBuilder();
+      Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+      return jarBuilder
+          .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
+          .setEntriesToJar(
+              context
+                  .getDirectToJarOutputSettings()
+                  .get()
+                  .getEntriesToJar()
+                  .stream()
+                  .map(context.getProjectFilesystem()::resolve))
+          .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
+          .setManifestFile(
+              context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+          .setShouldMergeManifests(true)
+          .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
+          .setEntryPatternBlacklist(ImmutableSet.of());
+    }
+
     @Override
     public void close() {
       // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
@@ -450,6 +450,8 @@ public abstract class Jsr199Javac implements Javac {
       tracer.close();
 
       close(compilationUnits);
+
+      closeResources(fileManager, inMemoryFileManager);
 
       try {
         processorFactory.close();
@@ -467,6 +469,20 @@ public abstract class Jsr199Javac implements Javac {
             LOG.warn(e, "Unable to close zipfile. We may be leaking memory.");
           }
         }
+      }
+    }
+
+    private void closeResources(
+        @Nullable StandardJavaFileManager fileManager,
+        @Nullable JavaInMemoryFileManager inMemoryFileManager) {
+      try {
+        if (inMemoryFileManager != null) {
+          inMemoryFileManager.close();
+        } else if (fileManager != null) {
+          fileManager.close();
+        }
+      } catch (IOException e) {
+        LOG.warn(e, "Unable to close fileManager. We may be leaking memory.");
       }
     }
 
