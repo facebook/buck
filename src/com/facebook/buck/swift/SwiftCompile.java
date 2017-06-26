@@ -17,12 +17,12 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessables;
-import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.cxx.PathShortener;
+import com.facebook.buck.cxx.Preprocessor;
+import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -55,7 +56,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
@@ -84,8 +84,9 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final boolean enableObjcInterop;
   private final Optional<SourcePath> bridgingHeader;
   private final SwiftBuckConfig swiftBuckConfig;
+  @AddToRuleKey private final Preprocessor cPreprocessor;
 
-  private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
+  private final PreprocessorFlags cxxDeps;
 
   SwiftCompile(
       CxxPlatform cxxPlatform,
@@ -96,16 +97,16 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
-      ImmutableList<? extends Arg> compilerFlags,
+      ImmutableList<Arg> compilerFlags,
       Optional<Boolean> enableObjcInterop,
-      Optional<SourcePath> bridgingHeader)
+      Optional<SourcePath> bridgingHeader,
+      Preprocessor preprocessor,
+      PreprocessorFlags cxxDeps)
       throws NoSuchBuildTargetException {
     super(params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getBuildDeps());
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
@@ -119,7 +120,15 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.compilerFlags = compilerFlags;
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
+    this.cPreprocessor = preprocessor;
+    this.cxxDeps = cxxDeps;
     performChecks(params);
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    super.appendToRuleKey(sink);
+    cxxDeps.appendToRuleKey(sink);
   }
 
   private void performChecks(BuildRuleParams params) {
@@ -221,46 +230,31 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   ImmutableList<String> getSwiftIncludeArgs(SourcePathResolver resolver) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    // Collect the header maps and roots into buckets organized by include type, so that we can:
-    // 1) Apply the header maps first (so that they work properly).
-    // 2) De-duplicate redundant include paths.
-    LinkedHashSet<String> headerMaps = new LinkedHashSet<String>();
-    LinkedHashSet<String> roots = new LinkedHashSet<String>();
-
-    for (CxxPreprocessorInput cxxPreprocessorInput : cxxPreprocessorInputs) {
-      Iterable<CxxHeaders> cxxHeaderses = cxxPreprocessorInput.getIncludes();
-      for (CxxHeaders cxxHeaders : cxxHeaderses) {
-        // Swift doesn't need to reference anything from system headers
-        if (cxxHeaders.getIncludeType() == CxxPreprocessables.IncludeType.SYSTEM) {
-          continue;
-        }
-        Optional<SourcePath> headerMap = cxxHeaders.getHeaderMap();
-        if (headerMap.isPresent()) {
-          headerMaps.add(resolver.getAbsolutePath(headerMap.get()).toString());
-        }
-        roots.add(resolver.getAbsolutePath(cxxHeaders.getIncludeRoot()).toString());
-      }
-    }
+    // Arg list can't simply be passed in since the current implementation of toToolFlags drops the
+    // dependency information.
+    Iterable<Arg> argsFromDeps =
+        cxxDeps
+            .toToolFlags(
+                resolver,
+                PathShortener.byRelativizingToWorkingDir(getProjectFilesystem().getRootPath()),
+                CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
+                cPreprocessor,
+                Optional.empty())
+            .getAllFlags();
+    args.addAll(Arg.stringify(argsFromDeps, resolver));
 
     if (bridgingHeader.isPresent()) {
       for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
+        // We should probably pass in the correct symlink trees instead of guessing.
         Path headerPath =
             CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
                 getProjectFilesystem(),
                 BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget()).build(),
                 headerVisibility,
                 cxxPlatform.getFlavor());
-
-        headerMaps.add(headerPath.toString());
+        args.add(INCLUDE_FLAG.concat(headerPath.toString()));
       }
     }
-
-    // Apply the header maps first, so that headers that matching there avoid falling back to
-    // stat'ing files in the normal include roots.
-    args.addAll(Iterables.transform(headerMaps, INCLUDE_FLAG::concat));
-
-    // Apply the regular includes last.
-    args.addAll(Iterables.transform(roots, INCLUDE_FLAG::concat));
 
     return args.build();
   }

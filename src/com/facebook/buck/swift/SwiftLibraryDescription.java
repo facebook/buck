@@ -22,10 +22,15 @@ import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.Preprocessor;
+import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -52,7 +57,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +66,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -208,45 +211,69 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
       // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
       // during compilation.
-      final Function<BuildRule, BuildRule> requireSwiftCompile =
-          input -> {
-            try {
-              Preconditions.checkArgument(input instanceof SwiftLibrary);
-              return ((SwiftLibrary) input).requireSwiftCompileRule(cxxPlatform.getFlavor());
-            } catch (NoSuchBuildTargetException e) {
-              throw new HumanReadableException(
-                  e, "Could not find SwiftCompile with target %s", buildTarget);
-            }
-          };
-      params =
-          params.copyAppendingExtraDeps(
-              params
-                  .getBuildDeps()
-                  .stream()
-                  .filter(SwiftLibrary.class::isInstance)
-                  .map(requireSwiftCompile)
-                  .collect(MoreCollectors.toImmutableSet()));
 
-      params =
-          params.copyAppendingExtraDeps(
-              params
-                  .getBuildDeps()
-                  .stream()
-                  .filter(CxxLibrary.class::isInstance)
-                  .map(
-                      input -> {
-                        BuildTarget companionTarget =
-                            input.getBuildTarget().withAppendedFlavors(SWIFT_COMPANION_FLAVOR);
-                        return resolver.getRuleOptional(companionTarget).map(requireSwiftCompile);
-                      })
-                  .filter(Optional::isPresent)
-                  .map(Optional::get)
-                  .collect(MoreCollectors.toImmutableSortedSet()));
+      // Direct swift dependencies.
+      ImmutableSet<SwiftCompile> swiftCompileRules =
+          RichStream.from(params.getBuildDeps())
+              .filter(SwiftLibrary.class)
+              .map(input -> input.requireSwiftCompileRule(cxxPlatform.getFlavor()))
+              .toImmutableSet();
+
+      // Implicitly generated swift libraries of apple_library dependencies with swift code.
+      ImmutableSet<SwiftCompile> implicitSwiftCompileRules =
+          RichStream.from(params.getBuildDeps())
+              .filter(CxxLibrary.class)
+              .flatMap(
+                  input -> {
+                    BuildTarget companionTarget =
+                        input.getBuildTarget().withAppendedFlavors(SWIFT_COMPANION_FLAVOR);
+                    // Note, this is liable to race conditions. The presence or absence of the companion
+                    // rule should be determined by metadata query, not by assumptions.
+                    return RichStream.from(
+                        resolver
+                            .getRuleOptional(companionTarget)
+                            .map(
+                                companion ->
+                                    ((SwiftLibrary) companion)
+                                        .requireSwiftCompileRule(cxxPlatform.getFlavor())));
+                  })
+              .toImmutableSet();
+
+      // Transitive C libraries whose headers might be visible to swift via bridging.
+
+      CxxPreprocessorInput inputs =
+          CxxPreprocessorInput.concat(
+              CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                  cxxPlatform, params.getBuildDeps()));
+      PreprocessorFlags cxxDeps =
+          PreprocessorFlags.of(
+              Optional.empty(),
+              CxxToolFlags.of(),
+              RichStream.from(inputs.getIncludes())
+                  .filter(
+                      headers -> headers.getIncludeType() != CxxPreprocessables.IncludeType.SYSTEM)
+                  .toImmutableSet(),
+              inputs.getFrameworks());
+      Preprocessor preprocessor = cxxPlatform.getCpp().resolve(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
-          params,
+          new BuildRuleParams(
+              params.getBuildTarget(),
+              () ->
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(swiftCompileRules)
+                      .addAll(implicitSwiftCompileRules)
+                      .addAll(cxxDeps.getDeps(ruleFinder))
+                      // This is only used for generating include args, but adding it for local
+                      // reasoning correctness.
+                      .addAll(preprocessor.getDeps(ruleFinder))
+                      .build(),
+              ImmutableSortedSet::of,
+              ImmutableSortedSet.of(),
+              params.getProjectFilesystem()),
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
           args.getModuleName().orElse(buildTarget.getShortName()),
@@ -259,7 +286,9 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                           buildTarget, cellRoots, resolver, cxxPlatform, f))
               .toImmutableList(),
           args.getEnableObjcInterop(),
-          args.getBridgingHeader());
+          args.getBridgingHeader(),
+          preprocessor,
+          cxxDeps);
     }
 
     // Otherwise, we return the generic placeholder of this library.

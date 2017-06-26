@@ -120,9 +120,9 @@ public class SwiftLibraryIntegrationTest {
 
     ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
 
-    assertThat(swiftIncludeArgs.size(), Matchers.equalTo(1));
-    assertThat(swiftIncludeArgs.get(0), Matchers.startsWith("-I"));
-    assertThat(swiftIncludeArgs.get(0), Matchers.endsWith("symlink.hmap"));
+    assertThat(swiftIncludeArgs.size(), Matchers.equalTo(2));
+    assertThat(swiftIncludeArgs.get(0), Matchers.equalTo("-I"));
+    assertThat(swiftIncludeArgs.get(1), Matchers.endsWith("symlink.hmap"));
   }
 
   @Test

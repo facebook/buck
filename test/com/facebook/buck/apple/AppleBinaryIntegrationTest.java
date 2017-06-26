@@ -50,7 +50,6 @@ import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -1035,7 +1034,6 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testSwiftFilesInsideBinaryAreRebuiltWhenHeaderFileTheyDependOnChanges()
       throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
