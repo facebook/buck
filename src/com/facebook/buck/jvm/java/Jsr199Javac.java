@@ -33,8 +33,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.zip.CustomJarOutputStream;
-import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -171,7 +169,6 @@ public abstract class Jsr199Javac implements Javac {
           return 1;
         }
 
-        CustomJarOutputStream jarOutputStream = null;
         try (CompilerBundle compilerBundle =
             new CompilerBundle(
                 context,
@@ -209,7 +206,7 @@ public abstract class Jsr199Javac implements Javac {
         } catch (IOException e) {
           LOG.warn(e, "Unable to create jarOutputStream");
         } finally {
-          closeResources(fileManager, inMemoryFileManager, jarOutputStream);
+          closeResources(fileManager, inMemoryFileManager);
         }
         return 1;
       }
@@ -223,16 +220,7 @@ public abstract class Jsr199Javac implements Javac {
 
   private void closeResources(
       @Nullable StandardJavaFileManager fileManager,
-      @Nullable JavaInMemoryFileManager inMemoryFileManager,
-      @Nullable CustomZipOutputStream jarOutputStream) {
-    try {
-      if (jarOutputStream != null) {
-        jarOutputStream.close();
-      }
-    } catch (IOException e) {
-      LOG.warn(e, "Unable to close jarOutputStream. We may be leaking memory.");
-    }
-
+      @Nullable JavaInMemoryFileManager inMemoryFileManager) {
     try {
       if (inMemoryFileManager != null) {
         inMemoryFileManager.close();
