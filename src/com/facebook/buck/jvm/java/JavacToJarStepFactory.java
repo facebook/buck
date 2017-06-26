@@ -203,22 +203,26 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
 
       steps.add(
-          new JavacDirectToJarStep(
+          new JavacStep(
+              outputDirectory,
+              usedClassesFileWriter,
+              workingDirectory,
               sourceFilePaths,
-              invokingRule,
-              resolver,
-              filesystem,
+              pathToSrcsList,
               declaredClasspathEntries,
               javac,
               buildTimeOptions,
-              outputDirectory,
-              workingDirectory,
-              pathToSrcsList,
-              entriesToJar,
-              mainClass,
-              manifestFile,
-              outputJar,
-              usedClassesFileWriter));
+              invokingRule,
+              resolver,
+              filesystem,
+              new ClasspathChecker(),
+              Optional.of(
+                  DirectToJarOutputSettings.of(
+                      outputJar,
+                      buildTimeOptions.getClassesToRemoveFromJar(),
+                      entriesToJar,
+                      mainClass,
+                      manifestFile))));
     } else {
       super.createCompileToJarStep(
           context,

@@ -657,8 +657,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacDirectToJarStep.class)));
-    assertThat(steps, Matchers.not(Matchers.hasItem(Matchers.instanceOf(JavacStep.class))));
+    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
     assertThat(steps, Matchers.not(Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class))));
   }
 
@@ -681,8 +680,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(
-        steps, Matchers.not(Matchers.hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
     assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
     assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
   }
@@ -706,8 +703,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(
-        steps, Matchers.not(Matchers.hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
     assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
     assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
   }

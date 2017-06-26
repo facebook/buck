@@ -217,16 +217,45 @@ public class JavacStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getJavac()
-        .getDescription(
-            getOptions(context, getClasspathEntries()), javaSourceFilePaths, pathToSrcsList);
+    String description =
+        getJavac()
+            .getDescription(
+                getOptions(context, getClasspathEntries()), javaSourceFilePaths, pathToSrcsList);
+
+    if (directToJarOutputSettings.isPresent()) {
+      DirectToJarOutputSettings directToJarOutputSettings = this.directToJarOutputSettings.get();
+      Optional<Path> manifestFile = directToJarOutputSettings.getManifestFile();
+      ImmutableSortedSet<Path> entriesToJar = directToJarOutputSettings.getEntriesToJar();
+      description =
+          description
+              + "; "
+              + String.format(
+                  "jar %s %s %s %s",
+                  manifestFile.isPresent() ? "cfm" : "cf",
+                  directToJarOutputSettings.getDirectToJarOutputPath(),
+                  manifestFile.isPresent() ? manifestFile.get() : "",
+                  Joiner.on(' ').join(entriesToJar));
+    }
+
+    return description;
   }
 
   @Override
   public String getShortName() {
-    return javacOptions.getCompilationMode() != JavacCompilationMode.ABI
-        ? getJavac().getShortName()
-        : "calculate_abi_from_source";
+    String name;
+    if (javacOptions.getCompilationMode() == JavacCompilationMode.ABI) {
+      name = "calculate_abi_from_source";
+    } else if (directToJarOutputSettings.isPresent()) {
+      name = "javac_jar";
+    } else {
+      name = getJavac().getShortName();
+    }
+
+    if (javac instanceof OutOfProcessJsr199Javac) {
+      name += "(oop)";
+    }
+
+    return name;
   }
 
   /**
