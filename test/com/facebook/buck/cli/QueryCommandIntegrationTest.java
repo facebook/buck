@@ -262,6 +262,25 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testOwnerWithPackageBoundaryException() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_package_boundary_exception", tmp);
+    workspace.setUp();
+
+    try {
+      workspace.runBuckCommand("query", "owner('dir/subdir/file')");
+      Assert.fail("Should have errored");
+    } catch (HumanReadableException e) {
+      assertThat(
+          e.getMessage(),
+          containsString(
+              "Remove dir from the project.package_boundary_exceptions list in your buckconfig."));
+      assertThat(e.getMessage(), containsString("dir/subdir/file"));
+    }
+  }
+
+  @Test
   public void testFormatWithoutFormatString() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

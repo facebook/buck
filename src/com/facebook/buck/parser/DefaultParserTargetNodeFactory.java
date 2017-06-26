@@ -177,7 +177,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
                 withinViewPatterns,
                 targetCell.getCellPathResolver());
         if (buildFileTrees.isPresent()
-            && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
+            && !cell.howToEnablePackageBoundaryCheckingFor(target.getBasePath()).isPresent()) {
           enforceBuckPackageBoundaries(
               target, buildFileTrees.get().getUnchecked(targetCell), node.getInputs());
         }

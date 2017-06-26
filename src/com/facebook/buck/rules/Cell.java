@@ -130,11 +130,13 @@ public class Cell {
    * Whether the cell is enforcing buck package boundaries for the package at the passed path.
    *
    * @param path Path of package (or file in a package) relative to the cell root.
+   * @return Optional.empty if package boundary enforcement is in place for that path, or a String
+   *     describing how to turn on package boundary enforcement for this path if not.
    */
-  public boolean isEnforcingBuckPackageBoundaries(Path path) {
+  public Optional<String> howToEnablePackageBoundaryCheckingFor(Path path) {
     ParserConfig configView = config.getView(ParserConfig.class);
     if (!configView.getEnforceBuckPackageBoundary()) {
-      return false;
+      return Optional.of("Set buckconfig project.check_package_boundary to true.");
     }
 
     Path absolutePath = filesystem.resolve(path);
@@ -142,10 +144,13 @@ public class Cell {
     ImmutableList<Path> exceptions = configView.getBuckPackageBoundaryExceptions();
     for (Path exception : exceptions) {
       if (absolutePath.startsWith(exception)) {
-        return false;
+        return Optional.of(
+            String.format(
+                "Remove %s from the project.package_boundary_exceptions list in your buckconfig.",
+                filesystem.getPathRelativeToProjectRoot(exception).get()));
       }
     }
-    return true;
+    return Optional.empty();
   }
 
   public Cell getCellIgnoringVisibilityCheck(Path cellPath) {
