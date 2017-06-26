@@ -152,6 +152,7 @@ public abstract class Jsr199Javac implements Javac {
 
         try (CompilerBundle compilerBundle =
             new CompilerBundle(
+                Jsr199Javac.this::createCompiler,
                 context,
                 invokingRule,
                 options,
@@ -288,7 +289,7 @@ public abstract class Jsr199Javac implements Javac {
     throw new AssertionError("Unreachable code");
   }
 
-  private class CompilerBundle implements AutoCloseable {
+  private static class CompilerBundle implements AutoCloseable {
     private final JavacExecutionContext context;
     private final JavacCompilationMode compilationMode;
     private final JavaCompiler compiler;
@@ -301,6 +302,7 @@ public abstract class Jsr199Javac implements Javac {
     private final Iterable<? extends JavaFileObject> compilationUnits;
 
     public CompilerBundle(
+        Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
         JavacExecutionContext context,
         BuildTarget invokingRule,
         ImmutableList<String> options,
@@ -310,7 +312,7 @@ public abstract class Jsr199Javac implements Javac {
         throws IOException {
       this.context = context;
       this.compilationMode = compilationMode;
-      compiler = createCompiler(context);
+      compiler = compilerConstructor.apply(context);
       StandardJavaFileManager standardFileManager =
           compiler.getStandardFileManager(null, null, null);
       if (context.getDirectToJarOutputSettings().isPresent()) {
