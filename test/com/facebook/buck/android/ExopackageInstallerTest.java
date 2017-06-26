@@ -136,13 +136,13 @@ public class ExopackageInstallerTest {
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("a", 40), Strings.repeat("b", 40)),
-        ExopackageInstaller.filterLibrariesForAbi(
+        ExopackageInstaller.NativeExoHelper.filterLibrariesForAbi(
                 libsDir, allLibs, "armeabi-v7a", ImmutableSet.of())
             .keySet());
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("d", 40)),
-        ExopackageInstaller.filterLibrariesForAbi(
+        ExopackageInstaller.NativeExoHelper.filterLibrariesForAbi(
                 libsDir, allLibs, "armeabi", ImmutableSet.of("libmy1.so", "libmy2.so"))
             .keySet());
   }

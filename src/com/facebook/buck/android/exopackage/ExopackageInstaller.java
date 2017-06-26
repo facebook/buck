@@ -28,6 +28,8 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.ExopackageInfo.DexInfo;
+import com.facebook.buck.rules.ExopackageInfo.NativeLibsInfo;
 import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -40,7 +42,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -79,7 +80,9 @@ public class ExopackageInstaller {
   private final String packageName;
   private final Path dataRoot;
 
-  private final ExopackageInfo exopackageInfo;
+  private final Optional<ResourcesInfo> resourcesExoInfo;
+  private final Optional<NativeLibsInfo> nativeExoInfo;
+  private final Optional<DexInfo> dexExoInfo;
 
   /**
    * AdbInterface provides a way to interact with multiple devices as ExopackageDevices (rather than
@@ -180,8 +183,11 @@ public class ExopackageInstaller {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
     Optional<ExopackageInfo> exopackageInfo = apkRule.getApkInfo().getExopackageInfo();
-    Preconditions.checkArgument(exopackageInfo.isPresent());
-    this.exopackageInfo = exopackageInfo.get();
+    this.nativeExoInfo =
+        exopackageInfo.map(ExopackageInfo::getNativeLibsInfo).orElse(Optional.empty());
+    this.dexExoInfo = exopackageInfo.map(ExopackageInfo::getDexInfo).orElse(Optional.empty());
+    this.resourcesExoInfo =
+        exopackageInfo.map(ExopackageInfo::getResourcesInfo).orElse(Optional.empty());
   }
 
   /** Installs the app specified in the constructor. This object should be discarded afterward. */
@@ -218,26 +224,33 @@ public class ExopackageInstaller {
 
     boolean doInstall() throws Exception {
       if (exopackageEnabled()) {
-        ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
-        ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
         device.mkDirP(dataRoot.toString());
         ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
+        ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
+        ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
 
-        if (exopackageInfo.getDexInfo().isPresent()) {
-          wantedPaths.addAll(installSecondaryDexFiles(presentFiles));
-          metadata.put(
-              SECONDARY_DEX_DIR.resolve("metadata.txt"), getSecondaryDexMetadataContents());
+        if (dexExoInfo.isPresent()) {
+          DexExoHelper dexExoHelper =
+              new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
+          installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
+          wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
+          metadata.putAll(dexExoHelper.getMetadataToInstall());
         }
 
-        if (exopackageInfo.getNativeLibsInfo().isPresent()) {
-          wantedPaths.addAll(installNativeLibraryFiles(presentFiles, metadata));
+        if (nativeExoInfo.isPresent()) {
+          NativeExoHelper nativeExoHelper =
+              new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
+          installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
+          wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
+          metadata.putAll(nativeExoHelper.getMetadataToInstall());
         }
 
-        if (exopackageInfo.getResourcesInfo().isPresent()) {
-          ImmutableMap<String, Path> filesByHash = getResourceFilesByHash();
-          wantedPaths.addAll(installResourcesFiles(presentFiles, filesByHash));
-          metadata.put(
-              RESOURCES_DIR.resolve("metadata.txt"), getResourceMetadataContents(filesByHash));
+        if (resourcesExoInfo.isPresent()) {
+          ResourcesExoHelper resourcesExoHelper =
+              new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
+          installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
+          wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
+          metadata.putAll(resourcesExoHelper.getMetadataToInstall());
         }
 
         deleteUnwantedFiles(presentFiles, wantedPaths.build());
@@ -265,108 +278,7 @@ public class ExopackageInstaller {
     }
 
     private boolean exopackageEnabled() {
-      return exopackageInfo.getDexInfo().isPresent()
-          || exopackageInfo.getNativeLibsInfo().isPresent()
-          || exopackageInfo.getResourcesInfo().isPresent();
-    }
-
-    private Iterable<Path> installSecondaryDexFiles(ImmutableSortedSet<Path> presentFiles)
-        throws Exception {
-      final ImmutableMap<String, Path> filesByHash = getRequiredDexFiles();
-      ImmutableMap<Path, Path> wantedFilesToInstall =
-          applyFilenameFormat(filesByHash, SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
-      installMissingFiles(presentFiles, wantedFilesToInstall, "secondary_dex");
-      return wantedFilesToInstall.keySet();
-    }
-
-    private String getSecondaryDexMetadataContents() throws IOException {
-      // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
-      // it wouldn't be terrible if we don't.  We store the dexed jars on the device
-      // with the full SHA-1 hashes in their names.  This is the format that the loader uses
-      // internally, so ideally we would just load them in place.  However, the code currently
-      // expects to be able to copy the jars from a directory that matches the name in the
-      // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
-      // hashes in the file names (because we use that to skip re-uploads), so just hack
-      // the metadata file to have hash-like names.
-      return com.google.common.io.Files.toString(
-              pathResolver
-                  .getAbsolutePath(exopackageInfo.getDexInfo().get().getMetadata())
-                  .toFile(),
-              Charsets.UTF_8)
-          .replaceAll(
-              "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
-    }
-
-    private Iterable<Path> installResourcesFiles(
-        ImmutableSortedSet<Path> presentFiles, ImmutableMap<String, Path> filesByHash)
-        throws Exception {
-      ImmutableMap<Path, Path> wantedFilesToInstall =
-          applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");
-      installMissingFiles(presentFiles, wantedFilesToInstall, "resources");
-      return wantedFilesToInstall.keySet();
-    }
-
-    private ImmutableMap<String, Path> getResourceFilesByHash() {
-      ResourcesInfo info = exopackageInfo.getResourcesInfo().get();
-
-      return info.getResourcesPaths()
-          .stream()
-          .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
-          .collect(
-              MoreCollectors.toImmutableMap(
-                  p -> {
-                    try {
-                      return projectFilesystem.computeSha1(p).getHash();
-                    } catch (IOException e) {
-                      throw new RuntimeException(e);
-                    }
-                  },
-                  i -> i));
-    }
-
-    private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {
-      return Joiner.on("\n")
-          .join(RichStream.from(filesByHash.keySet()).map(h -> "resources " + h).toOnceIterable());
-    }
-
-    private Iterable<Path> installNativeLibraryFiles(
-        ImmutableSortedSet<Path> presentFiles, ImmutableMap.Builder<Path, String> metadataBuilder)
-        throws Exception {
-      ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
-      ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
-      ImmutableList.Builder<Path> wantedPaths = ImmutableList.builder();
-      for (String abi : device.getDeviceAbis()) {
-        ImmutableMap<String, Path> filesByHash =
-            getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
-        if (filesByHash.isEmpty()) {
-          continue;
-        }
-        Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
-        ImmutableMap<Path, Path> wantedFilesToInstall =
-            applyFilenameFormat(filesByHash, abiDir, "native-%s.so");
-        installMissingFiles(presentFiles, wantedFilesToInstall, "native_library");
-        wantedPaths.addAll(wantedFilesToInstall.keySet());
-
-        metadataBuilder.put(
-            abiDir.resolve("metadata.txt"), getNativeLibraryMetadataContents(filesByHash));
-
-        providedLibraries.addAll(filesByHash.keySet());
-      }
-      return wantedPaths.build();
-    }
-
-    private String getNativeLibraryMetadataContents(ImmutableMap<String, Path> libraries) {
-      return Joiner.on('\n')
-          .join(
-              FluentIterable.from(libraries.entrySet())
-                  .transform(
-                      input -> {
-                        String hash = input.getKey();
-                        String filename = input.getValue().getFileName().toString();
-                        int index = filename.indexOf('.');
-                        String libname = index == -1 ? filename : filename.substring(0, index);
-                        return String.format("%s native-%s.so", libname, hash);
-                      }));
+      return dexExoInfo.isPresent() || nativeExoInfo.isPresent() || resourcesExoInfo.isPresent();
     }
 
     private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
@@ -414,21 +326,6 @@ public class ExopackageInstaller {
       }
     }
 
-    private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
-      ExopackageInfo.DexInfo dexInfo = exopackageInfo.getDexInfo().get();
-      ImmutableMultimap<String, Path> multimap =
-          parseExopackageInfoMetadata(
-              pathResolver.getAbsolutePath(dexInfo.getMetadata()),
-              pathResolver.getAbsolutePath(dexInfo.getDirectory()),
-              projectFilesystem);
-      // Convert multimap to a map, because every key should have only one value.
-      ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
-      for (Map.Entry<String, Path> entry : multimap.entries()) {
-        builder.put(entry);
-      }
-      return builder.build();
-    }
-
     private void installMissingFiles(
         ImmutableSortedSet<Path> presentFiles,
         ImmutableMap<Path, Path> wantedFilesToInstall,
@@ -452,16 +349,6 @@ public class ExopackageInstaller {
               .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
               .collect(MoreCollectors.toImmutableSortedSet());
       deleteFiles(filesToDelete);
-    }
-
-    private ImmutableMap<Path, Path> applyFilenameFormat(
-        Map<String, Path> filesToHashes, Path deviceDir, String filenameFormat) {
-      ImmutableMap.Builder<Path, Path> filesBuilder = ImmutableMap.builder();
-      for (Map.Entry<String, Path> entry : filesToHashes.entrySet()) {
-        filesBuilder.put(
-            deviceDir.resolve(String.format(filenameFormat, entry.getKey())), entry.getValue());
-      }
-      return filesBuilder.build();
     }
 
     private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
@@ -528,48 +415,6 @@ public class ExopackageInstaller {
         installFiles("metadata", ImmutableMap.copyOf(filesToInstall));
       }
     }
-  }
-
-  private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
-    ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.getNativeLibsInfo().get();
-    return parseExopackageInfoMetadata(
-        pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata()),
-        pathResolver.getAbsolutePath(nativeLibsInfo.getDirectory()),
-        projectFilesystem);
-  }
-
-  private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
-      ImmutableMultimap<String, Path> allLibraries,
-      String abi,
-      ImmutableSet<String> ignoreLibraries) {
-    return filterLibrariesForAbi(
-        pathResolver.getAbsolutePath(exopackageInfo.getNativeLibsInfo().get().getDirectory()),
-        allLibraries,
-        abi,
-        ignoreLibraries);
-  }
-
-  @VisibleForTesting
-  public static ImmutableMap<String, Path> filterLibrariesForAbi(
-      Path nativeLibsDir,
-      ImmutableMultimap<String, Path> allLibraries,
-      String abi,
-      ImmutableSet<String> ignoreLibraries) {
-    ImmutableMap.Builder<String, Path> filteredLibraries = ImmutableMap.builder();
-    for (Map.Entry<String, Path> entry : allLibraries.entries()) {
-      Path relativePath = nativeLibsDir.relativize(entry.getValue());
-      // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
-      Preconditions.checkState(relativePath.getNameCount() == 3);
-      Preconditions.checkState(
-          relativePath.getName(0).toString().equals("libs")
-              || relativePath.getName(0).toString().equals("assetLibs"));
-      String libAbi = relativePath.getParent().getFileName().toString();
-      String libName = relativePath.getFileName().toString();
-      if (libAbi.equals(abi) && !ignoreLibraries.contains(libName)) {
-        filteredLibraries.put(entry);
-      }
-    }
-    return filteredLibraries.build();
   }
 
   /**
@@ -689,5 +534,229 @@ public class ExopackageInstaller {
     }
 
     return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
+  }
+
+  private static ImmutableMap<Path, Path> applyFilenameFormat(
+      Map<String, Path> filesToHashes, Path deviceDir, String filenameFormat) {
+    ImmutableMap.Builder<Path, Path> filesBuilder = ImmutableMap.builder();
+    for (Map.Entry<String, Path> entry : filesToHashes.entrySet()) {
+      filesBuilder.put(
+          deviceDir.resolve(String.format(filenameFormat, entry.getKey())), entry.getValue());
+    }
+    return filesBuilder.build();
+  }
+
+  private static class DexExoHelper {
+    private final SourcePathResolver pathResolver;
+    private final ProjectFilesystem projectFilesystem;
+    private final DexInfo dexInfo;
+
+    private DexExoHelper(
+        SourcePathResolver pathResolver, ProjectFilesystem projectFilesystem, DexInfo dexInfo) {
+      this.pathResolver = pathResolver;
+      this.projectFilesystem = projectFilesystem;
+      this.dexInfo = dexInfo;
+    }
+
+    public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+      return applyFilenameFormat(getRequiredDexFiles(), SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
+    }
+
+    public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+      return ImmutableMap.of(
+          SECONDARY_DEX_DIR.resolve("metadata.txt"), getSecondaryDexMetadataContents());
+    }
+
+    private String getSecondaryDexMetadataContents() throws IOException {
+      // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
+      // it wouldn't be terrible if we don't.  We store the dexed jars on the device
+      // with the full SHA-1 hashes in their names.  This is the format that the loader uses
+      // internally, so ideally we would just load them in place.  However, the code currently
+      // expects to be able to copy the jars from a directory that matches the name in the
+      // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
+      // hashes in the file names (because we use that to skip re-uploads), so just hack
+      // the metadata file to have hash-like names.
+      return com.google.common.io.Files.toString(
+              pathResolver.getAbsolutePath(dexInfo.getMetadata()).toFile(), Charsets.UTF_8)
+          .replaceAll(
+              "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
+    }
+
+    private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
+      ImmutableMultimap<String, Path> multimap =
+          parseExopackageInfoMetadata(
+              pathResolver.getAbsolutePath(dexInfo.getMetadata()),
+              pathResolver.getAbsolutePath(dexInfo.getDirectory()),
+              projectFilesystem);
+      // Convert multimap to a map, because every key should have only one value.
+      ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
+      for (Map.Entry<String, Path> entry : multimap.entries()) {
+        builder.put(entry);
+      }
+      return builder.build();
+    }
+  }
+
+  private static class ResourcesExoHelper {
+    private final SourcePathResolver pathResolver;
+    private final ProjectFilesystem projectFilesystem;
+    private final ResourcesInfo resourcesInfo;
+
+    private ResourcesExoHelper(
+        SourcePathResolver pathResolver,
+        ProjectFilesystem projectFilesystem,
+        ResourcesInfo resourcesInfo) {
+      this.pathResolver = pathResolver;
+      this.projectFilesystem = projectFilesystem;
+      this.resourcesInfo = resourcesInfo;
+    }
+
+    public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+      return applyFilenameFormat(getResourceFilesByHash(), RESOURCES_DIR, "%s.apk");
+    }
+
+    public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+      return ImmutableMap.of(
+          RESOURCES_DIR.resolve("metadata.txt"),
+          getResourceMetadataContents(getResourceFilesByHash()));
+    }
+
+    private ImmutableMap<String, Path> getResourceFilesByHash() {
+      return resourcesInfo
+          .getResourcesPaths()
+          .stream()
+          .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
+          .collect(
+              MoreCollectors.toImmutableMap(
+                  p -> {
+                    try {
+                      return projectFilesystem.computeSha1(p).getHash();
+                    } catch (IOException e) {
+                      throw new RuntimeException(e);
+                    }
+                  },
+                  i -> i));
+    }
+
+    private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {
+      return Joiner.on("\n")
+          .join(RichStream.from(filesByHash.keySet()).map(h -> "resources " + h).toOnceIterable());
+    }
+  }
+
+  public static class NativeExoHelper {
+    private final ExopackageDevice device;
+    private final SourcePathResolver pathResolver;
+    private final ProjectFilesystem projectFilesystem;
+    private final NativeLibsInfo nativeLibsInfo;
+
+    private NativeExoHelper(
+        ExopackageDevice device,
+        SourcePathResolver pathResolver,
+        ProjectFilesystem projectFilesystem,
+        NativeLibsInfo nativeLibsInfo) {
+      this.device = device;
+      this.pathResolver = pathResolver;
+      this.projectFilesystem = projectFilesystem;
+      this.nativeLibsInfo = nativeLibsInfo;
+    }
+
+    public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+      ImmutableMap.Builder<Path, Path> filesToInstallBuilder = ImmutableMap.builder();
+      ImmutableMap<String, ImmutableMap<String, Path>> filesByHashForAbis = getFilesByHashForAbis();
+      for (String abi : filesByHashForAbis.keySet()) {
+        ImmutableMap<String, Path> filesByHash =
+            Preconditions.checkNotNull(filesByHashForAbis.get(abi));
+        Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
+        filesToInstallBuilder.putAll(applyFilenameFormat(filesByHash, abiDir, "native-%s.so"));
+      }
+      return filesToInstallBuilder.build();
+    }
+
+    public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+      ImmutableMap<String, ImmutableMap<String, Path>> filesByHashForAbis = getFilesByHashForAbis();
+      ImmutableMap.Builder<Path, String> metadataBuilder = ImmutableMap.builder();
+      for (String abi : filesByHashForAbis.keySet()) {
+        ImmutableMap<String, Path> filesByHash =
+            Preconditions.checkNotNull(filesByHashForAbis.get(abi));
+        Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
+        metadataBuilder.put(
+            abiDir.resolve("metadata.txt"), getNativeLibraryMetadataContents(filesByHash));
+      }
+      return metadataBuilder.build();
+    }
+
+    private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
+      return parseExopackageInfoMetadata(
+          pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata()),
+          pathResolver.getAbsolutePath(nativeLibsInfo.getDirectory()),
+          projectFilesystem);
+    }
+
+    private ImmutableMap<String, ImmutableMap<String, Path>> getFilesByHashForAbis()
+        throws Exception {
+      ImmutableMap.Builder<String, ImmutableMap<String, Path>> filesByHashForAbisBuilder =
+          ImmutableMap.builder();
+      ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
+      ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
+      for (String abi : device.getDeviceAbis()) {
+        ImmutableMap<String, Path> filesByHash =
+            getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
+        if (filesByHash.isEmpty()) {
+          continue;
+        }
+        providedLibraries.addAll(filesByHash.keySet());
+        filesByHashForAbisBuilder.put(abi, filesByHash);
+      }
+      return filesByHashForAbisBuilder.build();
+    }
+
+    private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
+        ImmutableMultimap<String, Path> allLibraries,
+        String abi,
+        ImmutableSet<String> ignoreLibraries) {
+      return filterLibrariesForAbi(
+          pathResolver.getAbsolutePath(nativeLibsInfo.getDirectory()),
+          allLibraries,
+          abi,
+          ignoreLibraries);
+    }
+
+    @VisibleForTesting
+    public static ImmutableMap<String, Path> filterLibrariesForAbi(
+        Path nativeLibsDir,
+        ImmutableMultimap<String, Path> allLibraries,
+        String abi,
+        ImmutableSet<String> ignoreLibraries) {
+      ImmutableMap.Builder<String, Path> filteredLibraries = ImmutableMap.builder();
+      for (Map.Entry<String, Path> entry : allLibraries.entries()) {
+        Path relativePath = nativeLibsDir.relativize(entry.getValue());
+        // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
+        Preconditions.checkState(relativePath.getNameCount() == 3);
+        Preconditions.checkState(
+            relativePath.getName(0).toString().equals("libs")
+                || relativePath.getName(0).toString().equals("assetLibs"));
+        String libAbi = relativePath.getParent().getFileName().toString();
+        String libName = relativePath.getFileName().toString();
+        if (libAbi.equals(abi) && !ignoreLibraries.contains(libName)) {
+          filteredLibraries.put(entry);
+        }
+      }
+      return filteredLibraries.build();
+    }
+
+    private String getNativeLibraryMetadataContents(ImmutableMap<String, Path> libraries) {
+      return Joiner.on('\n')
+          .join(
+              FluentIterable.from(libraries.entrySet())
+                  .transform(
+                      input -> {
+                        String hash = input.getKey();
+                        String filename = input.getValue().getFileName().toString();
+                        int index = filename.indexOf('.');
+                        String libname = index == -1 ? filename : filename.substring(0, index);
+                        return String.format("%s native-%s.so", libname, hash);
+                      }));
+    }
   }
 }
