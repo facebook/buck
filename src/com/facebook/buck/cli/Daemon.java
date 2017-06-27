@@ -46,7 +46,6 @@ import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import java.io.Closeable;
 import java.io.IOException;
@@ -98,9 +97,7 @@ final class Daemon implements Closeable {
         });
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
-            rootCell.getFilesystem().replaceBlacklistedPaths(ImmutableSet.of()),
-            rootCell.getFilesystem().getBuckPaths().getBuckOut(),
-            rootCell.getBuckConfig().getFileHashCacheMode()));
+            rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
     this.hashCaches = hashCachesBuilder.build();
 
     this.broadcastEventListener = new BroadcastEventListener();

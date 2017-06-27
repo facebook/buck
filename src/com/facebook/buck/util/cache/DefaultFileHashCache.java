@@ -34,8 +34,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class DefaultFileHashCache implements ProjectFileHashCache {
 
@@ -43,17 +43,16 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       Boolean.getBoolean("buck.DefaultFileHashCache.check_ignored_paths");
 
   private final ProjectFilesystem projectFilesystem;
-  private final Optional<Path> buckOutPath;
+  private final Predicate<Path> ignoredPredicate;
 
   @VisibleForTesting FileHashCacheEngine fileHashCacheEngine;
 
-  @VisibleForTesting
-  DefaultFileHashCache(
+  protected DefaultFileHashCache(
       ProjectFilesystem projectFilesystem,
-      Optional<Path> buckOutPath,
+      Predicate<Path> ignoredPredicate,
       FileHashCacheMode fileHashCacheMode) {
     this.projectFilesystem = projectFilesystem;
-    this.buckOutPath = buckOutPath;
+    this.ignoredPredicate = ignoredPredicate;
     final Function<Path, HashCodeAndFileType> hashLoader =
         path -> {
           try {
@@ -88,13 +87,23 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem, Path buckOutPath, FileHashCacheMode fileHashCacheMode) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.of(buckOutPath), fileHashCacheMode);
+      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
+    return new DefaultFileHashCache(
+        projectFilesystem,
+        (path) -> !(path.startsWith(projectFilesystem.getBuckPaths().getBuckOut())),
+        fileHashCacheMode);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
       ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.empty(), fileHashCacheMode);
+    return new DefaultFileHashCache(
+        projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
+  }
+
+  protected static Predicate<Path> getDefaultPathPredicate(ProjectFilesystem projectFilesystem) {
+    return path ->
+        path.startsWith(projectFilesystem.getBuckPaths().getBuckOut())
+            || projectFilesystem.isIgnored(path);
   }
 
   public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches(
@@ -167,10 +176,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   @Override
   public boolean isIgnored(Path path) {
-    if (buckOutPath.isPresent()) {
-      return !path.startsWith(buckOutPath.get());
-    }
-    return projectFilesystem.isIgnored(path);
+    return ignoredPredicate.test(path);
   }
 
   @Override

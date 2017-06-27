@@ -85,7 +85,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -227,10 +226,7 @@ public class CachingBuildEngineTest {
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
       fileHashCache =
-          new StackedFileHashCache(
-              ImmutableList.of(
-                  DefaultFileHashCache.createDefaultFileHashCache(
-                      filesystem, FileHashCacheMode.PREFIX_TREE)));
+          StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE);
       buildContext =
           BuildEngineBuildContext.builder()
               .setBuildContext(FakeBuildContext.NOOP_CONTEXT)

@@ -41,11 +41,9 @@ import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.StackedFileHashCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -205,10 +203,7 @@ public class AndroidResourceTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FileHashCache fileHashCache =
-        new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.PREFIX_TREE)));
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE);
     filesystem.writeContentsToPath(
         "something", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original =

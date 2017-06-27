@@ -203,4 +203,19 @@ public class WatchedFileHashCacheTest {
         cache.fileHashCacheEngine.getSizeIfPresent(path),
         nullValue());
   }
+
+  @Test
+  public void thatWillGetIsCorrect() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path buckOut = filesystem.getBuckPaths().getBuckOut();
+    filesystem.mkdirs(buckOut);
+    Path buckOutFile = buckOut.resolve("file.txt");
+    Path otherFile = Paths.get("file.txt");
+    filesystem.writeContentsToPath("data", buckOutFile);
+    filesystem.writeContentsToPath("other data", otherFile);
+    WatchedFileHashCache cache =
+        new WatchedFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
+    assertFalse(cache.willGet(filesystem.getPath("buck-out/file.txt")));
+    assertTrue(cache.willGet(filesystem.getPath("file.txt")));
+  }
 }

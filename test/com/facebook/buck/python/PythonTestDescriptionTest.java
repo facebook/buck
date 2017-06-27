@@ -54,7 +54,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.versions.Version;
@@ -570,10 +569,8 @@ public class PythonTestDescriptionTest {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(0),
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        rule.getProjectFilesystem(), FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(
+                rule.getProjectFilesystem(), FileHashCacheMode.PREFIX_TREE),
             new SourcePathResolver(ruleFinder),
             ruleFinder);
     return ruleKeyFactory.build(rule);

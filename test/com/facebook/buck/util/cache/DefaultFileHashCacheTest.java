@@ -38,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -57,7 +56,7 @@ public class DefaultFileHashCacheTest {
   public void whenPathIsPutCacheContainsPath() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -68,7 +67,7 @@ public class DefaultFileHashCacheTest {
   public void whenPathIsPutPathGetReturnsHash() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -79,7 +78,7 @@ public class DefaultFileHashCacheTest {
   public void whenPathIsPutThenInvalidatedCacheDoesNotContainPath() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
@@ -92,7 +91,7 @@ public class DefaultFileHashCacheTest {
   public void invalidatingNonExistentEntryDoesNotThrow() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     Path path = new File("SomeClass.java").toPath();
     assertFalse("Cache should not contain pain", cache.willGet(path));
     cache.invalidate(path);
@@ -103,7 +102,7 @@ public class DefaultFileHashCacheTest {
   public void getMissingPathThrows() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     expectedException.expect(RuntimeException.class);
     cache.get(filesystem.getPath("hello.java"));
   }
@@ -112,7 +111,7 @@ public class DefaultFileHashCacheTest {
   public void whenPathsArePutThenInvalidateAllRemovesThem() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path path1 = Paths.get("path1");
     filesystem.writeContentsToPath("contents1", path1);
@@ -136,7 +135,7 @@ public class DefaultFileHashCacheTest {
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path dir = filesystem.getPath("dir");
     filesystem.mkdirs(dir);
@@ -161,7 +160,7 @@ public class DefaultFileHashCacheTest {
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("SomeClass.class");
@@ -184,7 +183,7 @@ public class DefaultFileHashCacheTest {
   public void whenJarMemberWithoutHashInManifestIsQueriedThenThrow() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("Unhashed.txt");
@@ -208,7 +207,7 @@ public class DefaultFileHashCacheTest {
   public void whenJarMemberWithoutManifestIsQueriedThenThrow() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path abiJarPath = Paths.get("no-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
@@ -226,7 +225,7 @@ public class DefaultFileHashCacheTest {
   public void whenJarMemberWithEmptyManifestIsQueriedThenThrow() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
 
     Path abiJarPath = Paths.get("empty-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
@@ -247,7 +246,7 @@ public class DefaultFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path input = filesystem.getPath("input");
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     expectedException.expect(RuntimeException.class);
     cache.getSize(input);
   }
@@ -258,7 +257,7 @@ public class DefaultFileHashCacheTest {
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     assertThat(cache.getSize(input), Matchers.equalTo(123L));
   }
 
@@ -270,7 +269,7 @@ public class DefaultFileHashCacheTest {
     filesystem.writeBytesToPath(new byte[123], input.resolve("file1"));
     filesystem.writeBytesToPath(new byte[123], input.resolve("file2"));
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     assertThat(cache.getSize(input), Matchers.equalTo(246L));
   }
 
@@ -280,25 +279,39 @@ public class DefaultFileHashCacheTest {
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(filesystem, Optional.empty(), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     cache.getSize(input);
     cache.invalidate(input);
     assertNull(cache.fileHashCacheEngine.getSizeIfPresent(input));
   }
 
   @Test
-  public void thatBuckoutCacheWillGetIsCorrect() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path buckOut = Paths.get("buck-out");
+  public void thatBuckoutCacheWillGetIsCorrect() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);
     Path buckOutFile = buckOut.resolve("file.txt");
     Path otherFile = Paths.get("file.txt");
     filesystem.writeContentsToPath("data", buckOutFile);
     filesystem.writeContentsToPath("other data", otherFile);
     DefaultFileHashCache cache =
-        new DefaultFileHashCache(
-            filesystem, Optional.of(Paths.get("buck-out")), FileHashCacheMode.PREFIX_TREE);
+        DefaultFileHashCache.createBuckOutFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
     assertTrue(cache.willGet(filesystem.getPath("buck-out/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("file.txt")));
+  }
+
+  @Test
+  public void thatNonBuckoutCacheWillGetIsCorrect() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path buckOut = filesystem.getBuckPaths().getBuckOut();
+    filesystem.mkdirs(buckOut);
+    Path buckOutFile = buckOut.resolve("file.txt");
+    Path otherFile = Paths.get("file.txt");
+    filesystem.writeContentsToPath("data", buckOutFile);
+    filesystem.writeContentsToPath("other data", otherFile);
+    DefaultFileHashCache cache =
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, FileHashCacheMode.PREFIX_TREE);
+    assertFalse(cache.willGet(filesystem.getPath("buck-out/file.txt")));
+    assertTrue(cache.willGet(filesystem.getPath("file.txt")));
   }
 }

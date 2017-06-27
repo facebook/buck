@@ -175,15 +175,17 @@ java_immutables_library(
             TRANSPORT_SRCS
         ),
     ),
+    exported_deps = [
+        ":BuckPaths",
+        ":MorePaths.java",
+        ":ProjectFilesystemDelegate",
+        ":ProjectFilesystemDelegateFactory",
+    ],
     tests = [
         "//test/com/facebook/buck/io:io",
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":BuckPaths",
-        ":MorePaths.java",
-        ":ProjectFilesystemDelegate",
-        ":ProjectFilesystemDelegateFactory",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/log:api",

@@ -617,12 +617,22 @@ public final class Main {
                       DefaultFileHashCache.createDefaultFileHashCache(
                           cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()))
               .forEach(allCaches::add);
+          // The Daemon caches a buck-out filehashcache for the root cell, so the non-daemon case needs to create that itself.
           allCaches.add(
               DefaultFileHashCache.createBuckOutFileHashCache(
-                  rootCellProjectFilesystem,
-                  rootCell.getFilesystem().getBuckPaths().getBuckOut(),
-                  rootCell.getBuckConfig().getFileHashCacheMode()));
+                  rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
         }
+
+        rootCell
+            .getAllCells()
+            .forEach(
+                cell -> {
+                  if (!cell.equals(rootCell)) {
+                    allCaches.add(
+                        DefaultFileHashCache.createBuckOutFileHashCache(
+                            cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+                  }
+                });
 
         // A cache which caches hashes of cell-relative paths which may have been ignore by
         // the main cell cache, and only serves to prevent rehashing the same file multiple

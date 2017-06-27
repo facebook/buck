@@ -60,7 +60,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
@@ -724,19 +723,13 @@ public class GenruleTest {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey originalRuleKey = ruleKeyFactory.build(rule);
@@ -758,19 +751,13 @@ public class GenruleTest {
     ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey unchangedRuleKey = ruleKeyFactory.build(rule);
@@ -794,10 +781,7 @@ public class GenruleTest {
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
@@ -828,19 +812,13 @@ public class GenruleTest {
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey originalRuleKey = defaultRuleKeyFactory.build(rule);
@@ -866,19 +844,13 @@ public class GenruleTest {
     defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey unchangedRuleKey = defaultRuleKeyFactory.build(rule);
@@ -901,10 +873,7 @@ public class GenruleTest {
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
@@ -935,19 +904,13 @@ public class GenruleTest {
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey originalRuleKey = defaultRuleKeyFactory.build(rule);
@@ -969,19 +932,13 @@ public class GenruleTest {
     defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey unchangedRuleKey = defaultRuleKeyFactory.build(rule);
@@ -1004,10 +961,7 @@ public class GenruleTest {
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            new StackedFileHashCache(
-                ImmutableList.of(
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.PREFIX_TREE))),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
             pathResolver,
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);

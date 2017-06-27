@@ -66,6 +66,14 @@ public class StackedFileHashCache implements FileHashCache {
     this.caches = caches;
   }
 
+  public static StackedFileHashCache createDefaultHashCaches(
+      ProjectFilesystem filesystem, FileHashCacheMode fileHashCacheMode) {
+    return new StackedFileHashCache(
+        ImmutableList.of(
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode),
+            DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode)));
+  }
+
   /**
    * @return the {@link ProjectFileHashCache} which handles the given relative {@link Path} under
    *     the given {@link ProjectFilesystem}.

@@ -217,6 +217,9 @@ public class DistBuildSlaveExecutor {
       allCachesBuilder.add(
           DefaultFileHashCache.createDefaultFileHashCache(
               cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+      allCachesBuilder.add(
+          DefaultFileHashCache.createBuckOutFileHashCache(
+              cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
     }
 
     // 2. Add the Operating System roots.

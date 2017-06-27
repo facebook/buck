@@ -22,7 +22,6 @@ import com.facebook.buck.util.WatchmanOverflowEvent;
 import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class WatchedFileHashCache extends DefaultFileHashCache {
 
@@ -30,7 +29,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   public WatchedFileHashCache(
       ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
-    super(projectFilesystem, Optional.empty(), fileHashCacheMode);
+    super(projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
   }
 
   /**
