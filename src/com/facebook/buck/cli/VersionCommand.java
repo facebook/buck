@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
+import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -50,8 +51,16 @@ public class VersionCommand implements Command {
 
   @Override
   public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    params.getConsole().getStdOut().println("buck version " + getBuckVersion());
+    printVersion(params.getConsole());
     return 0;
+  }
+
+  /**
+   * Prints current Buck version to the console, in the form {@code [*]<git-commit-hash>}, where
+   * {@code *} indicates that the working tree of the Buck repository is dirty.
+   */
+  public void printVersion(Console console) {
+    console.getStdOut().println("buck version " + getBuckVersion());
   }
 
   @Override

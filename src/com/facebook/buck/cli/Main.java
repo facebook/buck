@@ -483,16 +483,18 @@ public final class Main {
       }
     }
 
-    // Setup the console.
     Verbosity verbosity = VerbosityParser.parse(args);
-    Optional<String> color;
-    if (context.isPresent() && (context.get().getEnv() != null)) {
-      String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
-      color = Optional.ofNullable(colorString);
-    } else {
-      color = Optional.empty();
+
+    // Setup the console.
+    final Console console = makeCustomConsole(context, verbosity, buckConfig);
+
+    // dirty! this is a temporary fix to speed up buck --version
+    // this will go away with permanent fix that dispatches commands providing only needed
+    // parameters which are lazily initialized
+    if (command.subcommand instanceof VersionCommand) {
+      ((VersionCommand) command.subcommand).printVersion(console);
+      return 0;
     }
-    final Console console = new Console(verbosity, stdOut, stdErr, buckConfig.createAnsi(color));
 
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
@@ -1012,6 +1014,18 @@ public final class Main {
         commandSemaphore.release();
       }
     }
+  }
+
+  private Console makeCustomConsole(
+      Optional<NGContext> context, Verbosity verbosity, BuckConfig buckConfig) {
+    Optional<String> color;
+    if (context.isPresent() && (context.get().getEnv() != null)) {
+      String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
+      color = Optional.ofNullable(colorString);
+    } else {
+      color = Optional.empty();
+    }
+    return new Console(verbosity, stdOut, stdErr, buckConfig.createAnsi(color));
   }
 
   private void flushEventListeners(
