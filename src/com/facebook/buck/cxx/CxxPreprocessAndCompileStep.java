@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -50,7 +49,6 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 
-  private final BuildTarget target;
   private final ProjectFilesystem filesystem;
   private final Operation operation;
   private final Path output;
@@ -61,6 +59,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
+  private final Optional<CxxLogInfo> cxxLogInfo;
 
   /** Directory to use to store intermediate/temp files used for compilation. */
   private final Path scratchDir;
@@ -71,7 +70,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       new FileLastModifiedDateContentsScrubber();
 
   public CxxPreprocessAndCompileStep(
-      BuildTarget target,
       ProjectFilesystem filesystem,
       Operation operation,
       Path output,
@@ -83,8 +81,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       DebugPathSanitizer sanitizer,
       Path scratchDir,
       boolean useArgfile,
-      Compiler compiler) {
-    this.target = target;
+      Compiler compiler,
+      Optional<CxxLogInfo> cxxLogInfo) {
     this.filesystem = filesystem;
     this.operation = operation;
     this.output = output;
@@ -97,6 +95,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
     this.compiler = compiler;
+    this.cxxLogInfo = cxxLogInfo;
   }
 
   @Override
@@ -120,9 +119,15 @@ public class CxxPreprocessAndCompileStep implements Step {
     // intermediate files.
     env.put("TMPDIR", filesystem.resolve(scratchDir).toString());
 
-    // Add some diagnostic strings into the subprocess's env as well.
-    // Note: the current process's env already contains `BUCK_BUILD_ID`, which will be inherited.
-    env.put("BUCK_BUILD_TARGET", target.toString());
+    if (cxxLogInfo.isPresent()) {
+      // Add some diagnostic strings into the subprocess's env as well.
+      // Note: the current process's env already contains `BUCK_BUILD_ID`, which will be inherited.
+      CxxLogInfo info = cxxLogInfo.get();
+
+      info.getTarget().ifPresent(target -> env.put("BUCK_BUILD_TARGET", target.toString()));
+      info.getSourcePath().ifPresent(path -> env.put("BUCK_BUILD_RULE_SOURCE", path.toString()));
+      info.getOutputPath().ifPresent(path -> env.put("BUCK_BUILD_RULE_OUTPUT", path.toString()));
+    }
 
     return ProcessExecutorParams.builder()
         .setDirectory(filesystem.getRootPath().toAbsolutePath())

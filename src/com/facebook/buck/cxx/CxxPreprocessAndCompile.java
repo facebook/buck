@@ -186,8 +186,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
                 .orElseGet(CxxToolFlags::of),
             getBuildTarget().getCellPath());
 
+    Path relativeInputPath = getRelativeInputPath(resolver);
+
     return new CxxPreprocessAndCompileStep(
-        getBuildTarget(),
         getProjectFilesystem(),
         preprocessDelegate.isPresent()
             ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
@@ -196,7 +197,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
         // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
         // getInputsAfterBuildingLocally.
         preprocessDelegate.isPresent() ? Optional.of(getDepFilePath()) : Optional.empty(),
-        getRelativeInputPath(resolver),
+        relativeInputPath,
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
             compilerDelegate.getCommandPrefix(),
@@ -206,7 +207,13 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
         sanitizer,
         scratchDir,
         useArgfile,
-        compilerDelegate.getCompiler());
+        compilerDelegate.getCompiler(),
+        Optional.of(
+            CxxLogInfo.builder()
+                .setTarget(getBuildTarget())
+                .setSourcePath(relativeInputPath)
+                .setOutputPath(output)
+                .build()));
   }
 
   public Path getRelativeInputPath(SourcePathResolver resolver) {

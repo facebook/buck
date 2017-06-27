@@ -153,6 +153,10 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
     return getProjectFilesystem().relativize(resolver.getAbsolutePath(input));
   }
 
+  public Path getOutputPath() {
+    return output;
+  }
+
   @Override
   public SourcePath getSourcePathToOutput() {
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
@@ -238,7 +242,6 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
     return new CxxPreprocessAndCompileStep(
-        getBuildTarget(),
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
         resolver.getRelativePath(getSourcePathToOutput()),
@@ -266,7 +269,8 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
         compilerSanitizer,
         scratchDir,
         /* useArgFile*/ true,
-        compilerDelegate.getCompiler());
+        compilerDelegate.getCompiler(),
+        Optional.empty());
   }
 
   /**
