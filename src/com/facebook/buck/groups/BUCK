@@ -1,4 +1,0 @@
-java_library(
-    name = "groups",
-    srcs = glob(["*.java"]),
-)
