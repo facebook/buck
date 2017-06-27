@@ -73,6 +73,7 @@ public class DefaultJavaLibraryBuilder {
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
+  @Nullable private CompileToJarStepFactory compileStepFactory;
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
@@ -214,6 +215,12 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
+  public DefaultJavaLibraryBuilder setCompileStepFactory(
+      @Nullable CompileToJarStepFactory compileStepFactory) {
+    this.compileStepFactory = compileStepFactory;
+    return this;
+  }
+
   protected DefaultJavaLibraryBuilder setCompileAgainstAbis(boolean compileAgainstAbis) {
     this.compileAgainstAbis = compileAgainstAbis;
     return this;
@@ -239,7 +246,6 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
     @Nullable private ZipArchiveDependencySupplier abiClasspath;
-    @Nullable private CompileToJarStepFactory compileStepFactory;
     @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
     @Nullable private BuildTarget abiJar;
 

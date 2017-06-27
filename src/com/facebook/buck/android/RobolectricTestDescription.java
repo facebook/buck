@@ -73,18 +73,21 @@ public class RobolectricTestDescription
   private final JavacOptions templateOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
+  private final AndroidLibraryCompilerFactory compilerFactory;
 
   public RobolectricTestDescription(
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      AndroidLibraryCompilerFactory compilerFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
+    this.compilerFactory = compilerFactory;
   }
 
   @Override
@@ -173,6 +176,9 @@ public class RobolectricTestDescription
                     cellRoots,
                     javaBuckConfig)
                 .setArgs(args)
+                .setCompileStepFactory(compilerFactory.getCompiler(
+                    args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA))
+                  .compileToJar(args, Preconditions.checkNotNull(javacOptions), resolver))
                 .setJavacOptions(javacOptions)
                 .setJavacOptionsAmender(new BootClasspathAppender())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
@@ -227,6 +233,8 @@ public class RobolectricTestDescription
     Optional<String> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
+
+    Optional<AndroidLibraryDescription.JvmLanguage> getLanguage();
 
     @Value.Default
     default boolean isUseOldStyleableFormat() {
