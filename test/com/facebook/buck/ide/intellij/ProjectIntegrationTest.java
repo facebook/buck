@@ -226,6 +226,21 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testUpdateWorkspaceWithoutIgnoredNodes() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("update_workspace_without_ignored_nodes");
+  }
+
+  @Test
+  public void testUpdateWorkspaceWithoutManagerNode() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("update_workspace_without_manager_node");
+  }
+
+  @Test
+  public void testUpdateWorkspaceWithoutProjectNode() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("update_workspace_without_project_node");
+  }
+
+  @Test
   public void testProjectWithProjectRoot() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
         "project_with_project_root", "--intellij-project-root", "project1", "//project1/lib:lib");

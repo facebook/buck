@@ -129,11 +129,27 @@ public class WorkspaceUpdater {
     NodeList changeListManagerNodeList =
         findIgnoreNodesInChangeListManager(xpath, workspaceDocument);
 
-    Node firstNode = changeListManagerNodeList.item(0);
-    Node lastNode = changeListManagerNodeList.item(changeListManagerNodeList.getLength() - 1);
-    Node parentNode = firstNode.getParentNode();
+    Node parentNode;
 
-    removeNodeRange(parentNode, firstNode, lastNode);
+    if (changeListManagerNodeList.getLength() == 0) {
+      parentNode = findChangeListManagerNode(xpath, workspaceDocument);
+    } else {
+      Node firstNode = changeListManagerNodeList.item(0);
+      Node lastNode = changeListManagerNodeList.item(changeListManagerNodeList.getLength() - 1);
+      parentNode = firstNode.getParentNode();
+
+      removeNodeRange(parentNode, firstNode, lastNode);
+    }
+
+    if (parentNode == null) {
+      Node projectNode = findProjectNode(xpath, workspaceDocument);
+      if (projectNode == null) {
+        projectNode = createNewProjectNode(workspaceDocument);
+        workspaceDocument.appendChild(projectNode);
+      }
+      parentNode = createNewChangeListManagerNode(workspaceDocument);
+      projectNode.appendChild(parentNode);
+    }
 
     addNewNodes(workspaceDocument, parentNode, excludedPaths);
 
@@ -146,6 +162,19 @@ public class WorkspaceUpdater {
         xpath
             .compile("/project/component[@name = 'ChangeListManager']/ignored")
             .evaluate(workspaceDocument, XPathConstants.NODESET);
+  }
+
+  private static Node findChangeListManagerNode(XPath xpath, Document workspaceDocument)
+      throws XPathExpressionException {
+    return (Node)
+        xpath
+            .compile("/project/component[@name = 'ChangeListManager']")
+            .evaluate(workspaceDocument, XPathConstants.NODE);
+  }
+
+  private static Node findProjectNode(XPath xpath, Document workspaceDocument)
+      throws XPathExpressionException {
+    return (Node) xpath.compile("/project").evaluate(workspaceDocument, XPathConstants.NODE);
   }
 
   private static void addNewNodes(
@@ -218,6 +247,18 @@ public class WorkspaceUpdater {
             changeListManager.appendChild(createNewIgnoreNode(workspaceDocument, excludeFolder)));
 
     changeListManager.appendChild(createNewOptionExcludedConvertedToIgnoredNode(workspaceDocument));
+  }
+
+  private static Element createNewProjectNode(Document workspaceDocument) {
+    Element project = workspaceDocument.createElement("project");
+    project.setAttribute("version", "4");
+    return project;
+  }
+
+  private static Element createNewChangeListManagerNode(Document workspaceDocument) {
+    Element component = workspaceDocument.createElement("component");
+    component.setAttribute("name", "ChangeListManager");
+    return component;
   }
 
   private static Element createNewIgnoreNode(Document workspaceDocument, String excludeFolder) {
