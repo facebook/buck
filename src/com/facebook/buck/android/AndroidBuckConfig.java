@@ -120,7 +120,6 @@ public class AndroidBuckConfig {
     return Optional.of(
         delegate.checkPathExistsAndResolve(
             pathToTool.toString(),
-            true,
             String.format("Overridden %s:%s path not found: ", "tools", tool)));
   }
 }
