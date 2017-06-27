@@ -21,12 +21,16 @@ import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
-class ResourcesExoHelper {
+public class ResourcesExoHelper {
+  @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
+
   private final SourcePathResolver pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.ResourcesInfo resourcesInfo;
@@ -41,13 +45,12 @@ class ResourcesExoHelper {
   }
 
   public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
-    return ExopackageUtil.applyFilenameFormat(
-        getResourceFilesByHash(), ExopackageInstaller.RESOURCES_DIR, "%s.apk");
+    return ExopackageUtil.applyFilenameFormat(getResourceFilesByHash(), RESOURCES_DIR, "%s.apk");
   }
 
   public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
     return ImmutableMap.of(
-        ExopackageInstaller.RESOURCES_DIR.resolve("metadata.txt"),
+        RESOURCES_DIR.resolve("metadata.txt"),
         getResourceMetadataContents(getResourceFilesByHash()));
   }
 

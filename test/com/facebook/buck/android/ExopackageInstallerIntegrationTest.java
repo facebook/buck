@@ -25,9 +25,12 @@ import static org.junit.Assume.assumeTrue;
 import com.android.common.SdkConstants;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.facebook.buck.android.exopackage.DexExoHelper;
 import com.facebook.buck.android.exopackage.ExopackageDevice;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.PackageInfo;
+import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -574,17 +577,17 @@ public class ExopackageInstallerIntegrationTest {
       deviceState.put(targetDevicePath.toString(), filesystem.readFileIfItExists(source).get());
 
       targetDevicePath = INSTALL_ROOT.relativize(targetDevicePath);
-      if (targetDevicePath.startsWith(ExopackageInstaller.SECONDARY_DEX_DIR)) {
+      if (targetDevicePath.startsWith(DexExoHelper.SECONDARY_DEX_DIR)) {
         if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
           allowedInstalledDexes--;
           assertTrue(allowedInstalledDexes >= 0);
         }
-      } else if (targetDevicePath.startsWith(ExopackageInstaller.NATIVE_LIBS_DIR)) {
+      } else if (targetDevicePath.startsWith(NativeExoHelper.NATIVE_LIBS_DIR)) {
         if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
           allowedInstalledLibs--;
           assertTrue(allowedInstalledLibs >= 0);
         }
-      } else if (targetDevicePath.startsWith(ExopackageInstaller.RESOURCES_DIR)) {
+      } else if (targetDevicePath.startsWith(ResourcesExoHelper.RESOURCES_DIR)) {
         if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
           allowedInstalledResources--;
           assertTrue(allowedInstalledResources >= 0);

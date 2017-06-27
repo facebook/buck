@@ -28,9 +28,11 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class NativeExoHelper {
+  @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
   private final ExopackageDevice device;
   private final SourcePathResolver pathResolver;
   private final ProjectFilesystem projectFilesystem;
@@ -53,7 +55,7 @@ public class NativeExoHelper {
     for (String abi : filesByHashForAbis.keySet()) {
       ImmutableMap<String, Path> filesByHash =
           Preconditions.checkNotNull(filesByHashForAbis.get(abi));
-      Path abiDir = ExopackageInstaller.NATIVE_LIBS_DIR.resolve(abi);
+      Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
       filesToInstallBuilder.putAll(
           ExopackageUtil.applyFilenameFormat(filesByHash, abiDir, "native-%s.so"));
     }
@@ -66,7 +68,7 @@ public class NativeExoHelper {
     for (String abi : filesByHashForAbis.keySet()) {
       ImmutableMap<String, Path> filesByHash =
           Preconditions.checkNotNull(filesByHashForAbis.get(abi));
-      Path abiDir = ExopackageInstaller.NATIVE_LIBS_DIR.resolve(abi);
+      Path abiDir = NATIVE_LIBS_DIR.resolve(abi);
       metadataBuilder.put(
           abiDir.resolve("metadata.txt"), getNativeLibraryMetadataContents(filesByHash));
     }

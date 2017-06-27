@@ -59,12 +59,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ExopackageInstaller {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
-  @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
-
-  @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
-
-  @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
-
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
 
   private final ProjectFilesystem projectFilesystem;

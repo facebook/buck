@@ -19,14 +19,17 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
-class DexExoHelper {
+public class DexExoHelper {
+  @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
   private final SourcePathResolver pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.DexInfo dexInfo;
@@ -42,13 +45,12 @@ class DexExoHelper {
 
   public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
     return ExopackageUtil.applyFilenameFormat(
-        getRequiredDexFiles(), ExopackageInstaller.SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
+        getRequiredDexFiles(), SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
   }
 
   public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
     return ImmutableMap.of(
-        ExopackageInstaller.SECONDARY_DEX_DIR.resolve("metadata.txt"),
-        getSecondaryDexMetadataContents());
+        SECONDARY_DEX_DIR.resolve("metadata.txt"), getSecondaryDexMetadataContents());
   }
 
   private String getSecondaryDexMetadataContents() throws IOException {
