@@ -17,11 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -47,8 +50,11 @@ import java.util.Optional;
 public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements NativeLinkable, CxxPreprocessorDep {
 
-  private final BuildRuleParams params;
-  private final BuildRuleResolver ruleResolver;
+  private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
+      InternalFlavor.of("preprocessor-deps");
+
+  public final BuildRuleParams params;
+  public final BuildRuleResolver ruleResolver;
   public final SourcePath sourcePath;
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
@@ -167,7 +173,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform)) {
       builder.addAll(input.getDeps(ruleResolver, ruleFinder));
@@ -183,6 +189,28 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
     builder.addAll(getExportedDeps());
 
     return builder.build();
+  }
+
+  private BuildTarget createAggregatedDepsTarget(CxxPlatform cxxPlatform) {
+    return params
+        .getBuildTarget()
+        .withAppendedFlavors(cxxPlatform.getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR);
+  }
+
+  public DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
+    BuildTarget depAggTarget = createAggregatedDepsTarget(cxxPlatform);
+
+    Optional<DependencyAggregation> existingRule =
+        ruleResolver.getRuleOptionalWithType(depAggTarget, DependencyAggregation.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    DependencyAggregation depAgg =
+        new DependencyAggregation(
+            depAggTarget, params.getProjectFilesystem(), getPreprocessDeps(cxxPlatform));
+    ruleResolver.addToIndex(depAgg);
+    return depAgg;
   }
 
   public PreprocessorDelegate buildPreprocessorDelegate(

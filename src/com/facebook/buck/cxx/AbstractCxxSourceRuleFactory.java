@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -70,6 +71,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
+  private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
+      InternalFlavor.of("preprocessor-deps");
 
   @Value.Parameter
   protected abstract ProjectFilesystem getProjectFilesystem();
@@ -178,6 +181,34 @@ abstract class AbstractCxxSourceRuleFactory {
   private final LoadingCache<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
       preprocessorDelegates =
           CacheBuilder.newBuilder().build(new PreprocessorDelegateCacheLoader());
+
+  /**
+   * Returns the no-op rule that aggregates the preprocessor dependencies.
+   *
+   * <p>Individual compile rules can depend on it, instead of having to depend on every preprocessor
+   * dep themselves. This turns O(n*m) dependencies into O(n+m) dependencies, where n is number of
+   * files in a target, and m is the number of targets.
+   */
+  private BuildRule requireAggregatedPreprocessDepsRule() {
+    BuildTarget target = createAggregatedPreprocessDepsBuildTarget();
+    Optional<DependencyAggregation> existingRule =
+        getResolver().getRuleOptionalWithType(target, DependencyAggregation.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    } else {
+      DependencyAggregation rule =
+          new DependencyAggregation(target, getProjectFilesystem(), getPreprocessDeps());
+      getResolver().addToIndex(rule);
+      return rule;
+    }
+  }
+
+  @VisibleForTesting
+  BuildTarget createAggregatedPreprocessDepsBuildTarget() {
+    return BuildTarget.builder(getBaseBuildTarget())
+        .addFlavors(getCxxPlatform().getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR)
+        .build();
+  }
 
   private String getOutputName(String name) {
     List<String> parts = new ArrayList<>();
@@ -409,7 +440,7 @@ abstract class AbstractCxxSourceRuleFactory {
     LOG.verbose("Creating preprocessed InferCapture build rule %s for %s", target, source);
 
     DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
-    depsBuilder.setCommonDeps(getPreprocessDeps());
+    depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
         preprocessorDelegates.getUnchecked(
@@ -452,7 +483,7 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
-    depsBuilder.setCommonDeps(getPreprocessDeps());
+    depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
@@ -580,7 +611,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     // We need the preprocessor deps for this rule, for its prefix header.
     depsBuilder.add(preprocessorDelegateCacheValue.getPreprocessorDelegate());
-    depsBuilder.setCommonDeps(getPreprocessDeps());
+    depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     CxxToolFlags compilerFlags = computeCompilerFlags(sourceType, sourceFlags);
 
@@ -655,7 +686,7 @@ abstract class AbstractCxxSourceRuleFactory {
       depsBuilder.add(rule);
     }
 
-    depsBuilder.setCommonDeps(pchTemplate.getPreprocessDeps(getCxxPlatform()));
+    depsBuilder.add(pchTemplate.requireAggregatedDepsRule(getCxxPlatform()));
     depsBuilder.add(preprocessorDelegate);
 
     return buildPrecompiledHeader(
