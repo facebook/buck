@@ -75,9 +75,11 @@ public class DistBuildConfig {
     return buckConfig;
   }
 
-  public Optional<ImmutableList<Path>> getOptionalPathWhitelist() {
-    return buckConfig.getOptionalPathList(
-        STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST, true, false);
+  public Optional<ImmutableList<String>> getOptionalPathWhitelist() {
+    // Can't use getOptionalPathList here because sparse checkouts may mean we don't have all files
+    // in other cells.
+    return buckConfig.getOptionalListWithoutComments(
+        STAMPEDE_SECTION, ALWAYS_MATERIALIZE_WHITELIST);
   }
 
   public Config getRemoteConfigWithOverride() {

@@ -314,7 +314,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     // a Java build, they are not added to the build graph, and as such Stampede needs to be told
     // about them directly via the whitelist.
 
-    Optional<ImmutableList<Path>> whitelist = distBuildConfig.getOptionalPathWhitelist();
+    Optional<ImmutableList<String>> whitelist = distBuildConfig.getOptionalPathWhitelist();
     if (!whitelist.isPresent()) {
       return;
     }
@@ -328,13 +328,8 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       // We want to materialize files during pre-loading for .buckconfig entries
       materializeCurrentFileDuringPreloading = true;
 
-      for (Path absPath : whitelist.get()) {
-        Optional<Path> relPathOpt = projectFilesystem.getPathRelativeToProjectRoot(absPath);
-        if (!relPathOpt.isPresent()) {
-          LOG.info("Not recording file because it is outside the project root: [%s]", absPath);
-          continue;
-        }
-        Path relPath = relPathOpt.get();
+      for (String entry : whitelist.get()) {
+        Path relPath = projectFilesystem.getPath(entry);
 
         if (isIgnored(relPath)) {
           LOG.info("Not recording file because it's an ignored path: [%s].", relPath);
@@ -347,7 +342,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
         }
 
         if (!willGet(relPath)) {
-          LOG.info("Unable to record file: [%s].", relPath);
+          LOG.warn("Unable to record file: [%s].", relPath);
           continue;
         }
         get(relPath);
