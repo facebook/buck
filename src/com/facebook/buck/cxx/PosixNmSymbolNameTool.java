@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -138,8 +137,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   .build(),
               nm.getEnvironment(context.getSourcePathResolver())) {
             @Override
-            protected void addOptions(
-                ExecutionContext context, ImmutableSet.Builder<ProcessExecutor.Option> options) {
+            protected void addOptions(ImmutableSet.Builder<ProcessExecutor.Option> options) {
               options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
             }
           };

@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -155,7 +154,7 @@ public abstract class ShellStep implements Step {
       throws InterruptedException, IOException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
 
-    addOptions(context, options);
+    addOptions(options);
 
     ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutor.Result result =
@@ -179,11 +178,7 @@ public abstract class ShellStep implements Step {
     return getExitCodeFromResult(context, result);
   }
 
-  protected void addOptions(ExecutionContext context, ImmutableSet.Builder<Option> options) {
-    if (shouldFlushStdOutErrAsProgressIsMade(context.getVerbosity())) {
-      options.add(Option.PRINT_STD_OUT);
-      options.add(Option.PRINT_STD_ERR);
-    }
+  protected void addOptions(ImmutableSet.Builder<Option> options) {
     options.add(Option.IS_SILENT);
   }
 
@@ -288,19 +283,6 @@ public abstract class ShellStep implements Step {
         "stderr was not set: shouldPrintStdErr() must return false and execute() must "
             + "have been invoked");
     return this.stderr.get();
-  }
-
-  /**
-   * By default, the output written to stdout and stderr will be buffered into individual {@link
-   * ByteArrayOutputStream}s and then converted into strings for easier consumption. This means that
-   * output from both streams that would normally be interleaved will now be displayed separately.
-   *
-   * <p>To disable this behavior and print to stdout and stderr directly, this method should be
-   * overridden to return {@code true}.
-   */
-  @SuppressWarnings("unused")
-  protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
-    return false;
   }
 
   /** @return an optional timeout to apply to the step. */
