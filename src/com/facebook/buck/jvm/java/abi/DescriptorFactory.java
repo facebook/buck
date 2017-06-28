@@ -148,7 +148,18 @@ class DescriptorFactory {
               @Override
               public Type visitDeclared(DeclaredType t, Void aVoid) {
                 // The erasure of a parameterized type is just the unparameterized version (JLS8 4.6)
-                return Type.getObjectType(getInternalName((TypeElement) t.asElement()));
+                TypeElement typeElement = (TypeElement) t.asElement();
+
+                if (typeElement.getQualifiedName().contentEquals("")) {
+                  // javac 7 uses a DeclaredType to model an intersection type
+                  if (typeElement.getKind() == ElementKind.INTERFACE) {
+                    return getType(typeElement.getInterfaces().get(0));
+                  }
+
+                  return getType(typeElement.getSuperclass());
+                }
+
+                return Type.getObjectType(getInternalName(typeElement));
               }
 
               @Override
