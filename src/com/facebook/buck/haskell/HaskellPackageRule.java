@@ -226,21 +226,27 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     steps.add(
         getWriteRegistrationFileStep(context.getSourcePathResolver(), registrationFile, packageDb));
 
-    // Build the the package DB.
+    // Initialize the package DB.
     steps.add(
         new GhcPkgStep(
             context.getSourcePathResolver(),
             ImmutableList.of("init", packageDb.toString()),
             ImmutableMap.of()));
+
+    // Build the the package DB.
+    ImmutableList.Builder<String> ghcPkgCmdBuilder = ImmutableList.builder();
+    ghcPkgCmdBuilder.add("-v0", "register", "--package-conf=" + packageDb, "--no-expand-pkgroot");
+    // Older versions of `ghc-pkg` appear to fail finding the interface files which are being
+    // exported by this package, so ignore these failure explicitly.
+    if (haskellVersion.getMajorVersion() < 8) {
+      ghcPkgCmdBuilder.add("--force-files");
+    }
+    ghcPkgCmdBuilder.add(registrationFile.toString());
+    ImmutableList<String> ghcPkgCmd = ghcPkgCmdBuilder.build();
     steps.add(
         new GhcPkgStep(
             context.getSourcePathResolver(),
-            ImmutableList.of(
-                "-v0",
-                "register",
-                "--package-conf=" + packageDb,
-                "--no-expand-pkgroot",
-                registrationFile.toString()),
+            ghcPkgCmd,
             ImmutableMap.of(
                 "GHC_PACKAGE_PATH",
                 depPackages
