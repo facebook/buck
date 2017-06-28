@@ -16,7 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -24,7 +28,14 @@ import java.util.Optional;
 public interface FilteredResourcesProvider {
 
   /** @return The set of res/ directories that should be used to calculate the final R.java file. */
-  ImmutableList<Path> getResDirectories();
+  ImmutableList<SourcePath> getResDirectories();
+
+  default ImmutableList<Path> getRelativeResDirectories(
+      ProjectFilesystem filesystem, SourcePathResolver resolver) {
+    return RichStream.from(getResDirectories())
+        .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)))
+        .toImmutableList();
+  }
 
   /**
    * @return The list of {@code strings.xml} files excluding whitelisted strings. Empty unless

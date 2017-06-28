@@ -128,7 +128,8 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
           new GenStringSourceMapStep(
               getProjectFilesystem(),
               rDotTxtPath.getParent(),
-              resourcesProvider.getResDirectories(),
+              resourcesProvider.getRelativeResDirectories(
+                  getProjectFilesystem(), buildContext.getSourcePathResolver()),
               outputDirPath);
       steps.add(genNativeStringInfo);
 

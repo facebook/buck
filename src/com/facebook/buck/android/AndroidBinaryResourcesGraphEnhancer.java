@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -59,7 +58,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ImmutableSet<String> locales;
   private final BuildRuleParams buildRuleParams;
   private final BuildRuleResolver ruleResolver;
-  private final SourcePathResolver pathResolver;
   private final AndroidBinary.AaptMode aaptMode;
   private final SourcePath manifest;
   private final Optional<String> resourceUnionPackage;
@@ -92,7 +90,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.exopackageForResources = exopackageForResources;
-    this.pathResolver = new SourcePathResolver(ruleFinder);
     this.resourceFilter = resourceFilter;
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
@@ -158,16 +155,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       resourceRules = ImmutableSortedSet.of(resourcesFilter);
     } else {
       filteredResourcesProvider =
-          new IdentityResourcesProvider(
-              resourceDetails
-                  .getResourceDirectories()
-                  .stream()
-                  .map(
-                      sourcePath ->
-                          buildRuleParams
-                              .getProjectFilesystem()
-                              .relativize(pathResolver.getAbsolutePath(sourcePath)))
-                  .collect(MoreCollectors.toImmutableList()));
+          new IdentityResourcesProvider(resourceDetails.getResourceDirectories());
     }
 
     AaptOutputInfo aaptOutputInfo;

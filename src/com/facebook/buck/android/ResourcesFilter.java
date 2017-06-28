@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
@@ -37,8 +38,10 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +50,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.apache.commons.compress.utils.IOUtils;
 
@@ -68,7 +74,6 @@ import org.apache.commons.compress.utils.IOUtils;
 public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
-  private static final String RES_DIRECTORIES_KEY = "res_directories";
   private static final String STRING_FILES_KEY = "string_files";
 
   enum ResourceCompressionMode {
@@ -126,8 +131,19 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableList<Path> getResDirectories() {
-    return buildOutputInitializer.getBuildOutput().resDirectories;
+  public ImmutableList<SourcePath> getResDirectories() {
+    return RichStream.from(getRawResDirectories())
+        .map(p -> (SourcePath) new ExplicitBuildTargetSourcePath(getBuildTarget(), p))
+        .toImmutableList();
+  }
+
+  private ImmutableList<Path> getRawResDirectories() {
+    Path resDestinationBasePath =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "__filtered__%s__");
+
+    return IntStream.range(0, resDirectories.size())
+        .mapToObj(count -> resDestinationBasePath.resolve(String.valueOf(count)))
+        .collect(MoreCollectors.toImmutableList());
   }
 
   @Override
@@ -211,12 +227,6 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
           public StepExecutionResult execute(ExecutionContext context)
               throws IOException, InterruptedException {
             buildableContext.addMetadata(
-                RES_DIRECTORIES_KEY,
-                filteredResDirectories
-                    .stream()
-                    .map(Object::toString)
-                    .collect(MoreCollectors.toImmutableList()));
-            buildableContext.addMetadata(
                 STRING_FILES_KEY,
                 stringFilesBuilder
                     .build()
@@ -295,30 +305,22 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   ImmutableBiMap<Path, Path> createInResDirToOutResDirMap(
       ImmutableList<Path> resourceDirectories, ImmutableList.Builder<Path> filteredResDirectories) {
     ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
-    String resDestinationBasePath = getResDestinationBasePath();
-    int count = 0;
+
+    List<Path> outputDirs = getRawResDirectories();
+    Preconditions.checkState(
+        outputDirs.size() == resourceDirectories.size(),
+        "Directory list sizes don't match.  This is a bug.");
+    Iterator<Path> outIter = outputDirs.iterator();
     for (Path resDir : resourceDirectories) {
-      Path filteredResourceDir = Paths.get(resDestinationBasePath, String.valueOf(count++));
+      Path filteredResourceDir = outIter.next();
       filteredResourcesDirMapBuilder.put(resDir, filteredResourceDir);
       filteredResDirectories.add(filteredResourceDir);
     }
     return filteredResourcesDirMapBuilder.build();
   }
 
-  private String getResDestinationBasePath() {
-    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "__filtered__%s__")
-        .toString();
-  }
-
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    ImmutableList<Path> resDirectories =
-        onDiskBuildInfo
-            .getValues(RES_DIRECTORIES_KEY)
-            .get()
-            .stream()
-            .map(Paths::get)
-            .collect(MoreCollectors.toImmutableList());
     ImmutableList<Path> stringFiles =
         onDiskBuildInfo
             .getValues(STRING_FILES_KEY)
@@ -327,7 +329,7 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .map(Paths::get)
             .collect(MoreCollectors.toImmutableList());
 
-    return new BuildOutput(resDirectories, stringFiles);
+    return new BuildOutput(stringFiles);
   }
 
   @Override
@@ -336,11 +338,9 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public static class BuildOutput {
-    private final ImmutableList<Path> resDirectories;
     private final ImmutableList<Path> stringFiles;
 
-    public BuildOutput(ImmutableList<Path> resDirectories, ImmutableList<Path> stringFiles) {
-      this.resDirectories = resDirectories;
+    public BuildOutput(ImmutableList<Path> stringFiles) {
       this.stringFiles = stringFiles;
     }
   }

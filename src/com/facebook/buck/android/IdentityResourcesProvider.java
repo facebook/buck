@@ -17,20 +17,21 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class IdentityResourcesProvider implements FilteredResourcesProvider {
 
-  private final ImmutableList<Path> resDirectories;
+  private final ImmutableList<SourcePath> resDirectories;
 
-  public IdentityResourcesProvider(ImmutableList<Path> resDirectories) {
+  public IdentityResourcesProvider(ImmutableList<SourcePath> resDirectories) {
     this.resDirectories = resDirectories;
   }
 
   @Override
-  public ImmutableList<Path> getResDirectories() {
+  public ImmutableList<SourcePath> getResDirectories() {
     return resDirectories;
   }
 

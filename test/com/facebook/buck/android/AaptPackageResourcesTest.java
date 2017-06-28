@@ -39,6 +39,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,6 +67,13 @@ public class AaptPackageResourcesTest {
   SourcePath createPathSourcePath(String path, String contentForHash) {
     hashCache.set(filesystem.resolve(path), HashCode.fromInt(contentForHash.hashCode()));
     return new FakeSourcePath(filesystem, path);
+  }
+
+  FilteredResourcesProvider createIdentifyResourcesProvider(String... paths) {
+    return new IdentityResourcesProvider(
+        RichStream.from(paths)
+            .map(p -> (SourcePath) new FakeSourcePath(filesystem, p))
+            .toImmutableList());
   }
 
   @Before
@@ -164,13 +172,11 @@ public class AaptPackageResourcesTest {
     RuleKey previousRuleKey = calculateRuleKey(args);
 
     args.hasAndroidResourceDeps = ImmutableList.of(resource1, resource2);
-    args.filteredResourcesProvider =
-        new IdentityResourcesProvider(ImmutableList.of(Paths.get("res1"), Paths.get("res2")));
+    args.filteredResourcesProvider = createIdentifyResourcesProvider("res1", "res2");
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
     args.hasAndroidResourceDeps = ImmutableList.of(resource1, resource2);
-    args.filteredResourcesProvider =
-        new IdentityResourcesProvider(ImmutableList.of(Paths.get("res2"), Paths.get("res1")));
+    args.filteredResourcesProvider = createIdentifyResourcesProvider("res2", "res1");
 
     // TODO(cjhopman): AaptPackageResources' rulekey doesn't properly reflect changes in the
     // ordering of resource-only dependencies.
@@ -199,8 +205,7 @@ public class AaptPackageResourcesTest {
     RuleKey previousRuleKey = calculateRuleKey(args);
 
     args.hasAndroidResourceDeps = ImmutableList.of(resource1, resource2);
-    args.filteredResourcesProvider =
-        new IdentityResourcesProvider(ImmutableList.of(Paths.get("res1"), Paths.get("res2")));
+    args.filteredResourcesProvider = createIdentifyResourcesProvider("res1", "res2");
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
     args.filteredResourcesProvider =

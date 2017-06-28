@@ -161,7 +161,8 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
         new AaptStep(
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
-            filteredResourcesProvider.getResDirectories(),
+            filteredResourcesProvider.getRelativeResDirectories(
+                getProjectFilesystem(), context.getSourcePathResolver()),
             ImmutableSortedSet.of(),
             getResourceApkPath(),
             rDotTxtDir,
