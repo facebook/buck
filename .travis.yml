@@ -56,10 +56,10 @@ cache:
     - $HOME/ndk_cache
     - $HOME/sdk_cache
 
-notification:
+notifications:
   slack:
     rooms:
-      secure: YCVClBpmJlhoF7W/POHKGnBqzFkiY+uG8QEsre0b5AJDZlWy1CfF6JYplkieg5z7zGlnC4c7VqdCcjPtHT7aBVD5t4GmpHWo6hx9wdEm0orTV+n1MTQgjzeGIEMZO0iSEvU0pGkJC0mHeQ5HrwBHLzGaNrjQO+CkxTeu1J59cW0=
+      secure: SYKQV9DT55kHf5Mpe6g5a3NmGXJb5E7kWiLulRp+EmKDIhf3lVmxGbx4Yr/TKZixbNILsPzhhiB56V0H+0mAgMpygVXaq4M9eSHKLljJEmEdeLKmQaRuOUikMOkpLsHw/epvmqrsvlb3yVpsJZZhhHmi9B0oQc0AnjpL/qLBaZE=
 
 script:
   - ./scripts/travisci_run.sh
