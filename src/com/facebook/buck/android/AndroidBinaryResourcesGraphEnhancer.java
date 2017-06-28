@@ -173,7 +173,12 @@ class AndroidBinaryResourcesGraphEnhancer {
 
       case AAPT2:
         {
-          Aapt2Link aapt2Link = createAapt2Link(resourceDetails);
+          Aapt2Link aapt2Link =
+              createAapt2Link(
+                  resourceDetails,
+                  needsResourceFiltering
+                      ? Optional.of(filteredResourcesProvider)
+                      : Optional.empty());
           ruleResolver.addToIndex(aapt2Link);
           enhancedDeps.add(aapt2Link);
           aaptOutputInfo = aapt2Link.getAaptOutputInfo();
@@ -280,14 +285,38 @@ class AndroidBinaryResourcesGraphEnhancer {
         aaptRDotTxtPath);
   }
 
-  private Aapt2Link createAapt2Link(AndroidPackageableCollection.ResourceDetails resourceDetails)
+  private Aapt2Link createAapt2Link(
+      AndroidPackageableCollection.ResourceDetails resourceDetails,
+      Optional<FilteredResourcesProvider> filteredResourcesProvider)
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
-    for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
-      compileListBuilder.add(
-          (Aapt2Compile)
-              ruleResolver.requireRule(
-                  resTarget.withAppendedFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
+    if (filteredResourcesProvider.isPresent()) {
+      Optional<BuildRule> resourceFilterRule =
+          filteredResourcesProvider.get().getResourceFilterRule();
+      Preconditions.checkState(
+          resourceFilterRule.isPresent(),
+          "Expected ResourceFilterRule to be present when filtered resources are present.");
+      ImmutableSortedSet<BuildRule> compileDeps = ImmutableSortedSet.of(resourceFilterRule.get());
+      for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
+        String safeName = resDir.toString().replaceAll("[^0-9A-Za-z]", "_");
+        Aapt2Compile compileRule =
+            new Aapt2Compile(
+                buildRuleParams
+                    .withAppendedFlavor(InternalFlavor.of("aapt2_compile_" + safeName))
+                    .withoutDeclaredDeps()
+                    .withExtraDeps(compileDeps),
+                resDir);
+        ruleResolver.addToIndex(compileRule);
+        compileListBuilder.add(compileRule);
+      }
+    } else {
+      for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
+        compileListBuilder.add(
+            (Aapt2Compile)
+                ruleResolver.requireRule(
+                    resTarget.withAppendedFlavors(
+                        AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)));
+      }
     }
     return new Aapt2Link(
         buildRuleParams

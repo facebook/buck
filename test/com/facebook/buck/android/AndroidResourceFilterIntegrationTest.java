@@ -290,6 +290,24 @@ public class AndroidResourceFilterIntegrationTest {
     assertEquals(1, matchingLines);
   }
 
+  @Test
+  public void testEnglishBuildDoesntContainFrenchStringsAapt2()
+      throws IOException, InterruptedException {
+    // TODO(dreiss): Remove this when aapt2 is everywhere.
+    ProjectWorkspace.ProcessResult foundAapt2 =
+        workspace.runBuckBuild("//apps/sample:check_for_aapt2");
+    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+
+    String target = "//apps/sample:app_en";
+    workspace.replaceFileContents("apps/sample/BUCK", "'aapt1', # app_en", "'aapt2',");
+    workspace.runBuckBuild(target).assertSuccess();
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    int matchingLines = runAaptDumpResources(apkFile);
+    assertEquals(1, matchingLines);
+  }
+
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
     final Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result =

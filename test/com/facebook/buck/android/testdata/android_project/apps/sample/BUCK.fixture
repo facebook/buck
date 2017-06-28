@@ -13,6 +13,7 @@ android_binary(
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   locales = ['en'],
+  aapt_mode = 'aapt1', # app_en
   deps = [
     '//java/com/sample/lib:lib',
     '//res/com/sample/base:base',
