@@ -20,6 +20,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
@@ -58,6 +59,10 @@ public interface RichStream<T> extends Stream<T> {
   @SafeVarargs
   static <T> RichStream<T> of(T... values) {
     return new RichStreamImpl<>(Stream.of(values));
+  }
+
+  static <T> RichStream<T> from(T[] array) {
+    return new RichStreamImpl<>(Arrays.stream(array));
   }
 
   static <T> RichStream<T> from(Iterable<T> iterable) {
