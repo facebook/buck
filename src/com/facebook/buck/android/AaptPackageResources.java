@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -40,11 +39,9 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -52,8 +49,6 @@ import java.util.stream.Stream;
 /** Packages the resources using {@code aapt}. */
 public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
-  public static final String FILTERED_RESOURCE_DIRS_KEY = "filtered_resource_dirs";
   public static final String RESOURCE_APK_PATH_FORMAT = "%s.unsigned.ap_";
 
   @AddToRuleKey private final SourcePath manifest;
@@ -190,25 +185,9 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
     // always exists.
     steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
 
-    // Record the filtered resources dirs, since when we initialize ourselves from disk, we'll
-    // need to test whether this is empty or not without requiring the `ResourcesFilter` rule to
-    // be available.
-    buildableContext.addMetadata(
-        FILTERED_RESOURCE_DIRS_KEY,
-        FluentIterable.from(filteredResourcesProvider.getResDirectories())
-            .transform(Object::toString)
-            .toSortedList(Ordering.natural()));
-
     buildableContext.recordArtifact(rDotTxtDir);
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
-
-    steps.add(
-        new RecordFileSha1Step(
-            getProjectFilesystem(),
-            getResourceApkPath(),
-            RESOURCE_PACKAGE_HASH_KEY,
-            buildableContext));
 
     return steps.build();
   }

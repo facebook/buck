@@ -16,17 +16,14 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipConstants;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,7 +44,6 @@ public class AaptPackageResourcesIntegrationTest {
   private ProjectFilesystem filesystem;
 
   private static final String MAIN_BUILD_TARGET = "//apps/sample:app";
-  private static final String PATH_TO_LAYOUT_XML = "res/com/sample/top/res/layout/top_layout.xml";
 
   @Before
   public void setUp() throws InterruptedException, IOException {
@@ -55,32 +51,6 @@ public class AaptPackageResourcesIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
-  }
-
-  @Test
-  public void testEditingLayoutChangesPackageHash() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
-
-    // This is too low-level of a test.  Ideally, we'd be able to save the rule graph generated
-    // by the build and query it directly, but runBuckCommand doesn't support that, so just
-    // test the files directly for now.
-    Path pathRelativeToProjectRoot =
-        BuildInfo.getPathToMetadataDirectory(
-                BuildTargetFactory.newInstance("//apps/sample:app#aapt_package"),
-                new ProjectFilesystem(workspace.getDestPath()))
-            .resolve(AaptPackageResources.RESOURCE_PACKAGE_HASH_KEY);
-    String firstHash = workspace.getFileContents(pathRelativeToProjectRoot);
-
-    workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "white", "black");
-
-    workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
-
-    String secondHash = workspace.getFileContents(pathRelativeToProjectRoot);
-
-    Sha1HashCode firstHashCode = Sha1HashCode.of(firstHash);
-    Sha1HashCode secondHashCode = Sha1HashCode.of(secondHash);
-    assertNotEquals(firstHashCode, secondHashCode);
   }
 
   @Test
