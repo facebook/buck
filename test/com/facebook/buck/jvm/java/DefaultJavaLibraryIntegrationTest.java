@@ -39,6 +39,7 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -49,12 +50,11 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -71,6 +71,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
@@ -143,6 +144,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         4,
         totalArtifactsCount);
 
+    Sha1HashCode ruleKey = workspace.getBuildLog().getRuleKey(target.getFullyQualifiedName());
+
     // Run `buck clean`.
     ProcessResult cleanResult = workspace.runBuckCommand("clean");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
@@ -151,13 +154,10 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertEquals("The build cache should still exist.", 4, totalArtifactsCount);
 
     // Corrupt the build cache!
-    File artifactZip =
-        FluentIterable.from(
-                ImmutableList.copyOf(DirArtifactCacheTestUtil.getAllFilesInCache(dirCache)))
-            .toSortedList(Ordering.natural())
-            .get(0)
-            .toFile();
-    FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);
+    Path artifactZip =
+        DirArtifactCacheTestUtil.getPathForRuleKey(
+            dirCache, new RuleKey(ruleKey.asHashCode()), Optional.empty());
+    FileSystem zipFs = FileSystems.newFileSystem(artifactZip, /* loader */ null);
     Path outputInZip = zipFs.getPath("/" + outputPath.toString());
     new ZipOutputStream(Files.newOutputStream(outputInZip, StandardOpenOption.TRUNCATE_EXISTING))
         .close();
