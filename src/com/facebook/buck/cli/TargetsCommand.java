@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.InMemoryBuildFileTree;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -44,7 +45,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGraphAndTargetNodes;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetNode;
@@ -368,8 +368,11 @@ public class TargetsCommand extends AbstractCommand {
           computeShowRules(
               params,
               executor,
-              TargetGraphAndTargetNodes.fromTargetGraphAndBuildTargets(
-                  targetGraphAndBuildTargetsForShowRules));
+              new Pair<>(
+                  targetGraphAndBuildTargetsForShowRules.getTargetGraph(),
+                  targetGraphAndBuildTargetsForShowRules
+                      .getTargetGraph()
+                      .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
 
       if (shouldUseJsonFormat()) {
         Iterable<TargetNode<?, ?>> matchingNodes =
@@ -797,7 +800,7 @@ public class TargetsCommand extends AbstractCommand {
   private ImmutableMap<BuildTarget, ShowOptions> computeShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      TargetGraphAndTargetNodes targetGraphAndTargetNodes)
+      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException {
 
@@ -819,7 +822,7 @@ public class TargetsCommand extends AbstractCommand {
                   params.getBuckEventBus(),
                   params.getBuckConfig().isActionGraphCheckingEnabled(),
                   params.getBuckConfig().isSkipActionGraphCache(),
-                  targetGraphAndTargetNodes.getTargetGraph(),
+                  targetGraphAndTargetNodes.getFirst(),
                   params.getBuckConfig().getKeySeed());
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
@@ -835,7 +838,7 @@ public class TargetsCommand extends AbstractCommand {
       }
     }
 
-    for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getTargetNodes()) {
+    for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
       ShowOptions.Builder showOptionsBuilder =
           getShowOptionBuilder(showOptionBuilderMap, targetNode.getBuildTarget());
       Preconditions.checkNotNull(showOptionsBuilder);
@@ -921,24 +924,24 @@ public class TargetsCommand extends AbstractCommand {
     return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
   }
 
-  private TargetGraphAndTargetNodes computeTargetsAndGraphToShowTargetHash(
+  private Pair<TargetGraph, Iterable<TargetNode<?, ?>>> computeTargetsAndGraphToShowTargetHash(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      TargetGraphAndTargetNodes targetGraphAndTargetNodes)
+      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     if (isDetectTestChanges()) {
       ImmutableSet<BuildTarget> explicitTestTargets =
           TargetGraphAndTargets.getExplicitTestTargets(
               targetGraphAndTargetNodes
-                  .getTargetGraph()
-                  .getSubgraph(targetGraphAndTargetNodes.getTargetNodes())
+                  .getFirst()
+                  .getSubgraph(targetGraphAndTargetNodes.getSecond())
                   .getNodes()
                   .iterator());
       LOG.debug("Got explicit test targets: %s", explicitTestTargets);
 
       Iterable<BuildTarget> matchingBuildTargetsWithTests =
-          mergeBuildTargets(targetGraphAndTargetNodes.getTargetNodes(), explicitTestTargets);
+          mergeBuildTargets(targetGraphAndTargetNodes.getSecond(), explicitTestTargets);
 
       // Parse the BUCK files for the tests of the targets passed in from the command line.
       TargetGraph targetGraphWithTests =
@@ -951,10 +954,8 @@ public class TargetsCommand extends AbstractCommand {
                   executor,
                   matchingBuildTargetsWithTests);
 
-      return TargetGraphAndTargetNodes.builder()
-          .setTargetGraph(targetGraphWithTests)
-          .setTargetNodes(targetGraphWithTests.getAll(matchingBuildTargetsWithTests))
-          .build();
+      return new Pair<>(
+          targetGraphWithTests, targetGraphWithTests.getAll(matchingBuildTargetsWithTests));
     } else {
       return targetGraphAndTargetNodes;
     }
@@ -991,16 +992,16 @@ public class TargetsCommand extends AbstractCommand {
   private void computeShowTargetHash(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      TargetGraphAndTargetNodes targetGraphAndTargetNodes,
+      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes,
       Map<BuildTarget, ShowOptions.Builder> showRulesResult)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException {
-    LOG.debug("Getting target hash for %s", targetGraphAndTargetNodes.getTargetNodes());
+    LOG.debug("Getting target hash for %s", targetGraphAndTargetNodes.getSecond());
 
-    TargetGraphAndTargetNodes targetGraphAndNodesWithTests =
+    Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndNodesWithTests =
         computeTargetsAndGraphToShowTargetHash(params, executor, targetGraphAndTargetNodes);
 
-    TargetGraph targetGraphWithTests = targetGraphAndNodesWithTests.getTargetGraph();
+    TargetGraph targetGraphWithTests = targetGraphAndNodesWithTests.getFirst();
 
     FileHashLoader fileHashLoader = createOrGetFileHashLoader(params);
 
@@ -1010,15 +1011,15 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 targetGraphWithTests,
                 fileHashLoader,
-                targetGraphAndNodesWithTests.getTargetNodes())
+                targetGraphAndNodesWithTests.getSecond())
             .setNumThreads(params.getBuckConfig().getNumThreads())
             .hashTargetGraph();
 
     ImmutableMap<BuildTarget, HashCode> finalHashes =
         rehashWithTestsIfNeeded(
-            targetGraphWithTests, targetGraphAndTargetNodes.getTargetNodes(), buildTargetHashes);
+            targetGraphWithTests, targetGraphAndTargetNodes.getSecond(), buildTargetHashes);
 
-    for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getTargetNodes()) {
+    for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
       processTargetHash(targetNode.getBuildTarget(), showRulesResult, finalHashes);
     }
   }
