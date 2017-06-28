@@ -248,7 +248,7 @@ public class HaskellDescriptionUtils {
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkType linkType,
-      ImmutableList<String> extraFlags,
+      ImmutableList<Arg> linkerFlags,
       Iterable<Arg> linkerInputs,
       Iterable<? extends NativeLinkable> deps,
       Linker.LinkableDepType depType,
@@ -277,7 +277,7 @@ public class HaskellDescriptionUtils {
     }
 
     // Add in extra flags passed into this function.
-    argsBuilder.addAll(StringArg.from(extraFlags));
+    argsBuilder.addAll(linkerFlags);
 
     // We pass in the linker inputs and all native linkable deps by prefixing with `-optl` so that
     // the args go straight to the linker, and preserve their order.

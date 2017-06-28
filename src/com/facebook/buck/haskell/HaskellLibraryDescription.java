@@ -48,6 +48,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -762,6 +763,8 @@ public class HaskellLibraryDescription
     default SourceList getSrcs() {
       return SourceList.EMPTY;
     }
+
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     ImmutableList<String> getCompilerFlags();
 

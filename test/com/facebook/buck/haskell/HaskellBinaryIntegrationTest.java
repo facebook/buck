@@ -84,6 +84,15 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
+  public void ghcLinkerFlags() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "run", "//:foo_rtsflags#default," + getLinkFlavor(), "-- +RTS -A512m -RTS");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("5"));
+  }
+
+  @Test
   public void dependency() throws IOException {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("run", "//:dependent#default," + getLinkFlavor());

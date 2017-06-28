@@ -44,9 +44,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreIterables;
@@ -159,9 +162,10 @@ public class HaskellBinaryDescription
                     .forEach(depsBuilder::add));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 
-    ImmutableList.Builder<String> linkFlagsBuilder = ImmutableList.builder();
-    ImmutableList.Builder<com.facebook.buck.rules.args.Arg> linkArgsBuilder =
-        ImmutableList.builder();
+    // Inputs we'll be linking (archives, objects, etc.)
+    ImmutableList.Builder<Arg> linkInputsBuilder = ImmutableList.builder();
+    // Additional linker flags passed to the Haskell linker
+    ImmutableList.Builder<Arg> linkFlagsBuilder = ImmutableList.builder();
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -190,20 +194,30 @@ public class HaskellBinaryDescription
               .getCellPath()
               .resolve(HaskellLinkRule.getOutputDir(binaryTarget, params.getProjectFilesystem()));
       linkFlagsBuilder.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle("-optl"),
-              Linkers.iXlinker(
-                  "-rpath",
-                  String.format(
-                      "%s/%s",
-                      cxxPlatform.getLd().resolve(resolver).origin(),
-                      absBinaryDir.relativize(sharedLibraries.getRoot()).toString()))));
+          StringArg.from(
+              MoreIterables.zipAndConcat(
+                  Iterables.cycle("-optl"),
+                  Linkers.iXlinker(
+                      "-rpath",
+                      String.format(
+                          "%s/%s",
+                          cxxPlatform.getLd().resolve(resolver).origin(),
+                          absBinaryDir.relativize(sharedLibraries.getRoot()).toString())))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
       executableBuilder.addDep(sharedLibraries);
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
     }
+
+    // Add in linker flags.
+    linkFlagsBuilder.addAll(
+        ImmutableList.copyOf(
+            Iterables.transform(
+                args.getLinkerFlags(),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        params.getBuildTarget(), cellRoots, resolver, cxxPlatform, f))));
 
     // Generate the compile rule and add its objects to the link.
     HaskellCompileRule compileRule =
@@ -232,10 +246,10 @@ public class HaskellBinaryDescription
                     cxxPlatform,
                     "srcs",
                     args.getSrcs())));
-    linkArgsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
+    linkInputsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
 
-    ImmutableList<String> linkFlags = linkFlagsBuilder.build();
-    ImmutableList<com.facebook.buck.rules.args.Arg> linkArgs = linkArgsBuilder.build();
+    ImmutableList<Arg> linkInputs = linkInputsBuilder.build();
+    ImmutableList<Arg> linkFlags = linkFlagsBuilder.build();
 
     final CommandTool executable = executableBuilder.build();
     final HaskellLinkRule linkRule =
@@ -248,7 +262,7 @@ public class HaskellBinaryDescription
             haskellConfig,
             Linker.LinkType.EXECUTABLE,
             linkFlags,
-            linkArgs,
+            linkInputs,
             RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
             depType,
             false);
@@ -336,6 +350,8 @@ public class HaskellBinaryDescription
     }
 
     ImmutableList<String> getCompilerFlags();
+
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {

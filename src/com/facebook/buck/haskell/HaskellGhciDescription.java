@@ -48,6 +48,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -346,6 +347,8 @@ public class HaskellGhciDescription
     }
 
     ImmutableList<String> getCompilerFlags();
+
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {

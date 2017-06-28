@@ -7,6 +7,17 @@ haskell_binary(
 )
 
 haskell_binary(
+  name = 'foo_rtsflags',
+  main = 'Foo',
+  srcs = [
+    'Foo.hs',
+  ],
+  linker_flags = [
+    '-rtsopts',
+  ],
+)
+
+haskell_binary(
   name = 'dependent',
   main = 'Dependent',
   srcs = [
