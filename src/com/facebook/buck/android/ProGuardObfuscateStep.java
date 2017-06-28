@@ -312,16 +312,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) {
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
       String proGuardArguments =
           Joiner.on('\n').join(getParameters(context, filesystem.getRootPath()));
-      try {
-        filesystem.writeContentsToPath(proGuardArguments, pathToProGuardCommandLineArgsFile);
-      } catch (IOException e) {
-        context.logError(
-            e, "Error writing ProGuard arguments to file: %s.", pathToProGuardCommandLineArgsFile);
-        return StepExecutionResult.ERROR;
-      }
+      filesystem.writeContentsToPath(proGuardArguments, pathToProGuardCommandLineArgsFile);
 
       return StepExecutionResult.SUCCESS;
     }

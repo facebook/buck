@@ -132,10 +132,6 @@ public class FilterResourcesStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    return StepExecutionResult.of(doExecute(context));
-  }
-
-  private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
     boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
     LOG.info(
         "FilterResourcesStep: canDownscale: %s. imageScalar non-null: %s.",
@@ -150,7 +146,7 @@ public class FilterResourcesStep implements Step {
       scaleUnmatchedDrawables(context);
     }
 
-    return 0;
+    return StepExecutionResult.of(0);
   }
 
   @VisibleForTesting

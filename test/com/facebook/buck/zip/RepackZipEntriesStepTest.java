@@ -59,7 +59,7 @@ public class RepackZipEntriesStepTest {
   }
 
   @Test
-  public void shouldLeaveZipAloneIfEntriesToCompressIsEmpty() throws IOException {
+  public void shouldLeaveZipAloneIfEntriesToCompressIsEmpty() throws Exception {
     Path out = parent.resolve("output.zip");
     RepackZipEntriesStep step =
         new RepackZipEntriesStep(filesystem, zipFile, out, ImmutableSet.of());
@@ -71,7 +71,7 @@ public class RepackZipEntriesStepTest {
   }
 
   @Test
-  public void repackWithHigherCompressionResultsInFewerBytes() throws IOException {
+  public void repackWithHigherCompressionResultsInFewerBytes() throws Exception {
     Path out = parent.resolve("output.zip");
     RepackZipEntriesStep step =
         new RepackZipEntriesStep(filesystem, zipFile, out, ImmutableSet.of("file"));
@@ -81,7 +81,7 @@ public class RepackZipEntriesStepTest {
   }
 
   @Test
-  public void justStoringEntriesLeadsToMoreBytesInOuputZip() throws IOException {
+  public void justStoringEntriesLeadsToMoreBytesInOuputZip() throws Exception {
     Path out = parent.resolve("output.zip");
     RepackZipEntriesStep step =
         new RepackZipEntriesStep(

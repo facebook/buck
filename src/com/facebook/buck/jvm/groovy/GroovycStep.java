@@ -76,20 +76,15 @@ class GroovycStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    try {
-      ProcessExecutorParams params =
-          ProcessExecutorParams.builder()
-              .setCommand(createCommand())
-              .setEnvironment(context.getEnvironment())
-              .setDirectory(filesystem.getRootPath().toAbsolutePath())
-              .build();
-      writePathToSourcesList(sourceFilePaths);
-      ProcessExecutor processExecutor = context.getProcessExecutor();
-      return StepExecutionResult.of(processExecutor.launchAndExecute(params));
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return StepExecutionResult.of(-1);
-    }
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(createCommand())
+            .setEnvironment(context.getEnvironment())
+            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .build();
+    writePathToSourcesList(sourceFilePaths);
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }
 
   @Override

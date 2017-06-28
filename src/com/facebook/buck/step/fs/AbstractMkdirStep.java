@@ -35,14 +35,10 @@ abstract class AbstractMkdirStep implements Step {
   protected abstract BuildCellRelativePath getPath();
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      Files.createDirectories(
-          context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
-    } catch (IOException e) {
-      context.logError(e, "Cannot make directories: %s", getPath());
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    Files.createDirectories(
+        context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
     return StepExecutionResult.SUCCESS;
   }
 

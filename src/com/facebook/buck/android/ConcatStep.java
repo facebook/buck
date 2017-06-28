@@ -68,16 +68,14 @@ public class ConcatStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableList<Path> list = inputs.get();
     try (OutputStream out = filesystem.newFileOutputStream(output); ) {
       for (Path p : list) {
         filesystem.copyToOutputStream(p, out);
       }
       out.flush();
-    } catch (IOException e) {
-      context.logError(e, "There was an error in concat step");
-      return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;
   }

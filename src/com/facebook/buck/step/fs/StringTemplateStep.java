@@ -57,12 +57,7 @@ public class StringTemplateStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     String template;
-    try {
-      template = new String(Files.readAllBytes(templatePath), Charsets.UTF_8);
-    } catch (IOException e) {
-      context.logError(e, "Could not read sh_binary template file");
-      return StepExecutionResult.ERROR;
-    }
+    template = new String(Files.readAllBytes(templatePath), Charsets.UTF_8);
 
     ST st = new ST(template);
 

@@ -49,18 +49,9 @@ abstract class AbstractZipScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    try {
-      ZipScrubber.scrubZip(getZipAbsolutePath());
-    } catch (RuntimeException e) {
-      context.logError(
-          e, "Error scrubbing non-deterministic metadata from %s", getZipAbsolutePath());
-      throw e;
-    } catch (IOException e) {
-      context.logError(
-          e, "Error scrubbing non-deterministic metadata from %s", getZipAbsolutePath());
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    ZipScrubber.scrubZip(getZipAbsolutePath());
     return StepExecutionResult.SUCCESS;
   }
 }

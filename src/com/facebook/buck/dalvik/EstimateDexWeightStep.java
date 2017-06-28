@@ -69,7 +69,8 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
     ClasspathTraversal traversal =
         new ClasspathTraversal(Collections.singleton(path), filesystem) {
@@ -93,12 +94,7 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
           }
         };
 
-    try {
-      new DefaultClasspathTraverser().traverse(traversal);
-    } catch (IOException e) {
-      context.logError(e, "Error accumulating class names for %s.", pathToJarOrClassesDirectory);
-      return StepExecutionResult.ERROR;
-    }
+    new DefaultClasspathTraverser().traverse(traversal);
 
     this.weightEstimate = (Integer) traversal.getResult();
     return StepExecutionResult.SUCCESS;

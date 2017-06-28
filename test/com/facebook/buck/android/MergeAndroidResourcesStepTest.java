@@ -293,7 +293,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaForLibrary() throws IOException {
+  public void testGenerateRDotJavaForLibrary() throws Exception {
     BuildTarget resTarget = BuildTargetFactory.newInstance("//:res1");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     entriesBuilder.add(
@@ -342,7 +342,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaForOneSymbolsFile() throws IOException {
+  public void testGenerateRDotJavaForOneSymbolsFile() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     String symbolsFile =
@@ -434,7 +434,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaForCustomDrawables() throws IOException {
+  public void testGenerateRDotJavaForCustomDrawables() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     String symbolsFile =
@@ -505,7 +505,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaWithResourceUnionPackage() throws IOException {
+  public void testGenerateRDotJavaWithResourceUnionPackage() throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
@@ -573,7 +573,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaWithPreviouslyEmptyResourceUnionPackage() throws IOException {
+  public void testGenerateRDotJavaWithPreviouslyEmptyResourceUnionPackage() throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     entriesBuilder.add(
@@ -620,7 +620,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaWithRName() throws IOException {
+  public void testGenerateRDotJavaWithRName() throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
     entriesBuilder.add(
@@ -743,7 +743,8 @@ public class MergeAndroidResourcesStepTest {
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       EnumSet<RType> rtypes,
       ImmutableList<String> duplicateResources,
-      ImmutableList<String> ignoredDuplicates) {
+      ImmutableList<String> ignoredDuplicates)
+      throws IOException, InterruptedException {
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
             filesystem,

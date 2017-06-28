@@ -114,12 +114,7 @@ public class JavacStep implements Step {
   private StepExecutionResult tryBuildWithFirstOrderDeps(
       ExecutionContext context, ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
-    try {
-      javacOptions.validateOptions(classpathChecker::validateClasspath);
-    } catch (IOException e) {
-      context.postEvent(ConsoleEvent.severe("Invalid Java compiler options: %s", e.getMessage()));
-      return StepExecutionResult.ERROR;
-    }
+    javacOptions.validateOptions(classpathChecker::validateClasspath);
 
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
@@ -145,8 +140,6 @@ public class JavacStep implements Step {
               getAbsolutePathsForJavacInputs(getJavac()),
               directToJarOutputSettings);
       return performBuild(context, stdout, stderr, getJavac(), javacExecutionContext);
-    } catch (Exception e) {
-      throw new RuntimeException("out of process javac connection failure during build", e);
     }
   }
 

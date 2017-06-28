@@ -41,6 +41,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -580,7 +581,12 @@ public class RemoteFileTest {
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
             .build();
     for (Step buildStep : buildSteps) {
-      int result = buildStep.execute(context).getExitCode();
+      int result;
+      try {
+        result = buildStep.execute(context).getExitCode();
+      } catch (HumanReadableException e) {
+        result = -1;
+      }
       if (result != 0) {
         break;
       }

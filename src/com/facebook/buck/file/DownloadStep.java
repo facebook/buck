@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -48,28 +47,22 @@ public class DownloadStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     BuckEventBus eventBus = context.getBuckEventBus();
-    try {
-      Path resolved = filesystem.resolve(output);
-      boolean success = downloader.fetch(eventBus, url, resolved);
+    Path resolved = filesystem.resolve(output);
+    boolean success = downloader.fetch(eventBus, url, resolved);
 
-      if (!success) {
-        return StepExecutionResult.of(reportFailedDownload(eventBus));
-      }
-
-      HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());
-      if (!sha1.equals(readHash)) {
-        eventBus.post(
-            ConsoleEvent.severe(
-                "Unable to download %s (hashes do not match. Expected %s, saw %s)",
-                url, sha1, readHash));
-        return StepExecutionResult.of(-1);
-      }
-    } catch (IOException e) {
+    if (!success) {
       return StepExecutionResult.of(reportFailedDownload(eventBus));
-    } catch (HumanReadableException e) {
-      eventBus.post(ConsoleEvent.severe(e.getHumanReadableErrorMessage(), e));
+    }
+
+    HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());
+    if (!sha1.equals(readHash)) {
+      eventBus.post(
+          ConsoleEvent.severe(
+              "Unable to download %s (hashes do not match. Expected %s, saw %s)",
+              url, sha1, readHash));
       return StepExecutionResult.of(-1);
     }
 

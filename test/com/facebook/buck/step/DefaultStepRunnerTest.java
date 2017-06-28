@@ -96,7 +96,8 @@ public class DefaultStepRunnerTest {
 
   private static class ExplosionStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context) {
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
       throw new RuntimeException("#yolo");
     }
 

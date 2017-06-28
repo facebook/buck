@@ -336,7 +336,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep(nameBuilder.toString()) {
           @Override
-          public StepExecutionResult execute(ExecutionContext executionContext) {
+          public StepExecutionResult execute(ExecutionContext executionContext)
+              throws IOException, InterruptedException {
             Map<Path, DexWithClasses> metadataTxtEntries = result.metadataTxtDexEntries;
             List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
 
@@ -352,21 +353,16 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
               }
             }
 
-            try {
-              for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {
-                Path pathToSecondaryDex = entry.getKey();
-                String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
-                containedClass = containedClass.replace('/', '.');
-                Sha1HashCode hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
-                lines.add(
-                    String.format(
-                        "%s %s %s", pathToSecondaryDex.getFileName(), hash, containedClass));
-              }
-              getProjectFilesystem().writeLinesToPath(lines, metadataFilePath);
-            } catch (IOException e) {
-              executionContext.logError(e, "Failed when writing metadata.txt multi-dex.");
-              return StepExecutionResult.ERROR;
+            for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {
+              Path pathToSecondaryDex = entry.getKey();
+              String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
+              containedClass = containedClass.replace('/', '.');
+              Sha1HashCode hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
+              lines.add(
+                  String.format(
+                      "%s %s %s", pathToSecondaryDex.getFileName(), hash, containedClass));
             }
+            getProjectFilesystem().writeLinesToPath(lines, metadataFilePath);
             return StepExecutionResult.SUCCESS;
           }
         });

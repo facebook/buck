@@ -42,13 +42,9 @@ public class RecordFileSha1Step implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      buildableContext.addMetadata(metadataKey, filesystem.computeSha1(inputFile).getHash());
-    } catch (IOException e) {
-      context.logError(e, "Error hashing %s", inputFile.toString());
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    buildableContext.addMetadata(metadataKey, filesystem.computeSha1(inputFile).getHash());
     return StepExecutionResult.SUCCESS;
   }
 

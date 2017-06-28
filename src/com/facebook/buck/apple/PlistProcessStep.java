@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.dd.plist.BinaryPropertyListWriter;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -29,7 +30,10 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 class PlistProcessStep implements Step {
 
@@ -74,13 +78,18 @@ class PlistProcessStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try (InputStream stream = filesystem.newFileInputStream(input);
         BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
       NSObject infoPlist;
       try {
         infoPlist = PropertyListParser.parse(bufferedStream);
-      } catch (Exception e) {
+      } catch (PropertyListFormatException
+          | ParseException
+          | ParserConfigurationException
+          | SAXException
+          | UnsupportedOperationException e) {
         throw new IOException(input.toString() + ": " + e);
       }
 
@@ -94,7 +103,10 @@ class PlistProcessStep implements Step {
             NSObject mergeInfoPlist;
             try {
               mergeInfoPlist = PropertyListParser.parse(mergeBufferedStream);
-            } catch (Exception e) {
+            } catch (PropertyListFormatException
+                | ParseException
+                | ParserConfigurationException
+                | SAXException e) {
               throw new IOException(additionalInputToMerge.toString() + ": " + e);
             }
 
@@ -121,9 +133,6 @@ class PlistProcessStep implements Step {
           filesystem.writeBytesToPath(binaryInfoPlist, output);
           break;
       }
-    } catch (IOException e) {
-      context.logError(e, "error parsing plist %s", input);
-      return StepExecutionResult.ERROR;
     }
 
     return StepExecutionResult.SUCCESS;

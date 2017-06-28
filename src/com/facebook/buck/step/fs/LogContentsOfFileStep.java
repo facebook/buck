@@ -43,13 +43,8 @@ public class LogContentsOfFileStep implements Step {
       throws IOException, InterruptedException {
 
     if (LOG.isLoggable(level)) {
-      String contents;
-      try {
-        contents = Files.toString(absolutePath.toFile(), StandardCharsets.UTF_8);
-        LOG.logWithLevel(level, contents);
-      } catch (IOException e) {
-        LOG.error(e, "Error logging the contents of the file %s", absolutePath.toString());
-      }
+      String contents = Files.toString(absolutePath.toFile(), StandardCharsets.UTF_8);
+      LOG.logWithLevel(level, contents);
     }
     return StepExecutionResult.SUCCESS;
   }

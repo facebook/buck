@@ -431,7 +431,7 @@ public class JarDirectoryStepTest {
    * be able to find the manifest for.
    */
   @Test
-  public void manifestShouldBeSecondEntryInJar() throws IOException {
+  public void manifestShouldBeSecondEntryInJar() throws Exception {
     Path manifestPath = Paths.get(JarFile.MANIFEST_NAME);
 
     // Create a directory with a manifest in it and more than two files.

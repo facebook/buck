@@ -18,11 +18,15 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /** Utility class to parse Info.plist from an Apple bundle. */
 public class AppleInfoPlistParsing {
@@ -37,7 +41,11 @@ public class AppleInfoPlistParsing {
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
       try {
         infoPlist = (NSDictionary) PropertyListParser.parse(bufferedInputStream);
-      } catch (Exception e) {
+      } catch (PropertyListFormatException
+          | ParseException
+          | ParserConfigurationException
+          | SAXException
+          | UnsupportedOperationException e) {
         throw new IOException(e);
       }
     }

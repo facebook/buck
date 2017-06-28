@@ -44,7 +44,7 @@ public class MessageTransport implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     checkNotClose();
     onClose.run();
     isClosed = true;

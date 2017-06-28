@@ -25,7 +25,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -164,7 +163,8 @@ public class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
-  private int executeCompilation(ExecutionContext context) throws Exception {
+  private int executeCompilation(ExecutionContext context)
+      throws IOException, InterruptedException {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
     if (useArgfile) {
@@ -236,38 +236,27 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    try {
-      LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
-      int exitCode = executeCompilation(context);
+    int exitCode = executeCompilation(context);
 
-      // If the compilation completed successfully and we didn't effect debug-info normalization
-      // through #line directive modification, perform the in-place update of the compilation per
-      // above.  This locates the relevant debug section and swaps out the expanded actual
-      // compilation directory with the one we really want.
-      if (exitCode == 0 && shouldSanitizeOutputBinary()) {
-        try {
-          Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
-          sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
-          FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
-        } catch (IOException e) {
-          context.logError(e, "error updating compilation directory");
-          return StepExecutionResult.ERROR;
-        }
-      }
-
-      if (exitCode != 0) {
-        LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
-      }
-
-      return StepExecutionResult.of(exitCode);
-
-    } catch (Exception e) {
-      MoreThrowables.propagateIfInterrupt(e);
-      context.logError(e, "Build error caused by exception");
-      return StepExecutionResult.ERROR;
+    // If the compilation completed successfully and we didn't effect debug-info normalization
+    // through #line directive modification, perform the in-place update of the compilation per
+    // above.  This locates the relevant debug section and swaps out the expanded actual
+    // compilation directory with the one we really want.
+    if (exitCode == 0 && shouldSanitizeOutputBinary()) {
+      Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
+      sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
+      FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
     }
+
+    if (exitCode != 0) {
+      LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
+    }
+
+    return StepExecutionResult.of(exitCode);
   }
 
   ImmutableList<String> getCommand() {

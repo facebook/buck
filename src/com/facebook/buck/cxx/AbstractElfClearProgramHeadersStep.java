@@ -42,7 +42,8 @@ abstract class AbstractElfClearProgramHeadersStep implements Step {
   abstract Path getPath();
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try (FileChannel channel =
         FileChannel.open(
             getFilesystem().resolve(getPath()),

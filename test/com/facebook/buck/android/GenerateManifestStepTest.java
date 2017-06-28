@@ -27,7 +27,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.After;
 import org.junit.Before;
@@ -54,7 +53,7 @@ public class GenerateManifestStepTest {
   }
 
   @Test
-  public void testManifestGeneration() throws IOException {
+  public void testManifestGeneration() throws Exception {
     String expectedOutputPath = testDataPath("AndroidManifest.expected.xml").toString();
     Path libraryManifestA = testDataPath("AndroidManifestA.xml");
     Path libraryManifestB = testDataPath("AndroidManifestB.xml");

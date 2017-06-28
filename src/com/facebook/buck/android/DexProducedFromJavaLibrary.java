@@ -153,7 +153,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     AbstractExecutionStep recordArtifactAndMetadataStep =
         new AbstractExecutionStep(stepName) {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             if (hasClassesToDx) {
               buildableContext.recordArtifact(getPathToDex());
 

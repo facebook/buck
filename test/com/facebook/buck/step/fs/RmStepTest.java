@@ -27,12 +27,17 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RmStepTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ExecutionContext context;
   private ProjectFilesystem filesystem;
@@ -44,7 +49,7 @@ public class RmStepTest {
   }
 
   @Test
-  public void deletesAFile() throws IOException {
+  public void deletesAFile() throws Exception {
     Path file = createFile();
 
     RmStep step =
@@ -56,7 +61,7 @@ public class RmStepTest {
   }
 
   @Test
-  public void deletesADirectory() throws IOException {
+  public void deletesADirectory() throws Exception {
     Path dir = createNonEmptyDirectory();
 
     RmStep step =
@@ -70,7 +75,7 @@ public class RmStepTest {
   }
 
   @Test
-  public void recursiveModeWorksOnFiles() throws IOException {
+  public void recursiveModeWorksOnFiles() throws Exception {
     Path file = createFile();
 
     RmStep step =
@@ -84,17 +89,18 @@ public class RmStepTest {
   }
 
   @Test
-  public void nonRecursiveModeFailsOnDirectories() throws IOException {
+  public void nonRecursiveModeFailsOnDirectories() throws Exception {
     Path dir = createNonEmptyDirectory();
 
     RmStep step =
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, dir));
-    assertEquals(1, step.execute(context).getExitCode());
+    thrown.expect(DirectoryNotEmptyException.class);
+    step.execute(context);
   }
 
   @Test
-  public void deletingNonExistentFileSucceeds() throws IOException {
+  public void deletingNonExistentFileSucceeds() throws Exception {
     Path file = getNonExistentFile();
 
     RmStep step =
@@ -106,7 +112,7 @@ public class RmStepTest {
   }
 
   @Test
-  public void deletingNonExistentFileRecursivelySucceeds() throws IOException {
+  public void deletingNonExistentFileRecursivelySucceeds() throws Exception {
     Path file = getNonExistentFile();
 
     RmStep step =

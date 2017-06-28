@@ -16,6 +16,8 @@
 
 package com.facebook.buck.step;
 
+import java.io.IOException;
+
 public class FakeStep implements Step {
   private final String shortName;
   private final String description;
@@ -28,7 +30,8 @@ public class FakeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     return StepExecutionResult.of(exitCode);
   }
 

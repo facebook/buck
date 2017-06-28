@@ -120,70 +120,46 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep("create_uber_classes_jar") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             Path libsDirectory = unpackDirectory.resolve("libs");
             boolean dirDoesNotExistOrIsEmpty;
             ProjectFilesystem filesystem = getProjectFilesystem();
             if (!filesystem.exists(libsDirectory)) {
               dirDoesNotExistOrIsEmpty = true;
             } else {
-              try {
-                dirDoesNotExistOrIsEmpty = filesystem.getDirectoryContents(libsDirectory).isEmpty();
-              } catch (IOException e) {
-                context.logError(e, "Failed to get directory contents of %s", libsDirectory);
-                return StepExecutionResult.ERROR;
-              }
+              dirDoesNotExistOrIsEmpty = filesystem.getDirectoryContents(libsDirectory).isEmpty();
             }
 
             Path classesJar = unpackDirectory.resolve("classes.jar");
             JavacEventSinkToBuckEventBusBridge eventSink =
                 new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
             if (!filesystem.exists(classesJar)) {
-              try {
-                new JarBuilder()
-                    .setObserver(new LoggingJarBuilderObserver(eventSink))
-                    .createJarFile(filesystem.resolve(classesJar));
-              } catch (IOException e) {
-                context.logError(e, "Failed to create empty jar %s", classesJar);
-                return StepExecutionResult.ERROR;
-              }
+              new JarBuilder()
+                  .setObserver(new LoggingJarBuilderObserver(eventSink))
+                  .createJarFile(filesystem.resolve(classesJar));
             }
 
             if (dirDoesNotExistOrIsEmpty) {
-              try {
-                filesystem.copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
-              } catch (IOException e) {
-                context.logError(e, "Failed to copy from %s to %s", classesJar, uberClassesJar);
-                return StepExecutionResult.ERROR;
-              }
+              filesystem.copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
             } else {
               // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
               ImmutableSortedSet.Builder<Path> entriesToJarBuilder =
                   ImmutableSortedSet.naturalOrder();
               entriesToJarBuilder.add(classesJar);
-              try {
-                entriesToJarBuilder.addAll(
-                    getProjectFilesystem().getDirectoryContents(libsDirectory));
-              } catch (IOException e) {
-                context.logError(e, "Failed to get directory contents of %s", libsDirectory);
-                return StepExecutionResult.ERROR;
-              }
+              entriesToJarBuilder.addAll(
+                  getProjectFilesystem().getDirectoryContents(libsDirectory));
 
               ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
-              try {
 
-                new JarBuilder()
-                    .setObserver(new LoggingJarBuilderObserver(eventSink))
-                    .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
-                    .setMainClass(Optional.<String>empty().orElse(null))
-                    .setManifestFile(Optional.<Path>empty().orElse(null))
-                    .setShouldMergeManifests(true)
-                    .setEntryPatternBlacklist(ImmutableSet.of())
-                    .createJarFile(filesystem.resolve(uberClassesJar));
-              } catch (IOException e) {
-                context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
-                return StepExecutionResult.ERROR;
-              }
+              new JarBuilder()
+                  .setObserver(new LoggingJarBuilderObserver(eventSink))
+                  .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
+                  .setMainClass(Optional.<String>empty().orElse(null))
+                  .setManifestFile(Optional.<Path>empty().orElse(null))
+                  .setShouldMergeManifests(true)
+                  .setEntryPatternBlacklist(ImmutableSet.of())
+                  .createJarFile(filesystem.resolve(uberClassesJar));
             }
             return StepExecutionResult.SUCCESS;
           }

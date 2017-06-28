@@ -75,7 +75,7 @@ public class Connection<REMOTE> implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     checkNotClose();
     isClosed = true;
     messageTransport.close();

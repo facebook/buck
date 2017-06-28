@@ -55,7 +55,8 @@ public class GenerateManifestStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
 
     if (skeletonManifestPath.getNameCount() == 0) {
       throw new HumanReadableException("Skeleton manifest filepath is missing");
@@ -66,12 +67,7 @@ public class GenerateManifestStep implements Step {
     }
 
     outManifestPath = filesystem.resolve(outManifestPath);
-    try {
-      Files.createParentDirs(outManifestPath.toFile());
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return StepExecutionResult.ERROR;
-    }
+    Files.createParentDirs(outManifestPath.toFile());
 
     List<File> libraryManifestFiles = new ArrayList<>();
 
@@ -92,11 +88,7 @@ public class GenerateManifestStep implements Step {
       // Convert line endings to Lf on Windows.
       xmlText = xmlText.replace("\r\n", "\n");
     }
-    try {
-      filesystem.writeContentsToPath(xmlText, outManifestPath);
-    } catch (IOException e) {
-      throw new HumanReadableException(e, "Error writing manifest file");
-    }
+    filesystem.writeContentsToPath(xmlText, outManifestPath);
 
     return StepExecutionResult.SUCCESS;
   }

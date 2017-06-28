@@ -136,13 +136,9 @@ public class CopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      filesystem.copy(source, destination, copySourceMode);
-      return StepExecutionResult.SUCCESS;
-    } catch (IOException e) {
-      context.logError(e, "Failed when trying to copy: %s", getDescription(context));
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    filesystem.copy(source, destination, copySourceMode);
+    return StepExecutionResult.SUCCESS;
   }
 }

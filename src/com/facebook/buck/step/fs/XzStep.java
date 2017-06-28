@@ -17,7 +17,6 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -43,7 +42,6 @@ import org.tukaani.xz.XZOutputStream;
  */
 public class XzStep implements Step {
   public static final int DEFAULT_COMPRESSION_LEVEL = 4;
-  private static final Logger LOG = Logger.get(XzStep.class);
 
   private final ProjectFilesystem filesystem;
   private final Path sourceFile;
@@ -144,7 +142,8 @@ public class XzStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try (InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(destinationFile);
         XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check)) {
@@ -154,9 +153,6 @@ public class XzStep implements Step {
       if (!keep) {
         filesystem.deleteFileAtPath(sourceFile);
       }
-    } catch (IOException e) {
-      LOG.error(e);
-      return StepExecutionResult.ERROR;
     } finally {
       XzMemorySemaphore.releaseMemory(compressionLevel);
     }

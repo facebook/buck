@@ -653,7 +653,8 @@ public class JavaTest extends AbstractBuildRuleWithResolver
         .add(
             new AbstractExecutionStep("write classpath file") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              public StepExecutionResult execute(ExecutionContext context)
+                  throws IOException, InterruptedException {
                 ImmutableSet<Path> classpathEntries =
                     ImmutableSet.<Path>builder()
                         .addAll(

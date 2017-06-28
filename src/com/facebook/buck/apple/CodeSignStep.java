@@ -65,22 +65,17 @@ class CodeSignStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     if (dryRunResultsPath.isPresent()) {
-      try {
-        NSDictionary dryRunResult = new NSDictionary();
-        dryRunResult.put(
-            "relative-path-to-sign",
-            dryRunResultsPath.get().getParent().relativize(pathToSign).toString());
-        dryRunResult.put("use-entitlements", pathToSigningEntitlements.isPresent());
-        dryRunResult.put("identity", getIdentityArg(codeSignIdentitySupplier.get()));
-        filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
-        return StepExecutionResult.SUCCESS;
-      } catch (IOException e) {
-        context.logError(
-            e, "Failed when trying to write dry run results: %s", getDescription(context));
-        return StepExecutionResult.ERROR;
-      }
+      NSDictionary dryRunResult = new NSDictionary();
+      dryRunResult.put(
+          "relative-path-to-sign",
+          dryRunResultsPath.get().getParent().relativize(pathToSign).toString());
+      dryRunResult.put("use-entitlements", pathToSigningEntitlements.isPresent());
+      dryRunResult.put("identity", getIdentityArg(codeSignIdentitySupplier.get()));
+      filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
+      return StepExecutionResult.SUCCESS;
     }
 
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
@@ -104,19 +99,14 @@ class CodeSignStep implements Step {
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor.Result result;
-    try {
-      ProcessExecutor processExecutor = context.getProcessExecutor();
-      result =
-          processExecutor.launchAndExecute(
-              processExecutorParams,
-              options,
-              /* stdin */ Optional.empty(),
-              /* timeOutMs */ Optional.of((long) 120000),
-              /* timeOutHandler */ Optional.empty());
-    } catch (InterruptedException | IOException e) {
-      context.logError(e, "Could not execute codesign.");
-      return StepExecutionResult.ERROR;
-    }
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    result =
+        processExecutor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.of((long) 120000),
+            /* timeOutHandler */ Optional.empty());
 
     if (result.isTimedOut()) {
       throw new RuntimeException(

@@ -49,29 +49,20 @@ public class SymlinkTreeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     for (Path dir :
         RichStream.from(links.keySet())
             .map(root::resolve)
             .map(Path::getParent)
             .distinct()
             .toOnceIterable()) {
-      try {
-        filesystem.mkdirs(dir);
-      } catch (IOException e) {
-        String msg = String.format("failed creating dirs \"%s\"", dir);
-        throw new RuntimeException(msg, e);
-      }
+      filesystem.mkdirs(dir);
     }
     for (ImmutableMap.Entry<Path, Path> ent : links.entrySet()) {
       Path target = filesystem.resolve(ent.getValue());
       Path link = filesystem.resolve(root.resolve(ent.getKey()));
-      try {
-        filesystem.createSymLink(link, target, true /* force */);
-      } catch (IOException e) {
-        String msg = String.format("failed creating linking \"%s\" -> \"%s\"", link, target);
-        throw new RuntimeException(msg, e);
-      }
+      filesystem.createSymLink(link, target, true /* force */);
     }
     return StepExecutionResult.SUCCESS;
   }

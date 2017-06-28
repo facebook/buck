@@ -64,15 +64,11 @@ abstract class AbstractSymlinkFileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     Path existingFilePath = getAbsoluteExistingFilePath();
     Path desiredLinkPath = getAbsoluteDesiredLinkPath();
-    try {
-      getFilesystem().createSymLink(desiredLinkPath, existingFilePath, /* force */ true);
-      return StepExecutionResult.SUCCESS;
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return StepExecutionResult.ERROR;
-    }
+    getFilesystem().createSymLink(desiredLinkPath, existingFilePath, /* force */ true);
+    return StepExecutionResult.SUCCESS;
   }
 }

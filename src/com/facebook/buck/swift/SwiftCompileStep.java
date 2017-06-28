@@ -60,24 +60,20 @@ class SwiftCompileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     ProcessExecutorParams params = makeProcessExecutorParams();
     SimpleProcessListener listener = new SimpleProcessListener();
 
     // TODO(markwang): parse the output, print build failure errors, etc.
-    try {
-      LOG.debug("%s", compilerCommand);
-      ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-      int result = executor.waitForProcess(process);
-      if (result != 0) {
-        LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
-      }
-      return StepExecutionResult.of(result);
-    } catch (IOException e) {
-      LOG.error(e, "Could not execute command %s", compilerCommand);
-      return StepExecutionResult.ERROR;
+    LOG.debug("%s", compilerCommand);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
+    int result = executor.waitForProcess(process);
+    if (result != 0) {
+      LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
     }
+    return StepExecutionResult.of(result);
   }
 
   @Override

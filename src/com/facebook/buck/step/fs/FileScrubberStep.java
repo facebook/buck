@@ -48,7 +48,8 @@ public class FileScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
@@ -60,7 +61,7 @@ public class FileScrubberStep implements Step {
           }
         }
       }
-    } catch (IOException | FileContentsScrubber.ScrubException e) {
+    } catch (FileContentsScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", filePath);
       return StepExecutionResult.ERROR;
     }

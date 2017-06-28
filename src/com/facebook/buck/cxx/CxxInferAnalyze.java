@@ -141,21 +141,15 @@ public class CxxInferAnalyze extends AbstractBuildRule {
             new AbstractExecutionStep("write_specs_path_list") {
               @Override
               public StepExecutionResult execute(ExecutionContext executionContext)
-                  throws IOException {
-                try {
-                  ImmutableList<String> specsDirsWithAbsolutePath =
-                      getSpecsOfAllDeps()
-                          .stream()
-                          .map(
-                              input ->
-                                  context.getSourcePathResolver().getAbsolutePath(input).toString())
-                          .collect(MoreCollectors.toImmutableList());
-                  getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
-                } catch (IOException e) {
-                  executionContext.logError(
-                      e, "Error while writing specs path list file for the analyzer");
-                  return StepExecutionResult.ERROR;
-                }
+                  throws IOException, InterruptedException {
+                ImmutableList<String> specsDirsWithAbsolutePath =
+                    getSpecsOfAllDeps()
+                        .stream()
+                        .map(
+                            input ->
+                                context.getSourcePathResolver().getAbsolutePath(input).toString())
+                        .collect(MoreCollectors.toImmutableList());
+                getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 return StepExecutionResult.SUCCESS;
               }
             })

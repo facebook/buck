@@ -64,7 +64,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void shouldCreateANewZipFileFromScratch() throws IOException {
+  public void shouldCreateANewZipFileFromScratch() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -89,7 +89,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws IOException {
+  public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -115,7 +115,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void willRecurseIntoSubdirectories() throws IOException {
+  public void willRecurseIntoSubdirectories() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -146,7 +146,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws IOException {
+  public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws Exception {
     // Symlinks on Windows are _hard_. Let's go shopping.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
@@ -178,7 +178,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void overwritingAnExistingZipFileIsAnError() throws IOException {
+  public void overwritingAnExistingZipFileIsAnError() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -198,7 +198,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void shouldBeAbleToJunkPaths() throws IOException {
+  public void shouldBeAbleToJunkPaths() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -222,7 +222,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipWithEmptyDir() throws IOException {
+  public void zipWithEmptyDir() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -259,7 +259,7 @@ public class ZipStepTest {
    * when writing uncompressed entries.
    */
   @Test
-  public void minCompressionWritesCorrectZipFile() throws IOException {
+  public void minCompressionWritesCorrectZipFile() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -293,7 +293,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void timesAreSanitized() throws IOException {
+  public void timesAreSanitized() throws Exception {
     Path parent = tmp.newFolder("zipstep");
 
     // Create a zip file with a file and a directory.
@@ -353,7 +353,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipEntryOrderingIsFilesystemAgnostic() throws IOException {
+  public void zipEntryOrderingIsFilesystemAgnostic() throws Exception {
     Path output = Paths.get("output");
     Path zipdir = Paths.get("zipdir");
 

@@ -27,7 +27,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -237,7 +236,8 @@ class XctoolRunTestsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableMap<String, String> env = getEnv(context);
 
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
@@ -248,40 +248,34 @@ class XctoolRunTestsStep implements Step {
             .setEnvironment(env);
 
     if (!testSelectorList.isEmpty()) {
-      try {
-        ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
-        int returnCode =
-            listAndFilterTestsThenFormatXctoolParams(
-                context.getProcessExecutor(),
-                context.getConsole(),
-                testSelectorList,
-                // Copy the entire xctool command and environment but add a -listTestsOnly arg.
-                ProcessExecutorParams.builder()
-                    .from(processExecutorParamsBuilder.build())
-                    .addCommand("-listTestsOnly")
-                    .build(),
-                xctoolFilterParamsBuilder);
-        if (returnCode != 0) {
-          context.getConsole().printErrorText("Failed to query tests with xctool");
-          return StepExecutionResult.of(returnCode);
-        }
-        ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
-        if (xctoolFilterParams.isEmpty()) {
-          context
-              .getConsole()
-              .printBuildFailure(
-                  String.format(
-                      Locale.US,
-                      "No tests found matching specified filter (%s)",
-                      testSelectorList.getExplanation()));
-          return StepExecutionResult.SUCCESS;
-        }
-        processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
-      } catch (IOException e) {
-        context.getConsole().printErrorText("Failed to get list of tests from test bundle");
-        context.getConsole().printBuildFailureWithStacktrace(e);
-        return StepExecutionResult.ERROR;
+      ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
+      int returnCode =
+          listAndFilterTestsThenFormatXctoolParams(
+              context.getProcessExecutor(),
+              context.getConsole(),
+              testSelectorList,
+              // Copy the entire xctool command and environment but add a -listTestsOnly arg.
+              ProcessExecutorParams.builder()
+                  .from(processExecutorParamsBuilder.build())
+                  .addCommand("-listTestsOnly")
+                  .build(),
+              xctoolFilterParamsBuilder);
+      if (returnCode != 0) {
+        context.getConsole().printErrorText("Failed to query tests with xctool");
+        return StepExecutionResult.of(returnCode);
       }
+      ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
+      if (xctoolFilterParams.isEmpty()) {
+        context
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    Locale.US,
+                    "No tests found matching specified filter (%s)",
+                    testSelectorList.getExplanation()));
+        return StepExecutionResult.SUCCESS;
+      }
+      processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
     }
 
     ProcessExecutorParams processExecutorParams = processExecutorParamsBuilder.build();
@@ -291,61 +285,54 @@ class XctoolRunTestsStep implements Step {
     try {
       LOG.debug("Running command: %s", processExecutorParams);
 
+      acquireStutterLock(stutterLockIsNotified);
+
+      // Start the process.
+      ProcessExecutor.LaunchedProcess launchedProcess =
+          context.getProcessExecutor().launchProcess(processExecutorParams);
+
+      int exitCode = -1;
+      String stderr = "Unexpected termination";
       try {
-        acquireStutterLock(stutterLockIsNotified);
-
-        // Start the process.
-        ProcessExecutor.LaunchedProcess launchedProcess =
-            context.getProcessExecutor().launchProcess(processExecutorParams);
-
-        int exitCode = -1;
-        String stderr = "Unexpected termination";
-        try {
-          ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
-          ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
-          Thread stdoutReaderThread = new Thread(stdoutReader);
-          Thread stderrReaderThread = new Thread(stderrReader);
-          stdoutReaderThread.start();
-          stderrReaderThread.start();
-          exitCode =
-              waitForProcessAndGetExitCode(
-                  context.getProcessExecutor(), launchedProcess, timeoutInMs);
-          stdoutReaderThread.join(timeoutInMs.orElse(1000L));
-          stderrReaderThread.join(timeoutInMs.orElse(1000L));
-          Optional<IOException> exception = stdoutReader.getException();
-          if (exception.isPresent()) {
-            throw exception.get();
-          }
-          stderr = stderrReader.getStdErr();
-          LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
-        } finally {
-          context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-          context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+        ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
+        ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
+        Thread stdoutReaderThread = new Thread(stdoutReader);
+        Thread stderrReaderThread = new Thread(stderrReader);
+        stdoutReaderThread.start();
+        stderrReaderThread.start();
+        exitCode =
+            waitForProcessAndGetExitCode(
+                context.getProcessExecutor(), launchedProcess, timeoutInMs);
+        stdoutReaderThread.join(timeoutInMs.orElse(1000L));
+        stderrReaderThread.join(timeoutInMs.orElse(1000L));
+        Optional<IOException> exception = stdoutReader.getException();
+        if (exception.isPresent()) {
+          throw exception.get();
         }
-
-        if (exitCode != 0) {
-          if (!stderr.isEmpty()) {
-            context
-                .getConsole()
-                .printErrorText(
-                    String.format(
-                        Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
-          } else {
-            context
-                .getConsole()
-                .printErrorText(
-                    String.format(Locale.US, "xctool failed with exit code %d", exitCode));
-          }
-        }
-
-        return StepExecutionResult.of(exitCode);
-
-      } catch (Exception e) {
-        LOG.error(e, "Exception while running %s", processExecutorParams.getCommand());
-        MoreThrowables.propagateIfInterrupt(e);
-        context.getConsole().printBuildFailureWithStacktrace(e);
-        return StepExecutionResult.ERROR;
+        stderr = stderrReader.getStdErr();
+        LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
+      } finally {
+        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
+        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
       }
+
+      if (exitCode != 0) {
+        if (!stderr.isEmpty()) {
+          context
+              .getConsole()
+              .printErrorText(
+                  String.format(
+                      Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
+        } else {
+          context
+              .getConsole()
+              .printErrorText(
+                  String.format(Locale.US, "xctool failed with exit code %d", exitCode));
+        }
+      }
+
+      return StepExecutionResult.of(exitCode);
+
     } finally {
       releaseStutterLock(stutterLockIsNotified);
     }

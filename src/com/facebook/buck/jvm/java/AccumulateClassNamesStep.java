@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
@@ -77,7 +76,8 @@ public class AccumulateClassNamesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =
@@ -92,22 +92,11 @@ public class AccumulateClassNamesStep implements Step {
       classNames = ImmutableSortedMap.of();
     }
 
-    try {
-      filesystem.writeLinesToPath(
-          Iterables.transform(
-              classNames.entrySet(),
-              entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),
-          whereClassNamesShouldBeWritten);
-    } catch (IOException e) {
-      context
-          .getBuckEventBus()
-          .post(
-              ThrowableConsoleEvent.create(
-                  e,
-                  "There was an error writing the list of .class files to %s.",
-                  whereClassNamesShouldBeWritten));
-      return StepExecutionResult.ERROR;
-    }
+    filesystem.writeLinesToPath(
+        Iterables.transform(
+            classNames.entrySet(),
+            entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),
+        whereClassNamesShouldBeWritten);
 
     return StepExecutionResult.SUCCESS;
   }

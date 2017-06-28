@@ -28,13 +28,11 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.security.Key;
@@ -111,7 +109,8 @@ public class ApkBuilderStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     PrintStream output = null;
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
@@ -149,13 +148,11 @@ public class ApkBuilderStep implements Step {
       // Build the APK
       builder.sealApk();
     } catch (ApkCreationException
-        | IOException
         | KeyStoreException
         | NoSuchAlgorithmException
         | SealedApkException
         | UnrecoverableKeyException e) {
       context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
-      Throwables.throwIfInstanceOf(e, IOException.class);
       return StepExecutionResult.ERROR;
     } catch (DuplicateFileException e) {
       throw new HumanReadableException(
@@ -170,11 +167,10 @@ public class ApkBuilderStep implements Step {
       throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
     KeystoreProperties keystoreProperties = keystorePropertiesSupplier.get();
-    InputStream inputStream = filesystem.getInputStreamForRelativePath(pathToKeystore);
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
     try {
-      keystore.load(inputStream, keystorePassword);
-    } catch (IOException | NoSuchAlgorithmException | CertificateException e) {
+      keystore.load(filesystem.getInputStreamForRelativePath(pathToKeystore), keystorePassword);
+    } catch (NoSuchAlgorithmException | CertificateException e) {
       throw new HumanReadableException(e, "%s is an invalid keystore.", pathToKeystore);
     }
 

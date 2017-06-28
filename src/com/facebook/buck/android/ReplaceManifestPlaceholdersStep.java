@@ -51,18 +51,13 @@ public class ReplaceManifestPlaceholdersStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    try {
-      String content =
-          new String(
-              Files.readAllBytes(projectFilesystem.resolve(androidManifest)),
-              StandardCharsets.UTF_8);
-      String replaced = replacePlaceholders(content, manifestEntries);
-      projectFilesystem.writeContentsToPath(replaced, replacedManifest);
-    } catch (IOException e) {
-      context.logError(e, "Could not replace manifest placeholders.");
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    String content =
+        new String(
+            Files.readAllBytes(projectFilesystem.resolve(androidManifest)), StandardCharsets.UTF_8);
+    String replaced = replacePlaceholders(content, manifestEntries);
+    projectFilesystem.writeContentsToPath(replaced, replacedManifest);
     return StepExecutionResult.SUCCESS;
   }
 

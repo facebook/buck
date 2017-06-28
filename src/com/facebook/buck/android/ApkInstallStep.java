@@ -21,6 +21,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import java.io.IOException;
 
 public class ApkInstallStep implements Step {
 
@@ -33,7 +34,8 @@ public class ApkInstallStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     AdbHelper adbHelper = AdbHelper.get(context, true);
     if (adbHelper.getDevices(true).isEmpty()) {
       return StepExecutionResult.SUCCESS;

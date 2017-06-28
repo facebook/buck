@@ -148,9 +148,15 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) {
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
       Iterable<CxxCompilationDatabaseEntry> entries = createEntries();
-      return StepExecutionResult.of(writeOutput(entries, context));
+      try (OutputStream outputStream =
+          getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
+        ObjectMappers.WRITER.writeValue(outputStream, entries);
+      }
+
+      return StepExecutionResult.of(0);
     }
 
     @VisibleForTesting
@@ -172,24 +178,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
       ImmutableList<String> arguments = compileRule.getCommand(pathResolver);
       return CxxCompilationDatabaseEntry.of(
           inputFilesystem.getRootPath().toString(), fileToCompile, arguments);
-    }
-
-    private int writeOutput(
-        Iterable<CxxCompilationDatabaseEntry> entries, ExecutionContext context) {
-      try (OutputStream outputStream =
-          getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
-        ObjectMappers.WRITER.writeValue(outputStream, entries);
-      } catch (IOException e) {
-        logError(e, context);
-        return 1;
-      }
-
-      return 0;
-    }
-
-    private void logError(Throwable throwable, ExecutionContext context) {
-      context.logError(
-          throwable, "Failed writing to %s in %s.", outputRelativePath, getBuildTarget());
     }
   }
 }

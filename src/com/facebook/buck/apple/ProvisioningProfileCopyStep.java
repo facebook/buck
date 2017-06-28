@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
@@ -33,7 +34,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Class to handle: 1. Identifying the best {@code .mobileprovision} file to use based on the bundle
@@ -108,18 +112,8 @@ class ProvisioningProfileCopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-
-    final String bundleID;
-    try {
-      bundleID =
-          AppleInfoPlistParsing.getBundleIdFromPlistStream(
-                  filesystem.getInputStreamForRelativePath(infoPlist))
-              .get();
-    } catch (IOException e) {
-      throw new HumanReadableException("Unable to get bundle ID from info.plist: " + infoPlist);
-    }
-
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     final Optional<ImmutableMap<String, NSObject>> entitlements;
     final String prefix;
     if (entitlementsPlist.isPresent()) {
@@ -128,10 +122,11 @@ class ProvisioningProfileCopyStep implements Step {
             (NSDictionary) PropertyListParser.parse(entitlementsPlist.get().toFile());
         entitlements = Optional.of(ImmutableMap.copyOf(entitlementsPlistDict.getHashMap()));
         prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get()).orElse("*");
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            "Unable to find entitlement .plist: " + entitlementsPlist.get());
-      } catch (Exception e) {
+      } catch (PropertyListFormatException
+          | ParseException
+          | ParserConfigurationException
+          | SAXException
+          | UnsupportedOperationException e) {
         throw new HumanReadableException(
             "Malformed entitlement .plist: " + entitlementsPlist.get());
       }
@@ -147,6 +142,10 @@ class ProvisioningProfileCopyStep implements Step {
       identities = ProvisioningProfileStore.MATCH_ANY_IDENTITY;
     }
 
+    final String bundleID =
+        AppleInfoPlistParsing.getBundleIdFromPlistStream(
+                filesystem.getInputStreamForRelativePath(infoPlist))
+            .get();
     Optional<ProvisioningProfileMetadata> bestProfile =
         provisioningProfileUUID.isPresent()
             ? provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get())
@@ -154,25 +153,19 @@ class ProvisioningProfileCopyStep implements Step {
                 bundleID, platform, entitlements, identities);
 
     if (dryRunResultsPath.isPresent()) {
-      try {
-        NSDictionary dryRunResult = new NSDictionary();
-        dryRunResult.put(BUNDLE_ID, bundleID);
-        dryRunResult.put(ENTITLEMENTS, entitlements.orElse(ImmutableMap.of()));
-        if (bestProfile.isPresent()) {
-          dryRunResult.put(PROFILE_UUID, bestProfile.get().getUUID());
-          dryRunResult.put(
-              PROFILE_FILENAME, bestProfile.get().getProfilePath().getFileName().toString());
-          dryRunResult.put(
-              TEAM_IDENTIFIER,
-              bestProfile.get().getEntitlements().get("com.apple.developer.team-identifier"));
-        }
-
-        filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
-      } catch (IOException e) {
-        context.logError(
-            e, "Failed when trying to write dry run results: %s", getDescription(context));
-        return StepExecutionResult.ERROR;
+      NSDictionary dryRunResult = new NSDictionary();
+      dryRunResult.put(BUNDLE_ID, bundleID);
+      dryRunResult.put(ENTITLEMENTS, entitlements.orElse(ImmutableMap.of()));
+      if (bestProfile.isPresent()) {
+        dryRunResult.put(PROFILE_UUID, bestProfile.get().getUUID());
+        dryRunResult.put(
+            PROFILE_FILENAME, bestProfile.get().getProfilePath().getFileName().toString());
+        dryRunResult.put(
+            TEAM_IDENTIFIER,
+            bestProfile.get().getEntitlements().get("com.apple.developer.team-identifier"));
       }
+
+      filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
     }
 
     selectedProvisioningProfileFuture.set(bestProfile);
@@ -191,13 +184,7 @@ class ProvisioningProfileCopyStep implements Step {
     Path provisioningProfileSource = bestProfile.get().getProfilePath();
 
     // Copy the actual .mobileprovision.
-    try {
-      filesystem.copy(
-          provisioningProfileSource, provisioningProfileDestination, CopySourceMode.FILE);
-    } catch (IOException e) {
-      context.logError(e, "Failed when trying to copy: %s", getDescription(context));
-      return StepExecutionResult.ERROR;
-    }
+    filesystem.copy(provisioningProfileSource, provisioningProfileDestination, CopySourceMode.FILE);
 
     // Merge the entitlements with the profile, and write out.
     if (entitlementsPlist.isPresent()) {

@@ -142,7 +142,8 @@ public class SmartDexingStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try {
       Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
       runDxCommands(context, outputToInputs);
@@ -193,7 +194,7 @@ public class SmartDexingStep implements Step {
           }
         }
       }
-    } catch (StepFailedException | IOException e) {
+    } catch (StepFailedException e) {
       context.logError(e, "There was an error in smart dexing step.");
       return StepExecutionResult.ERROR;
     }

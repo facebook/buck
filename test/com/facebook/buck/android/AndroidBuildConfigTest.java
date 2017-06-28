@@ -87,7 +87,7 @@ public class AndroidBuildConfigTest {
   }
 
   @Test
-  public void testReadValuesStep() throws IOException {
+  public void testReadValuesStep() throws Exception {
     Path pathToValues = Paths.get("src/values.txt");
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);

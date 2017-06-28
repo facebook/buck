@@ -40,11 +40,12 @@ public class CalculateAbiFromClassesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try {
       Path binJar = filesystem.resolve(binaryJar);
       new StubJar(binJar).setSourceAbiCompatible(sourceAbiCompatible).writeTo(filesystem, abiJar);
-    } catch (IOException | IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return StepExecutionResult.ERROR;
     }

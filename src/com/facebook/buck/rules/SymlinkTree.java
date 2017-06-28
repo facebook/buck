@@ -200,7 +200,8 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
   protected Step getVerifyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
         for (ImmutableMap.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
           for (Path pathPart : entry.getKey()) {
             if (pathPart.toString().equals("..")) {

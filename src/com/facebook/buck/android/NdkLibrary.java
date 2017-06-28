@@ -176,19 +176,14 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep("cache_unstripped_so") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
-            try {
-              Set<Path> unstrippedSharedObjs =
-                  getProjectFilesystem()
-                      .getFilesUnderPath(
-                          buildArtifactsDirectory, input -> input.toString().endsWith(".so"));
-              for (Path path : unstrippedSharedObjs) {
-                buildableContext.recordArtifact(path);
-              }
-            } catch (IOException e) {
-              context.logError(
-                  e, "Failed to cache intermediate artifacts of %s.", getBuildTarget());
-              return StepExecutionResult.ERROR;
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
+            Set<Path> unstrippedSharedObjs =
+                getProjectFilesystem()
+                    .getFilesUnderPath(
+                        buildArtifactsDirectory, input -> input.toString().endsWith(".so"));
+            for (Path path : unstrippedSharedObjs) {
+              buildableContext.recordArtifact(path);
             }
             return StepExecutionResult.SUCCESS;
           }

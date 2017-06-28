@@ -47,14 +47,10 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
-    AndroidManifestReader androidManifestReader;
-    try {
-      androidManifestReader = DefaultAndroidManifestReader.forPath(filesystem.resolve(manifest));
-    } catch (IOException e) {
-      context.logError(e, "Failed to create AndroidManifestReader for %s.", manifest);
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    AndroidManifestReader androidManifestReader =
+        DefaultAndroidManifestReader.forPath(filesystem.resolve(manifest));
 
     String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
     buildableContext.addMetadata(metadataKey, rDotJavaPackageFromAndroidManifest);

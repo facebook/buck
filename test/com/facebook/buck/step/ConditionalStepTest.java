@@ -47,7 +47,8 @@ public class ConditionalStepTest extends EasyMockSupport {
     Step stepToRunWhenSupplierIsTrue =
         new AbstractExecutionStep("inc") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             numCalls.incrementAndGet();
             return StepExecutionResult.of(37);
           }
@@ -85,7 +86,8 @@ public class ConditionalStepTest extends EasyMockSupport {
     Step stepToRunWhenSupplierIsTrue =
         new AbstractExecutionStep("inc") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             numCalls.incrementAndGet();
             throw new IllegalStateException("This step should not be executed.");
           }

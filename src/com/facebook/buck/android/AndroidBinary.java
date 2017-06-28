@@ -776,42 +776,38 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
           // Step that populates a list of libraries and writes a metadata.txt to decompress.
           new AbstractExecutionStep("write_metadata_for_asset_libraries_" + module.getName()) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               ProjectFilesystem filesystem = getProjectFilesystem();
-              try {
-                // Walk file tree to find libraries
-                filesystem.walkRelativeFileTree(
-                    libSubdirectory,
-                    new SimpleFileVisitor<Path>() {
-                      @Override
-                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                          throws IOException {
-                        if (!file.toString().endsWith(".so")) {
-                          throw new IOException("unexpected file in lib directory");
-                        }
-                        inputAssetLibrariesBuilder.add(file);
-                        return FileVisitResult.CONTINUE;
+              // Walk file tree to find libraries
+              filesystem.walkRelativeFileTree(
+                  libSubdirectory,
+                  new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                      if (!file.toString().endsWith(".so")) {
+                        throw new IOException("unexpected file in lib directory");
                       }
-                    });
+                      inputAssetLibrariesBuilder.add(file);
+                      return FileVisitResult.CONTINUE;
+                    }
+                  });
 
-                // Write a metadata
-                ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-                Path metadataOutput = libSubdirectory.resolve(metadataFilename);
-                for (Path libPath : inputAssetLibrariesBuilder.build()) {
-                  // Should return something like x86/libfoo.so
-                  Path relativeLibPath = libSubdirectory.relativize(libPath);
-                  long filesize = filesystem.getFileSize(libPath);
-                  String desiredOutput = relativeLibPath.toString();
-                  String checksum = filesystem.computeSha256(libPath);
-                  metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
-                }
-                ImmutableList<String> metadata = metadataLines.build();
-                if (!metadata.isEmpty()) {
-                  filesystem.writeLinesToPath(metadata, metadataOutput);
-                }
-              } catch (IOException e) {
-                context.logError(e, "Writing metadata for asset libraries failed.");
-                return StepExecutionResult.ERROR;
+              // Write a metadata
+              ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+              Path metadataOutput = libSubdirectory.resolve(metadataFilename);
+              for (Path libPath : inputAssetLibrariesBuilder.build()) {
+                // Should return something like x86/libfoo.so
+                Path relativeLibPath = libSubdirectory.relativize(libPath);
+                long filesize = filesystem.getFileSize(libPath);
+                String desiredOutput = relativeLibPath.toString();
+                String checksum = filesystem.computeSha256(libPath);
+                metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
+              }
+              ImmutableList<String> metadata = metadataLines.build();
+              if (!metadata.isEmpty()) {
+                filesystem.writeLinesToPath(metadata, metadataOutput);
               }
               return StepExecutionResult.SUCCESS;
             }
@@ -822,19 +818,15 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       steps.add(
           new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
-              try {
-                ProjectFilesystem filesystem = getProjectFilesystem();
-                for (Path libPath : inputAssetLibrariesBuilder.build()) {
-                  Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
-                  filesystem.move(libPath, tempPath);
-                  outputAssetLibrariesBuilder.add(tempPath);
-                }
-                return StepExecutionResult.SUCCESS;
-              } catch (IOException e) {
-                context.logError(e, "Renaming asset libraries failed");
-                return StepExecutionResult.ERROR;
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              ProjectFilesystem filesystem = getProjectFilesystem();
+              for (Path libPath : inputAssetLibrariesBuilder.build()) {
+                Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
+                filesystem.move(libPath, tempPath);
+                outputAssetLibrariesBuilder.add(tempPath);
               }
+              return StepExecutionResult.SUCCESS;
             }
           });
       // Concat and xz compress.
@@ -1052,7 +1044,8 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             Map<String, Path> classesToSources = new HashMap<>();
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =

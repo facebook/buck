@@ -225,17 +225,12 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
       public StepExecutionResult execute(ExecutionContext context)
           throws IOException, InterruptedException {
         ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-        try {
-          for (Path nativeLib : filesystem.getFilesUnderPath(pathToAllLibsDir)) {
-            Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
-            Path relativePath = pathToAllLibsDir.relativize(nativeLib);
-            metadataLines.add(String.format("%s %s", relativePath, filesha1));
-          }
-          filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
-        } catch (IOException e) {
-          context.logError(e, "There was an error hashing native libraries.");
-          return StepExecutionResult.ERROR;
+        for (Path nativeLib : filesystem.getFilesUnderPath(pathToAllLibsDir)) {
+          Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
+          Path relativePath = pathToAllLibsDir.relativize(nativeLib);
+          metadataLines.add(String.format("%s %s", relativePath, filesha1));
         }
+        filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
         return StepExecutionResult.SUCCESS;
       }
     };
@@ -277,7 +272,8 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
         steps.add(
             new Step() {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context)
+                  throws IOException, InterruptedException {
                 // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
@@ -314,31 +310,27 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
     steps.add(
         new AbstractExecutionStep("rename_native_executables") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             final ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
-            try {
-              filesystem.walkRelativeFileTree(
-                  destinationDir,
-                  new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
-                      if (file.toString().endsWith("-disguised-exe")) {
-                        executablesBuilder.add(file);
-                      }
-                      return FileVisitResult.CONTINUE;
+            filesystem.walkRelativeFileTree(
+                destinationDir,
+                new SimpleFileVisitor<Path>() {
+                  @Override
+                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                      throws IOException {
+                    if (file.toString().endsWith("-disguised-exe")) {
+                      executablesBuilder.add(file);
                     }
-                  });
-              for (Path exePath : executablesBuilder.build()) {
-                Path fakeSoPath =
-                    Paths.get(
-                        MorePaths.pathWithUnixSeparators(exePath)
-                            .replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
-                filesystem.move(exePath, fakeSoPath);
-              }
-            } catch (IOException e) {
-              context.logError(e, "Renaming native executables failed.");
-              return StepExecutionResult.ERROR;
+                    return FileVisitResult.CONTINUE;
+                  }
+                });
+            for (Path exePath : executablesBuilder.build()) {
+              Path fakeSoPath =
+                  Paths.get(
+                      MorePaths.pathWithUnixSeparators(exePath)
+                          .replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
+              filesystem.move(exePath, fakeSoPath);
             }
             return StepExecutionResult.SUCCESS;
           }

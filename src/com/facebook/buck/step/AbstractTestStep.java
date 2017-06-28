@@ -66,7 +66,8 @@ public abstract class AbstractTestStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     // Build the process, redirecting output to the provided output file.  In general,
     // it's undesirable that both stdout and stderr are being redirected to the same
     // input stream.  However, due to the nature of OS pipe buffering, we can't really
@@ -89,22 +90,17 @@ public abstract class AbstractTestStep implements Step {
             .build();
 
     ProcessExecutor.Result result;
-    try {
-      // Run the test process, saving the exit code.
-      ProcessExecutor executor = context.getProcessExecutor();
-      ImmutableSet<ProcessExecutor.Option> options =
-          ImmutableSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-      result =
-          executor.launchAndExecute(
-              params,
-              options,
-              /* stdin */ Optional.empty(),
-              testRuleTimeoutMs,
-              /* timeOutHandler */ Optional.empty());
-    } catch (IOException e) {
-      context.logError(e, "Error starting command %s", command);
-      return StepExecutionResult.ERROR;
-    }
+    // Run the test process, saving the exit code.
+    ProcessExecutor executor = context.getProcessExecutor();
+    ImmutableSet<ProcessExecutor.Option> options =
+        ImmutableSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    result =
+        executor.launchAndExecute(
+            params,
+            options,
+            /* stdin */ Optional.empty(),
+            testRuleTimeoutMs,
+            /* timeOutHandler */ Optional.empty());
 
     if (result.isTimedOut()) {
       throw new HumanReadableException(
@@ -116,11 +112,7 @@ public abstract class AbstractTestStep implements Step {
     try (FileOutputStream fileOut = new FileOutputStream(filesystem.resolve(exitCode).toFile());
         ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
       objectOut.writeInt(result.getExitCode());
-    } catch (IOException e) {
-      context.logError(e, "Error saving exit code to %s", exitCode);
-      return StepExecutionResult.ERROR;
     }
-
     return StepExecutionResult.SUCCESS;
   }
 

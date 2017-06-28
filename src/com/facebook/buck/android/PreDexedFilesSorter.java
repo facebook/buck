@@ -274,14 +274,12 @@ public class PreDexedFilesSorter {
       steps.add(
           new AbstractExecutionStep("write_canary_class") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
               try (InputStream inputStream = fileLike.getInput()) {
                 filesystem.createParentDirs(classFile);
                 filesystem.copyToPath(inputStream, classFile);
-              } catch (IOException e) {
-                context.logError(e, "Error writing canary class file: %s.", classFile.toString());
-                return StepExecutionResult.ERROR;
               }
               return StepExecutionResult.SUCCESS;
             }

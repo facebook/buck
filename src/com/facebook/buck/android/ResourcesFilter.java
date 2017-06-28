@@ -208,7 +208,8 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep("record_build_output") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             buildableContext.addMetadata(
                 RES_DIRECTORIES_KEY,
                 filteredResDirectories

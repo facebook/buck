@@ -23,6 +23,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
+import java.io.IOException;
 import org.junit.Test;
 
 /** Unit test for {@link AbstractExecutionStep}. */
@@ -34,7 +35,8 @@ public class AbstractExecutionStepTest {
     Step step =
         new AbstractExecutionStep(description) {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             return StepExecutionResult.SUCCESS;
           }
         };

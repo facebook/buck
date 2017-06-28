@@ -41,9 +41,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class JavacStepTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
@@ -238,14 +242,7 @@ public class JavacStepTest {
     BuckEventBusForTests.CapturingConsoleEventListener listener =
         new BuckEventBusForTests.CapturingConsoleEventListener();
     executionContext.getBuckEventBus().register(listener);
-    StepExecutionResult result = step.execute(executionContext);
-
-    assertThat(result, equalTo(StepExecutionResult.ERROR));
-    assertThat(
-        listener.getLogMessages(),
-        equalTo(
-            ImmutableList.of(
-                "Invalid Java compiler options: Bootstrap classpath /no-such-dir "
-                    + "contains no valid entries")));
+    thrown.expectMessage("Bootstrap classpath /no-such-dir contains no valid entries");
+    step.execute(executionContext);
   }
 }

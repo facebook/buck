@@ -326,7 +326,8 @@ public class CachingBuildEngineTest {
       buildSteps.add(
           new AbstractExecutionStep("Some Short Name") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               filesystem.touch(pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput()));
               return StepExecutionResult.SUCCESS;
             }
@@ -436,7 +437,8 @@ public class CachingBuildEngineTest {
       Step step =
           new AbstractExecutionStep("exploding step") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               throw new UnsupportedOperationException("build step should not be executed");
             }
           };
@@ -817,7 +819,8 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep(description) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               return StepExecutionResult.ERROR;
             }
           };
@@ -861,7 +864,8 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep(description) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               System.out.println("Failing");
               failedSteps.incrementAndGet();
               return StepExecutionResult.ERROR;
@@ -924,7 +928,8 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep(description) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               return StepExecutionResult.ERROR;
             }
           };
@@ -963,7 +968,8 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep("test") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
               return StepExecutionResult.ERROR;
             }
           };
@@ -1652,7 +1658,8 @@ public class CachingBuildEngineTest {
         return ImmutableList.of(
             new AbstractExecutionStep("false") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context)
+                  throws IOException, InterruptedException {
                 return StepExecutionResult.ERROR;
               }
             });
@@ -1789,7 +1796,8 @@ public class CachingBuildEngineTest {
               return ImmutableList.of(
                   new AbstractExecutionStep("false") {
                     @Override
-                    public StepExecutionResult execute(ExecutionContext context) {
+                    public StepExecutionResult execute(ExecutionContext context)
+                        throws IOException, InterruptedException {
                       return StepExecutionResult.ERROR;
                     }
                   });
@@ -2913,7 +2921,7 @@ public class CachingBuildEngineTest {
             new AbstractExecutionStep("step") {
               @Override
               public StepExecutionResult execute(ExecutionContext context)
-                  throws InterruptedException {
+                  throws IOException, InterruptedException {
                 started.release();
                 finish.acquire();
                 return StepExecutionResult.SUCCESS;
@@ -3545,13 +3553,9 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
-      try {
-        Thread.sleep(millis);
-      } catch (InterruptedException e) {
-        Throwables.throwIfUnchecked(e);
-        throw new RuntimeException(e);
-      }
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      Thread.sleep(millis);
       return StepExecutionResult.SUCCESS;
     }
   }
@@ -3563,7 +3567,8 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
       return StepExecutionResult.ERROR;
     }
   }

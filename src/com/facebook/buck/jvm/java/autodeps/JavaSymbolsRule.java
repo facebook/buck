@@ -100,7 +100,8 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
     Step extractSymbolsStep =
         new AbstractExecutionStep("java-symbols") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             try (OutputStream output = getProjectFilesystem().newFileOutputStream(outputPath)) {
               ObjectMappers.WRITER.writeValue(output, symbolsFinder.extractSymbols());
             }

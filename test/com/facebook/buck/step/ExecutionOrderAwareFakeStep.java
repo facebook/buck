@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.google.common.base.Preconditions;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,7 +44,8 @@ public class ExecutionOrderAwareFakeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     Preconditions.checkState(!executionBeginOrder.isPresent());
     Preconditions.checkState(!executionEndOrder.isPresent());
     executionBeginOrder = Optional.of(atomicExecutionOrder.getAndIncrement());

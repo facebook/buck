@@ -83,7 +83,8 @@ public class RepackZipEntriesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     Path inputFile = filesystem.getPathForRelativePath(inputPath);
     Path outputFile = filesystem.getPathForRelativePath(outputPath);
     try (ZipInputStream in =
@@ -116,9 +117,6 @@ public class RepackZipEntriesStep implements Step {
       }
 
       return StepExecutionResult.SUCCESS;
-    } catch (IOException e) {
-      context.logError(e, "Unable to repack zip");
-      return StepExecutionResult.ERROR;
     }
   }
 

@@ -105,27 +105,23 @@ public class MergeAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           public StepExecutionResult execute(ExecutionContext context)
               throws IOException, InterruptedException {
             for (SourcePath sourcePath : assetsDirectories) {
-              try {
-                Path relativePath = pathResolver.getRelativePath(sourcePath);
-                Path absolutePath = pathResolver.getAbsolutePath(sourcePath);
-                ProjectFilesystem assetFilesystem = pathResolver.getFilesystem(sourcePath);
-                assetFilesystem.walkFileTree(
-                    relativePath,
-                    new SimpleFileVisitor<Path>() {
-                      @Override
-                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                          throws IOException {
-                        Preconditions.checkState(
-                            !Files.getFileExtension(file.toString()).equals("gz"),
-                            "BUCK doesn't support adding .gz files to assets (%s).",
-                            file);
-                        assets.put(absolutePath, absolutePath.relativize(file));
-                        return super.visitFile(file, attrs);
-                      }
-                    });
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
+              Path relativePath = pathResolver.getRelativePath(sourcePath);
+              Path absolutePath = pathResolver.getAbsolutePath(sourcePath);
+              ProjectFilesystem assetFilesystem = pathResolver.getFilesystem(sourcePath);
+              assetFilesystem.walkFileTree(
+                  relativePath,
+                  new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                      Preconditions.checkState(
+                          !Files.getFileExtension(file.toString()).equals("gz"),
+                          "BUCK doesn't support adding .gz files to assets (%s).",
+                          file);
+                      assets.put(absolutePath, absolutePath.relativize(file));
+                      return super.visitFile(file, attrs);
+                    }
+                  });
             }
             return StepExecutionResult.SUCCESS;
           }

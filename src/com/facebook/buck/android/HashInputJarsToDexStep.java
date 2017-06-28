@@ -75,7 +75,8 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
   }
 
   @Override
-  public StepExecutionResult execute(final ExecutionContext context) {
+  public StepExecutionResult execute(final ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableList.Builder<Path> allInputs = ImmutableList.builder();
     allInputs.addAll(primaryInputsToDex.get());
     if (secondaryOutputToInputs.isPresent()) {
@@ -85,31 +86,26 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
     final Map<String, HashCode> classNamesToHashes = classNamesToHashesSupplier.get();
 
     for (Path path : allInputs.build()) {
-      try {
-        final Hasher hasher = Hashing.sha1().newHasher();
-        new DefaultClasspathTraverser()
-            .traverse(
-                new ClasspathTraversal(Collections.singleton(path), filesystem) {
-                  @Override
-                  public void visit(FileLike fileLike) throws IOException {
-                    if (FileLikes.isClassFile(fileLike)) {
-                      String className = FileLikes.getFileNameWithoutClassSuffix(fileLike);
+      final Hasher hasher = Hashing.sha1().newHasher();
+      new DefaultClasspathTraverser()
+          .traverse(
+              new ClasspathTraversal(Collections.singleton(path), filesystem) {
+                @Override
+                public void visit(FileLike fileLike) throws IOException {
+                  if (FileLikes.isClassFile(fileLike)) {
+                    String className = FileLikes.getFileNameWithoutClassSuffix(fileLike);
 
-                      if (classNamesToHashes.containsKey(className)) {
-                        HashCode classHash =
-                            Preconditions.checkNotNull(classNamesToHashes.get(className));
-                        hasher.putBytes(classHash.asBytes());
-                      } else {
-                        LOG.warn("%s hashes not found", className);
-                      }
+                    if (classNamesToHashes.containsKey(className)) {
+                      HashCode classHash =
+                          Preconditions.checkNotNull(classNamesToHashes.get(className));
+                      hasher.putBytes(classHash.asBytes());
+                    } else {
+                      LOG.warn("%s hashes not found", className);
                     }
                   }
-                });
-        dexInputsToHashes.put(path, Sha1HashCode.fromHashCode(hasher.hash()));
-      } catch (IOException e) {
-        context.logError(e, "Error hashing smart dex input: %s", path);
-        return StepExecutionResult.ERROR;
-      }
+                }
+              });
+      dexInputsToHashes.put(path, Sha1HashCode.fromHashCode(hasher.hash()));
     }
     stepFinished = true;
     return StepExecutionResult.SUCCESS;

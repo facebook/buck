@@ -53,7 +53,8 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     // Note that because these paths are resolved to absolute paths, the symlinks will be absolute
     // paths, as well.
     Path outDir = filesystem.resolve(this.outDir);
@@ -62,13 +63,8 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
     for (Path entry : entries) {
       Path link = outDir.resolve(entry);
       Path target = srcDir.resolve(entry);
-      try {
-        Files.createDirectories(link.getParent());
-        filesystem.createSymLink(link, target, false);
-      } catch (IOException e) {
-        context.logError(e, "Failed to create symlink from %s to %s.", link, target);
-        return StepExecutionResult.ERROR;
-      }
+      Files.createDirectories(link.getParent());
+      filesystem.createSymLink(link, target, false);
     }
     return StepExecutionResult.SUCCESS;
   }

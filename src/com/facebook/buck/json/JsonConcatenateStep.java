@@ -20,13 +20,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
-import javax.annotation.Nullable;
 
 public class JsonConcatenateStep implements Step {
 
@@ -53,16 +50,10 @@ public class JsonConcatenateStep implements Step {
   public StepExecutionResult execute(final ExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableSortedSet<Path> filesToConcatenate =
-        FluentIterable.from(this.inputs)
-            .transform(
-                new Function<Path, Path>() {
-                  @Nullable
-                  @Override
-                  public Path apply(Path input) {
-                    return filesystem.getRootPath().resolve(input);
-                  }
-                })
-            .toSortedSet(Ordering.natural());
+        inputs
+            .stream()
+            .map(input -> filesystem.getRootPath().resolve(input))
+            .collect(MoreCollectors.toImmutableSortedSet());
     Path destination = filesystem.getRootPath().resolve(output);
     new JsonConcatenator(filesToConcatenate, destination, filesystem).concatenate();
     return StepExecutionResult.SUCCESS;

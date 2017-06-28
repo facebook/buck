@@ -151,40 +151,31 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
     try {
       collectResources(filesystem, context.getBuckEventBus());
       processXmlFilesForIds(filesystem, references);
-    } catch (IOException | XPathExpressionException | ResourceParseException e) {
+    } catch (XPathExpressionException | ResourceParseException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
       return StepExecutionResult.ERROR;
     }
 
-    try {
-      Set<RDotTxtEntry> missing = verifyReferences(filesystem, references.build());
-      if (!missing.isEmpty()) {
-        context
-            .getBuckEventBus()
-            .post(
-                ConsoleEvent.severe(
-                    "The following resources were not found when processing %s: \n%s\n",
-                    resDirectory, Joiner.on('\n').join(missing)));
-        return StepExecutionResult.ERROR;
-      }
-    } catch (IOException e) {
-      context.logError(e, "Error verifying resources for %s.", resDirectory);
+    Set<RDotTxtEntry> missing = verifyReferences(filesystem, references.build());
+    if (!missing.isEmpty()) {
+      context
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.severe(
+                  "The following resources were not found when processing %s: \n%s\n",
+                  resDirectory, Joiner.on('\n').join(missing)));
       return StepExecutionResult.ERROR;
     }
 
     if (resourceUnion) {
-      try {
-        resourceUnion();
-      } catch (IOException e) {
-        context.logError(e, "Error performing resource union for %s.", resDirectory);
-        return StepExecutionResult.ERROR;
-      }
+      resourceUnion();
     }
 
     try (ThrowingPrintWriter writer =
@@ -194,9 +185,6 @@ public class MiniAapt implements Step {
       for (RDotTxtEntry entry : sortedResources) {
         writer.printf("%s %s %s %s\n", entry.idType, entry.type, entry.name, entry.idValue);
       }
-    } catch (IOException e) {
-      context.logError(e, "Error writing file: %s", pathToTextSymbolsFile);
-      return StepExecutionResult.ERROR;
     }
 
     return StepExecutionResult.SUCCESS;

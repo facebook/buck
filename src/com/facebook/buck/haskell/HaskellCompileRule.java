@@ -423,7 +423,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Step prepareOutputDir(String name, Path root, String suffix) {
     return new AbstractExecutionStep(String.format("preparing %s output dir", name)) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
         getProjectFilesystem().mkdirs(root);
         getProjectFilesystem()
             .walkRelativeFileTree(

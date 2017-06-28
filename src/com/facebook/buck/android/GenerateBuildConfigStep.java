@@ -56,16 +56,12 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     String java =
         BuildConfigs.generateBuildConfigDotJava(
             source, javaPackage, useConstantExpressions, fields.get());
-    try {
-      filesystem.writeContentsToPath(java, outBuildConfigPath);
-    } catch (IOException e) {
-      context.logError(e, "Error writing BuildConfig.java: %s", outBuildConfigPath);
-      return StepExecutionResult.ERROR;
-    }
+    filesystem.writeContentsToPath(java, outBuildConfigPath);
 
     return StepExecutionResult.SUCCESS;
   }

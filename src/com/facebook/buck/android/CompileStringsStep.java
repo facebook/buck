@@ -139,18 +139,14 @@ public class CompileStringsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      buildResourceNameToIdMap(
-          filesystem,
-          rDotTxtFile,
-          stringResourceNameToIdMap,
-          pluralsResourceNameToIdMap,
-          arrayResourceNameToIdMap);
-    } catch (IOException e) {
-      context.logError(e, "Failure parsing R.txt file.");
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    buildResourceNameToIdMap(
+        filesystem,
+        rDotTxtFile,
+        stringResourceNameToIdMap,
+        pluralsResourceNameToIdMap,
+        arrayResourceNameToIdMap);
 
     ImmutableMultimap<String, Path> filesByLocale = groupFilesByLocale(stringFiles);
     Map<String, StringResources> resourcesByLocale = new HashMap<>();

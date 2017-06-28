@@ -91,7 +91,8 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try (FileChannel channel =
         FileChannel.open(
             getFilesystem().resolve(getPath()),

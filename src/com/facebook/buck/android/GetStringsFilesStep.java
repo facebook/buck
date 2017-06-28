@@ -24,6 +24,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
@@ -52,22 +53,18 @@ public class GetStringsFilesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      Predicate<Path> filter =
-          pathRelativeToProjectRoot -> {
-            String filePath = MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
-            return STRINGS_FILE_PATH.matcher(filePath).matches();
-          };
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    Predicate<Path> filter =
+        pathRelativeToProjectRoot -> {
+          String filePath = MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+          return STRINGS_FILE_PATH.matcher(filePath).matches();
+        };
 
-      for (Path resDir : resDirs) {
-        stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
-      }
-      return StepExecutionResult.SUCCESS;
-    } catch (Exception e) {
-      context.logError(e, "There was an error getting the list of string files.");
-      return StepExecutionResult.ERROR;
+    for (Path resDir : resDirs) {
+      stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
     }
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

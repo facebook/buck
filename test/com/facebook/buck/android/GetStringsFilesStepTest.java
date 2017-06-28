@@ -27,7 +27,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -43,7 +42,7 @@ public class GetStringsFilesStepTest {
   }
 
   @Test
-  public void testStringFileOrderIsMaintained() throws IOException {
+  public void testStringFileOrderIsMaintained() throws Exception {
     setUpFakeFilesystem(
         ImmutableSet.of(
             Paths.get("test/res/values/strings.xml"),

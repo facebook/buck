@@ -22,7 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -109,7 +108,8 @@ class XctestRunTestsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ProcessExecutorParams.Builder builder =
         ProcessExecutorParams.builder()
             .addAllCommand(getCommand())
@@ -120,49 +120,42 @@ class XctestRunTestsStep implements Step {
     ProcessExecutorParams params = builder.build();
     LOG.debug("xctest command: %s", Joiner.on(" ").join(params.getCommand()));
 
-    try {
-      ProcessExecutor executor = context.getProcessExecutor();
-      ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
+    ProcessExecutor executor = context.getProcessExecutor();
+    ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
 
-      int exitCode;
-      try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
-          TeeInputStream outputWrapperStream =
-              new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
-        if (outputReadingCallback.isPresent()) {
-          // The caller is responsible for reading all the data, which TeeInputStream will
-          // copy to outputStream.
-          outputReadingCallback.get().readOutput(outputWrapperStream);
-        } else {
-          // Nobody's going to read from outputWrapperStream, so close it and copy
-          // the process's stdout and stderr to outputPath directly.
-          outputWrapperStream.close();
-          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
-        }
-        exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
-
-        // There's no way to distinguish a test failure from an xctest issue. We don't
-        // want to fail the step on a test failure, so return 0 for any xctest exit code.
-        exitCode = 0;
-
-        LOG.debug("Finished running command, exit code %d", exitCode);
-      } finally {
-        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+    int exitCode;
+    try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
+        TeeInputStream outputWrapperStream =
+            new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+      if (outputReadingCallback.isPresent()) {
+        // The caller is responsible for reading all the data, which TeeInputStream will
+        // copy to outputStream.
+        outputReadingCallback.get().readOutput(outputWrapperStream);
+      } else {
+        // Nobody's going to read from outputWrapperStream, so close it and copy
+        // the process's stdout and stderr to outputPath directly.
+        outputWrapperStream.close();
+        ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
       }
+      exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
 
-      if (exitCode != 0) {
-        context
-            .getConsole()
-            .printErrorText(String.format(Locale.US, "xctest failed with exit code %d", exitCode));
-      }
+      // There's no way to distinguish a test failure from an xctest issue. We don't
+      // want to fail the step on a test failure, so return 0 for any xctest exit code.
+      exitCode = 0;
 
-      return StepExecutionResult.of(exitCode);
-    } catch (IOException e) {
-      LOG.error(e, "Exception while running %s", params.getCommand());
-      MoreThrowables.propagateIfInterrupt(e);
-      context.getConsole().printBuildFailureWithStacktrace(e);
-      return StepExecutionResult.ERROR;
+      LOG.debug("Finished running command, exit code %d", exitCode);
+    } finally {
+      context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
+      context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
     }
+
+    if (exitCode != 0) {
+      context
+          .getConsole()
+          .printErrorText(String.format(Locale.US, "xctest failed with exit code %d", exitCode));
+    }
+
+    return StepExecutionResult.of(exitCode);
   }
 
   @Override

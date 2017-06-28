@@ -155,87 +155,83 @@ public class SplitZipStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      Set<Path> inputJarPaths =
-          inputPathsToSplit
-              .stream()
-              .map(filesystem::resolve)
-              .collect(MoreCollectors.toImmutableSet());
-      Supplier<ImmutableList<ClassNode>> classes =
-          ClassNodeListSupplier.createMemoized(inputJarPaths);
-      ProguardTranslatorFactory translatorFactory =
-          ProguardTranslatorFactory.create(
-              filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
-      Predicate<String> requiredInPrimaryZip =
-          createRequiredInPrimaryZipPredicate(translatorFactory, classes);
-      final ImmutableSet<String> wantedInPrimaryZip =
-          getWantedPrimaryDexEntries(translatorFactory, classes);
-      final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
-      final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
-      final ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
-          APKModuleGraph.getAPKModuleToClassesMap(
-              apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    Set<Path> inputJarPaths =
+        inputPathsToSplit
+            .stream()
+            .map(filesystem::resolve)
+            .collect(MoreCollectors.toImmutableSet());
+    Supplier<ImmutableList<ClassNode>> classes =
+        ClassNodeListSupplier.createMemoized(inputJarPaths);
+    ProguardTranslatorFactory translatorFactory =
+        ProguardTranslatorFactory.create(
+            filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
+    Predicate<String> requiredInPrimaryZip =
+        createRequiredInPrimaryZipPredicate(translatorFactory, classes);
+    final ImmutableSet<String> wantedInPrimaryZip =
+        getWantedPrimaryDexEntries(translatorFactory, classes);
+    final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
+    final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
+    final ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
+        APKModuleGraph.getAPKModuleToClassesMap(
+            apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
 
-      ZipSplitterFactory zipSplitterFactory;
-      zipSplitterFactory =
-          new DalvikAwareZipSplitterFactory(
-              dexSplitMode.getLinearAllocHardLimit(), wantedInPrimaryZip);
+    ZipSplitterFactory zipSplitterFactory;
+    zipSplitterFactory =
+        new DalvikAwareZipSplitterFactory(
+            dexSplitMode.getLinearAllocHardLimit(), wantedInPrimaryZip);
 
-      outputFiles =
-          zipSplitterFactory
-              .newInstance(
-                  filesystem,
-                  inputJarPaths,
-                  primaryJarPath,
-                  secondaryJarDir,
-                  secondaryJarPattern,
-                  additionalDexStoreJarDir,
-                  requiredInPrimaryZip,
-                  secondaryHeadSet,
-                  secondaryTailSet,
-                  additionalDexStoreClasses,
-                  apkModuleGraph,
-                  dexSplitMode.getDexSplitStrategy(),
-                  ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
-                  filesystem.getPathForRelativePath(pathToReportDir))
-              .execute();
+    outputFiles =
+        zipSplitterFactory
+            .newInstance(
+                filesystem,
+                inputJarPaths,
+                primaryJarPath,
+                secondaryJarDir,
+                secondaryJarPattern,
+                additionalDexStoreJarDir,
+                requiredInPrimaryZip,
+                secondaryHeadSet,
+                secondaryTailSet,
+                additionalDexStoreClasses,
+                apkModuleGraph,
+                dexSplitMode.getDexSplitStrategy(),
+                ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
+                filesystem.getPathForRelativePath(pathToReportDir))
+            .execute();
 
-      for (APKModule dexStore : outputFiles.keySet()) {
-        if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
-          try (BufferedWriter secondaryMetaInfoWriter =
-              Files.newWriter(secondaryJarMetaPath.toFile(), Charsets.UTF_8)) {
-            writeMetaList(
-                secondaryMetaInfoWriter,
-                SECONDARY_DEX_ID,
-                ImmutableSet.of(),
-                outputFiles.get(dexStore).asList(),
-                dexSplitMode.getDexStore());
-          }
-        } else {
-          try (BufferedWriter secondaryMetaInfoWriter =
-              Files.newWriter(
-                  addtionalDexStoreJarMetaPath
-                      .resolve("assets")
-                      .resolve(dexStore.getName())
-                      .resolve("metadata.txt")
-                      .toFile(),
-                  Charsets.UTF_8)) {
-            writeMetaList(
-                secondaryMetaInfoWriter,
-                dexStore.getName(),
-                apkModuleGraph.getGraph().getOutgoingNodesFor(dexStore),
-                outputFiles.get(dexStore).asList(),
-                dexSplitMode.getDexStore());
-          }
+    for (APKModule dexStore : outputFiles.keySet()) {
+      if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
+        try (BufferedWriter secondaryMetaInfoWriter =
+            Files.newWriter(secondaryJarMetaPath.toFile(), Charsets.UTF_8)) {
+          writeMetaList(
+              secondaryMetaInfoWriter,
+              SECONDARY_DEX_ID,
+              ImmutableSet.of(),
+              outputFiles.get(dexStore).asList(),
+              dexSplitMode.getDexStore());
+        }
+      } else {
+        try (BufferedWriter secondaryMetaInfoWriter =
+            Files.newWriter(
+                addtionalDexStoreJarMetaPath
+                    .resolve("assets")
+                    .resolve(dexStore.getName())
+                    .resolve("metadata.txt")
+                    .toFile(),
+                Charsets.UTF_8)) {
+          writeMetaList(
+              secondaryMetaInfoWriter,
+              dexStore.getName(),
+              apkModuleGraph.getGraph().getOutgoingNodesFor(dexStore),
+              outputFiles.get(dexStore).asList(),
+              dexSplitMode.getDexStore());
         }
       }
-
-      return StepExecutionResult.SUCCESS;
-    } catch (IOException e) {
-      context.logError(e, "There was an error running SplitZipStep.");
-      return StepExecutionResult.ERROR;
     }
+
+    return StepExecutionResult.SUCCESS;
   }
 
   @VisibleForTesting

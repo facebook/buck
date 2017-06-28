@@ -18,7 +18,6 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -34,8 +33,6 @@ import org.immutables.value.Value;
 @BuckStyleStep
 abstract class AbstractRmStep implements Step {
 
-  private static final Logger LOG = Logger.get(AbstractRmStep.class);
-
   @Value.Parameter
   protected abstract BuildCellRelativePath getPath();
 
@@ -50,20 +47,16 @@ abstract class AbstractRmStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     Path absolutePath =
         context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot());
-    try {
-      if (isRecursive()) {
-        // Delete a folder recursively
-        MoreFiles.deleteRecursivelyIfExists(absolutePath);
-      } else {
-        // Delete a single file
-        Files.deleteIfExists(absolutePath);
-      }
-    } catch (IOException e) {
-      LOG.error(e);
-      return StepExecutionResult.ERROR;
+    if (isRecursive()) {
+      // Delete a folder recursively
+      MoreFiles.deleteRecursivelyIfExists(absolutePath);
+    } else {
+      // Delete a single file
+      Files.deleteIfExists(absolutePath);
     }
     return StepExecutionResult.SUCCESS;
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -26,12 +27,17 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class PlistProcessStepTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private static final Path INPUT_PATH = Paths.get("input.plist");
   private static final Path MERGE_PATH = Paths.get("merge.plist");
@@ -54,8 +60,9 @@ public class PlistProcessStepTest {
     projectFilesystem.writeContentsToPath("<html>not a <b>plist</b></html>", INPUT_PATH);
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
-    int errorCode = plistProcessStep.execute(executionContext).getExitCode();
-    assertThat(errorCode, equalTo(1));
+    thrown.expect(IOException.class);
+    thrown.expectMessage(containsString("not a property list"));
+    plistProcessStep.execute(executionContext);
   }
 
   @Test

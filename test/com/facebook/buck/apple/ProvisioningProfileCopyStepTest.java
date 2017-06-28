@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,7 +57,6 @@ import org.junit.rules.ExpectedException;
 
 public class ProvisioningProfileCopyStepTest {
   private Path testdataDir;
-  private Path tempOutputDir;
   private Path outputFile;
   private Path xcentFile;
   private Path dryRunResultFile;
@@ -86,7 +86,7 @@ public class ProvisioningProfileCopyStepTest {
             return FileVisitResult.CONTINUE;
           }
         });
-    tempOutputDir = tmp.getRoot();
+    Path tempOutputDir = tmp.getRoot();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = Paths.get("test.xcent");
     dryRunResultFile = Paths.get("test_dry_run_results.plist");
@@ -121,8 +121,8 @@ public class ProvisioningProfileCopyStepTest {
   @Test
   public void testFailsWithInvalidInfoPlist() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(startsWith("Unable to get bundle ID from info.plist"));
+    thrown.expect(IOException.class);
+    thrown.expectMessage(containsString("not a property list"));
 
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(

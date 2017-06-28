@@ -40,7 +40,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -231,15 +230,9 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) {
-      List<String> lines;
-      try {
-        lines = filesystem.readLines(valuesFile);
-      } catch (IOException e) {
-        context.logError(e, "Error reading %s.", valuesFile);
-        return StepExecutionResult.ERROR;
-      }
-      values = BuildConfigFields.fromFieldDeclarations(lines);
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      values = BuildConfigFields.fromFieldDeclarations(filesystem.readLines(valuesFile));
       return StepExecutionResult.SUCCESS;
     }
 

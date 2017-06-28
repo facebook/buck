@@ -88,113 +88,109 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRuleWithDeclaredAndEx
     return ImmutableList.of(
         new AbstractExecutionStep("compute_android_binary_deps_abi") {
           @Override
-          public StepExecutionResult execute(ExecutionContext executionContext) {
-            try {
-              // TODO(cjhopman): Rather than calculate this hash ourselves, we should be able to
-              // just add all these files to the AndroidBinary's rulekey and rely on the input-based
-              // rulekey calculation.
+          public StepExecutionResult execute(ExecutionContext executionContext)
+              throws IOException, InterruptedException {
+            // TODO(cjhopman): Rather than calculate this hash ourselves, we should be able to
+            // just add all these files to the AndroidBinary's rulekey and rely on the input-based
+            // rulekey calculation.
 
-              // For exopackages, the only significant thing android_binary does is apkbuilder,
-              // so we need to include all of the apkbuilder inputs in the ABI key.
-              final Hasher hasher = Hashing.sha1().newHasher();
+            // For exopackages, the only significant thing android_binary does is apkbuilder,
+            // so we need to include all of the apkbuilder inputs in the ABI key.
+            final Hasher hasher = Hashing.sha1().newHasher();
 
-              // The primary dex is always added.
-              Sha1HashCode primaryDexHash =
-                  Preconditions.checkNotNull(preDexMerge.get().getPrimaryDexHash());
-              LOG.verbose("primary dex = %s", primaryDexHash);
-              primaryDexHash.update(hasher);
+            // The primary dex is always added.
+            Sha1HashCode primaryDexHash =
+                Preconditions.checkNotNull(preDexMerge.get().getPrimaryDexHash());
+            LOG.verbose("primary dex = %s", primaryDexHash);
+            primaryDexHash.update(hasher);
 
-              // We currently don't use any resource directories, so nothing to add there.
+            // We currently don't use any resource directories, so nothing to add there.
 
-              // Collect files whose sha1 hashes need to be added to our ABI key.
-              // This maps from the file to the role it plays, so changing (for example)
-              // a native library to an asset will change the ABI key.
-              // We assume that these are all order-insensitive to avoid having our ABI key
-              // affected by filesystem iteration order.
+            // Collect files whose sha1 hashes need to be added to our ABI key.
+            // This maps from the file to the role it plays, so changing (for example)
+            // a native library to an asset will change the ABI key.
+            // We assume that these are all order-insensitive to avoid having our ABI key
+            // affected by filesystem iteration order.
 
-              // If exopackage is disabled for secondary dexes, we need to hash the secondary dex
-              // files that end up in the APK. PreDexMerge already hashes those files, so we can
-              // just hash the summary of those hashes.
-              if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)
-                  && preDexMerge.isPresent()) {
-                addToHash(hasher, "secondary_dexes", preDexMerge.get().getMetadataTxtPath());
-              }
-
-              // If exopackage is disabled for native libraries, we add them in apkbuilder, so we
-              // need to include their hashes. AndroidTransitiveDependencies doesn't provide
-              // BuildRules, only paths. We could augment it, but our current native libraries are
-              // small enough that we can just hash them all without too much of a perf hit.
-              if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
-                  && copyNativeLibraries.isPresent()) {
-                for (Map.Entry<APKModule, CopyNativeLibraries> entry :
-                    copyNativeLibraries.get().entrySet()) {
-                  addToHash(
-                      hasher,
-                      "native_libs_" + entry.getKey().getName(),
-                      entry.getValue().getPathToMetadataTxt());
-                }
-              }
-
-              // In native exopackage mode, we include a bundle of fake
-              // libraries that makes multi-arch Android always put our application
-              // in 32-bit mode.
-              if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
-                String fakeNativeLibraryBundle =
-                    System.getProperty("buck.native_exopackage_fake_path");
-
-                Preconditions.checkNotNull(
-                    fakeNativeLibraryBundle, "fake native bundle not specified in properties.");
-
-                Path fakePath = Paths.get(fakeNativeLibraryBundle);
-                Preconditions.checkState(
-                    fakePath.isAbsolute(), "Expected fake path to be absolute: %s", fakePath);
-
-                addToHash(hasher, "fake_native_libs", fakePath, fakePath.getFileName());
-              }
-
-              // Same deal for native libs as assets.
-              final ImmutableSortedMap.Builder<Path, Path> allNativeFiles =
-                  ImmutableSortedMap.naturalOrder();
-              for (SourcePath libDir :
-                  packageableCollection.getNativeLibAssetsDirectories().values()) {
-                // A SourcePath may not come from the same ProjectFilesystem as the step. Yay. The
-                // `getFilesUnderPath` method returns files relative to the ProjectFilesystem's root
-                // and so they may not exist, but we could go and do some path manipulation to
-                // figure out where they are. Since we'll have to do the work anyway, let's just
-                // handle things ourselves.
-                final Path root = context.getSourcePathResolver().getAbsolutePath(libDir);
-
-                Files.walkFileTree(
-                    root,
-                    new SimpleFileVisitor<Path>() {
-                      @Override
-                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                          throws IOException {
-                        allNativeFiles.put(file, root.relativize(file));
-                        return FileVisitResult.CONTINUE;
-                      }
-                    });
-              }
-              for (Map.Entry<Path, Path> entry : allNativeFiles.build().entrySet()) {
-                addToHash(hasher, "native_lib_as_asset", entry.getKey(), entry.getValue());
-              }
-
-              // Resources get copied from third-party JARs, so hash them.
-              for (SourcePath jar :
-                  ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars())) {
-                addToHash(context.getSourcePathResolver(), hasher, "third-party jar", jar);
-              }
-
-              String abiHash = hasher.hash().toString();
-              LOG.verbose("ABI hash = %s", abiHash);
-              getProjectFilesystem().createParentDirs(abiPath);
-              getProjectFilesystem().writeContentsToPath(abiHash, abiPath);
-              buildableContext.recordArtifact(abiPath);
-              return StepExecutionResult.SUCCESS;
-            } catch (IOException e) {
-              executionContext.logError(e, "Error computing ABI hash.");
-              return StepExecutionResult.ERROR;
+            // If exopackage is disabled for secondary dexes, we need to hash the secondary dex
+            // files that end up in the APK. PreDexMerge already hashes those files, so we can
+            // just hash the summary of those hashes.
+            if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)
+                && preDexMerge.isPresent()) {
+              addToHash(hasher, "secondary_dexes", preDexMerge.get().getMetadataTxtPath());
             }
+
+            // If exopackage is disabled for native libraries, we add them in apkbuilder, so we
+            // need to include their hashes. AndroidTransitiveDependencies doesn't provide
+            // BuildRules, only paths. We could augment it, but our current native libraries are
+            // small enough that we can just hash them all without too much of a perf hit.
+            if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
+                && copyNativeLibraries.isPresent()) {
+              for (Map.Entry<APKModule, CopyNativeLibraries> entry :
+                  copyNativeLibraries.get().entrySet()) {
+                addToHash(
+                    hasher,
+                    "native_libs_" + entry.getKey().getName(),
+                    entry.getValue().getPathToMetadataTxt());
+              }
+            }
+
+            // In native exopackage mode, we include a bundle of fake
+            // libraries that makes multi-arch Android always put our application
+            // in 32-bit mode.
+            if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+              String fakeNativeLibraryBundle =
+                  System.getProperty("buck.native_exopackage_fake_path");
+
+              Preconditions.checkNotNull(
+                  fakeNativeLibraryBundle, "fake native bundle not specified in properties.");
+
+              Path fakePath = Paths.get(fakeNativeLibraryBundle);
+              Preconditions.checkState(
+                  fakePath.isAbsolute(), "Expected fake path to be absolute: %s", fakePath);
+
+              addToHash(hasher, "fake_native_libs", fakePath, fakePath.getFileName());
+            }
+
+            // Same deal for native libs as assets.
+            final ImmutableSortedMap.Builder<Path, Path> allNativeFiles =
+                ImmutableSortedMap.naturalOrder();
+            for (SourcePath libDir :
+                packageableCollection.getNativeLibAssetsDirectories().values()) {
+              // A SourcePath may not come from the same ProjectFilesystem as the step. Yay. The
+              // `getFilesUnderPath` method returns files relative to the ProjectFilesystem's root
+              // and so they may not exist, but we could go and do some path manipulation to
+              // figure out where they are. Since we'll have to do the work anyway, let's just
+              // handle things ourselves.
+              final Path root = context.getSourcePathResolver().getAbsolutePath(libDir);
+
+              Files.walkFileTree(
+                  root,
+                  new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                      allNativeFiles.put(file, root.relativize(file));
+                      return FileVisitResult.CONTINUE;
+                    }
+                  });
+            }
+            for (Map.Entry<Path, Path> entry : allNativeFiles.build().entrySet()) {
+              addToHash(hasher, "native_lib_as_asset", entry.getKey(), entry.getValue());
+            }
+
+            // Resources get copied from third-party JARs, so hash them.
+            for (SourcePath jar :
+                ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars())) {
+              addToHash(context.getSourcePathResolver(), hasher, "third-party jar", jar);
+            }
+
+            String abiHash = hasher.hash().toString();
+            LOG.verbose("ABI hash = %s", abiHash);
+            getProjectFilesystem().createParentDirs(abiPath);
+            getProjectFilesystem().writeContentsToPath(abiHash, abiPath);
+            buildableContext.recordArtifact(abiPath);
+            return StepExecutionResult.SUCCESS;
           }
         });
   }

@@ -42,7 +42,8 @@ class DexJarAnalysisStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
 
     try (ZipFile zf = new ZipFile(filesystem.resolve(dexPath).toFile())) {
       ZipEntry classesDexEntry = zf.getEntry("classes.dex");
@@ -60,9 +61,6 @@ class DexJarAnalysisStep implements Step {
           dexMetaPath);
 
       return StepExecutionResult.SUCCESS;
-    } catch (IOException e) {
-      context.logError(e, "There was an error in smart dexing step.");
-      return StepExecutionResult.ERROR;
     }
   }
 

@@ -40,13 +40,9 @@ public class MoveStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    try {
-      filesystem.move(source, destination, options);
-    } catch (IOException e) {
-      context.logError(e, "error moving %s -> %s", source, destination);
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    filesystem.move(source, destination, options);
     return StepExecutionResult.SUCCESS;
   }
 

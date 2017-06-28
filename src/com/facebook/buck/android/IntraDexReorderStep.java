@@ -35,6 +35,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -83,14 +84,15 @@ public class IntraDexReorderStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try {
       DefaultStepRunner stepRunner = new DefaultStepRunner();
       List<Step> dxSteps = generateReorderCommands();
       for (Step step : dxSteps) {
         stepRunner.runStepForBuildTarget(context, step, Optional.of(buildTarget));
       }
-    } catch (StepFailedException | InterruptedException e) {
+    } catch (StepFailedException e) {
       context.logError(e, "There was an error in intra dex reorder step.");
       return StepExecutionResult.ERROR;
     }
