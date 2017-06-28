@@ -2360,6 +2360,16 @@ your <code>.buckjavaargs</code> file</a>:
     The version of the NDK that Buck should use to build native code.  This is searched for in the
     subfolders defined by the folder found in the <code>ANDROID_NDK_REPOSITORY</code> environment
     variable.
+    <p>NDKs with version prior r11 store their version in <code>RELEASE.TXT</code> file. For example,
+    in version r10c this file contains "r10c (64-bit)". You need to put "r10c"
+    in <code>ndk_version</code>.</p>
+    <p>The NDKs after r11 store their version number in <code>source.properties</code> file
+    in <code>Pkg.Revision</code> option. For example, this is the content of that file for version
+    r13b:<p/>
+    {literal}<pre class="prettyprint lang-js">
+    Pkg.Desc = Android NDK
+    Pkg.Revision = 13.1.3345770</pre>{/literal}
+    <p>You need to put "13.1.3345770" in <code>ndk_version</code>.</p>
   {/param}
 {/call}
 
