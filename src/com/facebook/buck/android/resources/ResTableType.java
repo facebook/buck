@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -43,6 +44,11 @@ import javax.annotation.Nullable;
 public class ResTableType extends ResChunk {
   private static final int CONFIG_OFFSET = 20;
   private static final int FLAG_COMPLEX = 0x1;
+
+  public static final int ATTRIBUTE_NAME_REF_OFFSET = 0;
+  public static final int ATTRIBUTE_SIZE_OFFSET = 4;
+  public static final int ATTRIBUTE_TYPE_OFFSET = 7;
+  public static final int ATTRIBUTE_DATA_OFFSET = 8;
 
   private final int id;
   private final int entryCount;
@@ -420,20 +426,22 @@ public class ResTableType extends ResChunk {
         transformEntryDataOffset(entryData, offset + 8, visitor);
       }
       int count = entryData.getInt(offset + 12);
-      int entryOffset = offset;
+      int entryStart = offset + 16;
+      int entryOffset = entryStart;
       for (int j = 0; j < count; j++) {
         // Visit the name attribute reference.
-        transformEntryDataOffset(entryData, entryOffset + 16, visitor);
-        int type = entryData.get(entryOffset + 23);
+        transformEntryDataOffset(entryData, entryOffset + ATTRIBUTE_NAME_REF_OFFSET, visitor);
+        int type = entryData.get(entryOffset + ATTRIBUTE_TYPE_OFFSET);
         if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
           // Visit the value if it's a reference.
-          transformEntryDataOffset(entryData, entryOffset + 24, visitor);
+          transformEntryDataOffset(entryData, entryOffset + ATTRIBUTE_DATA_OFFSET, visitor);
         } else if (type == RES_DYNAMIC_REFERENCE || type == RES_DYNAMIC_ATTRIBUTE) {
           throw new UnsupportedOperationException();
         }
-        int size = entryData.getShort(entryOffset + 20);
+        int size = entryData.getShort(entryOffset + ATTRIBUTE_SIZE_OFFSET);
         entryOffset += 4 + size;
       }
+      sortAttributesAt(entryData, count, entryStart);
     } else {
       int type = entryData.get(offset + 11);
       if (type == RES_REFERENCE || type == RES_ATTRIBUTE) {
@@ -443,6 +451,40 @@ public class ResTableType extends ResChunk {
         throw new UnsupportedOperationException();
       }
     }
+  }
+
+  private void sortAttributesAt(ByteBuffer entryData, int attrCount, int attrStart) {
+    class AttrRef implements Comparable<AttrRef> {
+      final int offset;
+      final int size;
+      final int resId;
+
+      AttrRef(int offset) {
+        this.offset = offset;
+        this.resId = entryData.getInt(offset + ATTRIBUTE_NAME_REF_OFFSET);
+        this.size = 4 + entryData.getShort(offset + ATTRIBUTE_SIZE_OFFSET);
+      }
+
+      @Override
+      public int compareTo(AttrRef other) {
+        return resId - other.resId;
+      }
+    }
+    Stream.Builder<AttrRef> builder = Stream.builder();
+    int entryOffset = attrStart;
+    for (int j = 0; j < attrCount; j++) {
+      AttrRef ref = new AttrRef(entryOffset);
+      builder.add(ref);
+      entryOffset += ref.size;
+    }
+
+    byte[] newData = new byte[entryOffset - attrStart];
+    ByteBuffer newBuf = wrap(newData);
+    builder
+        .build()
+        .sorted()
+        .forEachOrdered(ref -> newBuf.put(slice(entryData, ref.offset, ref.size)));
+    slice(entryData, attrStart).put(newData);
   }
 
   public void transformReferences(RefTransformer visitor) {
