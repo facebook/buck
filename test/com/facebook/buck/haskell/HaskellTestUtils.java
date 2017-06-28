@@ -45,7 +45,7 @@ class HaskellTestUtils {
     ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
     Process process = Runtime.getRuntime().exec(cmd.toArray(new String[cmd.size()]));
     String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
-    Pattern versionPattern = Pattern.compile(".*version ([0-9]+)(?:[.][0-9]+(?:[.][0-9]+)?)?");
+    Pattern versionPattern = Pattern.compile(".*version ([0-9]+).*");
     Matcher matcher = versionPattern.matcher(output.trim());
     assertTrue(
         String.format(
