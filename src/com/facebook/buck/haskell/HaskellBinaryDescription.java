@@ -19,6 +19,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -211,7 +212,11 @@ public class HaskellBinaryDescription
                 params,
                 resolver,
                 ruleFinder,
-                RichStream.from(deps).filter(HaskellCompileDep.class::isInstance).toImmutableSet(),
+                RichStream.from(deps)
+                    .filter(
+                        dep ->
+                            dep instanceof HaskellCompileDep || dep instanceof CxxPreprocessorDep)
+                    .toImmutableSet(),
                 cxxPlatform,
                 haskellConfig,
                 depType,

@@ -104,4 +104,9 @@ public class HaskellLibraryIntegrationTest {
     workspace.writeContentsToPath("module OrderB where\nimport OrderA\n", "OrderB.hs");
     workspace.runBuckBuild("//:order#default," + getLinkFlavor()).assertSuccess();
   }
+
+  @Test
+  public void cHeader() throws IOException {
+    workspace.runBuckBuild("//:hs_header#default," + getLinkFlavor()).assertSuccess();
+  }
 }

@@ -84,3 +84,21 @@ haskell_library(
     'OrderB.hs',
   ],
 )
+
+cxx_library(
+  name = 'c_header',
+  exported_headers = [
+    'header.h',
+  ],
+)
+
+haskell_library(
+  name = 'hs_header',
+  compiler_flags = ['-cpp'],
+  srcs = [
+    'HsHeader.hs',
+  ],
+  deps = [
+    ':c_header',
+  ],
+)

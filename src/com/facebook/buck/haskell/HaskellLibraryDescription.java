@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -582,7 +583,7 @@ public class HaskellLibraryDescription
       @Override
       public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {
         return RichStream.from(allDeps.get(resolver, cxxPlatform))
-            .filter(HaskellCompileDep.class::isInstance)
+            .filter(dep -> dep instanceof HaskellCompileDep || dep instanceof CxxPreprocessorDep)
             .toImmutableList();
       }
 
