@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -244,6 +245,13 @@ public class ProjectIntegrationTest {
   public void testProjectWithProjectRoot() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
         "project_with_project_root", "--intellij-project-root", "project1", "//project1/lib:lib");
+  }
+
+  @Test
+  public void testPreprocessScript() throws InterruptedException, IOException {
+    ProcessResult result = runBuckProjectAndVerify("preprocess_script_test");
+
+    assertEquals("intellij", result.getStdout().trim());
   }
 
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)

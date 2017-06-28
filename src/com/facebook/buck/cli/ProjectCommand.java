@@ -236,24 +236,24 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    int rc = runPreprocessScriptIfNeeded(params);
+    final Ide projectIde =
+        (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
+
+    if (projectIde == null) {
+      params
+          .getConsole()
+          .getStdErr()
+          .println("\nCannot build a project: project IDE is not specified.");
+      return 1;
+    }
+
+    int rc = runPreprocessScriptIfNeeded(params, projectIde);
     if (rc != 0) {
       return rc;
     }
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Project", getConcurrencyLimit(params.getBuckConfig()))) {
-
-      final Ide projectIde =
-          (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
-
-      if (projectIde == null) {
-        params
-            .getConsole()
-            .getStdErr()
-            .println("\nCannot build a project: project IDE is not specified.");
-        return 1;
-      }
 
       ListeningExecutorService executor = pool.getExecutor();
 
@@ -357,7 +357,7 @@ public class ProjectCommand extends BuildCommand {
     return buildCommand.run(params);
   }
 
-  private int runPreprocessScriptIfNeeded(CommandRunnerParams params)
+  private int runPreprocessScriptIfNeeded(CommandRunnerParams params, Ide projectIde)
       throws IOException, InterruptedException {
     Optional<String> pathToPreProcessScript = getPathToPreProcessScript(params.getBuckConfig());
     if (!pathToPreProcessScript.isPresent()) {
@@ -383,6 +383,7 @@ public class ProjectCommand extends BuildCommand {
                 ImmutableMap.<String, String>builder()
                     .putAll(params.getEnvironment())
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()))
+                    .put("BUCK_PROJECT_TYPE", detectBuckProjectType(projectIde))
                     .build())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
@@ -400,6 +401,13 @@ public class ProjectCommand extends BuildCommand {
       processExecutor.destroyProcess(process, /* force */ false);
       processExecutor.waitForProcess(process);
     }
+  }
+
+  private String detectBuckProjectType(Ide projectIde) {
+    if (projectIde == Ide.INTELLIJ && projectView != null) {
+      return "intellij-view";
+    }
+    return projectIde.toString().toLowerCase();
   }
 
   @Override
