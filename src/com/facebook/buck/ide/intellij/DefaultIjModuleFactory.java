@@ -46,15 +46,17 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   }
 
   @Override
+  @SuppressWarnings(
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
   public IjModule createModule(
-      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes, Set<Path> excludes) {
+      Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes) {
     return createModuleUsingSortedTargetNodes(
         moduleBasePath, ImmutableSortedSet.copyOf(targetNodes), excludes);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private IjModule createModuleUsingSortedTargetNodes(
-      Path moduleBasePath, ImmutableSortedSet<TargetNode<?, ?>> targetNodes, Set<Path> excludes) {
+      Path moduleBasePath, ImmutableSortedSet<TargetNode> targetNodes, Set<Path> excludes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
     ImmutableSet<BuildTarget> moduleBuildTargets =

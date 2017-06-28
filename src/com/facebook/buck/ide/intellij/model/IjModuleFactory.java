@@ -29,6 +29,8 @@ public interface IjModuleFactory {
    * @param targetNodes set of nodes the module is to be created from.
    * @return nice shiny new module.
    */
+  @SuppressWarnings(
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
   IjModule createModule(
-      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes, Set<Path> excludes);
+      Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes);
 }

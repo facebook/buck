@@ -41,15 +41,17 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
+@SuppressWarnings(
+    "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
 abstract class AbstractFlavorSearchTargetNodeFinder {
 
   /** @return a map of nodes indexed by their "base" target. */
-  abstract ImmutableMap<BuildTarget, TargetNode<?, ?>> getBaseTargetIndex();
+  abstract ImmutableMap<BuildTarget, TargetNode> getBaseTargetIndex();
 
   /** Verify that base targets correctly correspond to their node. */
   @Value.Check
   void check() {
-    for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : getBaseTargetIndex().entrySet()) {
+    for (Map.Entry<BuildTarget, TargetNode> ent : getBaseTargetIndex().entrySet()) {
       Preconditions.checkArgument(
           ent.getValue()
               .getBuildTarget()
@@ -65,7 +67,7 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
    *     expensive flavor-subset-based lookup if we can find the node by the exact name.
    */
   @Value.Derived
-  ImmutableMap<BuildTarget, TargetNode<?, ?>> getBuildTargetIndex() {
+  ImmutableMap<BuildTarget, TargetNode> getBuildTargetIndex() {
     return getBaseTargetIndex()
         .values()
         .stream()
@@ -79,7 +81,7 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
   ImmutableMap<UnflavoredBuildTarget, ImmutableSet<ImmutableSet<Flavor>>> getBaseTargetFlavorMap() {
     Map<UnflavoredBuildTarget, List<ImmutableSet<Flavor>>> flavorMapRawBuilder =
         new LinkedHashMap<>();
-    for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : getBaseTargetIndex().entrySet()) {
+    for (Map.Entry<BuildTarget, TargetNode> ent : getBaseTargetIndex().entrySet()) {
       BuildTarget baseTarget = ent.getKey();
       UnflavoredBuildTarget unflavoredTarget = baseTarget.getUnflavoredBuildTarget();
       if (!flavorMapRawBuilder.containsKey(unflavoredTarget)) {

@@ -34,7 +34,9 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractAggregationModule {
 
-  public abstract ImmutableSet<TargetNode<?, ?>> getTargets();
+  @SuppressWarnings(
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+  public abstract ImmutableSet<TargetNode> getTargets();
 
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the
