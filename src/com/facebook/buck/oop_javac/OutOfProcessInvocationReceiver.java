@@ -152,10 +152,9 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
   }
 
   @Override
-  public int buildSourceAbiJar(int invocationId, String abiJarPath, String classUsageFilePath) {
+  public int buildSourceAbiJar(int invocationId, String abiJarPath) {
     try {
-      return getInvocation(invocationId)
-          .buildSourceAbiJar(Paths.get(abiJarPath), Paths.get(classUsageFilePath));
+      return getInvocation(invocationId).buildSourceAbiJar(Paths.get(abiJarPath));
     } catch (InterruptedException e) {
       return INTERRUPTED_EXIT_CODE;
     }

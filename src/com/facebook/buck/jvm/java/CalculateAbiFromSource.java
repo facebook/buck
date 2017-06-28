@@ -75,7 +75,6 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     this.resources = resources;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.compileStepFactory = compileStepFactory;
-    compileStepFactory.setCompileAbi();
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
@@ -86,6 +85,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     outputJar =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "lib__%s__output")
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
+    compileStepFactory.setCompileAbi(outputJar);
     this.outputJarContents =
         new JarContentsSupplier(new SourcePathResolver(ruleFinder), getSourcePathToOutput());
   }

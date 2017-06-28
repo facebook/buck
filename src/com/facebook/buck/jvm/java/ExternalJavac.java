@@ -183,8 +183,7 @@ public class ExternalJavac implements Javac {
       JavacCompilationMode compilationMode) {
     return new Invocation() {
       @Override
-      public int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile)
-          throws InterruptedException {
+      public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
         throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
       }
 

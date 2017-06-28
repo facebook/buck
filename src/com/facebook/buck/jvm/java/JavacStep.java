@@ -31,6 +31,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,6 +41,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public class JavacStep implements Step {
@@ -70,6 +72,8 @@ public class JavacStep implements Step {
 
   private final Optional<DirectToJarOutputSettings> directToJarOutputSettings;
 
+  @Nullable private final Path abiJar;
+
   public JavacStep(
       Path outputDirectory,
       ClassUsageFileWriter usedClassesFileWriter,
@@ -83,7 +87,8 @@ public class JavacStep implements Step {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
-      Optional<DirectToJarOutputSettings> directToJarOutputSettings) {
+      Optional<DirectToJarOutputSettings> directToJarOutputSettings,
+      @Nullable Path abiJar) {
     this.outputDirectory = outputDirectory;
     this.usedClassesFileWriter = usedClassesFileWriter;
     this.workingDirectory = workingDirectory;
@@ -97,6 +102,7 @@ public class JavacStep implements Step {
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
     this.directToJarOutputSettings = directToJarOutputSettings;
+    this.abiJar = abiJar;
   }
 
   @Override
@@ -173,7 +179,12 @@ public class JavacStep implements Step {
             pathToSrcsList,
             workingDirectory,
             javacOptions.getCompilationMode())) {
-      declaredDepsBuildResult = invocation.buildClasses();
+      if (abiJar != null) {
+        declaredDepsBuildResult =
+            invocation.buildSourceAbiJar(filesystem.resolve(Preconditions.checkNotNull(abiJar)));
+      } else {
+        declaredDepsBuildResult = invocation.buildClasses();
+      }
     }
     firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
     firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
@@ -243,7 +254,7 @@ public class JavacStep implements Step {
   @Override
   public String getShortName() {
     String name;
-    if (javacOptions.getCompilationMode() == JavacCompilationMode.ABI) {
+    if (abiJar != null) {
       name = "calculate_abi_from_source";
     } else if (directToJarOutputSettings.isPresent()) {
       name = "javac_jar";

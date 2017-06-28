@@ -152,7 +152,8 @@ public class DummyRDotJavaTest {
                         pathResolver,
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
-                        /* directToJarOutputSettings */ Optional.empty())
+                        /* directToJarOutputSettings */ Optional.empty(),
+                        null)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
             .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))

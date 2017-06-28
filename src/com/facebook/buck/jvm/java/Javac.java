@@ -72,7 +72,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
 
   interface Invocation extends AutoCloseable {
     /** Produces a source ABI jar at the given path. Must be called before {@link #buildClasses} */
-    int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile) throws InterruptedException;
+    int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException;
 
     int buildClasses() throws InterruptedException;
 

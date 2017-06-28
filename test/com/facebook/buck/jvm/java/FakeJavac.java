@@ -75,8 +75,7 @@ public class FakeJavac implements Javac {
       JavacCompilationMode compilationMode) {
     return new Invocation() {
       @Override
-      public int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile)
-          throws InterruptedException {
+      public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
         throw new UnsupportedOperationException();
       }
 

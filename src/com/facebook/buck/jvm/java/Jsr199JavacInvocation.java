@@ -95,9 +95,41 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   }
 
   @Override
-  public int buildSourceAbiJar(Path sourceAbiJar, Path usedClassesFile)
-      throws InterruptedException {
-    throw new UnsupportedOperationException("To be implemented soon");
+  public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
+    BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
+        new Jsr199TracingBridge(context.getEventSink(), invokingRule));
+    try {
+      // Invoke the compilation and inspect the result.
+      BuckJavacTaskProxy javacTask = getJavacTask();
+
+      javacTask.addPostEnterCallback(
+          topLevelTypes -> {
+            try {
+              JarBuilder jarBuilder = newJarBuilder().setShouldHashEntries(true);
+              StubGenerator stubGenerator =
+                  new StubGenerator(
+                      getTargetVersion(options),
+                      javacTask.getElements(),
+                      jarBuilder,
+                      context.getEventSink());
+              stubGenerator.generate(topLevelTypes);
+              jarBuilder.createJarFile(sourceAbiJar);
+            } catch (IOException e) {
+              throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
+            }
+          });
+
+      javacTask.enter();
+
+      return 0;
+    } catch (IOException e) {
+      LOG.error(e);
+      throw new HumanReadableException("IOException during abi generation: ", e.getMessage());
+    } finally {
+      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
+      // be using it.
+      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
+    }
   }
 
   @Override
@@ -126,21 +158,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try {
-      boolean isSuccess = true;
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
-
-      javacTask.enter();
-      if (compilationMode != JavacCompilationMode.ABI) {
-        javacTask.generate();
-        isSuccess =
-            diagnostics
-                    .getDiagnostics()
-                    .stream()
-                    .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
-                    .count()
-                == 0;
-      }
+      javacTask.generate();
+      boolean isSuccess =
+          diagnostics
+                  .getDiagnostics()
+                  .stream()
+                  .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+                  .count()
+              == 0;
       for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
         LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
       }
@@ -175,8 +202,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         return 1;
       }
 
-      if (!context.getDirectToJarOutputSettings().isPresent()
-          || compilationMode == JavacCompilationMode.ABI) {
+      if (!context.getDirectToJarOutputSettings().isPresent()) {
         return 0;
       }
 
@@ -259,32 +285,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
               options,
               classNamesForAnnotationProcessing,
               compilationUnits);
-      if (compilationMode == JavacCompilationMode.ABI) {
-        javacTask.addPostEnterCallback(
-            topLevelTypes -> {
-              try {
-                JarBuilder jarBuilder = newJarBuilder().setShouldHashEntries(true);
-                StubGenerator stubGenerator =
-                    new StubGenerator(
-                        getTargetVersion(options),
-                        Preconditions.checkNotNull(javacTask).getElements(),
-                        jarBuilder,
-                        context.getEventSink());
-                stubGenerator.generate(topLevelTypes);
-                jarBuilder.createJarFile(
-                    Preconditions.checkNotNull(
-                        context
-                            .getProjectFilesystem()
-                            .getPathForRelativePath(
-                                context
-                                    .getDirectToJarOutputSettings()
-                                    .get()
-                                    .getDirectToJarOutputPath())));
-              } catch (IOException e) {
-                throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
-              }
-            });
-      }
 
       PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
@@ -344,7 +344,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         .setManifestFile(
             context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
-        .setShouldHashEntries(compilationMode == JavacCompilationMode.ABI)
         .setEntryPatternBlacklist(ImmutableSet.of());
   }
 

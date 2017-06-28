@@ -73,7 +73,8 @@ public class JavacStepTest {
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            Optional.empty());
+            Optional.empty(),
+            null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -120,7 +121,8 @@ public class JavacStepTest {
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            Optional.empty());
+            Optional.empty(),
+            null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
@@ -172,7 +174,8 @@ public class JavacStepTest {
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            Optional.empty());
+            Optional.empty(),
+            null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -222,7 +225,8 @@ public class JavacStepTest {
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            Optional.empty());
+            Optional.empty(),
+            null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 

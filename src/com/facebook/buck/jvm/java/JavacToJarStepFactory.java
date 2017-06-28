@@ -39,6 +39,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
@@ -46,6 +47,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private final Javac javac;
   private JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
+  @Nullable private Path abiJar;
 
   public JavacToJarStepFactory(
       Javac javac, JavacOptions javacOptions, JavacOptionsAmender amender) {
@@ -54,8 +56,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     this.amender = amender;
   }
 
-  public void setCompileAbi() {
-    javacOptions = javacOptions.withCompilationMode(JavacCompilationMode.ABI);
+  public void setCompileAbi(Path abiJar) {
+    this.abiJar = abiJar;
   }
 
   @Override
@@ -95,7 +97,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             resolver,
             filesystem,
             new ClasspathChecker(),
-            Optional.empty()));
+            Optional.empty(),
+            abiJar));
   }
 
   @Override
@@ -204,7 +207,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
                       buildTimeOptions.getClassesToRemoveFromJar(),
                       entriesToJar,
                       mainClass,
-                      manifestFile))));
+                      manifestFile)),
+              abiJar));
     } else {
       super.createCompileToJarStep(
           context,

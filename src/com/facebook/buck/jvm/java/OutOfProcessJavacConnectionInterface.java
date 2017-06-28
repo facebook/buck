@@ -48,7 +48,7 @@ public interface OutOfProcessJavacConnectionInterface {
       List<Map<String, Object>> pluginFields,
       String javaCompilationModeAsString);
 
-  int buildSourceAbiJar(int invocationId, String abiJarPath, String classUsageFilePath);
+  int buildSourceAbiJar(int invocationId, String abiJarPath);
 
   int buildClasses(int invocationId);
 
