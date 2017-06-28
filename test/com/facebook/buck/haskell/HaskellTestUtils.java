@@ -16,22 +16,46 @@
 
 package com.facebook.buck.haskell;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class HaskellTestUtils {
+class HaskellTestUtils {
 
   private HaskellTestUtils() {}
 
   /** Assume that we can find a haskell compiler on the system. */
-  public static void assumeSystemCompiler() {
+  static HaskellVersion assumeSystemCompiler() throws IOException, InterruptedException {
     HaskellBuckConfig fakeConfig =
         new HaskellBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     Optional<Path> compilerOptional = fakeConfig.getSystemCompiler();
     assumeTrue(compilerOptional.isPresent());
+
+    // Find the major version of the haskell compiler.
+    ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
+    Process process = Runtime.getRuntime().exec(cmd.toArray(new String[cmd.size()]));
+    String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
+    Pattern versionPattern = Pattern.compile(".*version ([0-9]+)(?:[.][0-9]+(?:[.][0-9]+)?)?");
+    Matcher matcher = versionPattern.matcher(output.trim());
+    assertTrue(
+        String.format(
+            "Cannot match version from `ghc --version` output (using %s): %s",
+            versionPattern, output),
+        matcher.matches());
+    return HaskellVersion.of(Integer.valueOf(matcher.group(1)));
+  }
+
+  static String formatHaskellConfig(HaskellVersion version) {
+    return String.format("[haskell]\ncompiler_major_version = %s", version.getMajorVersion());
   }
 }
