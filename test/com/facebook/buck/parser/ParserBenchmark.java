@@ -141,6 +141,6 @@ public class ParserBenchmark {
         executorService,
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                x -> true, BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
+                BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
   }
 }

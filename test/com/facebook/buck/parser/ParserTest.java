@@ -72,7 +72,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -477,7 +476,7 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets =
         filterAllTargetsInProject(
-            parser, cell, x -> true, BuckEventBusForTests.newInstance(), executorService);
+            parser, cell, BuckEventBusForTests.newInstance(), executorService);
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(
@@ -490,8 +489,8 @@ public class ParserTest {
   @Test
   public void whenAllRulesAreRequestedMultipleTimesThenRulesAreOnlyParsedOnce()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -500,13 +499,13 @@ public class ParserTest {
   public void whenNotifiedOfNonPathEventThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Process event.
     parser.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -515,13 +514,13 @@ public class ParserTest {
   @Test
   public void pathInvalidationWorksAfterOverflow() throws Exception {
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Send overflow event.
     parser.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -534,7 +533,7 @@ public class ParserTest {
             Paths.get("java/com/facebook/Something.java")));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Test that the third parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 3, counter.calls);
@@ -553,10 +552,10 @@ public class ParserTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1045,7 +1044,7 @@ public class ParserTest {
   @Test
   public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     BuckConfig config =
         FakeBuckConfig.builder()
@@ -1057,7 +1056,7 @@ public class ParserTest {
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     assertEquals("Should have invalidated cache.", 2, counter.calls);
   }
@@ -1065,7 +1064,7 @@ public class ParserTest {
   @Test
   public void whenAllRulesAreRequestedWithDifferingCellsThenRulesAreParsedOnce()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     assertEquals("Should have parsed once.", 1, counter.calls);
 
@@ -1082,7 +1081,7 @@ public class ParserTest {
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
@@ -1090,7 +1089,7 @@ public class ParserTest {
   @Test
   public void whenAllRulesThenSingleTargetRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
     BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
     parser.buildTargetGraph(eventBus, cell, false, executorService, ImmutableList.of(foo));
 
@@ -1102,7 +1101,7 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
     parser.buildTargetGraph(eventBus, cell, false, executorService, ImmutableList.of(foo));
-    filterAllTargetsInProject(parser, cell, x -> true, eventBus, executorService);
+    filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     assertEquals("Should have replaced build rules", 1, counter.calls);
   }
@@ -1666,9 +1665,9 @@ public class ParserTest {
         executorService,
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                x -> true, BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
+                BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
             TargetNodePredicateSpec.of(
-                x -> true, BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
+                BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
         SpeculativeParsing.of(true),
         ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
   }
@@ -1693,9 +1692,9 @@ public class ParserTest {
             executorService,
             ImmutableList.of(
                 TargetNodePredicateSpec.of(
-                    x -> true, BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
+                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
-                    x -> true, BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
+                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
             SpeculativeParsing.of(true),
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
@@ -1708,9 +1707,9 @@ public class ParserTest {
             executorService,
             ImmutableList.of(
                 TargetNodePredicateSpec.of(
-                    x -> true, BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
+                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
-                    x -> true, BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))),
+                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))),
             SpeculativeParsing.of(true),
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
@@ -2122,16 +2121,10 @@ public class ParserTest {
    * action graph using all build files inside the given project root and returns an optionally
    * filtered set of build targets.
    *
-   * @param filter if specified, applied to each rule in rules. All matching rules will be included
-   *     in the List returned by this method. If filter is null, then this method returns null.
    * @return The build targets in the project filtered by the given filter.
    */
   public static synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
-      Parser parser,
-      Cell cell,
-      Predicate<TargetNode<?, ?>> filter,
-      BuckEventBus buckEventBus,
-      ListeningExecutorService executor)
+      Parser parser, Cell cell, BuckEventBus buckEventBus, ListeningExecutorService executor)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     return FluentIterable.from(
             parser
@@ -2142,11 +2135,9 @@ public class ParserTest {
                     executor,
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
-                            filter,
                             BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
                 .getTargetGraph()
                 .getNodes())
-        .filter(filter)
         .transform(TargetNode::getBuildTarget)
         .toSet();
   }

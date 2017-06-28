@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
@@ -408,10 +407,9 @@ public class TestCommand extends BuildCommand {
                       pool.getExecutor(),
                       ImmutableList.of(
                           TargetNodePredicateSpec.of(
-                              input ->
-                                  Description.getBuildRuleType(input.getDescription()).isTestRule(),
-                              BuildFileSpec.fromRecursivePath(
-                                  Paths.get(""), params.getCell().getRoot()))),
+                                  BuildFileSpec.fromRecursivePath(
+                                      Paths.get(""), params.getCell().getRoot()))
+                              .withOnlyTests(true)),
                       parserConfig.getDefaultFlavorsMode());
           targetGraphAndBuildTargets =
               targetGraphAndBuildTargets.withBuildTargets(ImmutableSet.of());

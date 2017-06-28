@@ -410,7 +410,6 @@ public class TargetsCommand extends AbstractCommand {
                   executor,
                   ImmutableList.of(
                       TargetNodePredicateSpec.of(
-                          x -> true,
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""), params.getCell().getRoot()))),
                   parserConfig.getDefaultFlavorsMode());
@@ -508,7 +507,6 @@ public class TargetsCommand extends AbstractCommand {
                           executor,
                           ImmutableList.of(
                               TargetNodePredicateSpec.of(
-                                  x -> true,
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))),
                           parserConfig.getDefaultFlavorsMode())

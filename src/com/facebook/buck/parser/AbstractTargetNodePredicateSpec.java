@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicate;
@@ -31,12 +32,14 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
 
-  @Value.Parameter
-  public abstract Predicate<? super TargetNode<?, ?>> getPredicate();
-
   @Override
   @Value.Parameter
   public abstract BuildFileSpec getBuildFileSpec();
+
+  @Value.Default
+  public boolean onlyTests() {
+    return false;
+  }
 
   @Override
   public TargetType getTargetType() {
@@ -50,7 +53,7 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
         ImmutableMap.builder();
 
     for (TargetNode<?, ?> node : nodes) {
-      if (getPredicate().apply(node)) {
+      if (!onlyTests() || Description.getBuildRuleType(node.getDescription()).isTestRule()) {
         resultBuilder.put(node.getBuildTarget(), Optional.of(node));
       }
     }

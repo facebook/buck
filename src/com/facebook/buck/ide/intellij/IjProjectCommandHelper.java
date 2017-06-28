@@ -217,7 +217,7 @@ public class IjProjectCommandHelper {
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      x -> true, BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());

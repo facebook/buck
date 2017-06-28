@@ -108,7 +108,6 @@ final class JavaBuildGraphProcessor {
                     executorService,
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
-                            x -> true,
                             BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
                 .getTargetGraph();
       } catch (BuildTargetException | BuildFileParseException e) {
