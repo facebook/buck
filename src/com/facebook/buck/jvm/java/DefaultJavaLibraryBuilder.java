@@ -311,7 +311,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean shouldBuildAbiFromSource() {
-      return isCompilingJava() && sourceAbisEnabled() && argsAllowSourceAbis();
+      return isCompilingJava() && !srcs.isEmpty() && sourceAbisEnabled() && argsAllowSourceAbis();
     }
 
     private boolean isCompilingJava() {
