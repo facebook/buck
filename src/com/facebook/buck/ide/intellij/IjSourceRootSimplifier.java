@@ -19,7 +19,9 @@ package com.facebook.buck.ide.intellij;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.ide.intellij.lang.java.JavaPackagePathCache;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
+import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
@@ -295,16 +297,22 @@ public class IjSourceRootSimplifier {
         return Optional.empty();
       }
 
+      // If it is a resource folder, we use the same resources_root as its children
+      IJFolderFactory folderFactory = typeForMerging.getFolderFactory();
+      if (typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_RESOURCE_FOLDER)) {
+        folderFactory = ((JavaResourceFolder)childrenToMerge.get(0))
+            .getFactoryWithSameResourcesRoot();
+      }
+
       IjFolder mergedFolder =
-          typeForMerging
-              .getFolderFactory()
-              .create(
-                  currentPath,
-                  true,
-                  childrenToMerge
-                      .stream()
-                      .flatMap(folder -> folder.getInputs().stream())
-                      .collect(MoreCollectors.toImmutableSortedSet()));
+          folderFactory
+            .create(
+                currentPath,
+                true,
+                childrenToMerge
+                    .stream()
+                    .flatMap(folder -> folder.getInputs().stream())
+                    .collect(MoreCollectors.toImmutableSortedSet()));
 
       removeFolders(childrenToMerge);
       mergePathsMap.put(currentPath, mergedFolder);

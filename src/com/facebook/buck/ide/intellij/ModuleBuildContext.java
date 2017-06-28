@@ -143,14 +143,23 @@ public class ModuleBuildContext {
     Path path = folder.getPath();
     IjFolder otherFolder = sourceFoldersMergeMap.get(path);
     if (otherFolder != null) {
-      folder = mergeAllowingTestToBePromotedToSource(folder, otherFolder);
+      folder = mergePromotingToSourceIfDifferent(folder, otherFolder);
     }
     sourceFoldersMergeMap.put(path, folder);
   }
 
-  private IjFolder mergeAllowingTestToBePromotedToSource(IjFolder from, IjFolder to) {
-    if ((from instanceof TestFolder && to instanceof SourceFolder)
-        || (to instanceof TestFolder && from instanceof SourceFolder)) {
+  /**
+   * Merges the two folders according to the following rules:
+   * - Folders of the same type merge normally
+   * - A folder that contains both regular and test sources should become a source folder
+   * - A folder that contains any kind of source and any kind of resource will not work correctly if
+   *   the resources_root is different from the src_root, since buck allows individual files to be
+   *   marked as sources/resources, but IntelliJ's granularity is only at the folder level. Thus,
+   *   we try to handle this by promoting these to source folders, but there isn't really a good
+   *   way around it.
+   */
+  private IjFolder mergePromotingToSourceIfDifferent(IjFolder from, IjFolder to) {
+    if (!from.getClass().equals(to.getClass())) {
       return new SourceFolder(
           to.getPath(),
           from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),

@@ -30,6 +30,8 @@ import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -479,13 +481,19 @@ public class IjProjectTemplateDataPreparer {
 
     private IjSourceFolder createSourceFolder(
         IjFolder folder, Path moduleLocationBasePath, @Nullable String packagePrefix) {
+      Path relativeOutputPath = (folder instanceof JavaResourceFolder)
+          ? ((JavaResourceFolder) folder).getRelativeOutputPath().orElse(null)
+          : null;
       return IjSourceFolder.builder()
           .setType(folder.getIjName())
           .setUrl(
               IjProjectPaths.toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
           .setPath(folder.getPath())
           .setIsTestSource(folder instanceof TestFolder)
-          .setIsAndroidResources(folder instanceof AndroidResourceFolder)
+          .setIsResourceFolder(
+              (folder instanceof AndroidResourceFolder) || (folder instanceof JavaResourceFolder))
+          .setResourceFolderType(ResourceFolderType.JAVA_RESOURCE)
+          .setRelativeOutputPath(relativeOutputPath)
           .setPackagePrefix(packagePrefix)
           .build();
     }

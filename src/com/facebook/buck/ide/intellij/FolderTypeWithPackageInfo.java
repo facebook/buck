@@ -18,6 +18,7 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 
@@ -25,7 +26,8 @@ public enum FolderTypeWithPackageInfo {
   SOURCE_FOLDER_WITH_PACKAGE_INFO(true, SourceFolder.FACTORY, SourceFolder.class),
   SOURCE_FOLDER_WITHOUT_PACKAGE_INFO(false, SourceFolder.FACTORY, SourceFolder.class),
   TEST_FOLDER_WITH_PACKAGE_INFO(true, TestFolder.FACTORY, TestFolder.class),
-  TEST_FOLDER_WITHOUT_PACKAGE_INFO(false, TestFolder.FACTORY, TestFolder.class);
+  TEST_FOLDER_WITHOUT_PACKAGE_INFO(false, TestFolder.FACTORY, TestFolder.class),
+  JAVA_RESOURCE_FOLDER(false, JavaResourceFolder.getFactoryWithResourcesRoot(null), JavaResourceFolder.class);
 
   public static final int FOLDER_TYPES_COUNT = values().length;
 
@@ -51,7 +53,9 @@ public enum FolderTypeWithPackageInfo {
       return folder.getWantsPackagePrefix()
           ? TEST_FOLDER_WITH_PACKAGE_INFO
           : TEST_FOLDER_WITHOUT_PACKAGE_INFO;
-    } else {
+    } else if (folder instanceof JavaResourceFolder) {
+      return JAVA_RESOURCE_FOLDER;
+    } else  {
       throw new IllegalArgumentException(String.format("Cannot detect folder type: %s", folder));
     }
   }

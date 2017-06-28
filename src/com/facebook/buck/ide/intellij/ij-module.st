@@ -53,14 +53,20 @@
       <%generatedFolder.type% url="%generatedFolder.url%" %\\%
         isTestSource="%generatedFolder.isTestSource%" generated="true" %\\%
         %if(generatedFolder.packagePrefix)%packagePrefix="%generatedFolder.packagePrefix%" %endif%%\\%
-        %if(generatedFolder.isAndroidResources)%type="java-resource" %endif%/>
+        %if(generatedFolder.isResourceFolder)%%\\%
+          type="%generatedFolder.resourceFolderType%" %\\%
+          %if(generatedFolder.relativeOutputPath)%relativeOutputPath="%generatedFolder.relativeOutputPath%" %endif%%\\%
+        %endif%/>
     </content>
 }%    <content url="%contentRoot.url%">
 %contentRoot.folders:{folder |
       <%folder.type% url="%folder.url%" %\\%
         isTestSource="%folder.isTestSource%" %\\%
         %if(folder.packagePrefix)%packagePrefix="%folder.packagePrefix%" %endif%%\\%
-        %if(folder.isAndroidResources)%type="java-resource" %endif%/>
+        %if(folder.isResourceFolder)%%\\%
+          type="%folder.resourceFolderType%" %\\%
+          %if(folder.relativeOutputPath)%relativeOutputPath="%folder.relativeOutputPath%" %endif%%\\%
+        %endif%/>
 }%    </content>
 %if(sdk)%    <orderEntry type="jdk" jdkName="%sdk%" jdkType="%sdkType%" />
 %else%    <orderEntry type="inheritedJdk" />
