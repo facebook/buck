@@ -245,12 +245,14 @@ public class JavaLibraryRules {
     return abiRules.build();
   }
 
-  public static ImmutableSortedSet<SourcePath> getAbiSourcePaths(
+  public static ZipArchiveDependencySupplier getAbiClasspath(
       BuildRuleResolver resolver, Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
-    return getAbiRules(resolver, inputs)
-        .stream()
-        .map(BuildRule::getSourcePathToOutput)
-        .collect(MoreCollectors.toImmutableSortedSet());
+    return new ZipArchiveDependencySupplier(
+        new SourcePathRuleFinder(resolver),
+        getAbiRules(resolver, inputs)
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSortedSet()));
   }
 
   /**

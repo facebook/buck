@@ -23,8 +23,8 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Preconditions;
@@ -49,10 +49,10 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       SourcePathRuleFinder ruleFinder,
       Javac javac,
       JavacOptions javacOptions,
-      ImmutableSortedSet<SourcePath> abiInputs,
+      ZipArchiveDependencySupplier abiClasspath,
       AndroidBuildConfig androidBuildConfig) {
     super(
-        params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiInputs)),
+        params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
         ruleFinder,
         /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
@@ -65,7 +65,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* providedDeps */ ImmutableSortedSet.of(),
         /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
             androidBuildConfig.getSourcePathToOutput()),
-        abiInputs,
+        abiClasspath,
         HasJavaAbi.getClassAbiJar(params.getBuildTarget()),
         /* trackClassUsage */ javacOptions.trackClassUsage(),
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),

@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -94,7 +95,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-      ImmutableSortedSet<SourcePath> abiInputs,
+      ZipArchiveDependencySupplier abiClasspath,
       @Nullable BuildTarget abiJar,
       JavacOptions javacOptions,
       boolean trackClassUsage,
@@ -116,7 +117,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarExportedDeps,
         fullJarProvidedDeps,
         compileTimeClasspathSourcePaths,
-        abiInputs,
+        abiClasspath,
         abiJar,
         trackClassUsage,
         compileStepFactory,
@@ -220,7 +221,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             fullJarExportedDeps,
             fullJarProvidedDeps,
             getFinalCompileTimeClasspathSourcePaths(),
-            getAbiInputs(),
+            getAbiClasspath(),
             getAbiJar(),
             Preconditions.checkNotNull(javacOptions),
             getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),

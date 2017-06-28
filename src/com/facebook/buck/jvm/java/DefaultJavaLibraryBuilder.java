@@ -226,7 +226,7 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
-    @Nullable private ImmutableSortedSet<SourcePath> abiInputs;
+    @Nullable private ZipArchiveDependencySupplier abiClasspath;
     @Nullable private CompileToJarStepFactory compileStepFactory;
     @Nullable private BuildTarget abiJar;
 
@@ -244,7 +244,7 @@ public class DefaultJavaLibraryBuilder {
           fullJarExportedDeps,
           fullJarProvidedDeps,
           getFinalCompileTimeClasspathSourcePaths(),
-          getAbiInputs(),
+          getAbiClasspath(),
           getAbiJar(),
           trackClassUsage,
           getCompileStepFactory(),
@@ -417,13 +417,13 @@ public class DefaultJavaLibraryBuilder {
       return compileTimeClasspathAbiDeps;
     }
 
-    protected final ImmutableSortedSet<SourcePath> getAbiInputs()
+    protected final ZipArchiveDependencySupplier getAbiClasspath()
         throws NoSuchBuildTargetException {
-      if (abiInputs == null) {
-        abiInputs = buildAbiInputs();
+      if (abiClasspath == null) {
+        abiClasspath = buildAbiClasspath();
       }
 
-      return abiInputs;
+      return abiClasspath;
     }
 
     protected final CompileToJarStepFactory getCompileStepFactory() {
@@ -497,11 +497,13 @@ public class DefaultJavaLibraryBuilder {
       return JavaLibraryRules.getAbiRules(buildRuleResolver, getCompileTimeClasspathFullDeps());
     }
 
-    protected ImmutableSortedSet<SourcePath> buildAbiInputs() throws NoSuchBuildTargetException {
-      return getCompileTimeClasspathAbiDeps()
-          .stream()
-          .map(BuildRule::getSourcePathToOutput)
-          .collect(MoreCollectors.toImmutableSortedSet());
+    protected ZipArchiveDependencySupplier buildAbiClasspath() throws NoSuchBuildTargetException {
+      return new ZipArchiveDependencySupplier(
+          ruleFinder,
+          getCompileTimeClasspathAbiDeps()
+              .stream()
+              .map(BuildRule::getSourcePathToOutput)
+              .collect(MoreCollectors.toImmutableSortedSet()));
     }
 
     protected CompileToJarStepFactory buildCompileStepFactory() {

@@ -199,7 +199,7 @@ public class AndroidPrebuiltAarDescription
             javacOptions,
             new BootClasspathAppender()),
         /* exportedDeps */ javaDeps,
-        JavaLibraryRules.getAbiSourcePaths(buildRuleResolver, androidLibraryParams.getBuildDeps()));
+        JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()));
   }
 
   @BuckStyleImmutable

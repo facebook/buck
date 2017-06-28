@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
+import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -51,9 +52,10 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       JavacOptions javacOptions,
       CompileToJarStepFactory compileStepFactory,
       Iterable<PrebuiltJar> exportedDeps,
-      ImmutableSortedSet<SourcePath> abiInputs) {
+      ZipArchiveDependencySupplier abiClasspath) {
     super(
-        androidLibraryParams.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiInputs)),
+        androidLibraryParams.copyAppendingExtraDeps(
+            ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
         ruleFinder,
         /* srcs */ ImmutableSortedSet.of(),
@@ -67,7 +69,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         /* compileTimeClasspathDeps */ ImmutableSortedSet.of(prebuiltJar.getSourcePathToOutput()),
-        abiInputs,
+        abiClasspath,
         HasJavaAbi.getClassAbiJar(androidLibraryParams.getBuildTarget()),
         javacOptions,
         /* trackClassUsage */ false,

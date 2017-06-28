@@ -165,7 +165,7 @@ public class AndroidBuildConfigDescription
         ruleFinder,
         javac,
         javacOptions,
-        JavaLibraryRules.getAbiSourcePaths(ruleResolver, javaLibraryParams.getBuildDeps()),
+        JavaLibraryRules.getAbiClasspath(ruleResolver, javaLibraryParams.getBuildDeps()),
         androidBuildConfig);
   }
 

@@ -170,7 +170,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-      ImmutableSortedSet<SourcePath> abiInputs,
+      ZipArchiveDependencySupplier abiClasspath,
       @Nullable BuildTarget abiJar,
       boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
@@ -216,7 +216,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       depFileRelativePath =
           getUsedClassesFilePath(params.getBuildTarget(), params.getProjectFilesystem());
     }
-    this.abiClasspath = new ZipArchiveDependencySupplier(ruleFinder, abiInputs);
+    this.abiClasspath = abiClasspath;
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {
