@@ -68,6 +68,7 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
   protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
+  protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
 
@@ -114,7 +115,8 @@ public class DefaultJavaLibraryBuilder {
         .setProvidedDeps(args.getProvidedDeps())
         .setTests(args.getTests())
         .setManifestFile(args.getManifestFile())
-        .setMavenCoords(args.getMavenCoords());
+        .setMavenCoords(args.getMavenCoords())
+        .setSourceAbisAllowed(args.getGenerateAbiFromSource().orElse(sourceAbisAllowed));
   }
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
@@ -124,6 +126,11 @@ public class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setJavacOptionsAmender(JavacOptionsAmender amender) {
     javacOptionsAmender = amender;
+    return this;
+  }
+
+  public DefaultJavaLibraryBuilder setSourceAbisAllowed(boolean sourceAbisAllowed) {
+    this.sourceAbisAllowed = sourceAbisAllowed;
     return this;
   }
 
@@ -346,7 +353,7 @@ public class DefaultJavaLibraryBuilder {
       return isCompilingJava()
           && !srcs.isEmpty()
           && sourceAbisEnabled()
-          && argsAllowSourceAbis()
+          && sourceAbisAllowed
           && postprocessClassesCommands.isEmpty();
     }
 
@@ -356,10 +363,6 @@ public class DefaultJavaLibraryBuilder {
 
     private boolean sourceAbisEnabled() {
       return javaBuckConfig != null && javaBuckConfig.shouldGenerateAbisFromSource();
-    }
-
-    private boolean argsAllowSourceAbis() {
-      return args == null || args.getGenerateAbiFromSource().orElse(true);
     }
 
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {

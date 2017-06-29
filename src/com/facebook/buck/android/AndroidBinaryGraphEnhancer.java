@@ -286,6 +286,7 @@ public class AndroidBinaryGraphEnhancer {
               .setSrcs(
                   ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
               .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+              .setSourceAbisAllowed(false)
               .build();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
@@ -358,6 +359,7 @@ public class AndroidBinaryGraphEnhancer {
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
+            .setSourceAbisAllowed(false)
             .build();
     ruleResolver.addToIndex(compileUberRDotJava);
 
