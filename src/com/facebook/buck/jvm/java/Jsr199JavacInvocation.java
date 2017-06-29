@@ -121,6 +121,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
       javacTask.enter();
 
+      debugLogDiagnostics();
+      if (!buildSuccessful()) {
+        reportDiagnosticsToUser();
+        return 1;
+      }
+
       return 0;
     } catch (IOException e) {
       LOG.error(e);
@@ -161,44 +167,15 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
       javacTask.generate();
-      boolean isSuccess =
-          diagnostics
-                  .getDiagnostics()
-                  .stream()
-                  .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
-                  .count()
-              == 0;
-      for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-        LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
-      }
 
-      List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
-          DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+      debugLogDiagnostics();
 
-      if (isSuccess) {
+      if (buildSuccessful()) {
         context
             .getUsedClassesFileWriter()
             .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
       } else {
-        if (context.getVerbosity().shouldPrintStandardInformation()) {
-          int numErrors = 0;
-          int numWarnings = 0;
-          for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
-            Diagnostic.Kind kind = diagnostic.getKind();
-            if (kind == Diagnostic.Kind.ERROR) {
-              ++numErrors;
-            } else if (kind == Diagnostic.Kind.WARNING
-                || kind == Diagnostic.Kind.MANDATORY_WARNING) {
-              ++numWarnings;
-            }
-
-            context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
-          }
-
-          if (numErrors > 0 || numWarnings > 0) {
-            context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
-          }
-        }
+        reportDiagnosticsToUser();
         return 1;
       }
 
@@ -224,6 +201,45 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       // be using it.
       BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
     }
+  }
+
+  private void debugLogDiagnostics() {
+    for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+      LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
+    }
+  }
+
+  private void reportDiagnosticsToUser() {
+    if (context.getVerbosity().shouldPrintStandardInformation()) {
+      List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
+          DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+
+      int numErrors = 0;
+      int numWarnings = 0;
+      for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
+        Diagnostic.Kind kind = diagnostic.getKind();
+        if (kind == Diagnostic.Kind.ERROR) {
+          ++numErrors;
+        } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
+          ++numWarnings;
+        }
+
+        context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
+      }
+
+      if (numErrors > 0 || numWarnings > 0) {
+        context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
+      }
+    }
+  }
+
+  private boolean buildSuccessful() {
+    return diagnostics
+            .getDiagnostics()
+            .stream()
+            .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+            .count()
+        == 0;
   }
 
   private void addCloseable(Object maybeCloseable) {
