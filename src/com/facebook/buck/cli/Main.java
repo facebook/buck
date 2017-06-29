@@ -1428,7 +1428,7 @@ public final class Main {
    */
   private static long getBuckPID() {
     String pid = ManagementFactory.getRuntimeMXBean().getName();
-    return (pid != null && pid.matches("^\\d+@\\w+$")) ? Long.parseLong(pid.split("@")[0]) : 0L;
+    return (pid != null && pid.matches("^\\d+@.*$")) ? Long.parseLong(pid.split("@")[0]) : 0L;
   }
 
   private static BuildId getBuildId(Optional<NGContext> context) {
