@@ -729,6 +729,52 @@ public class InterCellIntegrationTest {
     assertEquals(expected, actual);
   }
 
+  @Test
+  public void testCrossCellHandlesSQLiteMetadataConsistently() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    // This test case verifies that building the same target from different cells doesn't cause the
+    // SQLite metadata store and filesystem to get out of sync.
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/metadata/primary", "inter-cell/metadata/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+
+    // Set up the remaining cells
+    registerCell(primary, "primary", primary);
+    registerCell(secondary, "primary", primary);
+    registerCell(secondary, "secondary", secondary);
+
+    TestDataHelper.overrideBuckconfig(
+        primary, ImmutableMap.of("build", ImmutableMap.of("metadata_storage", "sqlite")));
+    TestDataHelper.overrideBuckconfig(
+        secondary, ImmutableMap.of("build", ImmutableMap.of("metadata_storage", "sqlite")));
+
+    // Build in the root cell.  This populates the db with //:hello
+    // entries, and the filesystem with RECORDED_PATHS metadata at paths like:
+    // bin/.hello/metadata/RECORDED_PATHS
+    primary.runBuckBuild("//:hello", "-c", "build.metadata_storage=sqlite").assertSuccess();
+
+    // Build in the secondary cell.  This should overwrite the cell1 db with entries like //:hello,
+    // and overwrite the filesystem with bin/.hello/metadata/RECORDED_PATHS.  Note: it's important
+    // that the DB keys are the same as in the previous step!  If we use fully-qualified target
+    // names, the rows can get out of sync.
+    secondary.runBuckBuild("primary//:hello").assertSuccess();
+
+    // Introduce changes to both files, including a compile error, and build again.  The compiler error will cause
+    // the build to delete the //:hello rows from the DB, and delete .hello/metadata/RECORDED_PATHS
+    String hello = primary.getFileContents("hello.cpp");
+    String main = primary.getFileContents("main.cpp");
+    primary.writeContentsToPath(hello + "compile error\n", "hello.cpp");
+    primary.writeContentsToPath(main + "// foo\n", "main.cpp");
+
+    primary.runBuckBuild("//:hello").assertFailure();
+
+    // Revert the compile error, and build in the secondary.
+    primary.writeContentsToPath(hello, "hello.cpp");
+    secondary.runBuckBuild("primary//:hello").assertSuccess();
+  }
+
   private static String sortLines(String input) {
     return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
         .sorted()

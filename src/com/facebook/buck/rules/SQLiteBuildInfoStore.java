@@ -83,7 +83,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   @Override
   public synchronized Optional<String> readMetadata(BuildTarget buildTarget, String key) {
     try {
-      selectStmt.setString(1, buildTarget.getFullyQualifiedName());
+      selectStmt.setString(1, cellRelativeName(buildTarget));
       selectStmt.setString(2, key);
       try (ResultSet rs = selectStmt.executeQuery()) {
         if (!rs.next()) {
@@ -102,7 +102,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
       throws IOException {
     try {
       for (Map.Entry<String, String> e : metadata.entrySet()) {
-        updateStmt.setString(1, buildTarget.getFullyQualifiedName());
+        updateStmt.setString(1, cellRelativeName(buildTarget));
         updateStmt.setString(2, e.getKey());
         updateStmt.setString(3, e.getValue());
         updateStmt.addBatch();
@@ -116,10 +116,14 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   @Override
   public synchronized void deleteMetadata(BuildTarget buildTarget) throws IOException {
     try {
-      deleteStmt.setString(1, buildTarget.getFullyQualifiedName());
+      deleteStmt.setString(1, cellRelativeName(buildTarget));
       deleteStmt.executeUpdate();
     } catch (SQLException e) {
       throw new IOException(e);
     }
+  }
+
+  private String cellRelativeName(BuildTarget buildTarget) {
+    return buildTarget.withoutCell().getFullyQualifiedName();
   }
 }
