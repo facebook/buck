@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.SettableFuture;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -48,6 +49,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   private JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
   @Nullable private Path abiJar;
+  @Nullable private SettableFuture<Void> abiFuture;
 
   public JavacToJarStepFactory(
       Javac javac, JavacOptions javacOptions, JavacOptionsAmender amender) {
@@ -56,7 +58,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     this.amender = amender;
   }
 
-  public void setCompileAbi(Path abiJar) {
+  public void setCompileAbi(SettableFuture<Void> future, Path abiJar) {
+    this.abiFuture = future;
     this.abiJar = abiJar;
   }
 
@@ -98,7 +101,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             filesystem,
             new ClasspathChecker(),
             Optional.empty(),
-            abiJar));
+            abiJar,
+            abiFuture));
   }
 
   @Override
@@ -208,7 +212,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
                       entriesToJar,
                       mainClass,
                       manifestFile)),
-              abiJar));
+              abiJar,
+              abiFuture));
     } else {
       super.createCompileToJarStep(
           context,

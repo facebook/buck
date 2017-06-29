@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -30,12 +31,16 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -101,7 +106,8 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.libraryOutputs =
           new RuleOutputs(
-              libraryTarget, Optional.of(DefaultJavaLibrary.getOutputJarPath(target, filesystem)));
+              libraryTarget,
+              Optional.of(DefaultJavaLibrary.getOutputJarPath(libraryTarget, filesystem)));
       if (!srcs.isEmpty() && depFileRelativePath != null) {
         libraryOutputs.addArtifact(depFileRelativePath);
       }
@@ -169,45 +175,96 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
       ExecutionContext executionContext,
       StepRunner stepRunner,
       ListeningExecutorService service) {
-    if (ruleOutputs.isAbi()) {
-      ((JavacToJarStepFactory) compileStepFactory)
-          .setCompileAbi(filesystem.resolve(ruleOutputs.getOutputJar().get()));
+    // Here is the magic that allows us to generate the source ABI partway through compilation.
+    //
+    // When we have a source ABI, the library rule depends on its own ABI rule, and both share
+    // an instance of this class. The first caller of this method will be the ABI rule, and
+    // we will have it build both the ABI and the library. That first call will set the future
+    // field on both libraryOutputs and abiOutputs, so when the library later calls this, it will
+    // already have a future and won't start another build.
+    //
+    // When we don't have a source ABI, the library rule will be the first (and only) rule to call
+    // this method, and it will not build the ABI.
+    //
+    if (ruleOutputs.future == null) {
+      boolean buildAbiAndLibrary = ruleOutputs.isAbi();
+      SettableFuture<Void> abiFuture = SettableFuture.create();
+      if (buildAbiAndLibrary) {
+        // The JavacStep will complete this future after it builds the ABI, then continue on to
+        // build the full jar
+        Preconditions.checkNotNull(abiOutputs);
+        abiOutputs.future = abiFuture;
+        ((JavacToJarStepFactory) compileStepFactory)
+            .setCompileAbi(abiFuture, filesystem.resolve(abiOutputs.getOutputJar().get()));
+      }
+
+      libraryOutputs.future =
+          stepRunner.runStepsForBuildTarget(
+              executionContext,
+              () -> getBuildSteps(buildContext, buildableContext, buildAbiAndLibrary),
+              Optional.of(ruleOutputs.getTarget()),
+              service);
+
+      // If something fails, the library future will notice it. We must propagate the failure to
+      // the ABI future or else we'll hang.
+      if (buildAbiAndLibrary) {
+        Futures.addCallback(
+            libraryOutputs.future,
+            new FutureCallback<Void>() {
+              @Override
+              public void onSuccess(@Nullable Void result) {
+                // Do nothing
+              }
+
+              @Override
+              public void onFailure(Throwable t) {
+                abiFuture.setException(t);
+              }
+            });
+      }
     }
 
-    return stepRunner.runStepsForBuildTarget(
-        executionContext,
-        () -> getBuildSteps(buildContext, buildableContext, ruleOutputs),
-        Optional.of(ruleOutputs.getTarget()),
-        service);
+    ruleOutputs.recordArtifacts(buildableContext);
+
+    return Preconditions.checkNotNull(ruleOutputs.future);
   }
 
   private ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext, RuleOutputs ruleOutputs) {
+      BuildContext context, BuildableContext buildableContext, boolean buildAbiAndLibrary) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    if (buildAbiAndLibrary) {
+      Preconditions.checkNotNull(abiOutputs);
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.of(abiOutputs.getOutputJar().get().getParent())));
+    }
+
     JavaLibraryRules.addCompileToJarSteps(
-        ruleOutputs.getTarget(),
+        libraryOutputs.getTarget(),
         filesystem,
         context,
         buildableContext,
-        ruleOutputs.getOutputJar(),
+        libraryOutputs.getOutputJar(),
         ruleFinder,
         srcs,
         resources,
-        ruleOutputs.isAbi() ? ImmutableList.of() : postprocessClassesCommands,
+        postprocessClassesCommands,
         compileTimeClasspathSourcePaths,
-        !ruleOutputs.isAbi() && trackClassUsage,
-        ruleOutputs.isAbi() ? null : depFileRelativePath,
+        trackClassUsage,
+        depFileRelativePath,
         compileStepFactory,
         resourcesRoot,
         manifestFile,
         classesToRemoveFromJar,
         steps);
 
-    if (!ruleOutputs.isAbi()) {
-      JavaLibraryRules.addAccumulateClassNamesStep(
-          ruleOutputs.getTarget(), filesystem, ruleOutputs.getSourcePathToOutput(), context, steps);
-    }
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        libraryOutputs.getTarget(),
+        filesystem,
+        libraryOutputs.getSourcePathToOutput(),
+        context,
+        steps);
 
     return steps.build();
   }
@@ -218,6 +275,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
     private final HasJavaAbi.JarContentsSupplier jarContents;
     private final boolean isAbi;
     private final List<Path> artifactsToRecord = new ArrayList<>();
+    @Nullable private ListenableFuture<Void> future;
 
     public RuleOutputs(BuildTarget target, Optional<Path> outputJarPath) {
       this.target = target;
@@ -243,8 +301,6 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
         ExecutionContext executionContext,
         StepRunner stepRunner,
         ListeningExecutorService service) {
-      recordArtifacts(buildableContext);
-
       return JavaAbiAndLibraryWorker.this.buildLocally(
           this, buildContext, buildableContext, executionContext, stepRunner, service);
     }
@@ -276,7 +332,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
 
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      return JavaAbiAndLibraryWorker.this.getBuildSteps(context, buildableContext, this);
+      return JavaAbiAndLibraryWorker.this.getBuildSteps(context, buildableContext, isAbi);
     }
   }
 }

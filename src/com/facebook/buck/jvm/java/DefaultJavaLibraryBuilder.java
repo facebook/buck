@@ -251,7 +251,16 @@ public class DefaultJavaLibraryBuilder {
 
     protected final JavaAbiAndLibraryWorker getWorker() throws NoSuchBuildTargetException {
       if (worker == null) {
-        worker = buildWorker();
+        if (HasJavaAbi.isLibraryTarget(initialParams.getBuildTarget()) && willProduceSourceAbi()) {
+          CalculateAbiFromSource abiRule =
+              (CalculateAbiFromSource)
+                  buildRuleResolver.requireRule(
+                      HasJavaAbi.getSourceAbiJar(initialParams.getBuildTarget()));
+
+          worker = abiRule.getWorker();
+        } else {
+          worker = buildWorker();
+        }
       }
 
       return worker;
@@ -327,6 +336,10 @@ public class DefaultJavaLibraryBuilder {
 
     private boolean willProduceOutputJar() {
       return !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent();
+    }
+
+    private boolean willProduceSourceAbi() {
+      return willProduceOutputJar() && shouldBuildAbiFromSource();
     }
 
     private boolean shouldBuildAbiFromSource() {
@@ -445,6 +458,12 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps = getCompileTimeClasspathAbiDeps();
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
       ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
+      if (HasJavaAbi.isLibraryTarget(initialParams.getBuildTarget()) && willProduceSourceAbi()) {
+        declaredDepsBuilder.add(
+            buildRuleResolver.requireRule(
+                HasJavaAbi.getSourceAbiJar(initialParams.getBuildTarget())));
+      }
+
       if (compileAgainstAbis) {
         declaredDepsBuilder.addAll(
             getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));

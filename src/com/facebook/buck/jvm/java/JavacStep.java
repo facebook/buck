@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -74,6 +75,8 @@ public class JavacStep implements Step {
 
   @Nullable private final Path abiJar;
 
+  @Nullable private final SettableFuture<Void> abiFuture;
+
   public JavacStep(
       Path outputDirectory,
       ClassUsageFileWriter usedClassesFileWriter,
@@ -88,7 +91,8 @@ public class JavacStep implements Step {
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
       Optional<DirectToJarOutputSettings> directToJarOutputSettings,
-      @Nullable Path abiJar) {
+      @Nullable Path abiJar,
+      @Nullable SettableFuture<Void> abiFuture) {
     this.outputDirectory = outputDirectory;
     this.usedClassesFileWriter = usedClassesFileWriter;
     this.workingDirectory = workingDirectory;
@@ -103,6 +107,7 @@ public class JavacStep implements Step {
     this.classpathChecker = classpathChecker;
     this.directToJarOutputSettings = directToJarOutputSettings;
     this.abiJar = abiJar;
+    this.abiFuture = abiFuture;
   }
 
   @Override
@@ -158,7 +163,7 @@ public class JavacStep implements Step {
                 .stream()
                 .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
                 .collect(Collectors.toList()));
-    int declaredDepsBuildResult;
+    int declaredDepsBuildResult = 0;
     String firstOrderStdout;
     String firstOrderStderr;
     Optional<String> returnedStderr;
@@ -172,10 +177,14 @@ public class JavacStep implements Step {
             pathToSrcsList,
             workingDirectory,
             javacOptions.getCompilationMode())) {
-      if (abiJar != null) {
+      if (abiFuture != null) {
         declaredDepsBuildResult =
             invocation.buildSourceAbiJar(filesystem.resolve(Preconditions.checkNotNull(abiJar)));
-      } else {
+        if (declaredDepsBuildResult == 0) {
+          abiFuture.set(null);
+        }
+      }
+      if (declaredDepsBuildResult == 0) {
         declaredDepsBuildResult = invocation.buildClasses();
       }
     }
@@ -248,7 +257,7 @@ public class JavacStep implements Step {
   public String getShortName() {
     String name;
     if (abiJar != null) {
-      name = "calculate_abi_from_source";
+      name = "javac_abi_and_full_jars";
     } else if (directToJarOutputSettings.isPresent()) {
       name = "javac_jar";
     } else {

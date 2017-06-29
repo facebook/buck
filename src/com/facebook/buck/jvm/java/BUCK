@@ -200,6 +200,7 @@ java_immutables_library(
         "OutOfProcessJavacConnectionInterface.java",
         "OutOfProcessJdkProvidedInMemoryJavac.java",
         "OutOfProcessJsr199Javac.java",
+        "ResettableDiagnosticCollector.java",
         "ResolvedJavacPluginProperties.java",
         "StandardJavaFileManagerFactory.java",
         "TracingProcessorWrapper.java",

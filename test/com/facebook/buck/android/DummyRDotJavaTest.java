@@ -153,6 +153,7 @@ public class DummyRDotJavaTest {
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
                         /* directToJarOutputSettings */ Optional.empty(),
+                        null,
                         null)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))

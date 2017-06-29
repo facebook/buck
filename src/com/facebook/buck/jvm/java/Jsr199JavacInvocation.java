@@ -53,7 +53,6 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -69,7 +68,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final JavacCompilationMode compilationMode;
-  private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+  private final ResettableDiagnosticCollector<JavaFileObject> diagnostics =
+      new ResettableDiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
   @Nullable private BuckJavacTaskProxy javacTask;
@@ -213,6 +213,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     if (context.getVerbosity().shouldPrintStandardInformation()) {
       List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
           DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+
+      diagnostics.clear();
 
       int numErrors = 0;
       int numWarnings = 0;
