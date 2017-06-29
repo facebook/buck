@@ -1166,4 +1166,18 @@ public class AppleBundleIntegrationTest {
     Path outputPath = workspace.buildAndReturnOutput("//:bundle#iphonesimulator-x86_64");
     assertTrue("Resource file should exist.", Files.isRegularFile(outputPath.resolve("file.txt")));
   }
+
+  @Test
+  public void bundleTraversesAppleResourceResourcesFromDepsForAdditionalResources()
+      throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_resources_from_deps", tmp);
+    workspace.setUp();
+    Path outputPath = workspace.buildAndReturnOutput("//:bundle#iphonesimulator-x86_64");
+    assertTrue(
+        "Resource file should exist.",
+        Files.isRegularFile(outputPath.resolve("other_resource.txt")));
+  }
 }

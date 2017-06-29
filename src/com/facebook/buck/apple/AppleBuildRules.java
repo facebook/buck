@@ -150,6 +150,16 @@ public final class AppleBuildRules {
     @SuppressWarnings("unchecked")
     GraphTraversable<TargetNode<?, ?>> graphTraversable =
         node -> {
+          // Handle resource exporting behavior of AppleResource.getResourceFromDeps
+          Optional<Iterable<TargetNode<?, ?>>> iterable =
+              node.castArg(AppleResourceDescriptionArg.class)
+                  .map(TargetNode::getConstructorArg)
+                  .map(arg -> targetGraph.getAll(arg.getResourcesFromDeps()));
+          if (iterable.isPresent()) {
+            return iterable.get().iterator();
+          }
+
+          // Stop traversal for rules outside the specific set.
           if (!isXcodeTargetDescription(node.getDescription())
               || SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
             return Collections.emptyIterator();

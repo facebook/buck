@@ -1,0 +1,40 @@
+apple_bundle(
+    name = 'bundle',
+    info_plist = 'Info.plist',
+    binary = ':binary',
+    extension = 'app',
+)
+
+apple_binary(
+    name = 'binary',
+    srcs = ['main.m'],
+    deps = [
+      ':lib_with_resource'
+    ],
+)
+
+apple_library(
+    name = 'lib_with_resource',
+    deps = [
+        ':resource'
+    ],
+)
+
+apple_resource(
+    name = 'resource',
+    resources_from_deps = [
+        ':other_lib_with_resource',
+    ],
+)
+
+apple_library(
+    name = 'other_lib_with_resource',
+    deps = [
+        ':other_resource'
+    ],
+)
+
+apple_resource(
+    name = 'other_resource',
+    files = ['other_resource.txt'],
+)

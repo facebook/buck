@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -80,5 +81,7 @@ public class AppleResourceDescription
     ImmutableSet<SourcePath> getFiles();
 
     ImmutableSet<SourcePath> getVariants();
+
+    ImmutableSet<BuildTarget> getResourcesFromDeps();
   }
 }

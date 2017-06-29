@@ -55,6 +55,20 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'resources_from_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Set of build targets whose transitive <code>apple_resource</code>s should be considered as part of
+  the current resource when collecting resources for bundles.
+
+  Usually, an <code>apple_bundle</code> collects all <code>apple_resource</code> rules transitively
+  reachable through apple_library rules. This field allows for resources which are not reachable
+  using the above traversal strategy to be considered for inclusion in the bundle.
+  {/param}
+{/call}
+
+
 {/param} // args
 
 {param examples}
