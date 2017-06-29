@@ -208,8 +208,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
     return delegate
         .getEnum(SECTION, "source_abi_verification_mode", SourceAbiVerificationMode.class)
-        // TODO(jkeljo): Flip the default to OFF when the feature is considered debugged
-        .orElse(SourceAbiVerificationMode.LOG);
+        .orElse(SourceAbiVerificationMode.OFF);
   }
 
   public boolean shouldCompileAgainstAbis() {
