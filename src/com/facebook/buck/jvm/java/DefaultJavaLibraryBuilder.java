@@ -236,24 +236,17 @@ public class DefaultJavaLibraryBuilder {
           getFinalParams(),
           sourcePathResolver,
           ruleFinder,
-          srcs,
-          resources,
           generatedSourceFolder,
           proguardConfig,
-          postprocessClassesCommands,
           getFinalFullJarDeclaredDeps(),
           fullJarExportedDeps,
           fullJarProvidedDeps,
           getFinalCompileTimeClasspathSourcePaths(),
           getAbiClasspath(),
           getAbiJar(),
-          trackClassUsage,
-          getCompileStepFactory(),
-          resourcesRoot,
-          manifestFile,
           mavenCoords,
           tests,
-          classesToRemoveFromJar);
+          getWorker());
     }
 
     protected final JavaAbiAndLibraryWorker getWorker() throws NoSuchBuildTargetException {
@@ -269,12 +262,15 @@ public class DefaultJavaLibraryBuilder {
           initialParams.getBuildTarget(),
           initialParams.getProjectFilesystem(),
           ruleFinder,
+          trackClassUsage,
           getCompileStepFactory(),
           srcs,
           resources,
+          postprocessClassesCommands,
           resourcesRoot,
           manifestFile,
           getFinalCompileTimeClasspathSourcePaths(),
+          getAbiClasspath(),
           classesToRemoveFromJar);
     }
 

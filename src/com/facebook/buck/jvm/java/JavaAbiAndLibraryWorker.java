@@ -47,6 +47,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
   private final ProjectFilesystem filesystem;
   private final SourcePathRuleFinder ruleFinder;
 
+  private final boolean trackClassUsage;
   private final CompileToJarStepFactory compileStepFactory;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
@@ -54,35 +55,52 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
   private final Optional<Path> resourcesRoot;
 
   private final Optional<SourcePath> manifestFile;
+  private final ImmutableList<String> postprocessClassesCommands;
   private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
+  private final ZipArchiveDependencySupplier abiClasspath;
   private final ImmutableSet<Pattern> classesToRemoveFromJar;
 
   @Nullable private final RuleOutputs abiOutputs;
+  private final RuleOutputs libraryOutputs;
+
+  @Nullable private final Path depFileRelativePath;
 
   public JavaAbiAndLibraryWorker(
       BuildTarget target,
       ProjectFilesystem filesystem,
       SourcePathRuleFinder ruleFinder,
+      boolean trackClassUsage,
       CompileToJarStepFactory compileStepFactory,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
+      ImmutableList<String> postprocessClassesCommands,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
+      ZipArchiveDependencySupplier abiClasspath,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     this.filesystem = filesystem;
     this.ruleFinder = ruleFinder;
+    this.trackClassUsage = trackClassUsage;
     this.compileStepFactory = compileStepFactory;
     this.srcs = srcs;
     this.resources = resources;
+    this.postprocessClassesCommands = postprocessClassesCommands;
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
+    this.abiClasspath = abiClasspath;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
+
+    depFileRelativePath = trackClassUsage ? getUsedClassesFilePath(target, filesystem) : null;
 
     BuildTarget libraryTarget =
         HasJavaAbi.isLibraryTarget(target) ? target : HasJavaAbi.getLibraryTarget(target);
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
+      this.libraryOutputs =
+          new RuleOutputs(
+              libraryTarget, Optional.of(DefaultJavaLibrary.getOutputJarPath(target, filesystem)));
+
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
       this.abiOutputs =
           new RuleOutputs(
@@ -91,6 +109,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
                   BuildTargets.getGenPath(filesystem, abiTarget, "lib__%s__output")
                       .resolve(String.format("%s-abi.jar", abiTarget.getShortName()))));
     } else {
+      this.libraryOutputs = new RuleOutputs(libraryTarget, Optional.empty());
       this.abiOutputs = null;
     }
   }
@@ -103,19 +122,37 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
     return resources;
   }
 
+  public boolean getTrackClassUsage() {
+    return trackClassUsage;
+  }
+
+  @Nullable
+  public Path getDepFileRelativePath() {
+    return depFileRelativePath;
+  }
+
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("compileStepFactory", compileStepFactory)
         .setReflectively("srcs", srcs)
         .setReflectively("resources", resources)
+        .setReflectively("postprocessClassesCommands", postprocessClassesCommands)
         .setReflectively("resourcesRoot", String.valueOf(resourcesRoot))
         .setReflectively("manifestFile", manifestFile)
-        .setReflectively("compileTimeClasspathSourcePaths", compileTimeClasspathSourcePaths)
+        .setReflectively("abiClasspath", abiClasspath)
         .setReflectively("classesToRemoveFromJar", classesToRemoveFromJar);
   }
 
   public RuleOutputs getAbiOutputs() {
     return Preconditions.checkNotNull(abiOutputs);
+  }
+
+  public RuleOutputs getLibraryOutputs() {
+    return libraryOutputs;
+  }
+
+  static Path getUsedClassesFilePath(BuildTarget target, ProjectFilesystem filesystem) {
+    return DefaultJavaLibrary.getOutputJarDirPath(target, filesystem).resolve("used-classes.json");
   }
 
   public ListenableFuture<Void> buildLocally(
@@ -150,15 +187,25 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
         ruleFinder,
         srcs,
         resources,
-        ImmutableList.of(),
+        ruleOutputs.isAbi() ? ImmutableList.of() : postprocessClassesCommands,
         compileTimeClasspathSourcePaths,
-        false,
-        null,
+        !ruleOutputs.isAbi() && trackClassUsage,
+        ruleOutputs.isAbi() ? null : depFileRelativePath,
         compileStepFactory,
         resourcesRoot,
         manifestFile,
         classesToRemoveFromJar,
         steps);
+
+    if (!ruleOutputs.isAbi()) {
+      JavaLibraryRules.addAccumulateClassNamesStep(
+          ruleOutputs.getTarget(),
+          filesystem,
+          ruleOutputs.getSourcePathToOutput(),
+          buildableContext,
+          context,
+          steps);
+    }
 
     return steps.build();
   }
@@ -211,6 +258,11 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
 
     public void initializeFromDisk() throws IOException {
       jarContents.load();
+    }
+
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      return JavaAbiAndLibraryWorker.this.getBuildSteps(context, buildableContext, this);
     }
   }
 }

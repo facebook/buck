@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaAbiAndLibraryWorker;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -48,9 +49,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
@@ -87,10 +86,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
-      Set<? extends SourcePath> srcs,
-      Set<? extends SourcePath> resources,
       Optional<SourcePath> proguardConfig,
-      ImmutableList<String> postprocessClassesCommands,
       SortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
@@ -98,34 +94,25 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ZipArchiveDependencySupplier abiClasspath,
       @Nullable BuildTarget abiJar,
       JavacOptions javacOptions,
-      boolean trackClassUsage,
-      CompileToJarStepFactory compileStepFactory,
-      Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      JavaAbiAndLibraryWorker worker) {
     super(
         params,
         resolver,
         ruleFinder,
-        srcs,
-        resources,
         javacOptions.getGeneratedSourceFolderName(),
         proguardConfig,
-        postprocessClassesCommands,
         fullJarDeclaredDeps,
         fullJarExportedDeps,
         fullJarProvidedDeps,
         compileTimeClasspathSourcePaths,
         abiClasspath,
         abiJar,
-        trackClassUsage,
-        compileStepFactory,
-        resourcesRoot,
-        Optional.empty(),
         mavenCoords,
         tests,
-        javacOptions.getClassesToRemoveFromJar());
+        worker);
     this.manifestFile = manifestFile;
   }
 
@@ -213,10 +200,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             getFinalParams(),
             sourcePathResolver,
             ruleFinder,
-            srcs,
-            resources,
             proguardConfig,
-            postprocessClassesCommands,
             getFinalFullJarDeclaredDeps(),
             fullJarExportedDeps,
             fullJarProvidedDeps,
@@ -224,12 +208,28 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             getAbiClasspath(),
             getAbiJar(),
             Preconditions.checkNotNull(javacOptions),
-            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),
-            getCompileStepFactory(),
-            resourcesRoot,
             mavenCoords,
             androidManifest,
-            tests);
+            tests,
+            getWorker());
+      }
+
+      @Override
+      protected JavaAbiAndLibraryWorker buildWorker() throws NoSuchBuildTargetException {
+        return new JavaAbiAndLibraryWorker(
+            initialParams.getBuildTarget(),
+            initialParams.getProjectFilesystem(),
+            ruleFinder,
+            getAndroidCompiler().trackClassUsage(javacOptions),
+            getCompileStepFactory(),
+            srcs,
+            resources,
+            postprocessClassesCommands,
+            resourcesRoot,
+            manifestFile,
+            getFinalCompileTimeClasspathSourcePaths(),
+            getAbiClasspath(),
+            classesToRemoveFromJar);
       }
 
       protected DummyRDotJava buildDummyRDotJava() {

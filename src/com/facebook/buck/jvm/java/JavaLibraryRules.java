@@ -215,7 +215,7 @@ public class JavaLibraryRules {
     return new JavaLibrary.Data(classHashes);
   }
 
-  private static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargets.getGenPath(filesystem, buildTarget, "%s.classes.txt");
   }
 
