@@ -17,36 +17,9 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 public interface StepRunner {
-
-  default ListenableFuture<Void> runStepsForBuildTarget(
-      ExecutionContext executionContext,
-      Supplier<ImmutableList<? extends Step>> stepsSupplier,
-      Optional<BuildTarget> optionalTarget,
-      ListeningExecutorService service) {
-    return service.submit(
-        () -> {
-          // Get and run all of the commands.
-          ImmutableList<? extends Step> steps = stepsSupplier.get();
-
-          for (Step step : steps) {
-            runStepForBuildTarget(executionContext, step, optionalTarget);
-
-            // Check for interruptions that may have been ignored by step.
-            if (Thread.interrupted()) {
-              Thread.currentThread().interrupt();
-              throw new InterruptedException();
-            }
-          }
-          return null;
-        });
-  }
 
   /**
    * Runs a BuildStep for a given BuildRule.

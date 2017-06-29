@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
-import com.facebook.buck.jvm.java.JavaAbiAndLibraryWorker;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -56,8 +55,11 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
         ruleFinder,
+        /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
+        /* resources */ ImmutableSortedSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.empty(),
+        /* postprocessClassesCommands */ ImmutableList.of(),
         /* declaredDeps */ params.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
@@ -65,23 +67,13 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             androidBuildConfig.getSourcePathToOutput()),
         abiClasspath,
         HasJavaAbi.getClassAbiJar(params.getBuildTarget()),
+        /* trackClassUsage */ javacOptions.trackClassUsage(),
+        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
+        /* resourcesRoot */ Optional.empty(),
+        /* manifest file */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
-        new JavaAbiAndLibraryWorker(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
-            ruleFinder,
-            javacOptions.trackClassUsage(),
-            new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
-            /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
-            /* resources */ ImmutableSortedSet.of(),
-            /* postprocessClassesCommands */ ImmutableList.of(),
-            /* resourcesRoot */ Optional.empty(),
-            /* manifest file */ Optional.empty(),
-            /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
-                androidBuildConfig.getSourcePathToOutput()),
-            abiClasspath,
-            /* classesToRemoveFromJar */ ImmutableSet.of()));
+        /* classesToRemoveFromJar */ ImmutableSet.of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),

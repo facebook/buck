@@ -53,6 +53,7 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -68,13 +69,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final JavacCompilationMode compilationMode;
-  private final ResettableDiagnosticCollector<JavaFileObject> diagnostics =
-      new ResettableDiagnosticCollector<>();
+  private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
   @Nullable private BuckJavacTaskProxy javacTask;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
-  private boolean buildAbiCalled = false;
 
   public Jsr199JavacInvocation(
       Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -120,11 +119,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             }
           });
 
-      javacTask.parse();
-      if (buildSuccessful()) {
-        javacTask.enter();
-      }
-      buildAbiCalled = true;
+      javacTask.enter();
 
       debugLogDiagnostics();
       if (!buildSuccessful()) {
@@ -171,20 +166,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     try {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
-      // JavacTask is not smart about detecting that parse/enter have been run before, so let's
-      // not do it.
-      if (!buildAbiCalled) {
-        javacTask.parse();
-        if (buildSuccessful()) {
-          javacTask.enter();
-        }
-      }
-      if (buildSuccessful()) {
-        javacTask.analyze();
-      }
-      if (buildSuccessful()) {
-        javacTask.generate();
-      }
+      javacTask.generate();
 
       debugLogDiagnostics();
 
@@ -231,8 +213,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     if (context.getVerbosity().shouldPrintStandardInformation()) {
       List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
           DiagnosticCleaner.clean(diagnostics.getDiagnostics());
-
-      diagnostics.clear();
 
       int numErrors = 0;
       int numWarnings = 0;

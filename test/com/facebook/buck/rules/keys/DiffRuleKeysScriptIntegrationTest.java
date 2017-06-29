@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
@@ -82,7 +81,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedResult =
         Joiner.on('\n')
             .join(
-                "Change details for [//:java_lib_1->worker]",
+                "Change details for [//:java_lib_1]",
                 "  (srcs):",
                 "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]",
                 "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]",
@@ -103,14 +102,14 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedResult =
         Joiner.on('\n')
             .join(
-                "Change details for [//:java_lib_2->worker]",
+                "Change details for [//:java_lib_2]",
                 "  (srcs):",
                 "    -[<missing>]",
                 "    -[container(LIST,len=1)]",
                 "    +[container(LIST,len=2)]",
                 "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
                 "");
-    assertEquals(expectedResult, runRuleKeyDiffer(workspace));
+    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
   }
 
   @Test
@@ -127,7 +126,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedResult =
         Joiner.on('\n')
             .join(
-                "Change details for " + "[//:java_lib_2->worker->compileStepFactory->javacOptions]",
+                "Change details for " + "[//:java_lib_2->compileStepFactory->javacOptions]",
                 "  (sourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
@@ -222,16 +221,17 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, ""),
         Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_all]",
-            "  (worker):",
-            "    -[ruleKey(sha1=75ce436f1066c72dc4c5e2f72908e3d29113489a)]",
-            "    +[ruleKey(sha1=59b8ee092ea3b9eea40069b5561c8b3b6ba5bf17)]",
-            "Change details for [//:java_lib_2->worker]",
+            "  (srcs):",
+            "    -[<missing>]",
+            "    +[container(LIST,len=1)]",
+            "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
+            "Change details for [//:java_lib_2]",
             "  (srcs):",
             "    -[<missing>]",
             "    -[container(LIST,len=1)]",
             "    +[container(LIST,len=2)]",
             "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
-            "Change details for [//:java_lib_1->worker]",
+            "Change details for [//:java_lib_1]",
             "  (srcs):",
             "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]",
             "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"));

@@ -19,17 +19,12 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepRunner;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
@@ -112,18 +107,5 @@ public interface BuildRule extends Comparable<BuildRule> {
     }
 
     return this.getBuildTarget().compareTo(that.getBuildTarget());
-  }
-
-  default ListenableFuture<Void> buildLocally(
-      BuildContext buildContext,
-      BuildableContext buildableContext,
-      ExecutionContext executionContext,
-      StepRunner stepRunner,
-      ListeningExecutorService service) {
-    return stepRunner.runStepsForBuildTarget(
-        executionContext,
-        () -> getBuildSteps(buildContext, buildableContext),
-        Optional.of(getBuildTarget()),
-        service);
   }
 }

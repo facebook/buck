@@ -78,7 +78,6 @@ public class JavacStepTest {
             fakeFilesystem,
             classpathChecker,
             Optional.empty(),
-            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
@@ -127,7 +126,6 @@ public class JavacStepTest {
             fakeFilesystem,
             classpathChecker,
             Optional.empty(),
-            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
@@ -181,7 +179,6 @@ public class JavacStepTest {
             fakeFilesystem,
             classpathChecker,
             Optional.empty(),
-            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
@@ -233,7 +230,6 @@ public class JavacStepTest {
             fakeFilesystem,
             classpathChecker,
             Optional.empty(),
-            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");

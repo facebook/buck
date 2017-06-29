@@ -61,7 +61,6 @@ import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.concurrent.WrappingListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
@@ -103,7 +102,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -340,17 +338,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return rulesList;
   }
 
-  private ListenableFuture<Optional<BuildResult>> buildLocally(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      BuildableContext buildableContext,
-      CacheResult ruleKeyCacheResult,
-      WeightedListeningExecutorService service) {
-    BuildLocally buildLocally =
-        new BuildLocally(
-            rule, buildContext, executionContext, buildableContext, ruleKeyCacheResult, service);
-    return buildLocally.buildAsync();
+  private BuildResult buildLocally(
+      final BuildRule rule,
+      final BuildEngineBuildContext buildContext,
+      final ExecutionContext executionContext,
+      final BuildableContext buildableContext,
+      final CacheResult cacheResult)
+      throws StepFailedException, InterruptedException {
+    executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
+    return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -502,12 +498,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     (depResults) -> handleDepsResults(rule, depResults),
                     serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
 
-    /*
-    TODO: Wrap our service with a tracing one
-    Then those get adjusted as appropriate
-
-     */
-
     // 4. Return to the current rule and check caches to see if we can avoid building
     // locally. Start with input-based.
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
@@ -564,20 +554,21 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // 8. Build the current rule locally, if we have to.
     buildResultFuture =
-        transformBuildResultAsyncIfNotPresent(
+        transformBuildResultIfNotPresent(
             rule,
             buildContext,
             buildResultFuture,
             () ->
-                buildLocally(
-                    rule,
-                    buildContext,
-                    executionContext,
-                    buildableContext,
-                    Preconditions.checkNotNull(rulekeyCacheResult.get()),
-                    // This needs to adjust the default amounts even in the non-resource-aware scheduling
-                    // case so that RuleScheduleInfo works correctly.
-                    service.withDefaultAmounts(getRuleResourceAmounts(rule))));
+                Optional.of(
+                    buildLocally(
+                        rule,
+                        buildContext,
+                        executionContext,
+                        buildableContext,
+                        Preconditions.checkNotNull(rulekeyCacheResult.get()))),
+            // This needs to adjust the default amounts even in the non-resource-aware scheduling
+            // case so that RuleScheduleInfo works correctly.
+            service.withDefaultAmounts(getRuleResourceAmounts(rule)));
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
@@ -1549,6 +1540,55 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return cacheResult;
   }
 
+  /**
+   * Execute the commands for this build rule. Requires all dependent rules are already built
+   * successfully.
+   */
+  private void executeCommandsNowThatDepsAreBuilt(
+      BuildRule rule,
+      BuildEngineBuildContext buildContext,
+      ExecutionContext executionContext,
+      BuildableContext buildableContext)
+      throws InterruptedException, StepFailedException {
+
+    LOG.debug("Building locally: %s", rule);
+    // Attempt to get an approximation of how long it takes to actually run the command.
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    long start = System.nanoTime();
+
+    buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+    cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+
+    // Get and run all of the commands.
+    List<? extends Step> steps =
+        rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+
+    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
+    for (Step step : steps) {
+      stepRunner.runStepForBuildTarget(
+          executionContext.withProcessExecutor(
+              new ContextualProcessExecutor(
+                  executionContext.getProcessExecutor(),
+                  ImmutableMap.of(
+                      BUILD_RULE_TYPE_CONTEXT_KEY,
+                      rule.getType(),
+                      STEP_TYPE_CONTEXT_KEY,
+                      StepType.BUILD_STEP.toString()))),
+          step,
+          optionalTarget);
+
+      // Check for interruptions that may have been ignored by step.
+      if (Thread.interrupted()) {
+        Thread.currentThread().interrupt();
+        throw new InterruptedException();
+      }
+    }
+
+    long end = System.nanoTime();
+    LOG.debug(
+        "Build completed: %s %s (%dns)", rule.getType(), rule.getFullyQualifiedName(), end - start);
+  }
+
   private void executePostBuildSteps(
       BuildRule rule, Iterable<Step> postBuildSteps, ExecutionContext context)
       throws InterruptedException, StepFailedException {
@@ -2019,25 +2059,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         rule,
         context,
         future,
-        () -> executor.submit(wrapWithTracingAndCancellation(rule, context, function)));
-  }
-
-  private Callable<Optional<BuildResult>> wrapWithTracingAndCancellation(
-      BuildRule rule, BuildEngineBuildContext context, Callable<Optional<BuildResult>> function) {
-    return () -> {
-      if (!shouldKeepGoing(context)) {
-        Preconditions.checkNotNull(firstFailure);
-        return Optional.of(BuildResult.canceled(rule, firstFailure));
-      }
-      try (BuildRuleEvent.Scope scope =
-          BuildRuleEvent.resumeSuspendScope(
-              context.getEventBus(),
-              rule,
-              buildRuleDurationTracker,
-              ruleKeyFactories.getDefaultRuleKeyFactory())) {
-        return function.call();
-      }
-    };
+        () ->
+            executor.submit(
+                () -> {
+                  if (!shouldKeepGoing(context)) {
+                    Preconditions.checkNotNull(firstFailure);
+                    return Optional.of(BuildResult.canceled(rule, firstFailure));
+                  }
+                  try (BuildRuleEvent.Scope scope =
+                      BuildRuleEvent.resumeSuspendScope(
+                          context.getEventBus(),
+                          rule,
+                          buildRuleDurationTracker,
+                          ruleKeyFactories.getDefaultRuleKeyFactory())) {
+                    return function.call();
+                  }
+                }));
   }
 
   private ListenableFuture<Optional<BuildResult>> transformBuildResultAsyncIfNotPresent(
@@ -2060,116 +2097,5 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           return function.call();
         },
         MoreExecutors.directExecutor());
-  }
-
-  private class BuildLocally {
-    private BuildRule rule;
-    private BuildEngineBuildContext buildContext;
-    private ExecutionContext executionContext;
-    private BuildableContext buildableContext;
-    private CacheResult rulekeyCacheResult;
-    private WeightedListeningExecutorService serviceForBuild;
-    boolean started = false;
-    private long start;
-
-    public BuildLocally(
-        BuildRule rule,
-        BuildEngineBuildContext buildContext,
-        ExecutionContext executionContext,
-        BuildableContext buildableContext,
-        CacheResult rulekeyCacheResult,
-        WeightedListeningExecutorService serviceForBuild) {
-      this.rule = rule;
-      this.buildContext = buildContext;
-      this.executionContext = executionContext;
-      this.buildableContext = buildableContext;
-      this.rulekeyCacheResult = rulekeyCacheResult;
-      this.serviceForBuild = serviceForBuild;
-    }
-
-    public ListenableFuture<Optional<BuildResult>> buildAsync() {
-      return Futures.catching(
-          Futures.transform(
-              rule.buildLocally(
-                  buildContext.getBuildContext(),
-                  buildableContext,
-                  executionContext.withProcessExecutor(
-                      new ContextualProcessExecutor(
-                          executionContext.getProcessExecutor(),
-                          ImmutableMap.of(
-                              BUILD_RULE_TYPE_CONTEXT_KEY,
-                              rule.getType(),
-                              STEP_TYPE_CONTEXT_KEY,
-                              StepType.BUILD_STEP.toString()))),
-                  CachingBuildEngine.this.stepRunner,
-                  new WrappingListeningExecutorService(serviceForBuild) {
-                    @Override
-                    protected <T> Callable<T> wrap(Callable<T> inner) {
-                      return () -> {
-                        try (BuildLocallyScope scope = new BuildLocallyScope()) {
-                          return inner.call();
-                        }
-                      };
-                    }
-                  }),
-              (v) -> {
-                if (!started) {
-                  // An override of BuildRule.builtLocally is not required to actually run any
-                  // code; it might return a ListenableFuture that it got from elsewhere. We still
-                  // want to do all the logging associated with start, however.
-                  onStart();
-                }
-                onSuccess();
-
-                return Optional.of(
-                    BuildResult.success(
-                        rule, BuildRuleSuccessType.BUILT_LOCALLY, rulekeyCacheResult));
-              }),
-          CancellationException.class,
-          (exception) ->
-              Optional.of(BuildResult.canceled(rule, Preconditions.checkNotNull(firstFailure))));
-    }
-
-    private void onSuccess() {
-      long end = System.nanoTime();
-      LOG.debug(
-          "Build completed: %s %s (%dns)",
-          rule.getType(), rule.getFullyQualifiedName(), end - start);
-    }
-
-    private void onStart() {
-      LOG.debug("Building locally: %s", rule);
-      // Attempt to get an approximation of how long it takes to actually run the command.
-      start = System.nanoTime();
-
-      buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-      cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-      started = true;
-    }
-
-    private class BuildLocallyScope implements AutoCloseable {
-      private final BuildRuleEvent.Scope scope;
-
-      public BuildLocallyScope() {
-        if (!shouldKeepGoing(buildContext)) {
-          Preconditions.checkNotNull(firstFailure);
-          throw new CancellationException();
-        }
-
-        scope =
-            BuildRuleEvent.resumeSuspendScope(
-                buildContext.getEventBus(),
-                rule,
-                buildRuleDurationTracker,
-                ruleKeyFactories.getDefaultRuleKeyFactory());
-
-        onStart();
-      }
-
-      @Override
-      public void close() {
-        scope.close();
-      }
-    }
   }
 }

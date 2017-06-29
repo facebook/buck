@@ -52,7 +52,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result =
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
-    assertTrue(result.getStderr().contains("package com.sample does not exist"));
+    assertTrue(result.getStderr().contains("package R does not exist"));
   }
 
   @Test

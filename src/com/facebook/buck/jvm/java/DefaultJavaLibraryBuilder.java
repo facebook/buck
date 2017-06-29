@@ -236,57 +236,29 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private ZipArchiveDependencySupplier abiClasspath;
     @Nullable private CompileToJarStepFactory compileStepFactory;
     @Nullable private BuildTarget abiJar;
-    @Nullable private JavaAbiAndLibraryWorker worker;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new DefaultJavaLibrary(
           getFinalParams(),
           sourcePathResolver,
           ruleFinder,
+          srcs,
+          resources,
           generatedSourceFolder,
           proguardConfig,
+          postprocessClassesCommands,
           getFinalFullJarDeclaredDeps(),
           fullJarExportedDeps,
           fullJarProvidedDeps,
           getFinalCompileTimeClasspathSourcePaths(),
           getAbiClasspath(),
           getAbiJar(),
-          mavenCoords,
-          tests,
-          getWorker());
-    }
-
-    protected final JavaAbiAndLibraryWorker getWorker() throws NoSuchBuildTargetException {
-      if (worker == null) {
-        if (HasJavaAbi.isLibraryTarget(initialParams.getBuildTarget()) && willProduceSourceAbi()) {
-          CalculateAbiFromSource abiRule =
-              (CalculateAbiFromSource)
-                  buildRuleResolver.requireRule(
-                      HasJavaAbi.getSourceAbiJar(initialParams.getBuildTarget()));
-
-          worker = abiRule.getWorker();
-        } else {
-          worker = buildWorker();
-        }
-      }
-
-      return worker;
-    }
-
-    protected JavaAbiAndLibraryWorker buildWorker() throws NoSuchBuildTargetException {
-      return new JavaAbiAndLibraryWorker(
-          initialParams.getBuildTarget(),
-          initialParams.getProjectFilesystem(),
-          ruleFinder,
           trackClassUsage,
           getCompileStepFactory(),
-          srcs,
-          resources,
-          postprocessClassesCommands,
           resourcesRoot,
           manifestFile,
-          getFinalCompileTimeClasspathSourcePaths(),
-          getAbiClasspath(),
+          mavenCoords,
+          tests,
           classesToRemoveFromJar);
     }
 
@@ -345,10 +317,6 @@ public class DefaultJavaLibraryBuilder {
       return !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent();
     }
 
-    private boolean willProduceSourceAbi() {
-      return willProduceOutputJar() && shouldBuildAbiFromSource();
-    }
-
     private boolean shouldBuildAbiFromSource() {
       return isCompilingJava()
           && !srcs.isEmpty()
@@ -366,7 +334,19 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
-      return new CalculateAbiFromSource(getFinalParams(), getWorker());
+      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialParams.getBuildTarget());
+      BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
+      JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
+      return new CalculateAbiFromSource(
+          getFinalParams().withBuildTarget(abiTarget),
+          ruleFinder,
+          srcs,
+          resources,
+          getFinalCompileTimeClasspathSourcePaths(),
+          compileStepFactory,
+          resourcesRoot,
+          manifestFile,
+          classesToRemoveFromJar);
     }
 
     private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
@@ -461,12 +441,6 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps = getCompileTimeClasspathAbiDeps();
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
       ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
-      if (HasJavaAbi.isLibraryTarget(initialParams.getBuildTarget()) && willProduceSourceAbi()) {
-        declaredDepsBuilder.add(
-            buildRuleResolver.requireRule(
-                HasJavaAbi.getSourceAbiJar(initialParams.getBuildTarget())));
-      }
-
       if (compileAgainstAbis) {
         declaredDepsBuilder.addAll(
             getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));

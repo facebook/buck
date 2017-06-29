@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
-import com.facebook.buck.jvm.java.JavaAbiAndLibraryWorker;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
@@ -31,7 +30,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -60,7 +58,10 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
         ruleFinder,
+        /* srcs */ ImmutableSortedSet.of(),
+        /* resources */ ImmutableSortedSet.of(),
         Optional.of(proguardConfig),
+        /* postprocessClassesCommands */ ImmutableList.of(),
         /* declaredDeps */ androidLibraryParams.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
@@ -71,26 +72,14 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         abiClasspath,
         HasJavaAbi.getClassAbiJar(androidLibraryParams.getBuildTarget()),
         javacOptions,
+        /* trackClassUsage */ false,
+        compileStepFactory,
+        /* resourcesRoot */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
         Optional.of(
             new ExplicitBuildTargetSourcePath(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* tests */ ImmutableSortedSet.of(),
-        new JavaAbiAndLibraryWorker(
-            androidLibraryParams.getBuildTarget(),
-            androidLibraryParams.getProjectFilesystem(),
-            ruleFinder,
-            /* trackClassUsage */ false,
-            compileStepFactory,
-            /* srcs */ ImmutableSortedSet.of(),
-            /* resources */ ImmutableSortedSet.of(),
-            /* postprocessClassesCommands */ ImmutableList.of(),
-            /* resourcesRoot */ Optional.empty(),
-            /* manifestFile */ Optional.empty(),
-            /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
-                prebuiltJar.getSourcePathToOutput()),
-            abiClasspath,
-            /* classesToRemoveFromJar */ ImmutableSet.of()));
+        /* tests */ ImmutableSortedSet.of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

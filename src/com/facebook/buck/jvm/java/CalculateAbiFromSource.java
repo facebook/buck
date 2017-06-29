@@ -16,73 +16,121 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepRunner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
+  private final SourcePathRuleFinder ruleFinder;
 
-  @AddToRuleKey private final JavaAbiAndLibraryWorker worker;
+  @AddToRuleKey private final JavacToJarStepFactory compileStepFactory;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
 
-  public CalculateAbiFromSource(BuildRuleParams params, JavaAbiAndLibraryWorker worker) {
+  @AddToRuleKey(stringify = true)
+  private final Optional<Path> resourcesRoot;
+
+  @AddToRuleKey private final Optional<SourcePath> manifestFile;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
+  @AddToRuleKey private final ImmutableSet<Pattern> classesToRemoveFromJar;
+
+  private final Path outputJar;
+  private final JarContentsSupplier outputJarContents;
+
+  public CalculateAbiFromSource(
+      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedSet<SourcePath> resources,
+      ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
+      JavacToJarStepFactory compileStepFactory,
+      Optional<Path> resourcesRoot,
+      Optional<SourcePath> manifestFile,
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(params);
 
-    this.worker = worker;
-  }
+    this.ruleFinder = ruleFinder;
+    this.srcs = srcs;
+    this.resources = resources;
+    this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
+    this.compileStepFactory = compileStepFactory;
+    this.resourcesRoot = resourcesRoot;
+    this.manifestFile = manifestFile;
+    this.classesToRemoveFromJar = classesToRemoveFromJar;
 
-  JavaAbiAndLibraryWorker getWorker() {
-    return worker;
-  }
-
-  @Override
-  public ListenableFuture<Void> buildLocally(
-      BuildContext buildContext,
-      BuildableContext buildableContext,
-      ExecutionContext executionContext,
-      StepRunner stepRunner,
-      ListeningExecutorService service) {
-    return worker
-        .getAbiOutputs()
-        .buildLocally(buildContext, buildableContext, executionContext, stepRunner, service);
+    Preconditions.checkArgument(
+        !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent(),
+        "Shouldn't have created a source ABI rule if there is no library jar.");
+    outputJar =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "lib__%s__output")
+            .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
+    compileStepFactory.setCompileAbi(outputJar);
+    this.outputJarContents =
+        new JarContentsSupplier(new SourcePathResolver(ruleFinder), getSourcePathToOutput());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    throw new AssertionError("Should never get here.");
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    JavaLibraryRules.addCompileToJarSteps(
+        getBuildTarget(),
+        getProjectFilesystem(),
+        context,
+        buildableContext,
+        Optional.of(outputJar),
+        ruleFinder,
+        srcs,
+        resources,
+        ImmutableList.of(),
+        compileTimeClasspathSourcePaths,
+        false,
+        null,
+        compileStepFactory,
+        resourcesRoot,
+        manifestFile,
+        classesToRemoveFromJar,
+        steps);
+
+    return steps.build();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return Preconditions.checkNotNull(worker.getAbiOutputs().getSourcePathToOutput());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJar);
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getJarContents() {
-    return worker.getAbiOutputs().getJarContents();
+    return outputJarContents.get();
   }
 
   @Override
   public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    worker.getAbiOutputs().initializeFromDisk();
+    outputJarContents.load();
     return new Object();
   }
 
