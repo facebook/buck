@@ -69,7 +69,7 @@ public class HelpCommand extends AbstractCommand {
 
   @Override
   public void printUsage(PrintStream stream) {
-    stream.println("buck build tool");
+    CommandHelper.printShortDescription(this, stream);
     stream.println("Usage:");
     stream.println("  buck help");
     stream.println("  buck help <command>");

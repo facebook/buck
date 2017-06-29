@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Set;
 
 public abstract class CommandHelper {
@@ -58,5 +59,11 @@ public abstract class CommandHelper {
     for (QueryTarget target : targets) {
       params.getConsole().getStdOut().println(target);
     }
+  }
+
+  public static void printShortDescription(Command command, PrintStream stream) {
+    stream.println("Description: ");
+    stream.println("  " + command.getShortDescription());
+    stream.println();
   }
 }

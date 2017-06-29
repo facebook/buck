@@ -74,8 +74,7 @@ public abstract class AbstractContainerCommand implements Command {
   public void printUsage(PrintStream stream) {
     String prefix = getContainerCommandPrefix();
 
-    stream.println("buck build tool");
-
+    CommandHelper.printShortDescription(this, stream);
     stream.println("Usage:");
     stream.println("  " + prefix + " [<options>]");
     stream.println("  " + prefix + " <command> --help");

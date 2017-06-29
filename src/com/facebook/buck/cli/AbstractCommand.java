@@ -190,6 +190,7 @@ public abstract class AbstractCommand implements Command {
 
   @Override
   public void printUsage(PrintStream stream) {
+    CommandHelper.printShortDescription(this, stream);
     stream.println("Options:");
     new AdditionalOptionsCmdLineParser(this).printUsage(stream);
     stream.println();

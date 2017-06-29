@@ -118,7 +118,9 @@ public class MainIntegrationTest {
   private String getUsageString() {
     return Joiner.on('\n')
         .join(
-            "buck build tool",
+            "Description: ",
+            "  Buck build tool",
+            "",
             "Usage:",
             "  buck [<options>]",
             "  buck <command> --help",
