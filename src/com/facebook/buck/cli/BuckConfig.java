@@ -1064,7 +1064,7 @@ public class BuckConfig implements ConfigPathGetter {
   /** @return whether to enable new file hash cache engine. */
   public FileHashCacheMode getFileHashCacheMode() {
     return getEnum("build", "file_hash_cache_mode", FileHashCacheMode.class)
-        .orElse(FileHashCacheMode.LOADING_CACHE);
+        .orElse(FileHashCacheMode.PREFIX_TREE);
   }
 
   public Config getConfig() {

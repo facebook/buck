@@ -73,7 +73,7 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
   @Override
   public HashCode get(Path path) throws IOException {
     long start = System.nanoTime();
-    HashCode sha1 = loadingCache.get(path).getHashCode();
+    HashCode sha1 = loadingCache.get(path.normalize()).getHashCode();
     cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     return sha1;
