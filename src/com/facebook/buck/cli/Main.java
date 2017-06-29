@@ -1318,6 +1318,7 @@ public final class Main {
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, buckConfig);
+    ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
 
     if (buckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(
@@ -1341,7 +1342,8 @@ public final class Main {
                 invocationInfo,
                 projectFilesystem,
                 MostExecutors.newSingleThreadExecutor(
-                    new CommandThreadFactory(getClass().getName()))));
+                    new CommandThreadFactory(getClass().getName())),
+                artifactCacheConfig.getArtifactCacheModes()));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
       }

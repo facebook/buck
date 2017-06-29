@@ -17,20 +17,23 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_FINISHED;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_CACHE_STATS;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_COMPLETE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_UPDATE;
-import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_UPLOAD_TO_CACHE_STATS;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.CacheCountersSummary;
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.CacheUploadInfo;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.views.JsonViews;
@@ -45,6 +48,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
@@ -52,6 +57,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.OptionalInt;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +76,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
 
+  private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
+  private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors = Maps.newConcurrentMap();
+  private AtomicInteger cacheMisses = new AtomicInteger(0);
+  private AtomicInteger cacheIgnores = new AtomicInteger(0);
+  private AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
+
   // Values to be written in the end of the log.
   private OptionalInt exitCode = OptionalInt.empty();
 
@@ -78,11 +90,19 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private AtomicInteger cacheUploadFailureCount = new AtomicInteger();
 
   public MachineReadableLoggerListener(
-      InvocationInfo info, ProjectFilesystem filesystem, ExecutorService executor)
+      InvocationInfo info,
+      ProjectFilesystem filesystem,
+      ExecutorService executor,
+      ImmutableSet<ArtifactCacheMode> cacheModes)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
+
+    for (ArtifactCacheMode mode : cacheModes) {
+      cacheModeHits.put(mode, new AtomicInteger(0));
+      cacheModeErrors.put(mode, new AtomicInteger(0));
+    }
 
     this.objectWriter =
         ObjectMappers.legacyCreate()
@@ -115,6 +135,23 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public void buildRuleEventFinished(BuildRuleEvent.Finished event) {
     writeToLog(PREFIX_BUILD_RULE_FINISHED, event);
+
+    CacheResult cacheResult = event.getCacheResult();
+    if (cacheResult.getType().isSuccess()) {
+      if (cacheResult.getType() == CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
+        localKeyUnchangedHits.incrementAndGet();
+      } else if (cacheResult.getType() == CacheResultType.HIT) {
+        cacheResult.cacheMode().ifPresent(mode -> cacheModeHits.get(mode).incrementAndGet());
+      } else {
+        throw new IllegalArgumentException("Unexpected CacheResult: " + cacheResult);
+      }
+    } else if (cacheResult.getType() == CacheResultType.ERROR) {
+      cacheResult.cacheMode().ifPresent(mode -> cacheModeErrors.get(mode).incrementAndGet());
+    } else if (cacheResult.getType() == CacheResultType.IGNORED) {
+      cacheIgnores.incrementAndGet();
+    } else {
+      cacheMisses.incrementAndGet();
+    }
   }
 
   @Subscribe
@@ -224,8 +261,17 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             () -> {
               try {
                 writeToLogImpl(
-                    PREFIX_UPLOAD_TO_CACHE_STATS,
-                    CacheUploadInfo.of(cacheUploadSuccessCount, cacheUploadFailureCount));
+                    PREFIX_CACHE_STATS,
+                    CacheCountersSummary.of(
+                        cacheModeHits,
+                        cacheModeErrors,
+                        cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
+                        cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
+                        cacheMisses.get(),
+                        cacheIgnores.get(),
+                        localKeyUnchangedHits.get(),
+                        cacheUploadSuccessCount,
+                        cacheUploadFailureCount));
 
                 outputStream.write(
                     String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))

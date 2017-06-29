@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener.integration;
 
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_CACHE_STATS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -59,6 +60,7 @@ public class MachineReadableLoggerIntegrationTest {
     assertTrue("log contains BuildRuleFinished.", data.contains("BuildRuleEvent.Finished"));
     assertTrue("log contains InvocationInfo.", data.contains("InvocationInfo"));
     assertTrue("log contains ExitCode.", data.contains("ExitCode"));
+    assertTrue("log contains " + PREFIX_CACHE_STATS, data.contains(PREFIX_CACHE_STATS));
     assertTrue("log contains successTypeName.", data.contains("successTypeName"));
   }
 }

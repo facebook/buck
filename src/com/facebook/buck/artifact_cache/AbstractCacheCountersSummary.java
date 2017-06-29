@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.log;
+package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.immutables.value.Value;
 
@@ -29,8 +30,36 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-@JsonDeserialize(as = CacheUploadInfo.class)
-abstract class AbstractCacheUploadInfo {
+@JsonDeserialize(as = CacheCountersSummary.class)
+abstract class AbstractCacheCountersSummary {
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheHitsPerMode();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheErrorsPerMode();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract int getTotalCacheHits();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract int getTotalCacheErrors();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract int getTotalCacheMisses();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract int getTotalCacheIgnores();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract int getTotalCacheLocalKeyUnchangedHits();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)

@@ -19,11 +19,11 @@ package com.facebook.buck.event.listener;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.CacheCountersSummary;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.log.CacheUploadInfo;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
@@ -43,6 +43,7 @@ import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.util.Optional;
@@ -210,12 +211,35 @@ public class MachineReadableLogJsonViewTest {
   }
 
   @Test
-  public void testCacheUploadInfo() throws IOException {
-    CacheUploadInfo cacheUploadInfo =
-        CacheUploadInfo.of(new AtomicInteger(1), new AtomicInteger(2));
+  public void testCacheCountersSummary() throws IOException {
+    CacheCountersSummary summary =
+        CacheCountersSummary.of(
+            ImmutableMap.of(
+                ArtifactCacheMode.http,
+                new AtomicInteger(1),
+                ArtifactCacheMode.dir,
+                new AtomicInteger(2)),
+            ImmutableMap.of(
+                ArtifactCacheMode.http,
+                new AtomicInteger(1),
+                ArtifactCacheMode.dir,
+                new AtomicInteger(2)),
+            3,
+            3,
+            0,
+            5,
+            0,
+            new AtomicInteger(2),
+            new AtomicInteger(0));
+
     assertJsonEquals(
-        WRITER.writeValueAsString(cacheUploadInfo),
-        "{\"successUploadCount\":1,\"failureUploadCount\":2}");
+        WRITER.writeValueAsString(summary),
+        "{\"cacheHitsPerMode\":{\"dir\":2,\"http\":1},"
+            + "\"cacheErrorsPerMode\":{\"dir\":2,\"http\":1},"
+            + "\"totalCacheHits\":3,\"totalCacheErrors\":3,"
+            + "\"totalCacheMisses\":0,\"totalCacheIgnores\":5,\""
+            + "totalCacheLocalKeyUnchangedHits\":0,"
+            + "\"successUploadCount\":2,\"failureUploadCount\":0}");
   }
 
   private void assertJsonEquals(String expected, String actual) throws IOException {
