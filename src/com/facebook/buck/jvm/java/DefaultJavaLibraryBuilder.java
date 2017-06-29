@@ -229,6 +229,7 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private ZipArchiveDependencySupplier abiClasspath;
     @Nullable private CompileToJarStepFactory compileStepFactory;
     @Nullable private BuildTarget abiJar;
+    @Nullable private JavaAbiAndLibraryWorker worker;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new DefaultJavaLibrary(
@@ -252,6 +253,28 @@ public class DefaultJavaLibraryBuilder {
           manifestFile,
           mavenCoords,
           tests,
+          classesToRemoveFromJar);
+    }
+
+    protected final JavaAbiAndLibraryWorker getWorker() throws NoSuchBuildTargetException {
+      if (worker == null) {
+        worker = buildWorker();
+      }
+
+      return worker;
+    }
+
+    protected JavaAbiAndLibraryWorker buildWorker() throws NoSuchBuildTargetException {
+      return new JavaAbiAndLibraryWorker(
+          initialParams.getBuildTarget(),
+          initialParams.getProjectFilesystem(),
+          ruleFinder,
+          getCompileStepFactory(),
+          srcs,
+          resources,
+          resourcesRoot,
+          manifestFile,
+          getFinalCompileTimeClasspathSourcePaths(),
           classesToRemoveFromJar);
     }
 
@@ -331,19 +354,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialParams.getBuildTarget());
-      BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
-      JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
-      return new CalculateAbiFromSource(
-          getFinalParams().withBuildTarget(abiTarget),
-          ruleFinder,
-          srcs,
-          resources,
-          getFinalCompileTimeClasspathSourcePaths(),
-          compileStepFactory,
-          resourcesRoot,
-          manifestFile,
-          classesToRemoveFromJar);
+      return new CalculateAbiFromSource(getFinalParams(), getWorker());
     }
 
     private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {

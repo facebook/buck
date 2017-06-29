@@ -343,6 +343,7 @@ java_immutables_library(
         "ForkMode.java",
         "JarFattener.java",
         "JarShape.java",
+        "JavaAbiAndLibraryWorker.java",
         "JavaAnnotationProcessor.java",
         "JavaAnnotationProcessorDescription.java",
         "JavaBinary.java",
