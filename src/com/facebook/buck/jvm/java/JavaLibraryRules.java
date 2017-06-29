@@ -115,8 +115,6 @@ public class JavaLibraryRules {
       if (trackClassUsage) {
         Preconditions.checkNotNull(depFileRelativePath);
         usedClassesFileWriter = new DefaultClassUsageFileWriter(depFileRelativePath);
-
-        buildableContext.recordArtifact(depFileRelativePath);
       } else {
         usedClassesFileWriter = NoOpClassUsageFileWriter.instance();
       }
@@ -178,7 +176,6 @@ public class JavaLibraryRules {
             output,
             steps);
       }
-      buildableContext.recordArtifact(output);
     }
   }
 
@@ -186,7 +183,6 @@ public class JavaLibraryRules {
       BuildTarget target,
       ProjectFilesystem filesystem,
       @Nullable SourcePath sourcePathToOutput,
-      BuildableContext buildableContext,
       BuildContext buildContext,
       ImmutableList.Builder<Step> steps) {
 
@@ -201,7 +197,6 @@ public class JavaLibraryRules {
             Optional.ofNullable(sourcePathToOutput)
                 .map(buildContext.getSourcePathResolver()::getRelativePath),
             pathToClassHashes));
-    buildableContext.recordArtifact(pathToClassHashes);
   }
 
   static JavaLibrary.Data initializeFromDisk(

@@ -38,6 +38,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -100,7 +102,9 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
       this.libraryOutputs =
           new RuleOutputs(
               libraryTarget, Optional.of(DefaultJavaLibrary.getOutputJarPath(target, filesystem)));
-
+      if (!srcs.isEmpty() && depFileRelativePath != null) {
+        libraryOutputs.addArtifact(depFileRelativePath);
+      }
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
       this.abiOutputs =
           new RuleOutputs(
@@ -112,6 +116,9 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
       this.libraryOutputs = new RuleOutputs(libraryTarget, Optional.empty());
       this.abiOutputs = null;
     }
+
+    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(libraryTarget, filesystem);
+    libraryOutputs.addArtifact(pathToClassHashes);
   }
 
   public ImmutableSortedSet<SourcePath> getSrcs() {
@@ -199,12 +206,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
 
     if (!ruleOutputs.isAbi()) {
       JavaLibraryRules.addAccumulateClassNamesStep(
-          ruleOutputs.getTarget(),
-          filesystem,
-          ruleOutputs.getSourcePathToOutput(),
-          buildableContext,
-          context,
-          steps);
+          ruleOutputs.getTarget(), filesystem, ruleOutputs.getSourcePathToOutput(), context, steps);
     }
 
     return steps.build();
@@ -215,6 +217,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
     private final Optional<Path> outputJarPath;
     private final HasJavaAbi.JarContentsSupplier jarContents;
     private final boolean isAbi;
+    private final List<Path> artifactsToRecord = new ArrayList<>();
 
     public RuleOutputs(BuildTarget target, Optional<Path> outputJarPath) {
       this.target = target;
@@ -223,6 +226,7 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
       jarContents =
           new HasJavaAbi.JarContentsSupplier(
               new SourcePathResolver(ruleFinder), getSourcePathToOutput());
+      outputJarPath.ifPresent(artifactsToRecord::add);
     }
 
     public boolean isAbi() {
@@ -239,8 +243,18 @@ public class JavaAbiAndLibraryWorker implements RuleKeyAppendable {
         ExecutionContext executionContext,
         StepRunner stepRunner,
         ListeningExecutorService service) {
+      recordArtifacts(buildableContext);
+
       return JavaAbiAndLibraryWorker.this.buildLocally(
           this, buildContext, buildableContext, executionContext, stepRunner, service);
+    }
+
+    protected void recordArtifacts(BuildableContext buildableContext) {
+      artifactsToRecord.forEach(buildableContext::recordArtifact);
+    }
+
+    public void addArtifact(Path artifact) {
+      artifactsToRecord.add(artifact);
     }
 
     public Optional<Path> getOutputJar() {
