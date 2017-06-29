@@ -74,6 +74,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
   @Nullable private BuckJavacTaskProxy javacTask;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
+  private boolean buildAbiCalled = false;
 
   public Jsr199JavacInvocation(
       Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -119,7 +120,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             }
           });
 
-      javacTask.enter();
+      javacTask.parse();
+      if (buildSuccessful()) {
+        javacTask.enter();
+      }
+      buildAbiCalled = true;
 
       debugLogDiagnostics();
       if (!buildSuccessful()) {
@@ -166,7 +171,20 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     try {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
-      javacTask.generate();
+      // JavacTask is not smart about detecting that parse/enter have been run before, so let's
+      // not do it.
+      if (!buildAbiCalled) {
+        javacTask.parse();
+        if (buildSuccessful()) {
+          javacTask.enter();
+        }
+      }
+      if (buildSuccessful()) {
+        javacTask.analyze();
+      }
+      if (buildSuccessful()) {
+        javacTask.generate();
+      }
 
       debugLogDiagnostics();
 
