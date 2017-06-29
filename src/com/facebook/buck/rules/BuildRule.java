@@ -29,7 +29,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -121,22 +120,10 @@ public interface BuildRule extends Comparable<BuildRule> {
       ExecutionContext executionContext,
       StepRunner stepRunner,
       ListeningExecutorService service) {
-    return service.submit(
-        () -> {
-          // Get and run all of the commands.
-          List<? extends Step> steps = getBuildSteps(buildContext, buildableContext);
-
-          Optional<BuildTarget> optionalTarget = Optional.of(getBuildTarget());
-          for (Step step : steps) {
-            stepRunner.runStepForBuildTarget(executionContext, step, optionalTarget);
-
-            // Check for interruptions that may have been ignored by step.
-            if (Thread.interrupted()) {
-              Thread.currentThread().interrupt();
-              throw new InterruptedException();
-            }
-          }
-          return null;
-        });
+    return stepRunner.runStepsForBuildTarget(
+        executionContext,
+        () -> getBuildSteps(buildContext, buildableContext),
+        Optional.of(getBuildTarget()),
+        service);
   }
 }
