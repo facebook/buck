@@ -25,6 +25,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -80,6 +81,12 @@ public class LuaBinaryBuilder
 
   public LuaBinaryBuilder setNativeStarterLibrary(BuildTarget target) {
     getArgForPopulating().setNativeStarterLibrary(Optional.of(target));
+    return this;
+  }
+
+  public LuaBinaryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    getArgForPopulating().setPlatformDeps(deps);
     return this;
   }
 }

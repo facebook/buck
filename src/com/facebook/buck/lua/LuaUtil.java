@@ -16,12 +16,18 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
+import java.util.Collection;
 import java.util.Optional;
 
 public class LuaUtil {
@@ -61,5 +67,19 @@ public class LuaUtil {
     return override.isPresent()
         ? override.get().replace('.', File.separatorChar)
         : target.getBasePath().toString();
+  }
+
+  public static ImmutableList<BuildTarget> getDeps(
+      CxxPlatform cxxPlatform,
+      ImmutableSortedSet<BuildTarget> deps,
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
+    return RichStream.<BuildTarget>empty()
+        .concat(deps.stream())
+        .concat(
+            platformDeps
+                .getMatchingValues(cxxPlatform.getFlavor().toString())
+                .stream()
+                .flatMap(Collection::stream))
+        .toImmutableList();
   }
 }

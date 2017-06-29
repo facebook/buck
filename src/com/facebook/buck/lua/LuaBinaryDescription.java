@@ -59,6 +59,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.OptionalCompat;
@@ -322,8 +323,9 @@ public class LuaBinaryDescription
           LuaPackageable packageable = (LuaPackageable) rule;
           LuaPackageComponents components = packageable.getLuaPackageComponents();
           LuaPackageComponents.addComponents(builder, components);
+          deps = packageable.getLuaPackageDeps(cxxPlatform);
           if (components.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : rule.getBuildDeps()) {
+            for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -331,7 +333,6 @@ public class LuaBinaryDescription
               }
             }
           }
-          deps = rule.getBuildDeps();
         } else if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
           NativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
@@ -750,7 +751,8 @@ public class LuaBinaryDescription
                 .orElse(luaConfig.getNativeStarterLibrary()),
             args.getMainModule(),
             args.getPackageStyle().orElse(luaConfig.getPackageStyle()),
-            params.getDeclaredDeps().get());
+            resolver.getAllRules(
+                LuaUtil.getDeps(cxxPlatform, args.getDeps(), args.getPlatformDeps())));
     LuaConfig.PackageStyle packageStyle =
         args.getPackageStyle().orElse(luaConfig.getPackageStyle());
     Tool binary =
@@ -807,5 +809,10 @@ public class LuaBinaryDescription
     Optional<String> getPythonPlatform();
 
     Optional<LuaConfig.PackageStyle> getPackageStyle();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
   }
 }

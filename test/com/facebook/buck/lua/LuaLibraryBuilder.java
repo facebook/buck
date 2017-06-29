@@ -19,6 +19,7 @@ package com.facebook.buck.lua;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,6 +50,12 @@ public class LuaLibraryBuilder
 
   public LuaLibraryBuilder setSrcs(ImmutableSortedMap<String, SourcePath> srcs) {
     getArgForPopulating().setSrcs(SourceList.ofNamedSources(srcs));
+    return this;
+  }
+
+  public LuaLibraryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
+    getArgForPopulating().setPlatformDeps(deps);
     return this;
   }
 }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -26,10 +28,12 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -51,6 +55,13 @@ public class LuaLibraryDescription
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(params) {
+
+      @Override
+      public Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform) {
+        return resolver.getAllRules(
+            LuaUtil.getDeps(cxxPlatform, args.getDeps(), args.getPlatformDeps()));
+      }
+
       @Override
       public LuaPackageComponents getLuaPackageComponents() {
         return LuaPackageComponents.builder()
@@ -76,5 +87,10 @@ public class LuaLibraryDescription
     }
 
     Optional<String> getBaseModule();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
   }
 }
