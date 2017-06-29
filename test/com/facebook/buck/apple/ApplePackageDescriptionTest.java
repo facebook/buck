@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.shell.ExportFileBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
@@ -76,12 +78,14 @@ public class ApplePackageDescriptionTest {
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
     resolver.requireAllRules(implicitDeps.build());
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRule rule =
         description.createBuildRule(
             graph,
-            TestBuildRuleParams.create(packageBuildTarget),
+            projectFilesystem,
+            TestBuildRuleParams.create(packageBuildTarget, projectFilesystem),
             resolver,
-            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
 
     assertThat(rule, instanceOf(ExternallyBuiltApplePackage.class));
@@ -118,7 +122,8 @@ public class ApplePackageDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget, projectFilesystem);
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
@@ -130,9 +135,10 @@ public class ApplePackageDescriptionTest {
     BuildRule rule =
         description.createBuildRule(
             graph,
+            projectFilesystem,
             params,
             resolver,
-            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
 
     assertThat(rule.getBuildDeps(), hasItem(resolver.getRule(exportFileBuildTarget)));

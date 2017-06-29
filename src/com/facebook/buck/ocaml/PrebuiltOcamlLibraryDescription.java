@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -48,6 +49,7 @@ public class PrebuiltOcamlLibraryDescription
   @Override
   public OcamlLibrary createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,

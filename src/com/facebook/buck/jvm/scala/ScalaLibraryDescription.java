@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.scala;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -60,6 +61,7 @@ public class ScalaLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,

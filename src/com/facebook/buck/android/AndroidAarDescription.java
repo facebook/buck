@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -96,6 +97,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -121,7 +123,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     AndroidManifest manifest =
         androidManifestDescription.createBuildRule(
-            targetGraph, androidManifestParams, resolver, cellRoots, androidManifestArgs);
+            targetGraph,
+            projectFilesystem,
+            androidManifestParams,
+            resolver,
+            cellRoots,
+            androidManifestArgs);
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     final APKModuleGraph apkModuleGraph =

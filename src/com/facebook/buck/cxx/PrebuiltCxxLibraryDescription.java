@@ -539,6 +539,7 @@ public class PrebuiltCxxLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,

@@ -116,7 +116,8 @@ public abstract class AbstractNodeBuilder<
     @SuppressWarnings("unchecked")
     TBuildRule rule =
         (TBuildRule)
-            description.createBuildRule(targetGraph, params, resolver, cellRoots, builtArg);
+            description.createBuildRule(
+                targetGraph, filesystem, params, resolver, cellRoots, builtArg);
     resolver.addToIndex(rule);
     return rule;
   }

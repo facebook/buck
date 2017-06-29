@@ -325,6 +325,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
   @Override
   public NdkLibrary createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,

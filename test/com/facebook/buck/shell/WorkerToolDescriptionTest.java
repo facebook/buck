@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import org.junit.Test;
 
 public class WorkerToolDescriptionTest {
@@ -71,10 +73,12 @@ public class WorkerToolDescriptionTest {
 
     WorkerToolDescription workerToolDescription =
         new WorkerToolDescription(FakeBuckConfig.builder().build());
-    BuildRuleParams params = TestBuildRuleParams.create("//arbitrary:target");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleParams params = TestBuildRuleParams.create("//arbitrary:target", projectFilesystem);
     return (WorkerTool)
         workerToolDescription.createBuildRule(
             targetGraph,
+            projectFilesystem,
             params,
             resolver,
             TestCellBuilder.createCellRoots(params.getProjectFilesystem()),

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -119,8 +121,9 @@ public class AndroidInstrumentationApkTest {
             .setManifest(new FakeSourcePath("apps/InstrumentationAndroidManifest.xml"))
             .build();
 
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params =
-        TestBuildRuleParams.create(buildTarget)
+        TestBuildRuleParams.create(buildTarget, projectFilesystem)
             .withDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
             .withExtraDeps(ImmutableSortedSet.of(androidBinary));
     AndroidInstrumentationApk androidInstrumentationApk =
@@ -135,9 +138,10 @@ public class AndroidInstrumentationApkTest {
                     new DxConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
                     TargetGraph.EMPTY,
+                    projectFilesystem,
                     params,
                     ruleResolver,
-                    TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                    TestCellBuilder.createCellRoots(projectFilesystem),
                     arg);
 
     assertEquals(

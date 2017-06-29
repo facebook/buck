@@ -42,6 +42,7 @@ import com.facebook.buck.ocaml.OcamlLibraryDescription;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -74,6 +75,7 @@ public class KnownBuildRuleTypesTest {
   private static final ImmutableMap<String, String> environment =
       ImmutableMap.copyOf(System.getenv());
 
+  private static ProjectFilesystem projectFilesystem;
   private static BuildRuleParams buildRuleParams;
 
   static class KnownRuleTestDescription implements Description<KnownRuleTestDescriptionArg> {
@@ -100,6 +102,7 @@ public class KnownBuildRuleTypesTest {
     @Override
     public BuildRule createBuildRule(
         TargetGraph targetGraph,
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
@@ -110,7 +113,9 @@ public class KnownBuildRuleTypesTest {
 
   @BeforeClass
   public static void setupBuildParams() throws IOException {
-    buildRuleParams = TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo"));
+    projectFilesystem = new FakeProjectFilesystem();
+    buildRuleParams =
+        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo"), projectFilesystem);
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)
@@ -126,9 +131,10 @@ public class KnownBuildRuleTypesTest {
     return (DefaultJavaLibrary)
         description.createBuildRule(
             TargetGraph.EMPTY,
+            projectFilesystem,
             buildRuleParams,
             resolver,
-            TestCellBuilder.createCellRoots(buildRuleParams.getProjectFilesystem()),
+            TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
   }
 

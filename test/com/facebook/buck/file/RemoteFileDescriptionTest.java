@@ -78,6 +78,7 @@ public class RemoteFileDescriptionTest {
 
     description.createBuildRule(
         TargetGraph.EMPTY,
+        filesystem,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
             .createBuildRuleParams(ruleResolver, filesystem),
@@ -102,6 +103,7 @@ public class RemoteFileDescriptionTest {
     BuildRule buildRule =
         description.createBuildRule(
             TargetGraph.EMPTY,
+            filesystem,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)
                 .createBuildRuleParams(ruleResolver, filesystem),

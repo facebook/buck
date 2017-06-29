@@ -185,6 +185,7 @@ public class HaskellGhciDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final CellPathResolver cellPathResolver,

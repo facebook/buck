@@ -113,6 +113,7 @@ public class SwiftLibraryIntegrationTest {
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraph.EMPTY,
+                projectFilesystem,
                 params,
                 resolver,
                 TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
@@ -130,16 +131,18 @@ public class SwiftLibraryIntegrationTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
-    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget, projectFilesystem);
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraph.EMPTY,
+                projectFilesystem,
                 params,
                 resolver,
-                TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
     resolver.addToIndex(buildRule);
 
@@ -173,9 +176,10 @@ public class SwiftLibraryIntegrationTest {
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
+                projectFilesystem,
                 params.withBuildTarget(linkTarget),
                 resolver,
-                TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
     assertThat(linkRule.getArgs(), Matchers.hasItem(objArg));

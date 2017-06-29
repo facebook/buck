@@ -103,6 +103,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public BuildRule createBuildRule(
       final TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,

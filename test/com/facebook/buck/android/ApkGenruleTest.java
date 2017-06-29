@@ -147,6 +147,7 @@ public class ApkGenruleTest {
         (ApkGenrule)
             description.createBuildRule(
                 TargetGraph.EMPTY,
+                projectFilesystem,
                 params,
                 ruleResolver,
                 TestCellBuilder.createCellRoots(params.getProjectFilesystem()),

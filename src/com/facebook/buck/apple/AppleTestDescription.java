@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -151,6 +152,7 @@ public class AppleTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -230,6 +232,7 @@ public class AppleTestDescription
     BuildRule library =
         createTestLibraryRule(
             targetGraph,
+            projectFilesystem,
             params,
             resolver,
             cellRoots,
@@ -368,6 +371,7 @@ public class AppleTestDescription
 
   private BuildRule createTestLibraryRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -389,6 +393,7 @@ public class AppleTestDescription
       library =
           appleLibraryDescription.createLibraryBuildRule(
               targetGraph,
+              projectFilesystem,
               params.withBuildTarget(libraryTarget),
               resolver,
               cellRoots,

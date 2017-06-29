@@ -110,7 +110,9 @@ public class AndroidManifestTest {
 
   private AndroidManifest createSimpleAndroidManifestRule() {
     // First, create the AndroidManifest object.
-    BuildRuleParams buildRuleParams = TestBuildRuleParams.create(MANIFEST_TARGET);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleParams buildRuleParams =
+        TestBuildRuleParams.create(MANIFEST_TARGET, projectFilesystem);
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescriptionArg arg =
         AndroidManifestDescriptionArg.builder()
@@ -119,9 +121,10 @@ public class AndroidManifestTest {
             .build();
     return description.createBuildRule(
         TargetGraph.EMPTY,
+        projectFilesystem,
         buildRuleParams,
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
-        TestCellBuilder.createCellRoots(buildRuleParams.getProjectFilesystem()),
+        TestCellBuilder.createCellRoots(projectFilesystem),
         arg);
   }
 

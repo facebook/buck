@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -58,16 +60,18 @@ public class AndroidManifestDescriptionTest {
     AndroidManifestDescriptionArg arg =
         AndroidManifestDescriptionArg.builder().setName("baz").setSkeleton(skeleton).build();
 
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params =
-        TestBuildRuleParams.create("//foo:baz")
+        TestBuildRuleParams.create("//foo:baz", projectFilesystem)
             .withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
         new AndroidManifestDescription()
             .createBuildRule(
                 TargetGraph.EMPTY,
+                projectFilesystem,
                 params,
                 buildRuleResolver,
-                TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                TestCellBuilder.createCellRoots(projectFilesystem),
                 arg);
 
     assertEquals(ImmutableSortedSet.of(ruleWithOutput), androidManifest.getBuildDeps());

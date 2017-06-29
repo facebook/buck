@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -142,6 +143,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -364,6 +366,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
   public Optional<BuildRule> createCompanionBuildRule(
       final TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -391,7 +394,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     if (!delegateArgs.getSrcs().isEmpty()) {
       return Optional.of(
           resolver.addToIndex(
-              createBuildRule(targetGraph, params, resolver, cellRoots, delegateArgs)));
+              createBuildRule(
+                  targetGraph, projectFilesystem, params, resolver, cellRoots, delegateArgs)));
     } else {
       return Optional.empty();
     }

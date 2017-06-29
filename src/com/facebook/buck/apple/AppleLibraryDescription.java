@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -186,6 +187,7 @@ public class AppleLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -198,6 +200,7 @@ public class AppleLibraryDescription
     } else {
       return createLibraryBuildRule(
           targetGraph,
+          projectFilesystem,
           params,
           resolver,
           cellRoots,
@@ -258,11 +261,13 @@ public class AppleLibraryDescription
 
   /**
    * @param targetGraph The target graph.
+   * @param projectFilesystem
    * @param cellRoots The roots of known cells.
    * @param bundleLoader The binary in which the current library will be (dynamically) loaded into.
    */
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createLibraryBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -285,6 +290,7 @@ public class AppleLibraryDescription
 
     BuildRule unstrippedBinaryRule =
         requireUnstrippedBuildRule(
+            projectFilesystem,
             params,
             resolver,
             cellRoots,
@@ -341,6 +347,7 @@ public class AppleLibraryDescription
   }
 
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -360,6 +367,7 @@ public class AppleLibraryDescription
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
         thinRules.add(
             requireSingleArchUnstrippedBuildRule(
+                projectFilesystem,
                 params.withBuildTarget(thinTarget),
                 resolver,
                 cellRoots,
@@ -382,6 +390,7 @@ public class AppleLibraryDescription
           thinRules.build());
     } else {
       return requireSingleArchUnstrippedBuildRule(
+          projectFilesystem,
           params,
           resolver,
           cellRoots,
@@ -398,6 +407,7 @@ public class AppleLibraryDescription
 
   private <A extends AppleNativeTargetDescriptionArg>
       BuildRule requireSingleArchUnstrippedBuildRule(
+          ProjectFilesystem projectFilesystem,
           BuildRuleParams params,
           BuildRuleResolver resolver,
           CellPathResolver cellRoots,
@@ -416,7 +426,8 @@ public class AppleLibraryDescription
         pathResolver, delegateArg, args, params.getBuildTarget());
 
     Optional<BuildRule> swiftCompanionBuildRule =
-        swiftDelegate.createCompanionBuildRule(targetGraph, params, resolver, cellRoots, args);
+        swiftDelegate.createCompanionBuildRule(
+            targetGraph, projectFilesystem, params, resolver, cellRoots, args);
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.

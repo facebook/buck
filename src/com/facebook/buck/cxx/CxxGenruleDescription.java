@@ -262,6 +262,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -271,6 +272,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
+          projectFilesystem,
           params.withAppendedFlavor(cxxPlatform.get().getFlavor()),
           resolver,
           cellRoots,

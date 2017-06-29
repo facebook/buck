@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dotnet;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
@@ -42,6 +43,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,

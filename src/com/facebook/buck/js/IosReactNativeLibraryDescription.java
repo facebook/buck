@@ -59,6 +59,7 @@ public class IosReactNativeLibraryDescription
   @Override
   public ReactNativeBundle createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,

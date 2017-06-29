@@ -163,6 +163,7 @@ public class PythonTestDescription
   @Override
   public PythonTest createBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
