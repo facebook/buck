@@ -199,6 +199,13 @@ public class ProjectCommand extends BuildCommand {
   private String projectRoot = "";
 
   @Option(
+    name = "--intellij-include-transitive-dependencies",
+    usage = "Include transitive dependencies as RUNTIME library for Intellij project."
+  )
+  @Nonnull
+  private boolean includeTransitiveDependencies = false;
+
+  @Option(
     name = "--file-with-list-of-generated-files",
     usage =
         "If present, forces command to save the list of generated file names to a provided"
@@ -271,6 +278,7 @@ public class ProjectCommand extends BuildCommand {
                     runIjCleaner,
                     removeUnusedLibraries,
                     excludeArtifacts,
+                    includeTransitiveDependencies,
                     skipBuild || !build);
 
             IjProjectCommandHelper projectCommandHelper =

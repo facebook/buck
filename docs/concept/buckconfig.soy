@@ -1930,6 +1930,15 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
+  {param name: 'include_transitive_dependencies' /}
+  {param example_value: 'false' /}
+  {param description}
+    Add transitive dependencies as RUNTIME library.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
   {param name: 'remove_unused_libraries' /}
   {param example_value: 'true' /}
   {param description}

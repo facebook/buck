@@ -43,6 +43,7 @@ public class IjProjectBuckConfig {
       boolean isCleanerEnabled,
       boolean removeUnusedLibraries,
       boolean excludeArtifacts,
+      boolean includeTransitiveDependencies,
       boolean skipBuild) {
     Optional<String> excludedResourcePathsOption =
         buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "excluded_resource_paths");
@@ -102,6 +103,8 @@ public class IjProjectBuckConfig {
         .setGeneratedFilesListFilename(Optional.ofNullable(generatedFilesListFilename))
         .setProjectRoot(projectRoot)
         .setProjectPaths(new IjProjectPaths(projectRoot))
+        .setIncludeTransitiveDependency(
+            isIncludingTransitiveDependencyEnabled(includeTransitiveDependencies, buckConfig))
         .setIgnoredTargetLabels(
             buckConfig.getListWithoutComments(
                 INTELLIJ_BUCK_CONFIG_SECTION, "ignored_target_labels"))
@@ -121,6 +124,13 @@ public class IjProjectBuckConfig {
     return removeUnusedLibraries
         || buckConfig.getBooleanValue(
             INTELLIJ_BUCK_CONFIG_SECTION, "remove_unused_libraries", false);
+  }
+
+  private static boolean isIncludingTransitiveDependencyEnabled(
+      boolean includeTransitiveDependency, BuckConfig buckConfig) {
+    return includeTransitiveDependency
+        || buckConfig.getBooleanValue(
+            INTELLIJ_BUCK_CONFIG_SECTION, "include_transitive_dependencies", false);
   }
 
   private static boolean isExcludingArtifactsEnabled(

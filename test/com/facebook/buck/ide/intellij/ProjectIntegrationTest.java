@@ -244,7 +244,11 @@ public class ProjectIntegrationTest {
   @Test
   public void testProjectWithProjectRoot() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
-        "project_with_project_root", "--intellij-project-root", "project1", "//project1/lib:lib");
+        "project_with_project_root",
+        "--intellij-project-root",
+        "project1",
+        "--intellij-include-transitive-dependencies",
+        "//project1/lib:lib");
   }
 
   @Test

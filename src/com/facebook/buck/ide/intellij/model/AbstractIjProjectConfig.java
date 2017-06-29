@@ -70,6 +70,8 @@ abstract class AbstractIjProjectConfig {
 
   public abstract boolean isExcludeArtifactsEnabled();
 
+  public abstract boolean isIncludeTransitiveDependency();
+
   public abstract boolean isSkipBuildEnabled();
 
   public abstract AggregationMode getAggregationMode();

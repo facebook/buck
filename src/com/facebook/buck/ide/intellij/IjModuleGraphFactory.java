@@ -264,7 +264,7 @@ public final class IjModuleGraphFactory {
                   Stream.concat(
                       exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget).stream(),
                       Stream.of(depBuildTarget)));
-          if (!projectConfig.getProjectRoot().isEmpty()) {
+          if (projectConfig.isIncludeTransitiveDependency()) {
             transitiveDepElements =
                 getProjectElementFromBuildTargets(
                     projectFilesystem,
