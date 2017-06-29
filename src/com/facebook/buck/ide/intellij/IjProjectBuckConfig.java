@@ -40,6 +40,7 @@ public class IjProjectBuckConfig {
       @Nullable AggregationMode aggregationMode,
       @Nullable String generatedFilesListFilename,
       @Nonnull String projectRoot,
+      String moduleGroupName,
       boolean isCleanerEnabled,
       boolean removeUnusedLibraries,
       boolean excludeArtifacts,
@@ -105,6 +106,7 @@ public class IjProjectBuckConfig {
         .setProjectPaths(new IjProjectPaths(projectRoot))
         .setIncludeTransitiveDependency(
             isIncludingTransitiveDependencyEnabled(includeTransitiveDependencies, buckConfig))
+        .setModuleGroupName(getModuleGroupName(moduleGroupName, buckConfig))
         .setIgnoredTargetLabels(
             buckConfig.getListWithoutComments(
                 INTELLIJ_BUCK_CONFIG_SECTION, "ignored_target_labels"))
@@ -117,6 +119,15 @@ public class IjProjectBuckConfig {
                     INTELLIJ_BUCK_CONFIG_SECTION, "android_resource_module_aggregation_limit")
                 .orElse(Integer.MAX_VALUE))
         .build();
+  }
+
+  private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {
+    String name = moduleGroupName;
+    if (null == name) {
+      name =
+          buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "module_group_name").orElse("modules");
+    }
+    return name;
   }
 
   private static boolean isRemovingUnusedLibrariesEnabled(

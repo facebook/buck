@@ -306,7 +306,8 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
-    boolean needToPutModuleToGroup = projectConfig.getProjectRoot().isEmpty();
+    String moduleGroupName = projectConfig.getModuleGroupName();
+    boolean needToPutModuleToGroup = !moduleGroupName.isEmpty();
     return modulesToBeWritten
         .stream()
         .map(
@@ -323,7 +324,7 @@ public class IjProjectTemplateDataPreparer {
               String group =
                   (module.getModuleBasePath().toString().isEmpty() || !needToPutModuleToGroup)
                       ? null
-                      : "modules";
+                      : moduleGroupName;
               return ModuleIndexEntry.builder()
                   .setFileUrl(fileUrl)
                   .setFilePath(moduleOutputFileRelativePath)

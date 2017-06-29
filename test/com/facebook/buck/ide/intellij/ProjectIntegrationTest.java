@@ -248,6 +248,8 @@ public class ProjectIntegrationTest {
         "--intellij-project-root",
         "project1",
         "--intellij-include-transitive-dependencies",
+        "--intellij-module-group-name",
+        "",
         "//project1/lib:lib");
   }
 

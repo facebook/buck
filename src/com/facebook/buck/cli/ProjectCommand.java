@@ -206,6 +206,12 @@ public class ProjectCommand extends BuildCommand {
   private boolean includeTransitiveDependencies = false;
 
   @Option(
+    name = "--intellij-module-group-name",
+    usage = "Specify Intellij module group name when grouping modules into a module group."
+  )
+  private String moduleGroupName = null;
+
+  @Option(
     name = "--file-with-list-of-generated-files",
     usage =
         "If present, forces command to save the list of generated file names to a provided"
@@ -275,6 +281,7 @@ public class ProjectCommand extends BuildCommand {
                     intellijAggregationMode,
                     generatedFilesListFilename,
                     projectRoot,
+                    moduleGroupName,
                     runIjCleaner,
                     removeUnusedLibraries,
                     excludeArtifacts,

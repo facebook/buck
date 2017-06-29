@@ -78,6 +78,8 @@ abstract class AbstractIjProjectConfig {
 
   public abstract Optional<String> getGeneratedFilesListFilename();
 
+  public abstract String getModuleGroupName();
+
   public abstract String getProjectRoot();
 
   public abstract IjProjectPaths getProjectPaths();

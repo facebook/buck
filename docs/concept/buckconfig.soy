@@ -1939,6 +1939,15 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
+  {param name: 'module_group_name' /}
+  {param example_value: 'modules' /}
+  {param description}
+    Specify module group name when grouping modules.  If it is set to '', modules are not grouped.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
   {param name: 'remove_unused_libraries' /}
   {param example_value: 'true' /}
   {param description}
