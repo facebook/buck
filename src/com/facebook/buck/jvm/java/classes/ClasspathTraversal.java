@@ -31,7 +31,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.annotation.Nullable;
 
 /**
  * Traversal strategy for traversing a set of paths that themselves are traversed. The provided
@@ -52,16 +51,6 @@ public abstract class ClasspathTraversal {
   }
 
   public abstract void visit(FileLike fileLike) throws IOException;
-
-  /**
-   * Subclasses can override this method to return a value of any type. This often represents some
-   * sort of cumulative value that is computed as a result of the traversal.
-   */
-  // TODO(mbolin): Change this from Object to a generic <T>.
-  @Nullable
-  public Object getResult() {
-    return null;
-  }
 
   public final void traverse() throws IOException {
     for (Path path : paths) {

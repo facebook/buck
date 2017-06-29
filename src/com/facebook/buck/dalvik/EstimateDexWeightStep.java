@@ -30,6 +30,7 @@ import com.google.common.base.Supplier;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class EstimateDexWeightStep implements Step, Supplier<Integer> {
 
@@ -72,10 +73,9 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
+    AtomicInteger totalWeightEstimate = new AtomicInteger();
     ClasspathTraversal traversal =
         new ClasspathTraversal(Collections.singleton(path), filesystem) {
-
-          private int totalWeightEstimate = 0;
 
           @Override
           public void visit(FileLike fileLike) throws IOException {
@@ -85,18 +85,13 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
               return;
             }
 
-            totalWeightEstimate += dexWeightEstimator.getEstimate(fileLike);
-          }
-
-          @Override
-          public Integer getResult() {
-            return totalWeightEstimate;
+            totalWeightEstimate.addAndGet(dexWeightEstimator.getEstimate(fileLike));
           }
         };
 
     new DefaultClasspathTraverser().traverse(traversal);
 
-    this.weightEstimate = (Integer) traversal.getResult();
+    this.weightEstimate = totalWeightEstimate.get();
     return StepExecutionResult.SUCCESS;
   }
 
