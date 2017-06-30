@@ -934,6 +934,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     }
   }
 
+  @Test
+  public void parseErrorsShouldBeReportedGracefully() throws IOException {
+    setUpProjectWorkspaceForScenario("parse_errors");
+
+    workspace.runBuckBuild("//:errors");
+  }
+
   /** Asserts that the specified file exists and returns its contents. */
   private String getContents(Path relativePathToFile) throws IOException {
     Path file = workspace.getPath(relativePathToFile);

@@ -73,6 +73,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
   @Nullable private BuckJavacTaskProxy javacTask;
+  private boolean frontendRunAttempted = false;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
 
   public Jsr199JavacInvocation(
@@ -119,7 +120,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             }
           });
 
-      javacTask.enter();
+      javacTask.parse();
+      // JavacTask.call would stop between these phases if there were an error, so we do too.
+      if (buildSuccessful()) {
+        javacTask.enter();
+      }
+      frontendRunAttempted = true;
 
       debugLogDiagnostics();
       if (!buildSuccessful()) {
@@ -166,7 +172,18 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     try {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
-      javacTask.generate();
+      if (!frontendRunAttempted) {
+        javacTask.parse();
+        // JavacTask.call would stop between these phases if there were an error, so we do too.
+        if (buildSuccessful()) {
+          javacTask.enter();
+        }
+      }
+      // JavacTask.generate will still try to run analyze even if enter failed, and in some cases
+      // that can actually crash the compiler, so we make sure that it doesn't happen.
+      if (buildSuccessful()) {
+        javacTask.generate();
+      }
 
       debugLogDiagnostics();
 
