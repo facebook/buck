@@ -60,11 +60,12 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   private final ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets;
 
   GenerateCodeForMergedLibraryMap(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedMap<String, String> mergeResult,
       ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets,
       BuildRule codeGenerator) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.mergeResult = mergeResult;
     this.sharedObjectTargets = sharedObjectTargets;
     this.codeGenerator = codeGenerator;

@@ -72,11 +72,13 @@ public class MergeAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private Optional<SourcePath> baseApk;
 
   public MergeAssets(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories) {
     super(
+        projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             ImmutableSortedSet.copyOf(
                 ruleFinder.filterBuildRuleInputs(

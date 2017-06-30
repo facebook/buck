@@ -123,7 +123,7 @@ public class AndroidInstrumentationApkTest {
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params =
-        TestBuildRuleParams.create(buildTarget, projectFilesystem)
+        TestBuildRuleParams.create(buildTarget)
             .withDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
             .withExtraDeps(ImmutableSortedSet.of(androidBinary));
     AndroidInstrumentationApk androidInstrumentationApk =

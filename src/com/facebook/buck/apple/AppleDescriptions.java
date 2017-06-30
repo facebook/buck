@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -276,6 +277,7 @@ public class AppleDescriptions {
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       ApplePlatform applePlatform,
@@ -354,6 +356,7 @@ public class AppleDescriptions {
 
     return Optional.of(
         new AppleAssetCatalog(
+            projectFilesystem,
             assetCatalogParams,
             applePlatform.getName(),
             targetSDKVersion,
@@ -367,6 +370,7 @@ public class AppleDescriptions {
 
   public static Optional<CoreDataModel> createBuildRulesForCoreDataDependencies(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String moduleName,
       AppleCxxPlatform appleCxxPlatform) {
@@ -387,18 +391,22 @@ public class AppleDescriptions {
     } else {
       return Optional.of(
           new CoreDataModel(
+              projectFilesystem,
               coreDataModelParams,
               appleCxxPlatform,
               moduleName,
               coreDataModelArgs
                   .stream()
-                  .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.getPath()))
+                  .map(input -> new PathSourcePath(projectFilesystem, input.getPath()))
                   .collect(MoreCollectors.toImmutableSet())));
     }
   }
 
   public static Optional<SceneKitAssets> createBuildRulesForSceneKitAssetsDependencies(
-      TargetGraph targetGraph, BuildRuleParams params, AppleCxxPlatform appleCxxPlatform) {
+      TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      AppleCxxPlatform appleCxxPlatform) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
@@ -416,16 +424,18 @@ public class AppleDescriptions {
     } else {
       return Optional.of(
           new SceneKitAssets(
+              projectFilesystem,
               sceneKitAssetsParams,
               appleCxxPlatform,
               sceneKitAssetsArgs
                   .stream()
-                  .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.getPath()))
+                  .map(input -> new PathSourcePath(projectFilesystem, input.getPath()))
                   .collect(MoreCollectors.toImmutableSet())));
     }
   }
 
   static AppleDebuggableBinary createAppleDebuggableBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildRule strippedBinaryRule,
@@ -437,6 +447,7 @@ public class AppleDescriptions {
     Optional<AppleDsym> appleDsym =
         createAppleDsymForDebugFormat(
             debugFormat,
+            projectFilesystem,
             params,
             resolver,
             unstrippedBinaryRule,
@@ -451,6 +462,7 @@ public class AppleDescriptions {
     }
     AppleDebuggableBinary rule =
         new AppleDebuggableBinary(
+            projectFilesystem,
             params
                 .withBuildTarget(
                     strippedBinaryRule
@@ -467,6 +479,7 @@ public class AppleDescriptions {
 
   private static Optional<AppleDsym> createAppleDsymForDebugFormat(
       AppleDebugFormat debugFormat,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ProvidesLinkedBinaryDeps unstrippedBinaryRule,
@@ -487,6 +500,7 @@ public class AppleDescriptions {
         dsymRule =
             Optional.of(
                 createAppleDsym(
+                    projectFilesystem,
                     params.withBuildTarget(dsymBuildTarget),
                     resolver,
                     unstrippedBinaryRule,
@@ -501,6 +515,7 @@ public class AppleDescriptions {
   }
 
   static AppleDsym createAppleDsym(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ProvidesLinkedBinaryDeps unstrippedBinaryBuildRule,
@@ -519,6 +534,7 @@ public class AppleDescriptions {
 
     AppleDsym appleDsym =
         new AppleDsym(
+            projectFilesystem,
             params
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -530,7 +546,7 @@ public class AppleDescriptions {
             appleCxxPlatform.getDsymutil(),
             appleCxxPlatform.getLldb(),
             unstrippedBinaryBuildRule.getSourcePathToOutput(),
-            AppleDsym.getDsymOutputPath(params.getBuildTarget(), params.getProjectFilesystem()));
+            AppleDsym.getDsymOutputPath(params.getBuildTarget(), projectFilesystem));
     resolver.addToIndex(appleDsym);
     return appleDsym;
   }
@@ -540,6 +556,7 @@ public class AppleDescriptions {
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CodeSignIdentityStore codeSignIdentityStore,
@@ -621,6 +638,7 @@ public class AppleDescriptions {
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
             targetGraph,
+            projectFilesystem,
             paramsWithoutBundleSpecificFlavors,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
@@ -631,6 +649,7 @@ public class AppleDescriptions {
     Optional<CoreDataModel> coreDataModel =
         createBuildRulesForCoreDataDependencies(
             targetGraph,
+            projectFilesystem,
             paramsWithoutBundleSpecificFlavors,
             AppleBundle.getBinaryName(params.getBuildTarget(), productName),
             appleCxxPlatform);
@@ -638,7 +657,7 @@ public class AppleDescriptions {
 
     Optional<SceneKitAssets> sceneKitAssets =
         createBuildRulesForSceneKitAssetsDependencies(
-            targetGraph, paramsWithoutBundleSpecificFlavors, appleCxxPlatform);
+            targetGraph, projectFilesystem, paramsWithoutBundleSpecificFlavors, appleCxxPlatform);
     addToIndex(resolver, sceneKitAssets);
 
     // TODO(beng): Sort through the changes needed to make project generation work with
@@ -683,6 +702,7 @@ public class AppleDescriptions {
       BuildRuleParams binaryParams = params.withBuildTarget(binaryBuildTarget);
       targetDebuggableBinaryRule =
           createAppleDebuggableBinary(
+              projectFilesystem,
               binaryParams,
               resolver,
               getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
@@ -694,6 +714,7 @@ public class AppleDescriptions {
       appleDsym =
           createAppleDsymForDebugFormat(
               debugFormat,
+              projectFilesystem,
               binaryParams,
               resolver,
               (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
@@ -730,6 +751,7 @@ public class AppleDescriptions {
         collectFirstLevelAppleDependencyBundles(params.getBuildDeps(), destinations);
 
     return new AppleBundle(
+        projectFilesystem,
         bundleParamsWithFlavoredBinaryDep,
         resolver,
         extension,
@@ -839,7 +861,7 @@ public class AppleDescriptions {
   }
 
   private static BuildRuleParams getBundleParamsWithUpdatedDeps(
-      final BuildRuleParams params,
+      BuildRuleParams params,
       final BuildTarget originalBinaryTarget,
       final Set<BuildRule> newDeps) {
     // Remove the unflavored binary rule and add the flavored one instead.

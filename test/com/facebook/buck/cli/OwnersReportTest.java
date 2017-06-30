@@ -71,7 +71,8 @@ public class OwnersReportTest {
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeRuleDescriptionArg args) {
-      return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+      return new FakeBuildRule(
+          projectFilesystem, params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
 
     @BuckStyleImmutable

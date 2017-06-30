@@ -68,13 +68,22 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .build());
 
   protected BuildRule createBuildRule(
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       @SuppressWarnings("unused") final BuildRuleResolver resolver,
       T args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
-    return new Genrule(params, args.getSrcs(), cmd, bash, cmdExe, args.getType(), args.getOut());
+    return new Genrule(
+        projectFilesystem,
+        params,
+        args.getSrcs(),
+        cmd,
+        bash,
+        cmdExe,
+        args.getType(),
+        args.getOut());
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
@@ -103,15 +112,14 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public BuildRule createBuildRule(
       final TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final T args)
       throws NoSuchBuildTargetException {
     Optional<MacroHandler> maybeMacroHandler =
-        getMacroHandler(
-            params.getBuildTarget(), params.getProjectFilesystem(), resolver, targetGraph, args);
+        getMacroHandler(params.getBuildTarget(), projectFilesystem, resolver, targetGraph, args);
     if (maybeMacroHandler.isPresent()) {
       MacroHandler macroHandler = maybeMacroHandler.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -123,6 +131,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
           args.getCmdExe().map(macroArgFunction);
       return createBuildRule(
+          projectFilesystem,
           params.withExtraDeps(
               Stream.concat(
                       ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
@@ -138,7 +147,13 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           cmdExe);
     }
     return createBuildRule(
-        params, resolver, args, Optional.empty(), Optional.empty(), Optional.empty());
+        projectFilesystem,
+        params,
+        resolver,
+        args,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   @Override

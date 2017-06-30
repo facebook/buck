@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -41,6 +42,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
   private final ImmutableSortedSet<BuildRule> bytecodeLinkDeps;
 
   public OcamlStaticLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleParams compileParams,
       ImmutableList<String> linkerFlags,
@@ -50,7 +52,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
       ImmutableSortedSet<BuildRule> nativeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeLinkDeps) {
-    super(params);
+    super(projectFilesystem, params);
     this.linkerFlags = linkerFlags;
     this.objFiles = objFiles;
     this.ocamlContext = ocamlContext;

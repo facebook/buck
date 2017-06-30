@@ -243,6 +243,7 @@ public class AndroidBinaryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
+              projectFilesystem,
               params,
               targetGraph,
               resolver,
@@ -258,8 +259,7 @@ public class AndroidBinaryDescription
               ImmutableSet.copyOf(args.getCpuFilters()),
               args.isBuildStringSourceMap(),
               shouldPreDex,
-              AndroidBinary.getPrimaryDexPath(
-                  params.getBuildTarget(), params.getProjectFilesystem()),
+              AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), projectFilesystem),
               dexSplitMode,
               args.getNoDx(),
               /* resourcesToExclude */ ImmutableSet.of(),
@@ -331,6 +331,7 @@ public class AndroidBinaryDescription
               .orElse(ImmutableSortedSet.of());
 
       return new AndroidBinary(
+          projectFilesystem,
           params
               .withExtraDeps(result.getFinalDeps())
               .copyAppendingExtraDeps(

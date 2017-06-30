@@ -43,6 +43,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +62,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(buildTarget),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
@@ -82,6 +84,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(buildTarget),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
@@ -131,6 +134,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
+            new FakeProjectFilesystem(),
             buildRuleParams,
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
@@ -193,6 +197,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
+            new FakeProjectFilesystem(),
             buildRuleParams,
             DEFAULT_JAVAC,
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
@@ -238,6 +243,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             target,
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(dep)),
             JavacFactory.create(ruleFinder, javaConfig, null),
             options,

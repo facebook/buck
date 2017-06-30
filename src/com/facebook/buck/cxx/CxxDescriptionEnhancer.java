@@ -809,7 +809,7 @@ public class CxxDescriptionEnhancer {
     //    TODO(beefon): should be:
     //    Path linkOutput = getLinkOutputPath(
     //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
-    //        params.getProjectFilesystem());
+    //        projectFilesystem);
 
     Path linkOutput =
         getBinaryOutputPath(
@@ -1085,14 +1085,14 @@ public class CxxDescriptionEnhancer {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JsonConcatenate(
+        projectFilesystem,
         new BuildRuleParams(
             buildTarget,
             () ->
                 ImmutableSortedSet.copyOf(
                     ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),
             () -> ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            projectFilesystem),
+            ImmutableSortedSet.of()),
         pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",

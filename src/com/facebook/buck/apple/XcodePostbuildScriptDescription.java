@@ -56,6 +56,6 @@ public class XcodePostbuildScriptDescription implements Description<XcodeScriptD
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       XcodeScriptDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 }

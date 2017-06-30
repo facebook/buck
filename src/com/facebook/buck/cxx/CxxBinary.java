@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -58,6 +59,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildTarget platformlessTarget;
 
   public CxxBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -67,7 +69,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests,
       BuildTarget platformlessTarget) {
-    super(params);
+    super(projectFilesystem, params);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.ruleFinder = ruleFinder;

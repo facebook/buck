@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -31,8 +32,9 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private final BuildRuleResolver resolver;
 
-  PythonLibrary(BuildRuleParams params, BuildRuleResolver resolver) {
-    super(params);
+  PythonLibrary(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
+    super(projectFilesystem, params);
     this.resolver = resolver;
   }
 

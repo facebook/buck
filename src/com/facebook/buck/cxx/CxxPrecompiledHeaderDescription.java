@@ -47,6 +47,7 @@ public class CxxPrecompiledHeaderDescription
       CellPathResolver cellRoots,
       CxxPrecompiledHeaderDescriptionArg args) {
     return new CxxPrecompiledHeaderTemplate(
+        projectFilesystem,
         params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.getDeps())),
         ruleResolver,
         args.getSrc());

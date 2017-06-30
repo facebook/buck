@@ -203,7 +203,13 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         switch (type.get().getValue()) {
           case SHARED:
             return createSharedLibraryBuildRule(
-                typeParams, resolver, target, swiftPlatform.get(), cxxPlatform, args.getSoname());
+                projectFilesystem,
+                typeParams,
+                resolver,
+                target,
+                swiftPlatform.get(),
+                cxxPlatform,
+                args.getSoname());
           case STATIC:
           case MACH_O_BUNDLE:
             // TODO(tho@uber.com) create build rule for other types.
@@ -262,6 +268,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
+          projectFilesystem,
           params.copyAppendingExtraDeps(
               () ->
                   ImmutableSet.<BuildRule>builder()
@@ -274,7 +281,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
           args.getModuleName().orElse(buildTarget.getShortName()),
-          BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s"),
+          BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
           args.getSrcs(),
           RichStream.from(args.getCompilerFlags())
               .map(
@@ -294,6 +301,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
                 params.getBuildTarget(), flavoredLinkerMapMode));
     return new SwiftLibrary(
+        projectFilesystem,
         params,
         resolver,
         ImmutableSet.of(),
@@ -305,6 +313,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   private BuildRule createSharedLibraryBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildTarget buildTarget,
@@ -320,7 +329,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
     Path sharedLibOutput =
         CxxDescriptionEnhancer.getSharedLibraryPath(
-            params.getProjectFilesystem(), buildTarget, sharedLibrarySoname);
+            projectFilesystem, buildTarget, sharedLibrarySoname);
 
     SwiftRuntimeNativeLinkable swiftRuntimeLinkable = new SwiftRuntimeNativeLinkable(swiftPlatform);
 
@@ -342,7 +351,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxBuckConfig,
             cxxPlatform,
-            params.getProjectFilesystem(),
+            projectFilesystem,
             resolver,
             sourcePathResolver,
             ruleFinder,
@@ -366,8 +375,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
   public Optional<BuildRule> createCompanionBuildRule(
       final TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxLibraryDescription.CommonArg args)

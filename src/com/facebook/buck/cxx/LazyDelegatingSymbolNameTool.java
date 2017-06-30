@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,6 +34,7 @@ public class LazyDelegatingSymbolNameTool implements SymbolNameTool {
 
   @Override
   public SourcePath createUndefinedSymbolsFile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -40,6 +42,7 @@ public class LazyDelegatingSymbolNameTool implements SymbolNameTool {
       Iterable<? extends SourcePath> linkerInputs) {
     return delegate
         .get()
-        .createUndefinedSymbolsFile(baseParams, ruleResolver, ruleFinder, target, linkerInputs);
+        .createUndefinedSymbolsFile(
+            projectFilesystem, baseParams, ruleResolver, ruleFinder, target, linkerInputs);
   }
 }

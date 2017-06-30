@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -76,6 +77,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final Linkage linkage;
 
   SwiftLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Collection<? extends BuildRule> exportedDeps,
@@ -84,7 +86,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<FrameworkPath> libraries,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
-    super(params);
+    super(projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;

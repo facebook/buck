@@ -74,7 +74,10 @@ public class JavaAnnotationProcessorDescription
 
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new JavaAnnotationProcessor(
-        params.copyAppendingExtraDeps(properties.getClasspathDeps()), pathResolver, properties);
+        projectFilesystem,
+        params.copyAppendingExtraDeps(properties.getClasspathDeps()),
+        pathResolver,
+        properties);
   }
 
   @BuckStyleImmutable

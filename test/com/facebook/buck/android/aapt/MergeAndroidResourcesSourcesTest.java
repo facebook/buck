@@ -102,7 +102,7 @@ public class MergeAndroidResourcesSourcesTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testRuleStepCreation() throws IOException, InterruptedException {
-    BuildRuleParams buildRuleParams = TestBuildRuleParams.create("//:output_folder", filesystem);
+    BuildRuleParams buildRuleParams = TestBuildRuleParams.create("//:output_folder");
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             new FakeSourcePath(filesystem, "res_in_1"), new FakeSourcePath(filesystem, "res_in_2"));
@@ -112,7 +112,7 @@ public class MergeAndroidResourcesSourcesTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
-        new MergeAndroidResourceSources(buildRuleParams, directories);
+        new MergeAndroidResourceSources(filesystem, buildRuleParams, directories);
 
     ImmutableList<Step> steps =
         mergeAndroidResourceSourcesStep.getBuildSteps(

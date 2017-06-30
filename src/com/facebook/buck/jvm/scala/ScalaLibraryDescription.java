@@ -61,14 +61,15 @@ public class ScalaLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams rawParams,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ScalaLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     ScalaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(targetGraph, rawParams, resolver, cellRoots, scalaBuckConfig)
+        new ScalaLibraryBuilder(
+                targetGraph, projectFilesystem, rawParams, resolver, cellRoots, scalaBuckConfig)
             .setArgs(args);
 
     return HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())

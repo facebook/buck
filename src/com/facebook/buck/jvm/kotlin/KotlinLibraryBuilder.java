@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.jvm.java.BaseCompileToJarStepFactory.EMPTY_EXTRA_CLASSPATH;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -36,12 +37,13 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
 
   KotlinLibraryBuilder(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    super(targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
+    super(targetGraph, projectFilesystem, params, buildRuleResolver, cellRoots, javaBuckConfig);
     this.kotlinBuckConfig = kotlinBuckConfig;
     setCompileAgainstAbis(false);
   }

@@ -46,6 +46,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
   @AddToRuleKey private final boolean legacyOutputPath;
 
   public PythonBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
       PythonPlatform pythonPlatform,
@@ -54,7 +55,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableSet<String> preloadLibraries,
       String pexExtension,
       boolean legacyOutputPath) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;

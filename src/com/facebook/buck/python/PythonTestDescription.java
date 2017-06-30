@@ -139,7 +139,10 @@ public class PythonTestDescription
    * this file.
    */
   private static BuildRule createTestModulesSourceBuildRule(
-      BuildRuleParams params, Path outputPath, ImmutableSet<String> testModules) {
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      Path outputPath,
+      ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
     params.getBuildTarget().checkUnflavored();
@@ -151,7 +154,8 @@ public class PythonTestDescription
 
     String contents = getTestModulesListContents(testModules);
 
-    return new WriteFile(newParams, contents, outputPath, /* executable */ false);
+    return new WriteFile(
+        projectFilesystem, newParams, contents, outputPath, /* executable */ false);
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonTestDescriptionArg args) {
@@ -163,8 +167,8 @@ public class PythonTestDescription
   @Override
   public PythonTest createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PythonTestDescriptionArg args)
@@ -226,8 +230,9 @@ public class PythonTestDescription
     // add it to the build.
     BuildRule testModulesBuildRule =
         createTestModulesSourceBuildRule(
+            projectFilesystem,
             params,
-            getTestModulesListPath(params.getBuildTarget(), params.getProjectFilesystem()),
+            getTestModulesListPath(params.getBuildTarget(), projectFilesystem),
             testModules);
     resolver.addToIndex(testModulesBuildRule);
 
@@ -243,9 +248,7 @@ public class PythonTestDescription
         PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>builder()
                 .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
-                .put(
-                    getTestMainName(),
-                    pythonBuckConfig.getPathToTestMain(params.getProjectFilesystem()))
+                .put(getTestMainName(), pythonBuckConfig.getPathToTestMain(projectFilesystem))
                 .putAll(srcs)
                 .build(),
             resources,
@@ -261,6 +264,7 @@ public class PythonTestDescription
             .collect(MoreCollectors.toImmutableList());
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -283,6 +287,7 @@ public class PythonTestDescription
     params.getBuildTarget().checkUnflavored();
     PythonBinary binary =
         binaryDescription.createPackageRule(
+            projectFilesystem,
             params.withAppendedFlavor(BINARY_FLAVOR),
             resolver,
             ruleFinder,
@@ -342,6 +347,7 @@ public class PythonTestDescription
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
+        projectFilesystem,
         params,
         ruleFinder,
         testEnv,

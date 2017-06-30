@@ -108,7 +108,7 @@ public class AndroidPrebuiltAarDescription
               .withoutDeclaredDeps()
               .withExtraDeps(
                   ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(args.getAar())));
-      return new UnzipAar(unzipAarParams, args.getAar());
+      return new UnzipAar(projectFilesystem, unzipAarParams, args.getAar());
     }
 
     BuildRule unzipAarRule =
@@ -124,6 +124,7 @@ public class AndroidPrebuiltAarDescription
       return CalculateAbiFromClasses.of(
           params.getBuildTarget(),
           ruleFinder,
+          projectFilesystem,
           params,
           new ExplicitBuildTargetSourcePath(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()));
@@ -150,6 +151,7 @@ public class AndroidPrebuiltAarDescription
               .withDeclaredDeps(ImmutableSortedSet.copyOf(javaDeps))
               .withExtraDeps(ImmutableSortedSet.of(unzipAar));
       return new PrebuiltJar(
+          projectFilesystem,
           /* params */ buildRuleParams,
           /* resolver */ pathResolver,
           /* binaryJar */ new ExplicitBuildTargetSourcePath(
@@ -163,7 +165,9 @@ public class AndroidPrebuiltAarDescription
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       return new Aapt2Compile(
-          params.copyAppendingExtraDeps(unzipAarRule), unzipAar.getResDirectory());
+          projectFilesystem,
+          params.copyAppendingExtraDeps(unzipAarRule),
+          unzipAar.getResDirectory());
     }
 
     BuildRule prebuiltJarRule =
@@ -186,6 +190,7 @@ public class AndroidPrebuiltAarDescription
             .withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
     return new AndroidPrebuiltAar(
+        projectFilesystem,
         androidLibraryParams,
         /* resolver */ pathResolver,
         ruleFinder,

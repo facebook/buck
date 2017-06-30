@@ -60,6 +60,7 @@ public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final ManifestEntries manifestEntries;
 
   Aapt2Link(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Aapt2Compile> compileRules,
@@ -67,6 +68,7 @@ public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       SourcePath manifest,
       ManifestEntries manifestEntries) {
     super(
+        projectFilesystem,
         buildRuleParams
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()

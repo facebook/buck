@@ -95,13 +95,14 @@ public class GroovyTestDescription
       GroovyTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
+        JavacOptionsFactory.create(defaultJavacOptions, projectFilesystem, params, resolver, args);
 
     BuildRuleParams testsLibraryParams =
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new DefaultGroovyLibraryBuilder(
                 targetGraph,
+                projectFilesystem,
                 testsLibraryParams,
                 resolver,
                 cellRoots,
@@ -121,6 +122,7 @@ public class GroovyTestDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
         testsLibrary,

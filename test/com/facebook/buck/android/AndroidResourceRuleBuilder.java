@@ -16,12 +16,14 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -39,6 +41,7 @@ public class AndroidResourceRuleBuilder {
   public static class Builder {
 
     private SourcePathRuleFinder ruleFinder;
+    private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     private BuildRuleParams buildRuleParams;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private SourcePath res;
@@ -51,6 +54,7 @@ public class AndroidResourceRuleBuilder {
 
     public AndroidResource build() {
       return new AndroidResource(
+          projectFilesystem,
           buildRuleParams,
           ruleFinder,
           deps,

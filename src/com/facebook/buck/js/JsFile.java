@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -41,8 +42,12 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final WorkerTool worker;
 
-  public JsFile(BuildRuleParams params, Optional<String> extraArgs, WorkerTool worker) {
-    super(params);
+  public JsFile(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      Optional<String> extraArgs,
+      WorkerTool worker) {
+    super(projectFilesystem, params);
     this.extraArgs = extraArgs;
     this.worker = worker;
   }
@@ -80,13 +85,14 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @AddToRuleKey private final Optional<String> virtualPath;
 
     JsFileDev(
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         SourcePath src,
         Optional<String> subPath,
         Optional<Path> virtualPath,
         Optional<String> extraArgs,
         WorkerTool worker) {
-      super(params, extraArgs, worker);
+      super(projectFilesystem, params, extraArgs, worker);
       this.src = src;
       this.subPath = subPath;
       this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
@@ -122,11 +128,12 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @AddToRuleKey private final SourcePath devFile;
 
     JsFileRelease(
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         SourcePath devFile,
         Optional<String> extraArgs,
         WorkerTool worker) {
-      super(buildRuleParams, extraArgs, worker);
+      super(projectFilesystem, buildRuleParams, extraArgs, worker);
       this.devFile = devFile;
     }
 

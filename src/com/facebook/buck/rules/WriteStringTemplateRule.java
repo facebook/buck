@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -44,12 +45,13 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
   @AddToRuleKey private final boolean executable;
 
   public WriteStringTemplateRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Path output,
       SourcePath template,
       ImmutableMap<String, String> values,
       boolean executable) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.output = output;
     this.template = template;
     this.values = values;
@@ -91,6 +93,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
   }
 
   public static WriteStringTemplateRule from(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
@@ -99,6 +102,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
       ImmutableMap<String, String> values,
       boolean executable) {
     return new WriteStringTemplateRule(
+        projectFilesystem,
         baseParams
             .withBuildTarget(target)
             .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template)))

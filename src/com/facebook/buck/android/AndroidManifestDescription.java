@@ -71,7 +71,8 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
                     Sets.union(manifestFiles, Collections.singleton(args.getSkeleton()))))
             .build();
 
-    return new AndroidManifest(params.withDeclaredDeps(newDeps), args.getSkeleton(), manifestFiles);
+    return new AndroidManifest(
+        projectFilesystem, params.withDeclaredDeps(newDeps), args.getSkeleton(), manifestFiles);
   }
 
   @BuckStyleImmutable

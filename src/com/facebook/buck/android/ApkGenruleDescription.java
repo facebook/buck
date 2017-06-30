@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -40,6 +41,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
   @Override
   protected BuildRule createBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ApkGenruleDescriptionArg args,
@@ -60,6 +62,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new ApkGenrule(
+        projectFilesystem,
         params.withExtraDeps(
             Suppliers.memoize(
                 () ->

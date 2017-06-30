@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -78,7 +79,8 @@ public class HaskellDescriptionUtils {
    */
   private static HaskellCompileRule createCompileRule(
       BuildTarget target,
-      final BuildRuleParams baseParams,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
       final BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
@@ -156,6 +158,7 @@ public class HaskellDescriptionUtils {
 
     return HaskellCompileRule.from(
         target,
+        projectFilesystem,
         baseParams,
         ruleFinder,
         haskellConfig.getCompiler().resolve(resolver),
@@ -195,6 +198,7 @@ public class HaskellDescriptionUtils {
   }
 
   public static HaskellCompileRule requireCompileRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -222,6 +226,7 @@ public class HaskellDescriptionUtils {
     return resolver.addToIndex(
         HaskellDescriptionUtils.createCompileRule(
             target,
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -242,6 +247,7 @@ public class HaskellDescriptionUtils {
    */
   public static HaskellLinkRule createLinkRule(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -295,15 +301,16 @@ public class HaskellDescriptionUtils {
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(
+                projectFilesystem,
                 baseParams.withBuildTarget(emptyModuleTarget),
                 "module Unused where",
-                BuildTargets.getGenPath(
-                    baseParams.getProjectFilesystem(), emptyModuleTarget, "%s/Unused.hs"),
+                BuildTargets.getGenPath(projectFilesystem, emptyModuleTarget, "%s/Unused.hs"),
                 /* executable */ false));
     HaskellCompileRule emptyCompiledModule =
         resolver.addToIndex(
             createCompileRule(
                 target.withAppendedFlavors(InternalFlavor.of("empty-compiled-module")),
+                projectFilesystem,
                 baseParams,
                 resolver,
                 ruleFinder,
@@ -328,12 +335,11 @@ public class HaskellDescriptionUtils {
         resolver.addToIndex(
             Archive.from(
                 emptyArchiveTarget,
-                baseParams.getProjectFilesystem(),
+                projectFilesystem,
                 ruleFinder,
                 cxxPlatform,
                 Archive.Contents.NORMAL,
-                BuildTargets.getGenPath(
-                    baseParams.getProjectFilesystem(), emptyArchiveTarget, "%s/libempty.a"),
+                BuildTargets.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
@@ -342,6 +348,7 @@ public class HaskellDescriptionUtils {
 
     return resolver.addToIndex(
         new HaskellLinkRule(
+            projectFilesystem,
             baseParams
                 .withBuildTarget(target)
                 .withDeclaredDeps(

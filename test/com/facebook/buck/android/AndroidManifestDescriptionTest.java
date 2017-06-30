@@ -62,7 +62,7 @@ public class AndroidManifestDescriptionTest {
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params =
-        TestBuildRuleParams.create("//foo:baz", projectFilesystem)
+        TestBuildRuleParams.create("//foo:baz")
             .withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
         new AndroidManifestDescription()

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -73,6 +74,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private final long maxTestOutputSize;
 
   public CxxGtestTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       BuildRule binary,
@@ -88,6 +90,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize) {
     super(
+        projectFilesystem,
         params,
         executable,
         env,

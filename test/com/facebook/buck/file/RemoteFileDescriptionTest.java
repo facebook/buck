@@ -81,7 +81,7 @@ public class RemoteFileDescriptionTest {
         filesystem,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
-            .createBuildRuleParams(ruleResolver, filesystem),
+            .createBuildRuleParams(ruleResolver),
         ruleResolver,
         TestCellBuilder.createCellRoots(filesystem),
         arg);
@@ -106,7 +106,7 @@ public class RemoteFileDescriptionTest {
             filesystem,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)
-                .createBuildRuleParams(ruleResolver, filesystem),
+                .createBuildRuleParams(ruleResolver),
             ruleResolver,
             TestCellBuilder.createCellRoots(filesystem),
             arg);

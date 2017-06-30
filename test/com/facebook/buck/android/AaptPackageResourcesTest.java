@@ -210,6 +210,7 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider =
         new ResourcesFilter(
+            filesystem,
             params
                 .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
                 .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
@@ -225,6 +226,7 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider =
         new ResourcesFilter(
+            filesystem,
             params
                 .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
                 .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
@@ -261,6 +263,7 @@ public class AaptPackageResourcesTest {
     return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
         .build(
             new AaptPackageResources(
+                filesystem,
                 params,
                 ruleFinder,
                 ruleResolver,

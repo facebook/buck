@@ -62,6 +62,7 @@ public class CxxTestTest {
 
     public FakeCxxTest() {
       super(
+          new FakeProjectFilesystem(),
           createBuildParams(),
           new CommandTool.Builder().build(),
           ImmutableMap.of(),

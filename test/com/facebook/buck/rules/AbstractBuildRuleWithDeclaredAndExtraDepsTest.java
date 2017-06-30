@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -25,7 +26,8 @@ public class AbstractBuildRuleWithDeclaredAndExtraDepsTest {
   @Test
   public void getTypeForAnonymousClass() {
     NoopBuildRuleWithDeclaredAndExtraDeps noopBuildRule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(TestBuildRuleParams.create("//:rule")) {};
+        new NoopBuildRuleWithDeclaredAndExtraDeps(
+            new FakeProjectFilesystem(), TestBuildRuleParams.create("//:rule")) {};
     assertThat(
         noopBuildRule.getType(), Matchers.equalTo("noop_build_rule_with_declared_and_extra_deps"));
   }

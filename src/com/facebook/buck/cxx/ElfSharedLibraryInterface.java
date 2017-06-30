@@ -54,11 +54,12 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final SourcePath input;
 
   private ElfSharedLibraryInterface(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Tool objcopy,
       SourcePath input) {
-    super(buildRuleParams, resolver);
+    super(projectFilesystem, buildRuleParams, resolver);
     this.pathResolver = resolver;
     this.objcopy = objcopy;
     this.input = input;
@@ -72,6 +73,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
       Tool objcopy,
       SourcePath input) {
     return new ElfSharedLibraryInterface(
+        projectFilesystem,
         new BuildRuleParams(
             target,
             () ->
@@ -80,8 +82,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
                     .addAll(ruleFinder.filterBuildRuleInputs(input))
                     .build(),
             () -> ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            projectFilesystem),
+            ImmutableSortedSet.of()),
         resolver,
         objcopy,
         input);

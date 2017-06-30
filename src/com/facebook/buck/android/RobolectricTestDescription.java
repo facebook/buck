@@ -114,15 +114,18 @@ public class RobolectricTestDescription
       return CalculateAbiFromClasses.of(
           params.getBuildTarget(),
           ruleFinder,
+          projectFilesystem,
           params,
           Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
     }
 
-    JavacOptions javacOptions = JavacOptionsFactory.create(templateOptions, params, resolver, args);
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(templateOptions, projectFilesystem, params, resolver, args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             params.getBuildTarget(),
+            projectFilesystem,
             params.withExtraDeps(resolver.getAllRules(args.getExportedDeps())),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
@@ -148,6 +151,7 @@ public class RobolectricTestDescription
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
+            projectFilesystem,
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
@@ -162,7 +166,12 @@ public class RobolectricTestDescription
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary.builder(
-                    targetGraph, testsLibraryParams, resolver, cellRoots, javaBuckConfig)
+                    targetGraph,
+                    projectFilesystem,
+                    testsLibraryParams,
+                    resolver,
+                    cellRoots,
+                    javaBuckConfig)
                 .setArgs(args)
                 .setJavacOptions(javacOptions)
                 .setJavacOptionsAmender(new BootClasspathAppender())
@@ -174,6 +183,7 @@ public class RobolectricTestDescription
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
 
     return new RobolectricTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         ruleFinder,
         testsLibrary,

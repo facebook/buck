@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -66,6 +67,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   private final Optional<SymlinkTree> sandboxTree;
 
   private CxxPreprocessAndCompile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
@@ -75,7 +77,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
-    super(params);
+    super(projectFilesystem, params);
     this.sandboxTree = sandboxTree;
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
@@ -102,6 +104,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
 
   /** @return a {@link CxxPreprocessAndCompile} step that compiles the given preprocessed source. */
   public static CxxPreprocessAndCompile compile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       CompilerDelegate compilerDelegate,
       Path output,
@@ -110,6 +113,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
+        projectFilesystem,
         params,
         Optional.empty(),
         compilerDelegate,
@@ -125,6 +129,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
    * @return a {@link CxxPreprocessAndCompile} step that preprocesses and compiles the given source.
    */
   public static CxxPreprocessAndCompile preprocessAndCompile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
@@ -135,6 +140,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
+        projectFilesystem,
         params,
         Optional.of(preprocessorDelegate),
         compilerDelegate,

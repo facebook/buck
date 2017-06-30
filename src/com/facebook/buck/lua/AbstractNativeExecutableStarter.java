@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
@@ -71,6 +72,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   private static final String NATIVE_STARTER_CXX_SOURCE =
       "com/facebook/buck/lua/native-starter.cpp.in";
+
+  abstract ProjectFilesystem getProjectFilesystem();
 
   abstract BuildRuleParams getBaseParams();
 
@@ -126,21 +129,23 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                       getRuleResolver()
                           .addToIndex(
                               new WriteFile(
+                                  getProjectFilesystem(),
                                   getBaseParams()
                                       .withBuildTarget(templateTarget)
                                       .withoutDeclaredDeps()
                                       .withoutExtraDeps(),
                                   getNativeStarterCxxSourceTemplate(),
                                   BuildTargets.getGenPath(
-                                      getBaseParams().getProjectFilesystem(),
+                                      getProjectFilesystem(),
                                       templateTarget,
                                       "%s/native-starter.cpp.in"),
                                   /* executable */ false));
 
                   Path output =
                       BuildTargets.getGenPath(
-                          getBaseParams().getProjectFilesystem(), target, "%s/native-starter.cpp");
+                          getProjectFilesystem(), target, "%s/native-starter.cpp");
                   return WriteStringTemplateRule.from(
+                      getProjectFilesystem(),
                       getBaseParams(),
                       getRuleFinder(),
                       target,
@@ -197,7 +202,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            getBaseParams().getProjectFilesystem(),
+            getProjectFilesystem(),
             getBaseParams().getBuildTarget(),
             getRuleResolver(),
             getPathResolver(),
@@ -245,7 +250,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 CxxLinkableEnhancer.createCxxLinkableBuildRule(
                     getCxxBuckConfig(),
                     getCxxPlatform(),
-                    getBaseParams().getProjectFilesystem(),
+                    getProjectFilesystem(),
                     getRuleResolver(),
                     getPathResolver(),
                     getRuleFinder(),

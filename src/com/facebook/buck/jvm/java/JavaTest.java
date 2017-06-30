@@ -144,6 +144,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final ForkMode forkMode;
 
   public JavaTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
       JavaLibrary compiledTestsLibrary,
@@ -161,7 +162,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    super(params, resolver);
+    super(projectFilesystem, params, resolver);
     this.compiledTestsLibrary = compiledTestsLibrary;
 
     for (Either<SourcePath, Path> path : additionalClasspathEntries) {

@@ -185,8 +185,8 @@ public class HaskellGhciDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       final CellPathResolver cellPathResolver,
       HaskellGhciDescriptionArg args)
@@ -266,7 +266,7 @@ public class HaskellGhciDescription
     BuildRule omnibusSharedObject =
         requireOmnibusSharedObject(
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             resolver,
             cxxPlatform,
             sortedNativeLinkables);
@@ -296,6 +296,7 @@ public class HaskellGhciDescription
 
     return resolver.addToIndex(
         HaskellGhciRule.from(
+            projectFilesystem,
             params,
             resolver,
             srcs,

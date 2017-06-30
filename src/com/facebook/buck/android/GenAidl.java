@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -66,8 +67,12 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path output;
   private final Path genPath;
 
-  GenAidl(BuildRuleParams params, SourcePath aidlFilePath, String importPath) {
-    super(params);
+  GenAidl(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePath aidlFilePath,
+      String importPath) {
+    super(projectFilesystem, params);
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     BuildTarget buildTarget = params.getBuildTarget();

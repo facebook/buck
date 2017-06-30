@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -64,11 +65,12 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
 
   protected ShBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
-    super(params);
+    super(projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.main = main;
     this.resources = resources;

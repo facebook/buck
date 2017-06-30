@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
@@ -59,6 +60,7 @@ public class CxxPrecompiledHeaderTest {
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
+            new FakeProjectFilesystem(),
             params,
             Paths.get("dir/foo.hash1.hash2.gch"),
             new PreprocessorDelegate(

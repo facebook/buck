@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -55,6 +56,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final boolean cache;
 
   private PythonPackagedBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       SourcePathRuleFinder ruleFinder,
@@ -70,6 +72,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       boolean cache,
       boolean legacyOutputPath) {
     super(
+        projectFilesystem,
         params,
         originalDeclareDeps,
         pythonPlatform,
@@ -89,6 +92,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   }
 
   static PythonPackagedBinary from(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
@@ -103,6 +107,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       boolean cache,
       boolean legacyOutputPath) {
     return new PythonPackagedBinary(
+        projectFilesystem,
         params
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()

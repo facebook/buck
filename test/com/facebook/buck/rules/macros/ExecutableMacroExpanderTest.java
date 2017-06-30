@@ -171,7 +171,7 @@ public class ExecutableMacroExpanderTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = TestBuildRuleParams.create(target);
     ruleResolver.addToIndex(
-        new NoopBinaryBuildRule(params) {
+        new NoopBinaryBuildRule(new FakeProjectFilesystem(), params) {
           @Override
           public Tool getExecutableCommand() {
             return new CommandTool.Builder()
@@ -211,17 +211,18 @@ public class ExecutableMacroExpanderTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     final Tool tool = new CommandTool.Builder().addArg("command").build();
     ruleResolver.addToIndex(
-        new NoopBinaryBuildRule(params) {
+        new NoopBinaryBuildRule(projectFilesystem, params) {
           @Override
           public Tool getExecutableCommand() {
             return tool;
           }
         });
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
-    CellPathResolver cellRoots = createCellRoots(params.getProjectFilesystem());
+    CellPathResolver cellRoots = createCellRoots(projectFilesystem);
     assertThat(
         expander.extractRuleKeyAppendablesFrom(
             target,
@@ -234,8 +235,8 @@ public class ExecutableMacroExpanderTest {
   private abstract static class NoopBinaryBuildRule extends NoopBuildRuleWithDeclaredAndExtraDeps
       implements BinaryBuildRule {
 
-    public NoopBinaryBuildRule(BuildRuleParams params) {
-      super(params);
+    public NoopBinaryBuildRule(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      super(projectFilesystem, params);
     }
   }
 }

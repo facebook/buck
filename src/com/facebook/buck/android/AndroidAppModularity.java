@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
@@ -37,8 +38,11 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
 
   protected final AndroidPackageableCollection packageableCollection;
 
-  AndroidAppModularity(BuildRuleParams params, AndroidPackageableCollection packageableCollection) {
-    super(params);
+  AndroidAppModularity(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      AndroidPackageableCollection packageableCollection) {
+    super(projectFilesystem, params);
     this.packageableCollection = packageableCollection;
   }
 

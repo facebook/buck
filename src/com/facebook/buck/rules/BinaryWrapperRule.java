@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -30,8 +31,11 @@ public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAnd
 
   private final SourcePathRuleFinder ruleFinder;
 
-  public BinaryWrapperRule(BuildRuleParams buildRuleParams, SourcePathRuleFinder ruleFinder) {
-    super(buildRuleParams);
+  public BinaryWrapperRule(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder) {
+    super(projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
   }
 

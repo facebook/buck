@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -82,6 +83,7 @@ public class JavaBinaryTest {
     JavaBinary javaBinary =
         ruleResolver.addToIndex(
             new JavaBinary(
+                new FakeProjectFilesystem(),
                 params,
                 new ExternalJavaRuntimeLauncher("/foobar/java"),
                 "com.facebook.base.Main",

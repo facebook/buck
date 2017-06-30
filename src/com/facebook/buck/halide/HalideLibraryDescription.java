@@ -116,6 +116,7 @@ public class HalideLibraryDescription
   }
 
   private CxxBinary createHalideCompiler(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -167,7 +168,7 @@ public class HalideLibraryDescription
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             ruleResolver,
             cellRoots,
             cxxBuckConfig,
@@ -205,6 +206,7 @@ public class HalideLibraryDescription
                 params.getBuildTarget(), flavoredLinkerMapMode));
     CxxBinary cxxBinary =
         new CxxBinary(
+            projectFilesystem,
             params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
             ruleResolver,
             ruleFinder,
@@ -219,6 +221,7 @@ public class HalideLibraryDescription
   }
 
   private BuildRule createHalideStaticLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -227,7 +230,7 @@ public class HalideLibraryDescription
       throws NoSuchBuildTargetException {
 
     if (!isPlatformSupported(args, platform)) {
-      return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+      return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
     }
 
     BuildRule halideCompile =
@@ -237,12 +240,12 @@ public class HalideLibraryDescription
 
     return Archive.from(
         params.getBuildTarget(),
-        params.getProjectFilesystem(),
+        projectFilesystem,
         ruleFinder,
         platform,
         cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
-            params.getProjectFilesystem(),
+            projectFilesystem,
             params.getBuildTarget(),
             platform.getFlavor(),
             CxxSourceRuleFactory.PicType.PIC,
@@ -251,7 +254,7 @@ public class HalideLibraryDescription
             new ExplicitBuildTargetSourcePath(
                 buildTarget,
                 HalideCompile.objectOutputPath(
-                    buildTarget, params.getProjectFilesystem(), args.getFunctionName()))));
+                    buildTarget, projectFilesystem, args.getFunctionName()))));
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(
@@ -270,6 +273,7 @@ public class HalideLibraryDescription
   }
 
   private BuildRule createHalideCompile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform platform,
@@ -281,6 +285,7 @@ public class HalideLibraryDescription
             resolver.requireRule(params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
 
     return new HalideCompile(
+        projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(halideCompiler)),
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
@@ -310,13 +315,12 @@ public class HalideLibraryDescription
               .requireRule(target.withFlavors(HALIDE_COMPILE_FLAVOR, cxxPlatform.getFlavor()))
               .getBuildTarget();
       Path outputPath =
-          HalideCompile.headerOutputPath(
-              compileTarget, params.getProjectFilesystem(), args.getFunctionName());
+          HalideCompile.headerOutputPath(compileTarget, projectFilesystem, args.getFunctionName());
       headersBuilder.put(
           outputPath.getFileName(), new ExplicitBuildTargetSourcePath(compileTarget, outputPath));
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           params.getBuildTarget(),
-          params.getProjectFilesystem(),
+          projectFilesystem,
           resolver,
           cxxPlatform,
           headersBuilder.build(),
@@ -325,7 +329,7 @@ public class HalideLibraryDescription
     } else if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          resolver, args, hostCxxPlatform, params.getBuildTarget(), params.getProjectFilesystem());
+          resolver, args, hostCxxPlatform, params.getBuildTarget(), projectFilesystem);
     } else if (flavors.contains(HALIDE_COMPILER_FLAVOR)) {
       // We always want to build the halide "compiler" for the host platform, so
       // we use the host flavor here, regardless of the flavors on the build
@@ -333,6 +337,7 @@ public class HalideLibraryDescription
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       final ImmutableSortedSet<BuildTarget> compilerDeps = args.getCompilerDeps();
       return createHalideCompiler(
+          projectFilesystem,
           params
               .withAppendedFlavor(HALIDE_COMPILER_FLAVOR)
               .withDeclaredDeps(resolver.getAllRules(compilerDeps))
@@ -353,13 +358,15 @@ public class HalideLibraryDescription
         || flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)) {
       // Halide always output PIC, so it's output can be used for both cases.
       // See: https://github.com/halide/Halide/blob/e3c301f3/src/LLVM_Output.cpp#L152
-      return createHalideStaticLibrary(params, resolver, ruleFinder, cxxPlatform, args);
+      return createHalideStaticLibrary(
+          projectFilesystem, params, resolver, ruleFinder, cxxPlatform, args);
     } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
       throw new HumanReadableException(
           "halide_library '%s' does not support shared libraries as output",
           params.getBuildTarget());
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
+          projectFilesystem,
           params.withoutDeclaredDeps().withoutExtraDeps(),
           resolver,
           cxxPlatform,
@@ -367,7 +374,8 @@ public class HalideLibraryDescription
           args.getFunctionName());
     }
 
-    return new HalideLibrary(params, resolver, args.getSupportedPlatformsRegex());
+    return new HalideLibrary(
+        projectFilesystem, params, resolver, args.getSupportedPlatformsRegex());
   }
 
   @BuckStyleImmutable

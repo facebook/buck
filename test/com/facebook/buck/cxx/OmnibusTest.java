@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -66,6 +67,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
@@ -114,6 +116,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
@@ -168,6 +171,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
@@ -230,6 +234,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
@@ -290,6 +295,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,
@@ -342,6 +348,7 @@ public class OmnibusTest {
     ImmutableMap<String, SourcePath> libs =
         toSonameMap(
             Omnibus.getSharedLibraries(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:rule")),
                 resolver,
                 ruleFinder,

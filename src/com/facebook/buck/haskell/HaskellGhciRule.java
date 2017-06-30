@@ -16,6 +16,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -99,6 +100,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   Path ghciCpp;
 
   private HaskellGhciRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       HaskellSources srcs,
@@ -118,7 +120,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path ghciCxx,
       Path ghciCc,
       Path ghciCpp) {
-    super(params);
+    super(projectFilesystem, params);
     this.buildRuleResolver = buildRuleResolver;
     this.srcs = srcs;
     this.compilerFlags = compilerFlags;
@@ -155,6 +157,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public static HaskellGhciRule from(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       HaskellSources srcs,
@@ -195,6 +198,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     extraDeps.addAll(ruleFinder.filterBuildRuleInputs(solibs.values()));
 
     return new HaskellGhciRule(
+        projectFilesystem,
         params.copyAppendingExtraDeps(extraDeps.build()),
         resolver,
         srcs,

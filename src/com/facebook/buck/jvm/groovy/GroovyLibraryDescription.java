@@ -60,10 +60,16 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
       GroovyLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultJavacOptions, params, resolver, args);
+        JavacOptionsFactory.create(defaultJavacOptions, projectFilesystem, params, resolver, args);
     DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder =
         new DefaultGroovyLibraryBuilder(
-                targetGraph, params, resolver, cellRoots, javacOptions, groovyBuckConfig)
+                targetGraph,
+                projectFilesystem,
+                params,
+                resolver,
+                cellRoots,
+                javacOptions,
+                groovyBuckConfig)
             .setArgs(args);
 
     return HasJavaAbi.isAbiTarget(params.getBuildTarget())

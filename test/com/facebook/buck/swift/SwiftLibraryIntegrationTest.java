@@ -92,6 +92,7 @@ public class SwiftLibraryIntegrationTest {
     BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
     FakeCxxLibrary depRule =
         new FakeCxxLibrary(
+            new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             symlinkTarget,
@@ -116,7 +117,7 @@ public class SwiftLibraryIntegrationTest {
                 projectFilesystem,
                 params,
                 resolver,
-                TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
     ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
@@ -132,7 +133,7 @@ public class SwiftLibraryIntegrationTest {
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget, projectFilesystem);
+    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget);
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
     SwiftCompile buildRule =

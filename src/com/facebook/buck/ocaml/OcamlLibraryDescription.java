@@ -88,6 +88,7 @@ public class OcamlLibraryDescription
 
     return OcamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
+        projectFilesystem,
         params,
         resolver,
         srcs,

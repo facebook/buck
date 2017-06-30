@@ -17,6 +17,7 @@
 package com.facebook.buck.gwt;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
@@ -47,10 +48,11 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final SourcePathRuleFinder ruleFinder;
 
   GwtModule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> filesForGwtModule) {
-    super(params);
+    super(projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     BuildTarget target = params.getBuildTarget();
     this.outputFile =

@@ -79,6 +79,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path sourceMapOutputPath;
 
   protected ReactNativeBundle(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams ruleParams,
       SourcePath entryPath,
       ImmutableSortedSet<SourcePath> srcs,
@@ -90,7 +91,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> packagerFlags,
       Tool jsPackager,
       ReactNativePlatform platform) {
-    super(ruleParams);
+    super(projectFilesystem, ruleParams);
     this.entryPath = entryPath;
     this.srcs = srcs;
     this.isUnbundle = isUnbundle;

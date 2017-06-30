@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaLibraryRules.getAbiRulesWherePossible;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -46,6 +47,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
+  protected final ProjectFilesystem projectFilesystem;
   protected final BuildRuleParams initialParams;
   @Nullable private final JavaBuckConfig javaBuckConfig;
   protected final TargetGraph targetGraph;
@@ -74,11 +76,13 @@ public class DefaultJavaLibraryBuilder {
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig) {
     this.targetGraph = targetGraph;
+    this.projectFilesystem = projectFilesystem;
     this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
@@ -91,10 +95,12 @@ public class DefaultJavaLibraryBuilder {
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots) {
     this.targetGraph = targetGraph;
+    this.projectFilesystem = projectFilesystem;
     this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
@@ -141,8 +147,7 @@ public class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setResources(ImmutableSortedSet<SourcePath> resources) {
     this.resources =
-        ResourceValidator.validateResources(
-            sourcePathResolver, initialParams.getProjectFilesystem(), resources);
+        ResourceValidator.validateResources(sourcePathResolver, projectFilesystem, resources);
     return this;
   }
 
@@ -239,6 +244,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
       return new DefaultJavaLibrary(
+          projectFilesystem,
           getFinalParams(),
           sourcePathResolver,
           ruleFinder,
@@ -277,6 +283,7 @@ public class DefaultJavaLibraryBuilder {
             buildRuleResolver.requireRule(HasJavaAbi.getSourceAbiJar(libraryTarget));
 
         return new CompareAbis(
+            projectFilesystem,
             initialParams
                 .withDeclaredDeps(ImmutableSortedSet.of(classAbi, sourceAbi))
                 .withoutExtraDeps(),
@@ -338,6 +345,7 @@ public class DefaultJavaLibraryBuilder {
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
       JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
       return new CalculateAbiFromSource(
+          projectFilesystem,
           getFinalParams().withBuildTarget(abiTarget),
           ruleFinder,
           srcs,
@@ -357,6 +365,7 @@ public class DefaultJavaLibraryBuilder {
       return CalculateAbiFromClasses.of(
           abiTarget,
           ruleFinder,
+          projectFilesystem,
           initialParams,
           Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()),
           javaBuckConfig != null

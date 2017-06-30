@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
@@ -29,6 +30,7 @@ import java.util.Optional;
 /** Same as a Genrule, but marked as a binary. */
 public class GenruleBinary extends Genrule implements BinaryBuildRule {
   protected GenruleBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
@@ -36,7 +38,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out) {
-    super(params, srcs, cmd, bash, cmdExe, type, out);
+    super(projectFilesystem, params, srcs, cmd, bash, cmdExe, type, out);
   }
 
   @Override

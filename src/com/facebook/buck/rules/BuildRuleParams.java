@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.collect.SortedSets;
@@ -36,28 +35,23 @@ public class BuildRuleParams {
   private final Supplier<? extends SortedSet<BuildRule>> extraDeps;
   private final Supplier<SortedSet<BuildRule>> totalBuildDeps;
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
-  private final ProjectFilesystem projectFilesystem;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
       final Supplier<? extends SortedSet<BuildRule>> declaredDeps,
       final Supplier<? extends SortedSet<BuildRule>> extraDeps,
-      ImmutableSortedSet<BuildRule> targetGraphOnlyDeps,
-      ProjectFilesystem projectFilesystem) {
+      ImmutableSortedSet<BuildRule> targetGraphOnlyDeps) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
-    this.projectFilesystem = projectFilesystem;
     this.targetGraphOnlyDeps = targetGraphOnlyDeps;
 
     this.totalBuildDeps =
         Suppliers.memoize(() -> SortedSets.union(declaredDeps.get(), extraDeps.get()));
   }
 
-  private BuildRuleParams(
-      BuildRuleParams baseForDeps, BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+  private BuildRuleParams(BuildRuleParams baseForDeps, BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
-    this.projectFilesystem = projectFilesystem;
     this.declaredDeps = baseForDeps.declaredDeps;
     this.extraDeps = baseForDeps.extraDeps;
     this.targetGraphOnlyDeps = baseForDeps.targetGraphOnlyDeps;
@@ -65,7 +59,7 @@ public class BuildRuleParams {
   }
 
   public BuildRuleParams withBuildTarget(BuildTarget target) {
-    return new BuildRuleParams(this, target, projectFilesystem);
+    return new BuildRuleParams(this, target);
   }
 
   public BuildRuleParams withoutFlavor(Flavor flavor) {
@@ -76,7 +70,7 @@ public class BuildRuleParams {
             .addAllFlavors(flavors)
             .build();
 
-    return new BuildRuleParams(this, target, projectFilesystem);
+    return new BuildRuleParams(this, target);
   }
 
   public BuildRuleParams withAppendedFlavor(Flavor flavor) {
@@ -87,7 +81,7 @@ public class BuildRuleParams {
             .addAllFlavors(flavors)
             .build();
 
-    return new BuildRuleParams(this, target, projectFilesystem);
+    return new BuildRuleParams(this, target);
   }
 
   public BuildRuleParams withDeclaredDeps(SortedSet<BuildRule> declaredDeps) {
@@ -95,8 +89,7 @@ public class BuildRuleParams {
   }
 
   public BuildRuleParams withDeclaredDeps(Supplier<? extends SortedSet<BuildRule>> declaredDeps) {
-    return new BuildRuleParams(
-        buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
+    return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps);
   }
 
   public BuildRuleParams withoutDeclaredDeps() {
@@ -104,8 +97,7 @@ public class BuildRuleParams {
   }
 
   public BuildRuleParams withExtraDeps(Supplier<? extends SortedSet<BuildRule>> extraDeps) {
-    return new BuildRuleParams(
-        buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps, projectFilesystem);
+    return new BuildRuleParams(buildTarget, declaredDeps, extraDeps, targetGraphOnlyDeps);
   }
 
   public BuildRuleParams withExtraDeps(SortedSet<BuildRule> extraDeps) {
@@ -155,9 +147,5 @@ public class BuildRuleParams {
   /** See {@link TargetNode#getTargetGraphOnlyDeps}. */
   public ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
     return targetGraphOnlyDeps;
-  }
-
-  public ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
   }
 }

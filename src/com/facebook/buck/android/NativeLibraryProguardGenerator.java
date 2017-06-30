@@ -54,20 +54,20 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
   private final Path outputPath;
 
   NativeLibraryProguardGenerator(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<SourcePath> nativeLibsDirs,
       BuildRule codeGenerator) {
     super(
+        projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             RichStream.from(ruleFinder.filterBuildRuleInputs(nativeLibsDirs))
                 .concat(RichStream.of(codeGenerator))
                 .toImmutableList()));
     this.nativeLibsDirs = nativeLibsDirs;
     this.codeGenerator = codeGenerator;
-    this.outputPath =
-        BuildTargets.getGenPath(
-            buildRuleParams.getProjectFilesystem(), getBuildTarget(), OUTPUT_FORMAT);
+    this.outputPath = BuildTargets.getGenPath(projectFilesystem, getBuildTarget(), OUTPUT_FORMAT);
   }
 
   @Override

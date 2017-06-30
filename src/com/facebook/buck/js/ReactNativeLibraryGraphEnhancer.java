@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.Aapt2Compile;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -45,6 +46,7 @@ public class ReactNativeLibraryGraphEnhancer {
   }
 
   private ReactNativeBundle createReactNativeBundle(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -65,6 +67,7 @@ public class ReactNativeLibraryGraphEnhancer {
     }
 
     return new ReactNativeBundle(
+        projectFilesystem,
         baseParams
             .withBuildTarget(target)
             .withDeclaredDeps(
@@ -87,6 +90,7 @@ public class ReactNativeLibraryGraphEnhancer {
   }
 
   public AndroidReactNativeLibrary enhanceForAndroid(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AndroidReactNativeLibraryDescriptionArg args) {
@@ -95,6 +99,7 @@ public class ReactNativeLibraryGraphEnhancer {
     BuildTarget originalBuildTarget = params.getBuildTarget();
     ReactNativeBundle bundle =
         createReactNativeBundle(
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -115,6 +120,7 @@ public class ReactNativeLibraryGraphEnhancer {
           new ExplicitBuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources());
       BuildRule resource =
           new AndroidResource(
+              projectFilesystem,
               paramsForResource,
               ruleFinder,
               /* deps */ ImmutableSortedSet.of(),
@@ -130,18 +136,29 @@ public class ReactNativeLibraryGraphEnhancer {
 
       Aapt2Compile aapt2Compile =
           new Aapt2Compile(
+              projectFilesystem,
               paramsForResource.withAppendedFlavor(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
               resources);
       resolver.addToIndex(aapt2Compile);
     }
 
-    return new AndroidReactNativeLibrary(params.copyAppendingExtraDeps(extraDeps.build()), bundle);
+    return new AndroidReactNativeLibrary(
+        projectFilesystem, params.copyAppendingExtraDeps(extraDeps.build()), bundle);
   }
 
   public ReactNativeBundle enhanceForIos(
-      BuildRuleParams params, BuildRuleResolver resolver, ReactNativeLibraryArg args) {
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      ReactNativeLibraryArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return createReactNativeBundle(
-        params, resolver, ruleFinder, params.getBuildTarget(), args, ReactNativePlatform.IOS);
+        projectFilesystem,
+        params,
+        resolver,
+        ruleFinder,
+        params.getBuildTarget(),
+        args,
+        ReactNativePlatform.IOS);
   }
 }

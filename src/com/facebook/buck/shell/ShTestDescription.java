@@ -97,6 +97,7 @@ public class ShTestDescription
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg));
     return new ShTest(
+        projectFilesystem,
         params.copyAppendingExtraDeps(
             () ->
                 FluentIterable.from(testArgs)
@@ -106,7 +107,7 @@ public class ShTestDescription
         testArgs,
         testEnv,
         FluentIterable.from(args.getResources())
-            .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
+            .transform(p -> new PathSourcePath(projectFilesystem, p))
             .toSortedSet(Ordering.natural()),
         args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.getRunTestSeparately(),

@@ -113,6 +113,7 @@ public class AndroidBuildConfigTest {
     // First, create the BuildConfig object.
     BuildRuleParams params = TestBuildRuleParams.create(BUILD_TARGET);
     return new AndroidBuildConfig(
+        new FakeProjectFilesystem(),
         params,
         /* javaPackage */ "com.example",
         /* values */ BuildConfigFields.empty(),

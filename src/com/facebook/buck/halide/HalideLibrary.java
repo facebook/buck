@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -57,10 +58,11 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   protected HalideLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Optional<Pattern> supportedPlatformsRegex) {
-    super(params);
+    super(projectFilesystem, params);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.supportedPlatformsRegex = supportedPlatformsRegex;

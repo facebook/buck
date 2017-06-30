@@ -71,6 +71,7 @@ public class PythonPackagedBinaryTest {
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary =
         PythonPackagedBinary.from(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create("//:bin"),
             ruleFinder,
             PythonTestUtils.PYTHON_PLATFORM,

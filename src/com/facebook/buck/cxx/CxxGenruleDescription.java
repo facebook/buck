@@ -278,7 +278,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           cellRoots,
           args);
     }
-    return new CxxGenrule(params, resolver, args.getOut());
+    return new CxxGenrule(projectFilesystem, params, resolver, args.getOut());
   }
 
   @Override

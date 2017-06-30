@@ -69,7 +69,7 @@ public class HaskellPrebuiltLibraryDescription
       CellPathResolver cellRoots,
       final HaskellPrebuiltLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    return new PrebuiltHaskellLibrary(params) {
+    return new PrebuiltHaskellLibrary(projectFilesystem, params) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =

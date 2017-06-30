@@ -452,6 +452,7 @@ public class Omnibus {
   }
 
   private static ImmutableList<Arg> createUndefinedSymbolsArgs(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -461,6 +462,7 @@ public class Omnibus {
         cxxPlatform
             .getSymbolNameTool()
             .createUndefinedSymbolsFile(
+                projectFilesystem,
                 params,
                 ruleResolver,
                 ruleFinder,
@@ -472,6 +474,7 @@ public class Omnibus {
         .getLd()
         .resolve(ruleResolver)
         .createUndefinedSymbolsLinkerArgs(
+            projectFilesystem,
             params,
             ruleResolver,
             ruleFinder,
@@ -483,6 +486,7 @@ public class Omnibus {
 
   // Create a build rule to link the giant merged omnibus library described by the given spec.
   protected static OmnibusLibrary createOmnibus(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -515,7 +519,12 @@ public class Omnibus {
     }
     argsBuilder.addAll(
         createUndefinedSymbolsArgs(
-            params, ruleResolver, ruleFinder, cxxPlatform, undefinedSymbolsOnlyRoots));
+            projectFilesystem,
+            params,
+            ruleResolver,
+            ruleFinder,
+            cxxPlatform,
+            undefinedSymbolsOnlyRoots));
 
     // Walk the graph in topological order, appending each nodes contributions to the link.
     ImmutableList<BuildTarget> targets = TopologicalSort.sort(spec.getGraph()).reverse();
@@ -564,11 +573,11 @@ public class Omnibus {
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                 cxxBuckConfig,
                 cxxPlatform,
-                params.getProjectFilesystem(),
+                projectFilesystem,
                 ruleResolver,
                 ruleFinder,
                 omnibusTarget,
-                BuildTargets.getGenPath(params.getProjectFilesystem(), omnibusTarget, "%s")
+                BuildTargets.getGenPath(projectFilesystem, omnibusTarget, "%s")
                     .resolve(omnibusSoname),
                 Optional.of(omnibusSoname),
                 argsBuilder.build()));
@@ -589,6 +598,7 @@ public class Omnibus {
    * @throws NoSuchBuildTargetException
    */
   public static OmnibusLibraries getSharedLibraries(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -609,7 +619,7 @@ public class Omnibus {
     SourcePath dummyOmnibus =
         createDummyOmnibus(
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             ruleResolver,
             ruleFinder,
             cxxBuckConfig,
@@ -625,7 +635,7 @@ public class Omnibus {
       if (shouldCreateDummyRoot(target, cxxPlatform)) {
         createDummyRoot(
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             ruleResolver,
             ruleFinder,
             cxxBuckConfig,
@@ -638,7 +648,7 @@ public class Omnibus {
         OmnibusRoot root =
             createRoot(
                 params.getBuildTarget(),
-                params.getProjectFilesystem(),
+                projectFilesystem,
                 ruleResolver,
                 ruleFinder,
                 cxxBuckConfig,
@@ -656,7 +666,14 @@ public class Omnibus {
     if (!spec.getBody().isEmpty()) {
       OmnibusLibrary omnibus =
           createOmnibus(
-              params, ruleResolver, ruleFinder, cxxBuckConfig, cxxPlatform, extraLdflags, spec);
+              projectFilesystem,
+              params,
+              ruleResolver,
+              ruleFinder,
+              cxxBuckConfig,
+              cxxPlatform,
+              extraLdflags,
+              spec);
       libs.addLibraries(omnibus);
       realOmnibus = Optional.of(omnibus.getPath());
     }
@@ -668,7 +685,7 @@ public class Omnibus {
         OmnibusRoot root =
             createRoot(
                 params.getBuildTarget(),
-                params.getProjectFilesystem(),
+                projectFilesystem,
                 ruleResolver,
                 ruleFinder,
                 cxxBuckConfig,

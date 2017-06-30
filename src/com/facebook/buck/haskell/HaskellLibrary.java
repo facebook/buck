@@ -17,13 +17,14 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 
 public abstract class HaskellLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements HaskellCompileDep, NativeLinkable {
 
-  public HaskellLibrary(BuildRuleParams params) {
-    super(params);
+  public HaskellLibrary(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(projectFilesystem, params);
   }
 }

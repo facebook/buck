@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -100,6 +101,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       CacheBuilder.newBuilder().weakKeys().weakValues().build();
 
   public CxxPrecompiledHeader(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
@@ -108,7 +110,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     Preconditions.checkArgument(
         !inputType.isAssembly(), "Asm files do not use precompiled headers.");
     this.preprocessorDelegate = preprocessorDelegate;

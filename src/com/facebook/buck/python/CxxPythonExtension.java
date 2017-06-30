@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkTarget;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -29,8 +30,8 @@ import java.nio.file.Path;
 public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements PythonPackagable, HasRuntimeDeps {
 
-  public CxxPythonExtension(BuildRuleParams params) {
-    super(params);
+  public CxxPythonExtension(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(projectFilesystem, params);
   }
 
   @VisibleForTesting

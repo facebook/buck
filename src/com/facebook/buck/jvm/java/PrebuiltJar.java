@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -81,6 +82,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   public PrebuiltJar(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath binaryJar,
@@ -89,7 +91,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
       final boolean provided) {
-    super(params, resolver);
+    super(projectFilesystem, params, resolver);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
     this.gwtJar = gwtJar;

@@ -43,7 +43,7 @@ public class KeystoreDescription implements Description<KeystoreDescriptionArg> 
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       KeystoreDescriptionArg args) {
-    return new Keystore(params, args.getStore(), args.getProperties());
+    return new Keystore(projectFilesystem, params, args.getStore(), args.getProperties());
   }
 
   @BuckStyleImmutable

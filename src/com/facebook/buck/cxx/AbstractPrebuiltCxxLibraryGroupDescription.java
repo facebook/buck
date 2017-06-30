@@ -160,14 +160,14 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PrebuiltCxxLibraryGroupDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    return new CustomPrebuiltCxxLibrary(params) {
+    return new CustomPrebuiltCxxLibrary(projectFilesystem, params) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
@@ -337,8 +337,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
   public abstract static class CustomPrebuiltCxxLibrary
       extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibrary {
-    public CustomPrebuiltCxxLibrary(BuildRuleParams params) {
-      super(params);
+    public CustomPrebuiltCxxLibrary(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      super(projectFilesystem, params);
     }
   }
 

@@ -179,7 +179,7 @@ public class AppleBinaryDescription
       AppleBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(APP_FLAVOR)) {
-      return createBundleBuildRule(targetGraph, params, resolver, args);
+      return createBundleBuildRule(targetGraph, projectFilesystem, params, resolver, args);
     } else {
       return createBinaryBuildRule(
           targetGraph, projectFilesystem, params, resolver, cellRoots, args);
@@ -261,6 +261,7 @@ public class AppleBinaryDescription
             cellRoots,
             args);
     return AppleDescriptions.createAppleDebuggableBinary(
+        projectFilesystem,
         params.withBuildTarget(unstrippedBinaryBuildTarget),
         resolver,
         strippedBinaryRule,
@@ -273,6 +274,7 @@ public class AppleBinaryDescription
 
   private BuildRule createBundleBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AppleBinaryDescriptionArg args)
@@ -319,6 +321,7 @@ public class AppleBinaryDescription
         delegate.getDefaultCxxPlatform(),
         platformFlavorsToAppleCxxPlatforms,
         targetGraph,
+        projectFilesystem,
         params,
         resolver,
         codeSignIdentityStore,
@@ -381,7 +384,7 @@ public class AppleBinaryDescription
         thinRules.add(thinRule);
       }
       return MultiarchFileInfos.requireMultiarchRule(
-          params, resolver, fatBinaryInfo.get(), thinRules.build());
+          projectFilesystem, params, resolver, fatBinaryInfo.get(), thinRules.build());
     } else {
       return requireThinBinary(targetGraph, projectFilesystem, params, resolver, cellRoots, args);
     }
@@ -424,10 +427,10 @@ public class AppleBinaryDescription
       try {
         return resolver.addToIndex(
             new WriteFile(
+                projectFilesystem,
                 params,
                 Files.readAllBytes(stubBinaryPath.get()),
-                BuildTargets.getGenPath(
-                    params.getProjectFilesystem(), params.getBuildTarget(), "%s"),
+                BuildTargets.getGenPath(projectFilesystem, params.getBuildTarget(), "%s"),
                 true));
       } catch (IOException e) {
         throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
@@ -440,7 +443,7 @@ public class AppleBinaryDescription
           delegate.createBuildRule(
               targetGraph,
               params.getBuildTarget(),
-              params.getProjectFilesystem(),
+              projectFilesystem,
               params.getExtraDeps(),
               resolver,
               cellRoots,

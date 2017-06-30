@@ -59,6 +59,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
     }
 
     return new CsharpLibrary(
+        projectFilesystem,
         params,
         args.getDllName(),
         args.getSrcs(),

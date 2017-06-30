@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -72,8 +73,11 @@ public class AndroidManifest extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path pathToOutputFile;
 
   protected AndroidManifest(
-      BuildRuleParams params, SourcePath skeletonFile, Set<SourcePath> manifestFiles) {
-    super(params);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePath skeletonFile,
+      Set<SourcePath> manifestFiles) {
+    super(projectFilesystem, params);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();

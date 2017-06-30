@@ -303,6 +303,7 @@ public class PrebuiltCxxLibraryDescription
    * @return a {@link HeaderSymlinkTree} for the exported headers of this prebuilt C/C++ library.
    */
   private static HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -310,7 +311,7 @@ public class PrebuiltCxxLibraryDescription
       throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params.getBuildTarget(),
-        params.getProjectFilesystem(),
+        projectFilesystem,
         resolver,
         cxxPlatform,
         parseExportedHeaders(params, resolver, cxxPlatform, args),
@@ -352,6 +353,7 @@ public class PrebuiltCxxLibraryDescription
 
   /** @return a {@link CxxLink} rule for a shared library version of this prebuilt C/C++ library. */
   private BuildRule createSharedLibraryBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
@@ -379,18 +381,18 @@ public class PrebuiltCxxLibraryDescription
         getStaticPicLibraryPath(
             target,
             cellRoots,
-            params.getProjectFilesystem(),
+            projectFilesystem,
             ruleResolver,
             cxxPlatform,
             versionSubDir,
             args.getLibDir(),
             args.getLibName());
-    if (!params.getProjectFilesystem().exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
+    if (!projectFilesystem.exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
       staticLibraryPath =
           getStaticLibraryPath(
               target,
               cellRoots,
-              params.getProjectFilesystem(),
+              projectFilesystem,
               ruleResolver,
               cxxPlatform,
               versionSubDir,
@@ -406,11 +408,11 @@ public class PrebuiltCxxLibraryDescription
 
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath =
-        BuildTargets.getGenPath(params.getProjectFilesystem(), sharedTarget, "%s").resolve(soname);
+        BuildTargets.getGenPath(projectFilesystem, sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         ruleResolver,
         pathResolver,
         ruleFinder,
@@ -539,8 +541,8 @@ public class PrebuiltCxxLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
       final PrebuiltCxxLibraryDescriptionArg args)
@@ -570,14 +572,20 @@ public class PrebuiltCxxLibraryDescription
           params.getBuildTarget().withoutFlavors(type.get().getKey(), platform.get().getKey());
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
-            params, ruleResolver, platform.get().getValue(), args);
+            projectFilesystem, params, ruleResolver, platform.get().getValue(), args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
-            params, ruleResolver, cellRoots, platform.get().getValue(), selectedVersions, args);
+            projectFilesystem,
+            params,
+            ruleResolver,
+            cellRoots,
+            platform.get().getValue(),
+            selectedVersions,
+            args);
       } else if (type.get().getValue() == Type.SHARED_INTERFACE) {
         return createSharedLibraryInterface(
             baseTarget,
-            params.getProjectFilesystem(),
+            projectFilesystem,
             ruleResolver,
             cellRoots,
             platform.get().getValue(),
@@ -604,7 +612,7 @@ public class PrebuiltCxxLibraryDescription
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     final boolean headerOnly = args.getHeaderOnly().orElse(false);
     final boolean forceStatic = args.getForceStatic().orElse(false);
-    return new PrebuiltCxxLibrary(params) {
+    return new PrebuiltCxxLibrary(projectFilesystem, params) {
 
       private final Map<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
           new HashMap<>();
@@ -686,7 +694,7 @@ public class PrebuiltCxxLibraryDescription
             ruleResolver,
             pathResolver,
             cellRoots,
-            params.getProjectFilesystem(),
+            projectFilesystem,
             cxxPlatform,
             versionSubdir,
             args);
@@ -701,9 +709,7 @@ public class PrebuiltCxxLibraryDescription
             .stream()
             .filter(
                 staticLibraryPath ->
-                    params
-                        .getProjectFilesystem()
-                        .exists(pathResolver.getAbsolutePath(staticLibraryPath)))
+                    projectFilesystem.exists(pathResolver.getAbsolutePath(staticLibraryPath)))
             .findFirst();
       }
 
@@ -717,7 +723,7 @@ public class PrebuiltCxxLibraryDescription
             PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
                 getBuildTarget(),
                 cellRoots,
-                params.getProjectFilesystem(),
+                projectFilesystem,
                 ruleResolver,
                 cxxPlatform,
                 versionSubdir,
@@ -772,7 +778,7 @@ public class PrebuiltCxxLibraryDescription
                         PrebuiltCxxLibraryDescription.getApplicableSourcePath(
                             params.getBuildTarget(),
                             cellRoots,
-                            params.getProjectFilesystem(),
+                            projectFilesystem,
                             ruleResolver,
                             cxxPlatform,
                             versionSubdir,
@@ -871,7 +877,7 @@ public class PrebuiltCxxLibraryDescription
                     : PrebuiltCxxLibraryDescription.getStaticLibraryPath(
                         getBuildTarget(),
                         cellRoots,
-                        params.getProjectFilesystem(),
+                        projectFilesystem,
                         ruleResolver,
                         cxxPlatform,
                         versionSubdir,

@@ -132,7 +132,7 @@ public class DefaultRuleKeyCacheTest {
   private static class TestRule extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
     private TestRule() {
-      super(TestBuildRuleParams.create("//:rule"));
+      super(new FakeProjectFilesystem(), TestBuildRuleParams.create("//:rule"));
     }
   }
 }

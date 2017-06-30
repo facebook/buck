@@ -52,13 +52,14 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final boolean cacheable;
 
   public HaskellLinkRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool linker,
       String name,
       ImmutableList<Arg> args,
       ImmutableList<Arg> linkerArgs,
       boolean cacheable) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.linker = linker;
     this.name = name;
     this.args = args;

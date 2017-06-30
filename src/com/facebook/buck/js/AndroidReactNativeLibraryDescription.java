@@ -63,7 +63,7 @@ public class AndroidReactNativeLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidReactNativeLibraryDescriptionArg args) {
-    return enhancer.enhanceForAndroid(params, resolver, args);
+    return enhancer.enhanceForAndroid(projectFilesystem, params, resolver, args);
   }
 
   @Override

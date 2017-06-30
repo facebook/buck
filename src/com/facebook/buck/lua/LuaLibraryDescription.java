@@ -49,14 +49,14 @@ public class LuaLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final LuaLibraryDescriptionArg args) {
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new LuaLibrary(params) {
+    return new LuaLibrary(projectFilesystem, params) {
 
       @Override
       public Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform) {

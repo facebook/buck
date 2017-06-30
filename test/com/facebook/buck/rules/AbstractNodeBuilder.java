@@ -110,7 +110,7 @@ public abstract class AbstractNodeBuilder<
       throws NoSuchBuildTargetException {
 
     // The BuildRule determines its deps by extracting them from the rule parameters.
-    BuildRuleParams params = createBuildRuleParams(resolver, filesystem);
+    BuildRuleParams params = createBuildRuleParams(resolver);
 
     TArg builtArg = getPopulatedArg();
     @SuppressWarnings("unchecked")
@@ -159,10 +159,9 @@ public abstract class AbstractNodeBuilder<
     }
   }
 
-  public BuildRuleParams createBuildRuleParams(
-      BuildRuleResolver resolver, ProjectFilesystem filesystem) {
+  public BuildRuleParams createBuildRuleParams(BuildRuleResolver resolver) {
     TargetNode<?, ?> node = build();
-    return TestBuildRuleParams.create(target, filesystem)
+    return TestBuildRuleParams.create(target)
         .withDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
         .withExtraDeps(resolver.getAllRules(node.getExtraDeps()));
   }

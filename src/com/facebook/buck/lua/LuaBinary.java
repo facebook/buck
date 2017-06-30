@@ -16,6 +16,7 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -47,6 +48,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final LuaConfig.PackageStyle packageStyle;
 
   public LuaBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       Path output,
@@ -55,7 +57,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       LuaPackageComponents components,
       Tool lua,
       LuaConfig.PackageStyle packageStyle) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(!output.isAbsolute());
     this.output = output;

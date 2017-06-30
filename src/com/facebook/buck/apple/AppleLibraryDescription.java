@@ -196,7 +196,7 @@ public class AppleLibraryDescription
     Optional<Map.Entry<Flavor, Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget());
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
-      return createFrameworkBundleBuildRule(targetGraph, params, resolver, args);
+      return createFrameworkBundleBuildRule(targetGraph, projectFilesystem, params, resolver, args);
     } else {
       return createLibraryBuildRule(
           targetGraph,
@@ -215,6 +215,7 @@ public class AppleLibraryDescription
 
   private <A extends AbstractAppleLibraryDescriptionArg> BuildRule createFrameworkBundleBuildRule(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AppleLibraryDescriptionArg args)
@@ -243,6 +244,7 @@ public class AppleLibraryDescription
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,
         targetGraph,
+        projectFilesystem,
         params,
         resolver,
         codeSignIdentityStore,
@@ -327,13 +329,14 @@ public class AppleLibraryDescription
     BuildRule strippedBinaryRule =
         CxxDescriptionEnhancer.createCxxStripRule(
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             resolver,
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
             unstrippedBinaryRule,
             representativePlatform);
 
     return AppleDescriptions.createAppleDebuggableBinary(
+        projectFilesystem,
         params,
         resolver,
         strippedBinaryRule,
@@ -381,6 +384,7 @@ public class AppleLibraryDescription
                 transitiveCxxPreprocessorInput));
       }
       return MultiarchFileInfos.requireMultiarchRule(
+          projectFilesystem,
           // In the same manner that debug flavors are omitted from single-arch constituents, they
           // are omitted here as well.
           params.withBuildTarget(
@@ -452,6 +456,7 @@ public class AppleLibraryDescription
     } else {
       BuildRule rule =
           delegate.createBuildRule(
+              projectFilesystem,
               params.withBuildTarget(unstrippedTarget),
               resolver,
               cellRoots,

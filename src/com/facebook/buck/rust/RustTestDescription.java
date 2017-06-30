@@ -98,6 +98,7 @@ public class RustTestDescription
     BinaryWrapperRule testExeBuild =
         resolver.addToIndex(
             RustCompileUtils.createBinaryBuildRule(
+                projectFilesystem,
                 params.withBuildTarget(exeTarget),
                 resolver,
                 rustBuckConfig,
@@ -125,7 +126,13 @@ public class RustTestDescription
 
     BuildRuleParams testParams = params.copyAppendingExtraDeps(testExe.getDeps(ruleFinder));
 
-    return new RustTest(testParams, ruleFinder, testExeBuild, args.getLabels(), args.getContacts());
+    return new RustTest(
+        projectFilesystem,
+        testParams,
+        ruleFinder,
+        testExeBuild,
+        args.getLabels(),
+        args.getContacts());
   }
 
   @Override

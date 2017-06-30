@@ -17,6 +17,7 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -61,6 +62,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final boolean cache;
 
   public LuaStandaloneBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool builder,
       ImmutableList<String> builderArgs,
@@ -70,7 +72,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
       String mainModule,
       Tool lua,
       boolean cache) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.builder = builder;
     this.builderArgs = builderArgs;
     this.output = output;

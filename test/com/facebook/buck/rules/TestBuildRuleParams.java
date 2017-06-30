@@ -16,33 +16,21 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class TestBuildRuleParams {
 
-  public static BuildRuleParams create(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+  public static BuildRuleParams create(BuildTarget buildTarget) {
     return new BuildRuleParams(
         buildTarget,
         () -> ImmutableSortedSet.of(),
         () -> ImmutableSortedSet.of(),
-        ImmutableSortedSet.of(),
-        projectFilesystem);
-  }
-
-  public static BuildRuleParams create(String buildTarget, ProjectFilesystem projectFilesystem) {
-    return create(BuildTargetFactory.newInstance(buildTarget), projectFilesystem);
-  }
-
-  public static BuildRuleParams create(BuildTarget buildTarget) {
-    return create(buildTarget, new FakeProjectFilesystem());
+        ImmutableSortedSet.of());
   }
 
   public static BuildRuleParams create(String buildTarget) {
-    return create(buildTarget, new FakeProjectFilesystem());
+    return create(BuildTargetFactory.newInstance(buildTarget));
   }
 }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -79,6 +81,7 @@ public class CxxLibraryTest {
     // Construct a CxxLibrary object to test.
     FakeCxxLibrary cxxLibrary =
         new FakeCxxLibrary(
+            new FakeProjectFilesystem(),
             params,
             publicHeaderTarget,
             publicHeaderSymlinkTreeTarget,
@@ -156,6 +159,7 @@ public class CxxLibraryTest {
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
@@ -165,7 +169,8 @@ public class CxxLibraryTest {
             .getBuildTarget()
             .withAppendedFlavors(cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
-        new FakeBuildRule(TestBuildRuleParams.create(staticPicLibraryTarget), pathResolver));
+        new FakeBuildRule(
+            projectFilesystem, TestBuildRuleParams.create(staticPicLibraryTarget), pathResolver));
 
     FrameworkPath frameworkPath =
         FrameworkPath.ofSourcePath(
@@ -174,6 +179,7 @@ public class CxxLibraryTest {
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary =
         new CxxLibrary(
+            projectFilesystem,
             params,
             ruleResolver,
             CxxDeps.EMPTY,

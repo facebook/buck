@@ -16,6 +16,7 @@
 
 package com.facebook.buck.graphql;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -26,8 +27,11 @@ public class GraphqlLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
-  public GraphqlLibrary(BuildRuleParams ruleParams, ImmutableSortedSet<SourcePath> srcs) {
-    super(ruleParams);
+  public GraphqlLibrary(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams ruleParams,
+      ImmutableSortedSet<SourcePath> srcs) {
+    super(projectFilesystem, ruleParams);
     this.srcs = srcs;
   }
 

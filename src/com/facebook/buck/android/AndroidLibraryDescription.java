@@ -88,16 +88,18 @@ public class AndroidLibraryDescription
       AndroidLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, args.getSrcs(), args.getMavenCoords());
+      return new JavaSourceJar(projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
     }
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
-    JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(defaultOptions, projectFilesystem, params, resolver, args);
     AndroidLibrary.Builder defaultJavaLibraryBuilder =
         (AndroidLibrary.Builder)
             AndroidLibrary.builder(
                     targetGraph,
+                    projectFilesystem,
                     params,
                     resolver,
                     cellRoots,

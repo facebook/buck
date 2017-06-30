@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -51,6 +52,7 @@ public class OcamlBuildRulesGenerator {
 
   private static final Flavor DEBUG_FLAVOR = InternalFlavor.of("debug");
 
+  private final ProjectFilesystem projectFilesystem;
   private final BuildRuleParams params;
   private final BuildRuleResolver resolver;
   private final SourcePathRuleFinder ruleFinder;
@@ -67,6 +69,7 @@ public class OcamlBuildRulesGenerator {
   private BuildRule cleanRule;
 
   public OcamlBuildRulesGenerator(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -78,6 +81,7 @@ public class OcamlBuildRulesGenerator {
       Compiler cxxCompiler,
       boolean bytecodeOnly,
       boolean buildNativePlugin) {
+    this.projectFilesystem = projectFilesystem;
     this.params = params;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
@@ -89,7 +93,7 @@ public class OcamlBuildRulesGenerator {
     this.cxxCompiler = cxxCompiler;
     this.bytecodeOnly = bytecodeOnly;
     this.buildNativePlugin = buildNativePlugin;
-    this.cleanRule = generateCleanBuildRule(params, ocamlContext);
+    this.cleanRule = generateCleanBuildRule(projectFilesystem, params, ocamlContext);
   }
 
   /** Generates build rules for both the native and bytecode outputs */
@@ -197,6 +201,7 @@ public class OcamlBuildRulesGenerator {
       Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc));
       OcamlCCompile compileRule =
           new OcamlCCompile(
+              projectFilesystem,
               cCompileParams,
               new OcamlCCompileStep.Args(
                   cCompiler.getEnvironment(pathResolver),
@@ -213,7 +218,8 @@ public class OcamlBuildRulesGenerator {
     return objects.build();
   }
 
-  private BuildRule generateCleanBuildRule(BuildRuleParams params, OcamlBuildContext ocamlContext) {
+  private BuildRule generateCleanBuildRule(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, OcamlBuildContext ocamlContext) {
     BuildTarget cleanTarget =
         BuildTarget.builder(params.getBuildTarget())
             .addFlavors(
@@ -223,7 +229,7 @@ public class OcamlBuildRulesGenerator {
 
     BuildRuleParams cleanParams = params.withBuildTarget(cleanTarget);
 
-    BuildRule cleanRule = new OcamlClean(cleanParams, ocamlContext);
+    BuildRule cleanRule = new OcamlClean(projectFilesystem, cleanParams, ocamlContext);
     resolver.addToIndex(cleanRule);
     return cleanRule;
   }
@@ -241,6 +247,7 @@ public class OcamlBuildRulesGenerator {
 
     OcamlDebugLauncher debugLauncher =
         new OcamlDebugLauncher(
+            projectFilesystem,
             debugParams,
             new OcamlDebugLauncherStep.Args(
                 ocamlContext.getOcamlDebug().get(),
@@ -282,6 +289,7 @@ public class OcamlBuildRulesGenerator {
 
     OcamlLink link =
         new OcamlLink(
+            projectFilesystem,
             linkParams,
             allInputs,
             cxxCompiler.getEnvironment(pathResolver),
@@ -332,6 +340,7 @@ public class OcamlBuildRulesGenerator {
 
     OcamlLink link =
         new OcamlLink(
+            projectFilesystem,
             linkParams,
             allInputs,
             cxxCompiler.getEnvironment(pathResolver),
@@ -490,9 +499,10 @@ public class OcamlBuildRulesGenerator {
         getCompileFlags(/* isBytecode */ false, /* excludeDeps */ false);
     OcamlMLCompile compile =
         new OcamlMLCompile(
+            projectFilesystem,
             compileParams,
             new OcamlMLCompileStep.Args(
-                params.getProjectFilesystem()::resolve,
+                projectFilesystem::resolve,
                 cCompiler.getEnvironment(pathResolver),
                 cCompiler.getCommandPrefix(pathResolver),
                 ocamlContext.getOcamlCompiler().get(),
@@ -571,9 +581,10 @@ public class OcamlBuildRulesGenerator {
         getCompileFlags(/* isBytecode */ true, /* excludeDeps */ false);
     BuildRule compileBytecode =
         new OcamlMLCompile(
+            projectFilesystem,
             compileParams,
             new OcamlMLCompileStep.Args(
-                params.getProjectFilesystem()::resolve,
+                projectFilesystem::resolve,
                 cCompiler.getEnvironment(pathResolver),
                 cCompiler.getCommandPrefix(pathResolver),
                 ocamlContext.getOcamlBytecodeCompiler().get(),

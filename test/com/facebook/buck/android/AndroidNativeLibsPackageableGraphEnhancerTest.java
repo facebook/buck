@@ -72,6 +72,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            new FakeProjectFilesystem(),
             originalParams,
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -144,6 +145,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            new FakeProjectFilesystem(),
             originalParams,
             nativePlatforms,
             ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
@@ -212,6 +214,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            new FakeProjectFilesystem(),
             originalParams,
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -251,6 +254,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            new FakeProjectFilesystem(),
             originalParams,
             ImmutableMap.of(),
             ImmutableSet.of(),

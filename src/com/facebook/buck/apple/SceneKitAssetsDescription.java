@@ -54,7 +54,7 @@ public class SceneKitAssetsDescription implements Description<AppleWrapperResour
     String extension = Files.getFileExtension(args.getPath().getFileName().toString());
     Preconditions.checkArgument(SCENEKIT_ASSETS_EXTENSION.equals(extension));
 
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 
   @Override

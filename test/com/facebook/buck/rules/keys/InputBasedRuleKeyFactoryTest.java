@@ -183,9 +183,9 @@ public class InputBasedRuleKeyFactoryTest {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
 
-    BuildRuleParams params = TestBuildRuleParams.create("//:rule", filesystem);
+    BuildRuleParams params = TestBuildRuleParams.create("//:rule");
     BuildRule rule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(filesystem, params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
@@ -223,10 +223,9 @@ public class InputBasedRuleKeyFactoryTest {
             .build(resolver, filesystem);
 
     BuildRuleParams params =
-        TestBuildRuleParams.create("//:rule", filesystem)
-            .withDeclaredDeps(ImmutableSortedSet.of(dep));
+        TestBuildRuleParams.create("//:rule").withDeclaredDeps(ImmutableSortedSet.of(dep));
     BuildRule rule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(filesystem, params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
@@ -298,9 +297,9 @@ public class InputBasedRuleKeyFactoryTest {
     Path inputFile = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[1024], inputFile);
 
-    BuildRuleParams params = TestBuildRuleParams.create("//:rule", filesystem);
+    BuildRuleParams params = TestBuildRuleParams.create("//:rule");
     BuildRule rule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(filesystem, params) {
           @AddToRuleKey
           NestedRuleKeyAppendableWithInput input =
               new NestedRuleKeyAppendableWithInput(new PathSourcePath(filesystem, inputFile));

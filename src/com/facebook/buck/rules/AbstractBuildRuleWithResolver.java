@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
+
 /**
  * This class should not ever be extended.
  *
@@ -29,8 +31,10 @@ public abstract class AbstractBuildRuleWithResolver
   private final SourcePathResolver resolver;
 
   protected AbstractBuildRuleWithResolver(
-      BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
-    super(buildRuleParams);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver) {
+    super(projectFilesystem, buildRuleParams);
     this.resolver = resolver;
   }
 

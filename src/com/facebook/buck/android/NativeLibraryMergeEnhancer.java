@@ -116,6 +116,7 @@ class NativeLibraryMergeEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
@@ -196,7 +197,7 @@ class NativeLibraryMergeEnhancer {
             pathResolver,
             ruleFinder,
             buildRuleParams.getBuildTarget(),
-            buildRuleParams.getProjectFilesystem(),
+            projectFilesystem,
             glueLinkable,
             nativeLibraryMergeLocalizedSymbols.map(ImmutableSortedSet::copyOf),
             orderedConstituents);

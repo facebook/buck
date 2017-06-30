@@ -88,6 +88,7 @@ public class CxxSourceRuleFactoryTest {
     private static FakeBuildRule createFakeBuildRule(
         String target, SourcePathResolver resolver, BuildRule... deps) {
       return new FakeBuildRule(
+          new FakeProjectFilesystem(),
           TestBuildRuleParams.create(BuildTargetFactory.newInstance(target))
               .withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
           resolver);

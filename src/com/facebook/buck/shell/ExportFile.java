@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -99,13 +100,14 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final SourcePath src;
 
   public ExportFile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
-    super(buildRuleParams, resolver);
+    super(projectFilesystem, buildRuleParams, resolver);
     this.ruleFinder = ruleFinder;
     this.name = name;
     this.mode = mode;

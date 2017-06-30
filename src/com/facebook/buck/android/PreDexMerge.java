@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -106,6 +107,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<String> dxMaxHeapSize;
 
   public PreDexMerge(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
@@ -115,7 +117,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ListeningExecutorService dxExecutorService,
       Optional<Integer> xzCompressionLevel,
       Optional<String> dxMaxHeapSize) {
-    super(params);
+    super(projectFilesystem, params);
     this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;

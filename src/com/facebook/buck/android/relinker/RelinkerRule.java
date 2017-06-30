@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -72,6 +73,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   private final SourcePathResolver pathResolver;
 
   public RelinkerRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -82,7 +84,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       SourcePath baseLibSourcePath,
       @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs) {
-    super(withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs), resolver);
+    super(projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs), resolver);
     this.pathResolver = resolver;
     this.cpuType = cpuType;
     this.objdump = objdump;
@@ -151,6 +153,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
       relinkerSteps.addAll(
           new CxxLink(
+                  getProjectFilesystem(),
                   buildRuleParams
                       .withAppendedFlavor(InternalFlavor.of("cxx-link"))
                       .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -53,7 +54,7 @@ public class DexWithClassesTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
     BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, javaLibrary);
+        new DexProducedFromJavaLibrary(new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutput(
@@ -84,7 +85,7 @@ public class DexWithClassesTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
     BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, javaLibrary);
+        new DexProducedFromJavaLibrary(new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutput(

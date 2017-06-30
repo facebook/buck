@@ -123,6 +123,7 @@ public class GoLibraryDescription
 
     if (platform.isPresent()) {
       return GoDescriptors.createGoCompileRule(
+          projectFilesystem,
           params,
           resolver,
           goBuckConfig,
@@ -138,7 +139,7 @@ public class GoLibraryDescription
               .append(args.getExportedDeps()));
     }
 
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 
   @BuckStyleImmutable

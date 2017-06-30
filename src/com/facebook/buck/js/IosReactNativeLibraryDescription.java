@@ -64,7 +64,7 @@ public class IosReactNativeLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ReactNativeLibraryArg args) {
-    return enhancer.enhanceForIos(params, resolver, args);
+    return enhancer.enhanceForIos(projectFilesystem, params, resolver, args);
   }
 
   @Override

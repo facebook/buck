@@ -87,8 +87,8 @@ public class DummyRDotJavaTest {
 
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
-            TestBuildRuleParams.create(
-                BuildTargetFactory.newInstance("//java/base:rule"), filesystem),
+            filesystem,
+            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//java/base:rule")),
             ruleFinder,
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
@@ -178,6 +178,7 @@ public class DummyRDotJavaTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(
                 BuildTargetFactory.newInstance("//java/com/example:library")),
             ruleFinder,

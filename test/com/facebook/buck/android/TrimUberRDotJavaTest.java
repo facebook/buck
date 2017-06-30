@@ -107,7 +107,8 @@ public class TrimUberRDotJavaTest {
 
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
         new DexProducedFromJavaLibrary(
-            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:dex"), filesystem),
+            filesystem,
+            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:dex")),
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary
         .getBuildOutputInitializer()
@@ -123,7 +124,8 @@ public class TrimUberRDotJavaTest {
 
     TrimUberRDotJava trimUberRDotJava =
         new TrimUberRDotJava(
-            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:trim"), filesystem),
+            filesystem,
+            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:trim")),
             Optional.of(new PathSourcePath(filesystem, rDotJavaDir)),
             ImmutableList.of(dexProducedFromJavaLibrary),
             keepResourcePattern);

@@ -356,7 +356,8 @@ public class DistBuildFileHashesTest {
 
       resolver.addToIndex(
           new BuildRuleWithToolAndPath(
-              TestBuildRuleParams.create("//:with_tool", projectFilesystem),
+              projectFilesystem,
+              TestBuildRuleParams.create("//:with_tool"),
               null,
               ArchiveMemberSourcePath.of(
                   new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));
@@ -467,8 +468,12 @@ public class DistBuildFileHashesTest {
 
     @AddToRuleKey SourcePath sourcePath;
 
-    public BuildRuleWithToolAndPath(BuildRuleParams params, Tool tool, SourcePath sourcePath) {
-      super(params);
+    public BuildRuleWithToolAndPath(
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams params,
+        Tool tool,
+        SourcePath sourcePath) {
+      super(projectFilesystem, params);
       this.tool = tool;
       this.sourcePath = sourcePath;
     }

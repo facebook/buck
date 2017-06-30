@@ -77,6 +77,7 @@ public class GoBinaryDescription
             .orElse(goBuckConfig.getDefaultPlatform());
 
     return GoDescriptors.createGoBinaryRule(
+        projectFilesystem,
         params,
         resolver,
         goBuckConfig,

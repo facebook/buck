@@ -158,7 +158,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     ImmutableCollection<SourcePath> assetsDirectories =
         packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories =
-        new AssembleDirectories(assembleAssetsParams, assetsDirectories);
+        new AssembleDirectories(projectFilesystem, assembleAssetsParams, assetsDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleAssetsDirectories));
 
     BuildRuleParams assembleResourceParams =
@@ -169,7 +169,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
     MergeAndroidResourceSources assembleResourceDirectories =
-        new MergeAndroidResourceSources(assembleResourceParams, resDirectories);
+        new MergeAndroidResourceSources(projectFilesystem, assembleResourceParams, resDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleResourceDirectories));
 
     /* android_resource */
@@ -183,6 +183,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     AndroidResource androidResource =
         new AndroidResource(
+            projectFilesystem,
             androidResourceParams,
             ruleFinder,
             /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -219,6 +220,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     if (args.getIncludeBuildConfigClass()) {
       ImmutableSortedSet<JavaLibrary> buildConfigRules =
           AndroidBinaryGraphEnhancer.addBuildConfigDeps(
+              projectFilesystem,
               originalBuildRuleParams,
               AndroidBinary.PackageType.RELEASE,
               EnumSet.noneOf(AndroidBinary.ExopackageMode.class),
@@ -241,6 +243,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             resolver,
+            projectFilesystem,
             originalBuildRuleParams,
             nativePlatforms,
             ImmutableSet.of(),
@@ -274,6 +277,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     BuildRuleParams androidAarParams =
         originalBuildRuleParams.withExtraDeps(aarExtraDepsBuilder.build());
     return new AndroidAar(
+        projectFilesystem,
         androidAarParams,
         manifest,
         androidResource,

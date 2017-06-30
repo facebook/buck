@@ -45,12 +45,13 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final Optional<String> functionNameOverride;
 
   public HalideCompile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool halideCompiler,
       String targetPlatform,
       Optional<ImmutableList<String>> compilerInvocationFlags,
       Optional<String> functionNameOverride) {
-    super(params);
+    super(projectFilesystem, params);
     this.halideCompiler = halideCompiler;
     this.targetPlatform = targetPlatform;
     this.compilerInvocationFlags = compilerInvocationFlags;

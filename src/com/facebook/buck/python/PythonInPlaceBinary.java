@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -67,6 +68,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   @AddToRuleKey private final Supplier<String> script;
 
   private PythonInPlaceBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       PythonPlatform pythonPlatform,
@@ -80,6 +82,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       Tool python,
       Supplier<String> script) {
     super(
+        projectFilesystem,
         params,
         originalDeclareDeps,
         pythonPlatform,
@@ -95,6 +98,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   public static PythonInPlaceBinary from(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
@@ -108,6 +112,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       SymlinkTree linkTree,
       Tool python) {
     return new PythonInPlaceBinary(
+        projectFilesystem,
         // The actual steps of a in-place binary doesn't actually have any build-time deps.
         params.withoutDeclaredDeps().withoutExtraDeps(),
         params.getDeclaredDeps(),
@@ -126,14 +131,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
             cxxPlatform,
             mainModule,
             components,
-            params
-                .getProjectFilesystem()
+            projectFilesystem
                 .resolve(
                     getBinPath(
-                        params.getBuildTarget(),
-                        params.getProjectFilesystem(),
-                        pexExtension,
-                        legacyOutputPath))
+                        params.getBuildTarget(), projectFilesystem, pexExtension, legacyOutputPath))
                 .getParent()
                 .relativize(linkTree.getRoot()),
             preloadLibraries));

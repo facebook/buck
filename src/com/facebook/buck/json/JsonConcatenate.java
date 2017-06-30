@@ -43,13 +43,14 @@ public class JsonConcatenate extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private Path output;
 
   public JsonConcatenate(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedSet<Path> inputs,
       String stepShortName,
       String stepDescription,
       String outputDirectoryPrefix,
       String outputName) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.inputs = inputs;
     this.outputDirectory =
         BuildTargets.getGenPath(

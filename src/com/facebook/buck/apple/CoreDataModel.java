@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -56,11 +57,12 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path outputDir;
 
   CoreDataModel(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleCxxPlatform appleCxxPlatform,
       String moduleName,
       ImmutableSet<SourcePath> dataModelPaths) {
-    super(params);
+    super(projectFilesystem, params);
     this.moduleName = moduleName;
     this.dataModelPaths = dataModelPaths;
     String outputDirString =

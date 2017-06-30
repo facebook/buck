@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -130,6 +131,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final AtomicReference<String> rDotJavaPackage;
 
   public AndroidResource(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
@@ -144,6 +146,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     super(
+        projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
@@ -191,7 +194,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AndroidResource(
-      final BuildRuleParams buildRuleParams,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable SourcePath res,
@@ -202,6 +206,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
     this(
+        projectFilesystem,
         buildRuleParams,
         ruleFinder,
         deps,
@@ -217,7 +222,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AndroidResource(
-      final BuildRuleParams buildRuleParams,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable SourcePath res,
@@ -230,6 +236,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     this(
+        projectFilesystem,
         buildRuleParams,
         ruleFinder,
         deps,

@@ -18,6 +18,7 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
@@ -44,6 +45,8 @@ import org.immutables.value.Value;
 abstract class AbstractLuaScriptStarter implements Starter {
 
   private static final String STARTER = "com/facebook/buck/lua/starter.lua.in";
+
+  abstract ProjectFilesystem getProjectFilesystem();
 
   abstract BuildRuleParams getBaseParams();
 
@@ -85,15 +88,14 @@ abstract class AbstractLuaScriptStarter implements Starter {
         getRuleResolver()
             .addToIndex(
                 new WriteFile(
+                    getProjectFilesystem(),
                     getBaseParams()
                         .withBuildTarget(templateTarget)
                         .withoutDeclaredDeps()
                         .withoutExtraDeps(),
                     getPureStarterTemplate(),
                     BuildTargets.getGenPath(
-                        getBaseParams().getProjectFilesystem(),
-                        templateTarget,
-                        "%s/starter.lua.in"),
+                        getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 
     final Tool lua = getLuaConfig().getLua(getRuleResolver());
@@ -101,6 +103,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
         getRuleResolver()
             .addToIndex(
                 WriteStringTemplateRule.from(
+                    getProjectFilesystem(),
                     getBaseParams(),
                     getRuleFinder(),
                     getTarget(),

@@ -17,6 +17,7 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -83,6 +84,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
 
   public GoTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       GoBinary testMain,
@@ -91,7 +93,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.testMain = testMain;
     this.labels = labels;

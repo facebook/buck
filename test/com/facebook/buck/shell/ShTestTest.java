@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -62,6 +63,7 @@ public class ShTestTest extends EasyMockSupport {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ShTest shTest =
         new ShTest(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(target)
                 .withDeclaredDeps(ImmutableSortedSet.of(dep))
                 .withExtraDeps(ImmutableSortedSet.of(extraDep)),

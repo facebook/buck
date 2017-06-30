@@ -67,9 +67,10 @@ public class RemoteFileDescription implements Description<RemoteFileDescriptionA
 
     RemoteFile.Type type = args.getType().orElse(RemoteFile.Type.DATA);
     if (type == RemoteFile.Type.EXECUTABLE) {
-      return new RemoteFileBinary(params, downloader, args.getUrl(), sha1, out, type);
+      return new RemoteFileBinary(
+          projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
     }
-    return new RemoteFile(params, downloader, args.getUrl(), sha1, out, type);
+    return new RemoteFile(projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
   }
 
   @BuckStyleImmutable

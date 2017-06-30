@@ -29,6 +29,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -66,11 +67,14 @@ public class CxxBoostTestTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     CxxBoostTest test =
         new CxxBoostTest(
-            TestBuildRuleParams.create(target, new ProjectFilesystem(tmp.getRoot())),
+            projectFilesystem,
+            TestBuildRuleParams.create(target),
             ruleFinder,
             new CxxLink(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:link")),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -45,8 +46,12 @@ public class DefaultWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   protected DefaultWorkerTool(
-      BuildRuleParams ruleParams, Tool tool, int maxWorkers, boolean isPersistent) {
-    super(ruleParams);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams ruleParams,
+      Tool tool,
+      int maxWorkers,
+      boolean isPersistent) {
+    super(projectFilesystem, ruleParams);
     this.tool = tool;
     this.maxWorkers = maxWorkers;
     this.isPersistent = isPersistent;

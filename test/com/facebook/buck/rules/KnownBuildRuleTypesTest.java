@@ -114,8 +114,7 @@ public class KnownBuildRuleTypesTest {
   @BeforeClass
   public static void setupBuildParams() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
-    buildRuleParams =
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo"), projectFilesystem);
+    buildRuleParams = TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo"));
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)

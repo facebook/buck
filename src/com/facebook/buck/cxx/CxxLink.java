@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -59,6 +60,7 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private boolean thinLto;
 
   public CxxLink(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Linker linker,
       Path output,
@@ -67,7 +69,7 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<RuleScheduleInfo> ruleScheduleInfo,
       boolean cacheable,
       boolean thinLto) {
-    super(params);
+    super(projectFilesystem, params);
     this.linker = linker;
     this.output = output;
     this.args = args;

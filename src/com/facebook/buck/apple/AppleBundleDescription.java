@@ -160,6 +160,7 @@ public class AppleBundleDescription
         defaultCxxPlatform,
         appleCxxPlatformsFlavorDomain,
         targetGraph,
+        projectFilesystem,
         params,
         resolver,
         codeSignIdentityStore,

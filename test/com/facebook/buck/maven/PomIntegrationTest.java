@@ -193,8 +193,8 @@ public class PomIntegrationTest {
         @Nullable SourcePath pomTemplate,
         BuildRule... deps) {
       super(
-          TestBuildRuleParams.create(target, filesystem)
-              .withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
+          filesystem,
+          TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
           new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
       this.coords = coords;
       this.pomTemplate = pomTemplate;

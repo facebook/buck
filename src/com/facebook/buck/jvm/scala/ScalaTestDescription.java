@@ -88,8 +88,8 @@ public class ScalaTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams rawParams,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ScalaTestDescriptionArg args)
@@ -97,6 +97,7 @@ public class ScalaTestDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
+            projectFilesystem,
             rawParams,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
@@ -108,7 +109,8 @@ public class ScalaTestDescription
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     ScalaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(targetGraph, javaLibraryParams, resolver, cellRoots, config)
+        new ScalaLibraryBuilder(
+                targetGraph, projectFilesystem, javaLibraryParams, resolver, cellRoots, config)
             .setArgs(args);
 
     if (HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())) {
@@ -121,6 +123,7 @@ public class ScalaTestDescription
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
         testsLibrary,

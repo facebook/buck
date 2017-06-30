@@ -58,7 +58,7 @@ public class PrebuiltRustLibraryDescription
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    return new PrebuiltRustLibrary(params, pathResolver) {
+    return new PrebuiltRustLibrary(projectFilesystem, params, pathResolver) {
 
       @Override
       protected SourcePath getRlib() {

@@ -72,8 +72,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GwtBinaryDescriptionArg args) {
@@ -120,6 +120,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
                                 ruleFinder.filterBuildRuleInputs(filesForGwtModule));
 
                         return new GwtModule(
+                            projectFilesystem,
                             params
                                 .withBuildTarget(gwtModuleTarget)
                                 .withDeclaredDeps(deps)
@@ -145,6 +146,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
     }.start();
 
     return new GwtBinary(
+        projectFilesystem,
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
         javaOptions.getJavaRuntimeLauncher(),

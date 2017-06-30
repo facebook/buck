@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -52,10 +53,11 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<String> mavenCoords;
 
   public JavaSourceJar(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> sources,
       Optional<String> mavenCoords) {
-    super(params);
+    super(projectFilesystem, params);
     this.sources = sources;
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s" + Javac.SRC_JAR);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -61,8 +62,11 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   CxxPrecompiledHeaderTemplate(
-      BuildRuleParams buildRuleParams, BuildRuleResolver ruleResolver, SourcePath sourcePath) {
-    super(buildRuleParams);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      BuildRuleResolver ruleResolver,
+      SourcePath sourcePath) {
+    super(projectFilesystem, buildRuleParams);
     this.params = buildRuleParams;
     this.ruleResolver = ruleResolver;
     this.sourcePath = sourcePath;
@@ -208,7 +212,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
     DependencyAggregation depAgg =
         new DependencyAggregation(
-            depAggTarget, params.getProjectFilesystem(), getPreprocessDeps(cxxPlatform));
+            depAggTarget, getProjectFilesystem(), getPreprocessDeps(cxxPlatform));
     ruleResolver.addToIndex(depAgg);
     return depAgg;
   }
@@ -225,7 +229,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
         pathResolver,
         cxxPlatform.getCompilerDebugPathSanitizer(),
         cxxPlatform.getHeaderVerification(),
-        params.getProjectFilesystem().getRootPath(),
+        getProjectFilesystem().getRootPath(),
         preprocessor,
         PreprocessorFlags.of(
             /* getPrefixHeader() */ Optional.empty(),

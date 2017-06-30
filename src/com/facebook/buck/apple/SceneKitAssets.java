@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -55,10 +56,11 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path outputDir;
 
   SceneKitAssets(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleCxxPlatform appleCxxPlatform,
       ImmutableSet<SourcePath> sceneKitAssetsPaths) {
-    super(params);
+    super(projectFilesystem, params);
     this.sceneKitAssetsPaths = sceneKitAssetsPaths;
     String outputDirString =
         BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s").toString();

@@ -113,13 +113,14 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     final WorkerTool worker = resolver.getRuleWithType(args.getWorker(), WorkerTool.class);
     if (file.isPresent()) {
       return params.getBuildTarget().getFlavors().contains(JsFlavors.RELEASE)
-          ? createReleaseFileRule(params, resolver, args, worker)
-          : createDevFileRule(params, ruleFinder, sourcePathResolver, args, file.get(), worker);
+          ? createReleaseFileRule(projectFilesystem, params, resolver, args, worker)
+          : createDevFileRule(
+              projectFilesystem, params, ruleFinder, sourcePathResolver, args, file.get(), worker);
     } else {
       return new LibraryBuilder(targetGraph, resolver, params, sourcesToFlavors)
           .setSources(args.getSrcs())
           .setLibraryDependencies(args.getLibs())
-          .build(worker);
+          .build(projectFilesystem, worker);
     }
   }
 
@@ -212,11 +213,12 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
       return this;
     }
 
-    private JsLibrary build(WorkerTool worker) {
+    private JsLibrary build(ProjectFilesystem projectFilesystem, WorkerTool worker) {
       Preconditions.checkNotNull(sourceFiles, "No source files set");
       Preconditions.checkNotNull(libraryDependencies, "No library dependencies set");
 
       return new JsLibrary(
+          projectFilesystem,
           baseParams.copyAppendingExtraDeps(Iterables.concat(sourceFiles, libraryDependencies)),
           sourceFiles
               .stream()
@@ -247,6 +249,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
   }
 
   private static BuildRule createReleaseFileRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       JsLibraryDescriptionArg args,
@@ -255,6 +258,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     final BuildTarget devTarget = withFileFlavorOnly(params.getBuildTarget());
     final BuildRule devFile = resolver.requireRule(devTarget);
     return new JsFile.JsFileRelease(
+        projectFilesystem,
         params.copyAppendingExtraDeps(devFile),
         resolver.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
         args.getExtraArgs(),
@@ -262,6 +266,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
   }
 
   private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
@@ -279,12 +284,13 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
                     changePathPrefix(
                             sourcePath,
                             basePath,
-                            params,
+                            projectFilesystem,
                             sourcePathResolver,
                             params.getBuildTarget().getUnflavoredBuildTarget())
                         .resolve(subPath.orElse("")));
 
     return new JsFile.JsFileDev(
+        projectFilesystem,
         ruleFinder.getRule(sourcePath).map(params::copyAppendingExtraDeps).orElse(params),
         sourcePath,
         subPath,
@@ -318,7 +324,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
   private static Path changePathPrefix(
       SourcePath sourcePath,
       String basePath,
-      BuildRuleParams params,
+      ProjectFilesystem projectFilesystem,
       SourcePathResolver sourcePathResolver,
       UnflavoredBuildTarget target) {
     final Path directoryOfBuildFile = target.getCellPath().resolve(target.getBasePath());
@@ -333,8 +339,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
                             directoryOfBuildFile, sourcePathResolver.getAbsolutePath(sourcePath))))
             .orElse(transplantTo); // build target output paths are replaced completely
 
-    return params
-        .getProjectFilesystem()
+    return projectFilesystem
         .getPathRelativeToProjectRoot(absolutePath)
         .orElseThrow(
             () ->

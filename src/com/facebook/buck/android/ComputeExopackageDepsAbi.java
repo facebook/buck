@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -63,12 +64,13 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRuleWithDeclaredAndEx
   private final Path abiPath;
 
   public ComputeExopackageDepsAbi(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       EnumSet<ExopackageMode> exopackageModes,
       AndroidPackageableCollection packageableCollection,
       Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries,
       Optional<PreDexMerge> preDexMerge) {
-    super(params);
+    super(projectFilesystem, params);
     Preconditions.checkArgument(!exopackageModes.isEmpty());
     this.exopackageModes = exopackageModes;
     this.packageableCollection = packageableCollection;

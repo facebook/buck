@@ -560,12 +560,12 @@ public class CxxLibraryDescription
 
     if (objects.isEmpty()) {
       return new NoopBuildRuleWithDeclaredAndExtraDeps(
+          projectFilesystem,
           new BuildRuleParams(
               staticTarget,
               Suppliers.ofInstance(ImmutableSortedSet.of()),
               Suppliers.ofInstance(ImmutableSortedSet.of()),
-              ImmutableSortedSet.of(),
-              projectFilesystem));
+              ImmutableSortedSet.of()));
     }
 
     Path staticLibraryPath =
@@ -680,6 +680,7 @@ public class CxxLibraryDescription
       CxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(
+        projectFilesystem,
         params,
         resolver,
         cellRoots,
@@ -692,6 +693,7 @@ public class CxxLibraryDescription
   }
 
   public BuildRule createBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams metadataRuleParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
@@ -704,7 +706,6 @@ public class CxxLibraryDescription
       throws NoSuchBuildTargetException {
 
     BuildTarget buildTarget = metadataRuleParams.getBuildTarget();
-    ProjectFilesystem projectFilesystem = metadataRuleParams.getProjectFilesystem();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
@@ -856,6 +857,7 @@ public class CxxLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new CxxLibrary(
+        projectFilesystem,
         metadataRuleParams,
         resolver,
         args.getPrivateCxxDeps(),

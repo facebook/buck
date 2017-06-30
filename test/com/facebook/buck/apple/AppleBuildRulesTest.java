@@ -117,7 +117,7 @@ public class AppleBuildRulesTest {
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params =
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//foo:lib"), projectFilesystem);
+        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//foo:lib"));
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
             TargetGraph.EMPTY,

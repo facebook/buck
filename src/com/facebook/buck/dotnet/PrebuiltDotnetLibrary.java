@@ -17,6 +17,7 @@
 package com.facebook.buck.dotnet;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
@@ -38,8 +39,11 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithResolver {
   private final SourcePath assembly;
 
   protected PrebuiltDotnetLibrary(
-      BuildRuleParams params, SourcePathResolver resolver, SourcePath assembly) {
-    super(params, resolver);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      SourcePath assembly) {
+    super(projectFilesystem, params, resolver);
 
     this.assembly = assembly;
 

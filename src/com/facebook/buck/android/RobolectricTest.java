@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -102,6 +103,7 @@ public class RobolectricTest extends JavaTest {
       };
 
   protected RobolectricTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       JavaLibrary compiledTestsLibrary,
@@ -122,6 +124,7 @@ public class RobolectricTest extends JavaTest {
       Optional<String> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest) {
     super(
+        projectFilesystem,
         buildRuleParams,
         new SourcePathResolver(ruleFinder),
         compiledTestsLibrary,

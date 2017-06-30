@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -59,6 +60,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
   private final JarContentsSupplier outputJarContents;
 
   public CalculateAbiFromSource(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> srcs,
@@ -68,7 +70,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
-    super(params);
+    super(projectFilesystem, params);
 
     this.ruleFinder = ruleFinder;
     this.srcs = srcs;

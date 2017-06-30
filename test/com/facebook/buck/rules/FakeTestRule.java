@@ -15,11 +15,13 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,12 +43,20 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
-    this(TestBuildRuleParams.create(target).withDeclaredDeps(deps), resolver, labels);
+    this(
+        new FakeProjectFilesystem(),
+        TestBuildRuleParams.create(target).withDeclaredDeps(deps),
+        resolver,
+        labels);
   }
 
   public FakeTestRule(
-      BuildRuleParams buildRuleParams, SourcePathResolver resolver, ImmutableSet<String> labels) {
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      ImmutableSet<String> labels) {
     this(
+        projectFilesystem,
         buildRuleParams,
         resolver,
         labels,
@@ -59,6 +69,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   }
 
   public FakeTestRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       ImmutableSet<String> labels,
@@ -66,7 +77,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       boolean runTestSeparately,
       ImmutableList<Step> testSteps,
       Callable<TestResults> interpretedTestResults) {
-    super(buildRuleParams, resolver);
+    super(projectFilesystem, buildRuleParams, resolver);
     this.labels = labels;
     this.pathToTestOutputDirectory = pathToTestOutputDirectory;
     this.runTestSeparately = runTestSeparately;

@@ -54,15 +54,15 @@ public class PrebuiltNativeLibraryDescription
     ImmutableSortedSet<? extends SourcePath> librarySources;
     try {
       librarySources =
-          FluentIterable.from(params.getProjectFilesystem().getFilesUnderPath(args.getNativeLibs()))
-              .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
+          FluentIterable.from(projectFilesystem.getFilesUnderPath(args.getNativeLibs()))
+              .transform(p -> new PathSourcePath(projectFilesystem, p))
               .toSortedSet(Ordering.natural());
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory %s.", args.getNativeLibs());
     }
 
     return new PrebuiltNativeLibrary(
-        params, args.getNativeLibs(), args.getIsAsset(), librarySources);
+        projectFilesystem, params, args.getNativeLibs(), args.getIsAsset(), librarySources);
   }
 
   @BuckStyleImmutable

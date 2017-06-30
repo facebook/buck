@@ -59,7 +59,7 @@ public class XcodePrebuildScriptDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       XcodeScriptDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 
   @Override

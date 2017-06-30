@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -169,6 +170,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String platformName,
       Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleBundle testBundle,
       Optional<AppleBundle> testHostApp,
@@ -183,7 +185,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
       SourcePathRuleFinder ruleFinder) {
-    super(params);
+    super(projectFilesystem, params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.useXctest = useXctest;

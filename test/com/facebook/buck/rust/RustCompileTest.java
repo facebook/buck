@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
@@ -165,6 +167,7 @@ public class RustCompileTest {
 
       @Override
       public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
+          ProjectFilesystem projectFilesystem,
           BuildRuleParams baseParams,
           BuildRuleResolver ruleResolver,
           SourcePathRuleFinder ruleFinder,
@@ -219,6 +222,7 @@ public class RustCompileTest {
     private FakeRustCompileRule(
         BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
       super(
+          new FakeProjectFilesystem(),
           TestBuildRuleParams.create(target),
           String.format("lib%s.rlib", target),
           fakeTool(),

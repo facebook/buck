@@ -17,6 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -78,12 +79,13 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePathRuleFinder ruleFinder;
 
   protected RustTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       BinaryBuildRule testExeBuild,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts) {
-    super(params);
+    super(projectFilesystem, params);
 
     this.testExeBuild = testExeBuild;
     this.ruleFinder = ruleFinder;

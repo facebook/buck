@@ -100,11 +100,12 @@ public class JavaTestDescription
       JavaTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateJavacOptions, params, resolver, args);
+        JavacOptionsFactory.create(templateJavacOptions, projectFilesystem, params, resolver, args);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
+            projectFilesystem,
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
@@ -118,7 +119,12 @@ public class JavaTestDescription
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultJavaLibrary.builder(
-                targetGraph, testsLibraryParams, resolver, cellRoots, javaBuckConfig)
+                targetGraph,
+                projectFilesystem,
+                testsLibraryParams,
+                resolver,
+                cellRoots,
+                javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
@@ -135,6 +141,7 @@ public class JavaTestDescription
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
         testsLibrary,
@@ -216,6 +223,7 @@ public class JavaTestDescription
     public final ImmutableMap<String, String> nativeLibsEnvironment;
 
     public CxxLibraryEnhancement(
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
         final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
@@ -225,7 +233,7 @@ public class JavaTestDescription
         throws NoSuchBuildTargetException {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(ruleFinder, params, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(ruleFinder, projectFilesystem, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -276,12 +284,15 @@ public class JavaTestDescription
     }
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
-        SourcePathRuleFinder ruleFinder, BuildRuleParams buildRuleParams, CxxPlatform cxxPlatform)
+        SourcePathRuleFinder ruleFinder,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        CxxPlatform cxxPlatform)
         throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           ruleFinder,
           buildRuleParams.getBuildTarget(),
-          buildRuleParams.getProjectFilesystem(),
+          projectFilesystem,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
           Predicates.or(NativeLinkable.class::isInstance, JavaLibrary.class::isInstance));

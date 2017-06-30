@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -62,6 +63,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final AppleAssetCatalogDescription.Optimization optimization;
 
   AppleAssetCatalog(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String applePlatformName,
       String targetSDKVersion,
@@ -71,7 +73,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> launchImage,
       AppleAssetCatalogDescription.Optimization optimization,
       String bundleName) {
-    super(params);
+    super(projectFilesystem, params);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.actool = actool;

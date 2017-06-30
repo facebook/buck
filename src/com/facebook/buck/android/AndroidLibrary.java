@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
@@ -64,6 +65,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public static Builder builder(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
@@ -73,6 +75,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       AndroidLibraryCompilerFactory compilerFactory) {
     return new Builder(
         targetGraph,
+        projectFilesystem,
         params,
         buildRuleResolver,
         cellRoots,
@@ -84,6 +87,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   @VisibleForTesting
   AndroidLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -105,6 +109,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests) {
     super(
+        projectFilesystem,
         params,
         resolver,
         ruleFinder,
@@ -143,6 +148,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
     protected Builder(
         TargetGraph targetGraph,
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
         CellPathResolver cellRoots,
@@ -150,7 +156,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
         AndroidLibraryCompilerFactory compilerFactory) {
-      super(targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
+      super(targetGraph, projectFilesystem, params, buildRuleResolver, cellRoots, javaBuckConfig);
       this.args = args;
       this.compilerFactory = compilerFactory;
       setJavacOptions(javacOptions);
@@ -210,6 +216,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Override
       protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
         return new AndroidLibrary(
+            projectFilesystem,
             getFinalParams(),
             sourcePathResolver,
             ruleFinder,
@@ -253,6 +260,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           graphEnhancer =
               new AndroidLibraryGraphEnhancer(
                   buildTarget,
+                  projectFilesystem,
                   initialParams
                       .withBuildTarget(buildTarget)
                       .withExtraDeps(

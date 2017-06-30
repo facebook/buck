@@ -44,7 +44,7 @@ public class PrebuiltPythonLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       PrebuiltPythonLibraryDescriptionArg args) {
-    return new PrebuiltPythonLibrary(params, args.getBinarySrc());
+    return new PrebuiltPythonLibrary(projectFilesystem, params, args.getBinarySrc());
   }
 
   @BuckStyleImmutable

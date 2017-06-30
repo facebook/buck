@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -56,10 +57,11 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private MavenUberJar(
       TraversedDeps traversedDeps,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate) {
-    super(params);
+    super(projectFilesystem, params);
     this.traversedDeps = traversedDeps;
     this.mavenCoords = mavenCoords;
     this.mavenPomTemplate = mavenPomTemplate;
@@ -80,12 +82,17 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
    */
   public static MavenUberJar create(
       JavaLibrary rootRule,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate) {
     TraversedDeps traversedDeps = TraversedDeps.traverse(ImmutableSet.of(rootRule));
     return new MavenUberJar(
-        traversedDeps, adjustParams(params, traversedDeps), mavenCoords, mavenPomTemplate);
+        traversedDeps,
+        projectFilesystem,
+        adjustParams(params, traversedDeps),
+        mavenCoords,
+        mavenPomTemplate);
   }
 
   @Override
@@ -148,17 +155,19 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     private final Optional<SourcePath> mavenPomTemplate;
 
     public SourceJar(
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         ImmutableSortedSet<SourcePath> srcs,
         Optional<String> mavenCoords,
         Optional<SourcePath> mavenPomTemplate,
         TraversedDeps traversedDeps) {
-      super(params, srcs, mavenCoords);
+      super(projectFilesystem, params, srcs, mavenCoords);
       this.traversedDeps = traversedDeps;
       this.mavenPomTemplate = mavenPomTemplate;
     }
 
     public static SourceJar create(
+        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         ImmutableSortedSet<SourcePath> topLevelSrcs,
         Optional<String> mavenCoords,
@@ -179,7 +188,8 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   })
               .append(topLevelSrcs)
               .toSortedSet(Ordering.natural());
-      return new SourceJar(params, sourcePaths, mavenCoords, mavenPomTemplate, traversedDeps);
+      return new SourceJar(
+          projectFilesystem, params, sourcePaths, mavenCoords, mavenPomTemplate, traversedDeps);
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -29,8 +30,12 @@ public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements
   private final BuildRuleResolver resolver;
   private final String output;
 
-  public CxxGenrule(BuildRuleParams params, BuildRuleResolver resolver, String output) {
-    super(params);
+  public CxxGenrule(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      String output) {
+    super(projectFilesystem, params);
     this.resolver = resolver;
     this.output = output;
   }

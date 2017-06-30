@@ -62,8 +62,9 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path pathToRDotJavaPackageFile;
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
-  UnzipAar(BuildRuleParams buildRuleParams, SourcePath aarFile) {
-    super(buildRuleParams);
+  UnzipAar(
+      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams, SourcePath aarFile) {
+    super(projectFilesystem, buildRuleParams);
     this.aarFile = aarFile;
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.unpackDirectory =

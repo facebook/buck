@@ -28,6 +28,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Paths;
@@ -168,7 +169,11 @@ public class JvmLibraryArgInterpreterTest {
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
     return JavacOptionsFactory.create(
-        defaults, TestBuildRuleParams.create("//not:real"), ruleResolver, arg);
+        defaults,
+        new FakeProjectFilesystem(),
+        TestBuildRuleParams.create("//not:real"),
+        ruleResolver,
+        arg);
   }
 
   @BuckStyleImmutable

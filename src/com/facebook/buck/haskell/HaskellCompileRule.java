@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -109,6 +110,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final Preprocessor preprocessor;
 
   private HaskellCompileRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool compiler,
       HaskellVersion haskellVersion,
@@ -124,7 +126,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
       Preprocessor preprocessor) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.haskellVersion = haskellVersion;
     this.flags = flags;
@@ -145,6 +147,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   public static HaskellCompileRule from(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       final Tool compiler,
@@ -176,6 +179,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                             .iterator())
                     .build());
     return new HaskellCompileRule(
+        projectFilesystem,
         baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
         haskellVersion,

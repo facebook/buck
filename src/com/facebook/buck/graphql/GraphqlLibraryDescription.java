@@ -40,14 +40,14 @@ public class GraphqlLibraryDescription implements Description<GraphqlLibraryDesc
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GraphqlLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    return new GraphqlLibrary(params, args.getSrcs());
+    return new GraphqlLibrary(projectFilesystem, params, args.getSrcs());
   }
 
   @BuckStyleImmutable

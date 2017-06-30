@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -59,6 +60,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<SourcePath> classpathsToIncludeInJar;
 
   public AndroidAar(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AndroidManifest manifest,
       AndroidResource androidResource,
@@ -67,7 +69,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Path> assembledNativeLibs,
       ImmutableSet<SourcePath> nativeLibAssetsDirectories,
       ImmutableSortedSet<SourcePath> classpathsToIncludeInJar) {
-    super(params);
+    super(projectFilesystem, params);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);

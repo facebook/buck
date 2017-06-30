@@ -103,11 +103,12 @@ public class KotlinTestDescription
         params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateJavacOptions, params, resolver, args);
+        JavacOptionsFactory.create(templateJavacOptions, projectFilesystem, params, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new KotlinLibraryBuilder(
                 targetGraph,
+                projectFilesystem,
                 testsLibraryParams,
                 resolver,
                 cellRoots,
@@ -129,6 +130,7 @@ public class KotlinTestDescription
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
     return new JavaTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
         testsLibrary,

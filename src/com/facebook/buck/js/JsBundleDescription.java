@@ -105,6 +105,7 @@ public class JsBundleDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
       return new ExportFile(
+          projectFilesystem,
           JsUtil.copyParamsWithDependencies(params),
           ruleFinder,
           new SourcePathResolver(ruleFinder),
@@ -121,10 +122,7 @@ public class JsBundleDescription
         && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)
         && !flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       return createAndroidRule(
-          params.getBuildTarget(),
-          params.getProjectFilesystem(),
-          resolver,
-          args.getAndroidPackage());
+          params.getBuildTarget(), projectFilesystem, resolver, args.getAndroidPackage());
     }
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
@@ -150,6 +148,7 @@ public class JsBundleDescription
     // all dependencies between files that go into the final bundle
     if (flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       return new JsDependenciesFile(
+          projectFilesystem,
           paramsWithLibraries,
           libraries,
           entryPoints,
@@ -157,6 +156,7 @@ public class JsBundleDescription
     }
 
     return new JsBundle(
+        projectFilesystem,
         paramsWithLibraries,
         libraries,
         entryPoints,
@@ -202,12 +202,12 @@ public class JsBundleDescription
     final BuildRule resource = resolver.requireRule(resourceTarget);
 
     return new JsBundleAndroid(
+        projectFilesystem,
         new BuildRuleParams(
             buildTarget,
             () -> ImmutableSortedSet.of(),
             () -> ImmutableSortedSet.of(jsBundle, resource),
-            ImmutableSortedSet.of(),
-            projectFilesystem),
+            ImmutableSortedSet.of()),
         jsBundle,
         resolver.getRuleWithType(resourceTarget, AndroidResource.class));
   }
@@ -225,14 +225,14 @@ public class JsBundleDescription
             buildTarget,
             () -> ImmutableSortedSet.of(),
             () -> ImmutableSortedSet.of(jsBundle),
-            ImmutableSortedSet.of(),
-            projectFilesystem);
+            ImmutableSortedSet.of());
 
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      return new Aapt2Compile(params, jsBundle.getSourcePathToResources());
+      return new Aapt2Compile(projectFilesystem, params, jsBundle.getSourcePathToResources());
     }
 
     return new AndroidResource(
+        projectFilesystem,
         params,
         new SourcePathRuleFinder(resolver),
         ImmutableSortedSet.of(), // deps

@@ -133,7 +133,7 @@ public class CxxBinaryDescription
     return createBuildRule(
         targetGraph,
         params.getBuildTarget(),
-        params.getProjectFilesystem(),
+        projectFilesystem,
         params.getExtraDeps(),
         resolver,
         cellRoots,
@@ -251,6 +251,7 @@ public class CxxBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxBinary cxxBinary =
         new CxxBinary(
+            projectFilesystem,
             new BuildRuleParams(
                 target,
                 () -> cxxLinkAndCompileRules.deps,
@@ -259,8 +260,7 @@ public class CxxBinaryDescription
                         .addAll(extraDepsFromOriginalParams.get())
                         .addAll(cxxLinkAndCompileRules.executable.getDeps(ruleFinder))
                         .build(),
-                ImmutableSortedSet.of(),
-                projectFilesystem),
+                ImmutableSortedSet.of()),
             resolver,
             ruleFinder,
             cxxPlatform,

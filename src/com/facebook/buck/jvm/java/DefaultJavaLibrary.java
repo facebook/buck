@@ -144,12 +144,13 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   public static DefaultJavaLibraryBuilder builder(
       TargetGraph targetGraph,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-        targetGraph, params, buildRuleResolver, cellRoots, javaBuckConfig);
+        targetGraph, projectFilesystem, params, buildRuleResolver, cellRoots, javaBuckConfig);
   }
 
   @Override
@@ -158,7 +159,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   protected DefaultJavaLibrary(
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Set<? extends SourcePath> srcs,
@@ -179,7 +181,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
-    super(params, resolver);
+    super(projectFilesystem, params, resolver);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
 
@@ -213,8 +215,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     this.trackClassUsage = trackClassUsage;
     if (this.trackClassUsage) {
-      depFileRelativePath =
-          getUsedClassesFilePath(params.getBuildTarget(), params.getProjectFilesystem());
+      depFileRelativePath = getUsedClassesFilePath(params.getBuildTarget(), projectFilesystem);
     }
     this.abiClasspath = abiClasspath;
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {

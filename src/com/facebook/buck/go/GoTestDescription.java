@@ -131,16 +131,19 @@ public class GoTestDescription
   }
 
   private GoTestMain requireTestMainGenRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableSet<SourcePath> srcs,
       Path packageName)
       throws NoSuchBuildTargetException {
-    Tool testMainGenerator = GoDescriptors.getTestMainGenerator(goBuckConfig, params, resolver);
+    Tool testMainGenerator =
+        GoDescriptors.getTestMainGenerator(goBuckConfig, projectFilesystem, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     GoTestMain generatedTestMain =
         new GoTestMain(
+            projectFilesystem,
             params
                 .withAppendedFlavor(InternalFlavor.of("test-main-src"))
                 .withDeclaredDeps(ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder)))
@@ -168,14 +171,15 @@ public class GoTestDescription
             .orElse(goBuckConfig.getDefaultPlatform());
 
     if (params.getBuildTarget().getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
-      return createTestLibrary(params, resolver, args, platform);
+      return createTestLibrary(projectFilesystem, params, resolver, args, platform);
     }
 
-    GoBinary testMain = createTestMainRule(params, resolver, args, platform);
+    GoBinary testMain = createTestMainRule(projectFilesystem, params, resolver, args, platform);
     resolver.addToIndex(testMain);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testMain)).withoutExtraDeps(),
         ruleFinder,
         testMain,
@@ -187,6 +191,7 @@ public class GoTestDescription
   }
 
   private GoBinary createTestMainRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoTestDescriptionArg args,
@@ -195,13 +200,15 @@ public class GoTestDescription
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
     BuildRuleParams testTargetParams = params.withAppendedFlavor(TEST_LIBRARY_FLAVOR);
-    BuildRule testLibrary = new NoopBuildRuleWithDeclaredAndExtraDeps(testTargetParams);
+    BuildRule testLibrary =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, testTargetParams);
     resolver.addToIndex(testLibrary);
 
     BuildRule generatedTestMain =
-        requireTestMainGenRule(params, resolver, args.getSrcs(), packageName);
+        requireTestMainGenRule(projectFilesystem, params, resolver, args.getSrcs(), packageName);
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
+            projectFilesystem,
             params
                 .withAppendedFlavor(InternalFlavor.of("test-main"))
                 .withDeclaredDeps(ImmutableSortedSet.of(testLibrary))
@@ -257,6 +264,7 @@ public class GoTestDescription
   }
 
   private GoCompile createTestLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoTestDescriptionArg args,
@@ -290,6 +298,7 @@ public class GoTestDescription
 
       testLibrary =
           GoDescriptors.createGoCompileRule(
+              projectFilesystem,
               testTargetParams,
               resolver,
               goBuckConfig,
@@ -312,6 +321,7 @@ public class GoTestDescription
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(
+              projectFilesystem,
               params,
               resolver,
               goBuckConfig,

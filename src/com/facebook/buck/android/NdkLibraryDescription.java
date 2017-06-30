@@ -154,7 +154,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
    *     file and also appends relevant preprocessor and linker flags to use C/C++ library deps.
    */
   private Pair<String, Iterable<BuildRule>> generateMakefile(
-      BuildRuleParams params, BuildRuleResolver resolver) throws NoSuchBuildTargetException {
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver)
+      throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
@@ -188,7 +189,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(), pathResolver, Optional.empty(), preprocessor));
       String localCflags =
-          Joiner.on(' ').join(escapeForMakefile(params.getProjectFilesystem(), ppFlags.build()));
+          Joiner.on(' ').join(escapeForMakefile(projectFilesystem, ppFlags.build()));
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
@@ -214,7 +215,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           Joiner.on(' ')
               .join(
                   escapeForMakefile(
-                      params.getProjectFilesystem(),
+                      projectFilesystem,
                       Arg.stringify(nativeLinkableInput.getArgs(), pathResolver)));
 
       // Write the relevant lines to the generated makefile.
@@ -325,24 +326,26 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
   @Override
   public NdkLibrary createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       NdkLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
+    Pair<String, Iterable<BuildRule>> makefilePair =
+        generateMakefile(projectFilesystem, params, resolver);
 
     ImmutableSortedSet<SourcePath> sources;
     if (!args.getSrcs().isEmpty()) {
       sources = args.getSrcs();
     } else {
-      sources = findSources(params.getProjectFilesystem(), params.getBuildTarget().getBasePath());
+      sources = findSources(projectFilesystem, params.getBuildTarget().getBasePath());
     }
     return new NdkLibrary(
+        projectFilesystem,
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
-        getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
+        getGeneratedMakefilePath(params.getBuildTarget(), projectFilesystem),
         makefilePair.getFirst(),
         sources,
         args.getFlags(),

@@ -80,11 +80,13 @@ public class AndroidBuildConfigDescription
       return CalculateAbiFromClasses.of(
           params.getBuildTarget(),
           ruleFinder,
+          projectFilesystem,
           params,
           Preconditions.checkNotNull(configRule.getSourcePathToOutput()));
     }
 
     return createBuildRule(
+        projectFilesystem,
         params,
         args.getPackage(),
         args.getValues(),
@@ -104,6 +106,7 @@ public class AndroidBuildConfigDescription
    *     {@link BuildRuleResolver}.
    */
   static AndroidBuildConfigJavaLibrary createBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String javaPackage,
       BuildConfigFields values,
@@ -155,13 +158,19 @@ public class AndroidBuildConfigDescription
                 ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(valuesFile)));
     AndroidBuildConfig androidBuildConfig =
         new AndroidBuildConfig(
-            buildConfigParams, javaPackage, values, valuesFile, useConstantExpressions);
+            projectFilesystem,
+            buildConfigParams,
+            javaPackage,
+            values,
+            valuesFile,
+            useConstantExpressions);
     ruleResolver.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams =
         params.withDeclaredDeps(ImmutableSortedSet.of(androidBuildConfig)).withoutExtraDeps();
     return new AndroidBuildConfigJavaLibrary(
+        projectFilesystem,
         javaLibraryParams,
         pathResolver,
         ruleFinder,

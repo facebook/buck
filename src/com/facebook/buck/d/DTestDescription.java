@@ -90,6 +90,7 @@ public class DTestDescription
         buildRuleResolver.addToIndex(
             DDescriptionUtils.createSourceSymlinkTree(
                 DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
+                projectFilesystem,
                 params,
                 ruleFinder,
                 pathResolver,
@@ -103,6 +104,7 @@ public class DTestDescription
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
+            projectFilesystem,
             params.withBuildTarget(binaryTarget),
             buildRuleResolver,
             cxxPlatform,
@@ -118,6 +120,7 @@ public class DTestDescription
     buildRuleResolver.addToIndex(binaryRule);
 
     return new DTest(
+        projectFilesystem,
         params.copyAppendingExtraDeps(ImmutableList.of(binaryRule)),
         binaryRule,
         args.getContacts(),

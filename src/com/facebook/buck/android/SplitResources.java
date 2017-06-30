@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -53,11 +54,13 @@ public class SplitResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
 
   public SplitResources(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt) {
     super(
+        projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             getAllDeps(ruleFinder, pathToAaptResources, pathToOriginalRDotTxt)));
     this.pathToAaptResources = pathToAaptResources;

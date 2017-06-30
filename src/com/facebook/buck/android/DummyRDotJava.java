@@ -83,6 +83,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<SourcePath> abiInputs;
 
   public DummyRDotJava(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
@@ -92,6 +93,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> finalRName,
       boolean useOldStyleableFormat) {
     this(
+        projectFilesystem,
         params,
         ruleFinder,
         androidResourceDeps,
@@ -104,6 +106,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private DummyRDotJava(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
@@ -113,7 +116,9 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
-    super(params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
+    super(
+        projectFilesystem,
+        params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.

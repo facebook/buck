@@ -111,8 +111,7 @@ public class AndroidManifestTest {
   private AndroidManifest createSimpleAndroidManifestRule() {
     // First, create the AndroidManifest object.
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create(MANIFEST_TARGET, projectFilesystem);
+    BuildRuleParams buildRuleParams = TestBuildRuleParams.create(MANIFEST_TARGET);
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescriptionArg arg =
         AndroidManifestDescriptionArg.builder()

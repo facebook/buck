@@ -85,6 +85,7 @@ public class OcamlBinaryDescription
     ImmutableList<String> linkerFlags = args.getLinkerFlags();
     return OcamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
+        projectFilesystem,
         params,
         resolver,
         srcs,

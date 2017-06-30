@@ -17,6 +17,7 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -63,12 +64,13 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
 
   public DTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<String> labels,
       Optional<Long> testRuleTimeoutMs) {
-    super(params);
+    super(projectFilesystem, params);
     this.contacts = contacts;
     this.labels = labels;
     this.testRuleTimeoutMs = testRuleTimeoutMs;

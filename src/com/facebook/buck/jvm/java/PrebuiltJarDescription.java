@@ -68,13 +68,14 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
     if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(), ruleFinder, params, args.getBinaryJar());
+          params.getBuildTarget(), ruleFinder, projectFilesystem, params, args.getBinaryJar());
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildRule prebuilt =
         new PrebuiltJar(
+            projectFilesystem,
             params,
             pathResolver,
             args.getBinaryJar(),
@@ -90,14 +91,15 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
             .withAppendedFlavor(JavaLibrary.GWT_MODULE_FLAVOR)
             .withDeclaredDeps(ImmutableSortedSet.of(prebuilt))
             .withoutExtraDeps();
-    BuildRule gwtModule = createGwtModule(gwtParams, args);
+    BuildRule gwtModule = createGwtModule(projectFilesystem, gwtParams, args);
     resolver.addToIndex(gwtModule);
 
     return prebuilt;
   }
 
   @VisibleForTesting
-  static BuildRule createGwtModule(BuildRuleParams params, PrebuiltJarDescriptionArg arg) {
+  static BuildRule createGwtModule(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, PrebuiltJarDescriptionArg arg) {
     // Because a PrebuiltJar rarely requires any building whatsoever (it could if the source_jar
     // is a BuildTargetSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
@@ -115,8 +117,9 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       @AddToRuleKey private final SourcePath source;
       private final Path output;
 
-      protected ExistingOuputs(BuildRuleParams params, SourcePath source) {
-        super(params);
+      protected ExistingOuputs(
+          ProjectFilesystem projectFilesystem, BuildRuleParams params, SourcePath source) {
+        super(projectFilesystem, params);
         this.source = source;
         BuildTarget target = params.getBuildTarget();
         this.output =
@@ -152,7 +155,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
       }
     }
-    return new ExistingOuputs(params, input);
+    return new ExistingOuputs(projectFilesystem, params, input);
   }
 
   @BuckStyleImmutable

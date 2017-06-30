@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -84,6 +85,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public PrebuiltAppleFramework(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -92,7 +94,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
       ImmutableSet<FrameworkPath> frameworks,
       Optional<Pattern> supportedPlatformsRegex,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags) {
-    super(params, pathResolver);
+    super(projectFilesystem, params, pathResolver);
     this.frameworkPath = frameworkPath;
     this.ruleResolver = ruleResolver;
     this.exportedLinkerFlags = exportedLinkerFlags;

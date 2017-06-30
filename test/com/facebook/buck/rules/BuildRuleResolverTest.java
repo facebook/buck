@@ -172,11 +172,8 @@ public class BuildRuleResolverTest {
 
   private static BuildRule emptyBuildRuleWithTarget(BuildTarget target) {
     return new NoopBuildRuleWithDeclaredAndExtraDeps(
+        new FakeProjectFilesystem(),
         new BuildRuleParams(
-            target,
-            ImmutableSortedSet::of,
-            ImmutableSortedSet::of,
-            ImmutableSortedSet.of(),
-            new FakeProjectFilesystem()));
+            target, ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()));
   }
 }

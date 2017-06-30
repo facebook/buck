@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -38,8 +39,9 @@ public class OcamlClean extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private static final Logger LOG = Logger.get(OcamlClean.class);
 
-  public OcamlClean(BuildRuleParams params, OcamlBuildContext ocamlContext) {
-    super(params);
+  public OcamlClean(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, OcamlBuildContext ocamlContext) {
+    super(projectFilesystem, params);
     this.ocamlContext = ocamlContext;
   }
 

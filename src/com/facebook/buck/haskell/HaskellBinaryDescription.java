@@ -183,7 +183,7 @@ public class HaskellBinaryDescription
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   ruleFinder,
                   params.getBuildTarget(),
-                  params.getProjectFilesystem(),
+                  projectFilesystem,
                   cxxPlatform,
                   deps,
                   NativeLinkable.class::isInstance));
@@ -194,7 +194,7 @@ public class HaskellBinaryDescription
           params
               .getBuildTarget()
               .getCellPath()
-              .resolve(HaskellLinkRule.getOutputDir(binaryTarget, params.getProjectFilesystem()));
+              .resolve(HaskellLinkRule.getOutputDir(binaryTarget, projectFilesystem));
       linkFlagsBuilder.addAll(
           StringArg.from(
               MoreIterables.zipAndConcat(
@@ -225,6 +225,7 @@ public class HaskellBinaryDescription
     HaskellCompileRule compileRule =
         resolver.addToIndex(
             HaskellDescriptionUtils.requireCompileRule(
+                projectFilesystem,
                 params,
                 resolver,
                 ruleFinder,
@@ -257,6 +258,7 @@ public class HaskellBinaryDescription
     final HaskellLinkRule linkRule =
         HaskellDescriptionUtils.createLinkRule(
             binaryTarget,
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -270,6 +272,7 @@ public class HaskellBinaryDescription
             false);
 
     return new HaskellBinary(
+        projectFilesystem,
         params.copyAppendingExtraDeps(linkRule),
         ruleFinder,
         deps,

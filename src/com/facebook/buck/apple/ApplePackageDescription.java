@@ -93,6 +93,7 @@ public class ApplePackageDescription
                 resolver));
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
+          projectFilesystem,
           params.withExtraDeps(
               () ->
                   ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -107,7 +108,7 @@ public class ApplePackageDescription
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable());
     } else {
-      return new BuiltinApplePackage(params, bundle);
+      return new BuiltinApplePackage(projectFilesystem, params, bundle);
     }
   }
 

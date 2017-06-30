@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -83,13 +84,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final Optional<Long> testRuleTimeoutMs;
 
   protected AndroidInstrumentationTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       HasInstallableApk apk,
       Set<String> labels,
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<Long> testRuleTimeoutMs) {
-    super(params);
+    super(projectFilesystem, params);
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);

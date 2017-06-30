@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
@@ -136,6 +137,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Boolean isWorkerGenrule;
 
   protected Genrule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
@@ -143,7 +145,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out) {
-    super(params);
+    super(projectFilesystem, params);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;

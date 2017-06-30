@@ -50,12 +50,13 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final JarContentsSupplier outputPathContentsSupplier;
 
   public CompareAbis(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath classAbi,
       SourcePath sourceAbi,
       JavaBuckConfig.SourceAbiVerificationMode verificationMode) {
-    super(params);
+    super(projectFilesystem, params);
     this.classAbi = classAbi;
     this.sourceAbi = sourceAbi;
     this.verificationMode = verificationMode;

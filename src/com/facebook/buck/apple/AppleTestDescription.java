@@ -253,6 +253,7 @@ public class AppleTestDescription
             defaultCxxPlatform,
             appleCxxPlatformFlavorDomain,
             targetGraph,
+            projectFilesystem,
             params
                 .withBuildTarget(
                     params
@@ -282,7 +283,7 @@ public class AppleTestDescription
             appleConfig.cacheBundlesAndPackages());
     resolver.addToIndex(bundle);
 
-    Optional<SourcePath> xctool = getXctool(params, resolver);
+    Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new AppleTest(
@@ -293,6 +294,7 @@ public class AppleTestDescription
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         Optional.of(args.getDestinationSpecifier()),
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(bundle)).withoutExtraDeps(),
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
@@ -309,7 +311,8 @@ public class AppleTestDescription
         ruleFinder);
   }
 
-  private Optional<SourcePath> getXctool(BuildRuleParams params, BuildRuleResolver resolver) {
+  private Optional<SourcePath> getXctool(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
@@ -320,7 +323,7 @@ public class AppleTestDescription
               .addFlavors(UNZIP_XCTOOL_FLAVOR)
               .build();
       final Path outputDirectory =
-          BuildTargets.getGenPath(params.getProjectFilesystem(), unzipXctoolTarget, "%s/unzipped");
+          BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
         BuildRuleParams unzipXctoolParams =
             params
@@ -328,7 +331,7 @@ public class AppleTestDescription
                 .withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule))
                 .withoutExtraDeps();
         resolver.addToIndex(
-            new AbstractBuildRuleWithDeclaredAndExtraDeps(unzipXctoolParams) {
+            new AbstractBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context, BuildableContext buildableContext) {
@@ -362,8 +365,7 @@ public class AppleTestDescription
           new ExplicitBuildTargetSourcePath(
               unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
-      return Optional.of(
-          new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
+      return Optional.of(new PathSourcePath(projectFilesystem, appleConfig.getXctoolPath().get()));
     } else {
       return Optional.empty();
     }

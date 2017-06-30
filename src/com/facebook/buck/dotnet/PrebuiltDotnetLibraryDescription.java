@@ -47,7 +47,7 @@ public class PrebuiltDotnetLibraryDescription
       CellPathResolver cellRoots,
       PrebuiltDotnetLibraryDescriptionArg args) {
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new PrebuiltDotnetLibrary(params, pathResolver, args.getAssembly());
+    return new PrebuiltDotnetLibrary(projectFilesystem, params, pathResolver, args.getAssembly());
   }
 
   @BuckStyleImmutable

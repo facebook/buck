@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -57,8 +58,11 @@ public class CxxPreprocessablesTest {
     private final CxxPreprocessorInput input;
 
     public FakeCxxPreprocessorDep(
-        BuildRuleParams params, SourcePathResolver resolver, CxxPreprocessorInput input) {
-      super(params, resolver);
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams params,
+        SourcePathResolver resolver,
+        CxxPreprocessorInput input) {
+      super(projectFilesystem, params, resolver);
       this.input = Preconditions.checkNotNull(input);
     }
 
@@ -92,6 +96,7 @@ public class CxxPreprocessablesTest {
       CxxPreprocessorInput input,
       BuildRule... deps) {
     return new FakeCxxPreprocessorDep(
+        new FakeProjectFilesystem(),
         TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
         resolver,
         input);
@@ -101,13 +106,6 @@ public class CxxPreprocessablesTest {
       String target, SourcePathResolver resolver, CxxPreprocessorInput input, BuildRule... deps) {
     return createFakeCxxPreprocessorDep(
         BuildTargetFactory.newInstance(target), resolver, input, deps);
-  }
-
-  private static FakeBuildRule createFakeBuildRule(
-      BuildTarget target, SourcePathResolver resolver, BuildRule... deps) {
-    return new FakeBuildRule(
-        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-        resolver);
   }
 
   @Rule public ExpectedException exception = ExpectedException.none();
@@ -185,18 +183,12 @@ public class CxxPreprocessablesTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup up the main build target and build params, which some random dep.  We'll make
     // sure the dep doesn't get propagated to the symlink rule below.
-    FakeBuildRule dep =
-        createFakeBuildRule(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//random:dep"), pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
-    BuildRuleParams params =
-        TestBuildRuleParams.create(target, filesystem).withDeclaredDeps(ImmutableSortedSet.of(dep));
     Path root = Paths.get("root");
 
     // Setup a simple genrule we can wrap in a ExplicitBuildTargetSourcePath to model a input source
@@ -220,7 +212,7 @@ public class CxxPreprocessablesTest {
     HeaderSymlinkTree symlinkTree =
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
             target,
-            params.getProjectFilesystem(),
+            filesystem,
             root,
             links,
             CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY,

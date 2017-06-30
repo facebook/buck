@@ -115,6 +115,7 @@ public class HaskellLibraryDescription
   }
 
   private HaskellCompileRule requireCompileRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -126,6 +127,7 @@ public class HaskellLibraryDescription
       boolean hsProfile)
       throws NoSuchBuildTargetException {
     return HaskellDescriptionUtils.requireCompileRule(
+        projectFilesystem,
         params,
         resolver,
         ruleFinder,
@@ -149,6 +151,7 @@ public class HaskellLibraryDescription
 
   private Archive createStaticLibrary(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -161,6 +164,7 @@ public class HaskellLibraryDescription
       throws NoSuchBuildTargetException {
     HaskellCompileRule compileRule =
         requireCompileRule(
+            projectFilesystem,
             baseParams,
             resolver,
             pathResolver,
@@ -172,12 +176,12 @@ public class HaskellLibraryDescription
             hsProfile);
     return Archive.from(
         target,
-        baseParams.getProjectFilesystem(),
+        projectFilesystem,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
-            baseParams.getProjectFilesystem(),
+            projectFilesystem,
             target.withoutFlavors(HaskellDescriptionUtils.PROF),
             cxxPlatform.getFlavor(),
             depType == Linker.LinkableDepType.STATIC
@@ -190,6 +194,7 @@ public class HaskellLibraryDescription
 
   private Archive requireStaticLibrary(
       BuildTarget baseTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -225,6 +230,7 @@ public class HaskellLibraryDescription
     return resolver.addToIndex(
         createStaticLibrary(
             target,
+            projectFilesystem,
             baseParams,
             resolver,
             pathResolver,
@@ -238,6 +244,7 @@ public class HaskellLibraryDescription
 
   private HaskellPackageRule createPackage(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -256,6 +263,7 @@ public class HaskellLibraryDescription
         library =
             requireSharedLibrary(
                 getBaseBuildTarget(target),
+                projectFilesystem,
                 baseParams,
                 resolver,
                 pathResolver,
@@ -270,6 +278,7 @@ public class HaskellLibraryDescription
         library =
             requireStaticLibrary(
                 getBaseBuildTarget(target),
+                projectFilesystem,
                 baseParams,
                 resolver,
                 pathResolver,
@@ -289,6 +298,7 @@ public class HaskellLibraryDescription
           BuildRule profiledLibrary =
               requireStaticLibrary(
                   getBaseBuildTarget(target),
+                  projectFilesystem,
                   baseParams,
                   resolver,
                   pathResolver,
@@ -331,6 +341,7 @@ public class HaskellLibraryDescription
     ImmutableSortedSet<SourcePath> objects;
     HaskellCompileRule compileRule =
         requireCompileRule(
+            projectFilesystem,
             baseParams,
             resolver,
             pathResolver,
@@ -344,6 +355,7 @@ public class HaskellLibraryDescription
     if (hsProfile) {
       HaskellCompileRule profiledCompileRule =
           requireCompileRule(
+              projectFilesystem,
               baseParams,
               resolver,
               pathResolver,
@@ -365,6 +377,7 @@ public class HaskellLibraryDescription
 
     return HaskellPackageRule.from(
         target,
+        projectFilesystem,
         baseParams,
         ruleFinder,
         haskellConfig.getPackager().resolve(resolver),
@@ -380,6 +393,7 @@ public class HaskellLibraryDescription
 
   private HaskellPackageRule requirePackage(
       BuildTarget baseTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -421,6 +435,7 @@ public class HaskellLibraryDescription
     return resolver.addToIndex(
         createPackage(
             target,
+            projectFilesystem,
             baseParams,
             resolver,
             pathResolver,
@@ -434,6 +449,7 @@ public class HaskellLibraryDescription
 
   private HaskellLinkRule createSharedLibrary(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -444,6 +460,7 @@ public class HaskellLibraryDescription
       throws NoSuchBuildTargetException {
     HaskellCompileRule compileRule =
         requireCompileRule(
+            projectFilesystem,
             baseParams,
             resolver,
             pathResolver,
@@ -455,6 +472,7 @@ public class HaskellLibraryDescription
             false);
     return HaskellDescriptionUtils.createLinkRule(
         target,
+        projectFilesystem,
         baseParams,
         resolver,
         ruleFinder,
@@ -470,6 +488,7 @@ public class HaskellLibraryDescription
 
   private HaskellLinkRule requireSharedLibrary(
       BuildTarget baseTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -492,14 +511,22 @@ public class HaskellLibraryDescription
     }
     return resolver.addToIndex(
         createSharedLibrary(
-            target, baseParams, resolver, pathResolver, ruleFinder, cxxPlatform, args, deps));
+            target,
+            projectFilesystem,
+            baseParams,
+            resolver,
+            pathResolver,
+            ruleFinder,
+            cxxPlatform,
+            args,
+            deps));
   }
 
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final HaskellLibraryDescriptionArg args)
@@ -540,6 +567,7 @@ public class HaskellLibraryDescription
           }
           return requirePackage(
               baseTarget,
+              projectFilesystem,
               params,
               resolver,
               pathResolver,
@@ -552,6 +580,7 @@ public class HaskellLibraryDescription
         case SHARED:
           return requireSharedLibrary(
               baseTarget,
+              projectFilesystem,
               params,
               resolver,
               pathResolver,
@@ -563,6 +592,7 @@ public class HaskellLibraryDescription
         case STATIC:
           return requireStaticLibrary(
               baseTarget,
+              projectFilesystem,
               params,
               resolver,
               pathResolver,
@@ -581,7 +611,7 @@ public class HaskellLibraryDescription
               "%s: unexpected type `%s`", params.getBuildTarget(), type.get().getValue()));
     }
 
-    return new HaskellLibrary(params) {
+    return new HaskellLibrary(projectFilesystem, params) {
 
       @Override
       public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {
@@ -597,6 +627,7 @@ public class HaskellLibraryDescription
         HaskellPackageRule rule =
             requirePackage(
                 getBaseBuildTarget(getBuildTarget()),
+                projectFilesystem,
                 params,
                 resolver,
                 pathResolver,
@@ -643,6 +674,7 @@ public class HaskellLibraryDescription
             Archive archive =
                 requireStaticLibrary(
                     getBaseBuildTarget(getBuildTarget()),
+                    projectFilesystem,
                     params,
                     resolver,
                     pathResolver,
@@ -661,6 +693,7 @@ public class HaskellLibraryDescription
             BuildRule rule =
                 requireSharedLibrary(
                     getBaseBuildTarget(getBuildTarget()),
+                    projectFilesystem,
                     params,
                     resolver,
                     pathResolver,
@@ -691,6 +724,7 @@ public class HaskellLibraryDescription
         BuildRule sharedLibraryBuildRule =
             requireSharedLibrary(
                 getBaseBuildTarget(getBuildTarget()),
+                projectFilesystem,
                 params,
                 resolver,
                 pathResolver,

@@ -101,9 +101,9 @@ public class AndroidResourceDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(ruleFinder, params, args.getRes(), "res");
+      return createSymlinkTree(ruleFinder, projectFilesystem, params, args.getRes(), "res");
     } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(ruleFinder, params, args.getAssets(), "assets");
+      return createSymlinkTree(ruleFinder, projectFilesystem, params, args.getAssets(), "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
@@ -146,7 +146,7 @@ public class AndroidResourceDescription
               .withDeclaredDeps(
                   ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())))
               .withoutExtraDeps();
-      return new Aapt2Compile(params, resDir.get());
+      return new Aapt2Compile(projectFilesystem, params, resDir.get());
     }
 
     params =
@@ -162,6 +162,7 @@ public class AndroidResourceDescription
                     .orElse(ImmutableSet.of())));
 
     return new AndroidResource(
+        projectFilesystem,
         // We only propagate other AndroidResource rule dependencies, as these are
         // the only deps which should control whether we need to re-run the aapt_package
         // step.
@@ -182,6 +183,7 @@ public class AndroidResourceDescription
 
   private SymlinkTree createSymlinkTree(
       SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
       String outputDirName) {
@@ -208,10 +210,10 @@ public class AndroidResourceDescription
       }
     }
     Path symlinkTreeRoot =
-        BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s")
+        BuildTargets.getGenPath(projectFilesystem, params.getBuildTarget(), "%s")
             .resolve(outputDirName);
     return new SymlinkTree(
-        params.getBuildTarget(), params.getProjectFilesystem(), symlinkTreeRoot, links, ruleFinder);
+        params.getBuildTarget(), projectFilesystem, symlinkTreeRoot, links, ruleFinder);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

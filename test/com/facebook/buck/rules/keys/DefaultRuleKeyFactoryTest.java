@@ -497,8 +497,8 @@ public class DefaultRuleKeyFactoryTest {
     // Create a dummy build rule that uses the input.
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(
-            TestBuildRuleParams.create("//:target", filesystem)
-                .withDeclaredDeps(ImmutableSortedSet.of(dep))) {
+            filesystem,
+            TestBuildRuleParams.create("//:target").withDeclaredDeps(ImmutableSortedSet.of(dep))) {
 
           @AddToRuleKey private final SourcePath inputField = input;
 
@@ -559,7 +559,7 @@ public class DefaultRuleKeyFactoryTest {
     // Create a dummy build rule that uses the input.
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(
-            TestBuildRuleParams.create("//:target", filesystem)) {
+            filesystem, TestBuildRuleParams.create("//:target")) {
 
           @AddToRuleKey private final RuleKeyAppendable appendableField = appendable;
         };

@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -103,6 +104,7 @@ abstract class DDescriptionUtils {
    * @return the new build rule
    */
   public static CxxLink createNativeLinkable(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CxxPlatform cxxPlatform,
@@ -120,6 +122,7 @@ abstract class DDescriptionUtils {
 
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
+            projectFilesystem,
             params,
             buildRuleResolver,
             sourcePathResolver,
@@ -135,15 +138,14 @@ abstract class DDescriptionUtils {
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         buildRuleResolver,
         sourcePathResolver,
         ruleFinder,
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName()),
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
         Linker.LinkableDepType.STATIC,
         /* thinLto */ false,
         FluentIterable.from(params.getBuildDeps()).filter(NativeLinkable.class),
@@ -165,6 +167,7 @@ abstract class DDescriptionUtils {
 
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
@@ -172,12 +175,11 @@ abstract class DDescriptionUtils {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
     return new SymlinkTree(
         target,
-        baseParams.getProjectFilesystem(),
-        BuildTargets.getGenPath(
-            baseParams.getProjectFilesystem(), baseParams.getBuildTarget(), "%s"),
+        projectFilesystem,
+        BuildTargets.getGenPath(projectFilesystem, baseParams.getBuildTarget(), "%s"),
         MoreMaps.transformKeys(
             sources.toNameMap(baseParams.getBuildTarget(), pathResolver, "srcs"),
-            MorePaths.toPathFn(baseParams.getProjectFilesystem().getRootPath().getFileSystem())),
+            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
         ruleFinder);
   }
 
@@ -211,6 +213,7 @@ abstract class DDescriptionUtils {
    */
   public static DCompileBuildRule requireBuildRule(
       BuildTarget compileTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -242,6 +245,7 @@ abstract class DDescriptionUtils {
               ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
               return new DCompileBuildRule(
+                  projectFilesystem,
                   baseParams
                       .withBuildTarget(compileTarget)
                       .withDeclaredDeps(deps)
@@ -271,6 +275,7 @@ abstract class DDescriptionUtils {
    * @return SourcePaths of the generated object files
    */
   public static ImmutableList<SourcePath> sourcePathsForCompiledSources(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
@@ -289,6 +294,7 @@ abstract class DDescriptionUtils {
       BuildRule rule =
           requireBuildRule(
               compileTarget,
+              projectFilesystem,
               baseParams,
               buildRuleResolver,
               ruleFinder,

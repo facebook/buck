@@ -577,6 +577,7 @@ public class RuleKeyTest {
   @Test
   public void changingRuleKeyFieldChangesKeyWhenClassImplementsAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
@@ -589,8 +590,10 @@ public class RuleKeyTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     new FakeProjectFilesystem(), FileHashCacheMode.PREFIX_TREE)));
 
-    BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(params, "foo", "bar");
-    BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(params, "foo", "xyzzy");
+    BuildRule buildRule1 =
+        new TestRuleKeyAppendableBuildRule(projectFilesystem, params, "foo", "bar");
+    BuildRule buildRule2 =
+        new TestRuleKeyAppendableBuildRule(projectFilesystem, params, "foo", "xyzzy");
 
     RuleKey ruleKey1 =
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(buildRule1);
@@ -603,6 +606,7 @@ public class RuleKeyTest {
   @Test
   public void changingRuleKeyFieldOfDepChangesKeyWhenClassImplementsAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
@@ -615,19 +619,23 @@ public class RuleKeyTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     new FakeProjectFilesystem(), FileHashCacheMode.PREFIX_TREE)));
 
-    BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(params, "foo", "bar");
-    BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(params, "foo", "xyzzy");
+    BuildRule buildRule1 =
+        new TestRuleKeyAppendableBuildRule(projectFilesystem, params, "foo", "bar");
+    BuildRule buildRule2 =
+        new TestRuleKeyAppendableBuildRule(projectFilesystem, params, "foo", "xyzzy");
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//cheese:milk");
 
     BuildRuleParams parentParams1 =
         TestBuildRuleParams.create(parentTarget)
             .withDeclaredDeps(ImmutableSortedSet.of(buildRule1));
-    BuildRule parentRule1 = new NoopBuildRuleWithDeclaredAndExtraDeps(parentParams1);
+    BuildRule parentRule1 =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, parentParams1);
     BuildRuleParams parentParams2 =
         TestBuildRuleParams.create(parentTarget)
             .withDeclaredDeps(ImmutableSortedSet.of(buildRule2));
-    BuildRule parentRule2 = new NoopBuildRuleWithDeclaredAndExtraDeps(parentParams2);
+    BuildRule parentRule2 =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, parentParams2);
 
     RuleKey ruleKey1 =
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(parentRule1);
@@ -689,26 +697,27 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//a:target");
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams depParams = TestBuildRuleParams.create(depTarget);
     NoopBuildRuleWithDeclaredAndExtraDeps dep =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(depParams);
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, depParams);
 
     BuildRuleParams paramsWithDeclaredDep =
         TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(dep));
     NoopBuildRuleWithDeclaredAndExtraDeps ruleWithDeclaredDep =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithDeclaredDep);
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, paramsWithDeclaredDep);
 
     BuildRuleParams paramsWithExtraDep =
         TestBuildRuleParams.create(target).withExtraDeps(ImmutableSortedSet.of(dep));
     NoopBuildRuleWithDeclaredAndExtraDeps ruleWithExtraDep =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithExtraDep);
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, paramsWithExtraDep);
 
     BuildRuleParams paramsWithBothDeps =
         TestBuildRuleParams.create(target)
             .withDeclaredDeps(ImmutableSortedSet.of(dep))
             .withExtraDeps(ImmutableSortedSet.of(dep));
     NoopBuildRuleWithDeclaredAndExtraDeps ruleWithBothDeps =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(paramsWithBothDeps);
+        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, paramsWithBothDeps);
 
     assertNotEquals(
         ruleKeyFactory.build(ruleWithDeclaredDep), ruleKeyFactory.build(ruleWithExtraDep));
@@ -740,8 +749,12 @@ public class RuleKeyTest {
     @AddToRuleKey
     private final String bar;
 
-    public TestRuleKeyAppendableBuildRule(BuildRuleParams buildRuleParams, String foo, String bar) {
-      super(buildRuleParams);
+    public TestRuleKeyAppendableBuildRule(
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        String foo,
+        String bar) {
+      super(projectFilesystem, buildRuleParams);
       this.foo = foo;
       this.bar = bar;
     }

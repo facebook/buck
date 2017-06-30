@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -87,6 +88,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Function<String, String> macroExpander;
 
   protected NdkLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Path makefile,
       String makefileContents,
@@ -95,7 +97,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean isAsset,
       Optional<String> ndkVersion,
       Function<String, String> macroExpander) {
-    super(params);
+    super(projectFilesystem, params);
     this.isAsset = isAsset;
 
     BuildTarget buildTarget = params.getBuildTarget();

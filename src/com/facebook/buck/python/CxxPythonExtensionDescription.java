@@ -327,8 +327,8 @@ public class CxxPythonExtensionDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
       final CxxPythonExtensionDescriptionArg args)
@@ -342,7 +342,7 @@ public class CxxPythonExtensionDescription
           args,
           platform.get().getValue(),
           params.getBuildTarget(),
-          params.getProjectFilesystem());
+          projectFilesystem);
     }
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -358,7 +358,7 @@ public class CxxPythonExtensionDescription
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       return createExtensionBuildRule(
           params.getBuildTarget(),
-          params.getProjectFilesystem(),
+          projectFilesystem,
           ruleResolver,
           cellRoots,
           pythonPlatform.get().getValue(),
@@ -373,7 +373,7 @@ public class CxxPythonExtensionDescription
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.getBaseModule());
     String moduleName = args.getModuleName().orElse(params.getBuildTarget().getShortName());
     final Path module = baseModule.resolve(getExtensionName(moduleName));
-    return new CxxPythonExtension(params) {
+    return new CxxPythonExtension(projectFilesystem, params) {
 
       @Override
       protected BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform)
@@ -448,7 +448,7 @@ public class CxxPythonExtensionDescription
                             .getBuildTarget()
                             .withAppendedFlavors(
                                 pythonPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR),
-                        params.getProjectFilesystem(),
+                        projectFilesystem,
                         ruleResolver,
                         pathResolver,
                         ruleFinder,

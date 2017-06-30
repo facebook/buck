@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -39,8 +40,9 @@ public class OcamlBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final BuildRule binary;
 
-  public OcamlBinary(BuildRuleParams params, BuildRule binary) {
-    super(params);
+  public OcamlBinary(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRule binary) {
+    super(projectFilesystem, params);
     this.binary = binary;
   }
 

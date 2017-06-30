@@ -44,13 +44,26 @@ public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final boolean executable;
 
   public WriteFile(
-      BuildRuleParams buildRuleParams, String fileContents, Path output, boolean executable) {
-    this(buildRuleParams, fileContents.getBytes(StandardCharsets.UTF_8), output, executable);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      String fileContents,
+      Path output,
+      boolean executable) {
+    this(
+        projectFilesystem,
+        buildRuleParams,
+        fileContents.getBytes(StandardCharsets.UTF_8),
+        output,
+        executable);
   }
 
   public WriteFile(
-      BuildRuleParams buildRuleParams, byte[] fileContents, Path output, boolean executable) {
-    super(buildRuleParams);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      byte[] fileContents,
+      Path output,
+      boolean executable) {
+    super(projectFilesystem, buildRuleParams);
 
     Preconditions.checkArgument(!output.isAbsolute(), "'%s' must not be absolute.", output);
 

@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -56,12 +57,13 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
 
   public MultiarchFile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       Tool lipo,
       ImmutableSortedSet<SourcePath> thinBinaries,
       Path output) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);

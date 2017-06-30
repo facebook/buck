@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Pair;
@@ -80,6 +81,7 @@ public class RustCompileUtils {
   protected static RustCompileRule createBuild(
       BuildTarget target,
       String crateName,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -200,6 +202,7 @@ public class RustCompileUtils {
     return resolver.addToIndex(
         RustCompileRule.from(
             ruleFinder,
+            projectFilesystem,
             params.withBuildTarget(target),
             filename,
             rustConfig.getRustCompiler().resolve(resolver),
@@ -215,6 +218,7 @@ public class RustCompileUtils {
   }
 
   public static RustCompileRule requireBuild(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -241,6 +245,7 @@ public class RustCompileUtils {
     return createBuild(
         target,
         crateName,
+        projectFilesystem,
         params,
         resolver,
         ruleFinder,
@@ -281,6 +286,7 @@ public class RustCompileUtils {
   }
 
   public static BinaryWrapperRule createBinaryBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       RustBuckConfig rustBuckConfig,
@@ -350,7 +356,7 @@ public class RustCompileUtils {
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   ruleFinder,
                   params.getBuildTarget(),
-                  params.getProjectFilesystem(),
+                  projectFilesystem,
                   cxxPlatform,
                   params.getBuildDeps(),
                   RustLinkable.class::isInstance,
@@ -362,7 +368,7 @@ public class RustCompileUtils {
           params
               .getBuildTarget()
               .getCellPath()
-              .resolve(RustCompileRule.getOutputDir(binaryTarget, params.getProjectFilesystem()));
+              .resolve(RustCompileRule.getOutputDir(binaryTarget, projectFilesystem));
 
       linkerArgs.addAll(
           Linkers.iXlinker(
@@ -388,6 +394,7 @@ public class RustCompileUtils {
         RustCompileUtils.createBuild(
             binaryTarget,
             crate,
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -407,7 +414,8 @@ public class RustCompileUtils {
 
     final CommandTool executable = executableBuilder.build();
 
-    return new BinaryWrapperRule(params.copyAppendingExtraDeps(buildRule), ruleFinder) {
+    return new BinaryWrapperRule(
+        projectFilesystem, params.copyAppendingExtraDeps(buildRule), ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {

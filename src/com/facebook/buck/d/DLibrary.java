@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -37,8 +38,12 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
   private final BuildRuleResolver buildRuleResolver;
   private final DIncludes includes;
 
-  public DLibrary(BuildRuleParams params, BuildRuleResolver buildRuleResolver, DIncludes includes) {
-    super(params);
+  public DLibrary(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      DIncludes includes) {
+    super(projectFilesystem, params);
     this.buildRuleResolver = buildRuleResolver;
     this.includes = includes;
   }

@@ -43,7 +43,7 @@ public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GenAidlDescriptionArg args) {
-    return new GenAidl(params, args.getAidl(), args.getImportPath());
+    return new GenAidl(projectFilesystem, params, args.getAidl(), args.getImportPath());
   }
 
   @BuckStyleImmutable

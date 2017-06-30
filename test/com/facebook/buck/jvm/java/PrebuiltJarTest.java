@@ -48,10 +48,11 @@ public class PrebuiltJarTest {
     filesystem = new FakeProjectFilesystem(temp.newFolder());
 
     BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//lib:junit"), filesystem);
+        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//lib:junit"));
 
     junitJarRule =
         new PrebuiltJar(
+            filesystem,
             buildRuleParams,
             new SourcePathResolver(
                 new SourcePathRuleFinder(

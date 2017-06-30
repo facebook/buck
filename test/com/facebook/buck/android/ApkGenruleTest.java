@@ -142,7 +142,7 @@ public class ApkGenruleTest {
                     new PathSourcePath(
                         projectFilesystem, fileSystem.getPath("src/com/facebook/key.properties"))))
             .build();
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget, projectFilesystem);
+    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
     ApkGenrule apkGenrule =
         (ApkGenrule)
             description.createBuildRule(
@@ -150,7 +150,7 @@ public class ApkGenruleTest {
                 projectFilesystem,
                 params,
                 ruleResolver,
-                TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+                TestCellBuilder.createCellRoots(projectFilesystem),
                 arg);
     ruleResolver.addToIndex(apkGenrule);
 

@@ -98,6 +98,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             /* leadingIncludePaths */ Optional.empty());
 
     return new CxxInferCapture(
+        filesystem,
         buildRuleParams,
         CxxToolFlags.of(),
         CxxToolFlags.of(),
@@ -210,7 +211,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     "short2"))
             .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
             .build();
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create(buildTarget2, filesystem2);
+    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create(buildTarget2);
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -277,7 +278,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     "short2"))
             .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
             .build();
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create(buildTarget2, filesystem2);
+    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create(buildTarget2);
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

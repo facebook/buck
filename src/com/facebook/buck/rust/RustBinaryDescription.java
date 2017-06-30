@@ -98,6 +98,7 @@ public class RustBinaryDescription
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     return RustCompileUtils.createBinaryBuildRule(
+        projectFilesystem,
         params,
         resolver,
         rustBuckConfig,

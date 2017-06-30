@@ -360,6 +360,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
         CxxPreprocessAndCompile.compile(
+            getProjectFilesystem(),
             buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             compilerDelegate,
             getCompileOutputPath(target, name),
@@ -458,6 +459,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxInferCapture result =
         new CxxInferCapture(
+            getProjectFilesystem(),
             buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             ppFlags,
             cFlags,
@@ -537,6 +539,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
         CxxPreprocessAndCompile.preprocessAndCompile(
+            getProjectFilesystem(),
             buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             preprocessorDelegate,
             compilerDelegate,
@@ -746,6 +749,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxPrecompiledHeader rule =
         new CxxPrecompiledHeader(
+            getProjectFilesystem(),
             buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
             output,
             preprocessorDelegate,
@@ -885,11 +889,7 @@ abstract class AbstractCxxSourceRuleFactory {
   private BuildRuleParams buildRuleParamsWithTargetAndDeps(
       BuildTarget target, SortedSet<BuildRule> deps) {
     return new BuildRuleParams(
-        target,
-        () -> deps,
-        () -> ImmutableSortedSet.of(),
-        ImmutableSortedSet.of(),
-        getProjectFilesystem());
+        target, () -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
   }
 
   public enum PicType {

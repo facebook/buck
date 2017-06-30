@@ -88,6 +88,7 @@ public class RustLibraryDescription
   }
 
   private RustCompileRule requireBuild(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -114,6 +115,7 @@ public class RustLibraryDescription
             ImmutableSet.of("lib.rs"),
             args.getSrcs());
     return RustCompileUtils.requireBuild(
+        projectFilesystem,
         params,
         resolver,
         ruleFinder,
@@ -174,6 +176,7 @@ public class RustLibraryDescription
       }
 
       return requireBuild(
+          projectFilesystem,
           params,
           resolver,
           pathResolver,
@@ -190,7 +193,7 @@ public class RustLibraryDescription
     }
 
     // Common case - we're being invoked to satisfy some other rule's dependency.
-    return new RustLibrary(params) {
+    return new RustLibrary(projectFilesystem, params) {
       // RustLinkable
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
@@ -241,6 +244,7 @@ public class RustLibraryDescription
         try {
           rule =
               requireBuild(
+                  projectFilesystem,
                   params,
                   resolver,
                   pathResolver,
@@ -273,6 +277,7 @@ public class RustLibraryDescription
         String sharedLibrarySoname = CrateType.DYLIB.filenameFor(crate, cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireBuild(
+                projectFilesystem,
                 params,
                 resolver,
                 pathResolver,
@@ -327,6 +332,7 @@ public class RustLibraryDescription
 
         BuildRule rule =
             requireBuild(
+                projectFilesystem,
                 params,
                 resolver,
                 pathResolver,
@@ -361,6 +367,7 @@ public class RustLibraryDescription
                 Optional.empty(), getBuildTarget(), cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireBuild(
+                projectFilesystem,
                 params,
                 resolver,
                 pathResolver,

@@ -18,6 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -40,12 +41,13 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final boolean bytecodeOnly;
 
   public OcamlBuild(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       OcamlBuildContext ocamlContext,
       Compiler cCompiler,
       Compiler cxxCompiler,
       boolean bytecodeOnly) {
-    super(params);
+    super(projectFilesystem, params);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;

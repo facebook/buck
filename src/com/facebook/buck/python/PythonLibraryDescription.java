@@ -80,7 +80,7 @@ public class PythonLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       PythonLibraryDescriptionArg args) {
-    return new PythonLibrary(params, resolver);
+    return new PythonLibrary(projectFilesystem, params, resolver);
   }
 
   @Override

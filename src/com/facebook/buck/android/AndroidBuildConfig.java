@@ -146,19 +146,19 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final Path pathToOutputFile;
 
   protected AndroidBuildConfig(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       String javaPackage,
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.javaPackage = javaPackage;
     this.defaultValues = defaultValues;
     this.valuesFile = valuesFile;
     this.useConstantExpressions = useConstantExpressions;
     this.pathToOutputFile =
-        BuildTargets.getGenPath(
-                buildRuleParams.getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__%s__")
+        BuildTargets.getGenPath(projectFilesystem, buildRuleParams.getBuildTarget(), "__%s__")
             .resolve("BuildConfig.java");
   }
 

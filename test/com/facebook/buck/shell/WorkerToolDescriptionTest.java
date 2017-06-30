@@ -74,14 +74,14 @@ public class WorkerToolDescriptionTest {
     WorkerToolDescription workerToolDescription =
         new WorkerToolDescription(FakeBuckConfig.builder().build());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create("//arbitrary:target", projectFilesystem);
+    BuildRuleParams params = TestBuildRuleParams.create("//arbitrary:target");
     return (WorkerTool)
         workerToolDescription.createBuildRule(
             targetGraph,
             projectFilesystem,
             params,
             resolver,
-            TestCellBuilder.createCellRoots(params.getProjectFilesystem()),
+            TestCellBuilder.createCellRoots(projectFilesystem),
             args);
   }
 }

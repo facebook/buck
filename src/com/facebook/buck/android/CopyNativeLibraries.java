@@ -72,13 +72,14 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final String moduleName;
 
   protected CopyNativeLibraries(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSet<SourcePath> nativeLibDirectories,
       ImmutableSet<StrippedObjectDescription> stripLibRules,
       ImmutableSet<StrippedObjectDescription> stripLibAssetRules,
       ImmutableSet<TargetCpuType> cpuFilters,
       String moduleName) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.nativeLibDirectories = nativeLibDirectories;
     this.stripLibRules = stripLibRules;
     this.stripLibAssetRules = stripLibAssetRules;

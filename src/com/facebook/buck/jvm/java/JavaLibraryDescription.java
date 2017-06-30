@@ -129,6 +129,7 @@ public class JavaLibraryDescription
       BuildRuleParams emptyParams = params.withDeclaredDeps(deps.build()).withoutExtraDeps();
 
       return new Javadoc(
+          projectFilesystem,
           emptyParams,
           args.getMavenCoords(),
           args.getMavenPomTemplate(),
@@ -151,9 +152,10 @@ public class JavaLibraryDescription
               .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(params, args.getSrcs(), mavenCoords);
+        return new JavaSourceJar(projectFilesystem, params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
+            projectFilesystem,
             Preconditions.checkNotNull(paramsWithMavenFlavor),
             args.getSrcs(),
             mavenCoords,
@@ -161,10 +163,12 @@ public class JavaLibraryDescription
       }
     }
 
-    JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(defaultOptions, projectFilesystem, params, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        DefaultJavaLibrary.builder(targetGraph, params, resolver, cellRoots, javaBuckConfig)
+        DefaultJavaLibrary.builder(
+                targetGraph, projectFilesystem, params, resolver, cellRoots, javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
@@ -182,6 +186,7 @@ public class JavaLibraryDescription
       resolver.addToIndex(defaultJavaLibrary);
       return MavenUberJar.create(
           defaultJavaLibrary,
+          projectFilesystem,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
           args.getMavenCoords(),
           args.getMavenPomTemplate());

@@ -75,9 +75,7 @@ public class ExportFileDescription
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
-          && !pathResolver
-              .getFilesystem(args.getSrc().get())
-              .equals(params.getProjectFilesystem())) {
+          && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {
         throw new HumanReadableException(
             "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
             target, args.getSrc().get());
@@ -86,11 +84,11 @@ public class ExportFileDescription
     } else {
       src =
           new PathSourcePath(
-              params.getProjectFilesystem(),
+              projectFilesystem,
               target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
     }
 
-    return new ExportFile(params, ruleFinder, pathResolver, name, mode, src);
+    return new ExportFile(projectFilesystem, params, ruleFinder, pathResolver, name, mode, src);
   }
 
   /** If the src field is absent, add the name field to the list of inputs. */

@@ -65,7 +65,7 @@ public class AndroidAppModularityDescription
         AndroidPackageableCollector.getPackageableRules(params.getBuildDeps()));
     AndroidPackageableCollection packageableCollection = collector.build();
 
-    return new AndroidAppModularity(params, packageableCollection);
+    return new AndroidAppModularity(projectFilesystem, params, packageableCollection);
   }
 
   @BuckStyleImmutable

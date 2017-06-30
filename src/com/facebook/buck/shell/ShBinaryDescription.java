@@ -46,7 +46,7 @@ public class ShBinaryDescription implements Description<ShBinaryDescriptionArg> 
       CellPathResolver cellRoots,
       ShBinaryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    return new ShBinary(params, ruleFinder, args.getMain(), args.getResources());
+    return new ShBinary(projectFilesystem, params, ruleFinder, args.getMain(), args.getResources());
   }
 
   @BuckStyleImmutable

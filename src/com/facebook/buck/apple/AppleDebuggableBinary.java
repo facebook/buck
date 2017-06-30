@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -55,8 +56,9 @@ public class AppleDebuggableBinary extends AbstractBuildRuleWithDeclaredAndExtra
 
   @AddToRuleKey private final SourcePath binarySourcePath;
 
-  public AppleDebuggableBinary(BuildRuleParams buildRuleParams, BuildRule binaryRule) {
-    super(buildRuleParams);
+  public AppleDebuggableBinary(
+      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams, BuildRule binaryRule) {
+    super(projectFilesystem, buildRuleParams);
     this.binaryRule = binaryRule;
     this.binarySourcePath = Preconditions.checkNotNull(binaryRule.getSourcePathToOutput());
     performChecks(buildRuleParams, binaryRule);

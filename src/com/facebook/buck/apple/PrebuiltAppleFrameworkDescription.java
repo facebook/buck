@@ -93,13 +93,14 @@ public class PrebuiltAppleFrameworkDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PrebuiltAppleFrameworkDescriptionArg args)
       throws NoSuchBuildTargetException {
     return new PrebuiltAppleFramework(
+        projectFilesystem,
         params,
         resolver,
         new SourcePathResolver(new SourcePathRuleFinder(resolver)),

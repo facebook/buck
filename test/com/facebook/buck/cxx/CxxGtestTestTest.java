@@ -78,9 +78,11 @@ public class CxxGtestTestTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     CxxGtestTest test =
         new CxxGtestTest(
-            TestBuildRuleParams.create(target, filesystem),
+            filesystem,
+            TestBuildRuleParams.create(target),
             ruleFinder,
             new CxxLink(
+                filesystem,
                 TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:link")),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),

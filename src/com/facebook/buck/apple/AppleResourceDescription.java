@@ -53,7 +53,7 @@ public class AppleResourceDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleResourceDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 
   @Override

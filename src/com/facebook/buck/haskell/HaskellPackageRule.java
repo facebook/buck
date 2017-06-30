@@ -18,6 +18,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -73,6 +74,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> objects;
 
   public HaskellPackageRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool ghcPkg,
       HaskellVersion haskellVersion,
@@ -83,7 +85,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSortedSet<SourcePath> interfaces,
       ImmutableSortedSet<SourcePath> objects) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.ghcPkg = ghcPkg;
     this.haskellVersion = haskellVersion;
     this.depType = depType;
@@ -97,6 +99,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   public static HaskellPackageRule from(
       BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       final Tool ghcPkg,
@@ -123,6 +126,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                         ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
                     .build());
     return new HaskellPackageRule(
+        projectFilesystem,
         baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         ghcPkg,
         haskellVersion,

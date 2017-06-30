@@ -104,6 +104,7 @@ public class CxxLuaExtensionDescription
   }
 
   private ImmutableList<com.facebook.buck.rules.args.Arg> getExtensionArgs(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -131,7 +132,7 @@ public class CxxLuaExtensionDescription
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             ruleResolver,
             cxxPlatform,
             headers,
@@ -176,7 +177,7 @@ public class CxxLuaExtensionDescription
     // Generate rule to build the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            params.getProjectFilesystem(),
+            projectFilesystem,
             params.getBuildTarget(),
             ruleResolver,
             pathResolver,
@@ -217,6 +218,7 @@ public class CxxLuaExtensionDescription
   }
 
   private BuildRule createExtensionBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
@@ -225,17 +227,16 @@ public class CxxLuaExtensionDescription
       throws NoSuchBuildTargetException {
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          ruleResolver, args, cxxPlatform, params.getBuildTarget(), params.getProjectFilesystem());
+          ruleResolver, args, cxxPlatform, params.getBuildTarget(), projectFilesystem);
     }
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     String extensionName = getExtensionName(params.getBuildTarget(), cxxPlatform);
-    Path extensionPath =
-        getExtensionPath(params.getProjectFilesystem(), params.getBuildTarget(), cxxPlatform);
+    Path extensionPath = getExtensionPath(projectFilesystem, params.getBuildTarget(), cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         ruleResolver,
         pathResolver,
         ruleFinder,
@@ -256,6 +257,7 @@ public class CxxLuaExtensionDescription
         NativeLinkableInput.builder()
             .setArgs(
                 getExtensionArgs(
+                    projectFilesystem,
                     params.withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                     ruleResolver,
                     pathResolver,
@@ -275,8 +277,8 @@ public class CxxLuaExtensionDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final CxxLuaExtensionDescriptionArg args)
@@ -289,14 +291,15 @@ public class CxxLuaExtensionDescription
 
     // If a C/C++ platform is specified, then build an extension with it.
     if (platform.isPresent()) {
-      return createExtensionBuildRule(params, resolver, cellRoots, platform.get().getValue(), args);
+      return createExtensionBuildRule(
+          projectFilesystem, params, resolver, cellRoots, platform.get().getValue(), args);
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    return new CxxLuaExtension(params) {
+    return new CxxLuaExtension(projectFilesystem, params) {
 
       @Override
       public String getModule(CxxPlatform cxxPlatform) {
@@ -331,7 +334,14 @@ public class CxxLuaExtensionDescription
         return NativeLinkableInput.builder()
             .addAllArgs(
                 getExtensionArgs(
-                    params, resolver, pathResolver, ruleFinder, cellRoots, cxxPlatform, args))
+                    projectFilesystem,
+                    params,
+                    resolver,
+                    pathResolver,
+                    ruleFinder,
+                    cellRoots,
+                    cxxPlatform,
+                    args))
             .addAllFrameworks(args.getFrameworks())
             .build();
       }

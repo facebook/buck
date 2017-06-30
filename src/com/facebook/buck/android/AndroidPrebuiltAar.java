@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -42,6 +43,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   private final PrebuiltJar prebuiltJar;
 
   public AndroidPrebuiltAar(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams androidLibraryParams,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -54,6 +56,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Iterable<PrebuiltJar> exportedDeps,
       ZipArchiveDependencySupplier abiClasspath) {
     super(
+        projectFilesystem,
         androidLibraryParams.copyAppendingExtraDeps(
             ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,

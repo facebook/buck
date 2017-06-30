@@ -88,6 +88,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
    * must also be passed to rustc for the interface details, and to be linked if its a binary crate.
    */
   protected RustCompileRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       String filename,
       Tool compiler,
@@ -98,7 +99,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath rootModule,
       boolean hasOutput) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
 
     this.filename = filename;
     this.compiler = compiler;
@@ -115,6 +116,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public static RustCompileRule from(
       SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String filename,
       Tool compiler,
@@ -126,6 +128,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath rootModule,
       boolean hasOutput) {
     return new RustCompileRule(
+        projectFilesystem,
         params.withExtraDeps(
             Suppliers.memoize(
                 () ->

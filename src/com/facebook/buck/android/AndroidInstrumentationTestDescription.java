@@ -68,6 +68,7 @@ public class AndroidInstrumentationTestDescription
     }
 
     return new AndroidInstrumentationTest(
+        projectFilesystem,
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
         args.getLabels(),

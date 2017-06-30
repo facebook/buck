@@ -1085,6 +1085,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.builder(
                 TargetGraph.EMPTY,
+                new FakeProjectFilesystem(),
                 buildRuleParams,
                 ruleResolver,
                 TestCellPathResolver.get(projectFilesystem),
@@ -1321,6 +1322,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           return CalculateAbiFromClasses.of(
               target,
               new SourcePathRuleFinder(ruleResolver),
+              new FakeProjectFilesystem(),
               TestBuildRuleParams.create(target),
               new FakeSourcePath("java/src/com/facebook/somejava/library/library-abi.jar"));
         }
@@ -1383,11 +1385,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       JavacOptions options =
           JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setAnnotationProcessingParams(params).build();
 
-      BuildRuleParams buildRuleParams = TestBuildRuleParams.create(buildTarget, projectFilesystem);
+      BuildRuleParams buildRuleParams = TestBuildRuleParams.create(buildTarget);
 
       DefaultJavaLibrary javaLibrary =
           DefaultJavaLibrary.builder(
                   TargetGraph.EMPTY,
+                  projectFilesystem,
                   buildRuleParams,
                   ruleResolver,
                   TestCellPathResolver.get(projectFilesystem),

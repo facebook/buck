@@ -60,6 +60,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -432,6 +433,7 @@ public class TestRunningTest {
     BuildTarget separateTest1Target = BuildTargetFactory.newInstance("//:test1");
     FakeTestRule separateTest1 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(separateTest1Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -448,6 +450,7 @@ public class TestRunningTest {
     BuildTarget separateTest2Target = BuildTargetFactory.newInstance("//:test2");
     FakeTestRule separateTest2 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(separateTest2Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -464,6 +467,7 @@ public class TestRunningTest {
     BuildTarget separateTest3Target = BuildTargetFactory.newInstance("//:test3");
     FakeTestRule separateTest3 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(separateTest3Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -545,6 +549,7 @@ public class TestRunningTest {
     BuildTarget separateTest1Target = BuildTargetFactory.newInstance("//:test1");
     FakeTestRule separateTest1 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(separateTest1Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -561,6 +566,7 @@ public class TestRunningTest {
     BuildTarget separateTest2Target = BuildTargetFactory.newInstance("//:test2");
     FakeTestRule separateTest2 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(separateTest2Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -577,6 +583,7 @@ public class TestRunningTest {
     BuildTarget separateTest3Target = BuildTargetFactory.newInstance("//:test3");
     FakeTestRule separateTest3 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(separateTest3Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -594,6 +601,7 @@ public class TestRunningTest {
     BuildTarget parallelTest1Target = BuildTargetFactory.newInstance("//:paralleltest1");
     FakeTestRule parallelTest1 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(parallelTest1Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -611,6 +619,7 @@ public class TestRunningTest {
     BuildTarget parallelTest2Target = BuildTargetFactory.newInstance("//:paralleltest2");
     FakeTestRule parallelTest2 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(parallelTest2Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -628,6 +637,7 @@ public class TestRunningTest {
     BuildTarget parallelTest3Target = BuildTargetFactory.newInstance("//:paralleltest3");
     FakeTestRule parallelTest3 =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(parallelTest3Target),
             new SourcePathResolver(
                 new SourcePathRuleFinder(
@@ -784,6 +794,7 @@ public class TestRunningTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     FakeTestRule failingTest =
         new FakeTestRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(failingTestTarget),
             resolver,
             ImmutableSet.of(),

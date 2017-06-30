@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -31,8 +32,9 @@ import com.google.common.collect.ImmutableList;
 public class OcamlCCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final OcamlCCompileStep.Args args;
 
-  public OcamlCCompile(BuildRuleParams params, OcamlCCompileStep.Args args) {
-    super(params);
+  public OcamlCCompile(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, OcamlCCompileStep.Args args) {
+    super(projectFilesystem, params);
     this.args = args;
   }
 

@@ -89,7 +89,8 @@ public class CalculateAbiFromClassesTest {
         CalculateAbiFromClasses.of(
             target,
             ruleFinder,
-            builder.createBuildRuleParams(resolver, filesystem),
+            filesystem,
+            builder.createBuildRuleParams(resolver),
             new DefaultBuildTargetSourcePath(javaLibraryTarget));
 
     FileHashCache initialHashCache =
@@ -152,7 +153,8 @@ public class CalculateAbiFromClassesTest {
         CalculateAbiFromClasses.of(
             target,
             ruleFinder,
-            builder.createBuildRuleParams(resolver, filesystem),
+            filesystem,
+            builder.createBuildRuleParams(resolver),
             new DefaultBuildTargetSourcePath(javaLibraryTarget));
 
     FileHashCache initialHashCache =

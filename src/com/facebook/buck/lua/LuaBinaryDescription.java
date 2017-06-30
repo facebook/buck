@@ -159,6 +159,7 @@ public class LuaBinaryDescription
   }
 
   private Starter getStarter(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -179,6 +180,7 @@ public class LuaBinaryDescription
               "%s: cannot use pure starter with native libraries", baseParams.getBuildTarget());
         }
         return LuaScriptStarter.of(
+            projectFilesystem,
             baseParams,
             ruleResolver,
             pathResolver,
@@ -192,6 +194,7 @@ public class LuaBinaryDescription
             relativePythonModulesDir);
       case NATIVE:
         return NativeExecutableStarter.of(
+            projectFilesystem,
             baseParams,
             ruleResolver,
             pathResolver,
@@ -221,6 +224,7 @@ public class LuaBinaryDescription
 
   /** @return the {@link Starter} used to build the Lua binary entry point. */
   private Starter createStarter(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -231,7 +235,7 @@ public class LuaBinaryDescription
       LuaConfig.PackageStyle packageStyle,
       boolean mayHaveNativeCode) {
 
-    Path output = getOutputPath(baseParams.getBuildTarget(), baseParams.getProjectFilesystem());
+    Path output = getOutputPath(baseParams.getBuildTarget(), projectFilesystem);
     StarterType starterType = getStarterType(mayHaveNativeCode);
 
     // The relative paths from the starter to the various components.
@@ -246,15 +250,14 @@ public class LuaBinaryDescription
               output
                   .getParent()
                   .relativize(
-                      getModulesSymlinkTreeRoot(
-                          baseParams.getBuildTarget(), baseParams.getProjectFilesystem())));
+                      getModulesSymlinkTreeRoot(baseParams.getBuildTarget(), projectFilesystem)));
       relativePythonModulesDir =
           Optional.of(
               output
                   .getParent()
                   .relativize(
                       getPythonModulesSymlinkTreeRoot(
-                          baseParams.getBuildTarget(), baseParams.getProjectFilesystem())));
+                          baseParams.getBuildTarget(), projectFilesystem)));
 
       // We only need to setup a native lib link tree if we're using a native starter.
       if (starterType == StarterType.NATIVE) {
@@ -264,12 +267,13 @@ public class LuaBinaryDescription
                     .getParent()
                     .relativize(
                         getNativeLibsSymlinkTreeRoot(
-                            baseParams.getBuildTarget(), baseParams.getProjectFilesystem())));
+                            baseParams.getBuildTarget(), projectFilesystem)));
       }
     }
 
     // Build the starter.
     return getStarter(
+        projectFilesystem,
         baseParams,
         ruleResolver,
         pathResolver,
@@ -293,6 +297,7 @@ public class LuaBinaryDescription
   }
 
   private LuaBinaryPackageComponents getPackageComponentsFromDeps(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -372,6 +377,7 @@ public class LuaBinaryDescription
     // Build the starter.
     Starter starter =
         createStarter(
+            projectFilesystem,
             baseParams,
             ruleResolver,
             pathResolver,
@@ -395,6 +401,7 @@ public class LuaBinaryDescription
       OmnibusRoots roots = omnibusRoots.build();
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
+              projectFilesystem,
               baseParams,
               ruleResolver,
               ruleFinder,
@@ -560,6 +567,7 @@ public class LuaBinaryDescription
   }
 
   private Tool getInPlaceBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -572,35 +580,34 @@ public class LuaBinaryDescription
         resolver.addToIndex(
             createSymlinkTree(
                 getModulesSymlinkTreeTarget(params.getBuildTarget()),
-                params.getProjectFilesystem(),
+                projectFilesystem,
                 resolver,
                 ruleFinder,
-                getModulesSymlinkTreeRoot(params.getBuildTarget(), params.getProjectFilesystem()),
+                getModulesSymlinkTreeRoot(params.getBuildTarget(), projectFilesystem),
                 components.getModules()));
 
     final List<SymlinkTree> pythonModulesLinktree = new ArrayList<>();
     if (!components.getPythonModules().isEmpty()) {
       // Add in any missing init modules into the python components.
-      SourcePath emptyInit = PythonBinaryDescription.createEmptyInitModule(params, resolver);
+      SourcePath emptyInit =
+          PythonBinaryDescription.createEmptyInitModule(projectFilesystem, params, resolver);
       extraInputs.add(emptyInit);
       ImmutableMap<String, SourcePath> pythonModules =
           MoreMaps.transformKeys(
               PythonBinaryDescription.addMissingInitModules(
                   MoreMaps.transformKeys(
                       components.getPythonModules(),
-                      MorePaths.toPathFn(
-                          params.getProjectFilesystem().getRootPath().getFileSystem())),
+                      MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
                   emptyInit),
               Object::toString);
       final SymlinkTree symlinkTree =
           resolver.addToIndex(
               createSymlinkTree(
                   getPythonModulesSymlinkTreeTarget(params.getBuildTarget()),
-                  params.getProjectFilesystem(),
+                  projectFilesystem,
                   resolver,
                   ruleFinder,
-                  getPythonModulesSymlinkTreeRoot(
-                      params.getBuildTarget(), params.getProjectFilesystem()),
+                  getPythonModulesSymlinkTreeRoot(params.getBuildTarget(), projectFilesystem),
                   pythonModules));
       pythonModulesLinktree.add(symlinkTree);
     }
@@ -611,11 +618,10 @@ public class LuaBinaryDescription
           resolver.addToIndex(
               createSymlinkTree(
                   getNativeLibsSymlinkTreeTarget(params.getBuildTarget()),
-                  params.getProjectFilesystem(),
+                  projectFilesystem,
                   resolver,
                   ruleFinder,
-                  getNativeLibsSymlinkTreeRoot(
-                      params.getBuildTarget(), params.getProjectFilesystem()),
+                  getNativeLibsSymlinkTreeRoot(params.getBuildTarget(), projectFilesystem),
                   addVersionLessLibraries(cxxPlatform, components.getNativeLibraries())));
       nativeLibsLinktree.add(symlinkTree);
     }
@@ -661,13 +667,14 @@ public class LuaBinaryDescription
   }
 
   private Tool getStandaloneBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       SourcePath starter,
       String mainModule,
       final LuaPackageComponents components) {
-    Path output = getOutputPath(params.getBuildTarget(), params.getProjectFilesystem());
+    Path output = getOutputPath(params.getBuildTarget(), projectFilesystem);
 
     Tool lua = luaConfig.getLua(resolver);
     Tool packager = luaConfig.getPackager().resolve(resolver);
@@ -675,6 +682,7 @@ public class LuaBinaryDescription
     LuaStandaloneBinary binary =
         resolver.addToIndex(
             new LuaStandaloneBinary(
+                projectFilesystem,
                 params
                     .withAppendedFlavor(BINARY_FLAVOR)
                     .withDeclaredDeps(
@@ -700,6 +708,7 @@ public class LuaBinaryDescription
   }
 
   private Tool getBinary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -710,9 +719,11 @@ public class LuaBinaryDescription
       LuaConfig.PackageStyle packageStyle) {
     switch (packageStyle) {
       case STANDALONE:
-        return getStandaloneBinary(params, resolver, ruleFinder, starter, mainModule, components);
+        return getStandaloneBinary(
+            projectFilesystem, params, resolver, ruleFinder, starter, mainModule, components);
       case INPLACE:
-        return getInPlaceBinary(params, resolver, ruleFinder, cxxPlatform, starter, components);
+        return getInPlaceBinary(
+            projectFilesystem, params, resolver, ruleFinder, cxxPlatform, starter, components);
     }
     throw new IllegalStateException(
         String.format("%s: unexpected package style %s", params.getBuildTarget(), packageStyle));
@@ -741,6 +752,7 @@ public class LuaBinaryDescription
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     LuaBinaryPackageComponents components =
         getPackageComponentsFromDeps(
+            projectFilesystem,
             params,
             resolver,
             pathResolver,
@@ -758,6 +770,7 @@ public class LuaBinaryDescription
         args.getPackageStyle().orElse(luaConfig.getPackageStyle());
     Tool binary =
         getBinary(
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -767,9 +780,10 @@ public class LuaBinaryDescription
             components.getComponents(),
             packageStyle);
     return new LuaBinary(
+        projectFilesystem,
         params.copyAppendingExtraDeps(binary.getDeps(ruleFinder)),
         ruleFinder,
-        getOutputPath(params.getBuildTarget(), params.getProjectFilesystem()),
+        getOutputPath(params.getBuildTarget(), projectFilesystem),
         binary,
         args.getMainModule(),
         components.getComponents(),

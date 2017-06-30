@@ -127,6 +127,7 @@ public class CxxPreprocessAndCompileTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
@@ -147,6 +148,7 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
+                    projectFilesystem,
                     params,
                     new CompilerDelegate(
                         pathResolver,
@@ -165,6 +167,7 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
+                    projectFilesystem,
                     params,
                     new CompilerDelegate(
                         pathResolver,
@@ -184,6 +187,7 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.preprocessAndCompile(
+                    projectFilesystem,
                     params,
                     new PreprocessorDelegate(
                         pathResolver,
@@ -214,6 +218,7 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
+                    projectFilesystem,
                     params,
                     new CompilerDelegate(
                         pathResolver,
@@ -236,6 +241,7 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
+                    projectFilesystem,
                     params,
                     new CompilerDelegate(
                         pathResolver,
@@ -258,6 +264,7 @@ public class CxxPreprocessAndCompileTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
+                    projectFilesystem,
                     params,
                     new CompilerDelegate(
                         pathResolver,
@@ -281,6 +288,7 @@ public class CxxPreprocessAndCompileTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     final BuildRuleParams params = TestBuildRuleParams.create(target);
     final FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
@@ -300,6 +308,7 @@ public class CxxPreprocessAndCompileTest {
         return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.preprocessAndCompile(
+                    projectFilesystem,
                     params,
                     new PreprocessorDelegate(
                         pathResolver,
@@ -342,6 +351,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
@@ -354,6 +364,7 @@ public class CxxPreprocessAndCompileTest {
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
+            projectFilesystem,
             params,
             new CompilerDelegate(
                 pathResolver,
@@ -398,7 +409,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create(target, filesystem);
+    BuildRuleParams params = TestBuildRuleParams.create(target);
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     filesystem.writeContentsToPath(
@@ -408,6 +419,7 @@ public class CxxPreprocessAndCompileTest {
 
     CxxPreprocessAndCompile cxxPreprocess =
         CxxPreprocessAndCompile.preprocessAndCompile(
+            filesystem,
             params,
             new PreprocessorDelegate(
                 pathResolver,
@@ -436,6 +448,7 @@ public class CxxPreprocessAndCompileTest {
 
     CxxPreprocessAndCompile cxxCompile =
         CxxPreprocessAndCompile.compile(
+            filesystem,
             params,
             new CompilerDelegate(
                 pathResolver,
@@ -459,6 +472,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     Path output = Paths.get("test.o");
     Path input = Paths.get("test.ii");
@@ -473,6 +487,7 @@ public class CxxPreprocessAndCompileTest {
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
+            projectFilesystem,
             params,
             compilerDelegate,
             output,
@@ -502,6 +517,7 @@ public class CxxPreprocessAndCompileTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create(target);
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
@@ -509,6 +525,7 @@ public class CxxPreprocessAndCompileTest {
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.preprocessAndCompile(
+            projectFilesystem,
             params,
             new PreprocessorDelegate(
                 pathResolver,

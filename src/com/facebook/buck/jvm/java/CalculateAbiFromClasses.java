@@ -55,11 +55,12 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
   private final JarContentsSupplier abiJarContentsSupplier;
 
   public CalculateAbiFromClasses(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       SourcePath binaryJar,
       boolean sourceAbiCompatible) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.binaryJar = binaryJar;
     this.sourceAbiCompatible = sourceAbiCompatible;
     this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
@@ -69,18 +70,21 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
   public static CalculateAbiFromClasses of(
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams libraryParams,
       SourcePath library) {
-    return of(target, ruleFinder, libraryParams, library, false);
+    return of(target, ruleFinder, projectFilesystem, libraryParams, library, false);
   }
 
   public static CalculateAbiFromClasses of(
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams libraryParams,
       SourcePath library,
       boolean sourceAbiCompatible) {
     return new CalculateAbiFromClasses(
+        projectFilesystem,
         libraryParams
             .withBuildTarget(target)
             .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library)))

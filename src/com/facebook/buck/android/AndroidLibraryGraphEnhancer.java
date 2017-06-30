@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
@@ -50,9 +51,11 @@ public class AndroidLibraryGraphEnhancer {
   private final Optional<String> resourceUnionPackage;
   private final Optional<String> finalRName;
   private final boolean useOldStyleableFormat;
+  private final ProjectFilesystem projectFilesystem;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Javac javac,
       JavacOptions javacOptions,
@@ -61,6 +64,7 @@ public class AndroidLibraryGraphEnhancer {
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat) {
+    this.projectFilesystem = projectFilesystem;
     Preconditions.checkState(!HasJavaAbi.isAbiTarget(buildTarget));
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
@@ -126,6 +130,7 @@ public class AndroidLibraryGraphEnhancer {
 
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
+            projectFilesystem,
             dummyRDotJavaParams,
             ruleFinder,
             androidResourceDeps,

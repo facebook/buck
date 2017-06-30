@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -44,6 +45,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   private final AndroidBuildConfig androidBuildConfig;
 
   AndroidBuildConfigJavaLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -52,6 +54,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       ZipArchiveDependencySupplier abiClasspath,
       AndroidBuildConfig androidBuildConfig) {
     super(
+        projectFilesystem,
         params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
         ruleFinder,

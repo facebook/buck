@@ -103,20 +103,28 @@ public class KotlinLibraryDescription
               .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(params, args.getSrcs(), mavenCoords);
+        return new JavaSourceJar(projectFilesystem, params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
+            projectFilesystem,
             Preconditions.checkNotNull(paramsWithMavenFlavor),
             args.getSrcs(),
             mavenCoords,
             args.getMavenPomTemplate());
       }
     }
-    JavacOptions javacOptions = JavacOptionsFactory.create(defaultOptions, params, resolver, args);
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(defaultOptions, projectFilesystem, params, resolver, args);
 
     KotlinLibraryBuilder defaultKotlinLibraryBuilder =
         new KotlinLibraryBuilder(
-                targetGraph, params, resolver, cellRoots, kotlinBuckConfig, javaBuckConfig)
+                targetGraph,
+                projectFilesystem,
+                params,
+                resolver,
+                cellRoots,
+                kotlinBuckConfig,
+                javaBuckConfig)
             .setJavacOptions(javacOptions)
             .setArgs(args);
 
@@ -134,6 +142,7 @@ public class KotlinLibraryDescription
       resolver.addToIndex(defaultKotlinLibrary);
       return MavenUberJar.create(
           defaultKotlinLibrary,
+          projectFilesystem,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
           args.getMavenCoords(),
           args.getMavenPomTemplate());

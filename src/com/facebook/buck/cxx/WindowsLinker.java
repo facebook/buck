@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -105,6 +106,7 @@ public class WindowsLinker implements Linker {
 
   @Override
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,

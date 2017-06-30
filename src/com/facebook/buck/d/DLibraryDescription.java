@@ -77,7 +77,12 @@ public class DLibraryDescription
 
     if (params.getBuildTarget().getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          params.getBuildTarget(), params, ruleFinder, pathResolver, args.getSrcs());
+          params.getBuildTarget(),
+          projectFilesystem,
+          params,
+          ruleFinder,
+          pathResolver,
+          args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
@@ -91,6 +96,7 @@ public class DLibraryDescription
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
       buildRuleResolver.requireRule(sourceTreeTarget);
       return createStaticLibraryBuildRule(
+          projectFilesystem,
           params,
           buildRuleResolver,
           pathResolver,
@@ -103,11 +109,12 @@ public class DLibraryDescription
           CxxSourceRuleFactory.PicType.PDC);
     }
 
-    return new DLibrary(params, buildRuleResolver, dIncludes);
+    return new DLibrary(projectFilesystem, params, buildRuleResolver, dIncludes);
   }
 
   /** @return a BuildRule that creates a static library. */
   private BuildRule createStaticLibraryBuildRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -122,6 +129,7 @@ public class DLibraryDescription
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(
+            projectFilesystem,
             params,
             ruleResolver,
             pathResolver,
@@ -139,7 +147,7 @@ public class DLibraryDescription
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
-            params.getProjectFilesystem(),
+            projectFilesystem,
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             pic,
@@ -147,7 +155,7 @@ public class DLibraryDescription
 
     return Archive.from(
         staticTarget,
-        params.getProjectFilesystem(),
+        projectFilesystem,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

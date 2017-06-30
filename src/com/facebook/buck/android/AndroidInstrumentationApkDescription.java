@@ -125,10 +125,11 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
     Path primaryDexPath =
-        AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem());
+        AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), projectFilesystem);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            projectFilesystem,
             params,
             targetGraph,
             resolver,
@@ -179,6 +180,7 @@ public class AndroidInstrumentationApkDescription
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
 
     return new AndroidInstrumentationApk(
+        projectFilesystem,
         params
             .withExtraDeps(enhancementResult.getFinalDeps())
             .copyAppendingExtraDeps(rulesToExcludeFromDex),

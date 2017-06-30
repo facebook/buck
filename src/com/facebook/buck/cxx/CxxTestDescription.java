@@ -169,7 +169,7 @@ public class CxxTestDescription
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
               targetGraph,
               params.getBuildTarget().withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
-              params.getProjectFilesystem(),
+              projectFilesystem,
               resolver,
               cellRoots,
               cxxBuckConfig,
@@ -179,9 +179,7 @@ public class CxxTestDescription
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params.getBuildTarget(),
-          params.getProjectFilesystem(),
-          cxxLinkAndCompileRules.compileRules);
+          params.getBuildTarget(), projectFilesystem, cxxLinkAndCompileRules.compileRules);
     }
 
     if (params
@@ -192,13 +190,13 @@ public class CxxTestDescription
           cxxPlatforms.getValue(params.getBuildTarget()).isPresent()
               ? params.getBuildTarget()
               : params.getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()),
-          params.getProjectFilesystem(),
+          projectFilesystem,
           resolver);
     }
 
     if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          resolver, args, cxxPlatform, params.getBuildTarget(), params.getProjectFilesystem());
+          resolver, args, cxxPlatform, params.getBuildTarget(), projectFilesystem);
     }
 
     // Generate the link rule that builds the test binary.
@@ -206,7 +204,7 @@ public class CxxTestDescription
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             targetGraph,
             params.getBuildTarget(),
-            params.getProjectFilesystem(),
+            projectFilesystem,
             resolver,
             cellRoots,
             cxxBuckConfig,
@@ -283,6 +281,7 @@ public class CxxTestDescription
         {
           test =
               new CxxGtestTest(
+                  projectFilesystem,
                   testParams,
                   ruleFinder,
                   cxxLinkAndCompileRules.getBinaryRule(),
@@ -290,7 +289,7 @@ public class CxxTestDescription
                   testEnv,
                   testArgs,
                   FluentIterable.from(args.getResources())
-                      .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
+                      .transform(p -> new PathSourcePath(projectFilesystem, p))
                       .toSortedSet(Ordering.natural()),
                   args.getAdditionalCoverageTargets(),
                   additionalDeps,
@@ -305,6 +304,7 @@ public class CxxTestDescription
         {
           test =
               new CxxBoostTest(
+                  projectFilesystem,
                   testParams,
                   ruleFinder,
                   cxxLinkAndCompileRules.getBinaryRule(),
@@ -312,7 +312,7 @@ public class CxxTestDescription
                   testEnv,
                   testArgs,
                   FluentIterable.from(args.getResources())
-                      .transform(p -> new PathSourcePath(params.getProjectFilesystem(), p))
+                      .transform(p -> new PathSourcePath(projectFilesystem, p))
                       .toSortedSet(Ordering.natural()),
                   args.getAdditionalCoverageTargets(),
                   additionalDeps,

@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
@@ -67,11 +68,13 @@ public class NativeRelinker {
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibs;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibsAssets;
+  private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ImmutableList<RelinkerRule> rules;
 
   public NativeRelinker(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -79,6 +82,7 @@ public class NativeRelinker {
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibs,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets) {
+    this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(
         !linkableLibs.isEmpty() || !linkableLibsAssets.isEmpty(),
@@ -236,6 +240,7 @@ public class NativeRelinker {
     }
 
     return new RelinkerRule(
+        projectFilesystem,
         relinkerParams,
         resolver,
         ruleFinder,

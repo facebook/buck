@@ -81,8 +81,8 @@ public class WorkerToolDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
-      ProjectFilesystem projectFilesystem,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       WorkerToolDescriptionArg args)
@@ -142,6 +142,7 @@ public class WorkerToolDescription
 
     CommandTool tool = builder.build();
     return new DefaultWorkerTool(
+        projectFilesystem,
         params.copyAppendingExtraDeps(tool.getDeps(new SourcePathRuleFinder(resolver))),
         tool,
         maxWorkers,

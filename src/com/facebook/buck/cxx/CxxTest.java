@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -72,6 +73,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
 
   public CxxTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool executable,
       ImmutableMap<String, String> env,
@@ -83,7 +85,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
-    super(params);
+    super(projectFilesystem, params);
     this.executable = executable;
     this.env = env;
     this.args = Suppliers.memoize(args);

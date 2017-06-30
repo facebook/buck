@@ -29,6 +29,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
@@ -45,6 +46,7 @@ public class AndroidBuildConfigJavaLibraryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
+            new FakeProjectFilesystem(),
             params,
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
@@ -75,6 +77,7 @@ public class AndroidBuildConfigJavaLibraryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
+            new FakeProjectFilesystem(),
             params,
             "com.example.buck",
             /* values */ fields,

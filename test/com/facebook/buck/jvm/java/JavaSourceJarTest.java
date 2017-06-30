@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,6 +59,7 @@ public class JavaSourceJarTest {
 
     JavaSourceJar rule =
         new JavaSourceJar(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create("//example:target"),
             ImmutableSortedSet.of(),
             Optional.empty());
@@ -85,6 +87,7 @@ public class JavaSourceJarTest {
 
     JavaSourceJar rule =
         new JavaSourceJar(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create("//example:target"),
             ImmutableSortedSet.of(fileBased, ruleBased),
             Optional.empty());

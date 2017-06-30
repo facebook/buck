@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class FakeWorkerBuilder
@@ -49,11 +48,7 @@ public class FakeWorkerBuilder
         FakeWorkerBuilder.FakeWorkerDescription, FakeWorkerBuilder.FakeWorkerTool> {
 
   public FakeWorkerBuilder(BuildTarget target) {
-    this(target, FakeWorkerTool::new);
-  }
-
-  public FakeWorkerBuilder(BuildTarget target, Function<BuildRuleParams, BuildRule> create) {
-    super(new FakeWorkerDescription(create), target);
+    super(new FakeWorkerDescription(), target);
   }
 
   public static class FakeWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -61,8 +56,8 @@ public class FakeWorkerBuilder
     private final Tool tool = new FakeTool();
     private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
 
-    public FakeWorkerTool(BuildRuleParams params) {
-      super(params);
+    public FakeWorkerTool(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      super(projectFilesystem, params);
     }
 
     @Override
@@ -119,12 +114,6 @@ public class FakeWorkerBuilder
   }
 
   public static class FakeWorkerDescription implements Description<FakeWorkerDescriptionArg> {
-    private final Function<BuildRuleParams, BuildRule> create;
-
-    private FakeWorkerDescription(Function<BuildRuleParams, BuildRule> create) {
-      this.create = create;
-    }
-
     @Override
     public Class<FakeWorkerDescriptionArg> getConstructorArgType() {
       return FakeWorkerDescriptionArg.class;
@@ -139,7 +128,7 @@ public class FakeWorkerBuilder
         CellPathResolver cellRoots,
         FakeWorkerDescriptionArg args)
         throws NoSuchBuildTargetException {
-      return create.apply(params);
+      return new FakeWorkerTool(projectFilesystem, params);
     }
 
     @BuckStyleImmutable

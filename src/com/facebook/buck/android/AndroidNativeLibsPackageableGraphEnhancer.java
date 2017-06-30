@@ -21,6 +21,7 @@ import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -56,6 +57,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   private static final String COPY_NATIVE_LIBS = "copy_native_libs";
 
+  private final ProjectFilesystem projectFilesystem;
   private final BuildTarget originalBuildTarget;
   private final BuildRuleParams buildRuleParams;
   private final BuildRuleResolver ruleResolver;
@@ -77,6 +79,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   public AndroidNativeLibsPackageableGraphEnhancer(
       BuildRuleResolver ruleResolver,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams originalParams,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters,
@@ -86,6 +89,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
       APKModuleGraph apkModuleGraph) {
+    this.projectFilesystem = projectFilesystem;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
@@ -167,6 +171,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               ruleResolver,
               pathResolver,
               ruleFinder,
+              projectFilesystem,
               buildRuleParams,
               nativePlatforms,
               nativeLibraryMergeMap.get(),
@@ -241,8 +246,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 .build();
         nativeLinkableLibsBuilder.put(
             runtimeLinkableMetadata,
-            new PathSourcePath(
-                buildRuleParams.getProjectFilesystem(), platform.getCxxSharedRuntimePath().get()));
+            new PathSourcePath(projectFilesystem, platform.getCxxSharedRuntimePath().get()));
       }
     }
 
@@ -256,6 +260,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         && (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
       NativeRelinker relinker =
           new NativeRelinker(
+              projectFilesystem,
               buildRuleParams.withExtraDeps(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
@@ -277,6 +282,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
         generateStripRules(
+            projectFilesystem,
             buildRuleParams,
             ruleFinder,
             ruleResolver,
@@ -285,6 +291,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             nativeLinkableLibs);
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
         generateStripRules(
+            projectFilesystem,
             buildRuleParams,
             ruleFinder,
             ruleResolver,
@@ -332,6 +339,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
+              projectFilesystem,
               paramsForCopyNativeLibraries,
               ImmutableSet.copyOf(nativeLibsDirectories),
               ImmutableSet.copyOf(filteredStrippedLibsMap.values()),
@@ -351,6 +359,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   // Note: this method produces rules that will be shared between multiple apps,
   // so be careful not to let information about this particular app slip into the definitions.
   private static ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
@@ -400,6 +409,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
         stripLinkable =
             new StripLinkable(
+                projectFilesystem,
                 paramsForStripLinkable,
                 platform.getCxxPlatform().getStrip(),
                 sourcePath,

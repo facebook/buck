@@ -68,11 +68,12 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Pattern.compile("^ *package ([\\w.]+);");
 
   TrimUberRDotJava(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<SourcePath> pathToRDotJavaDir,
       Collection<DexProducedFromJavaLibrary> allPreDexRules,
       Optional<String> keepResourcePattern) {
-    super(buildRuleParams);
+    super(projectFilesystem, buildRuleParams);
     this.pathToRDotJavaDir = pathToRDotJavaDir;
     this.allPreDexRules = allPreDexRules;
     this.keepResourcePattern = keepResourcePattern;

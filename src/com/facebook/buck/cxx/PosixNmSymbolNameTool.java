@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -67,6 +68,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
   @Override
   public SourcePath createUndefinedSymbolsFile(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -75,6 +77,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     UndefinedSymbolsFile rule =
         ruleResolver.addToIndex(
             new UndefinedSymbolsFile(
+                projectFilesystem,
                 baseParams
                     .withBuildTarget(target)
                     .withDeclaredDeps(
@@ -95,8 +98,11 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     @AddToRuleKey private final Iterable<? extends SourcePath> inputs;
 
     public UndefinedSymbolsFile(
-        BuildRuleParams buildRuleParams, Tool nm, Iterable<? extends SourcePath> inputs) {
-      super(buildRuleParams);
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        Tool nm,
+        Iterable<? extends SourcePath> inputs) {
+      super(projectFilesystem, buildRuleParams);
       this.nm = nm;
       this.inputs = inputs;
     }

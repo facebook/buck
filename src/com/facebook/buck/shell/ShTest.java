@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -76,6 +77,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
 
   protected ShTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Arg> args,
@@ -85,7 +87,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean runTestSeparately,
       Set<String> labels,
       ImmutableSet<String> contacts) {
-    super(params);
+    super(projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.args = args;
     this.env = env;

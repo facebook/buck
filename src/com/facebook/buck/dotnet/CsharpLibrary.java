@@ -50,13 +50,14 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final FrameworkVersion version;
 
   protected CsharpLibrary(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String dllName,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableList<Either<BuildRule, String>> refs,
       ImmutableMap<String, SourcePath> resources,
       FrameworkVersion version) {
-    super(params);
+    super(projectFilesystem, params);
 
     Preconditions.checkArgument(dllName.endsWith(".dll"));
 

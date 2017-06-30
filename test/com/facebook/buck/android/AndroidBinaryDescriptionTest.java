@@ -85,6 +85,7 @@ public class AndroidBinaryDescriptionTest {
     Keystore keystore =
         ruleResolver.addToIndex(
             new Keystore(
+                new FakeProjectFilesystem(),
                 TestBuildRuleParams.create("//:keystore"),
                 new FakeSourcePath("store"),
                 new FakeSourcePath("properties")));

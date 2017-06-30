@@ -33,15 +33,21 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
 
   public FakeBuildRule(
       BuildTarget target, SourcePathResolver resolver, ImmutableSortedSet<BuildRule> deps) {
-    this(TestBuildRuleParams.create(target).withDeclaredDeps(deps), resolver);
+    this(
+        new FakeProjectFilesystem(),
+        TestBuildRuleParams.create(target).withDeclaredDeps(deps),
+        resolver);
   }
 
-  public FakeBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
-    super(buildRuleParams, resolver);
+  public FakeBuildRule(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver) {
+    super(projectFilesystem, buildRuleParams, resolver);
   }
 
   public FakeBuildRule(BuildTarget buildTarget, SourcePathResolver resolver) {
-    this(TestBuildRuleParams.create(buildTarget), resolver);
+    this(new FakeProjectFilesystem(), TestBuildRuleParams.create(buildTarget), resolver);
   }
 
   public FakeBuildRule(
@@ -50,8 +56,8 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
       SourcePathResolver resolver,
       BuildRule... deps) {
     this(
-        TestBuildRuleParams.create(target, filesystem)
-            .withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
+        filesystem,
+        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
         resolver);
   }
 

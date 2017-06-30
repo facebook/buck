@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -37,11 +38,13 @@ public class ExternallyBuiltApplePackage extends Genrule {
   private boolean cacheable;
 
   public ExternallyBuiltApplePackage(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
       boolean cacheable) {
     super(
+        projectFilesystem,
         params,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),

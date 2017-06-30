@@ -65,6 +65,7 @@ public class SourcePathResolverTest {
     Path expectedPath = Paths.get("foo");
     BuildRule rule =
         new PathReferenceRule(
+            new FakeProjectFilesystem(),
             TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo")),
             pathResolver,
             expectedPath);
@@ -251,7 +252,8 @@ public class SourcePathResolverTest {
     // Test that using other BuildRule types resolves to the short name.
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule =
-        new FakeBuildRule(TestBuildRuleParams.create(fakeBuildTarget), pathResolver);
+        new FakeBuildRule(
+            new FakeProjectFilesystem(), TestBuildRuleParams.create(fakeBuildTarget), pathResolver);
     resolver.addToIndex(fakeBuildRule);
     DefaultBuildTargetSourcePath buildTargetSourcePath2 =
         new DefaultBuildTargetSourcePath(fakeBuildRule.getBuildTarget());
@@ -283,7 +285,8 @@ public class SourcePathResolverTest {
 
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//package:fake");
     FakeBuildRule fakeBuildRule =
-        new FakeBuildRule(TestBuildRuleParams.create(fakeBuildTarget), pathResolver);
+        new FakeBuildRule(
+            new FakeProjectFilesystem(), TestBuildRuleParams.create(fakeBuildTarget), pathResolver);
     resolver.addToIndex(fakeBuildRule);
     ExplicitBuildTargetSourcePath buildTargetSourcePath2 =
         new ExplicitBuildTargetSourcePath(
@@ -296,7 +299,10 @@ public class SourcePathResolverTest {
 
     BuildTarget otherFakeBuildTarget = BuildTargetFactory.newInstance("//package:fake2");
     FakeBuildRule otherFakeBuildRule =
-        new FakeBuildRule(TestBuildRuleParams.create(otherFakeBuildTarget), pathResolver);
+        new FakeBuildRule(
+            new FakeProjectFilesystem(),
+            TestBuildRuleParams.create(otherFakeBuildTarget),
+            pathResolver);
     resolver.addToIndex(otherFakeBuildRule);
     ExplicitBuildTargetSourcePath buildTargetSourcePath3 =
         new ExplicitBuildTargetSourcePath(
@@ -340,7 +346,10 @@ public class SourcePathResolverTest {
 
     BuildTarget otherFakeBuildTarget = BuildTargetFactory.newInstance("//package2:fake2");
     FakeBuildRule otherFakeBuildRule =
-        new FakeBuildRule(TestBuildRuleParams.create(otherFakeBuildTarget), pathResolver);
+        new FakeBuildRule(
+            new FakeProjectFilesystem(),
+            TestBuildRuleParams.create(otherFakeBuildTarget),
+            pathResolver);
     resolver.addToIndex(otherFakeBuildRule);
     ForwardingBuildTargetSourcePath buildTargetSourcePath3 =
         new ForwardingBuildTargetSourcePath(
@@ -519,8 +528,11 @@ public class SourcePathResolverTest {
     private final Path source;
 
     protected PathReferenceRule(
-        BuildRuleParams buildRuleParams, SourcePathResolver resolver, Path source) {
-      super(buildRuleParams, resolver);
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver,
+        Path source) {
+      super(projectFilesystem, buildRuleParams, resolver);
       this.source = source;
     }
 

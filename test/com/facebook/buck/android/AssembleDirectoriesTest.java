@@ -73,7 +73,7 @@ public class AssembleDirectoriesTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:output_folder");
-    BuildRuleParams buildRuleParams = TestBuildRuleParams.create(target, filesystem);
+    BuildRuleParams buildRuleParams = TestBuildRuleParams.create(target);
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
@@ -81,7 +81,8 @@ public class AssembleDirectoriesTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
-    AssembleDirectories assembleDirectories = new AssembleDirectories(buildRuleParams, directories);
+    AssembleDirectories assembleDirectories =
+        new AssembleDirectories(filesystem, buildRuleParams, directories);
     ruleResolver.addToIndex(assembleDirectories);
 
     ImmutableList<Step> steps =

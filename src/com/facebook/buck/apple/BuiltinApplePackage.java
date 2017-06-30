@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -49,8 +50,9 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final Path temp;
   private final BuildRule bundle;
 
-  public BuiltinApplePackage(BuildRuleParams params, BuildRule bundle) {
-    super(params);
+  public BuiltinApplePackage(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRule bundle) {
+    super(projectFilesystem, params);
     BuildTarget buildTarget = params.getBuildTarget();
     // TODO(markwang): This will be different for Mac apps.
     this.pathToOutputFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +64,7 @@ public class CxxDescriptionEnhancerTest {
     BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
@@ -117,6 +119,7 @@ public class CxxDescriptionEnhancerTest {
     BuildRuleParams otherlibParams = TestBuildRuleParams.create(otherlibTarget);
     FakeCxxLibrary otherlibRule =
         new FakeCxxLibrary(
+            new FakeProjectFilesystem(),
             otherlibParams,
             BuildTargetFactory.newInstance("//:otherheader"),
             BuildTargetFactory.newInstance("//:othersymlink"),
@@ -133,6 +136,7 @@ public class CxxDescriptionEnhancerTest {
         TestBuildRuleParams.create(libTarget).withDeclaredDeps(ImmutableSortedSet.of(otherlibRule));
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
@@ -191,6 +195,7 @@ public class CxxDescriptionEnhancerTest {
     BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),

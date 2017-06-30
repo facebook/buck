@@ -52,6 +52,7 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
   private FilteredResourcesProvider resourcesProvider;
 
   GenerateRDotJava(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
@@ -61,6 +62,7 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
     super(
+        projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             getAllDeps(ruleFinder, pathToRDotTxtFile, resourceDeps, resourcesProvider)));
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;

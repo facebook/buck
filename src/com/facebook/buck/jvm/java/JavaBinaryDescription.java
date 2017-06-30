@@ -105,6 +105,7 @@ public class JavaBinaryDescription
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule =
         new JavaBinary(
+            projectFilesystem,
             binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
             javaOptions.getJavaRuntimeLauncher(),
             args.getMainClass().orElse(null),
@@ -124,6 +125,7 @@ public class JavaBinaryDescription
       SourcePath innerJar = innerJarRule.getSourcePathToOutput();
       rule =
           new JarFattener(
+              projectFilesystem,
               params.copyAppendingExtraDeps(
                   Suppliers.<Iterable<BuildRule>>ofInstance(
                       ruleFinder.filterBuildRuleInputs(

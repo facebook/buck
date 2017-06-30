@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -100,7 +101,8 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
@@ -125,6 +127,7 @@ public class OcamlRuleBuilder {
     if (noYaccOrLexSources && noGeneratedSources) {
       return createFineGrainedBuildRule(
           ocamlBuckConfig,
+          projectFilesystem,
           params,
           resolver,
           srcs,
@@ -135,7 +138,15 @@ public class OcamlRuleBuilder {
           buildNativePlugin);
     } else {
       return createBulkBuildRule(
-          ocamlBuckConfig, params, resolver, srcs, isLibrary, bytecodeOnly, argFlags, linkerFlags);
+          ocamlBuckConfig,
+          projectFilesystem,
+          params,
+          resolver,
+          srcs,
+          isLibrary,
+          bytecodeOnly,
+          argFlags,
+          linkerFlags);
     }
   }
 
@@ -177,7 +188,8 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createBulkBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
@@ -260,7 +272,7 @@ public class OcamlRuleBuilder {
     }
     OcamlBuildContext ocamlContext =
         OcamlBuildContext.builder(ocamlBuckConfig)
-            .setProjectFilesystem(params.getProjectFilesystem())
+            .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
             .setNativeIncludes(nativeIncludes)
@@ -281,6 +293,7 @@ public class OcamlRuleBuilder {
 
     final OcamlBuild ocamlLibraryBuild =
         new OcamlBuild(
+            projectFilesystem,
             compileParams,
             ocamlContext,
             ocamlBuckConfig.getCCompiler().resolve(resolver),
@@ -290,6 +303,7 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
+          projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -313,6 +327,7 @@ public class OcamlRuleBuilder {
           ImmutableSortedSet.of(ocamlLibraryBuild));
     } else {
       return new OcamlBinary(
+          projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -325,7 +340,8 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createFineGrainedBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
-      final BuildRuleParams params,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
@@ -406,7 +422,7 @@ public class OcamlRuleBuilder {
     }
     OcamlBuildContext ocamlContext =
         OcamlBuildContext.builder(ocamlBuckConfig)
-            .setProjectFilesystem(params.getProjectFilesystem())
+            .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
             .setNativeIncludes(nativeIncludes)
@@ -425,13 +441,14 @@ public class OcamlRuleBuilder {
             .setCPreprocessor(ocamlBuckConfig.getCPreprocessor().resolve(resolver))
             .build();
 
-    Path baseDir = params.getProjectFilesystem().getRootPath().toAbsolutePath();
+    Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
     ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(baseDir, ocamlContext);
 
     ImmutableList<SourcePath> cInput = getCInput(pathResolver, getInput(srcs));
 
     OcamlBuildRulesGenerator generator =
         new OcamlBuildRulesGenerator(
+            projectFilesystem,
             compileParams,
             pathResolver,
             ruleFinder,
@@ -448,6 +465,7 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
+          projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -467,6 +485,7 @@ public class OcamlRuleBuilder {
               .build());
     } else {
       return new OcamlBinary(
+          projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()

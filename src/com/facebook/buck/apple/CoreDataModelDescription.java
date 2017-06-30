@@ -57,7 +57,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
         CORE_DATA_MODEL_EXTENSION.equals(extension)
             || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
 
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {

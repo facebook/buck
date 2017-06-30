@@ -45,7 +45,7 @@ public class ZipFileDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ZipFileDescriptionArg args) {
-    return new Zip(params, args.getOut(), args.getSrcs());
+    return new Zip(projectFilesystem, params, args.getOut(), args.getSrcs());
   }
 
   @BuckStyleImmutable

@@ -91,6 +91,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   SwiftCompile(
       CxxPlatform cxxPlatform,
       SwiftBuckConfig swiftBuckConfig,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool swiftCompiler,
       ImmutableSet<FrameworkPath> frameworks,
@@ -103,7 +104,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps)
       throws NoSuchBuildTargetException {
-    super(params);
+    super(projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
     this.swiftBuckConfig = swiftBuckConfig;

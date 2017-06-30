@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -25,8 +26,9 @@ import javax.annotation.Nullable;
 public class NoopBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsInputBasedRuleKey {
 
-  public NoopBuildRuleWithDeclaredAndExtraDeps(BuildRuleParams params) {
-    super(params);
+  public NoopBuildRuleWithDeclaredAndExtraDeps(
+      ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(projectFilesystem, params);
   }
 
   @Override

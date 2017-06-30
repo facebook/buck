@@ -69,21 +69,20 @@ public class ApplePackageDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
-        TestCellPathResolver.get(params.getProjectFilesystem()),
+        TestCellPathResolver.get(projectFilesystem),
         arg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
     resolver.requireAllRules(implicitDeps.build());
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRule rule =
         description.createBuildRule(
             graph,
             projectFilesystem,
-            TestBuildRuleParams.create(packageBuildTarget, projectFilesystem),
+            TestBuildRuleParams.create(packageBuildTarget),
             resolver,
             TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
@@ -123,11 +122,11 @@ public class ApplePackageDescriptionTest {
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget, projectFilesystem);
+    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget);
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
-        TestCellPathResolver.get(params.getProjectFilesystem()),
+        TestCellPathResolver.get(projectFilesystem),
         arg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());

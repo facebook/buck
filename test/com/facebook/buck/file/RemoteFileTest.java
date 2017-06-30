@@ -564,10 +564,16 @@ public class RemoteFileTest {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toAbsolutePath());
 
-    BuildRuleParams params = TestBuildRuleParams.create("//cake:walk", filesystem);
+    BuildRuleParams params = TestBuildRuleParams.create("//cake:walk");
     RemoteFile remoteFile =
         new RemoteFile(
-            params, downloader, new URI("http://example.com"), hashCode, "output.txt", type);
+            filesystem,
+            params,
+            downloader,
+            new URI("http://example.com"),
+            hashCode,
+            "output.txt",
+            type);
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     resolver.addToIndex(remoteFile);

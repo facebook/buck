@@ -99,14 +99,14 @@ public class PythonBinaryDescription
   }
 
   public static SourcePath createEmptyInitModule(
-      BuildRuleParams params, BuildRuleResolver resolver) {
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(params.getBuildTarget());
     Path emptyInitPath =
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(), params.getBuildTarget(), "%s/__init__.py");
+        BuildTargets.getGenPath(projectFilesystem, params.getBuildTarget(), "%s/__init__.py");
     WriteFile rule =
         resolver.addToIndex(
             new WriteFile(
+                projectFilesystem,
                 params.withBuildTarget(emptyInitTarget).withoutDeclaredDeps().withoutExtraDeps(),
                 "",
                 emptyInitPath,
@@ -136,6 +136,7 @@ public class PythonBinaryDescription
   }
 
   private PythonInPlaceBinary createInPlaceBinaryRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -154,18 +155,17 @@ public class PythonBinaryDescription
     }
 
     // Add in any missing init modules into the python components.
-    SourcePath emptyInit = createEmptyInitModule(params, resolver);
+    SourcePath emptyInit = createEmptyInitModule(projectFilesystem, params, resolver);
     components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
     BuildTarget linkTreeTarget =
         params.getBuildTarget().withAppendedFlavors(InternalFlavor.of("link-tree"));
-    Path linkTreeRoot =
-        BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s");
+    Path linkTreeRoot = BuildTargets.getGenPath(projectFilesystem, linkTreeTarget, "%s");
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
                 linkTreeTarget,
-                params.getProjectFilesystem(),
+                projectFilesystem,
                 linkTreeRoot,
                 ImmutableMap.<Path, SourcePath>builder()
                     .putAll(components.getModules())
@@ -175,6 +175,7 @@ public class PythonBinaryDescription
                 ruleFinder));
 
     return PythonInPlaceBinary.from(
+        projectFilesystem,
         params,
         resolver,
         cxxPlatform,
@@ -190,6 +191,7 @@ public class PythonBinaryDescription
   }
 
   PythonBinary createPackageRule(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -205,6 +207,7 @@ public class PythonBinaryDescription
     switch (packageStyle) {
       case INPLACE:
         return createInPlaceBinaryRule(
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -217,6 +220,7 @@ public class PythonBinaryDescription
 
       case STANDALONE:
         return PythonPackagedBinary.from(
+            projectFilesystem,
             params,
             ruleFinder,
             pythonPlatform,
@@ -297,6 +301,7 @@ public class PythonBinaryDescription
     CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
+            projectFilesystem,
             params,
             resolver,
             ruleFinder,
@@ -318,6 +323,7 @@ public class PythonBinaryDescription
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
     return createPackageRule(
+        projectFilesystem,
         params,
         resolver,
         ruleFinder,

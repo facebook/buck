@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -57,6 +58,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
   private final BuildRuleParams buildRuleParams;
+  private final ProjectFilesystem projectFilesystem;
   private final BuildRuleResolver ruleResolver;
   private final AndroidBinary.AaptMode aaptMode;
   private final SourcePath manifest;
@@ -71,6 +73,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean exopackageForResources;
 
   public AndroidBinaryResourcesGraphEnhancer(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
@@ -87,6 +90,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries,
       Optional<Arg> postFilterResourcesCmd) {
+    this.projectFilesystem = projectFilesystem;
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.exopackageForResources = exopackageForResources;
@@ -276,6 +280,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private SplitResources createSplitResourcesRule(
       SourcePath aaptOutputPath, SourcePath aaptRDotTxtPath) {
     return new SplitResources(
+        projectFilesystem,
         buildRuleParams
             .withAppendedFlavor(SPLIT_RESOURCES_FLAVOR)
             .withoutDeclaredDeps()
@@ -301,6 +306,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         String safeName = resDir.toString().replaceAll("[^0-9A-Za-z]", "_");
         Aapt2Compile compileRule =
             new Aapt2Compile(
+                projectFilesystem,
                 buildRuleParams
                     .withAppendedFlavor(InternalFlavor.of("aapt2_compile_" + safeName))
                     .withoutDeclaredDeps()
@@ -319,6 +325,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       }
     }
     return new Aapt2Link(
+        projectFilesystem,
         buildRuleParams
             .withAppendedFlavor(AAPT2_LINK_FLAVOR)
             .withoutDeclaredDeps()
@@ -335,6 +342,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
     return new GenerateRDotJava(
+        projectFilesystem,
         buildRuleParams
             .withAppendedFlavor(GENERATE_RDOT_JAVA_FLAVOR)
             .withoutDeclaredDeps()
@@ -353,6 +361,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableSortedSet<BuildRule> resourceRules,
       ImmutableCollection<BuildRule> rulesWithResourceDirectories) {
     return new ResourcesFilter(
+        projectFilesystem,
         buildRuleParams
             .withAppendedFlavor(RESOURCES_FILTER_FLAVOR)
             .withDeclaredDeps(
@@ -373,6 +382,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       FilteredResourcesProvider filteredResourcesProvider) {
     return new AaptPackageResources(
+        projectFilesystem,
         buildRuleParams
             .withAppendedFlavor(AAPT_PACKAGE_FLAVOR)
             .withoutDeclaredDeps()
@@ -393,6 +403,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       FilteredResourcesProvider filteredResourcesProvider,
       AaptOutputInfo aaptOutputInfo) {
     return new PackageStringAssets(
+        projectFilesystem,
         buildRuleParams
             .withAppendedFlavor(PACKAGE_STRING_ASSETS_FLAVOR)
             .withDeclaredDeps(
@@ -416,6 +427,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableSet<SourcePath> assetsDirectories, Optional<SourcePath> baseApk) {
     MergeAssets mergeAssets =
         new MergeAssets(
+            projectFilesystem,
             buildRuleParams
                 .withAppendedFlavor(MERGE_ASSETS_FLAVOR)
                 .withoutDeclaredDeps()

@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
@@ -72,6 +73,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
 
   private PythonTest(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
@@ -81,7 +83,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
-    super(params);
+    super(projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.env = env;
@@ -93,6 +95,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public static PythonTest from(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Supplier<ImmutableMap<String, String>> env,
@@ -102,6 +105,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     return new PythonTest(
+        projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(binary)).withoutExtraDeps(),
         ruleFinder,
         params.getDeclaredDeps(),

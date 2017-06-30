@@ -49,7 +49,7 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleAssetCatalogDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
   }
 
   public enum Optimization {

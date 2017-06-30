@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -170,6 +171,7 @@ public class PythonUtil {
   }
 
   static PythonPackageComponents getAllComponents(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -245,6 +247,7 @@ public class PythonUtil {
       OmnibusRoots roots = omnibusRoots.build();
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
+              projectFilesystem,
               params,
               ruleResolver,
               ruleFinder,

@@ -78,6 +78,7 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   AaptPackageResources(
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
@@ -88,6 +89,7 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(
+        projectFilesystem,
         params
             .withDeclaredDeps(
                 getAllDeps(

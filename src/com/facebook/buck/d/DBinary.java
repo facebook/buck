@@ -16,6 +16,7 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -41,8 +42,12 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePath output;
 
   public DBinary(
-      BuildRuleParams params, SourcePathRuleFinder ruleFinder, Tool executable, SourcePath output) {
-    super(params);
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
+      Tool executable,
+      SourcePath output) {
+    super(projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.executable = executable;
     this.output = output;
