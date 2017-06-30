@@ -216,11 +216,19 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             path, target, path);
       }
       if (!ancestor.get().equals(basePath)) {
+        // Based on a cursory scan of recent reports, the spurious errors from buckd caching have
+        // an empty owners string. It's possible that the errors aren't just limited to that case.
+        // If so, just change this to unconditionally print the message.
+        String extra =
+            ancestor.get().toString().isEmpty()
+                ? " This may be due to a bug in buckd's caching. "
+                    + "Running `buck kill` and trying again might resolve it."
+                : "";
         throw new HumanReadableException(
             "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find "
                 + "the owning rule that references '%s', and use a reference to that rule instead "
-                + "of referencing the desired file directly.",
-            path, target, ancestor.get(), path);
+                + "of referencing the desired file directly.%s",
+            path, target, ancestor.get(), path, extra);
       }
     }
   }
