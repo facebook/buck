@@ -50,18 +50,25 @@ class CxxErrorTransformer {
     this.pathNormalizer = pathNormalizer;
   }
 
+  private static final String TERM_ESCS = "(?:\\u001B\\[[;\\d]*[mK])*";
   private static final ImmutableList<Pattern> PATH_PATTERNS =
       Platform.detect() == Platform.WINDOWS
           ? ImmutableList.of()
           : ImmutableList.of(
               Pattern.compile(
-                  "(?<prefix>^(?:In file included |\\s+)from )"
+                  "(?<prefix>^(?:In file included |\\s+)from "
+                      + TERM_ESCS
+                      + ")"
                       + "(?<path>[^:]+)"
-                      + "(?<suffix>[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
+                      + "(?<suffix>(?:[:,]\\d+(?:[:,]\\d+)?)?"
+                      + TERM_ESCS
+                      + "[:,]$)"),
               Pattern.compile(
-                  "(?<prefix>^(?:\u001B\\[[;\\d]*m)?)"
+                  "(?<prefix>^"
+                      + TERM_ESCS
+                      + ")"
                       + "(?<path>[^:]+)"
-                      + "(?<suffix>:(?:\\d+:(?:\\d+:)?)?)"));
+                      + "(?<suffix>(?::\\d+(?::\\d+:)?)?:)"));
 
   @VisibleForTesting
   String transformLine(String line) {

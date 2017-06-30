@@ -148,6 +148,24 @@ public class CxxErrorTransformerTest {
         transformer.transformLine(
             String.format("%s something bad", ansi.asErrorText(originalPath + ":4:2:"))),
         equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":4:2:"))));
+    assertThat(
+        transformer.transformLine(
+            String.format(
+                "In file included from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
+        equalTo(
+            String.format(
+                "In file included from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", expectedPath)));
+    assertThat(
+        transformer.transformLine(
+            String.format("    from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
+        equalTo(String.format("    from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", expectedPath)));
+    assertThat(
+        transformer.transformLine(
+            String.format("\u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
+        equalTo(String.format("\u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", expectedPath)));
+    assertThat(
+        transformer.transformLine(String.format("\u001b[01m%s:7\u001b[m,", originalPath)),
+        equalTo(String.format("\u001b[01m%s:7\u001b[m,", expectedPath)));
   }
 
   @Test
