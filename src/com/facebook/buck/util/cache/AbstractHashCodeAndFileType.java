@@ -38,8 +38,6 @@ abstract class AbstractHashCodeAndFileType {
 
   public abstract ImmutableSet<Path> getChildren();
 
-  public abstract long getTimestamp();
-
   @Value.Auxiliary
   abstract Optional<JarContentHasher> getJarContentHasher();
 
@@ -64,7 +62,6 @@ abstract class AbstractHashCodeAndFileType {
     return HashCodeAndFileType.builder()
         .setType(Type.ARCHIVE)
         .setGetHashCode(hashCode)
-        .setTimestamp(System.nanoTime())
         .setJarContentHasher(new JarContentHasher(projectFilesystem, archiveRelativePath))
         .build();
   }
@@ -73,17 +70,12 @@ abstract class AbstractHashCodeAndFileType {
     return HashCodeAndFileType.builder()
         .setType(Type.DIRECTORY)
         .setGetHashCode(hashCode)
-        .setTimestamp(System.nanoTime())
         .setChildren(children)
         .build();
   }
 
   public static HashCodeAndFileType ofFile(HashCode hashCode) {
-    return HashCodeAndFileType.builder()
-        .setType(Type.FILE)
-        .setTimestamp(System.nanoTime())
-        .setGetHashCode(hashCode)
-        .build();
+    return HashCodeAndFileType.builder().setType(Type.FILE).setGetHashCode(hashCode).build();
   }
 
   enum Type {
