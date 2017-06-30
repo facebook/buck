@@ -332,16 +332,13 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
 
     compileFlags.addAll(
         StringArg.from(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-ccopt"),
-                CxxHeaders.getArgs(
-                    cxxPreprocessorInput.getIncludes(),
-                    getSourcePathResolver(),
-                    Optional.empty(),
-                    getCPreprocessor()))));
+            CxxHeaders.getArgs(
+                cxxPreprocessorInput.getIncludes(),
+                getSourcePathResolver(),
+                Optional.empty(),
+                getCPreprocessor())));
 
     for (Arg cFlag : cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C)) {
-      compileFlags.add(StringArg.of("-ccopt"));
       compileFlags.add(cFlag);
     }
 
@@ -354,9 +351,8 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
 
   public ImmutableList<String> getCommonCFlags() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(addPrefix("-ccopt", getCFlags()));
+    builder.addAll(getCFlags());
     builder.add(
-        "-ccopt",
         "-isystem"
             + getOcamlInteropIncludesDir().orElse(DEFAULT_OCAML_INTEROP_INCLUDE_DIR.toString()));
     return builder.build();
