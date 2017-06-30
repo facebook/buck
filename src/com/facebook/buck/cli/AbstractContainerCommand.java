@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.OptionalInt;
 import org.kohsuke.args4j.Option;
@@ -92,13 +93,12 @@ public abstract class AbstractContainerCommand implements Command {
     } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
     }
-    int lengthOfLongestCommand = 0;
-    for (SubCommand subCommand : subCommands.value()) {
-      String name = subCommand.name();
-      if (name.length() > lengthOfLongestCommand) {
-        lengthOfLongestCommand = name.length();
-      }
-    }
+
+    int lengthOfLongestCommand =
+        Arrays.stream(subCommands.value())
+            .map(subcmd -> subcmd.name().length())
+            .max(Integer::compare)
+            .orElse(0);
 
     for (SubCommand subCommand : subCommands.value()) {
       Command command;
