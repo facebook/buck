@@ -26,6 +26,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +59,7 @@ public class AndroidAppModularityDescription
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
             params.getBuildTarget(),
-            /*buildTargetsToExcludeFromDex*/ ImmutableSet.of(),
+            args.getNoDx(),
             /*resourcesToExclude*/ ImmutableSet.of(),
             apkModuleGraph);
     collector.addPackageables(
@@ -74,5 +75,8 @@ public class AndroidAppModularityDescription
       extends CommonDescriptionArg, HasDeclaredDeps {
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+
+    @Hint(isDep = false)
+    ImmutableSet<BuildTarget> getNoDx();
   }
 }
