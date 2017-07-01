@@ -94,13 +94,6 @@ public abstract class DebugPathSanitizer {
     return contents;
   }
 
-  public String restore(Optional<Path> workingDir, String contents) {
-    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
-      contents = contents.replace(getExpandedPath(entry.getValue()), entry.getKey().toString());
-    }
-    return contents;
-  }
-
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   abstract void restoreCompilationDirectory(Path path, Path workingDir) throws IOException;

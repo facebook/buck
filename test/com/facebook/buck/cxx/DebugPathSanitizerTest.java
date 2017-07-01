@@ -78,48 +78,4 @@ public class DebugPathSanitizerTest {
             "-I/another/path/with/subdirectories/something"),
         equalTo("-IOTHER_NAME_WITH_SUFFIX/something"));
   }
-
-  @Test
-  public void restoreWithoutAnyMatches() {
-    assertThat(
-        debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")), "an arbitrary string with no match"),
-        equalTo("an arbitrary string with no match"));
-  }
-
-  @Test
-  public void restoreProjectRoot() {
-    assertThat(
-        debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")),
-            "a string that mentions the ./////////////////////////////////////// somewhere"),
-        equalTo("a string that mentions the /project/root somewhere"));
-  }
-
-  @Test
-  public void restoreOtherDirectories() {
-    assertThat(
-        debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")),
-            "-ISYMBOLIC_NAME////////////////////////////dir "
-                + "-IOTHER_NAME//////////////////////////////"),
-        equalTo("-I/some/absolute/path/dir -I/another/path"));
-  }
-
-  @Test
-  public void restoreDirectoriesThatArePrefixOfOtherDirectories() {
-    assertThat(
-        debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")),
-            "-IOTHER_NAME_WITH_SUFFIX///////////////////something"),
-        equalTo("-I/another/path/with/subdirectories/something"));
-  }
-
-  @Test
-  public void restoreDoesNotTouchUnexpandedPaths() {
-    assertThat(
-        debugPathSanitizer.restore(
-            Optional.of(Paths.get("/project/root")), ". -ISYMBOLIC_NAME/ OTHER_NAME"),
-        equalTo(". -ISYMBOLIC_NAME/ OTHER_NAME"));
-  }
 }
