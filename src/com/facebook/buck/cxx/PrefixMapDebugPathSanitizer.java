@@ -121,12 +121,12 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  protected ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir) {
+  protected Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir) {
     if (workingDir.isPresent()) {
       Assertions.assertCondition(workingDir.get().equals(compilationDir));
     }
     // We need to always sanitize the real workingDir because we add it directly into the flags.
-    return allPaths;
+    return allPaths.entrySet();
   }
 
   @Override

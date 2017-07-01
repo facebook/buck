@@ -20,7 +20,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -59,7 +58,7 @@ public abstract class DebugPathSanitizer {
 
   abstract ImmutableList<String> getCompilationFlags();
 
-  protected abstract ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir);
+  protected abstract Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir);
 
   public String getCompilationDirectory() {
     return getExpandedPath(compilationDirectory);
@@ -81,7 +80,7 @@ public abstract class DebugPathSanitizer {
    * @return a string with all matching paths replaced with their sanitized versions.
    */
   public String sanitize(Optional<Path> workingDir, String contents) {
-    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
+    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir)) {
       String replacement = entry.getValue().toString();
       String pathToReplace = entry.getKey().toString();
       if (contents.contains(pathToReplace)) {
