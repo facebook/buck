@@ -85,8 +85,7 @@ public class OCamlIntegrationTest {
     OcamlBuckConfig ocamlBuckConfig =
         new OcamlBuckConfig(
             buckConfig,
-            DefaultCxxPlatforms.build(
-                Platform.detect(), filesystem, new CxxBuckConfig(buckConfig)));
+            DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig)));
 
     assumeTrue(ocamlBuckConfig.getOcamlCompiler().isPresent());
     assumeTrue(ocamlBuckConfig.getOcamlBytecodeCompiler().isPresent());

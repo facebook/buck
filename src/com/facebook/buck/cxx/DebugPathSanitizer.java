@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -56,7 +55,10 @@ public abstract class DebugPathSanitizer {
   abstract ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize);
 
-  abstract ImmutableList<String> getCompilationFlags();
+  @SuppressWarnings("unused")
+  ImmutableList<String> getCompilationFlags(Path workingDir) {
+    return ImmutableList.of();
+  }
 
   protected abstract Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir);
 
@@ -96,14 +98,4 @@ public abstract class DebugPathSanitizer {
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   abstract void restoreCompilationDirectory(Path path, Path workingDir) throws IOException;
-
-  /**
-   * Offensive check for cross-cell builds: return a new sanitizer with the provided
-   * ProjectFilesystem
-   */
-  @SuppressWarnings("unused")
-  public DebugPathSanitizer withProjectFilesystem(ProjectFilesystem projectFilesystem) {
-    // Do nothing by default.  Only one subclass uses this right now.
-    return this;
-  }
 }

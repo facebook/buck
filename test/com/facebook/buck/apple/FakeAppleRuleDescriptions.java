@@ -183,8 +183,7 @@ public class FakeAppleRuleDescriptions {
           Optional.empty());
 
   public static final CxxPlatform DEFAULT_PLATFORM =
-      DefaultCxxPlatforms.build(
-          Platform.MACOS, new FakeProjectFilesystem(), new CxxBuckConfig(DEFAULT_BUCK_CONFIG));
+      DefaultCxxPlatforms.build(Platform.MACOS, new CxxBuckConfig(DEFAULT_BUCK_CONFIG));
 
   public static final FlavorDomain<CxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
       FlavorDomain.of(

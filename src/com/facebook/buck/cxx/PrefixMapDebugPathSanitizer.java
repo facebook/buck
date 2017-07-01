@@ -15,15 +15,14 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
-import com.facebook.infer.annotation.Assertions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,30 +31,20 @@ import java.util.Optional;
  * that the output only contains references to the mapped-to paths (i.e. the fake paths).
  */
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
-  private static final Logger LOG = Logger.get(PrefixMapDebugPathSanitizer.class);
-  protected final ImmutableBiMap<Path, Path> allPaths;
-  private final ProjectFilesystem projectFilesystem;
-  private boolean isGcc;
-  private Path compilationDir;
 
-  // Save so we can make a copy later
-  private final ImmutableBiMap<Path, Path> other;
+  private boolean isGcc;
   private final CxxToolProvider.Type cxxType;
+
+  private final ImmutableBiMap<Path, Path> other;
 
   public PrefixMapDebugPathSanitizer(
       int pathSize,
       char separator,
       Path fakeCompilationDirectory,
       ImmutableBiMap<Path, Path> other,
-      Path realCompilationDirectory,
-      CxxToolProvider.Type cxxType,
-      ProjectFilesystem projectFilesystem) {
+      CxxToolProvider.Type cxxType) {
     super(separator, pathSize, fakeCompilationDirectory);
-    this.projectFilesystem = projectFilesystem;
     this.isGcc = cxxType == CxxToolProvider.Type.GCC;
-    this.compilationDir = realCompilationDirectory;
-    // Save for later
-    this.other = other;
     this.cxxType = cxxType;
 
     ImmutableBiMap.Builder<Path, Path> pathsBuilder = ImmutableBiMap.builder();
@@ -69,42 +58,29 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
             .toSortedList(
                 (left, right) ->
                     right.getKey().toString().length() - left.getKey().toString().length()));
-    // We assume that nothing in other is a prefix of realCompilationDirectory (though the reverse
-    // is fine).
-    pathsBuilder.put(realCompilationDirectory, fakeCompilationDirectory);
-    for (Path p : other.keySet()) {
-      Assertions.assertCondition(!realCompilationDirectory.toString().contains(p.toString()));
-    }
-
-    this.allPaths = pathsBuilder.build();
+    this.other = pathsBuilder.build();
   }
 
   @Override
   ImmutableMap<String, String> getCompilationEnvironment(Path workingDir, boolean shouldSanitize) {
-    if (!workingDir.equals(compilationDir)) {
-      throw new AssertionError(
-          String.format(
-              "Expected working dir (%s) to be same as compilation dir (%s)",
-              workingDir, compilationDir));
-    }
     return ImmutableMap.of("PWD", workingDir.toString());
   }
 
   @Override
   void restoreCompilationDirectory(Path path, Path workingDir) throws IOException {
-    Assertions.assertCondition(workingDir.equals(compilationDir));
     // There should be nothing to sanitize in the compilation directory because the compilation
     // flags took care of it.
   }
 
   @Override
-  ImmutableList<String> getCompilationFlags() {
+  ImmutableList<String> getCompilationFlags(Path workingDir) {
     if (cxxType == CxxToolProvider.Type.WINDOWS) {
       return ImmutableList.of();
     }
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     // Two -fdebug-prefix-map flags will be applied in the reverse order, so reverse allPaths.
-    Iterable<Map.Entry<Path, Path>> iter = ImmutableList.copyOf(allPaths.entrySet()).reverse();
+    Iterable<Map.Entry<Path, Path>> iter =
+        ImmutableList.copyOf(getAllPaths(Optional.of(workingDir))).reverse();
     for (Map.Entry<Path, Path> mappings : iter) {
       flags.add(getDebugPrefixMapFlag(mappings.getKey(), mappings.getValue()));
     }
@@ -122,29 +98,11 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   protected Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir) {
-    if (workingDir.isPresent()) {
-      Assertions.assertCondition(workingDir.get().equals(compilationDir));
+    if (!workingDir.isPresent()) {
+      return other.entrySet();
     }
-    // We need to always sanitize the real workingDir because we add it directly into the flags.
-    return allPaths.entrySet();
-  }
-
-  @Override
-  public DebugPathSanitizer withProjectFilesystem(ProjectFilesystem projectFilesystem) {
-    if (this.projectFilesystem.equals(projectFilesystem)) {
-      return this;
-    }
-    LOG.debug(
-        "Creating a new PrefixMapDebugPathSanitizer with projectFilesystem %s",
-        projectFilesystem.getRootPath());
-    // TODO(mzlee): Do not create a new sanitizer every time
-    return new PrefixMapDebugPathSanitizer(
-        this.pathSize,
-        this.separator,
-        this.compilationDirectory,
-        this.other,
-        projectFilesystem.getRootPath(),
-        this.cxxType,
-        projectFilesystem);
+    return Iterables.concat(
+        other.entrySet(),
+        ImmutableList.of(new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory)));
   }
 }

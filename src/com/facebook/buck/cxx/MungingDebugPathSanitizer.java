@@ -78,11 +78,6 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
         "PWD", shouldSanitize ? getExpandedPath(workingDir) : workingDir.toString());
   }
 
-  @Override
-  ImmutableList<String> getCompilationFlags() {
-    return ImmutableList.of();
-  }
-
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   @Override

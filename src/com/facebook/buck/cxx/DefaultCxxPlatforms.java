@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
@@ -58,8 +57,7 @@ public class DefaultCxxPlatforms {
   private static final String DEFAULT_WINDOWS_RANLIB = "lib";
   private static final String DEFAULT_UNIX_RANLIB = "ranlib";
 
-  public static CxxPlatform build(
-      Platform platform, ProjectFilesystem filesystem, CxxBuckConfig config) {
+  public static CxxPlatform build(Platform platform, CxxBuckConfig config) {
     String sharedLibraryExtension;
     String sharedLibraryVersionedExtensionFormat;
     String staticLibraryExtension;
@@ -91,9 +89,7 @@ public class DefaultCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.of(),
-                filesystem.getRootPath().toAbsolutePath(),
-                CxxToolProvider.Type.GCC,
-                filesystem);
+                CxxToolProvider.Type.GCC);
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
@@ -113,9 +109,7 @@ public class DefaultCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.of(),
-                filesystem.getRootPath().toAbsolutePath(),
-                CxxToolProvider.Type.CLANG,
-                filesystem);
+                CxxToolProvider.Type.CLANG);
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
@@ -143,9 +137,7 @@ public class DefaultCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.of(),
-                filesystem.getRootPath().toAbsolutePath(),
-                CxxToolProvider.Type.WINDOWS,
-                filesystem);
+                CxxToolProvider.Type.WINDOWS);
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
         ranlibCommand = DEFAULT_WINDOWS_RANLIB;
@@ -166,9 +158,7 @@ public class DefaultCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.of(),
-                filesystem.getRootPath().toAbsolutePath(),
-                CxxToolProvider.Type.GCC,
-                filesystem);
+                CxxToolProvider.Type.GCC);
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;

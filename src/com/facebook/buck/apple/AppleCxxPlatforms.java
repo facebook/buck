@@ -328,9 +328,7 @@ public class AppleCxxPlatforms {
             File.separatorChar,
             Paths.get("."),
             sanitizerPaths.build(),
-            filesystem.getRootPath().toAbsolutePath(),
-            CxxToolProvider.Type.CLANG,
-            filesystem);
+            CxxToolProvider.Type.CLANG);
     DebugPathSanitizer assemblerDebugPathSanitizer =
         new MungingDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(),
