@@ -98,7 +98,7 @@ public class WorkerToolTest {
             .build(resolver);
 
     BuildRule exportFileRule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
             .setSrc(new FakeSourcePath("file.txt"))
             .build(resolver);
 
@@ -132,7 +132,7 @@ public class WorkerToolTest {
             .build(resolver);
 
     BuildRule exportFileRule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
             .setSrc(new FakeSourcePath("file.txt"))
             .build(resolver);
 
@@ -166,7 +166,7 @@ public class WorkerToolTest {
             .build(resolver);
 
     BuildRule exportFileRule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
             .setSrc(new FakeSourcePath("file.txt"))
             .build(resolver);
 

@@ -710,10 +710,8 @@ public class ProjectGeneratorTest {
     BuildTarget publicGeneratedTarget =
         BuildTarget.builder(rootPath, "//foo", "generated2.h").build();
 
-    TargetNode<?, ?> privateGeneratedNode =
-        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
-    TargetNode<?, ?> publicGeneratedNode =
-        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+    TargetNode<?, ?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?, ?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node =
@@ -911,10 +909,8 @@ public class ProjectGeneratorTest {
     BuildTarget publicGeneratedTarget =
         BuildTarget.builder(rootPath, "//foo", "generated2.h").build();
 
-    TargetNode<?, ?> privateGeneratedNode =
-        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
-    TargetNode<?, ?> publicGeneratedNode =
-        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+    TargetNode<?, ?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?, ?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node =
@@ -964,10 +960,8 @@ public class ProjectGeneratorTest {
     BuildTarget publicGeneratedTarget =
         BuildTarget.builder(rootPath, "//foo", "generated2.h").build();
 
-    TargetNode<?, ?> privateGeneratedNode =
-        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
-    TargetNode<?, ?> publicGeneratedNode =
-        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+    TargetNode<?, ?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?, ?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> node =
@@ -1741,14 +1735,12 @@ public class ProjectGeneratorTest {
   public void testAppleLibraryLinkerFlagsWithLocationMacrosAreExpanded() throws IOException {
     BuildTarget exportFileTarget = BuildTarget.builder(rootPath, "//foo", "libExported.a").build();
     TargetNode<?, ?> exportFileNode =
-        ExportFileBuilder.newExportFileBuilder(exportFileTarget)
-            .setSrc(new FakeSourcePath("libExported.a"))
-            .build();
+        new ExportFileBuilder(exportFileTarget).setSrc(new FakeSourcePath("libExported.a")).build();
 
     BuildTarget transitiveDepOfGenruleTarget =
         BuildTarget.builder(rootPath, "//foo", "libExported2.a").build();
     TargetNode<?, ?> transitiveDepOfGenruleNode =
-        ExportFileBuilder.newExportFileBuilder(transitiveDepOfGenruleTarget)
+        new ExportFileBuilder(transitiveDepOfGenruleTarget)
             .setSrc(new FakeSourcePath("libExported2.a"))
             .build();
 
@@ -3518,7 +3510,7 @@ public class ProjectGeneratorTest {
   public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:rule");
     SourcePath sourcePath = new DefaultBuildTargetSourcePath(buildTarget);
-    TargetNode<?, ?> generatingTarget = ExportFileBuilder.newExportFileBuilder(buildTarget).build();
+    TargetNode<?, ?> generatingTarget = new ExportFileBuilder(buildTarget).build();
 
     ImmutableSet<TargetNode<?, ?>> nodes =
         FluentIterable.from(
@@ -3545,25 +3537,23 @@ public class ProjectGeneratorTest {
     BuildTarget libTarget = BuildTarget.builder(rootPath, "//Libraries", "foo").build();
 
     TargetNode<ExportFileDescriptionArg, ?> source1 =
-        ExportFileBuilder.newExportFileBuilder(source1Target)
+        new ExportFileBuilder(source1Target)
             .setSrc(new PathSourcePath(projectFilesystem, Paths.get("Vendor/sources/source1")))
             .build();
 
     TargetNode<ExportFileDescriptionArg, ?> source2 =
-        ExportFileBuilder.newExportFileBuilder(source2Target)
+        new ExportFileBuilder(source2Target)
             .setSrc(new PathSourcePath(projectFilesystem, Paths.get("Vendor/source2")))
             .build();
 
     TargetNode<ExportFileDescriptionArg, ?> source2Ref =
-        ExportFileBuilder.newExportFileBuilder(source2RefTarget)
+        new ExportFileBuilder(source2RefTarget)
             .setSrc(new DefaultBuildTargetSourcePath(source2Target))
             .build();
 
-    TargetNode<ExportFileDescriptionArg, ?> source3 =
-        ExportFileBuilder.newExportFileBuilder(source3Target).build();
+    TargetNode<ExportFileDescriptionArg, ?> source3 = new ExportFileBuilder(source3Target).build();
 
-    TargetNode<ExportFileDescriptionArg, ?> header =
-        ExportFileBuilder.newExportFileBuilder(headerTarget).build();
+    TargetNode<ExportFileDescriptionArg, ?> header = new ExportFileBuilder(headerTarget).build();
 
     TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libTarget)
@@ -4029,7 +4019,7 @@ public class ProjectGeneratorTest {
     BuildTarget resourceTarget = BuildTarget.builder(rootPath, "//foo", "res").build();
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
 
-    TargetNode<?, ?> fileNode = ExportFileBuilder.newExportFileBuilder(fileTarget).build();
+    TargetNode<?, ?> fileNode = new ExportFileBuilder(fileTarget).build();
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setDirs(ImmutableSet.of())
@@ -4061,8 +4051,7 @@ public class ProjectGeneratorTest {
     BuildTarget resourceTarget = BuildTarget.builder(rootPath, "//foo", "res").build();
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
 
-    TargetNode<?, ?> directoryNode =
-        ExportFileBuilder.newExportFileBuilder(directoryTarget).build();
+    TargetNode<?, ?> directoryNode = new ExportFileBuilder(directoryTarget).build();
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setDirs(ImmutableSet.of(new DefaultBuildTargetSourcePath(directoryTarget)))
@@ -4096,8 +4085,7 @@ public class ProjectGeneratorTest {
     BuildTarget resourceTarget = BuildTarget.builder(rootPath, "//foo", "res").build();
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
 
-    TargetNode<?, ?> directoryNode =
-        ExportFileBuilder.newExportFileBuilder(directoryTarget).build();
+    TargetNode<?, ?> directoryNode = new ExportFileBuilder(directoryTarget).build();
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setDirs(ImmutableSet.of(new DefaultBuildTargetSourcePath(directoryTarget)))

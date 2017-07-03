@@ -108,7 +108,7 @@ public class InputBasedRuleKeyFactoryTest {
     Path output = Paths.get("output");
 
     BuildRule rule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setSrc(new PathSourcePath(filesystem, output))
             .build(resolver, filesystem);
@@ -144,7 +144,7 @@ public class InputBasedRuleKeyFactoryTest {
             .build(resolver, filesystem);
 
     BuildRule rule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setSrc(dep.getSourcePathToOutput())
             .build(resolver, filesystem);
@@ -330,7 +330,7 @@ public class InputBasedRuleKeyFactoryTest {
 
     // Construct rule which uses input.
     BuildRule rule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setSrc(new PathSourcePath(filesystem, input))
             .build(resolver, filesystem);
@@ -396,7 +396,7 @@ public class InputBasedRuleKeyFactoryTest {
 
     // Construct rule which uses inputs.
     BuildRule rule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setSrc(new PathSourcePath(filesystem, input))
             .build(resolver, filesystem);
@@ -429,7 +429,7 @@ public class InputBasedRuleKeyFactoryTest {
     Path tooLargeInput = filesystem.getPath("too_large_input");
     filesystem.writeBytesToPath(new byte[tooLargeRuleSize], tooLargeInput);
     BuildRule tooLargeRule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:large_rule"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:large_rule"))
             .setOut("out")
             .setSrc(new PathSourcePath(filesystem, tooLargeInput))
             .build(resolver, filesystem);
@@ -459,7 +459,7 @@ public class InputBasedRuleKeyFactoryTest {
     Path input = filesystem.getPath("small_enough_input");
     filesystem.writeBytesToPath(new byte[smallEnoughRuleSize], input);
     BuildRule smallEnoughRule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:small_rule"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//:small_rule"))
             .setOut("out")
             .setSrc(new PathSourcePath(filesystem, input))
             .build(resolver, filesystem);

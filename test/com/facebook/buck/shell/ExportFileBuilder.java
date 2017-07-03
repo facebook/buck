@@ -30,10 +30,6 @@ public class ExportFileBuilder
     super(new ExportFileDescription(), target);
   }
 
-  public static ExportFileBuilder newExportFileBuilder(BuildTarget target) {
-    return new ExportFileBuilder(target);
-  }
-
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {
     getArgForPopulating().setSrc(Optional.ofNullable(path));
     return this;

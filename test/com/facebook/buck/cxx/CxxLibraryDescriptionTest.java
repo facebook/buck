@@ -742,7 +742,7 @@ public class CxxLibraryDescriptionTest {
                 CxxDescriptionEnhancer.SHARED_FLAVOR,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(
@@ -778,7 +778,7 @@ public class CxxLibraryDescriptionTest {
                 CxxDescriptionEnhancer.SHARED_FLAVOR,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(
@@ -822,7 +822,7 @@ public class CxxLibraryDescriptionTest {
                 CxxDescriptionEnhancer.SHARED_FLAVOR,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(
@@ -860,7 +860,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(
@@ -900,7 +900,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(
@@ -947,7 +947,7 @@ public class CxxLibraryDescriptionTest {
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    ExportFileBuilder locBuilder = new ExportFileBuilder(location);
     locBuilder.setOut("somewhere.over.the.rainbow");
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(

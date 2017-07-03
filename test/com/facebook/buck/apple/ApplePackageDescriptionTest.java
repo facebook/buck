@@ -102,7 +102,7 @@ public class ApplePackageDescriptionTest {
     BuildTarget exportFileBuildTarget = BuildTargetFactory.newInstance("//foo:exportfile");
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            ExportFileBuilder.newExportFileBuilder(exportFileBuildTarget).build(),
+            new ExportFileBuilder(exportFileBuildTarget).build(),
             AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
             AppleBundleBuilder.createBuilder(bundleBuildTarget)
                 .setBinary(binaryBuildTarget)

@@ -147,7 +147,7 @@ public class JsTestScenario {
     }
 
     Builder arbitraryRule(BuildTarget target) {
-      nodes.add(ExportFileBuilder.newExportFileBuilder(target).build());
+      nodes.add(new ExportFileBuilder(target).build());
       return this;
     }
 
