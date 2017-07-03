@@ -99,6 +99,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
+  private static IDevice getSingleDevice(AdbHelper adbHelper) throws InterruptedException {
+    List<IDevice> devices = adbHelper.getDevices(true);
+    if (devices.isEmpty()) {
+      throw new HumanReadableException("Expecting one android device/emulator to be attached.");
+    }
+    return devices.get(0);
+  }
+
   @Override
   public ImmutableSet<String> getLabels() {
     return labels;
@@ -145,7 +153,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     AdbHelper adb = AdbHelper.get(executionContext, true);
     IDevice device;
     try {
-      device = adb.getSingleDevice();
+      device = getSingleDevice(adb);
     } catch (InterruptedException e) {
       throw new HumanReadableException("Unable to get connected device.");
     }
@@ -258,7 +266,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       IDevice device;
       AdbHelper adbHelper = AdbHelper.get(context, true);
       try {
-        device = adbHelper.getSingleDevice();
+        device = getSingleDevice(adbHelper);
       } catch (InterruptedException e) {
         device = null;
       }
