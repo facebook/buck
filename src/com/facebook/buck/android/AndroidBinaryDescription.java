@@ -250,7 +250,6 @@ public class AndroidBinaryDescription
               && !args.getPreprocessJavaClassesBash().isPresent();
 
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
-      ResourceCompressionMode compressionMode = getCompressionMode(args);
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       AndroidBinaryGraphEnhancer graphEnhancer =
@@ -261,7 +260,7 @@ public class AndroidBinaryDescription
               resolver,
               cellRoots,
               args.getAaptMode(),
-              compressionMode,
+              args.getResourceCompression(),
               resourceFilter,
               args.getEffectiveBannedDuplicateResourceTypes(),
               args.getResourceUnionPackage(),
@@ -355,7 +354,7 @@ public class AndroidBinaryDescription
               args.getProguardConfig(),
               args.isSkipProguard(),
               redexOptions,
-              compressionMode,
+              args.getResourceCompression(),
               args.getCpuFilters(),
               resourceFilter,
               exopackageModes,
@@ -438,14 +437,6 @@ public class AndroidBinaryDescription
       return PackageType.DEBUG;
     }
     return PackageType.valueOf(args.getPackageType().get().toUpperCase(Locale.US));
-  }
-
-  private ResourceCompressionMode getCompressionMode(AndroidBinaryDescriptionArg args) {
-    if (!args.getResourceCompression().isPresent()) {
-      return ResourceCompressionMode.DISABLED;
-    }
-    return ResourceCompressionMode.valueOf(
-        args.getResourceCompression().get().toUpperCase(Locale.US));
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {
@@ -596,7 +587,10 @@ public class AndroidBinaryDescription
 
     Optional<SourcePath> getProguardConfig();
 
-    Optional<String> getResourceCompression();
+    @Value.Default
+    default ResourceCompressionMode getResourceCompression() {
+      return ResourceCompressionMode.DISABLED;
+    }
 
     @Value.Default
     default boolean isSkipCrunchPngs() {

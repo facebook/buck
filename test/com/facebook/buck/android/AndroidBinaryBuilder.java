@@ -109,7 +109,7 @@ public class AndroidBinaryBuilder
 
   public AndroidBinaryBuilder setResourceCompressionMode(
       ResourceCompressionMode resourceCompressionMode) {
-    getArgForPopulating().setResourceCompression(Optional.of(resourceCompressionMode.toString()));
+    getArgForPopulating().setResourceCompression(resourceCompressionMode);
     return this;
   }
 
