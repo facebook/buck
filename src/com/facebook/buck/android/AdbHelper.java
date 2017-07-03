@@ -97,22 +97,16 @@ public class AdbHelper {
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
   private final ExecutionContext context;
-  private final Console console;
-  private final BuckEventBus buckEventBus;
   private final boolean restartAdbOnFailure;
 
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
       ExecutionContext context,
-      Console console,
-      BuckEventBus buckEventBus,
       boolean restartAdbOnFailure) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.context = context;
-    this.console = console;
-    this.buckEventBus = buckEventBus;
     this.restartAdbOnFailure = restartAdbOnFailure;
   }
 
@@ -123,13 +117,11 @@ public class AdbHelper {
         context.getAdbOptions().get(),
         context.getTargetDeviceOptions().get(),
         context,
-        context.getConsole(),
-        context.getBuckEventBus(),
         restartOnFailure);
   }
 
   private BuckEventBus getBuckEventBus() {
-    return buckEventBus;
+    return context.getBuckEventBus();
   }
 
   /**
@@ -141,7 +133,7 @@ public class AdbHelper {
   @SuppressForbidden
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
-      console.printBuildFailure("No devices are found.");
+      context.getConsole().printBuildFailure("No devices are found.");
       return null;
     }
 
@@ -188,15 +180,17 @@ public class AdbHelper {
 
     // Filtered out all devices.
     if (onlineDevices == 0) {
-      console.printBuildFailure("No devices are found.");
+      context.getConsole().printBuildFailure("No devices are found.");
       return null;
     }
 
     if (devices.isEmpty()) {
-      console.printBuildFailure(
-          String.format(
-              "Found %d connected device(s), but none of them matches specified filter.",
-              onlineDevices));
+      context
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Found %d connected device(s), but none of them matches specified filter.",
+                  onlineDevices));
       return null;
     }
 
@@ -237,7 +231,9 @@ public class AdbHelper {
     AndroidDebugBridge adb =
         AndroidDebugBridge.createBridge(context.getPathToAdbExecutable(), false);
     if (adb == null) {
-      console.printBuildFailure("Failed to connect to adb. Make sure adb server is running.");
+      context
+          .getConsole()
+          .printBuildFailure("Failed to connect to adb. Make sure adb server is running.");
       return null;
     }
 
@@ -257,7 +253,7 @@ public class AdbHelper {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
-      console.printBuildFailure("Failed to create adb connection.");
+      getConsole().printBuildFailure("Failed to create adb connection.");
       return new ArrayList<>();
     }
 
@@ -266,21 +262,22 @@ public class AdbHelper {
     if (devices != null && devices.size() > 1) {
       // Found multiple devices but multi-install mode is not enabled.
       if (!options.isMultiInstallModeEnabled()) {
-        console.printBuildFailure(
-            String.format(
-                "%d device(s) matches specified device filter (1 expected).\n"
-                    + "Either disconnect other devices or enable multi-install mode (%s).",
-                devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
+        getConsole()
+            .printBuildFailure(
+                String.format(
+                    "%d device(s) matches specified device filter (1 expected).\n"
+                        + "Either disconnect other devices or enable multi-install mode (%s).",
+                    devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
         return new ArrayList<>();
       }
       if (!quiet) {
         // Report if multiple devices are matching the filter.
-        console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+        getConsole().getStdOut().printf("Found " + devices.size() + " matching devices.\n");
       }
     }
 
     if (devices == null && restartAdbOnFailure) {
-      console.printErrorText("No devices found with adb, restarting adb-server.");
+      getConsole().printErrorText("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
     }
@@ -315,7 +312,8 @@ public class AdbHelper {
   public boolean adbCall(AdbCallable adbCallable, boolean quiet) throws InterruptedException {
     List<IDevice> devices;
 
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "set_up_adb_call")) {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
       devices = getDevices(quiet);
       if (devices.size() == 0) {
         return false;
@@ -343,8 +341,8 @@ public class AdbHelper {
     try {
       results = Futures.allAsList(futures).get();
     } catch (ExecutionException ex) {
-      console.printBuildFailure("Failed: " + adbCallable);
-      ex.printStackTrace(console.getStdErr());
+      getConsole().printBuildFailure("Failed: " + adbCallable);
+      ex.printStackTrace(getConsole().getStdErr());
       return false;
     } catch (InterruptedException e) {
       try {
@@ -372,15 +370,21 @@ public class AdbHelper {
 
     // Report results.
     if (successCount > 0 && !quiet) {
-      console.printSuccess(
-          String.format("Successfully ran %s on %d device(s)", adbCallable, successCount));
+      getConsole()
+          .printSuccess(
+              String.format("Successfully ran %s on %d device(s)", adbCallable, successCount));
     }
     if (failureCount > 0) {
-      console.printBuildFailure(
-          String.format("Failed to %s on %d device(s).", adbCallable, failureCount));
+      getConsole()
+          .printBuildFailure(
+              String.format("Failed to %s on %d device(s).", adbCallable, failureCount));
     }
 
     return failureCount == 0;
+  }
+
+  private Console getConsole() {
+    return context.getConsole();
   }
 
   /** Base class for commands to be run against an {@link com.android.ddmlib.IDevice IDevice}. */
@@ -600,13 +604,14 @@ public class AdbHelper {
         device.installPackage(apk.getAbsolutePath(), true);
       }
       if (reason != null) {
-        console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
+        getConsole()
+            .printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
         return false;
       }
       return true;
     } catch (InstallException ex) {
-      console.printBuildFailure(String.format("Failed to install apk on %s.", name));
-      ex.printStackTrace(console.getStdErr());
+      getConsole().printBuildFailure(String.format("Failed to install apk on %s.", name));
+      ex.printStackTrace(getConsole().getStdErr());
       return false;
     }
   }
@@ -659,8 +664,8 @@ public class AdbHelper {
         | ShellCommandUnresponsiveException
         | TimeoutException
         | IOException e) {
-      console.printBuildFailure(String.format("Failed to test /data/local/tmp on %s.", name));
-      e.printStackTrace(console.getStdErr());
+      getConsole().printBuildFailure(String.format("Failed to test /data/local/tmp on %s.", name));
+      e.printStackTrace(getConsole().getStdErr());
       return false;
     }
     String logMessage = loggingInfo.toString();
@@ -674,7 +679,7 @@ public class AdbHelper {
       fullMessage.append("Here's some extra info:\n");
       fullMessage.append(logMessage);
       fullMessage.append("============================================================\n");
-      console.getStdErr().println(fullMessage.toString());
+      getConsole().getStdErr().println(fullMessage.toString());
     }
 
     return true;
@@ -739,10 +744,10 @@ public class AdbHelper {
 
       // Sanity check.
       if (launcherActivities.isEmpty()) {
-        console.printBuildFailure("No launchable activities found.");
+        getConsole().printBuildFailure("No launchable activities found.");
         return 1;
       } else if (launcherActivities.size() > 1) {
-        console.printBuildFailure("Default activity is ambiguous.");
+        getConsole().printBuildFailure("Default activity is ambiguous.");
         return 1;
       }
 
@@ -755,7 +760,7 @@ public class AdbHelper {
 
     final String activityToRun = activity;
 
-    PrintStream stdOut = console.getStdOut();
+    PrintStream stdOut = getConsole().getStdOut();
     stdOut.println(String.format("Starting activity %s...", activityToRun));
 
     StartActivityEvent.Started started =
@@ -768,7 +773,7 @@ public class AdbHelper {
               public boolean call(IDevice device) throws Exception {
                 String err = deviceStartActivity(device, activityToRun, waitForDebugger);
                 if (err != null) {
-                  console.printBuildFailure(err);
+                  getConsole().printBuildFailure(err);
                   return false;
                 } else {
                   return true;
@@ -874,7 +879,7 @@ public class AdbHelper {
       }
     }
 
-    PrintStream stdOut = console.getStdOut();
+    PrintStream stdOut = getConsole().getStdOut();
     stdOut.printf("Removing apk from %s.\n", name);
     try {
       long start = System.currentTimeMillis();
@@ -882,8 +887,8 @@ public class AdbHelper {
       long end = System.currentTimeMillis();
 
       if (reason != null) {
-        console.printBuildFailure(
-            String.format("Failed to uninstall apk from %s: %s.", name, reason));
+        getConsole()
+            .printBuildFailure(String.format("Failed to uninstall apk from %s: %s.", name, reason));
         return false;
       }
 
@@ -892,8 +897,8 @@ public class AdbHelper {
       return true;
 
     } catch (InstallException ex) {
-      console.printBuildFailure(String.format("Failed to uninstall apk from %s.", name));
-      ex.printStackTrace(console.getStdErr());
+      getConsole().printBuildFailure(String.format("Failed to uninstall apk from %s.", name));
+      ex.printStackTrace(getConsole().getStdErr());
       return false;
     }
   }

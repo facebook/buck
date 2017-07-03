@@ -158,8 +158,6 @@ public class UninstallCommand extends AbstractCommand {
               adbOptions(params.getBuckConfig()),
               targetDeviceOptions(),
               context,
-              params.getConsole(),
-              params.getBuckEventBus(),
               params.getBuckConfig().getRestartAdbOnFailure());
 
       // Find application package name from manifest and uninstall from matching devices.

@@ -26,14 +26,11 @@ import static org.junit.Assert.assertTrue;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -48,10 +45,14 @@ import org.kohsuke.args4j.CmdLineException;
 
 public class AdbHelperTest {
 
+  private TestConsole testConsole;
+  private ExecutionContext testContext;
   private AdbHelper basicAdbHelper;
 
   @Before
   public void setUp() throws CmdLineException {
+    testContext = TestExecutionContext.newInstance();
+    testConsole = (TestConsole) testContext.getConsole();
     basicAdbHelper = createAdbHelper(new AdbOptions(), new TargetDeviceOptions());
   }
 
@@ -81,7 +82,7 @@ public class AdbHelperTest {
 
   private AdbHelper createAdbHelper(AdbOptions adbOptions, TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
-    return createAdbHelper(TestExecutionContext.newInstance(), adbOptions, targetDeviceOptions);
+    return createAdbHelper(testContext, adbOptions, targetDeviceOptions);
   }
 
   private AdbHelper createAdbHelper(
@@ -89,10 +90,7 @@ public class AdbHelperTest {
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
-    Console console = new TestConsole();
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    return new AdbHelper(
-        adbOptions, targetDeviceOptions, executionContext, console, eventBus, true) {
+    return new AdbHelper(adbOptions, targetDeviceOptions, executionContext, true) {
       @Override
       protected boolean isDeviceTempWritable(IDevice device, String name) {
         return true;
@@ -385,16 +383,8 @@ public class AdbHelperTest {
 
     final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
-    TestConsole console = new TestConsole();
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     AdbHelper adbHelper =
-        new AdbHelper(
-            new AdbOptions(),
-            new TargetDeviceOptions(),
-            TestExecutionContext.newInstance(),
-            console,
-            eventBus,
-            true) {
+        new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
           @Override
           protected boolean isDeviceTempWritable(IDevice device, String name) {
             return true;
@@ -422,8 +412,8 @@ public class AdbHelperTest {
 
     assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals("", console.getTextWrittenToStdErr());
+    assertEquals("", testConsole.getTextWrittenToStdOut());
+    assertEquals("", testConsole.getTextWrittenToStdErr());
   }
 
   @Test
@@ -444,16 +434,8 @@ public class AdbHelperTest {
 
     final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
-    TestConsole console = new TestConsole();
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     AdbHelper adbHelper =
-        new AdbHelper(
-            new AdbOptions(),
-            new TargetDeviceOptions(),
-            TestExecutionContext.newInstance(),
-            console,
-            eventBus,
-            true) {
+        new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
           @Override
           protected boolean isDeviceTempWritable(IDevice device, String name) {
             return true;
@@ -481,8 +463,9 @@ public class AdbHelperTest {
 
     assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals("Successfully ran install apk on 1 device(s)\n", console.getTextWrittenToStdErr());
+    assertEquals("", testConsole.getTextWrittenToStdOut());
+    assertEquals(
+        "Successfully ran install apk on 1 device(s)\n", testConsole.getTextWrittenToStdErr());
   }
 
   /** Also make sure we're not erroneously parsing "Exception" and "Error". */
