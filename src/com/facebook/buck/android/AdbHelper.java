@@ -89,10 +89,10 @@ public class AdbHelper {
   static final String SERIAL_NUMBER_ENV = "ANDROID_SERIAL";
 
   // Taken from ddms source code.
-  public static final long INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
-  public static final long GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
+  private static final long INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
+  private static final long GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
-  public static final String ECHO_COMMAND_SUFFIX = " ; echo -n :$?";
+  private static final String ECHO_COMMAND_SUFFIX = " ; echo -n :$?";
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
@@ -197,7 +197,7 @@ public class AdbHelper {
     return devices;
   }
 
-  private boolean isEmulator(IDevice device) {
+  private static boolean isEmulator(IDevice device) {
     return isLocalTransport(device) || device.isEmulator();
   }
 
@@ -205,11 +205,11 @@ public class AdbHelper {
    * To be consistent with adb, we treat all local transports (as opposed to USB transports) as
    * emulators instead of devices.
    */
-  private boolean isLocalTransport(IDevice device) {
+  private static boolean isLocalTransport(IDevice device) {
     return RE_LOCAL_TRANSPORT_SERIAL.matcher(device.getSerialNumber()).find();
   }
 
-  private boolean isAdbInitialized(AndroidDebugBridge adb) {
+  private static boolean isAdbInitialized(AndroidDebugBridge adb) {
     return adb.isConnected() && adb.hasInitialDeviceList();
   }
 
@@ -219,7 +219,8 @@ public class AdbHelper {
    */
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  private AndroidDebugBridge createAdb(ExecutionContext context) throws InterruptedException {
+  private static AndroidDebugBridge createAdb(ExecutionContext context)
+      throws InterruptedException {
     DdmPreferences.setTimeOut(60000);
 
     try {
