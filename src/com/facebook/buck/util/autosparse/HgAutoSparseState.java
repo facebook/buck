@@ -210,10 +210,10 @@ public class HgAutoSparseState implements AutoSparseState {
             continue;
           }
           Path path = Paths.get(parts[0]);
-          String hash = "";
+          // We ignore the hash portion of the manifest entry, no need to bloat up memory with
+          // data we don't use.
           String flag = "";
           try {
-            hash = parts[1].substring(0, 40);
             flag = parts[1].substring(40);
           } catch (IndexOutOfBoundsException e) {
             // not a valid raw manifest line, skip
@@ -225,7 +225,7 @@ public class HgAutoSparseState implements AutoSparseState {
             continue;
           }
 
-          hgManifest.add(path, ManifestInfo.of(hash, flag));
+          hgManifest.add(path, ManifestInfo.of(flag));
         }
 
       } catch (IOException e) {

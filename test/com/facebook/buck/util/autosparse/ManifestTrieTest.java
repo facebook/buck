@@ -48,7 +48,7 @@ public class ManifestTrieTest {
   public void addRetrieve() {
     ManifestTrie trie = new ManifestTrie();
     Path testPath1 = Paths.get("foo/bar/baz");
-    ManifestInfo info1 = ManifestInfo.of("<hash>", "");
+    ManifestInfo info1 = ManifestInfo.of("");
     Path testPath2 = Paths.get("foo/spam/eggs");
 
     trie.add(testPath1, info1);
@@ -66,7 +66,7 @@ public class ManifestTrieTest {
   public void addRemove() {
     ManifestTrie trie = new ManifestTrie();
     Path testPath = Paths.get("foo/bar/baz");
-    ManifestInfo info = ManifestInfo.of("<hash>", "");
+    ManifestInfo info = ManifestInfo.of("");
 
     trie.add(testPath, info);
     trie.remove(testPath);
@@ -84,15 +84,15 @@ public class ManifestTrieTest {
     ManifestTrie trie = new ManifestTrie();
 
     Path testPathDeeper = Paths.get("foo/bar/deeper/path");
-    ManifestInfo infoDeeper = ManifestInfo.of("<hashdeep>", "");
+    ManifestInfo infoDeeper = ManifestInfo.of("");
     trie.add(testPathDeeper, infoDeeper);
 
     Path testPath1 = Paths.get("foo/bar/baz");
-    ManifestInfo info1 = ManifestInfo.of("<hash1>", "");
+    ManifestInfo info1 = ManifestInfo.of("");
     trie.add(testPath1, info1);
 
     Path testPath2 = Paths.get("foo/bar/spam");
-    ManifestInfo info2 = ManifestInfo.of("<hash2>", "");
+    ManifestInfo info2 = ManifestInfo.of("");
     trie.add(testPath2, info2);
 
     assertTrue(trie.containsLeafNodes(testPath1.getParent()));
@@ -114,8 +114,8 @@ public class ManifestTrieTest {
   public void replaceExisting() {
     ManifestTrie trie = new ManifestTrie();
     Path testPath = Paths.get("foo/bar/baz");
-    ManifestInfo info1 = ManifestInfo.of("<hash1>", "");
-    ManifestInfo info2 = ManifestInfo.of("<hash1>", "");
+    ManifestInfo info1 = ManifestInfo.of("");
+    ManifestInfo info2 = ManifestInfo.of("");
 
     trie.add(testPath, info1);
     trie.add(testPath, info2);
@@ -137,15 +137,15 @@ public class ManifestTrieTest {
     ImmutableMap<Path, ManifestInfo> testPaths =
         ImmutableMap.of(
             testPath1,
-            ManifestInfo.of("<hash1>", ""),
+            ManifestInfo.of(""),
             testPath2,
-            ManifestInfo.of("<hash2>", ""),
+            ManifestInfo.of(""),
             Paths.get("ham/bar/foo"),
-            ManifestInfo.of("<hash3>", ""),
+            ManifestInfo.of(""),
             Paths.get("ham/bar/spam"),
-            ManifestInfo.of("<hash4>", ""),
+            ManifestInfo.of(""),
             Paths.get("foo/bar/spam"),
-            ManifestInfo.of("<hash5>", ""));
+            ManifestInfo.of(""));
     testPaths.forEach((path, info) -> trie.add(path, info));
     trie.remove(testPath1);
     trie.remove(testPath2);
