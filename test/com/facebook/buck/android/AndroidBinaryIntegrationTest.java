@@ -639,18 +639,18 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
     assertTrue(sym.undefined.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromTopi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.global.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.global.contains("_Z10botFromTopi"));
     assertTrue(sym.global.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
@@ -658,13 +658,13 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // Run some verification on the same apk with native_relinker disabled.
     apkPath = workspace.buildAndReturnOutput("//apps/sample:app_no_xdso_dce");
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
   }
 

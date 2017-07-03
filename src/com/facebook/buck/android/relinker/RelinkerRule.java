@@ -240,7 +240,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
   private Symbols getSymbols(ProcessExecutor executor, Path path)
       throws IOException, InterruptedException {
-    return Symbols.getSymbols(executor, objdump, pathResolver, absolutify(path));
+    return Symbols.getDynamicSymbols(executor, objdump, pathResolver, absolutify(path));
   }
 
   private Path getRelativeVersionFilePath() {
