@@ -158,6 +158,7 @@ public class MachineReadableLogJsonViewTest {
                 Optional.of(ArtifactCacheMode.dir),
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
                 Optional.empty()),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),

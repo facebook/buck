@@ -20,6 +20,8 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
+import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -38,6 +40,7 @@ import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.RuleKeyType;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.StringRuleKeyHasher;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -589,13 +592,29 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private CacheResult performRuleKeyCacheCheck(BuildRule rule, BuildEngineBuildContext buildContext)
       throws IOException {
     final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-    return tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-        rule,
-        defaultRuleKey,
-        buildContext.getArtifactCache(),
-        // TODO(simons): This should be a shared between all tests, not one per cell
-        rule.getProjectFilesystem(),
-        buildContext);
+    long cacheRequestTimestampMillis = System.currentTimeMillis();
+    CacheResult cacheResult =
+        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+            rule,
+            defaultRuleKey,
+            buildContext.getArtifactCache(),
+            // TODO(simons): This should be a shared between all tests, not one per cell
+            rule.getProjectFilesystem(),
+            buildContext);
+
+    RuleKeyCacheResult ruleKeyCacheResult =
+        RuleKeyCacheResult.builder()
+            .setBuildTarget(rule.getFullyQualifiedName())
+            .setRuleKey(defaultRuleKey.toString())
+            .setRuleKeyType(RuleKeyType.DEFAULT)
+            .setCacheResult(cacheResult.getType())
+            .setRequestTimestampMillis(cacheRequestTimestampMillis)
+            .setTwoLevelContentHashKey(cacheResult.twoLevelContentHashKey())
+            .build();
+
+    buildContext.getEventBus().post(new RuleKeyCacheResultEvent(ruleKeyCacheResult));
+
+    return cacheResult;
   }
 
   private Optional<BuildResult> getBuildResultForRuleKeyCacheResult(
