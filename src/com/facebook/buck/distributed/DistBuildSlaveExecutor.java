@@ -61,7 +61,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -353,7 +352,7 @@ public class DistBuildSlaveExecutor {
                   distBuildConfig.getRuleKeyDiagnosticsMode(),
                   args.getBuckEventBus(),
                   args.getPlatform(),
-                  ImmutableMap.of(),
+                  distBuildConfig.getEnvironment(),
                   args.getClock(),
                   new ConcurrencyLimit(
                       4,

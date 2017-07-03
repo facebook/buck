@@ -132,7 +132,10 @@ public class DistBuildStateTest {
         new TestCellBuilder().setFilesystem(createJavaOnlyFilesystem("/loading")).build();
     DistBuildState distributedBuildState =
         DistBuildState.load(
-            Optional.empty(), dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+            FakeBuckConfig.builder().build(),
+            dump,
+            rootCellWhenLoading,
+            knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
     assertThat(cells.get(0).getBuckConfig(), Matchers.equalTo(buckConfig));
@@ -192,7 +195,10 @@ public class DistBuildStateTest {
         new TestCellBuilder().setFilesystem(createJavaOnlyFilesystem("/loading")).build();
     DistBuildState distributedBuildState =
         DistBuildState.load(
-            Optional.empty(), dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+            FakeBuckConfig.builder().build(),
+            dump,
+            rootCellWhenLoading,
+            knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
 
     assertThat(cells, Matchers.aMapWithSize(1));
@@ -245,7 +251,10 @@ public class DistBuildStateTest {
         new TestCellBuilder().setFilesystem(createJavaOnlyFilesystem("/loading")).build();
     DistBuildState distributedBuildState =
         DistBuildState.load(
-            Optional.empty(), dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+            FakeBuckConfig.builder().build(),
+            dump,
+            rootCellWhenLoading,
+            knownBuildRuleTypesFactory);
 
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
@@ -324,8 +333,7 @@ public class DistBuildStateTest {
                 .build(),
             new DefaultCellPathResolver(cell1Root, localConfig));
     DistBuildState distributedBuildState =
-        DistBuildState.load(
-            Optional.of(localBuckConfig), dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
+        DistBuildState.load(localBuckConfig, dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));
 

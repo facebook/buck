@@ -121,7 +121,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
         // with Stampede build slave .buckconfig.
         DistBuildState state =
             DistBuildState.load(
-                Optional.of(params.getBuckConfig()),
+                params.getBuckConfig(),
                 jobState,
                 params.getCell(),
                 params.getKnownBuildRuleTypesFactory());
