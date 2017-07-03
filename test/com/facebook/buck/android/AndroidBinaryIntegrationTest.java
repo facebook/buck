@@ -1374,19 +1374,18 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.enableDirCache();
     String app = "//apps/sample:app_with_static_symbols";
     String usnl = app + "#unstripped_native_libraries";
-    // TODO: It should be possible to build these concurrently.
-    Path apkPath = workspace.buildAndReturnOutput(app);
-    Path unstrippedList = workspace.buildAndReturnOutput(usnl);
+    ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(app, usnl);
 
     SymbolGetter syms = getSymbolGetter();
-    Symbols strippedSyms = syms.getNormalSymbols(apkPath, "lib/x86/libnative_cxx_symbols.so");
+    Symbols strippedSyms =
+        syms.getNormalSymbols(outputs.get(app), "lib/x86/libnative_cxx_symbols.so");
     assertThat(strippedSyms.all, Matchers.empty());
 
     workspace.runBuckCommand("clean").assertSuccess();
     workspace.runBuckBuild(usnl);
 
     String unstrippedPath = null;
-    for (String line : filesystem.readLines(unstrippedList)) {
+    for (String line : filesystem.readLines(workspace.buildAndReturnOutput(usnl))) {
       if (line.matches(".*x86.*cxx_symbols.*")) {
         unstrippedPath = line.trim();
       }

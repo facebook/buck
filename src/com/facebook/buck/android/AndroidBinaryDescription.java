@@ -176,18 +176,21 @@ public class AndroidBinaryDescription
             PerfEventId.of("AndroidBinaryDescription"),
             "target",
             params.getBuildTarget().toString())) {
-      ResourceCompressionMode compressionMode = getCompressionMode(args);
-
       BuildTarget target = params.getBuildTarget();
-      boolean isFlavored = target.isFlavored();
-      if (isFlavored) {
-        if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)
-            && !compressionMode.isStoreStringsAsAssets()) {
-          throw new HumanReadableException(
-              "'package_string_assets' flavor does not exist for %s.",
-              target.getUnflavoredBuildTarget());
+
+      // All of our supported flavors are constructed as side-effects
+      // of the main target.
+      for (Flavor flavor : FLAVORS) {
+        if (target.getFlavors().contains(flavor)) {
+          resolver.requireRule(target.withoutFlavors(flavor));
+          return resolver.getRule(target);
         }
-        params = params.withBuildTarget(BuildTarget.of(target.getUnflavoredBuildTarget()));
+      }
+
+      // We don't support requiring other flavors right now.
+      if (target.isFlavored()) {
+        throw new HumanReadableException(
+            "Requested target %s contains an unrecognized flavor", target);
       }
 
       BuildRule keystore = resolver.getRule(args.getKeystore());
@@ -247,6 +250,7 @@ public class AndroidBinaryDescription
               && !args.getPreprocessJavaClassesBash().isPresent();
 
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
+      ResourceCompressionMode compressionMode = getCompressionMode(args);
 
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       AndroidBinaryGraphEnhancer graphEnhancer =
@@ -296,24 +300,6 @@ public class AndroidBinaryDescription
               dxConfig,
               getPostFilterResourcesArgs(args, params, resolver, cellRoots));
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
-
-      if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
-        Optional<PackageStringAssets> packageStringAssets = result.getPackageStringAssets();
-        Preconditions.checkState(packageStringAssets.isPresent());
-        return packageStringAssets.get();
-      }
-
-      if (target.getFlavors().contains(AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR)) {
-        // Rule already added to index during graph enhancement.
-        return resolver.getRule(target);
-      }
-
-      if (target
-          .getFlavors()
-          .contains(AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR)) {
-        // Rule already added to index during graph enhancement.
-        return resolver.getRule(target);
-      }
 
       // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
       // target may be mentioned in that parameter, it may not be present as a build rule.

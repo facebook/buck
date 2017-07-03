@@ -86,7 +86,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
       workspace.runBuckCommand("targets", "--show-output", target);
       fail("The targets command should have thrown an exception");
     } catch (HumanReadableException e) {
-      assertTrue(e.getHumanReadableErrorMessage().contains("flavor does not exist"));
+      assertTrue(e.getHumanReadableErrorMessage().contains("could not be resolved"));
     }
   }
 }
