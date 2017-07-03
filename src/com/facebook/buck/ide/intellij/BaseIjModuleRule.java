@@ -120,7 +120,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
       // the default folders generated should work. On the other hand, if there is a resources_root,
       // then for resources under this root, we need to create java-resource folders with the
       // correct relativeOutputPath set.
-      if (resourcesRoot.isPresent() && resourcesRoot.get() != null) {
+      if (resourcesRoot.isPresent()) {
         ImmutableSet<Path> resources = javaLibraryArg.getResources().stream()
             .map(sourcePath -> (sourcePath instanceof PathSourcePath)
                 ? ((PathSourcePath) sourcePath).getRelativePath()

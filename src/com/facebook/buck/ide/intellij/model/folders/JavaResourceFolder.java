@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij.model.folders;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -31,6 +32,7 @@ public class JavaResourceFolder extends InclusiveFolder {
 
   public JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
     super(path, false, inputs);
+    Preconditions.checkNotNull(resourcesRoot);
     this.resourcesRoot = resourcesRoot;
   }
 
@@ -45,6 +47,11 @@ public class JavaResourceFolder extends InclusiveFolder {
       return Optional.of(resourcesRoot.relativize(getPath()));
     }
   }
+
+  public Path getResourcesRoot() {
+    return resourcesRoot;
+  }
+
   @Override
   protected IJFolderFactory getFactory() {
     return getFactoryWithResourcesRoot(resourcesRoot);

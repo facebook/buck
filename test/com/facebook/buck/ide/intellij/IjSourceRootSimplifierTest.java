@@ -311,6 +311,19 @@ public class IjSourceRootSimplifierTest {
   }
 
   @Test
+  public void testDifferentResourcesRootAreNotMergedIntoParent() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder parent = buildJavaResourceFolder("res/test", "res/test");
+    IjFolder left = buildJavaResourceFolder("res/test/left", "res/test");
+    IjFolder right = buildJavaResourceFolder("res/test/right", "res");
+
+    assertThat(
+        simplifier.simplify(0, ImmutableSet.of(parent, left, right)),
+        Matchers.containsInAnyOrder(parent, right)
+    );
+  }
+
+  @Test
   public void testShortPackagesAreMerged() {
     IjSourceRootSimplifier simplifier =
         new IjSourceRootSimplifier(
