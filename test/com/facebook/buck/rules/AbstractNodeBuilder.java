@@ -131,28 +131,21 @@ public abstract class AbstractNodeBuilder<
       TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
       TArg populatedArg = getPopulatedArg();
       TargetNode<TArg, TDescription> node =
-          factory.create(
-              // This hash will do in a pinch.
-              hash,
-              description,
-              populatedArg,
-              filesystem,
-              target,
-              getDepsFromArg(populatedArg),
-              ImmutableSet.of(
-                  VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
-              ImmutableSet.of(),
-              cellRoots);
-      if (selectedVersions.isPresent()) {
-        node =
-            node.withTargetConstructorArgDepsAndSelectedVerisons(
-                node.getBuildTarget(),
-                node.getConstructorArg(),
-                node.getDeclaredDeps(),
-                node.getExtraDeps(),
-                node.getTargetGraphOnlyDeps(),
-                selectedVersions);
-      }
+          factory
+              .create(
+                  // This hash will do in a pinch.
+                  hash,
+                  description,
+                  populatedArg,
+                  filesystem,
+                  target,
+                  getDepsFromArg(populatedArg),
+                  ImmutableSet.of(
+                      VISIBILITY_PATTERN_PARSER.parse(
+                          null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
+                  ImmutableSet.of(),
+                  cellRoots)
+              .withSelectedVersions(selectedVersions);
       return node;
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);

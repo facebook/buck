@@ -114,21 +114,23 @@ public class TargetNodeFactory {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
-    return new TargetNode<>(
-        this,
-        rawInputsHashCode,
-        description,
-        constructorArg,
-        filesystem,
-        buildTarget,
-        declaredDeps,
-        ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
-        targetGraphOnlyDepsBuilder.build(),
-        visibilityPatterns,
-        withinViewPatterns,
-        pathsBuilder.build(),
-        cellRoots,
-        Optional.empty());
+    return TargetNode.<T, U>builder()
+        .setTargetNodeFactory(this)
+        .setRawInputsHashCode(rawInputsHashCode)
+        .setDescription(description)
+        .setConstructorArg(constructorArg)
+        .setFilesystem(filesystem)
+        .setBuildTarget(buildTarget)
+        .setDeclaredDeps(declaredDeps)
+        .setExtraDeps(
+            ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)))
+        .setTargetGraphOnlyDeps(targetGraphOnlyDepsBuilder.build())
+        .setVisibilityPatterns(visibilityPatterns)
+        .setWithinViewPatterns(withinViewPatterns)
+        .setInputs(pathsBuilder.build())
+        .setCellNames(cellRoots)
+        .setSelectedVersions(Optional.empty())
+        .build();
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
