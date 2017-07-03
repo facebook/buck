@@ -334,6 +334,7 @@ public class DistBuildSlaveExecutor {
                       engineConfig.getBuildInputRuleKeyFileSizeLimit(),
                       new DefaultRuleKeyCache<>()),
                   distBuildConfig.getFileHashCacheMode());
+          //TODO(shivanker): Supply the target device, adb options, and target device options to work with Android.
           Build build =
               new Build(
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),

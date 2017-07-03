@@ -90,10 +90,10 @@ public abstract class DistBuildFactory {
                 .setClock(params.getClock())
                 .setArtifactCache(distBuildArtifactCacheFactory.newInstance(true))
                 .setState(state)
-                .setRootCell(params.getCell())
                 .setParser(params.getParser())
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
+                //TODO(alisdair,shivanker): Change this to state.getRootCell().getBuckConfig().getKeySeed()
                 .setCacheKeySeed(params.getBuckConfig().getKeySeed())
                 .setConsole(params.getConsole())
                 .setProvider(
