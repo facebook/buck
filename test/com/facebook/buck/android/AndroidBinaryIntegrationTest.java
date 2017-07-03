@@ -472,21 +472,21 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     }
   }
 
-  @Test
-  public void testNativeLibraryMerging() throws IOException, InterruptedException {
+  private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Path tmpDir = tmpFolder.newFolder("merging_tmp");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
+    Path tmpDir = tmpFolder.newFolder("symbols_tmp");
+    return new SymbolGetter(
+        new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);
+  }
+
+  @Test
+  public void testNativeLibraryMerging() throws IOException, InterruptedException {
+    SymbolGetter syms = getSymbolGetter();
     SymbolsAndDtNeeded info;
 
     workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
@@ -634,19 +634,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Path tmpDir = tmpFolder.newFolder("xdso");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
+    SymbolGetter syms = getSymbolGetter();
     Symbols sym;
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
@@ -682,19 +670,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testNativeRelinkerModular() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Path tmpDir = tmpFolder.newFolder("xdso");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
+    SymbolGetter syms = getSymbolGetter();
     Symbols sym;
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce_modular");
