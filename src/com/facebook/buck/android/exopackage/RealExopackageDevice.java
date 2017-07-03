@@ -251,11 +251,6 @@ public class RealExopackageDevice implements ExopackageDevice {
   }
 
   @Override
-  public String listDir(String dirPath) throws Exception {
-    return AdbHelper.executeCommandWithErrorChecking(device, "ls " + dirPath + " | cat");
-  }
-
-  @Override
   public ImmutableSortedSet<Path> listDirRecursive(Path root) throws Exception {
     String lsOutput = AdbHelper.executeCommandWithErrorChecking(device, "ls -R " + root + " | cat");
     Set<Path> paths = new HashSet<>();

@@ -47,7 +47,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -65,7 +64,6 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Before;
@@ -519,22 +517,6 @@ public class ExopackageInstallerIntegrationTest {
     public String getSignature(String packagePath) throws Exception {
       assertTrue(deviceState.containsKey(packagePath));
       return packageSignature;
-    }
-
-    @Override
-    public String listDir(String dirPath) throws Exception {
-      Set<String> res = new TreeSet<>();
-      for (String s : deviceState.subMap(dirPath, false, dirPath + "\u00FF", false).keySet()) {
-        s = s.substring(dirPath.length() + 1);
-        if (s.contains("/")) {
-          res.add(s.substring(0, s.indexOf("/")));
-        } else {
-          res.add(s);
-        }
-      }
-      String output = Joiner.on("\n").join(res) + "\n";
-      debug("ls " + dirPath + "\n" + output);
-      return output;
     }
 
     @Override

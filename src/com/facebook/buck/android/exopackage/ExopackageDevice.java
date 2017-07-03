@@ -34,8 +34,6 @@ public interface ExopackageDevice {
 
   String getSignature(String packagePath) throws Exception;
 
-  String listDir(String dirPath) throws Exception;
-
   ImmutableSortedSet<Path> listDirRecursive(Path dirPath) throws Exception;
 
   void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception;
