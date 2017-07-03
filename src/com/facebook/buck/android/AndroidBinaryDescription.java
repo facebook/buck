@@ -42,6 +42,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -54,6 +55,7 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -82,6 +84,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -116,6 +119,8 @@ public class AndroidBinaryDescription
       ImmutableSet.of(
           PACKAGE_STRING_ASSETS_FLAVOR, AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR);
 
+  public static final Flavor INSTALL_FLAVOR = InternalFlavor.of("install");
+
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
@@ -125,6 +130,7 @@ public class AndroidBinaryDescription
   private final DxConfig dxConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
+  private final AndroidInstallConfig androidInstallConfig;
 
   public AndroidBinaryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -145,6 +151,7 @@ public class AndroidBinaryDescription
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.dxConfig = dxConfig;
+    this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
   }
 
   @Override
@@ -167,7 +174,6 @@ public class AndroidBinaryDescription
             PerfEventId.of("AndroidBinaryDescription"),
             "target",
             params.getBuildTarget().toString())) {
-
       ResourceCompressionMode compressionMode = getCompressionMode(args);
 
       BuildTarget target = params.getBuildTarget();
@@ -330,49 +336,84 @@ public class AndroidBinaryDescription
                           .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())))
               .orElse(ImmutableSortedSet.of());
 
-      return new AndroidBinary(
-          projectFilesystem,
-          params
-              .withExtraDeps(result.getFinalDeps())
-              .copyAppendingExtraDeps(
-                  ruleFinder.filterBuildRuleInputs(
-                      result.getPackageableCollection().getProguardConfigs()))
-              .copyAppendingExtraDeps(rulesToExcludeFromDex)
-              .copyAppendingExtraDeps(redexExtraDeps),
-          ruleFinder,
-          proGuardConfig.getProguardJarOverride(),
-          proGuardConfig.getProguardMaxHeapSize(),
-          Optional.of(args.getProguardJvmArgs()),
-          proGuardConfig.getProguardAgentPath(),
-          (Keystore) keystore,
-          packageType,
-          dexSplitMode,
-          args.getNoDx(),
-          androidSdkProguardConfig,
-          args.getOptimizationPasses(),
-          args.getProguardConfig(),
-          args.isSkipProguard(),
-          redexOptions,
-          compressionMode,
-          args.getCpuFilters(),
-          resourceFilter,
-          exopackageModes,
-          MACRO_HANDLER.getExpander(params.getBuildTarget(), cellRoots, resolver),
-          args.getPreprocessJavaClassesBash(),
-          rulesToExcludeFromDex,
-          result,
-          args.isReorderClassesIntraDex(),
-          args.getDexReorderToolFile(),
-          args.getDexReorderDataDumpFile(),
-          args.getXzCompressionLevel(),
-          dxExecutorService,
-          args.isPackageAssetLibraries(),
-          args.isCompressAssetLibraries(),
-          args.getManifestEntries(),
-          javaOptions.getJavaRuntimeLauncher(),
-          dxConfig.getDxMaxHeapSize(),
-          args.getIsCacheable());
+      AndroidBinary androidBinary =
+          new AndroidBinary(
+              projectFilesystem,
+              params
+                  .withExtraDeps(result.getFinalDeps())
+                  .copyAppendingExtraDeps(
+                      ruleFinder.filterBuildRuleInputs(
+                          result.getPackageableCollection().getProguardConfigs()))
+                  .copyAppendingExtraDeps(rulesToExcludeFromDex)
+                  .copyAppendingExtraDeps(redexExtraDeps),
+              ruleFinder,
+              proGuardConfig.getProguardJarOverride(),
+              proGuardConfig.getProguardMaxHeapSize(),
+              Optional.of(args.getProguardJvmArgs()),
+              proGuardConfig.getProguardAgentPath(),
+              (Keystore) keystore,
+              packageType,
+              dexSplitMode,
+              args.getNoDx(),
+              androidSdkProguardConfig,
+              args.getOptimizationPasses(),
+              args.getProguardConfig(),
+              args.isSkipProguard(),
+              redexOptions,
+              compressionMode,
+              args.getCpuFilters(),
+              resourceFilter,
+              exopackageModes,
+              MACRO_HANDLER.getExpander(params.getBuildTarget(), cellRoots, resolver),
+              args.getPreprocessJavaClassesBash(),
+              rulesToExcludeFromDex,
+              result,
+              args.isReorderClassesIntraDex(),
+              args.getDexReorderToolFile(),
+              args.getDexReorderDataDumpFile(),
+              args.getXzCompressionLevel(),
+              dxExecutorService,
+              args.isPackageAssetLibraries(),
+              args.isCompressAssetLibraries(),
+              args.getManifestEntries(),
+              javaOptions.getJavaRuntimeLauncher(),
+              dxConfig.getDxMaxHeapSize(),
+              args.getIsCacheable());
+      // The exo installer is always added to the index so that the action graph is the same
+      // between build and install calls.
+      resolver.addToIndex(
+          createExoInstaller(
+              params.getBuildTarget().withFlavors(INSTALL_FLAVOR),
+              projectFilesystem,
+              resolver,
+              androidBinary,
+              androidInstallConfig));
+      return androidBinary;
     }
+  }
+
+  private BuildRule createExoInstaller(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver resolver,
+      AndroidBinary binary,
+      AndroidInstallConfig androidInstallConfig) {
+    BuildRule installer;
+    if (androidInstallConfig.getConcurrentInstallEnabled(
+        Optional.ofNullable(resolver.getEventBus()))) {
+      binary.getClass();
+      throw new UnsupportedOperationException("concurrent_install not yet supported");
+    } else {
+      installer =
+          new NoopBuildRule(buildTarget, filesystem) {
+            @Override
+            public SortedSet<BuildRule> getBuildDeps() {
+              return ImmutableSortedSet.of();
+            }
+          };
+    }
+    resolver.addToIndex(installer);
+    return installer;
   }
 
   private DexSplitMode createDexSplitMode(

@@ -44,6 +44,8 @@ java_immutables_library(
 
 BUCK_CONFIG_SRCS = [
     "AndroidBuckConfig.java",
+    "AndroidInstallConfig.java",
+    "DxConfig.java",
 ]
 
 java_immutables_library(
@@ -59,6 +61,9 @@ java_immutables_library(
     deps = [
         ":cxxruntime",
         "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
         "//src/com/facebook/buck/util/environment:platform",
     ],
 )
@@ -168,6 +173,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":apkmodule",
+        ":config",
         ":cxxruntime",
         ":helpers",
         ":packageable",
