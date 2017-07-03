@@ -26,7 +26,7 @@ public class ExportFileBuilder
     extends AbstractNodeBuilder<
         ExportFileDescriptionArg.Builder, ExportFileDescriptionArg, ExportFileDescription,
         ExportFile> {
-  private ExportFileBuilder(BuildTarget target) {
+  public ExportFileBuilder(BuildTarget target) {
     super(new ExportFileDescription(), target);
   }
 
