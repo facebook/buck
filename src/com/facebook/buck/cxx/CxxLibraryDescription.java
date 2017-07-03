@@ -34,7 +34,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -52,7 +52,6 @@ import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -67,6 +66,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -559,13 +559,12 @@ public class CxxLibraryDescription
             buildTarget, cxxPlatform.getFlavor(), pic);
 
     if (objects.isEmpty()) {
-      return new NoopBuildRuleWithDeclaredAndExtraDeps(
-          projectFilesystem,
-          new BuildRuleParams(
-              staticTarget,
-              Suppliers.ofInstance(ImmutableSortedSet.of()),
-              Suppliers.ofInstance(ImmutableSortedSet.of()),
-              ImmutableSortedSet.of()));
+      return new NoopBuildRule(staticTarget, projectFilesystem) {
+        @Override
+        public SortedSet<BuildRule> getBuildDeps() {
+          return ImmutableSortedSet.of();
+        }
+      };
     }
 
     Path staticLibraryPath =
