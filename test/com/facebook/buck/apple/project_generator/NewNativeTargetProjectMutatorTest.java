@@ -85,15 +85,16 @@ public class NewNativeTargetProjectMutatorTest {
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolver sourcePathResolver;
-  private BuildRuleResolver buildRuleResolver;
 
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
-    buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    sourcePathResolver = new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+    sourcePathResolver =
+        new SourcePathResolver(
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
   }
@@ -298,8 +299,7 @@ public class NewNativeTargetProjectMutatorTest {
         XcodePostbuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
             .setCmd("echo \"hello world!\"")
             .build();
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(postbuildNode), x -> buildRuleResolver);
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(ImmutableList.of(postbuildNode));
 
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
@@ -347,8 +347,7 @@ public class NewNativeTargetProjectMutatorTest {
             .setCmd("echo \"hello world!\"")
             .build();
 
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(prebuildNode), x -> buildRuleResolver);
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(ImmutableList.of(prebuildNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
@@ -386,8 +385,7 @@ public class NewNativeTargetProjectMutatorTest {
             .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
             .build();
 
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(reactNativeNode), x -> buildRuleResolver);
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(ImmutableList.of(reactNativeNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
