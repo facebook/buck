@@ -24,6 +24,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -39,6 +40,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 final class OwnersReport {
   final ImmutableSetMultimap<TargetNode<?, ?>, Path> owners;
@@ -138,6 +141,55 @@ final class OwnersReport {
       this.console = console;
     }
 
+    private OwnersReport getReportForBasePath(
+        Map<Path, ImmutableSet<TargetNode<?, ?>>> map,
+        ListeningExecutorService executor,
+        Cell cell,
+        Path basePath,
+        Path cellRelativePath) {
+      Path buckFile = cell.getFilesystem().resolve(basePath).resolve(cell.getBuildFileName());
+      ImmutableSet<TargetNode<?, ?>> targetNodes =
+          map.computeIfAbsent(
+              buckFile,
+              basePath1 -> {
+                try {
+                  return parser.getAllTargetNodes(
+                      eventBus, cell, /* enable profiling */ false, executor, basePath1);
+                } catch (BuildFileParseException e) {
+                  Path targetBasePath = MorePaths.relativize(cell.getRoot(), basePath);
+                  String targetBaseName =
+                      cell.getCanonicalName().orElse("")
+                          + "//"
+                          + MorePaths.pathWithUnixSeparators(targetBasePath);
+
+                  console
+                      .getStdErr()
+                      .format(
+                          "Could not parse build targets for %s: %s%n",
+                          targetBaseName, e.getHumanReadableErrorMessage());
+                  throw new RuntimeException(e);
+                }
+              });
+      return targetNodes
+          .stream()
+          .map(targetNode -> generateOwnersReport(cell, targetNode, cellRelativePath.toString()))
+          .reduce(OwnersReport.emptyReport(), OwnersReport::updatedWith);
+    }
+
+    private ImmutableSet<Path> getAllBasePathsForPath(
+        BuildFileTree buildFileTree, Path cellRelativePath) {
+      Collection<Path> pathTree =
+          rootCell.isEnforcingBuckPackageBoundaries(cellRelativePath)
+              ? ImmutableSet.of(cellRelativePath)
+              : IntStream.range(1, cellRelativePath.getNameCount())
+                  .mapToObj(end -> cellRelativePath.subpath(0, end))
+                  .collect(Collectors.toList());
+      return RichStream.from(pathTree)
+          .map(buildFileTree::getBasePathOfAncestorTarget)
+          .flatMap(e -> OptionalCompat.asSet(e).stream())
+          .toImmutableSet();
+    }
+
     OwnersReport build(
         ImmutableMap<Cell, BuildFileTree> buildFileTrees,
         ListeningExecutorService executor,
@@ -201,46 +253,18 @@ final class OwnersReport {
         Map<Path, ImmutableSet<TargetNode<?, ?>>> map = new HashMap<>();
         for (Path absolutePath : entry.getValue()) {
           Path cellRelativePath = cell.getFilesystem().relativize(absolutePath);
-          Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(cellRelativePath);
-          if (!basePath.isPresent()) {
+          ImmutableSet<Path> basePaths = getAllBasePathsForPath(buildFileTree, cellRelativePath);
+          if (basePaths.isEmpty()) {
             inputWithNoOwners.add(absolutePath);
             continue;
           }
-
-          Path buckFile =
-              cell.getFilesystem().resolve(basePath.get()).resolve(cell.getBuildFileName());
-          ImmutableSet<TargetNode<?, ?>> targetNodes =
-              map.computeIfAbsent(
-                  buckFile,
-                  basePath1 -> {
-                    try {
-                      return parser.getAllTargetNodes(
-                          eventBus, cell, /* enable profiling */ false, executor, basePath1);
-                    } catch (BuildFileParseException e) {
-                      Path targetBasePath = MorePaths.relativize(cell.getRoot(), basePath.get());
-                      String targetBaseName =
-                          cell.getCanonicalName().orElse("")
-                              + "//"
-                              + MorePaths.pathWithUnixSeparators(targetBasePath);
-
-                      console
-                          .getStdErr()
-                          .format(
-                              "Could not parse build targets for %s: %s%n",
-                              targetBaseName, e.getHumanReadableErrorMessage());
-                      throw new RuntimeException(e);
-                    }
-                  });
-          Optional<OwnersReport> partialReport =
-              targetNodes
+          report =
+              basePaths
                   .stream()
                   .map(
-                      targetNode ->
-                          generateOwnersReport(cell, targetNode, cellRelativePath.toString()))
-                  .reduce(OwnersReport::updatedWith);
-          if (partialReport.isPresent()) {
-            report = report.updatedWith(partialReport.get());
-          }
+                      basePath ->
+                          getReportForBasePath(map, executor, cell, basePath, cellRelativePath))
+                  .reduce(report, OwnersReport::updatedWith);
         }
       }
 

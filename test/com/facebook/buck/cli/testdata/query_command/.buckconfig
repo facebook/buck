@@ -3,3 +3,4 @@
 
 [project]
     read_only_paths = symlinks/
+    package_boundary_exceptions=owners_violating_package_boundary
