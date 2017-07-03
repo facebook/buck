@@ -370,6 +370,7 @@ java_immutables_library(
         "DefaultOnDiskBuildInfo.java",
         "ExternalTestRunnerRule.java",
         "FilesystemBuildInfoStore.java",
+        "HasInstallHelpers.java",
         "IndividualTestEvent.java",
         "InitializableFromDisk.java",
         "Manifest.java",

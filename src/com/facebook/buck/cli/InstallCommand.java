@@ -45,6 +45,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -218,6 +219,31 @@ public class InstallCommand extends BuildCommand {
     return exitCode;
   }
 
+  @Override
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(BuildRuleResolver resolver) {
+    ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
+    builder.addAll(super.getAdditionalTargetsToBuild(resolver));
+    for (BuildTarget target : getBuildTargets()) {
+      BuildRule rule = resolver.getRule(target);
+      if (rule instanceof HasInstallHelpers) {
+        // An install command never explicitly "requires" the install flavor. This ensures that the
+        // install flavor is always present in the action graph regardless of if it's an install or
+        // a build. That ensures that the target graph and action graph are the same between install
+        // and build commands.
+        ((HasInstallHelpers) rule)
+            .getHelpers()
+            .forEach(
+                helper -> {
+                  Preconditions.checkState(
+                      resolver.getRuleOptional(helper).isPresent(),
+                      "Install of %s failed because some install helpers were not available.");
+                  builder.add(helper);
+                });
+      }
+    }
+    return builder.build();
+  }
+
   private int install(CommandRunnerParams params)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
 
@@ -288,8 +314,11 @@ public class InstallCommand extends BuildCommand {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
+    // TODO(cjhopman): This shouldn't be doing parsing outside of the normal parse stage.
+    // The first step to that would be to move the Apple install helpers to be deps available from
+    // getInstallHelpers() call on the installed target. Then those helpers should be available
+    // without needing to explicitly request them here.
     for (int index = 0; index < getArguments().size(); index++) {
-
       // TODO(markwang): Cache argument parsing
       TargetNodeSpec spec =
           parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()).get(index);

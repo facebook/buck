@@ -105,6 +105,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -975,12 +976,18 @@ public class BuildCommand extends AbstractCommand {
                 params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
-          targetsToBuild,
+          FluentIterable.from(targetsToBuild)
+              .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver())),
           isKeepGoing(),
           params.getBuckEventBus(),
           params.getConsole(),
           getPathToBuildReport(rootCellBuckConfig));
     }
+  }
+
+  @SuppressWarnings("unused")
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(BuildRuleResolver resolver) {
+    return ImmutableList.of();
   }
 
   protected CommandThreadManager getArtifactFetchService(
