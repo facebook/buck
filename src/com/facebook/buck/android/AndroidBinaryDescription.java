@@ -117,7 +117,9 @@ public class AndroidBinaryDescription
 
   private static final ImmutableSet<Flavor> FLAVORS =
       ImmutableSet.of(
-          PACKAGE_STRING_ASSETS_FLAVOR, AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR);
+          PACKAGE_STRING_ASSETS_FLAVOR,
+          AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR,
+          AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR);
 
   public static final Flavor INSTALL_FLAVOR = InternalFlavor.of("install");
 
@@ -302,6 +304,13 @@ public class AndroidBinaryDescription
       }
 
       if (target.getFlavors().contains(AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR)) {
+        // Rule already added to index during graph enhancement.
+        return resolver.getRule(target);
+      }
+
+      if (target
+          .getFlavors()
+          .contains(AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR)) {
         // Rule already added to index during graph enhancement.
         return resolver.getRule(target);
       }

@@ -22,6 +22,7 @@ import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1366,5 +1367,36 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
             matchCount, contents),
         1,
         matchCount);
+  }
+
+  @Test
+  public void testUnstrippedNativeLibraries() throws IOException, InterruptedException {
+    workspace.enableDirCache();
+    String app = "//apps/sample:app_with_static_symbols";
+    String usnl = app + "#unstripped_native_libraries";
+    // TODO: It should be possible to build these concurrently.
+    Path apkPath = workspace.buildAndReturnOutput(app);
+    Path unstrippedList = workspace.buildAndReturnOutput(usnl);
+
+    SymbolGetter syms = getSymbolGetter();
+    Symbols strippedSyms = syms.getNormalSymbols(apkPath, "lib/x86/libnative_cxx_symbols.so");
+    assertThat(strippedSyms.all, Matchers.empty());
+
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild(usnl);
+
+    String unstrippedPath = null;
+    for (String line : filesystem.readLines(unstrippedList)) {
+      if (line.matches(".*x86.*cxx_symbols.*")) {
+        unstrippedPath = line.trim();
+      }
+    }
+    if (unstrippedPath == null) {
+      Assert.fail("Couldn't find path to our x86 library.");
+    }
+
+    Symbols unstrippedSyms = syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath));
+    assertThat(unstrippedSyms.global, hasItem("get_value"));
+    assertThat(unstrippedSyms.all, hasItem("supply_value"));
   }
 }

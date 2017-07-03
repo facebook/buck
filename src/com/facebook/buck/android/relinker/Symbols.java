@@ -92,6 +92,12 @@ public class Symbols {
     return getSymbols(executor, objdump, resolver, lib, "-T");
   }
 
+  public static Symbols getNormalSymbols(
+      ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
+      throws IOException, InterruptedException {
+    return getSymbols(executor, objdump, resolver, lib, "-t");
+  }
+
   private static Symbols getSymbols(
       ProcessExecutor executor,
       Tool objdump,

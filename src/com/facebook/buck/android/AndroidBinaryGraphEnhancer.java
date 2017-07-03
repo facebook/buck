@@ -83,6 +83,8 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("compile_native_lib_merge_map_generated_code");
   public static final Flavor NATIVE_LIBRARY_PROGUARD_FLAVOR =
       InternalFlavor.of("generate_proguard_config_from_native_libs");
+  public static final Flavor UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR =
+      InternalFlavor.of("unstripped_native_libraries");
 
   private final BuildTarget originalBuildTarget;
   private final SortedSet<BuildRule> originalDeps;
@@ -259,6 +261,19 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addToIndex(nativeLibraryProguardGenerator);
       enhancedDeps.add(nativeLibraryProguardGenerator);
       proguardConfigsBuilder.add(nativeLibraryProguardGenerator.getSourcePathToOutput());
+    }
+
+    if (nativeLibsEnhancementResult.getUnstrippedLibraries().isPresent()) {
+      UnstrippedNativeLibraries unstrippedNativeLibraries =
+          new UnstrippedNativeLibraries(
+              projectFilesystem,
+              buildRuleParams
+                  .withAppendedFlavor(UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR)
+                  .withoutExtraDeps()
+                  .withoutDeclaredDeps(),
+              ruleFinder,
+              nativeLibsEnhancementResult.getUnstrippedLibraries().get());
+      ruleResolver.addToIndex(unstrippedNativeLibraries);
     }
 
     Optional<ImmutableSortedMap<String, String>> sonameMergeMap =

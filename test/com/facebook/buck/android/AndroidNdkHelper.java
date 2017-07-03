@@ -134,6 +134,22 @@ public class AndroidNdkHelper {
       return Symbols.getDynamicSymbols(executor, objdump, resolver, lib);
     }
 
+    public Symbols getNormalSymbols(Path apkPath, String libName)
+        throws IOException, InterruptedException {
+      Path lib = unpack(apkPath, libName);
+      return Symbols.getNormalSymbols(executor, objdump, resolver, lib);
+    }
+
+    public Symbols getDynamicSymbolsFromFile(Path sharedObject)
+        throws IOException, InterruptedException {
+      return Symbols.getDynamicSymbols(executor, objdump, resolver, sharedObject);
+    }
+
+    public Symbols getNormalSymbolsFromFile(Path sharedObject)
+        throws IOException, InterruptedException {
+      return Symbols.getNormalSymbols(executor, objdump, resolver, sharedObject);
+    }
+
     public Symbols getXzsSymbols(Path apkPath, String libName, String xzsName, String metadataName)
         throws IOException, InterruptedException {
       Path xzs = unpack(apkPath, xzsName);

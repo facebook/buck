@@ -95,3 +95,11 @@ cxx_library(
     'PUBLIC'
   ],
 )
+
+cxx_library(
+  name = 'symbols',
+  srcs = ['symbols.cpp'],
+  visibility = [
+    'PUBLIC'
+  ],
+)

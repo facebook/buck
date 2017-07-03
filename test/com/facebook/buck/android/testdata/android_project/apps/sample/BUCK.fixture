@@ -781,3 +781,13 @@ android_binary(
     'lib2e.so': ['.*/merge:[EF]'],
   },
 )
+
+android_binary(
+  name = 'app_with_static_symbols',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:symbols',
+  ],
+)

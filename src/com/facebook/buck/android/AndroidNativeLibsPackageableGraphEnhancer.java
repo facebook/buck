@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +111,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   @BuckStyleImmutable
   interface AbstractAndroidNativeLibsGraphEnhancementResult {
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
+
+    Optional<ImmutableSortedSet<SourcePath>> getUnstrippedLibraries();
 
     Optional<ImmutableSortedMap<String, String>> getSonameMergeMap();
 
@@ -298,6 +302,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             originalBuildTarget,
             nativePlatforms,
             nativeLinkableLibsAssets);
+
+    resultBuilder.setUnstrippedLibraries(
+        RichStream.from(nativeLinkableLibs.values())
+            .concat(nativeLinkableLibsAssets.values().stream())
+            .toImmutableSortedSet(Ordering.natural()));
 
     for (APKModule module : apkModules) {
 
