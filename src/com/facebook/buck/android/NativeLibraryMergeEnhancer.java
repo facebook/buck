@@ -873,7 +873,8 @@ class NativeLibraryMergeEnhancer {
 
       ImmutableMap<String, SourcePath> originalSharedLibraries =
           constituents.getLinkables().iterator().next().getSharedLibraries(cxxPlatform);
-      if (canUseOriginal || originalSharedLibraries.isEmpty()) {
+      if (canUseOriginal
+          || (!constituents.isActuallyMerged() && originalSharedLibraries.isEmpty())) {
         return originalSharedLibraries;
       }
 
