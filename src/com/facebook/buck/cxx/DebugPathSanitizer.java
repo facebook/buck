@@ -60,7 +60,7 @@ public abstract class DebugPathSanitizer {
     return ImmutableList.of();
   }
 
-  protected abstract Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir);
+  protected abstract Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir);
 
   public String getCompilationDirectory() {
     return getExpandedPath(compilationDirectory);
@@ -82,8 +82,8 @@ public abstract class DebugPathSanitizer {
    * @return a string with all matching paths replaced with their sanitized versions.
    */
   public String sanitize(Optional<Path> workingDir, String contents) {
-    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir)) {
-      String replacement = entry.getValue().toString();
+    for (Map.Entry<Path, String> entry : getAllPaths(workingDir)) {
+      String replacement = entry.getValue();
       String pathToReplace = entry.getKey().toString();
       if (contents.contains(pathToReplace)) {
         // String.replace creates a number of objects, and creates a fair

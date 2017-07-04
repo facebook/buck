@@ -182,13 +182,13 @@ public class CxxLinkTest {
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("something"), Paths.get("A")));
+            ImmutableBiMap.of(Paths.get("something"), "A"));
     DebugPathSanitizer sanitizer2 =
         new MungingDebugPathSanitizer(
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
+            ImmutableBiMap.of(Paths.get("different"), "A"));
 
     // Generate a rule with a path we need to sanitize to a consistent value.
     ImmutableList<Arg> args1 =

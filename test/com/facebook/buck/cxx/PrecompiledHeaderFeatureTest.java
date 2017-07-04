@@ -195,7 +195,7 @@ public class PrecompiledHeaderFeatureTest {
                               250,
                               File.separatorChar,
                               Paths.get("."),
-                              ImmutableBiMap.of(from, Paths.get("melon")))))
+                              ImmutableBiMap.of(from, "melon"))))
                   .setPrefixHeader(new FakeSourcePath(("foo.pch")))
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
                   .build();

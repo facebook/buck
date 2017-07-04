@@ -47,7 +47,7 @@ import java.util.Optional;
 public class MungingDebugPathSanitizer extends DebugPathSanitizer {
 
   private static final DebugSectionFinder DEBUG_SECTION_FINDER = new DebugSectionFinder();
-  protected final ImmutableBiMap<Path, Path> other;
+  protected final ImmutableBiMap<Path, String> other;
 
   /**
    * @param pathSize fix paths to this size for in-place replacements.
@@ -55,7 +55,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    * @param compilationDirectory the desired path to replace the actual compilation directory with.
    */
   public MungingDebugPathSanitizer(
-      int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, Path> other) {
+      int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, String> other) {
     super(separator, pathSize, compilationDirectory);
     this.other = other;
   }
@@ -127,12 +127,13 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  protected Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir) {
+  protected Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
     if (!workingDir.isPresent()) {
       return other.entrySet();
     }
     return Iterables.concat(
         other.entrySet(),
-        ImmutableList.of(new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory)));
+        ImmutableList.of(
+            new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory.toString())));
   }
 }

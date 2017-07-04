@@ -315,11 +315,11 @@ public class AppleCxxPlatforms {
             Flavor.replaceInvalidCharacters(targetSdk.getName() + "-" + targetArchitecture),
             String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
 
-    ImmutableBiMap.Builder<Path, Path> sanitizerPaths = ImmutableBiMap.builder();
-    sanitizerPaths.put(sdkPaths.getSdkPath(), Paths.get("APPLE_SDKROOT"));
-    sanitizerPaths.put(sdkPaths.getPlatformPath(), Paths.get("APPLE_PLATFORM_DIR"));
+    ImmutableBiMap.Builder<Path, String> sanitizerPaths = ImmutableBiMap.builder();
+    sanitizerPaths.put(sdkPaths.getSdkPath(), "APPLE_SDKROOT");
+    sanitizerPaths.put(sdkPaths.getPlatformPath(), "APPLE_PLATFORM_DIR");
     if (sdkPaths.getDeveloperPath().isPresent()) {
-      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
+      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), "APPLE_DEVELOPER_DIR");
     }
 
     DebugPathSanitizer compilerDebugPathSanitizer =

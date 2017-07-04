@@ -38,11 +38,11 @@ public class DebugPathSanitizerTest {
             Paths.get("."),
             ImmutableBiMap.of(
                 Paths.get("/some/absolute/path"),
-                Paths.get("SYMBOLIC_NAME"),
+                "SYMBOLIC_NAME",
                 Paths.get("/another/path/with/subdirectories"),
-                Paths.get("OTHER_NAME_WITH_SUFFIX"),
+                "OTHER_NAME_WITH_SUFFIX",
                 Paths.get("/another/path"),
-                Paths.get("OTHER_NAME")));
+                "OTHER_NAME"));
   }
 
   @Test

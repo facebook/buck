@@ -146,7 +146,7 @@ public class PreprocessorFlagsTest {
                   10,
                   File.separatorChar,
                   Paths.get("PWD"),
-                  ImmutableBiMap.of(Paths.get(prefix), Paths.get("A")));
+                  ImmutableBiMap.of(Paths.get(prefix), "A"));
 
           CxxToolFlags flags =
               CxxToolFlags.explicitBuilder()

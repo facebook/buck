@@ -532,13 +532,14 @@ public class NdkCxxPlatforms {
     NdkCxxToolchainPaths sanitizedPaths = toolchainPaths.getSanitizedPaths();
 
     // Build up the map of paths that must be sanitized.
-    ImmutableBiMap.Builder<Path, Path> sanitizePathsBuilder = ImmutableBiMap.builder();
-    sanitizePathsBuilder.put(toolchainPaths.getNdkToolRoot(), sanitizedPaths.getNdkToolRoot());
+    ImmutableBiMap.Builder<Path, String> sanitizePathsBuilder = ImmutableBiMap.builder();
+    sanitizePathsBuilder.put(
+        toolchainPaths.getNdkToolRoot(), sanitizedPaths.getNdkToolRoot().toString());
     if (compilerType != NdkCxxPlatformCompiler.Type.GCC) {
       sanitizePathsBuilder.put(
-          toolchainPaths.getNdkGccToolRoot(), sanitizedPaths.getNdkGccToolRoot());
+          toolchainPaths.getNdkGccToolRoot(), sanitizedPaths.getNdkGccToolRoot().toString());
     }
-    sanitizePathsBuilder.put(ndkRoot, Paths.get(ANDROID_NDK_ROOT));
+    sanitizePathsBuilder.put(ndkRoot, ANDROID_NDK_ROOT);
 
     CxxToolProvider.Type type =
         compilerType == NdkCxxPlatformCompiler.Type.CLANG
@@ -556,7 +557,7 @@ public class NdkCxxPlatforms {
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type);
 
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
-    ImmutableBiMap<Path, Path> sanitizePaths = sanitizePathsBuilder.build();
+    ImmutableBiMap<Path, String> sanitizePaths = sanitizePathsBuilder.build();
     PrefixMapDebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(),

@@ -35,19 +35,19 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   private boolean isGcc;
   private final CxxToolProvider.Type cxxType;
 
-  private final ImmutableBiMap<Path, Path> other;
+  private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(
       int pathSize,
       char separator,
       Path fakeCompilationDirectory,
-      ImmutableBiMap<Path, Path> other,
+      ImmutableBiMap<Path, String> other,
       CxxToolProvider.Type cxxType) {
     super(separator, pathSize, fakeCompilationDirectory);
     this.isGcc = cxxType == CxxToolProvider.Type.GCC;
     this.cxxType = cxxType;
 
-    ImmutableBiMap.Builder<Path, Path> pathsBuilder = ImmutableBiMap.builder();
+    ImmutableBiMap.Builder<Path, String> pathsBuilder = ImmutableBiMap.builder();
     // As these replacements are processed one at a time, if one is a prefix (or actually is just
     // contained in) another, it must be processed after that other one. To ensure that we can
     // process them in the correct order, they are inserted into allPaths in order of length
@@ -79,9 +79,9 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     }
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     // Two -fdebug-prefix-map flags will be applied in the reverse order, so reverse allPaths.
-    Iterable<Map.Entry<Path, Path>> iter =
+    Iterable<Map.Entry<Path, String>> iter =
         ImmutableList.copyOf(getAllPaths(Optional.of(workingDir))).reverse();
-    for (Map.Entry<Path, Path> mappings : iter) {
+    for (Map.Entry<Path, String> mappings : iter) {
       flags.add(getDebugPrefixMapFlag(mappings.getKey(), mappings.getValue()));
     }
     if (isGcc) {
@@ -92,17 +92,18 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     return flags.build();
   }
 
-  private String getDebugPrefixMapFlag(Path realPath, Path fakePath) {
+  private String getDebugPrefixMapFlag(Path realPath, String fakePath) {
     return String.format("-fdebug-prefix-map=%s=%s", realPath, fakePath);
   }
 
   @Override
-  protected Iterable<Map.Entry<Path, Path>> getAllPaths(Optional<Path> workingDir) {
+  protected Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
     if (!workingDir.isPresent()) {
       return other.entrySet();
     }
     return Iterables.concat(
         other.entrySet(),
-        ImmutableList.of(new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory)));
+        ImmutableList.of(
+            new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory.toString())));
   }
 }
