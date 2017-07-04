@@ -224,6 +224,22 @@ public abstract class BuckCommandHandler {
     logTime();
   }
 
+  public void runInCurrentThreadPostEnd(@Nullable Runnable postEndAction) {
+    if (!beforeCommand()) {
+      return;
+    }
+
+    start();
+    if (isStarted()) {
+      waitFor();
+    }
+    afterCommand();
+    if (postEndAction != null) {
+      postEndAction.run();
+    }
+    logTime();
+  }
+
   private void logTime() {
     if (startTime > 0) {
       long time = System.currentTimeMillis() - startTime;

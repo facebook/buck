@@ -179,6 +179,7 @@
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <programRunner
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
+    <runLineMarkerContributor language="JAVA" implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
   </extensions>
 
   <actions>
