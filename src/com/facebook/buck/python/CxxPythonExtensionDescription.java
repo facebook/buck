@@ -57,7 +57,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
@@ -485,7 +485,7 @@ public class CxxPythonExtensionDescription
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
 
     for (PythonPlatform pythonPlatform : pythonPlatforms.getValues()) {
-      extraDepsBuilder.addAll(OptionalCompat.asSet(pythonPlatform.getCxxLibrary()));
+      Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);
     }
   }
 

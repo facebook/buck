@@ -56,7 +56,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -732,9 +732,9 @@ public class AppleDescriptions {
             binary,
             ImmutableSet.<BuildRule>builder()
                 .add(targetDebuggableBinaryRule)
-                .addAll(OptionalCompat.asSet(assetCatalog))
-                .addAll(OptionalCompat.asSet(coreDataModel))
-                .addAll(OptionalCompat.asSet(sceneKitAssets))
+                .addAll(Optionals.toStream(assetCatalog).iterator())
+                .addAll(Optionals.toStream(coreDataModel).iterator())
+                .addAll(Optionals.toStream(sceneKitAssets).iterator())
                 .addAll(
                     BuildRules.toBuildRulesFor(
                         params.getBuildTarget(),
@@ -744,7 +744,7 @@ public class AppleDescriptions {
                             .filter(BuildTargetSourcePath.class)
                             .map(BuildTargetSourcePath::getTarget)
                             .collect(MoreCollectors.toImmutableSet())))
-                .addAll(OptionalCompat.asSet(appleDsym))
+                .addAll(Optionals.toStream(appleDsym).iterator())
                 .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths =

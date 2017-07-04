@@ -33,7 +33,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -237,7 +236,7 @@ public class RobolectricTest extends JavaTest {
                 // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
                 // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
                 // to run this test.
-                OptionalCompat.asSet(optionalDummyRDotJava).stream(),
+                Optionals.toStream(optionalDummyRDotJava),
                 optionalDummyRDotJava.map(resourceRulesFunction).orElse(ImmutableSet.of()).stream(),
                 optionalDummyRDotJava.map(assetsRulesFunction).orElse(ImmutableSet.of()).stream(),
                 // It's possible that the user added some tool as a dependency, so make sure we

@@ -25,8 +25,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
@@ -164,8 +164,10 @@ public abstract class AbstractReport {
         DefectReport.builder()
             .setUserReport(userReport)
             .setHighlightedBuildIds(
-                FluentIterable.from(selectedBuilds)
-                    .transformAndConcat((x) -> OptionalCompat.asSet(x.getBuildId())))
+                RichStream.from(selectedBuilds)
+                    .map(BuildLogEntry::getBuildId)
+                    .flatMap(Optionals::toStream)
+                    .toOnceIterable())
             .setBuildEnvironmentDescription(buildEnvironmentDescription)
             .setSourceControlInfo(sourceControlInfo)
             .setIncludedPaths(includedPaths)

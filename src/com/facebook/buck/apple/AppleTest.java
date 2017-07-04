@@ -44,7 +44,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -456,10 +456,9 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps() {
     return Stream.concat(
-        Stream.concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
+        Stream.concat(Stream.of(testBundle), Optionals.toStream(testHostApp))
             .map(BuildRule::getBuildTarget),
-        OptionalCompat.asSet(xctool)
-            .stream()
+        Optionals.toStream(xctool)
             .map(ruleFinder::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));

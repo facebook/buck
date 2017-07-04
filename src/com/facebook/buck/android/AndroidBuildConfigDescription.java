@@ -39,7 +39,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -155,7 +155,7 @@ public class AndroidBuildConfigDescription
         params
             .withBuildTarget(buildConfigBuildTarget)
             .copyAppendingExtraDeps(
-                ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(valuesFile)));
+                ruleFinder.filterBuildRuleInputs(Optionals.toStream(valuesFile)));
     AndroidBuildConfig androidBuildConfig =
         new AndroidBuildConfig(
             projectFilesystem,

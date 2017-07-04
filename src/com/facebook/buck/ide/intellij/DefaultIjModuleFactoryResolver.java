@@ -33,7 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -133,7 +133,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.addAll(
-        OptionalCompat.asSet(ruleFinder.getRule(sourcePath).map(BuildRule::getBuildTarget)));
+        Optionals.toStream(ruleFinder.getRule(sourcePath).map(BuildRule::getBuildTarget))
+            .iterator());
     return sourcePathResolver.getRelativePath(sourcePath);
   }
 }

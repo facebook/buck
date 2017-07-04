@@ -21,7 +21,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -132,15 +131,16 @@ public class OcamlLinkStep extends ShellStep {
       cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, stdlib.get());
     }
 
-    return cmd.add("-cc", cxxCompiler.get(0))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-ccopt"), cxxCompiler.subList(1, cxxCompiler.size())))
-        .addAll(OptionalCompat.asSet(isLibrary ? Optional.of("-a") : Optional.empty()))
-        .addAll(
-            OptionalCompat.asSet(
-                !isLibrary && isBytecode ? Optional.of("-custom") : Optional.empty()))
-        .add("-o", output.toString())
+    cmd.add("-cc", cxxCompiler.get(0));
+    cmd.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-ccopt"), cxxCompiler.subList(1, cxxCompiler.size())));
+    if (isLibrary) {
+      cmd.add("-a");
+    } else if (isBytecode) {
+      cmd.add("-custom");
+    }
+    return cmd.add("-o", output.toString())
         .addAll(flags)
         .addAll(ocamlInput)
         .addAll(input.stream().map(Object::toString).iterator())

@@ -61,8 +61,9 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
@@ -152,10 +153,10 @@ public class LuaBinaryDescription
 
   private Iterable<BuildTarget> getNativeStarterDepTargets() {
     Optional<BuildTarget> nativeStarterLibrary = luaConfig.getNativeStarterLibrary();
-    return ImmutableSet.copyOf(
-        nativeStarterLibrary.isPresent()
-            ? OptionalCompat.asSet(nativeStarterLibrary)
-            : OptionalCompat.asSet(luaConfig.getLuaCxxLibraryTarget()));
+    return nativeStarterLibrary.isPresent()
+        ? ImmutableSet.of(nativeStarterLibrary.get())
+        : Optionals.toStream(luaConfig.getLuaCxxLibraryTarget())
+            .collect(MoreCollectors.toImmutableSet());
   }
 
   private Starter getStarter(

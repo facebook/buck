@@ -34,7 +34,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.OptionalMatchers;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.NaiveVersionSelector;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -255,7 +255,7 @@ public class CxxGenruleDescriptionTest {
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
                 .orElseThrow(AssertionError::new);
     assertThat(
-        Arg.stringify(OptionalCompat.asSet(genrule.getCmd()), pathResolver),
+        Arg.stringify(Optionals.toStream(genrule.getCmd()).toOnceIterable(), pathResolver),
         Matchers.contains(
             pathResolver
                 .getAbsolutePath(dep.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))

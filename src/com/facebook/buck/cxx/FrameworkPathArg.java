@@ -22,10 +22,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.OptionalCompat;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
 public abstract class FrameworkPathArg implements Arg {
@@ -38,17 +39,18 @@ public abstract class FrameworkPathArg implements Arg {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(final SourcePathRuleFinder ruleFinder) {
-    FluentIterable<SourcePath> sourcePaths =
-        FluentIterable.from(frameworkPaths)
-            .transformAndConcat(input -> OptionalCompat.asSet(input.getSourcePath()));
+    Stream<SourcePath> sourcePaths =
+        frameworkPaths.stream().map(FrameworkPath::getSourcePath).flatMap(Optionals::toStream);
     return ruleFinder.filterBuildRuleInputs(sourcePaths);
   }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    return FluentIterable.from(frameworkPaths)
-        .transformAndConcat(input -> OptionalCompat.asSet(input.getSourcePath()))
-        .toList();
+    return frameworkPaths
+        .stream()
+        .map(FrameworkPath::getSourcePath)
+        .flatMap(Optionals::toStream)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   @Override

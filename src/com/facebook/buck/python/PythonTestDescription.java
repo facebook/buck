@@ -44,7 +44,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -371,8 +371,8 @@ public class PythonTestDescription
 
     if (constructorArg.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle())
         == PythonBuckConfig.PackageStyle.STANDALONE) {
-      extraDepsBuilder.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexTarget()));
-      extraDepsBuilder.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexExecutorTarget()));
+      Optionals.addIfPresent(pythonBuckConfig.getPexTarget(), extraDepsBuilder);
+      Optionals.addIfPresent(pythonBuckConfig.getPexExecutorTarget(), extraDepsBuilder);
     }
   }
 

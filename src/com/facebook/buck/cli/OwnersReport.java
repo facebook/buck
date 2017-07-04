@@ -24,7 +24,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -186,7 +186,7 @@ final class OwnersReport {
                   .collect(Collectors.toList());
       return RichStream.from(pathTree)
           .map(buildFileTree::getBasePathOfAncestorTarget)
-          .flatMap(e -> OptionalCompat.asSet(e).stream())
+          .flatMap(Optionals::toStream)
           .toImmutableSet();
     }
 

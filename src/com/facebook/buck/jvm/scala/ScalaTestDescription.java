@@ -44,7 +44,7 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
@@ -150,9 +150,8 @@ public class ScalaTestDescription
       AbstractScalaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder
-        .add(config.getScalaLibraryTarget())
-        .addAll(OptionalCompat.asSet(config.getScalacTarget()));
+    extraDepsBuilder.add(config.getScalaLibraryTarget());
+    Optionals.addIfPresent(config.getScalacTarget(), extraDepsBuilder);
     for (String envValue : constructorArg.getEnv().values()) {
       try {
         MACRO_HANDLER.extractParseTimeDeps(

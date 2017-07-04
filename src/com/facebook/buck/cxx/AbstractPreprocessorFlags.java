@@ -24,7 +24,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +63,7 @@ abstract class AbstractPreprocessorFlags {
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getPrefixHeader())));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(Optionals.toStream(getPrefixHeader())));
     for (CxxHeaders cxxHeaders : getIncludes()) {
       cxxHeaders.getDeps(ruleFinder).forEachOrdered(deps::add);
     }

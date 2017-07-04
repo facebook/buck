@@ -57,7 +57,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -1588,9 +1588,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       deps.add(
-          OptionalCompat.asSet(enhancementResult.getPreDexMerge())
-              .stream()
-              .map(BuildRule::getBuildTarget));
+          Optionals.toStream(enhancementResult.getPreDexMerge()).map(BuildRule::getBuildTarget));
     }
     if (ExopackageMode.enabledForResources(exopackageModes)) {
       deps.add(

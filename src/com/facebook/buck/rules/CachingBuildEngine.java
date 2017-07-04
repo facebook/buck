@@ -54,7 +54,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -1013,7 +1012,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                       success,
                       calculatedRuleKey,
                       metaDataRuleKey);
-                  ruleKeys.addAll(OptionalCompat.asSet(calculatedRuleKey));
+                  if (calculatedRuleKey.isPresent()) {
+                    ruleKeys.add(calculatedRuleKey.get());
+                  }
                 }
 
                 // If the manifest-based rule key has changed, we need to push the artifact to cache
@@ -1032,7 +1033,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                       success,
                       onDiskRuleKey,
                       metaDataRuleKey);
-                  ruleKeys.addAll(OptionalCompat.asSet(onDiskRuleKey));
+                  if (onDiskRuleKey.isPresent()) {
+                    ruleKeys.add(onDiskRuleKey.get());
+                  }
                 }
 
                 // Do the actual upload.
