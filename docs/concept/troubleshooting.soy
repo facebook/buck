@@ -46,23 +46,6 @@ In this case, give <code>buck clean</code> a shot and file a bug if you have
 found a reproducible bug.
 
 
-<h2>Make sure you do not have a .nobuckcheck file</h2>
-
-If you have been working on Buck itself, you had to create
-a <a href="nobuckcheck.html"><code>.nobuckcheck</code></a> file to disable
-Buck's autoupdating capability
-(assuming you are working on a project that uses
-{sp}<a href="buckversion.html"><code>.buckversion</code></a>).
-Once you are done modifying Buck, you should delete the
-{sp}<code>.nobuckcheck</code> file so that Buck autoupdates again.
-<p>
-If you forget to do this, it is inevitable that someone will update your
-project such that it requires a newer version of Buck, and your local build
-will inexplicably stop working because your are using an outdated version of
-Buck. The alternative is to periodically <code>git pull --rebase</code> to
-update your checkout of Buck manually, but that is error-prone.
-
-
 <h2>Delete all generated files in your project.</h2>
 
 Buck is designed so that all generated files are written to the

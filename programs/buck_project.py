@@ -56,18 +56,6 @@ class BuckProject:
         self.buckd_dir = os.path.join(root, ".buckd")
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
 
-        self.has_no_buck_check = (os.path.exists(os.path.join(
-            self.root, ".nobuckcheck")))
-
-        if self.has_no_buck_check:
-            print(textwrap.dedent(
-                """::: '.nobuckcheck' file is present. Not updating buck."""),
-                file=sys.stderr)
-
-        buck_version_path = os.path.join(self.root, ".buckversion")
-        buck_version = get_file_contents_if_exists(buck_version_path)
-        self.buck_version = buck_version.split(':') if buck_version else None
-
         buck_javaargs_path = os.path.join(self.root, ".buckjavaargs")
         self.buck_javaargs = get_file_contents_if_exists(buck_javaargs_path)
 

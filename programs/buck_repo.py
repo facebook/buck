@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import subprocess
 import sys
 import textwrap
 
@@ -38,166 +37,39 @@ RESOURCES = {
 }
 
 
-def get_ant_env(max_heap_size_mb):
-    ant_env = os.environ.copy()
-    ant_opts = ant_env.get('ANT_OPTS', '')
-    if ant_opts.find('-Xmx') == -1:
-        # Adjust the max heap size if it's not already specified.
-        ant_max_heap_arg = '-Xmx{0}m'.format(max_heap_size_mb)
-        if ant_opts:
-            ant_opts += ' '
-        ant_opts += ant_max_heap_arg
-        ant_env['ANT_OPTS'] = ant_opts
-    return ant_env
-
-
 class BuckRepo(BuckTool):
 
     def __init__(self, buck_bin_dir, buck_project):
         super(BuckRepo, self).__init__(buck_project)
 
-        self._buck_dir = platform_path(os.path.dirname(buck_bin_dir))
-        self._build_success_file = os.path.join(
-            self._buck_dir, "build", "successful-build")
+        self.buck_dir = platform_path(os.path.dirname(buck_bin_dir))
 
-        dot_git = os.path.join(self._buck_dir, '.git')
-        self._is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
+        dot_git = os.path.join(self.buck_dir, '.git')
+        self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
             sys.platform != 'cygwin'
         self._is_buck_repo_dirty_override = os.environ.get('BUCK_REPOSITORY_DIRTY')
 
-        buck_version = buck_project.buck_version
-        if self._is_git and not buck_project.has_no_buck_check and buck_version:
-            revision = buck_version[0]
-            branch = buck_version[1] if len(buck_version) > 1 else None
-            self._checkout_and_clean(revision, branch)
-
-        self._build()
-
-    def _checkout_and_clean(self, revision, branch):
-        with Tracing('BuckRepo._checkout_and_clean'):
-            if not self._revision_exists(revision):
-                print(textwrap.dedent("""\
-                    Required revision {0} is not
-                    available in the local repository.
-                    Buck is fetching updates from git. You can disable this by creating
-                    a '.nobuckcheck' file in your repository, but this might lead to
-                    strange bugs or build failures.""".format(revision)),
-                      file=sys.stderr)
-                git_command = ['git', 'fetch']
-                git_command.extend(['--all'] if not branch else ['origin', branch])
-                try:
-                    subprocess.check_call(
-                        git_command,
-                        stdout=sys.stderr,
-                        cwd=self._buck_dir)
-                except subprocess.CalledProcessError:
-                    raise BuckToolException(textwrap.dedent("""\
-                          Failed to fetch Buck updates from git."""))
-
-            current_revision = self._get_git_revision()
-
-            if current_revision != revision:
-                print(textwrap.dedent("""\
-                    Buck is at {0}, but should be {1}.
-                    Buck is updating itself. To disable this, add a '.nobuckcheck'
-                    file to your project root. In general, you should only disable
-                    this if you are developing Buck.""".format(
-                    current_revision, revision)),
-                    file=sys.stderr)
-
-                try:
-                    subprocess.check_call(
-                        ['git', 'checkout', '--quiet', revision],
-                        cwd=self._buck_dir)
-                except subprocess.CalledProcessError:
-                    raise BuckToolException(textwrap.dedent("""\
-                          Failed to update Buck to revision {0}.""".format(revision)))
-                if os.path.exists(self._build_success_file):
-                    os.remove(self._build_success_file)
-
-                ant = self._check_for_ant()
-                self._run_ant_clean(ant)
-                raise RestartBuck()
-
     def _join_buck_dir(self, relative_path):
-        return os.path.join(self._buck_dir, *(relative_path.split('/')))
+        return os.path.join(self.buck_dir, *(relative_path.split('/')))
 
     def _has_local_changes(self):
-        if not self._is_git:
+        if not self.is_git:
             return False
 
         output = check_output(
             ['git', 'ls-files', '-m'],
-            cwd=self._buck_dir)
+            cwd=self.buck_dir)
         return bool(output.strip())
 
-    def _get_git_revision(self):
-        if not self._is_git:
+    def get_git_revision(self):
+        if not self.is_git:
             return 'N/A'
-        return buck_version.get_git_revision(self._buck_dir)
+        return buck_version.get_git_revision(self.buck_dir)
 
     def _get_git_commit_timestamp(self):
-        if self._is_buck_repo_dirty_override or not self._is_git:
+        if self._is_buck_repo_dirty_override or not self.is_git:
             return -1
-        return buck_version.get_git_revision_timestamp(self._buck_dir)
-
-    def _revision_exists(self, revision):
-        returncode = subprocess.call(
-            ['git', 'cat-file', '-e', revision],
-            cwd=self._buck_dir)
-        return returncode == 0
-
-    def _check_for_ant(self):
-        ant = which('ant')
-        if not ant:
-            message = "You do not have ant on your $PATH. Cannot build Buck."
-            if sys.platform == "darwin":
-                message += "\nTry running 'brew install ant'."
-            raise BuckToolException(message)
-        return ant
-
-    def _print_ant_failure_and_exit(self, ant_log_path):
-        print(textwrap.dedent("""\
-                ::: 'ant' failed in the buck repo at '{0}',
-                ::: and 'buck' is not properly built. It will be unusable
-                ::: until the error is corrected. You can check the logs
-                ::: at {1} to figure out what broke.""".format(
-              self._buck_dir, ant_log_path)), file=sys.stderr)
-        if self._is_git:
-            raise BuckToolException(textwrap.dedent("""\
-                ::: It is possible that running this command will fix it:
-                ::: git -C "{0}" clean -xfd""".format(self._buck_dir)))
-        else:
-            raise BuckToolException(textwrap.dedent("""\
-                ::: It is possible that running this command will fix it:
-                ::: rm -rf "{0}"/build""".format(self._buck_dir)))
-
-    def _run_ant_clean(self, ant):
-        clean_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant-clean.log')
-        with open(clean_log_path, 'w') as clean_log:
-            exitcode = subprocess.call([ant, 'clean'], stdout=clean_log,
-                                       cwd=self._buck_dir, env=get_ant_env(JAVA_MAX_HEAP_SIZE_MB))
-            if exitcode is not 0:
-                self._print_ant_failure_and_exit(clean_log_path)
-
-    def _run_ant(self, ant):
-        ant_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant.log')
-        with open(ant_log_path, 'w') as ant_log:
-            exitcode = subprocess.call([ant], stdout=ant_log,
-                                       cwd=self._buck_dir, env=get_ant_env(JAVA_MAX_HEAP_SIZE_MB))
-            if exitcode is not 0:
-                self._print_ant_failure_and_exit(ant_log_path)
-
-    def _build(self):
-        with Tracing('BuckRepo._build'):
-            if not os.path.exists(self._build_success_file):
-                print(
-                    "Buck does not appear to have been built -- building Buck!",
-                    file=sys.stderr)
-                ant = self._check_for_ant()
-                self._run_ant_clean(ant)
-                self._run_ant(ant)
-                print("All done, continuing with build.", file=sys.stderr)
+        return buck_version.get_git_revision_timestamp(self.buck_dir)
 
     def _get_resource_lock_path(self):
         return None
@@ -216,7 +88,7 @@ class BuckRepo(BuckTool):
             fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
             if not fake_buck_version:
                 # Then check the content of .fakebuckversion.
-                fake_buck_version_file_path = os.path.join(self._buck_dir, ".fakebuckversion")
+                fake_buck_version_file_path = os.path.join(self.buck_dir, ".fakebuckversion")
                 if os.path.exists(fake_buck_version_file_path):
                     with open(fake_buck_version_file_path) as fake_buck_version_file:
                         fake_buck_version = fake_buck_version_file.read().strip()
@@ -231,44 +103,12 @@ class BuckRepo(BuckTool):
             # First try to get the "clean" buck version.  If it succeeds,
             # return it.
             clean_version = buck_version.get_clean_buck_version(
-                self._buck_dir,
+                self.buck_dir,
                 allow_dirty=self._is_buck_repo_dirty_override == "1")
             if clean_version is not None:
                 return clean_version
 
-            # Otherwise, if there is a .nobuckcheck file, or if there isn't
-            # a .buckversion file, fall back to a "dirty" version.
-            if (self._buck_project.has_no_buck_check or
-                    not self._buck_project.buck_version):
-                return buck_version.get_dirty_buck_version(self._buck_dir)
-
-            if self._has_local_changes():
-                print(textwrap.dedent("""\
-                ::: Your buck directory has local modifications, and therefore
-                ::: builds will not be able to use a distributed cache.
-                ::: The following files must be either reverted or committed:"""),
-                      file=sys.stderr)
-                subprocess.call(
-                    ['git', 'ls-files', '-m'],
-                    stdout=sys.stderr,
-                    cwd=self._buck_dir)
-            elif os.environ.get('BUCK_CLEAN_REPO_IF_DIRTY') != 'NO':
-                print(textwrap.dedent("""\
-                ::: Your local buck directory is dirty, and therefore builds will
-                ::: not be able to use a distributed cache."""), file=sys.stderr)
-                if sys.stdout.isatty():
-                    print(
-                        "::: Do you want to clean your buck directory? [y/N]",
-                        file=sys.stderr)
-                    choice = raw_input().lower()
-                    if choice == "y":
-                        subprocess.call(
-                            ['git', 'clean', '-fd'],
-                            stdout=sys.stderr,
-                            cwd=self._buck_dir)
-                        raise RestartBuck()
-
-            return buck_version.get_dirty_buck_version(self._buck_dir)
+            return buck_version.get_dirty_buck_version(self.buck_dir)
 
     def _is_buck_production(self):
         return False
@@ -281,14 +121,14 @@ class BuckRepo(BuckTool):
                     self._get_git_commit_timestamp()),
                 "-Dbuck.git_dirty={0}".format(
                   int(self._is_buck_repo_dirty_override == "1" or
-                      buck_version.is_dirty(self._buck_dir))),
+                      buck_version.is_dirty(self.buck_dir))),
             ]
 
     def _get_bootstrap_classpath(self):
         return self._join_buck_dir("build/bootstrapper/bootstrapper.jar")
 
     def _get_java_classpath(self):
-        classpath_file_path = os.path.join(self._buck_dir, "programs", "classpaths")
+        classpath_file_path = os.path.join(self.buck_dir, "programs", "classpaths")
         classpath_entries = []
         with open(classpath_file_path, 'r') as classpath_file:
             for line in classpath_file.readlines():
