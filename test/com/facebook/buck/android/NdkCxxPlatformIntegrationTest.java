@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -74,9 +75,10 @@ public class NdkCxxPlatformIntegrationTest {
   @Parameterized.Parameter(value = 2)
   public String arch;
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths("ndk-test", true);
+  @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("ndk-test-long-pwd", true);
 
-  private ProjectWorkspace setupWorkspace(String name) throws IOException {
+  private ProjectWorkspace setupWorkspace(String name, TemporaryPaths tmp) throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, name, tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
@@ -116,7 +118,7 @@ public class NdkCxxPlatformIntegrationTest {
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
-    ProjectWorkspace workspace = setupWorkspace("runtime_stl");
+    ProjectWorkspace workspace = setupWorkspace("runtime_stl", tmp);
     workspace.runBuckCommand("build", String.format("//:main#android-%s", arch)).assertSuccess();
   }
 
@@ -131,7 +133,7 @@ public class NdkCxxPlatformIntegrationTest {
         arch,
         not(anyOf(equalTo("arm64"), equalTo("x86_64"))));
 
-    ProjectWorkspace workspace = setupWorkspace("ndk_app_platform");
+    ProjectWorkspace workspace = setupWorkspace("ndk_app_platform", tmp);
 
     BuildTarget target = BuildTargetFactory.newInstance(String.format("//:main#android-%s", arch));
     BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target, Optional.empty());
@@ -148,14 +150,16 @@ public class NdkCxxPlatformIntegrationTest {
   @Test
   public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized()
       throws InterruptedException, IOException {
-    ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
-    workspace.writeContentsToPath(
+    String buckConfig =
         "[ndk]\n"
             + "  cpu_abis = arm, armv7, arm64, x86, x86_64\n"
             + "  gcc_version = 4.9\n"
-            + "  app_platform = android-21\n",
-        ".buckconfig");
+            + "  app_platform = android-21\n";
+
+    ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths", tmp);
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    workspace.writeContentsToPath(buckConfig, ".buckconfig");
+
     BuildTarget target =
         BuildTargetFactory.newInstance(String.format("//:lib#android-%s,static", arch));
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
@@ -174,5 +178,17 @@ public class NdkCxxPlatformIntegrationTest {
 
     // Verify that the NDK path is sanitized.
     assertFalse(contents.contains(getNdkRoot().toString()));
+
+    // Run another build in a location with a longer PWD, to verify that this doesn't affect output.
+    ProjectWorkspace longPwdWorkspace = setupWorkspace("ndk_debug_paths", tmp_long_pwd);
+    ProjectFilesystem longPwdFilesystem = new ProjectFilesystem(workspace.getDestPath());
+    longPwdWorkspace.writeContentsToPath(buckConfig, ".buckconfig");
+    longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    lib =
+        longPwdWorkspace.getPath(
+            BuildTargets.getGenPath(
+                longPwdFilesystem, target, "%s/lib" + target.getShortName() + ".a"));
+    String movedContents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
+    assertEquals(contents, movedContents);
   }
 }

@@ -47,7 +47,11 @@ import java.util.Optional;
 public class MungingDebugPathSanitizer extends DebugPathSanitizer {
 
   private static final DebugSectionFinder DEBUG_SECTION_FINDER = new DebugSectionFinder();
-  protected final ImmutableBiMap<Path, String> other;
+
+  private final Path compilationDirectory;
+  private final int pathSize;
+  private final char separator;
+  private final ImmutableBiMap<Path, String> other;
 
   /**
    * @param pathSize fix paths to this size for in-place replacements.
@@ -56,8 +60,19 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    */
   public MungingDebugPathSanitizer(
       int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, String> other) {
-    super(separator, pathSize, compilationDirectory);
+    this.compilationDirectory = compilationDirectory;
+    this.pathSize = pathSize;
+    this.separator = separator;
     this.other = other;
+  }
+
+  @Override
+  public String getCompilationDirectory() {
+    return getExpandedPath(compilationDirectory);
+  }
+
+  private String getExpandedPath(Path path) {
+    return getPaddedDir(path.toString(), pathSize, separator);
   }
 
   @Override
@@ -89,7 +104,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    * @return a {@link ByteBufferReplacer} suitable for replacing {@code workingDir} with {@code
    *     compilationDirectory}.
    */
-  protected ByteBufferReplacer getCompilationDirectoryReplacer(Path workingDir) {
+  private ByteBufferReplacer getCompilationDirectoryReplacer(Path workingDir) {
     return new ByteBufferReplacer(
         ImmutableMap.of(
             getExpandedPath(workingDir).getBytes(Charsets.US_ASCII),

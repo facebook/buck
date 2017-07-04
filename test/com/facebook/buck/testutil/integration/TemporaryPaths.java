@@ -32,6 +32,9 @@ import org.junit.rules.ExternalResource;
  */
 public class TemporaryPaths extends ExternalResource {
 
+  private static final String DEFAULT_PREFIX = "junit-temp-path";
+
+  private final String prefix;
   private final boolean keepContents;
   private Path root;
 
@@ -40,6 +43,15 @@ public class TemporaryPaths extends ExternalResource {
   }
 
   public TemporaryPaths(boolean keepContents) {
+    this(DEFAULT_PREFIX, keepContents);
+  }
+
+  public TemporaryPaths(String prefix) {
+    this(prefix, false);
+  }
+
+  public TemporaryPaths(String prefix, boolean keepContents) {
+    this.prefix = prefix;
     this.keepContents = keepContents;
   }
 
@@ -48,7 +60,7 @@ public class TemporaryPaths extends ExternalResource {
     if (root != null) {
       return;
     }
-    root = Files.createTempDirectory("junit-temp-path").toRealPath();
+    root = Files.createTempDirectory(prefix).toRealPath();
   }
 
   public Path getRoot() {

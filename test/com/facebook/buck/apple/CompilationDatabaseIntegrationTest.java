@@ -288,7 +288,7 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("." + Strings.repeat("/", 399));
     commandArgs.add("-x");
     commandArgs.add(language);
-    commandArgs.add("'-fdebug-prefix-map=" + tmpRoot + "=.'");
+    commandArgs.add("'-fdebug-prefix-map=" + tmpRoot + "=." + Strings.repeat("/", 399) + "'");
     commandArgs.add("'-fdebug-prefix-map=" + xcodeDeveloperDir + "=APPLE_DEVELOPER_DIR'");
     commandArgs.add("'-fdebug-prefix-map=" + platformDir + "=APPLE_PLATFORM_DIR'");
     commandArgs.add("'-fdebug-prefix-map=" + sdkRoot + "=APPLE_SDKROOT'");

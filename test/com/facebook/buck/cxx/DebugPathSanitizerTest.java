@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class DebugPathSanitizerTest {
 
-  DebugPathSanitizer debugPathSanitizer;
+  MungingDebugPathSanitizer debugPathSanitizer;
 
   @Before
   public void setUp() {

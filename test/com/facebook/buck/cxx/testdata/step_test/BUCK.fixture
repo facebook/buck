@@ -2,6 +2,8 @@ cxx_library(
   name = 'simple',
   srcs = [
     'simple.cc',
+    'simple.c',
+    'simple.s',
   ],
 )
 

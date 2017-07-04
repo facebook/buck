@@ -37,7 +37,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -69,8 +68,7 @@ public class CxxCompilationDatabaseIntegrationTest {
   private static final String COMPILER_PATH;
   private static final ImmutableList<String> COMPILER_SPECIFIC_FLAGS =
       Platform.detect() == Platform.MACOS
-          ? ImmutableList.of(
-              "-Xclang", "-fdebug-compilation-dir", "-Xclang", "." + Strings.repeat("/", 249))
+          ? ImmutableList.of("-Xclang", "-fdebug-compilation-dir", "-Xclang", ".")
           : ImmutableList.of();
   private static final ImmutableList<String> MORE_COMPILER_SPECIFIC_FLAGS =
       Platform.detect() == Platform.LINUX

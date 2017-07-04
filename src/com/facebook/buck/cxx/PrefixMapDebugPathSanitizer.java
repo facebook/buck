@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cxx;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,18 +31,17 @@ import java.util.Optional;
  */
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
-  private boolean isGcc;
+  private final String fakeCompilationDirectory;
+  private final boolean isGcc;
   private final CxxToolProvider.Type cxxType;
 
   private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(
-      int pathSize,
-      char separator,
-      Path fakeCompilationDirectory,
+      String fakeCompilationDirectory,
       ImmutableBiMap<Path, String> other,
       CxxToolProvider.Type cxxType) {
-    super(separator, pathSize, fakeCompilationDirectory);
+    this.fakeCompilationDirectory = fakeCompilationDirectory;
     this.isGcc = cxxType == CxxToolProvider.Type.GCC;
     this.cxxType = cxxType;
 
@@ -53,12 +51,18 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     // process them in the correct order, they are inserted into allPaths in order of length
     // (longest first). Then, if they are processed in the order in allPaths, prefixes will be
     // handled correctly.
-    pathsBuilder.putAll(
-        FluentIterable.from(other.entrySet())
-            .toSortedList(
-                (left, right) ->
-                    right.getKey().toString().length() - left.getKey().toString().length()));
+    other
+        .entrySet()
+        .stream()
+        .sorted(
+            (left, right) -> right.getKey().toString().length() - left.getKey().toString().length())
+        .forEach(e -> pathsBuilder.put(e.getKey(), e.getValue()));
     this.other = pathsBuilder.build();
+  }
+
+  @Override
+  public String getCompilationDirectory() {
+    return fakeCompilationDirectory;
   }
 
   @Override
@@ -104,6 +108,6 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     return Iterables.concat(
         other.entrySet(),
         ImmutableList.of(
-            new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory.toString())));
+            new AbstractMap.SimpleEntry<>(workingDir.get(), fakeCompilationDirectory)));
   }
 }

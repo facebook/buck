@@ -29,27 +29,18 @@ import java.util.stream.StreamSupport;
 
 /** Encapsulates all the logic to sanitize debug paths in native code. */
 public abstract class DebugPathSanitizer {
-  protected final int pathSize;
-  protected final char separator;
-  protected final Path compilationDirectory;
-
-  public DebugPathSanitizer(char separator, int pathSize, Path compilationDirectory) {
-    this.separator = separator;
-    this.pathSize = pathSize;
-    this.compilationDirectory = compilationDirectory;
-  }
 
   /**
    * @return the given path as a string, expanded using {@code separator} to fulfill the required
    *     {@code pathSize}.
    */
-  protected String getExpandedPath(Path path) {
+  public static String getPaddedDir(String path, int size, char pad) {
     Preconditions.checkArgument(
-        path.toString().length() <= pathSize,
+        path.length() <= size,
         String.format(
             "Path is too long to sanitize:\n'%s' is %d characters long, limit is %d.",
-            path, path.toString().length(), pathSize));
-    return Strings.padEnd(path.toString(), pathSize, separator);
+            path, path.length(), size));
+    return Strings.padEnd(path, size, pad);
   }
 
   abstract ImmutableMap<String, String> getCompilationEnvironment(
@@ -62,9 +53,7 @@ public abstract class DebugPathSanitizer {
 
   protected abstract Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir);
 
-  public String getCompilationDirectory() {
-    return getExpandedPath(compilationDirectory);
-  }
+  public abstract String getCompilationDirectory();
 
   public Function<String, String> sanitize(final Optional<Path> workingDir) {
     return input -> DebugPathSanitizer.this.sanitize(workingDir, input);

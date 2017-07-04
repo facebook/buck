@@ -84,7 +84,7 @@ public class CxxPrecompiledHeaderRuleTest {
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
       CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(PREPROCESSOR_SUPPORTING_PCH);
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
   private ProjectFilesystem filesystem;
   private ProjectWorkspace workspace;
 
