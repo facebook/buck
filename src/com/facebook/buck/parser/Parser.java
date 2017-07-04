@@ -31,6 +31,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
+import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
@@ -544,6 +545,14 @@ public class Parser {
     }
 
     return target.withFlavors(defaultFlavors);
+  }
+
+  public RemoteDaemonicParserState storeParserState() throws IOException {
+    return getPermState().serialiseDaemonicParserState();
+  }
+
+  public void restoreParserState(RemoteDaemonicParserState state, Cell rootCell) {
+    getPermState().restoreState(state, rootCell);
   }
 
   @Subscribe

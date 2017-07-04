@@ -294,7 +294,7 @@ class DaemonicCellState {
         values.forEach(
             (k, v) -> {
               BuildFileEnvProperty prop = new BuildFileEnvProperty();
-              prop.setValue(v.get());
+              v.ifPresent(prop::setValue);
               buildFileEnvValuesMapBuilder.put(k, prop);
             });
       }
@@ -350,6 +350,15 @@ class DaemonicCellState {
           ObjectMappers.readValue(json, new TypeReference<ImmutableSet<Map<String, Object>>>() {});
       Path key = root.resolve(pathString);
       daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserialisedRawNodes);
+      deserialisedRawNodes.forEach(
+          rawNode -> {
+            daemonicCellState.allRawNodeTargets.add(
+                UnflavoredBuildTarget.of(
+                    root,
+                    cell.getCanonicalName(),
+                    "//" + rawNode.get("buck.base_path"),
+                    (String) rawNode.get("name")));
+          });
     }
 
     return daemonicCellState;
