@@ -235,4 +235,15 @@ public class BuckBuildManager {
       final BuckCommandHandler handler, @Nullable final Runnable postStartAction) {
     handler.runInCurrentThread(postStartAction);
   }
+
+  /**
+   * Run handler in the current thread with a post end action.
+   *
+   * @param handler a handler to run
+   * @param postEndAction an action that is executed
+   */
+  public void runInCurrentThreadPostEnd(
+      final BuckCommandHandler handler, @Nullable final Runnable postEndAction) {
+    handler.runInCurrentThreadPostEnd(postEndAction);
+  }
 }
