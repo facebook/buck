@@ -97,7 +97,9 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
     builder.setBuildTarget(symlinkTree.getBuildTarget());
     builder.setIncludeType(includeType);
     builder.setRoot(
-        new ExplicitBuildTargetSourcePath(symlinkTree.getBuildTarget(), symlinkTree.getRoot()));
+        new ExplicitBuildTargetSourcePath(
+            symlinkTree.getBuildTarget(),
+            symlinkTree.getProjectFilesystem().relativize(symlinkTree.getRoot())));
 
     if (includeType == CxxPreprocessables.IncludeType.LOCAL) {
       builder.setIncludeRoot(
@@ -110,7 +112,9 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
       }
     } else {
       builder.setIncludeRoot(
-          new ExplicitBuildTargetSourcePath(symlinkTree.getBuildTarget(), symlinkTree.getRoot()));
+          new ExplicitBuildTargetSourcePath(
+              symlinkTree.getBuildTarget(),
+              symlinkTree.getProjectFilesystem().relativize(symlinkTree.getRoot())));
     }
     builder.putAllNameToPathMap(symlinkTree.getLinks());
     return builder.build();
