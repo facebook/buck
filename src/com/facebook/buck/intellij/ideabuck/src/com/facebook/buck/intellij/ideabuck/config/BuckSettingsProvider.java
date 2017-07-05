@@ -46,9 +46,10 @@ public class BuckSettingsProvider
 
   @Override
   public State getState() {
+    BuckExecutableDetector buckExecutableDetector = new BuckExecutableDetector();
     if (state.buckExecutable == null || state.buckExecutable.isEmpty()) {
       try {
-        state.buckExecutable = BuckExecutableDetector.getBuckExecutable();
+        state.buckExecutable = buckExecutableDetector.getBuckExecutable();
       } catch (RuntimeException e) {
         // let the user insert the path to the executable
         state.buckExecutable = "";
@@ -62,7 +63,7 @@ public class BuckSettingsProvider
 
     if (state.adbExecutable == null || state.adbExecutable.isEmpty()) {
       try {
-        state.adbExecutable = BuckExecutableDetector.getAdbExecutable();
+        state.adbExecutable = buckExecutableDetector.getAdbExecutable();
       } catch (RuntimeException e) {
         // let the user insert the path to the executable
         state.adbExecutable = "";
