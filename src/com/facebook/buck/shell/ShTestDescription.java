@@ -112,6 +112,7 @@ public class ShTestDescription
         args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.getRunTestSeparately(),
         args.getLabels(),
+        args.getType(),
         args.getContacts());
   }
 
@@ -141,6 +142,8 @@ public class ShTestDescription
     Optional<SourcePath> getTest();
 
     ImmutableList<String> getArgs();
+
+    Optional<String> getType();
 
     @Value.Default
     default boolean getRunTestSeparately() {

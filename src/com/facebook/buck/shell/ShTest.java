@@ -66,6 +66,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final ImmutableList<Arg> args;
   @AddToRuleKey private final ImmutableMap<String, Arg> env;
+  @AddToRuleKey private final Optional<String> type;
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -86,6 +87,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately,
       Set<String> labels,
+      Optional<String> type,
       ImmutableSet<String> contacts) {
     super(projectFilesystem, params);
     this.ruleFinder = ruleFinder;
@@ -95,6 +97,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestSeparately = runTestSeparately;
     this.labels = ImmutableSet.copyOf(labels);
+    this.type = type;
     this.contacts = contacts;
   }
 
@@ -201,7 +204,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
-        .setType("custom")
+        .setType(type.orElse("custom"))
         .addAllCommand(Arg.stringify(args, buildContext.getSourcePathResolver()))
         .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())

@@ -61,4 +61,19 @@ public class ShTestIntegrationTest {
     workspace.setUp();
     workspace.runBuckCommand("test", "//foo:test").assertSuccess();
   }
+
+  @Test
+  public void type() throws IOException {
+    Assume.assumeTrue(ImmutableSet.of(Platform.MACOS, Platform.LINUX).contains(Platform.detect()));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sh_test_type", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("external_runner.sh").toString(),
+            "//:test")
+        .assertSuccess();
+  }
 }

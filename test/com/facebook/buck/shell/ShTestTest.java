@@ -74,6 +74,7 @@ public class ShTestTest extends EasyMockSupport {
             Optional.empty(),
             /* runTestSeparately */ false,
             /* labels */ ImmutableSet.of(),
+            /* type */ Optional.of("custom"),
             /* contacts */ ImmutableSet.of());
 
     assertThat(
