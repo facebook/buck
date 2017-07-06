@@ -93,7 +93,7 @@ public class CacheBenchmark {
             HashCode hashCode = Hashing.sha1().newHasher().putBytes(leaf.getBytes()).hash();
             cache.set(Paths.get(leaf), hashCode);
           } catch (IOException e) {
-            throw new RuntimeException(e.getCause());
+            throw new RuntimeException(e);
           }
         });
   }

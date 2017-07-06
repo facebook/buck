@@ -58,7 +58,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           try {
             return getHashCodeAndFileType(path);
           } catch (IOException e) {
-            throw new RuntimeException(e.getCause());
+            throw new RuntimeException(e);
           }
         };
 
@@ -67,7 +67,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           try {
             return getPathSize(path);
           } catch (IOException e) {
-            throw new RuntimeException(e.getCause());
+            throw new RuntimeException(e);
           }
         };
     switch (fileHashCacheMode) {
