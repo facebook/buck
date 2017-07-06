@@ -47,7 +47,7 @@ public class BuildRuleParams {
     this.targetGraphOnlyDeps = targetGraphOnlyDeps;
 
     this.totalBuildDeps =
-        Suppliers.memoize(() -> SortedSets.union(declaredDeps.get(), extraDeps.get()));
+        Suppliers.memoize(() -> SortedSets.union(this.declaredDeps.get(), this.extraDeps.get()));
   }
 
   private BuildRuleParams(BuildRuleParams baseForDeps, BuildTarget buildTarget) {
