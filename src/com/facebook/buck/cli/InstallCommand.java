@@ -96,6 +96,8 @@ public class InstallCommand extends BuildCommand {
   @VisibleForTesting static final String INSTALL_VIA_SD_SHORT_ARG = "-S";
   @VisibleForTesting static final String ACTIVITY_LONG_ARG = "--activity";
   @VisibleForTesting static final String ACTIVITY_SHORT_ARG = "-a";
+  @VisibleForTesting static final String PROCESS_LONG_ARG = "--process";
+  @VisibleForTesting static final String PROCESS_SHORT_ARG = "-p";
   @VisibleForTesting static final String UNINSTALL_LONG_ARG = "--uninstall";
   @VisibleForTesting static final String UNINSTALL_SHORT_ARG = "-u";
 
@@ -151,6 +153,15 @@ public class InstallCommand extends BuildCommand {
   @Nullable
   private String activity = null;
 
+  @Option(
+    name = PROCESS_LONG_ARG,
+    aliases = {PROCESS_SHORT_ARG},
+    metaVar = "<pkg:process>",
+    usage = "Process to kill after install e.g. com.facebook.katana[:proc1]. Implies -r."
+  )
+  @Nullable
+  private String process = null;
+
   public AdbOptions adbOptions(BuckConfig buckConfig) {
     return adbOptions.getAdbOptions(buckConfig);
   }
@@ -168,7 +179,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   public boolean shouldStartActivity() {
-    return (activity != null) || run;
+    return (activity != null) || (process != null) || run;
   }
 
   public boolean shouldInstallViaSd() {
@@ -390,7 +401,8 @@ public class InstallCommand extends BuildCommand {
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(pathResolver, hasInstallableApk, shouldInstallViaSd(), false)) {
+    if (!adbHelper.installApk(
+        pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
       return 1;
     }
 

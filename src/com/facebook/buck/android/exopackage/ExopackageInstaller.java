@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 
 /** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
 public class ExopackageInstaller {
@@ -180,14 +181,15 @@ public class ExopackageInstaller {
   }
 
   /** Installs the app specified in the constructor. This object should be discarded afterward. */
-  public synchronized boolean install(boolean quiet) throws InterruptedException {
+  public synchronized boolean install(boolean quiet, @Nullable String processName)
+      throws InterruptedException {
     InstallEvent.Started started = InstallEvent.started(apkRule.getBuildTarget());
     eventBus.post(started);
 
     boolean success =
         adbHelper.adbCall(
             "install exopackage apk",
-            device -> new SingleDeviceInstaller(device).doInstall(),
+            device -> new SingleDeviceInstaller(device).doInstall(processName),
             quiet);
 
     eventBus.post(
@@ -211,7 +213,7 @@ public class ExopackageInstaller {
       this.device = device;
     }
 
-    boolean doInstall() throws Exception {
+    boolean doInstall(@Nullable String processName) throws Exception {
       if (exopackageEnabled()) {
         device.mkDirP(dataRoot.toString());
         ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
@@ -260,7 +262,23 @@ public class ExopackageInstaller {
       }
       // TODO(dreiss): Make this work on Gingerbread.
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
-        device.stopPackage(packageName);
+        // If a specific process name is given and we're not installing a full APK,
+        // just kill that process, otherwise kill everything in the package
+        if (shouldAppBeInstalled() || processName == null) {
+          device.stopPackage(packageName);
+        } else {
+          try {
+            device.killProcess(processName);
+          } catch (Exception e) {
+            if (e.getLocalizedMessage().contains("No such process")) {
+              LOG.warn(
+                  "WARN: No running process matching %s, either it was not running or does not exist",
+                  processName);
+            } else {
+              throw e;
+            }
+          }
+        }
       }
 
       return true;

@@ -399,6 +399,16 @@ public class RealExopackageDevice implements ExopackageDevice {
     return abis.build();
   }
 
+  @Override
+  public void killProcess(String processName) throws Exception {
+    String packageName =
+        processName.contains(":")
+            ? processName.substring(0, processName.indexOf(':'))
+            : processName;
+    AdbHelper.executeCommandWithErrorChecking(
+        device, String.format("run-as %s killall %s", packageName, processName));
+  }
+
   private class FileInstallReceiver extends CollectingOutputReceiver {
     private final Closer closer;
     private final Path source;

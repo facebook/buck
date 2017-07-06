@@ -47,4 +47,6 @@ public interface ExopackageDevice {
   String getProperty(String name) throws Exception;
 
   List<String> getDeviceAbis() throws Exception;
+
+  void killProcess(String processName) throws Exception;
 }

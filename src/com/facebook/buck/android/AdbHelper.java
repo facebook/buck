@@ -523,11 +523,13 @@ public class AdbHelper {
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
-      boolean quiet)
+      boolean quiet,
+      @Nullable String processName)
       throws InterruptedException {
     Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
     if (exopackageInfo.isPresent()) {
-      return new ExopackageInstaller(pathResolver, context, this, hasInstallableApk).install(quiet);
+      return new ExopackageInstaller(pathResolver, context, this, hasInstallableApk)
+          .install(quiet, processName);
     }
     InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
     if (!quiet) {
@@ -823,7 +825,7 @@ public class AdbHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean)
+   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
    */
   public boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
       throws InterruptedException {

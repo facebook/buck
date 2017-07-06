@@ -602,6 +602,11 @@ public class ExopackageInstallerIntegrationTest {
       return ImmutableList.of(abi);
     }
 
+    @Override
+    public void killProcess(String packageName) throws Exception {
+      // noop
+    }
+
     public void setAllowedInstallCounts(
         int expectedApksInstalled,
         int expectedDexesInstalled,
@@ -790,7 +795,7 @@ public class ExopackageInstallerIntegrationTest {
                   executionContext,
                   new FakeAdbInterface(),
                   new FakeApkRule(pathResolver, apkInfo))
-              .install(true));
+              .install(true, null));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
