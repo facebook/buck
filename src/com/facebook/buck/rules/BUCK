@@ -210,6 +210,7 @@ java_immutables_library(
         "AbstractVersionedTool.java",
         "ActionGraph.java",
         "AddToRuleKey.java",
+        "AddsToRuleKey.java",
         "BinaryBuildRule.java",
         "BinaryBuildRuleToolProvider.java",
         "BuckPyFunction.java",

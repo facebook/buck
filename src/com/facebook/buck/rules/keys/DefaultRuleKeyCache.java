@@ -18,8 +18,8 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
@@ -107,8 +107,8 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
   private <K> V calculateNode(K node, Function<K, RuleKeyResult<V>> create) {
     Preconditions.checkArgument(
-        node instanceof BuildRule ^ node instanceof RuleKeyAppendable,
-        "%s must be one of either a `BuildRule` or `RuleKeyAppendable`",
+        node instanceof BuildRule ^ node instanceof AddsToRuleKey,
+        "%s must be one of either a `BuildRule` or `AddsToRuleKey`",
         node.getClass());
 
     // Record start time for stats.
@@ -156,8 +156,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   }
 
   @Override
-  public V get(
-      RuleKeyAppendable appendable, Function<? super RuleKeyAppendable, RuleKeyResult<V>> create) {
+  public V get(AddsToRuleKey appendable, Function<? super AddsToRuleKey, RuleKeyResult<V>> create) {
     return getNode(appendable, create);
   }
 
@@ -171,7 +170,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   }
 
   @VisibleForTesting
-  public boolean isCached(RuleKeyAppendable appendable) {
+  public boolean isCached(AddsToRuleKey appendable) {
     return isCachedNode(appendable);
   }
 

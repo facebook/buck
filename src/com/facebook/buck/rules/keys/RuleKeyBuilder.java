@@ -27,6 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -34,7 +35,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -64,11 +64,10 @@ import javax.annotation.Nullable;
  *
  * <p>{@link RuleKeyFactory} classes create concrete instances of this class and use them to produce
  * rule keys. Concrete implementations may tweak behavior of the builder, and at the very minimum
- * should implement {@link #setAppendableRuleKey(RuleKeyAppendable)}, and {@link
- * #setBuildRule(BuildRule)}.
+ * should implement {@link #setAddsToRuleKey(AddsToRuleKey)}, and {@link #setBuildRule(BuildRule)}.
  *
  * <p>This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of
- * how {@link RuleKeyFactory} and {@link RuleKeyAppendable} classes feed the builder.
+ * how {@link RuleKeyFactory} and {@link AddsToRuleKey} classes feed the builder.
  *
  * <p>Each element fed to the builder is a (key, value) pair. Keys are always simple strings,
  * typically the name of a field annotated with {@link AddToRuleKey}. Values on the other hand may
@@ -133,8 +132,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   /** Recursively serializes the value. Serialization of the key is handled outside. */
   protected RuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val) {
-    if (val instanceof RuleKeyAppendable) {
-      return setAppendableRuleKey((RuleKeyAppendable) val);
+    if (val instanceof AddsToRuleKey) {
+      return setAddsToRuleKey((AddsToRuleKey) val);
     }
 
     if (val instanceof BuildRule) {
@@ -264,12 +263,12 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   /**
    * Implementations should ask their factories to compute the rule key for the {@link
-   * RuleKeyAppendable} and call {@link #setAppendableRuleKey(RuleKey)} on it.
+   * AddsToRuleKey} and call {@link #setAddsToRuleKey(RuleKey)} on it.
    */
-  protected abstract RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable);
+  protected abstract RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable);
 
-  /** To be called from {@link #setAppendableRuleKey(RuleKeyAppendable)}. */
-  protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKey ruleKey) {
+  /** To be called from {@link #setAddsToRuleKey(AddsToRuleKey)}. */
+  protected final RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(RuleKey ruleKey) {
     try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)) {
       return setSingleValue(ruleKey);
     }

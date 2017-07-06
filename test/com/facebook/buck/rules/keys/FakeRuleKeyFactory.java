@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -70,7 +70,7 @@ public class FakeRuleKeyFactory
 
   @Override
   public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
-      RuleKeyAppendable appendable, RuleKeyHasher<DIAG_KEY> hasher) {
+      AddsToRuleKey appendable, RuleKeyHasher<DIAG_KEY> hasher) {
     throw new UnsupportedOperationException();
   }
 }

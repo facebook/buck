@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-// TODO(t6430785): Delete this class once we can use reflection for all rulekeys
-public interface RuleKeyAppendable extends AddsToRuleKey {
-
-  void appendToRuleKey(RuleKeyObjectSink sink);
-}
+/**
+ * Identifies a class that uses {@link com.facebook.buck.rules.AddToRuleKey} annotations to indicate
+ * fields that should be added to rule keys.
+ */
+public interface AddsToRuleKey {}

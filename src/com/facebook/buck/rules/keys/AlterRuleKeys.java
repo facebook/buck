@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
@@ -29,6 +31,14 @@ public final class AlterRuleKeys {
   public static void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
     for (AlterRuleKey alterRuleKey : cache.getUnchecked(rule.getClass())) {
       alterRuleKey.amendKey(sink, rule);
+    }
+  }
+
+  public static void amendKey(RuleKeyObjectSink sink, AddsToRuleKey appendable) {
+    if (appendable instanceof RuleKeyAppendable) {
+      ((RuleKeyAppendable) appendable).appendToRuleKey(sink);
+    } else {
+      throw new UnsupportedOperationException("NYI");
     }
   }
 }

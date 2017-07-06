@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -716,8 +717,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @Override
     public V get(
-        RuleKeyAppendable appendable,
-        Function<? super RuleKeyAppendable, RuleKeyResult<V>> create) {
+        AddsToRuleKey appendable, Function<? super AddsToRuleKey, RuleKeyResult<V>> create) {
       RuleKeyResult<V> result = create.apply(appendable);
       results.put(appendable, result);
       return result.result;
