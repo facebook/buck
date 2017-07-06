@@ -400,6 +400,7 @@ class BuckTool(object):
 
             return returncode
 
+
     def kill_buckd(self):
         with Tracing('BuckTool.kill_buckd'):
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
