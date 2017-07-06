@@ -176,6 +176,49 @@ public class DefaultRuleKeyFactoryTest {
   }
 
   @Test
+  public void shouldAllowAddsToRuleKeysToAppendToRuleKey() {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    BuildRule rule = new EmptyRule(target);
+
+    FileHashCache fileHashCache = new DummyFileHashCache();
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+
+    RuleKey subKey =
+        new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory)
+            .setReflectively("cheese", "brie")
+            .setReflectively("wine", "cabernet")
+            .build(RuleKey::new);
+
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
+    try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
+      try (RuleKeyScopedHasher.Scope appendableScope =
+          builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
+        builder.getScopedHasher().getHasher().putRuleKey(subKey);
+      }
+    }
+    RuleKey expected = builder.build(RuleKey::new);
+
+    class AppendingField extends EmptyRule {
+
+      @AddToRuleKey private Adder field = new Adder();
+
+      public AppendingField(BuildTarget target) {
+        super(target);
+      }
+    }
+
+    RuleKey seen = factory.build(new AppendingField(target));
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
   public void shouldAllowRuleKeyAppendablesToAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
@@ -192,6 +235,7 @@ public class DefaultRuleKeyFactoryTest {
     RuleKey subKey =
         new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
+            .setReflectively("wine", "cabernet")
             .build(RuleKey::new);
 
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
@@ -270,6 +314,38 @@ public class DefaultRuleKeyFactoryTest {
     }
 
     RuleKey seen = factory.build(new RuleContainingAppendableRule(target, appendableRule));
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void stringifiedAddsToRuleKeysGetAddedToRuleKeyAsStrings() {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    BuildRule rule = new EmptyRule(target);
+
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
+    DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
+
+    builder.setReflectively("field", "cheddar");
+    RuleKey expected = builder.build(RuleKey::new);
+
+    class AppendingField extends EmptyRule {
+
+      @AddToRuleKey(stringify = true)
+      private Adder field = new Adder();
+
+      public AppendingField(BuildTarget target) {
+        super(target);
+      }
+    }
+
+    RuleKey seen = factory.build(new AppendingField(target));
 
     assertEquals(expected, seen);
   }
@@ -630,7 +706,19 @@ public class DefaultRuleKeyFactoryTest {
     assertNotEquals("Rule keys should be different! " + val1 + " != " + val2, key1, key2);
   }
 
+  private static class Adder implements AddsToRuleKey {
+    @AddToRuleKey private String cheese = "brie";
+    @AddToRuleKey private String wine = "cabernet";
+
+    @Override
+    public String toString() {
+      return "cheddar";
+    }
+  }
+
   private static class Appender implements RuleKeyAppendable {
+    @AddToRuleKey private String wine = "cabernet";
+
     @Override
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       sink.setReflectively("cheese", "brie");

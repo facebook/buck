@@ -25,20 +25,28 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 
 public final class AlterRuleKeys {
-  private static final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
-      cache = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
+  private static final LoadingCache<Class<?>, ImmutableCollection<AlterRuleKey>> cache =
+      CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
 
   public static void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
-    for (AlterRuleKey alterRuleKey : cache.getUnchecked(rule.getClass())) {
-      alterRuleKey.amendKey(sink, rule);
-    }
+    amendKey(sink, (Object) rule);
   }
 
   public static void amendKey(RuleKeyObjectSink sink, AddsToRuleKey appendable) {
     if (appendable instanceof RuleKeyAppendable) {
       ((RuleKeyAppendable) appendable).appendToRuleKey(sink);
-    } else {
-      throw new UnsupportedOperationException("NYI");
+    }
+
+    // Honor @AddToRuleKey on RuleKeyAppendable's in addition to their custom code. Having this be a
+    // static method invoking things from outside (as opposed to a default method) ensures that the
+    // long-standing habit of not needing to chain to super in RuleKeyAppendable doesn't cause
+    // subtle breakages.
+    amendKey(sink, (Object) appendable);
+  }
+
+  private static void amendKey(RuleKeyObjectSink sink, Object appendable) {
+    for (AlterRuleKey alterRuleKey : cache.getUnchecked(appendable.getClass())) {
+      alterRuleKey.amendKey(sink, appendable);
     }
   }
 }

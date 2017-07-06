@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 
 class DefaultAlterRuleKey implements AlterRuleKey {
@@ -27,7 +26,7 @@ class DefaultAlterRuleKey implements AlterRuleKey {
   }
 
   @Override
-  public void amendKey(RuleKeyObjectSink builder, BuildRule rule) {
-    builder.setReflectively(valueExtractor.getName(), valueExtractor.getValue(rule));
+  public void amendKey(RuleKeyObjectSink builder, Object addsToRuleKey) {
+    builder.setReflectively(valueExtractor.getName(), valueExtractor.getValue(addsToRuleKey));
   }
 }
