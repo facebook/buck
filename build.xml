@@ -506,26 +506,6 @@
     </exec>
   </target>
 
-  <target name="jar" depends="buck-jar, report-generator-jar"/>
-
-  <target name="buck-jar"
-          depends="compile"
-          description="build buck.jar"
-          >
-
-    <jar destfile="${build.dir}/buck.jar" update="true">
-      <zipfileset refid="buck.jars" />
-      <zipfileset refid="third-party.jars" />
-      <fileset dir="${src.dir}"
-               excludes="**/*.java, **/BUCK"
-               />
-      <fileset dir="${classes.dir}" />
-      <manifest>
-        <attribute name="Main-Class" value="com.facebook.buck.cli.Main" />
-      </manifest>
-    </jar>
-  </target>
-
   <target name="report-generator-jar" depends="compile">
     <jar destfile="${build.dir}/report-generator.jar">
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.7.201606060606.jar"/>
@@ -912,5 +892,5 @@
   <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
-  <target name="all" depends="jar, test, javadoc" />
+  <target name="all" depends="default, test, javadoc" />
 </project>
