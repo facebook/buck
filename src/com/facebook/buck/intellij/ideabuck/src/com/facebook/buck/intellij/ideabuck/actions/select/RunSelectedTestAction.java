@@ -16,12 +16,11 @@
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
-import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
-import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
+import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.configurations.TestConfiguration;
 import com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType;
+import com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationUtil;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
-import com.google.common.base.Function;
 import com.intellij.execution.Executor;
 import com.intellij.execution.ExecutorRegistry;
 import com.intellij.execution.ProgramRunnerUtil;
@@ -41,13 +40,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-
-import java.util.List;
 import java.util.Optional;
-
-import javax.annotation.Nullable;
 import javax.annotation.Nonnull;
-import javax.swing.Icon;
+import javax.annotation.Nullable;
+import javax.swing.*;
 
 /**
  * Abstract class collecting common logic for running and debugging buck tests from the editor.
@@ -145,40 +141,33 @@ public class RunSelectedTestAction extends AnAction {
       VirtualFile buckFile,
       boolean debug) {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
-    BuckQueryCommandHandler handler =
-      new BuckQueryCommandHandler(
-          project,
-          buckFile.getParent(),
-          BuckCommand.QUERY,
-          new Function<List<String>, Void>() {
-        @Nullable
-        @Override
-        public Void apply(@Nullable List<String> strings) {
-          if (strings == null || strings.isEmpty() || strings.get(0) == null || strings.get(0).isEmpty()) {
-            return null;
-          }
-          TestConfigurationType type = new TestConfigurationType();
-          if (type.getConfigurationFactories().length == 0) {
-            return null;
-          }
-          RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
-          RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings
-              = (RunnerAndConfigurationSettingsImpl)runManager.createRunConfiguration(
-                  name,
-                  type.getConfigurationFactories()[0]);
-          TestConfiguration testConfiguration =
-              (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
-          testConfiguration.data.target = strings.get(0);
-          testConfiguration.data.testSelectors = testSelectors.orElse("");
+    TestConfigurationType type = new TestConfigurationType();
+    if (type.getConfigurationFactories().length == 0) {
+      return;
+    }
+    RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
+    RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings
+        = (RunnerAndConfigurationSettingsImpl)runManager.createRunConfiguration(
+        name,
+        type.getConfigurationFactories()[0]);
+    TestConfiguration testConfiguration =
+        (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
+    BuckCommandHandler handler = TestConfigurationUtil.getTestConfigurationDataHandler(
+        testConfiguration,
+        name,
+        testSelectors,
+        project,
+        containingFile,
+        buckFile,
+        configuration -> {
           runnerAndConfigurationSettingsResult = runnerAndConfigurationSettings;
           runManager.addConfiguration(runnerAndConfigurationSettings, false);
           return null;
-        }});
-    handler.command().addParameter("owner("+ containingFile.getPath()+")");
+        }
+    );
     buildManager.runInCurrentThreadPostEnd(handler,
       () -> {
         if (runnerAndConfigurationSettingsResult != null) {
-          RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
           runManager.setSelectedConfiguration(runnerAndConfigurationSettingsResult);
           Executor executor;
           if (debug) {
