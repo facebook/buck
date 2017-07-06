@@ -32,6 +32,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -363,6 +364,10 @@ class AndroidBinaryResourcesGraphEnhancer {
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(resourceRules)
                     .addAll(rulesWithResourceDirectories)
+                    .addAll(
+                        RichStream.from(postFilterResourcesCmd)
+                            .flatMap(a -> a.getDeps(ruleFinder).stream())
+                            .toOnceIterable())
                     .build())
             .withoutExtraDeps(),
         resourceDetails.getResourceDirectories(),
