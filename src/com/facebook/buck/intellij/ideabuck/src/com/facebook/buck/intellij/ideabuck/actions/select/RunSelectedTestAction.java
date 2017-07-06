@@ -41,17 +41,15 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-
 import java.util.List;
 import java.util.Optional;
-
-import javax.annotation.Nullable;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.swing.Icon;
 
 /**
- * Abstract class collecting common logic for running and debugging buck tests from the editor.
- * This includes logic to handle creating, running and debugging test configurations in the intellij ide.
+ * Abstract class collecting common logic for running and debugging buck tests from the editor. This
+ * includes logic to handle creating, running and debugging test configurations in the intellij ide.
  */
 public class RunSelectedTestAction extends AnAction {
 
@@ -118,13 +116,7 @@ public class RunSelectedTestAction extends AnAction {
         testSelectors = Optional.of(psiClass.getQualifiedName());
       }
     }
-    createTestConfigurationFromContext(
-        name,
-        testSelectors,
-        project,
-        virtualFile,
-        buckFile,
-        debug);
+    createTestConfigurationFromContext(name, testSelectors, project, virtualFile, buckFile, debug);
   }
 
   /**
@@ -132,7 +124,8 @@ public class RunSelectedTestAction extends AnAction {
    *
    * @param name a {@link String} representing the name of the configuration.
    * @param testSelectors a {@link String} representing optional testSelectors for filtering.
-   * @param project {@link Project} then intellij project corresponding the the file or module under test.
+   * @param project {@link Project} then intellij project corresponding the the file or module under
+   *     test.
    * @param containingFile {@link VirtualFile} the file that containing the impacted tests.
    * @param buckFile {@link VirtualFile} the file representing the buck File.
    * @param debug a {@link boolean} used to signify run or debug.
@@ -146,54 +139,57 @@ public class RunSelectedTestAction extends AnAction {
       boolean debug) {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     BuckQueryCommandHandler handler =
-      new BuckQueryCommandHandler(
-          project,
-          buckFile.getParent(),
-          BuckCommand.QUERY,
-          new Function<List<String>, Void>() {
-        @Nullable
-        @Override
-        public Void apply(@Nullable List<String> strings) {
-          if (strings == null || strings.isEmpty() || strings.get(0) == null || strings.get(0).isEmpty()) {
-            return null;
-          }
-          TestConfigurationType type = new TestConfigurationType();
-          if (type.getConfigurationFactories().length == 0) {
-            return null;
-          }
-          RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
-          RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings
-              = (RunnerAndConfigurationSettingsImpl)runManager.createRunConfiguration(
-                  name,
-                  type.getConfigurationFactories()[0]);
-          TestConfiguration testConfiguration =
-              (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
-          testConfiguration.data.target = strings.get(0);
-          testConfiguration.data.testSelectors = testSelectors.orElse("");
-          runnerAndConfigurationSettingsResult = runnerAndConfigurationSettings;
-          runManager.addConfiguration(runnerAndConfigurationSettings, false);
-          return null;
-        }});
-    handler.command().addParameter("owner("+ containingFile.getPath()+")");
-    buildManager.runInCurrentThreadPostEnd(handler,
-      () -> {
-        if (runnerAndConfigurationSettingsResult != null) {
-          RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
-          runManager.setSelectedConfiguration(runnerAndConfigurationSettingsResult);
-          Executor executor;
-          if (debug) {
-            executor = DefaultDebugExecutor.getDebugExecutorInstance();
-          } else {
-            if (ExecutorRegistry.getInstance().getRegisteredExecutors().length == 0) {
-              return;
+        new BuckQueryCommandHandler(
+            project,
+            buckFile.getParent(),
+            BuckCommand.QUERY,
+            new Function<List<String>, Void>() {
+              @Nullable
+              @Override
+              public Void apply(@Nullable List<String> strings) {
+                if (strings == null
+                    || strings.isEmpty()
+                    || strings.get(0) == null
+                    || strings.get(0).isEmpty()) {
+                  return null;
+                }
+                TestConfigurationType type = new TestConfigurationType();
+                if (type.getConfigurationFactories().length == 0) {
+                  return null;
+                }
+                RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
+                RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings =
+                    (RunnerAndConfigurationSettingsImpl)
+                        runManager.createRunConfiguration(
+                            name, type.getConfigurationFactories()[0]);
+                TestConfiguration testConfiguration =
+                    (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
+                testConfiguration.data.target = strings.get(0);
+                testConfiguration.data.testSelectors = testSelectors.orElse("");
+                runnerAndConfigurationSettingsResult = runnerAndConfigurationSettings;
+                runManager.addConfiguration(runnerAndConfigurationSettings, false);
+                return null;
+              }
+            });
+    handler.command().addParameter("owner(" + containingFile.getPath() + ")");
+    buildManager.runInCurrentThreadPostEnd(
+        handler,
+        () -> {
+          if (runnerAndConfigurationSettingsResult != null) {
+            RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
+            runManager.setSelectedConfiguration(runnerAndConfigurationSettingsResult);
+            Executor executor;
+            if (debug) {
+              executor = DefaultDebugExecutor.getDebugExecutorInstance();
+            } else {
+              if (ExecutorRegistry.getInstance().getRegisteredExecutors().length == 0) {
+                return;
+              }
+              executor = ExecutorRegistry.getInstance().getRegisteredExecutors()[0];
             }
-            executor = ExecutorRegistry.getInstance().getRegisteredExecutors()[0];
+            ProgramRunnerUtil.executeConfiguration(
+                project, runnerAndConfigurationSettingsResult, executor);
           }
-          ProgramRunnerUtil.executeConfiguration(
-              project,
-              runnerAndConfigurationSettingsResult,
-              executor);
-        }
-    });
+        });
   }
 }
