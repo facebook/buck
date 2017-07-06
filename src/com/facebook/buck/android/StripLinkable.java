@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.StripStep;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -44,17 +45,17 @@ public class StripLinkable extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path resultDir;
 
   public StripLinkable(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool stripTool,
       SourcePath sourcePathToStrip,
       String strippedObjectName) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.stripTool = stripTool;
     this.strippedObjectName = strippedObjectName;
     this.sourcePathToStrip = sourcePathToStrip;
-    this.resultDir =
-        BuildTargets.getGenPath(getProjectFilesystem(), buildRuleParams.getBuildTarget(), "%s");
+    this.resultDir = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
   }
 
   @Override

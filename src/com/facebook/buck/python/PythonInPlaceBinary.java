@@ -68,6 +68,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   @AddToRuleKey private final Supplier<String> script;
 
   private PythonInPlaceBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
@@ -82,6 +83,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       Tool python,
       Supplier<String> script) {
     super(
+        buildTarget,
         projectFilesystem,
         params,
         originalDeclareDeps,
@@ -98,6 +100,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   public static PythonInPlaceBinary from(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -112,6 +115,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       SymlinkTree linkTree,
       Tool python) {
     return new PythonInPlaceBinary(
+        buildTarget,
         projectFilesystem,
         // The actual steps of a in-place binary doesn't actually have any build-time deps.
         params.withoutDeclaredDeps().withoutExtraDeps(),
@@ -132,9 +136,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
             mainModule,
             components,
             projectFilesystem
-                .resolve(
-                    getBinPath(
-                        params.getBuildTarget(), projectFilesystem, pexExtension, legacyOutputPath))
+                .resolve(getBinPath(buildTarget, projectFilesystem, pexExtension, legacyOutputPath))
                 .getParent()
                 .relativize(linkTree.getRoot()),
             preloadLibraries));

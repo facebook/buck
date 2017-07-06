@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
@@ -105,10 +106,12 @@ public class TrimUberRDotJavaTest {
     filesystem.createParentDirs(rDotJavaPath);
     filesystem.writeContentsToPath(rDotJavaContents, rDotJavaPath);
 
+    BuildTarget dexTarget = BuildTargetFactory.newInstance("//:dex");
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
         new DexProducedFromJavaLibrary(
+            dexTarget,
             filesystem,
-            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:dex")),
+            TestBuildRuleParams.create(),
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary
         .getBuildOutputInitializer()
@@ -122,10 +125,12 @@ public class TrimUberRDotJavaTest {
                         ImmutableList.of("com.test.my_first_resource"))));
     resolver.addToIndex(dexProducedFromJavaLibrary);
 
+    BuildTarget trimTarget = BuildTargetFactory.newInstance("//:trim");
     TrimUberRDotJava trimUberRDotJava =
         new TrimUberRDotJava(
+            trimTarget,
             filesystem,
-            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:trim")),
+            TestBuildRuleParams.create(),
             Optional.of(new PathSourcePath(filesystem, rDotJavaDir)),
             ImmutableList.of(dexProducedFromJavaLibrary),
             keepResourcePattern);

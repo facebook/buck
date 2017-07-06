@@ -44,18 +44,21 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
     this(
+        target,
         new FakeProjectFilesystem(),
-        TestBuildRuleParams.create(target).withDeclaredDeps(deps),
+        TestBuildRuleParams.create().withDeclaredDeps(deps),
         resolver,
         labels);
   }
 
   public FakeTestRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       ImmutableSet<String> labels) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         resolver,
@@ -69,6 +72,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   }
 
   public FakeTestRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -77,7 +81,7 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       boolean runTestSeparately,
       ImmutableList<Step> testSteps,
       Callable<TestResults> interpretedTestResults) {
-    super(projectFilesystem, buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams, resolver);
     this.labels = labels;
     this.pathToTestOutputDirectory = pathToTestOutputDirectory;
     this.runTestSeparately = runTestSeparately;

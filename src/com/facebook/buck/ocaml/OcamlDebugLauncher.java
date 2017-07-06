@@ -18,6 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -38,10 +39,11 @@ public class OcamlDebugLauncher extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final OcamlDebugLauncherStep.Args args;
 
   public OcamlDebugLauncher(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       OcamlDebugLauncherStep.Args args) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.args = args;
   }
 

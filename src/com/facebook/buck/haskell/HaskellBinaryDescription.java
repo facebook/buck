@@ -123,6 +123,7 @@ public class HaskellBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -132,11 +133,11 @@ public class HaskellBinaryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
-    Linker.LinkableDepType depType = getLinkStyle(params.getBuildTarget(), args);
+    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    Linker.LinkableDepType depType = getLinkStyle(buildTarget, args);
 
     // The target to use for the link rule.
-    BuildTarget binaryTarget = params.getBuildTarget().withFlavors(InternalFlavor.of("binary"));
+    BuildTarget binaryTarget = buildTarget.withFlavors(InternalFlavor.of("binary"));
 
     // Maintain backwards compatibility to ease upgrade flows.
     if (haskellConfig.shouldUsedOldBinaryOutputLocation().orElse(true)) {
@@ -154,12 +155,7 @@ public class HaskellBinaryDescription
         .ifPresent(
             query ->
                 QueryUtils.resolveDepQuery(
-                        params.getBuildTarget(),
-                        query,
-                        resolver,
-                        cellRoots,
-                        targetGraph,
-                        args.getDeps())
+                        buildTarget, query, resolver, cellRoots, targetGraph, args.getDeps())
                     .filter(NativeLinkable.class::isInstance)
                     .forEach(depsBuilder::add));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
@@ -182,7 +178,7 @@ public class HaskellBinaryDescription
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   ruleFinder,
-                  params.getBuildTarget(),
+                  buildTarget,
                   projectFilesystem,
                   cxxPlatform,
                   deps,
@@ -191,8 +187,7 @@ public class HaskellBinaryDescription
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path absBinaryDir =
-          params
-              .getBuildTarget()
+          buildTarget
               .getCellPath()
               .resolve(HaskellLinkRule.getOutputDir(binaryTarget, projectFilesystem));
       linkFlagsBuilder.addAll(
@@ -219,12 +214,13 @@ public class HaskellBinaryDescription
                 args.getLinkerFlags(),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        params.getBuildTarget(), cellRoots, resolver, cxxPlatform, f))));
+                        buildTarget, cellRoots, resolver, cxxPlatform, f))));
 
     // Generate the compile rule and add its objects to the link.
     HaskellCompileRule compileRule =
         resolver.addToIndex(
             HaskellDescriptionUtils.requireCompileRule(
+                buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -242,7 +238,7 @@ public class HaskellBinaryDescription
                 Optional.empty(),
                 args.getCompilerFlags(),
                 HaskellSources.from(
-                    params.getBuildTarget(),
+                    buildTarget,
                     resolver,
                     pathResolver,
                     ruleFinder,
@@ -272,6 +268,7 @@ public class HaskellBinaryDescription
             false);
 
     return new HaskellBinary(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(linkRule),
         ruleFinder,

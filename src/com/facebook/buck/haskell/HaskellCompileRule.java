@@ -110,6 +110,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final Preprocessor preprocessor;
 
   private HaskellCompileRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool compiler,
@@ -126,7 +127,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
       Preprocessor preprocessor) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.haskellVersion = haskellVersion;
     this.flags = flags;
@@ -179,8 +180,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                             .iterator())
                     .build());
     return new HaskellCompileRule(
+        target,
         projectFilesystem,
-        baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
+        baseParams.withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
         haskellVersion,
         flags,

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -65,6 +66,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean cache;
 
   public JavaBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       JavaRuntimeLauncher javaRuntimeLauncher,
@@ -76,7 +78,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
       ImmutableSet<SourcePath> transitiveClasspaths,
       boolean cache) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;

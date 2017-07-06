@@ -83,6 +83,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<SourcePath> abiInputs;
 
   public DummyRDotJava(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -93,6 +94,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> finalRName,
       boolean useOldStyleableFormat) {
     this(
+        buildTarget,
         projectFilesystem,
         params,
         ruleFinder,
@@ -106,6 +108,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private DummyRDotJava(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -117,6 +120,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
     super(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);

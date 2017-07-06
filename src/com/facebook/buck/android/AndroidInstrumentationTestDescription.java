@@ -54,6 +54,7 @@ public class AndroidInstrumentationTestDescription
   @Override
   public AndroidInstrumentationTest createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -64,10 +65,11 @@ public class AndroidInstrumentationTestDescription
       throw new HumanReadableException(
           "In %s, instrumentation_apk='%s' must be an android_binary(), apk_genrule() or "
               + "android_instrumentation_apk(), but was %s().",
-          params.getBuildTarget(), apk.getFullyQualifiedName(), apk.getType());
+          buildTarget, apk.getFullyQualifiedName(), apk.getType());
     }
 
     return new AndroidInstrumentationTest(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,

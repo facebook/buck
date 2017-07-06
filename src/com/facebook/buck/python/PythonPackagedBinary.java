@@ -56,6 +56,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final boolean cache;
 
   private PythonPackagedBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
@@ -72,6 +73,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       boolean cache,
       boolean legacyOutputPath) {
     super(
+        buildTarget,
         projectFilesystem,
         params,
         originalDeclareDeps,
@@ -92,6 +94,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   }
 
   static PythonPackagedBinary from(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -107,6 +110,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       boolean cache,
       boolean legacyOutputPath) {
     return new PythonPackagedBinary(
+        buildTarget,
         projectFilesystem,
         params
             .withDeclaredDeps(

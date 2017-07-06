@@ -1085,9 +1085,9 @@ public class CxxDescriptionEnhancer {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JsonConcatenate(
+        buildTarget,
         projectFilesystem,
         new BuildRuleParams(
-            buildTarget,
             () ->
                 ImmutableSortedSet.copyOf(
                     ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),

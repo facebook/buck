@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -85,10 +86,12 @@ public class DummyRDotJavaTest {
                 .build());
     setAndroidResourceBuildOutput(resourceRule2);
 
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/base:rule");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
+            buildTarget,
             filesystem,
-            TestBuildRuleParams.create(BuildTargetFactory.newInstance("//java/base:rule")),
+            TestBuildRuleParams.create(),
             ruleFinder,
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
@@ -176,11 +179,12 @@ public class DummyRDotJavaTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
+            buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(
-                BuildTargetFactory.newInstance("//java/com/example:library")),
+            TestBuildRuleParams.create(),
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(

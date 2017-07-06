@@ -91,6 +91,7 @@ public class AndroidInstrumentationApkDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -101,9 +102,7 @@ public class AndroidInstrumentationApkDescription
     if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
-          params.getBuildTarget(),
-          installableApk.getFullyQualifiedName(),
-          installableApk.getType());
+          buildTarget, installableApk.getFullyQualifiedName(), installableApk.getType());
     }
     AndroidBinary apkUnderTest =
         ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
@@ -124,11 +123,11 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
-    Path primaryDexPath =
-        AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), projectFilesystem);
+    Path primaryDexPath = AndroidBinary.getPrimaryDexPath(buildTarget, projectFilesystem);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            buildTarget,
             projectFilesystem,
             params,
             targetGraph,
@@ -173,13 +172,14 @@ public class AndroidInstrumentationApkDescription
             dxExecutorService,
             apkUnderTest.getManifestEntries(),
             cxxBuckConfig,
-            new APKModuleGraph(targetGraph, params.getBuildTarget(), Optional.empty()),
+            new APKModuleGraph(targetGraph, buildTarget, Optional.empty()),
             dxConfig,
             /* postFilterResourcesCommands */ Optional.empty());
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
 
     return new AndroidInstrumentationApk(
+        buildTarget,
         projectFilesystem,
         params
             .withExtraDeps(enhancementResult.getFinalDeps())

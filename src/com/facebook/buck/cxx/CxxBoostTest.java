@@ -75,6 +75,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private final BuildRule binary;
 
   public CxxBoostTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -90,6 +91,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
     super(
+        buildTarget,
         projectFilesystem,
         params,
         executable,

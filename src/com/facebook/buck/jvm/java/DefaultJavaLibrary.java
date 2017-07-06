@@ -144,13 +144,20 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
   public static DefaultJavaLibraryBuilder builder(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-        targetGraph, projectFilesystem, params, buildRuleResolver, cellRoots, javaBuckConfig);
+        targetGraph,
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        cellRoots,
+        javaBuckConfig);
   }
 
   @Override
@@ -159,6 +166,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   protected DefaultJavaLibrary(
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -181,7 +189,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
-    super(projectFilesystem, params, resolver);
+    super(buildTarget, projectFilesystem, params, resolver);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
 
@@ -190,7 +198,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     for (BuildRule dep : fullJarExportedDeps) {
       if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
-            params.getBuildTarget()
+            buildTarget
                 + ": exported dep "
                 + dep.getBuildTarget()
                 + " ("
@@ -215,7 +223,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
 
     this.trackClassUsage = trackClassUsage;
     if (this.trackClassUsage) {
-      depFileRelativePath = getUsedClassesFilePath(params.getBuildTarget(), projectFilesystem);
+      depFileRelativePath = getUsedClassesFilePath(buildTarget, projectFilesystem);
     }
     this.abiClasspath = abiClasspath;
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
@@ -242,7 +250,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
         Suppliers.memoize(
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.generatedSourceFolder = generatedSourceFolder;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
   }

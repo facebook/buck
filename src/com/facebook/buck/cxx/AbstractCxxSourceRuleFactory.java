@@ -360,8 +360,9 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
         CxxPreprocessAndCompile.compile(
+            target,
             getProjectFilesystem(),
-            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
+            buildRuleParamsWithAndDeps(depsBuilder.build()),
             compilerDelegate,
             getCompileOutputPath(target, name),
             source.getPath(),
@@ -459,8 +460,9 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxInferCapture result =
         new CxxInferCapture(
+            target,
             getProjectFilesystem(),
-            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
+            buildRuleParamsWithAndDeps(depsBuilder.build()),
             ppFlags,
             cFlags,
             source.getPath(),
@@ -539,8 +541,9 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result =
         CxxPreprocessAndCompile.preprocessAndCompile(
+            target,
             getProjectFilesystem(),
-            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
+            buildRuleParamsWithAndDeps(depsBuilder.build()),
             preprocessorDelegate,
             compilerDelegate,
             getCompileOutputPath(target, name),
@@ -749,8 +752,9 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CxxPrecompiledHeader rule =
         new CxxPrecompiledHeader(
+            target,
             getProjectFilesystem(),
-            buildRuleParamsWithTargetAndDeps(target, depsBuilder.build()),
+            buildRuleParamsWithAndDeps(depsBuilder.build()),
             output,
             preprocessorDelegate,
             compilerDelegate,
@@ -886,10 +890,8 @@ abstract class AbstractCxxSourceRuleFactory {
     return factory.requirePreprocessAndCompileRules(sources);
   }
 
-  private BuildRuleParams buildRuleParamsWithTargetAndDeps(
-      BuildTarget target, SortedSet<BuildRule> deps) {
-    return new BuildRuleParams(
-        target, () -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
+  private BuildRuleParams buildRuleParamsWithAndDeps(SortedSet<BuildRule> deps) {
+    return new BuildRuleParams(() -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
   }
 
   public enum PicType {

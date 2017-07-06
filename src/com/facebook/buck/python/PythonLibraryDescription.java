@@ -75,12 +75,13 @@ public class PythonLibraryDescription
   @Override
   public PythonLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       PythonLibraryDescriptionArg args) {
-    return new PythonLibrary(projectFilesystem, params, resolver);
+    return new PythonLibrary(buildTarget, projectFilesystem, params, resolver);
   }
 
   @Override

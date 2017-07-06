@@ -32,10 +32,11 @@ public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAnd
   private final SourcePathRuleFinder ruleFinder;
 
   public BinaryWrapperRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
   }
 

@@ -64,13 +64,14 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
 
   public DTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<String> labels,
       Optional<Long> testRuleTimeoutMs) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.contacts = contacts;
     this.labels = labels;
     this.testRuleTimeoutMs = testRuleTimeoutMs;

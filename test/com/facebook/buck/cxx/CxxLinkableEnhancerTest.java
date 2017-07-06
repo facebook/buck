@@ -79,12 +79,13 @@ public class CxxLinkableEnhancerTest {
     private final NativeLinkableInput sharedInput;
 
     public FakeNativeLinkable(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         SourcePathResolver resolver,
         NativeLinkableInput staticInput,
         NativeLinkableInput sharedInput) {
-      super(projectFilesystem, params, resolver);
+      super(buildTarget, projectFilesystem, params, resolver);
       this.staticInput = Preconditions.checkNotNull(staticInput);
       this.sharedInput = Preconditions.checkNotNull(sharedInput);
     }
@@ -125,10 +126,11 @@ public class CxxLinkableEnhancerTest {
       NativeLinkableInput staticNativeLinkableInput,
       NativeLinkableInput sharedNativeLinkableInput,
       BuildRule... deps) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
     return new FakeNativeLinkable(
+        buildTarget,
         new FakeProjectFilesystem(),
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance(target))
-            .withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
         resolver,
         staticNativeLinkableInput,
         sharedNativeLinkableInput);
@@ -197,7 +199,10 @@ public class CxxLinkableEnhancerTest {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule =
         new FakeBuildRule(
-            new FakeProjectFilesystem(), TestBuildRuleParams.create(fakeBuildTarget), pathResolver);
+            fakeBuildTarget,
+            new FakeProjectFilesystem(),
+            TestBuildRuleParams.create(),
+            pathResolver);
     fakeBuildRule.setOutputFile("foo");
     resolver.addToIndex(fakeBuildRule);
 

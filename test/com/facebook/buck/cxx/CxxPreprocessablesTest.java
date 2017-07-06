@@ -58,11 +58,12 @@ public class CxxPreprocessablesTest {
     private final CxxPreprocessorInput input;
 
     public FakeCxxPreprocessorDep(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         SourcePathResolver resolver,
         CxxPreprocessorInput input) {
-      super(projectFilesystem, params, resolver);
+      super(buildTarget, projectFilesystem, params, resolver);
       this.input = Preconditions.checkNotNull(input);
     }
 
@@ -96,8 +97,9 @@ public class CxxPreprocessablesTest {
       CxxPreprocessorInput input,
       BuildRule... deps) {
     return new FakeCxxPreprocessorDep(
+        target,
         new FakeProjectFilesystem(),
-        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
         resolver,
         input);
   }

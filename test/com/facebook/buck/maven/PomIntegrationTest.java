@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -193,8 +194,9 @@ public class PomIntegrationTest {
         @Nullable SourcePath pomTemplate,
         BuildRule... deps) {
       super(
+          BuildTargetFactory.newInstance(target),
           filesystem,
-          TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
+          TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
           new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
       this.coords = coords;
       this.pomTemplate = pomTemplate;

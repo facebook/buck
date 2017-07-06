@@ -48,6 +48,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final LuaConfig.PackageStyle packageStyle;
 
   public LuaBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -57,7 +58,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       LuaPackageComponents components,
       Tool lua,
       LuaConfig.PackageStyle packageStyle) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(!output.isAbsolute());
     this.output = output;

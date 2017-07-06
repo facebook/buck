@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -54,12 +55,14 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
   private final Path outputPath;
 
   NativeLibraryProguardGenerator(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<SourcePath> nativeLibsDirs,
       BuildRule codeGenerator) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             RichStream.from(ruleFinder.filterBuildRuleInputs(nativeLibsDirs))

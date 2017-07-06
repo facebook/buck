@@ -46,12 +46,13 @@ public class DefaultWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   protected DefaultWorkerTool(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams ruleParams,
       Tool tool,
       int maxWorkers,
       boolean isPersistent) {
-    super(projectFilesystem, ruleParams);
+    super(buildTarget, projectFilesystem, ruleParams);
     this.tool = tool;
     this.maxWorkers = maxWorkers;
     this.isPersistent = isPersistent;

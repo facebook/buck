@@ -86,6 +86,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public CxxLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -104,7 +105,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean canBeAsset,
       boolean propagateLinkables,
       boolean reexportAllHeaderDependencies) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.deps = deps;
     this.exportedDeps = exportedDeps;

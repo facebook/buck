@@ -79,16 +79,14 @@ public class RustTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       RustTestDescriptionArg args)
       throws NoSuchBuildTargetException {
-    final BuildTarget buildTarget = params.getBuildTarget();
-
-    BuildTarget exeTarget =
-        params.getBuildTarget().withAppendedFlavors(InternalFlavor.of("unittest"));
+    BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
         RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
@@ -98,8 +96,9 @@ public class RustTestDescription
     BinaryWrapperRule testExeBuild =
         resolver.addToIndex(
             RustCompileUtils.createBinaryBuildRule(
+                exeTarget,
                 projectFilesystem,
-                params.withBuildTarget(exeTarget),
+                params,
                 resolver,
                 rustBuckConfig,
                 cxxPlatforms,
@@ -113,7 +112,7 @@ public class RustTestDescription
                     .flatMap(x -> x)
                     .iterator(),
                 args.getLinkerFlags().iterator(),
-                RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.getLinkStyle()),
+                RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
                 args.isRpath(),
                 args.getSrcs(),
                 args.getCrateRoot(),
@@ -127,6 +126,7 @@ public class RustTestDescription
     BuildRuleParams testParams = params.copyAppendingExtraDeps(testExe.getDeps(ruleFinder));
 
     return new RustTest(
+        buildTarget,
         projectFilesystem,
         testParams,
         ruleFinder,

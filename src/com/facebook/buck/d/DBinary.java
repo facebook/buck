@@ -42,12 +42,13 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePath output;
 
   public DBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Tool executable,
       SourcePath output) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.executable = executable;
     this.output = output;

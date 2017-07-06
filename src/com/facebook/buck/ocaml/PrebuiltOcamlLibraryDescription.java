@@ -49,13 +49,12 @@ public class PrebuiltOcamlLibraryDescription
   @Override
   public OcamlLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PrebuiltOcamlLibraryDescriptionArg args) {
-
-    final BuildTarget target = params.getBuildTarget();
 
     final boolean bytecodeOnly = args.getBytecodeOnly();
 
@@ -65,7 +64,7 @@ public class PrebuiltOcamlLibraryDescription
     final String bytecodeLib = args.getBytecodeLib();
     final ImmutableList<String> cLibs = args.getCLibs();
 
-    final Path libPath = target.getBasePath().resolve(libDir);
+    final Path libPath = buildTarget.getBasePath().resolve(libDir);
     final Path includeDir = libPath.resolve(args.getIncludeDir());
 
     final Optional<SourcePath> staticNativeLibraryPath =
@@ -86,6 +85,7 @@ public class PrebuiltOcamlLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     return new PrebuiltOcamlLibrary(
+        buildTarget,
         projectFilesystem,
         params,
         ruleFinder,

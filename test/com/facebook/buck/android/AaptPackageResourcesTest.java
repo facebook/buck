@@ -105,7 +105,7 @@ public class AaptPackageResourcesTest {
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = new SourcePathResolver(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
-    params = TestBuildRuleParams.create(aaptTarget);
+    params = TestBuildRuleParams.create();
 
     hashCache = new FakeFileHashCache(new HashMap<>());
     createPathSourcePath("res1", "resources1");
@@ -210,11 +210,9 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider =
         new ResourcesFilter(
+            aaptTarget.withFlavors(InternalFlavor.of("filter")),
             filesystem,
-            params
-                .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-                .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
-                .withoutExtraDeps(),
+            params.withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2)).withoutExtraDeps(),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -226,11 +224,9 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider =
         new ResourcesFilter(
+            aaptTarget.withFlavors(InternalFlavor.of("filter")),
             filesystem,
-            params
-                .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-                .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
-                .withoutExtraDeps(),
+            params.withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2)).withoutExtraDeps(),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
@@ -263,6 +259,7 @@ public class AaptPackageResourcesTest {
     return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
         .build(
             new AaptPackageResources(
+                aaptTarget,
                 filesystem,
                 params,
                 ruleFinder,

@@ -17,6 +17,7 @@
 package com.facebook.buck.zip;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -40,12 +41,13 @@ public class ZipFileDescription
   @Override
   public Zip createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ZipFileDescriptionArg args) {
-    return new Zip(projectFilesystem, params, args.getOut(), args.getSrcs());
+    return new Zip(buildTarget, projectFilesystem, params, args.getOut(), args.getSrcs());
   }
 
   @BuckStyleImmutable

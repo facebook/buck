@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -33,11 +34,12 @@ public class Keystore extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final SourcePath pathToProperties;
 
   public Keystore(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePath store,
       SourcePath properties) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.pathToStore = store;
     this.pathToProperties = properties;
   }

@@ -45,7 +45,7 @@ public class CxxPrecompiledHeaderTest {
   @Test
   public void generatesPchStepShouldUseCorrectLang() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Preprocessor preprocessorSupportingPch =
@@ -60,6 +60,7 @@ public class CxxPrecompiledHeaderTest {
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
+            target,
             new FakeProjectFilesystem(),
             params,
             Paths.get("dir/foo.hash1.hash2.gch"),

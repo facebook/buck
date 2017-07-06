@@ -68,13 +68,13 @@ public class GenAidlTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathResolver pathResolver =
         new SourcePathResolver(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    GenAidl genAidlRule = new GenAidl(stubFilesystem, params, pathToAidl, importPath);
+    GenAidl genAidlRule = new GenAidl(target, stubFilesystem, params, pathToAidl, importPath);
 
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(

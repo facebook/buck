@@ -21,6 +21,8 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -68,11 +70,14 @@ public class PythonPackagedBinaryTest {
       throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary =
         PythonPackagedBinary.from(
+            target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create("//:bin"),
+            TestBuildRuleParams.create(),
             ruleFinder,
             PythonTestUtils.PYTHON_PLATFORM,
             PEX,

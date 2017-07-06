@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -72,12 +73,14 @@ public class MergeAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private Optional<SourcePath> baseApk;
 
   public MergeAssets(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             ImmutableSortedSet.copyOf(

@@ -564,9 +564,11 @@ public class RemoteFileTest {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toAbsolutePath());
 
-    BuildRuleParams params = TestBuildRuleParams.create("//cake:walk");
+    BuildTarget target = BuildTargetFactory.newInstance("//cake:walk");
+    BuildRuleParams params = TestBuildRuleParams.create();
     RemoteFile remoteFile =
         new RemoteFile(
+            target,
             filesystem,
             params,
             downloader,

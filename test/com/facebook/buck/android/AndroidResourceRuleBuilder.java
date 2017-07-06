@@ -53,8 +53,9 @@ public class AndroidResourceRuleBuilder {
 
     public AndroidResource build() {
       return new AndroidResource(
+          buildTarget,
           projectFilesystem,
-          TestBuildRuleParams.create(buildTarget),
+          TestBuildRuleParams.create(),
           ruleFinder,
           deps,
           res,

@@ -131,6 +131,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final AtomicReference<String> rDotJavaPackage;
 
   public AndroidResource(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -146,6 +147,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
@@ -165,7 +167,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.hasWhitelistedStrings = hasWhitelistedStrings;
     this.resourceUnion = resourceUnion;
 
-    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.pathToTextSymbolsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
     this.pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
@@ -194,6 +195,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AndroidResource(
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -206,6 +208,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         ruleFinder,
@@ -222,6 +225,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AndroidResource(
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -236,6 +240,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         ruleFinder,

@@ -84,6 +84,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
 
   public GoTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -93,7 +94,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.testMain = testMain;
     this.labels = labels;

@@ -64,6 +64,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   private CxxInferCapture createCaptureRule(
+      BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem filesystem,
@@ -98,6 +99,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             /* leadingIncludePaths */ Optional.empty());
 
     return new CxxInferCapture(
+        buildTarget,
         filesystem,
         buildRuleParams,
         CxxToolFlags.of(),
@@ -211,7 +213,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     "short2"))
             .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
             .build();
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create(buildTarget2);
+    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -221,7 +223,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCapture captureRule =
-        createCaptureRule(buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
+        createCaptureRule(
+            buildTarget2, buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
@@ -278,7 +281,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     "short2"))
             .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
             .build();
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create(buildTarget2);
+    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -288,7 +291,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCapture captureRule =
-        createCaptureRule(buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
+        createCaptureRule(
+            buildTarget2, buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(

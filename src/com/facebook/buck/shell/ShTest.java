@@ -78,6 +78,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
 
   protected ShTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -89,7 +90,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Set<String> labels,
       Optional<String> type,
       ImmutableSet<String> contacts) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.args = args;
     this.env = env;

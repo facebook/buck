@@ -16,21 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class TestBuildRuleParams {
 
-  public static BuildRuleParams create(BuildTarget buildTarget) {
+  public static BuildRuleParams create() {
     return new BuildRuleParams(
-        buildTarget,
-        () -> ImmutableSortedSet.of(),
-        () -> ImmutableSortedSet.of(),
-        ImmutableSortedSet.of());
-  }
-
-  public static BuildRuleParams create(String buildTarget) {
-    return create(BuildTargetFactory.newInstance(buildTarget));
+        () -> ImmutableSortedSet.of(), () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
   }
 }

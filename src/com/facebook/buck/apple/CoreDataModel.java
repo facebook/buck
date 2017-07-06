@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -57,16 +58,17 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path outputDir;
 
   CoreDataModel(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleCxxPlatform appleCxxPlatform,
       String moduleName,
       ImmutableSet<SourcePath> dataModelPaths) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.moduleName = moduleName;
     this.dataModelPaths = dataModelPaths;
     String outputDirString =
-        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .toString()
             .replace('#', '-'); // momc doesn't like # in paths
     this.outputDir = Paths.get(outputDirString);

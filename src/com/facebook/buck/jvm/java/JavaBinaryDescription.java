@@ -80,6 +80,7 @@ public class JavaBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -90,12 +91,13 @@ public class JavaBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(params.getBuildDeps(), cxxPlatform);
+    BuildTarget binaryBuildTarget = buildTarget;
     BuildRuleParams binaryParams = params;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
     // package it into the final fat JAR, so adjust it's params to use a flavored target.
     if (!nativeLibraries.isEmpty()) {
-      binaryParams = params.withAppendedFlavor(FAT_JAR_INNER_JAR_FLAVOR);
+      binaryBuildTarget = binaryBuildTarget.withAppendedFlavors(FAT_JAR_INNER_JAR_FLAVOR);
     }
 
     // Construct the build rule to build the binary JAR.
@@ -105,6 +107,7 @@ public class JavaBinaryDescription
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule =
         new JavaBinary(
+            binaryBuildTarget,
             projectFilesystem,
             binaryParams.copyAppendingExtraDeps(transitiveClasspathDeps),
             javaOptions.getJavaRuntimeLauncher(),
@@ -125,6 +128,7 @@ public class JavaBinaryDescription
       SourcePath innerJar = innerJarRule.getSourcePathToOutput();
       rule =
           new JarFattener(
+              buildTarget,
               projectFilesystem,
               params.copyAppendingExtraDeps(
                   Suppliers.<Iterable<BuildRule>>ofInstance(

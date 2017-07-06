@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -47,6 +48,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -57,7 +59,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
         CORE_DATA_MODEL_EXTENSION.equals(extension)
             || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
 
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {

@@ -73,6 +73,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
 
   public CxxTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool executable,
@@ -85,7 +86,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.executable = executable;
     this.env = env;
     this.args = Suppliers.memoize(args);

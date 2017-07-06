@@ -73,6 +73,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
 
   private PythonTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -83,7 +84,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.env = env;
@@ -95,6 +96,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public static PythonTest from(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -105,6 +107,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     return new PythonTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(binary)).withoutExtraDeps(),
         ruleFinder,

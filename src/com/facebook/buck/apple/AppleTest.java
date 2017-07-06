@@ -170,6 +170,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String platformName,
       Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleBundle testBundle,
@@ -185,7 +186,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
       SourcePathRuleFinder ruleFinder) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.useXctest = useXctest;

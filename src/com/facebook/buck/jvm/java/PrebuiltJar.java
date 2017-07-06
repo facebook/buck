@@ -22,6 +22,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -82,6 +83,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   public PrebuiltJar(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -91,7 +93,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
       final boolean provided) {
-    super(projectFilesystem, params, resolver);
+    super(buildTarget, projectFilesystem, params, resolver);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
     this.gwtJar = gwtJar;
@@ -128,7 +130,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
             getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
     this.binaryJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
 
-    buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   public Optional<SourcePath> getSourceJar() {

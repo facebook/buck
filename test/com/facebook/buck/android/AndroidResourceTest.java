@@ -118,7 +118,7 @@ public class AndroidResourceTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -126,6 +126,7 @@ public class AndroidResourceTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
+            buildTarget,
             projectFilesystem,
             params,
             ruleFinder,
@@ -152,7 +153,7 @@ public class AndroidResourceTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -160,6 +161,7 @@ public class AndroidResourceTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
+            buildTarget,
             projectFilesystem,
             params,
             ruleFinder,

@@ -46,6 +46,7 @@ public class ReactNativeLibraryGraphEnhancer {
   }
 
   private ReactNativeBundle createReactNativeBundle(
+      BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
@@ -67,9 +68,9 @@ public class ReactNativeLibraryGraphEnhancer {
     }
 
     return new ReactNativeBundle(
+        target,
         projectFilesystem,
         baseParams
-            .withBuildTarget(target)
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(args.getEntryPath()))
@@ -79,10 +80,10 @@ public class ReactNativeLibraryGraphEnhancer {
             .withoutExtraDeps(),
         args.getEntryPath(),
         args.getSrcs(),
-        ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
-        ReactNativeFlavors.useIndexedUnbundling(baseParams.getBuildTarget()),
-        ReactNativeFlavors.isDevMode(baseParams.getBuildTarget()),
-        ReactNativeFlavors.exposeSourceMap(baseParams.getBuildTarget()),
+        ReactNativeFlavors.useUnbundling(baseBuildTarget),
+        ReactNativeFlavors.useIndexedUnbundling(baseBuildTarget),
+        ReactNativeFlavors.isDevMode(baseBuildTarget),
+        ReactNativeFlavors.exposeSourceMap(baseBuildTarget),
         args.getBundleName(),
         packagerFlags,
         jsPackager,
@@ -90,15 +91,16 @@ public class ReactNativeLibraryGraphEnhancer {
   }
 
   public AndroidReactNativeLibrary enhanceForAndroid(
+      BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AndroidReactNativeLibraryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    BuildTarget originalBuildTarget = params.getBuildTarget();
     ReactNativeBundle bundle =
         createReactNativeBundle(
+            originalBuildTarget,
             projectFilesystem,
             params,
             resolver,
@@ -111,15 +113,15 @@ public class ReactNativeLibraryGraphEnhancer {
     ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
     extraDeps.add(bundle);
     if (args.getPackage().isPresent()) {
-      BuildRuleParams paramsForResource =
-          params
-              .withAppendedFlavor(REACT_NATIVE_ANDROID_RES_FLAVOR)
-              .withExtraDeps(ImmutableSortedSet.of(bundle));
+      BuildTarget buildTargetForResource =
+          originalBuildTarget.withAppendedFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR);
+      BuildRuleParams paramsForResource = params.withExtraDeps(ImmutableSortedSet.of(bundle));
 
       SourcePath resources =
           new ExplicitBuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources());
       BuildRule resource =
           new AndroidResource(
+              buildTargetForResource,
               projectFilesystem,
               paramsForResource,
               ruleFinder,
@@ -136,28 +138,35 @@ public class ReactNativeLibraryGraphEnhancer {
 
       Aapt2Compile aapt2Compile =
           new Aapt2Compile(
+              buildTargetForResource.withAppendedFlavors(
+                  AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
               projectFilesystem,
-              paramsForResource.withAppendedFlavor(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
+              paramsForResource,
               resources);
       resolver.addToIndex(aapt2Compile);
     }
 
     return new AndroidReactNativeLibrary(
-        projectFilesystem, params.copyAppendingExtraDeps(extraDeps.build()), bundle);
+        originalBuildTarget,
+        projectFilesystem,
+        params.copyAppendingExtraDeps(extraDeps.build()),
+        bundle);
   }
 
   public ReactNativeBundle enhanceForIos(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ReactNativeLibraryArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return createReactNativeBundle(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
         ruleFinder,
-        params.getBuildTarget(),
+        buildTarget,
         args,
         ReactNativePlatform.IOS);
   }

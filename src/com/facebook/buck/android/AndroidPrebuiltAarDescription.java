@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -92,6 +93,7 @@ public class AndroidPrebuiltAarDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -100,7 +102,7 @@ public class AndroidPrebuiltAarDescription
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
 
-    ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    ImmutableSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
       Preconditions.checkState(flavors.size() == 1);
       BuildRuleParams unzipAarParams =
@@ -108,21 +110,21 @@ public class AndroidPrebuiltAarDescription
               .withoutDeclaredDeps()
               .withExtraDeps(
                   ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(args.getAar())));
-      return new UnzipAar(projectFilesystem, unzipAarParams, args.getAar());
+      return new UnzipAar(buildTarget, projectFilesystem, unzipAarParams, args.getAar());
     }
 
     BuildRule unzipAarRule =
-        buildRuleResolver.requireRule(params.getBuildTarget().withFlavors(AAR_UNZIP_FLAVOR));
+        buildRuleResolver.requireRule(buildTarget.withFlavors(AAR_UNZIP_FLAVOR));
     Preconditions.checkState(
         unzipAarRule instanceof UnzipAar,
         "aar_unzip flavor created rule of unexpected type %s for target %s",
         unzipAarRule.getClass(),
-        params.getBuildTarget());
+        buildTarget);
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
+          buildTarget,
           ruleFinder,
           projectFilesystem,
           params,
@@ -151,6 +153,7 @@ public class AndroidPrebuiltAarDescription
               .withDeclaredDeps(ImmutableSortedSet.copyOf(javaDeps))
               .withExtraDeps(ImmutableSortedSet.of(unzipAar));
       return new PrebuiltJar(
+          buildTarget,
           projectFilesystem,
           /* params */ buildRuleParams,
           /* resolver */ pathResolver,
@@ -165,6 +168,7 @@ public class AndroidPrebuiltAarDescription
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       return new Aapt2Compile(
+          buildTarget,
           projectFilesystem,
           params.copyAppendingExtraDeps(unzipAarRule),
           unzipAar.getResDirectory());
@@ -173,13 +177,13 @@ public class AndroidPrebuiltAarDescription
     BuildRule prebuiltJarRule =
         buildRuleResolver.requireRule(
             BuildTargets.createFlavoredBuildTarget(
-                params.getBuildTarget().checkUnflavored(), AAR_PREBUILT_JAR_FLAVOR));
+                buildTarget.checkUnflavored(), AAR_PREBUILT_JAR_FLAVOR));
     Preconditions.checkState(
         prebuiltJarRule instanceof PrebuiltJar,
         "%s flavor created rule of unexpected type %s for target %s",
         AAR_PREBUILT_JAR_FLAVOR,
         unzipAarRule.getType(),
-        params.getBuildTarget());
+        buildTarget);
     PrebuiltJar prebuiltJar = (PrebuiltJar) prebuiltJarRule;
 
     Preconditions.checkArgument(
@@ -190,6 +194,7 @@ public class AndroidPrebuiltAarDescription
             .withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
     return new AndroidPrebuiltAar(
+        buildTarget,
         projectFilesystem,
         androidLibraryParams,
         /* resolver */ pathResolver,

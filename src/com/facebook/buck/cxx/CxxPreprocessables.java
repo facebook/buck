@@ -24,7 +24,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -224,7 +223,7 @@ public class CxxPreprocessables {
 
   /** Builds a {@link CxxPreprocessorInput} for a rule. */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver ruleResolver,
       boolean hasHeaderSymlinkTree,
       CxxPlatform platform,
@@ -236,7 +235,7 @@ public class CxxPreprocessables {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     if (hasHeaderSymlinkTree) {
       addHeaderSymlinkTree(
-          builder, params.getBuildTarget(), ruleResolver, platform, headerVisibility, includeType);
+          builder, buildTarget, ruleResolver, platform, headerVisibility, includeType);
     }
     return builder
         .putAllPreprocessorFlags(

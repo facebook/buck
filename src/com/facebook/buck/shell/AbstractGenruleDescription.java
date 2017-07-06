@@ -68,6 +68,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .build());
 
   protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       @SuppressWarnings("unused") final BuildRuleResolver resolver,
@@ -76,6 +77,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     return new Genrule(
+        buildTarget,
         projectFilesystem,
         params,
         args.getSrcs(),
@@ -112,6 +114,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public BuildRule createBuildRule(
       final TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -119,18 +122,18 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final T args)
       throws NoSuchBuildTargetException {
     Optional<MacroHandler> maybeMacroHandler =
-        getMacroHandler(params.getBuildTarget(), projectFilesystem, resolver, targetGraph, args);
+        getMacroHandler(buildTarget, projectFilesystem, resolver, targetGraph, args);
     if (maybeMacroHandler.isPresent()) {
       MacroHandler macroHandler = maybeMacroHandler.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-          MacroArg.toMacroArgFunction(macroHandler, params.getBuildTarget(), cellRoots, resolver)
-              ::apply;
+          MacroArg.toMacroArgFunction(macroHandler, buildTarget, cellRoots, resolver)::apply;
       final Optional<com.facebook.buck.rules.args.Arg> cmd = args.getCmd().map(macroArgFunction);
       final Optional<com.facebook.buck.rules.args.Arg> bash = args.getBash().map(macroArgFunction);
       final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
           args.getCmdExe().map(macroArgFunction);
       return createBuildRule(
+          buildTarget,
           projectFilesystem,
           params.withExtraDeps(
               Stream.concat(
@@ -147,6 +150,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           cmdExe);
     }
     return createBuildRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,

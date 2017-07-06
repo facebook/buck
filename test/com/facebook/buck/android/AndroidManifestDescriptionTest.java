@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -61,13 +62,14 @@ public class AndroidManifestDescriptionTest {
         AndroidManifestDescriptionArg.builder().setName("baz").setSkeleton(skeleton).build();
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
     BuildRuleParams params =
-        TestBuildRuleParams.create("//foo:baz")
-            .withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
         new AndroidManifestDescription()
             .createBuildRule(
                 TargetGraph.EMPTY,
+                buildTarget,
                 projectFilesystem,
                 params,
                 buildRuleResolver,

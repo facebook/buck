@@ -74,6 +74,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private final long maxTestOutputSize;
 
   public CxxGtestTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -90,6 +91,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize) {
     super(
+        buildTarget,
         projectFilesystem,
         params,
         executable,

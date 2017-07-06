@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -75,6 +76,7 @@ public class KnownBuildRuleTypesTest {
   private static final ImmutableMap<String, String> environment =
       ImmutableMap.copyOf(System.getenv());
 
+  private static BuildTarget buildTarget;
   private static ProjectFilesystem projectFilesystem;
   private static BuildRuleParams buildRuleParams;
 
@@ -102,6 +104,7 @@ public class KnownBuildRuleTypesTest {
     @Override
     public BuildRule createBuildRule(
         TargetGraph targetGraph,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver resolver,
@@ -114,7 +117,8 @@ public class KnownBuildRuleTypesTest {
   @BeforeClass
   public static void setupBuildParams() throws IOException {
     projectFilesystem = new FakeProjectFilesystem();
-    buildRuleParams = TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:foo"));
+    buildTarget = BuildTargetFactory.newInstance("//:foo");
+    buildRuleParams = TestBuildRuleParams.create();
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)
@@ -130,6 +134,7 @@ public class KnownBuildRuleTypesTest {
     return (DefaultJavaLibrary)
         description.createBuildRule(
             TargetGraph.EMPTY,
+            buildTarget,
             projectFilesystem,
             buildRuleParams,
             resolver,

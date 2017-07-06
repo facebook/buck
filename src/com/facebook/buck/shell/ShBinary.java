@@ -65,22 +65,22 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
 
   protected ShBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.main = main;
     this.resources = resources;
 
-    BuildTarget target = params.getBuildTarget();
     this.output =
         BuildTargets.getGenPath(
             getProjectFilesystem(),
-            target,
-            String.format("__%%s__/%s.sh", target.getShortNameAndFlavorPostfix()));
+            buildTarget,
+            String.format("__%%s__/%s.sh", buildTarget.getShortNameAndFlavorPostfix()));
   }
 
   @Override

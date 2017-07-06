@@ -74,6 +74,7 @@ public class DTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -81,17 +82,15 @@ public class DTestDescription
       DTestDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    BuildTarget target = params.getBuildTarget();
-
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     SymlinkTree sourceTree =
         buildRuleResolver.addToIndex(
             DDescriptionUtils.createSourceSymlinkTree(
-                DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
+                DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
+                buildTarget,
                 projectFilesystem,
-                params,
                 ruleFinder,
                 pathResolver,
                 args.getSrcs()));
@@ -100,12 +99,13 @@ public class DTestDescription
     // The rule needs its own target so that we can depend on it without creating cycles.
     BuildTarget binaryTarget =
         DDescriptionUtils.createBuildTargetForFile(
-            target, "build-", target.getFullyQualifiedName(), cxxPlatform);
+            buildTarget, "build-", buildTarget.getFullyQualifiedName(), cxxPlatform);
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
+            binaryTarget,
             projectFilesystem,
-            params.withBuildTarget(binaryTarget),
+            params,
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
@@ -120,6 +120,7 @@ public class DTestDescription
     buildRuleResolver.addToIndex(binaryRule);
 
     return new DTest(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(ImmutableList.of(binaryRule)),
         binaryRule,

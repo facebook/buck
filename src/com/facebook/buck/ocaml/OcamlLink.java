@@ -18,6 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -58,6 +59,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final boolean buildNativePlugin;
 
   public OcamlLink(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableList<SourcePath> inputs,
@@ -73,7 +75,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       boolean isLibrary,
       boolean isBytecode,
       boolean buildNativePlugin) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
 
     this.inputs = inputs;
     this.cxxCompilerEnvironment = cxxCompilerEnvironment;

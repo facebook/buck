@@ -43,14 +43,14 @@ abstract class AbstractVersionedAliasDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       VersionedAliasDescriptionArg args) {
     throw new IllegalStateException(
-        String.format(
-            "%s: `versioned_alias()` rules cannot produce build rules", params.getBuildTarget()));
+        String.format("%s: `versioned_alias()` rules cannot produce build rules", buildTarget));
   }
 
   @BuckStyleImmutable

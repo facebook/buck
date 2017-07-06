@@ -104,6 +104,7 @@ abstract class DDescriptionUtils {
    * @return the new build rule
    */
   public static CxxLink createNativeLinkable(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -116,12 +117,12 @@ abstract class DDescriptionUtils {
       DIncludes includes)
       throws NoSuchBuildTargetException {
 
-    BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
+            buildTarget,
             projectFilesystem,
             params,
             buildRuleResolver,
@@ -167,8 +168,8 @@ abstract class DDescriptionUtils {
 
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
+      BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       SourceList sources) {
@@ -176,9 +177,9 @@ abstract class DDescriptionUtils {
     return new SymlinkTree(
         target,
         projectFilesystem,
-        BuildTargets.getGenPath(projectFilesystem, baseParams.getBuildTarget(), "%s"),
+        BuildTargets.getGenPath(projectFilesystem, baseBuildTarget, "%s"),
         MoreMaps.transformKeys(
-            sources.toNameMap(baseParams.getBuildTarget(), pathResolver, "srcs"),
+            sources.toNameMap(baseBuildTarget, pathResolver, "srcs"),
             MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
         ruleFinder);
   }
@@ -213,6 +214,7 @@ abstract class DDescriptionUtils {
    */
   public static DCompileBuildRule requireBuildRule(
       BuildTarget compileTarget,
+      BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
@@ -230,7 +232,7 @@ abstract class DDescriptionUtils {
               Tool compiler = dBuckConfig.getDCompiler();
 
               Map<BuildTarget, DIncludes> transitiveIncludes = new TreeMap<>();
-              transitiveIncludes.put(baseParams.getBuildTarget(), includes);
+              transitiveIncludes.put(baseBuildTarget, includes);
               for (Map.Entry<BuildTarget, DLibrary> library :
                   getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
                 transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
@@ -245,11 +247,9 @@ abstract class DDescriptionUtils {
               ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
               return new DCompileBuildRule(
+                  compileTarget,
                   projectFilesystem,
-                  baseParams
-                      .withBuildTarget(compileTarget)
-                      .withDeclaredDeps(deps)
-                      .withoutExtraDeps(),
+                  baseParams.withDeclaredDeps(deps).withoutExtraDeps(),
                   compiler,
                   ImmutableList.<String>builder()
                       .addAll(dBuckConfig.getBaseCompilerFlags())
@@ -275,6 +275,7 @@ abstract class DDescriptionUtils {
    * @return SourcePaths of the generated object files
    */
   public static ImmutableList<SourcePath> sourcePathsForCompiledSources(
+      BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
@@ -288,12 +289,13 @@ abstract class DDescriptionUtils {
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :
-        sources.toNameMap(baseParams.getBuildTarget(), sourcePathResolver, "srcs").entrySet()) {
+        sources.toNameMap(baseBuildTarget, sourcePathResolver, "srcs").entrySet()) {
       BuildTarget compileTarget =
-          createDCompileBuildTarget(baseParams.getBuildTarget(), source.getKey(), cxxPlatform);
+          createDCompileBuildTarget(baseBuildTarget, source.getKey(), cxxPlatform);
       BuildRule rule =
           requireBuildRule(
               compileTarget,
+              baseBuildTarget,
               projectFilesystem,
               baseParams,
               buildRuleResolver,

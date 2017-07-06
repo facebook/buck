@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -78,6 +79,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
 
   public JarFattener(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -86,7 +88,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.javac = javac;
     this.javacOptions = javacOptions;

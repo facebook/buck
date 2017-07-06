@@ -63,7 +63,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(buildTarget),
+            TestBuildRuleParams.create(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -85,7 +85,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(buildTarget),
+            TestBuildRuleParams.create(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -128,7 +128,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .build());
 
     BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create(buildTarget)
+        TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer =
@@ -191,7 +191,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .build());
 
     BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create(buildTarget)
+        TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2));
 
     AndroidLibraryGraphEnhancer graphEnhancer =
@@ -244,7 +244,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(dep)),
+            TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(dep)),
             JavacFactory.create(ruleFinder, javaConfig, null),
             options,
             DependencyMode.FIRST_ORDER,

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -63,6 +64,7 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path resultsDir;
 
   CxxInferCapture(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       CxxToolFlags preprocessorFlags,
@@ -72,7 +74,7 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.preprocessorFlags = preprocessorFlags;
     this.compilerFlags = compilerFlags;
     this.input = input;

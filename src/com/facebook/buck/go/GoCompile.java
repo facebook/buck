@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -61,6 +62,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path output;
 
   public GoCompile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SymlinkTree symlinkTree,
@@ -74,7 +76,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Tool assembler,
       Tool packer,
       GoPlatform platform) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.importPathMap = importPathMap;
     this.srcs = srcs;
     this.symlinkTree = symlinkTree;

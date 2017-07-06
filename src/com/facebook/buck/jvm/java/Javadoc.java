@@ -21,6 +21,7 @@ import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVE
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.maven.AetherUtil;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -61,13 +62,14 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
   private final Path scratchDir;
 
   protected Javadoc(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate,
       Iterable<HasMavenCoordinates> mavenDeps,
       ImmutableSet<SourcePath> sources) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
 
     this.mavenCoords = mavenCoords.map(coord -> AetherUtil.addClassifier(coord, "javadoc"));
     this.mavenPomTemplate = mavenPomTemplate;

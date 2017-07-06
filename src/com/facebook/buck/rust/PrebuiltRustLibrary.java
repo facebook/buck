@@ -17,6 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -38,8 +39,11 @@ import com.google.common.collect.ImmutableList;
 abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithResolver implements RustLinkable {
 
   public PrebuiltRustLibrary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, SourcePathResolver resolver) {
-    super(projectFilesystem, params, resolver);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePathResolver resolver) {
+    super(buildTarget, projectFilesystem, params, resolver);
   }
 
   /**

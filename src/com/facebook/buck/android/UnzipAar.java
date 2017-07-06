@@ -63,10 +63,12 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
   UnzipAar(
-      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams, SourcePath aarFile) {
-    super(projectFilesystem, buildRuleParams);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePath aarFile) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.aarFile = aarFile;
-    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.unpackDirectory =
         BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__unpack_%s__");
     this.uberClassesJar =

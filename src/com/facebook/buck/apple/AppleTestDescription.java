@@ -153,6 +153,7 @@ public class AppleTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -161,18 +162,17 @@ public class AppleTestDescription
       throws NoSuchBuildTargetException {
     AppleDebugFormat debugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
-            .getValue(params.getBuildTarget())
+            .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForTests());
-    if (params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
-      params = params.withoutFlavor(debugFormat.getFlavor());
+    if (buildTarget.getFlavors().contains(debugFormat.getFlavor())) {
+      buildTarget = buildTarget.withoutFlavors(debugFormat.getFlavor());
     }
 
     boolean createBundle =
-        Sets.intersection(params.getBuildTarget().getFlavors(), AUXILIARY_LIBRARY_FLAVORS)
-            .isEmpty();
+        Sets.intersection(buildTarget.getFlavors(), AUXILIARY_LIBRARY_FLAVORS).isEmpty();
     // Flavors pertaining to the library targets that are generated.
     Sets.SetView<Flavor> libraryFlavors =
-        Sets.difference(params.getBuildTarget().getFlavors(), AUXILIARY_LIBRARY_FLAVORS);
+        Sets.difference(buildTarget.getFlavors(), AUXILIARY_LIBRARY_FLAVORS);
     boolean addDefaultPlatform = libraryFlavors.isEmpty();
     ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
@@ -184,7 +184,7 @@ public class AppleTestDescription
     }
 
     Optional<MultiarchFileInfo> multiarchFileInfo =
-        MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, params.getBuildTarget());
+        MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, buildTarget);
     AppleCxxPlatform appleCxxPlatform;
     ImmutableList<CxxPlatform> cxxPlatforms;
     if (multiarchFileInfo.isPresent()) {
@@ -196,7 +196,7 @@ public class AppleTestDescription
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          cxxPlatformFlavorDomain.getValue(params.getBuildTarget()).orElse(defaultCxxPlatform);
+          cxxPlatformFlavorDomain.getValue(buildTarget).orElse(defaultCxxPlatform);
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
@@ -204,7 +204,7 @@ public class AppleTestDescription
         throw new HumanReadableException(
             e,
             "%s: Apple test requires an Apple platform, found '%s'",
-            params.getBuildTarget(),
+            buildTarget,
             cxxPlatform.getFlavor().getName());
       }
     }
@@ -214,7 +214,7 @@ public class AppleTestDescription
       testHostInfo =
           Optional.of(
               createTestHostInfo(
-                  params,
+                  buildTarget,
                   resolver,
                   args.getTestHostApp().get(),
                   debugFormat,
@@ -225,8 +225,7 @@ public class AppleTestDescription
     }
 
     BuildTarget libraryTarget =
-        params
-            .getBuildTarget()
+        buildTarget
             .withAppendedFlavors(extraFlavorsBuilder.build())
             .withAppendedFlavors(debugFormat.getFlavor())
             .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
@@ -254,21 +253,17 @@ public class AppleTestDescription
             defaultCxxPlatform,
             appleCxxPlatformFlavorDomain,
             targetGraph,
+            buildTarget.withAppendedFlavors(
+                BUNDLE_FLAVOR,
+                debugFormat.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             projectFilesystem,
-            params
-                .withBuildTarget(
-                    params
-                        .getBuildTarget()
-                        .withAppendedFlavors(
-                            BUNDLE_FLAVOR,
-                            debugFormat.getFlavor(),
-                            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
-                            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR))
-                .withDeclaredDeps(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .add(library)
-                        .addAll(params.getDeclaredDeps().get())
-                        .build()),
+            params.withDeclaredDeps(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .add(library)
+                    .addAll(params.getDeclaredDeps().get())
+                    .build()),
             resolver,
             codeSignIdentityStore,
             provisioningProfileStore,
@@ -284,7 +279,7 @@ public class AppleTestDescription
             appleConfig.cacheBundlesAndPackages());
     resolver.addToIndex(bundle);
 
-    Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);
+    Optional<SourcePath> xctool = getXctool(buildTarget, projectFilesystem, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new AppleTest(
@@ -295,6 +290,7 @@ public class AppleTestDescription
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         Optional.of(args.getDestinationSpecifier()),
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(bundle)).withoutExtraDeps(),
         bundle,
@@ -313,7 +309,10 @@ public class AppleTestDescription
   }
 
   private Optional<SourcePath> getXctool(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver) {
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
@@ -327,12 +326,10 @@ public class AppleTestDescription
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
         BuildRuleParams unzipXctoolParams =
-            params
-                .withBuildTarget(unzipXctoolTarget)
-                .withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule))
-                .withoutExtraDeps();
+            params.withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule)).withoutExtraDeps();
         resolver.addToIndex(
-            new AbstractBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, unzipXctoolParams) {
+            new AbstractBuildRuleWithDeclaredAndExtraDeps(
+                buildTarget, projectFilesystem, unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context, BuildableContext buildableContext) {
@@ -396,8 +393,9 @@ public class AppleTestDescription
       library =
           appleLibraryDescription.createLibraryBuildRule(
               targetGraph,
+              libraryTarget,
               projectFilesystem,
-              params.withBuildTarget(libraryTarget),
+              params,
               resolver,
               cellRoots,
               args,
@@ -432,7 +430,7 @@ public class AppleTestDescription
   }
 
   private TestHostInfo createTestHostInfo(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver resolver,
       BuildTarget testHostAppBuildTarget,
       AppleDebugFormat debugFormat,
@@ -450,7 +448,7 @@ public class AppleTestDescription
     if (!(rule instanceof AppleBundle)) {
       throw new HumanReadableException(
           "Apple test rule '%s' has test_host_app '%s' not of type '%s'.",
-          params.getBuildTarget(),
+          buildTarget,
           testHostAppBuildTarget,
           Description.getBuildRuleType(AppleBundleDescription.class));
     }

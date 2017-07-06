@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
@@ -39,8 +40,10 @@ public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends Abstract
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
 
   protected AbstractBuildRuleWithDeclaredAndExtraDeps(
-      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams) {
-    super(buildRuleParams.getBuildTarget(), projectFilesystem);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams) {
+    super(buildTarget, projectFilesystem);
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
     this.buildDeps = () -> buildRuleParams.getBuildDeps();

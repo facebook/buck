@@ -43,6 +43,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   private final PrebuiltJar prebuiltJar;
 
   public AndroidPrebuiltAar(
+      BuildTarget androidLibraryBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams androidLibraryParams,
       SourcePathResolver resolver,
@@ -56,6 +57,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Iterable<PrebuiltJar> exportedDeps,
       ZipArchiveDependencySupplier abiClasspath) {
     super(
+        androidLibraryBuildTarget,
         projectFilesystem,
         androidLibraryParams.copyAppendingExtraDeps(
             ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
@@ -73,7 +75,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         /* providedDeps */ ImmutableSortedSet.of(),
         /* compileTimeClasspathDeps */ ImmutableSortedSet.of(prebuiltJar.getSourcePathToOutput()),
         abiClasspath,
-        HasJavaAbi.getClassAbiJar(androidLibraryParams.getBuildTarget()),
+        HasJavaAbi.getClassAbiJar(androidLibraryBuildTarget),
         javacOptions,
         /* trackClassUsage */ false,
         compileStepFactory,

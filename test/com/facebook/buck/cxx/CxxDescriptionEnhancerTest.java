@@ -61,9 +61,10 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
+    BuildRuleParams libParams = TestBuildRuleParams.create();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
@@ -116,9 +117,10 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget otherlibTarget = BuildTargetFactory.newInstance("//:otherlib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams otherlibParams = TestBuildRuleParams.create(otherlibTarget);
+    BuildRuleParams otherlibParams = TestBuildRuleParams.create();
     FakeCxxLibrary otherlibRule =
         new FakeCxxLibrary(
+            otherlibTarget,
             new FakeProjectFilesystem(),
             otherlibParams,
             BuildTargetFactory.newInstance("//:otherheader"),
@@ -133,9 +135,10 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSortedSet.of());
 
     BuildRuleParams libParams =
-        TestBuildRuleParams.create(libTarget).withDeclaredDeps(ImmutableSortedSet.of(otherlibRule));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(otherlibRule));
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
@@ -192,9 +195,10 @@ public class CxxDescriptionEnhancerTest {
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
+    BuildRuleParams libParams = TestBuildRuleParams.create();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),

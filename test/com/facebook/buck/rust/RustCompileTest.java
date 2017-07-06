@@ -222,8 +222,9 @@ public class RustCompileTest {
     private FakeRustCompileRule(
         BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
       super(
+          target,
           new FakeProjectFilesystem(),
-          TestBuildRuleParams.create(target),
+          TestBuildRuleParams.create(),
           String.format("lib%s.rlib", target),
           fakeTool(),
           fakeLinker(),

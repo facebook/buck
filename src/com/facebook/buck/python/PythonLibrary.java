@@ -33,8 +33,11 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BuildRuleResolver resolver;
 
   PythonLibrary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
-    super(projectFilesystem, params);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver) {
+    super(buildTarget, projectFilesystem, params);
     this.resolver = resolver;
   }
 

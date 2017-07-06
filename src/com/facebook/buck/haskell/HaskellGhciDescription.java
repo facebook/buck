@@ -185,6 +185,7 @@ public class HaskellGhciDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -192,8 +193,7 @@ public class HaskellGhciDescription
       HaskellGhciDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    CxxPlatform cxxPlatform =
-        cxxPlatforms.getValue(params.getBuildTarget()).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
@@ -265,11 +265,7 @@ public class HaskellGhciDescription
 
     BuildRule omnibusSharedObject =
         requireOmnibusSharedObject(
-            params.getBuildTarget(),
-            projectFilesystem,
-            resolver,
-            cxxPlatform,
-            sortedNativeLinkables);
+            buildTarget, projectFilesystem, resolver, cxxPlatform, sortedNativeLinkables);
 
     ImmutableSortedMap.Builder<String, SourcePath> solibs = ImmutableSortedMap.naturalOrder();
     for (NativeLinkable nativeLinkable : sortedNativeLinkables) {
@@ -286,16 +282,11 @@ public class HaskellGhciDescription
 
     HaskellSources srcs =
         HaskellSources.from(
-            params.getBuildTarget(),
-            resolver,
-            pathResolver,
-            ruleFinder,
-            cxxPlatform,
-            "srcs",
-            args.getSrcs());
+            buildTarget, resolver, pathResolver, ruleFinder, cxxPlatform, "srcs", args.getSrcs());
 
     return resolver.addToIndex(
         HaskellGhciRule.from(
+            buildTarget,
             projectFilesystem,
             params,
             resolver,

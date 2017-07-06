@@ -164,6 +164,7 @@ public class AndroidBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -175,40 +176,38 @@ public class AndroidBinaryDescription
             Optional.ofNullable(resolver.getEventBus()),
             PerfEventId.of("AndroidBinaryDescription"),
             "target",
-            params.getBuildTarget().toString())) {
-      BuildTarget target = params.getBuildTarget();
-
+            buildTarget.toString())) {
       // All of our supported flavors are constructed as side-effects
       // of the main target.
       for (Flavor flavor : FLAVORS) {
-        if (target.getFlavors().contains(flavor)) {
-          resolver.requireRule(target.withoutFlavors(flavor));
-          return resolver.getRule(target);
+        if (buildTarget.getFlavors().contains(flavor)) {
+          resolver.requireRule(buildTarget.withoutFlavors(flavor));
+          return resolver.getRule(buildTarget);
         }
       }
 
       // We don't support requiring other flavors right now.
-      if (target.isFlavored()) {
+      if (buildTarget.isFlavored()) {
         throw new HumanReadableException(
-            "Requested target %s contains an unrecognized flavor", target);
+            "Requested target %s contains an unrecognized flavor", buildTarget);
       }
 
       BuildRule keystore = resolver.getRule(args.getKeystore());
       if (!(keystore instanceof Keystore)) {
         throw new HumanReadableException(
             "In %s, keystore='%s' must be a keystore() but was %s().",
-            params.getBuildTarget(), keystore.getFullyQualifiedName(), keystore.getType());
+            buildTarget, keystore.getFullyQualifiedName(), keystore.getType());
       }
 
       APKModuleGraph apkModuleGraph = null;
       if (!args.getApplicationModuleConfigs().isEmpty()) {
         apkModuleGraph =
             new APKModuleGraph(
-                Optional.of(args.getApplicationModuleConfigs()), targetGraph, target);
+                Optional.of(args.getApplicationModuleConfigs()), targetGraph, buildTarget);
       } else {
         apkModuleGraph =
             new APKModuleGraph(
-                targetGraph, target, Optional.of(args.getApplicationModuleTargets()));
+                targetGraph, buildTarget, Optional.of(args.getApplicationModuleTargets()));
       }
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
@@ -224,7 +223,7 @@ public class AndroidBinaryDescription
         LOG.error(
             "Target %s specified use_android_proguard_config_with_optimizations, "
                 + "which is deprecated. Use android_sdk_proguard_config.",
-            params.getBuildTarget());
+            buildTarget);
         androidSdkProguardConfig =
             args.getUseAndroidProguardConfigWithOptimizations().orElse(false)
                 ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
@@ -237,7 +236,7 @@ public class AndroidBinaryDescription
       } else if (args.isExopackage().orElse(false)) {
         LOG.error(
             "Target %s specified exopackage=True, which is deprecated. Use exopackage_modes.",
-            params.getBuildTarget());
+            buildTarget);
         exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
       }
 
@@ -254,6 +253,7 @@ public class AndroidBinaryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
+              buildTarget,
               projectFilesystem,
               params,
               targetGraph,
@@ -270,7 +270,7 @@ public class AndroidBinaryDescription
               ImmutableSet.copyOf(args.getCpuFilters()),
               args.isBuildStringSourceMap(),
               shouldPreDex,
-              AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), projectFilesystem),
+              AndroidBinary.getPrimaryDexPath(buildTarget, projectFilesystem),
               dexSplitMode,
               args.getNoDx(),
               /* resourcesToExclude */ ImmutableSet.of(),
@@ -297,7 +297,7 @@ public class AndroidBinaryDescription
               cxxBuckConfig,
               apkModuleGraph,
               dxConfig,
-              getPostFilterResourcesArgs(args, params, resolver, cellRoots));
+              getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots));
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
       // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
@@ -308,7 +308,7 @@ public class AndroidBinaryDescription
         if (ruleOptional.isPresent()) {
           builder.add(ruleOptional.get());
         } else {
-          LOG.info("%s: no_dx target not a dependency: %s", target, noDxTarget);
+          LOG.info("%s: no_dx target not a dependency: %s", buildTarget, noDxTarget);
         }
       }
 
@@ -318,7 +318,7 @@ public class AndroidBinaryDescription
               .filter(JavaLibrary.class)
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
-      Optional<RedexOptions> redexOptions = getRedexOptions(params, resolver, cellRoots, args);
+      Optional<RedexOptions> redexOptions = getRedexOptions(buildTarget, resolver, cellRoots, args);
 
       ImmutableSortedSet<BuildRule> redexExtraDeps =
           redexOptions
@@ -332,6 +332,7 @@ public class AndroidBinaryDescription
 
       AndroidBinary androidBinary =
           new AndroidBinary(
+              buildTarget,
               projectFilesystem,
               params
                   .withExtraDeps(result.getFinalDeps())
@@ -358,7 +359,7 @@ public class AndroidBinaryDescription
               args.getCpuFilters(),
               resourceFilter,
               exopackageModes,
-              MACRO_HANDLER.getExpander(params.getBuildTarget(), cellRoots, resolver),
+              MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver),
               args.getPreprocessJavaClassesBash(),
               rulesToExcludeFromDex,
               result,
@@ -377,7 +378,7 @@ public class AndroidBinaryDescription
       // between build and install calls.
       resolver.addToIndex(
           createExoInstaller(
-              params.getBuildTarget().withFlavors(INSTALL_FLAVOR),
+              buildTarget.withFlavors(INSTALL_FLAVOR),
               projectFilesystem,
               resolver,
               androidBinary,
@@ -501,17 +502,15 @@ public class AndroidBinaryDescription
 
   private Optional<com.facebook.buck.rules.args.Arg> getPostFilterResourcesArgs(
       AndroidBinaryDescriptionArg arg,
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
     return arg.getPostFilterResourcesCmd()
-        .map(
-            MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver)
-                ::apply);
+        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply);
   }
 
   private Optional<RedexOptions> getRedexOptions(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidBinaryDescriptionArg arg) {
@@ -525,12 +524,11 @@ public class AndroidBinaryDescription
       throw new HumanReadableException(
           "Requested running ReDex for %s but the path to the tool"
               + "has not been specified in the %s.%s .buckconfig section.",
-          params.getBuildTarget(), SECTION, CONFIG_PARAM_REDEX);
+          buildTarget, SECTION, CONFIG_PARAM_REDEX);
     }
 
     java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver)
-            ::apply;
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply;
     List<com.facebook.buck.rules.args.Arg> redexExtraArgs =
         arg.getRedexExtraArgs().stream().map(macroArgFunction).collect(Collectors.toList());
 

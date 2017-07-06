@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -38,12 +39,14 @@ public class KeystoreDescription implements Description<KeystoreDescriptionArg> 
   @Override
   public Keystore createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       KeystoreDescriptionArg args) {
-    return new Keystore(projectFilesystem, params, args.getStore(), args.getProperties());
+    return new Keystore(
+        buildTarget, projectFilesystem, params, args.getStore(), args.getProperties());
   }
 
   @BuckStyleImmutable

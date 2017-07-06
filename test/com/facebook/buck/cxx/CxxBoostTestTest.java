@@ -68,14 +68,17 @@ public class CxxBoostTestTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     CxxBoostTest test =
         new CxxBoostTest(
+            target,
             projectFilesystem,
-            TestBuildRuleParams.create(target),
+            TestBuildRuleParams.create(),
             ruleFinder,
             new CxxLink(
+                linkTarget,
                 new FakeProjectFilesystem(),
-                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:link")),
+                TestBuildRuleParams.create(),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
                 ImmutableList.of(),

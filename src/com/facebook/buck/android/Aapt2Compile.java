@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -40,8 +41,11 @@ public class Aapt2Compile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final SourcePath resDir;
 
   public Aapt2Compile(
-      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams, SourcePath resDir) {
-    super(projectFilesystem, buildRuleParams);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePath resDir) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.resDir = resDir;
   }
 

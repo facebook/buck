@@ -56,6 +56,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public FakeCxxLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildTarget publicHeaderTarget,
@@ -67,7 +68,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Path sharedLibraryOutput,
       String sharedLibrarySoname,
       ImmutableSortedSet<BuildTarget> tests) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.publicHeaderTarget = publicHeaderTarget;
     this.publicHeaderSymlinkTreeTarget = publicHeaderSymlinkTreeTarget;
     this.privateHeaderTarget = privateHeaderTarget;

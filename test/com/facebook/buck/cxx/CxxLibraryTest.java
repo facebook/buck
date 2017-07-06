@@ -57,7 +57,7 @@ public class CxxLibraryTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -81,6 +81,7 @@ public class CxxLibraryTest {
     // Construct a CxxLibrary object to test.
     FakeCxxLibrary cxxLibrary =
         new FakeCxxLibrary(
+            target,
             new FakeProjectFilesystem(),
             params,
             publicHeaderTarget,
@@ -160,17 +161,16 @@ public class CxxLibraryTest {
         new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     BuildTarget staticPicLibraryTarget =
-        params
-            .getBuildTarget()
-            .withAppendedFlavors(cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+        target.withAppendedFlavors(
+            cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
         new FakeBuildRule(
-            projectFilesystem, TestBuildRuleParams.create(staticPicLibraryTarget), pathResolver));
+            staticPicLibraryTarget, projectFilesystem, TestBuildRuleParams.create(), pathResolver));
 
     FrameworkPath frameworkPath =
         FrameworkPath.ofSourcePath(
@@ -179,6 +179,7 @@ public class CxxLibraryTest {
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary =
         new CxxLibrary(
+            target,
             projectFilesystem,
             params,
             ruleResolver,

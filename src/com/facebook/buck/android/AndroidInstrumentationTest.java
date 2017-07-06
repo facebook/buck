@@ -84,6 +84,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final Optional<Long> testRuleTimeoutMs;
 
   protected AndroidInstrumentationTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       HasInstallableApk apk,
@@ -91,7 +92,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<Long> testRuleTimeoutMs) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);

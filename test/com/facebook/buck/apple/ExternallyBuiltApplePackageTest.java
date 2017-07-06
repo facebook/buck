@@ -59,7 +59,7 @@ public class ExternallyBuiltApplePackageTest {
   private String bundleLocation = "Fake/Bundle/Location";
   private BuildTarget buildTarget = BuildTarget.builder(Paths.get("."), "//foo", "package").build();
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-  private BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+  private BuildRuleParams params = TestBuildRuleParams.create();
   private BuildRuleResolver resolver =
       new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   private ApplePackageConfigAndPlatformInfo config =
@@ -79,7 +79,12 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
-            projectFilesystem, params, config, new FakeSourcePath(bundleLocation), true);
+            buildTarget,
+            projectFilesystem,
+            params,
+            config,
+            new FakeSourcePath(bundleLocation),
+            true);
     resolver.addToIndex(rule);
     ShellStep step =
         Iterables.getOnlyElement(
@@ -100,7 +105,12 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
-            projectFilesystem, params, config, new FakeSourcePath("Fake/Bundle/Location"), true);
+            buildTarget,
+            projectFilesystem,
+            params,
+            config,
+            new FakeSourcePath("Fake/Bundle/Location"),
+            true);
     resolver.addToIndex(rule);
     assertThat(
         pathResolver
@@ -115,7 +125,12 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
-            projectFilesystem, params, config, new FakeSourcePath("Fake/Bundle/Location"), true);
+            buildTarget,
+            projectFilesystem,
+            params,
+            config,
+            new FakeSourcePath("Fake/Bundle/Location"),
+            true);
     resolver.addToIndex(rule);
     AbstractGenruleStep step =
         Iterables.getOnlyElement(
@@ -134,6 +149,7 @@ public class ExternallyBuiltApplePackageTest {
     Function<String, ExternallyBuiltApplePackage> packageWithVersion =
         input ->
             new ExternallyBuiltApplePackage(
+                buildTarget,
                 projectFilesystem,
                 params,
                 config.withPlatform(config.getPlatform().withBuildVersion(input)),
@@ -149,6 +165,7 @@ public class ExternallyBuiltApplePackageTest {
     Function<String, ExternallyBuiltApplePackage> packageWithSdkVersion =
         input ->
             new ExternallyBuiltApplePackage(
+                buildTarget,
                 projectFilesystem,
                 params,
                 config.withPlatform(

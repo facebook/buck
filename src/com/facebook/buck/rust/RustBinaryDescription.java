@@ -81,16 +81,15 @@ public class RustBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       RustBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    final BuildTarget buildTarget = params.getBuildTarget();
-
     Linker.LinkableDepType linkStyle =
-        RustCompileUtils.getLinkStyle(params.getBuildTarget(), args.getLinkStyle());
+        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
         BINARY_TYPE.getFlavorAndValue(buildTarget);
@@ -98,6 +97,7 @@ public class RustBinaryDescription
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     return RustCompileUtils.createBinaryBuildRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,

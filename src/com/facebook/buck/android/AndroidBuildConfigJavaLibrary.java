@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -45,6 +46,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   private final AndroidBuildConfig androidBuildConfig;
 
   AndroidBuildConfigJavaLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -54,6 +56,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       ZipArchiveDependencySupplier abiClasspath,
       AndroidBuildConfig androidBuildConfig) {
     super(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
@@ -69,7 +72,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
             androidBuildConfig.getSourcePathToOutput()),
         abiClasspath,
-        HasJavaAbi.getClassAbiJar(params.getBuildTarget()),
+        HasJavaAbi.getClassAbiJar(buildTarget),
         /* trackClassUsage */ javacOptions.trackClassUsage(),
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.empty(),
@@ -81,7 +84,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),
         "%s must depend on the AndroidBuildConfig whose output is in this rule's srcs.",
-        params.getBuildTarget());
+        buildTarget);
   }
 
   /**

@@ -93,23 +93,26 @@ public class KotlinTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       KotlinTestDescriptionArg args)
       throws NoSuchBuildTargetException {
-    BuildRuleParams testsLibraryParams =
-        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildTarget testsLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateJavacOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(
+            templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new KotlinLibraryBuilder(
                 targetGraph,
+                testsLibraryBuildTarget,
                 projectFilesystem,
-                testsLibraryParams,
+                params,
                 resolver,
                 cellRoots,
                 kotlinBuckConfig,
@@ -118,7 +121,7 @@ public class KotlinTestDescription
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName());
 
-    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
@@ -128,8 +131,9 @@ public class KotlinTestDescription
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Function<String, Arg> toMacroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
     return new JavaTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,

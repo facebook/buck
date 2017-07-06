@@ -73,6 +73,7 @@ public class DBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -86,9 +87,9 @@ public class DBinaryDescription
     SymlinkTree sourceTree =
         buildRuleResolver.addToIndex(
             DDescriptionUtils.createSourceSymlinkTree(
-                DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
+                DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
+                buildTarget,
                 projectFilesystem,
-                params,
                 ruleFinder,
                 pathResolver,
                 args.getSrcs()));
@@ -97,8 +98,9 @@ public class DBinaryDescription
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
+            buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
-            params.withAppendedFlavor(BINARY_FLAVOR),
+            params,
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
@@ -119,6 +121,7 @@ public class DBinaryDescription
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
+        buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
         ruleFinder,

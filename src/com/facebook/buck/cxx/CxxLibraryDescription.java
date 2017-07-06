@@ -672,6 +672,7 @@ public class CxxLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -679,6 +680,7 @@ public class CxxLibraryDescription
       CxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
@@ -692,6 +694,7 @@ public class CxxLibraryDescription
   }
 
   public BuildRule createBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams metadataRuleParams,
       final BuildRuleResolver resolver,
@@ -704,7 +707,6 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
 
-    BuildTarget buildTarget = metadataRuleParams.getBuildTarget();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
@@ -856,6 +858,7 @@ public class CxxLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new CxxLibrary(
+        buildTarget,
         projectFilesystem,
         metadataRuleParams,
         resolver,

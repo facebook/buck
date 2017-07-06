@@ -29,6 +29,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
@@ -354,10 +355,12 @@ public class DistBuildFileHashesTest {
         jarWriter.writeEntry("Archive.class", new ByteArrayInputStream(archiveMemberData));
       }
 
+      BuildTarget target = BuildTargetFactory.newInstance("//:with_tool");
       resolver.addToIndex(
           new BuildRuleWithToolAndPath(
+              target,
               projectFilesystem,
-              TestBuildRuleParams.create("//:with_tool"),
+              TestBuildRuleParams.create(),
               null,
               ArchiveMemberSourcePath.of(
                   new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));
@@ -469,11 +472,12 @@ public class DistBuildFileHashesTest {
     @AddToRuleKey SourcePath sourcePath;
 
     public BuildRuleWithToolAndPath(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         Tool tool,
         SourcePath sourcePath) {
-      super(projectFilesystem, params);
+      super(buildTarget, projectFilesystem, params);
       this.tool = tool;
       this.sourcePath = sourcePath;
     }

@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -97,6 +98,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
@@ -104,19 +106,19 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
       AndroidAarDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    originalBuildRuleParams.getBuildTarget().checkUnflavored();
+    buildTarget.checkUnflavored();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
         new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
             .addAll(originalBuildRuleParams.getExtraDeps().get());
 
     /* android_manifest */
-    BuildRuleParams androidManifestParams =
-        originalBuildRuleParams.withAppendedFlavor(AAR_ANDROID_MANIFEST_FLAVOR);
+    BuildTarget androidManifestTarget =
+        buildTarget.withAppendedFlavors(AAR_ANDROID_MANIFEST_FLAVOR);
 
     AndroidManifestDescriptionArg androidManifestArgs =
         AndroidManifestDescriptionArg.builder()
-            .setName(androidManifestParams.getBuildTarget().getShortName())
+            .setName(androidManifestTarget.getShortName())
             .setSkeleton(args.getManifestSkeleton())
             .setDeps(args.getDeps())
             .build();
@@ -124,20 +126,21 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     AndroidManifest manifest =
         androidManifestDescription.createBuildRule(
             targetGraph,
+            androidManifestTarget,
             projectFilesystem,
-            androidManifestParams,
+            originalBuildRuleParams,
             resolver,
             cellRoots,
             androidManifestArgs);
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     final APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(targetGraph, originalBuildRuleParams.getBuildTarget(), Optional.empty());
+        new APKModuleGraph(targetGraph, buildTarget, Optional.empty());
 
     /* assemble dirs */
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
-            originalBuildRuleParams.getBuildTarget(),
+            buildTarget,
             /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
             apkModuleGraph);
@@ -152,30 +155,35 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     BuildRuleParams assembleAssetsParams =
         originalBuildRuleParams
-            .withAppendedFlavor(AAR_ASSEMBLE_ASSETS_FLAVOR)
             .withDeclaredDeps(androidResourceDeclaredDeps)
             .withExtraDeps(androidResourceExtraDeps);
     ImmutableCollection<SourcePath> assetsDirectories =
         packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories =
-        new AssembleDirectories(projectFilesystem, assembleAssetsParams, assetsDirectories);
+        new AssembleDirectories(
+            buildTarget.withAppendedFlavors(AAR_ASSEMBLE_ASSETS_FLAVOR),
+            projectFilesystem,
+            assembleAssetsParams,
+            assetsDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleAssetsDirectories));
 
     BuildRuleParams assembleResourceParams =
         originalBuildRuleParams
-            .withAppendedFlavor(AAR_ASSEMBLE_RESOURCE_FLAVOR)
             .withDeclaredDeps(androidResourceDeclaredDeps)
             .withExtraDeps(androidResourceExtraDeps);
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
     MergeAndroidResourceSources assembleResourceDirectories =
-        new MergeAndroidResourceSources(projectFilesystem, assembleResourceParams, resDirectories);
+        new MergeAndroidResourceSources(
+            buildTarget.withAppendedFlavors(AAR_ASSEMBLE_RESOURCE_FLAVOR),
+            projectFilesystem,
+            assembleResourceParams,
+            resDirectories);
     aarExtraDepsBuilder.add(resolver.addToIndex(assembleResourceDirectories));
 
     /* android_resource */
     BuildRuleParams androidResourceParams =
         originalBuildRuleParams
-            .withAppendedFlavor(AAR_ANDROID_RESOURCE_FLAVOR)
             .withDeclaredDeps(
                 ImmutableSortedSet.of(
                     manifest, assembleAssetsDirectories, assembleResourceDirectories))
@@ -183,6 +191,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     AndroidResource androidResource =
         new AndroidResource(
+            buildTarget.withAppendedFlavors(AAR_ANDROID_RESOURCE_FLAVOR),
             projectFilesystem,
             androidResourceParams,
             ruleFinder,
@@ -205,9 +214,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     classpathToIncludeInAar.addAll(packageableCollection.getClasspathEntriesToDex());
     aarExtraDepsBuilder.addAll(
         BuildRules.toBuildRulesFor(
-            originalBuildRuleParams.getBuildTarget(),
-            resolver,
-            packageableCollection.getJavaLibrariesToDex()));
+            buildTarget, resolver, packageableCollection.getJavaLibrariesToDex()));
 
     if (!args.getBuildConfigValues().getNameToField().isEmpty()
         && !args.getIncludeBuildConfigClass()) {
@@ -215,13 +222,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
           "Rule %s has build_config_values set but does not set "
               + "include_build_config_class to True. Either indicate you want to include the "
               + "BuildConfig class in the final .aar or do not specify build config values.",
-          originalBuildRuleParams.getBuildTarget());
+          buildTarget);
     }
     if (args.getIncludeBuildConfigClass()) {
       ImmutableSortedSet<JavaLibrary> buildConfigRules =
           AndroidBinaryGraphEnhancer.addBuildConfigDeps(
+              buildTarget,
               projectFilesystem,
-              originalBuildRuleParams,
               AndroidBinary.PackageType.RELEASE,
               EnumSet.noneOf(AndroidBinary.ExopackageMode.class),
               args.getBuildConfigValues(),
@@ -243,6 +250,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             resolver,
+            buildTarget,
             projectFilesystem,
             originalBuildRuleParams,
             nativePlatforms,
@@ -277,6 +285,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     BuildRuleParams androidAarParams =
         originalBuildRuleParams.withExtraDeps(aarExtraDepsBuilder.build());
     return new AndroidAar(
+        buildTarget,
         projectFilesystem,
         androidAarParams,
         manifest,

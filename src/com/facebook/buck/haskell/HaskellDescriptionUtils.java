@@ -198,6 +198,7 @@ public class HaskellDescriptionUtils {
   }
 
   public static HaskellCompileRule requireCompileRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -213,8 +214,7 @@ public class HaskellDescriptionUtils {
       HaskellSources srcs)
       throws NoSuchBuildTargetException {
 
-    BuildTarget target =
-        getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, depType, hsProfile);
+    BuildTarget target = getCompileBuildTarget(buildTarget, cxxPlatform, depType, hsProfile);
 
     // If this rule has already been generated, return it.
     Optional<HaskellCompileRule> existing =
@@ -301,8 +301,9 @@ public class HaskellDescriptionUtils {
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(
+                emptyModuleTarget,
                 projectFilesystem,
-                baseParams.withBuildTarget(emptyModuleTarget),
+                baseParams,
                 "module Unused where",
                 BuildTargets.getGenPath(projectFilesystem, emptyModuleTarget, "%s/Unused.hs"),
                 /* executable */ false));
@@ -348,9 +349,9 @@ public class HaskellDescriptionUtils {
 
     return resolver.addToIndex(
         new HaskellLinkRule(
+            target,
             projectFilesystem,
             baseParams
-                .withBuildTarget(target)
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(linker.getDeps(ruleFinder))

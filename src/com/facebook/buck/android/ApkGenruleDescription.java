@@ -41,6 +41,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
   @Override
   protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -54,7 +55,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       throw new HumanReadableException(
           "The 'apk' argument of %s, %s, must correspond to an "
               + "installable rule, such as android_binary() or apk_genrule().",
-          params.getBuildTarget(), args.getApk().getFullyQualifiedName());
+          buildTarget, args.getApk().getFullyQualifiedName());
     }
     HasInstallableApk installableApk = (HasInstallableApk) apk;
 
@@ -62,6 +63,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new ApkGenrule(
+        buildTarget,
         projectFilesystem,
         params.withExtraDeps(
             Suppliers.memoize(

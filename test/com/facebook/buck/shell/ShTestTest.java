@@ -63,8 +63,9 @@ public class ShTestTest extends EasyMockSupport {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ShTest shTest =
         new ShTest(
+            target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(target)
+            TestBuildRuleParams.create()
                 .withDeclaredDeps(ImmutableSortedSet.of(dep))
                 .withExtraDeps(ImmutableSortedSet.of(extraDep)),
             ruleFinder,

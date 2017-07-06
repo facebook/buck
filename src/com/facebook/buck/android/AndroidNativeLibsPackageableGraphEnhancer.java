@@ -81,6 +81,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   public AndroidNativeLibsPackageableGraphEnhancer(
       BuildRuleResolver ruleResolver,
+      BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams originalParams,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
@@ -92,7 +93,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       RelinkerMode relinkerMode,
       APKModuleGraph apkModuleGraph) {
     this.projectFilesystem = projectFilesystem;
-    this.originalBuildTarget = originalParams.getBuildTarget();
+    this.originalBuildTarget = originalBuildTarget;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
     this.pathResolver = new SourcePathResolver(ruleFinder);
@@ -175,8 +176,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               ruleResolver,
               pathResolver,
               ruleFinder,
+              originalBuildTarget,
               projectFilesystem,
-              buildRuleParams,
               nativePlatforms,
               nativeLibraryMergeMap.get(),
               nativeLibraryMergeGlue,
@@ -264,6 +265,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         && (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
       NativeRelinker relinker =
           new NativeRelinker(
+              originalBuildTarget,
               projectFilesystem,
               buildRuleParams.withExtraDeps(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -336,7 +338,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           BuildRules.toBuildRulesFor(originalBuildTarget, ruleResolver, nativeLibsTargets);
       BuildRuleParams paramsForCopyNativeLibraries =
           buildRuleParams
-              .withAppendedFlavor(InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName()))
               .withDeclaredDeps(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(nativeLibsRules)
@@ -348,6 +349,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
+              originalBuildTarget.withAppendedFlavors(
+                  InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName())),
               projectFilesystem,
               paramsForCopyNativeLibraries,
               ImmutableSet.copyOf(nativeLibsDirectories),
@@ -409,7 +412,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       } else {
         BuildRuleParams paramsForStripLinkable =
             buildRuleParams
-                .withBuildTarget(targetForStripRule)
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
@@ -418,6 +420,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
         stripLinkable =
             new StripLinkable(
+                targetForStripRule,
                 projectFilesystem,
                 paramsForStripLinkable,
                 platform.getCxxPlatform().getStrip(),

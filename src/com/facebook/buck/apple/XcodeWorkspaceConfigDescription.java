@@ -48,12 +48,13 @@ public class XcodeWorkspaceConfigDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       XcodeWorkspaceConfigDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
   public static String getWorkspaceNameFromArg(XcodeWorkspaceConfigDescriptionArg arg) {

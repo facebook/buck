@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -54,12 +55,13 @@ public class XcodePrebuildScriptDescription
   @Override
   public NoopBuildRuleWithDeclaredAndExtraDeps createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       XcodeScriptDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
   @Override

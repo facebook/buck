@@ -1075,7 +1075,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create(buildTarget).withDeclaredDeps(ImmutableSortedSet.copyOf(deps));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps));
 
     JavacOptions javacOptions =
         spoolMode.isPresent()
@@ -1085,6 +1085,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.builder(
                 TargetGraph.EMPTY,
+                buildTarget,
                 new FakeProjectFilesystem(),
                 buildRuleParams,
                 ruleResolver,
@@ -1323,7 +1324,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               target,
               new SourcePathRuleFinder(ruleResolver),
               new FakeProjectFilesystem(),
-              TestBuildRuleParams.create(target),
+              TestBuildRuleParams.create(),
               new FakeSourcePath("java/src/com/facebook/somejava/library/library-abi.jar"));
         }
       };
@@ -1385,11 +1386,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       JavacOptions options =
           JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setAnnotationProcessingParams(params).build();
 
-      BuildRuleParams buildRuleParams = TestBuildRuleParams.create(buildTarget);
+      BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
 
       DefaultJavaLibrary javaLibrary =
           DefaultJavaLibrary.builder(
                   TargetGraph.EMPTY,
+                  buildTarget,
                   projectFilesystem,
                   buildRuleParams,
                   ruleResolver,

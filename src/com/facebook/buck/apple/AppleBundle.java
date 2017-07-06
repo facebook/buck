@@ -156,6 +156,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean cacheable;
 
   AppleBundle(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -178,7 +179,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
     this.productName = productName;

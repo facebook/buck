@@ -65,6 +65,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public static Builder builder(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -75,6 +76,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       AndroidLibraryCompilerFactory compilerFactory) {
     return new Builder(
         targetGraph,
+        buildTarget,
         projectFilesystem,
         params,
         buildRuleResolver,
@@ -87,6 +89,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   @VisibleForTesting
   AndroidLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -109,6 +112,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests) {
     super(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
@@ -148,6 +152,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
     protected Builder(
         TargetGraph targetGraph,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
@@ -156,7 +161,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
         AndroidLibraryCompilerFactory compilerFactory) {
-      super(targetGraph, projectFilesystem, params, buildRuleResolver, cellRoots, javaBuckConfig);
+      super(
+          targetGraph,
+          buildTarget,
+          projectFilesystem,
+          params,
+          buildRuleResolver,
+          cellRoots,
+          javaBuckConfig);
       this.args = args;
       this.compilerFactory = compilerFactory;
       setJavacOptions(javacOptions);
@@ -178,7 +190,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             RichStream.from(args.getProvidedDeps())
                 .concat(
                     QueryUtils.resolveDepQuery(
-                            initialParams.getBuildTarget(),
+                            initialBuildTarget,
                             androidArgs.getProvidedDepsQuery().get(),
                             buildRuleResolver,
                             cellRoots,
@@ -216,6 +228,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Override
       protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
         return new AndroidLibrary(
+            initialBuildTarget,
             projectFilesystem,
             getFinalParams(),
             sourcePathResolver,
@@ -249,8 +262,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
         if (graphEnhancer == null) {
-          BuildTarget buildTarget = initialParams.getBuildTarget();
-          if (HasJavaAbi.isAbiTarget(buildTarget)) {
+          BuildTarget buildTarget = initialBuildTarget;
+          if (HasJavaAbi.isAbiTarget(initialBuildTarget)) {
             buildTarget = HasJavaAbi.getLibraryTarget(buildTarget);
           }
 
@@ -261,13 +274,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               new AndroidLibraryGraphEnhancer(
                   buildTarget,
                   projectFilesystem,
-                  initialParams
-                      .withBuildTarget(buildTarget)
-                      .withExtraDeps(
-                          () ->
-                              ImmutableSortedSet.copyOf(
-                                  Iterables.concat(
-                                      queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
+                  initialParams.withExtraDeps(
+                      () ->
+                          ImmutableSortedSet.copyOf(
+                              Iterables.concat(
+                                  queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
                   getJavac(),
                   javacOptions,
                   DependencyMode.FIRST_ORDER,
@@ -284,7 +295,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             ? Suppliers.memoize(
                 () ->
                     QueryUtils.resolveDepQuery(
-                            initialParams.getBuildTarget(),
+                            initialBuildTarget,
                             args.getDepsQuery().get(),
                             buildRuleResolver,
                             cellRoots,

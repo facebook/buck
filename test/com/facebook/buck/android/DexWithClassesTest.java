@@ -52,9 +52,10 @@ public class DexWithClassesTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(new FakeProjectFilesystem(), params, javaLibrary);
+        new DexProducedFromJavaLibrary(
+            buildTarget, new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutput(
@@ -83,9 +84,10 @@ public class DexWithClassesTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(new FakeProjectFilesystem(), params, javaLibrary);
+        new DexProducedFromJavaLibrary(
+            buildTarget, new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutput(

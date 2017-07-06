@@ -85,6 +85,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public PrebuiltAppleFramework(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -94,7 +95,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
       ImmutableSet<FrameworkPath> frameworks,
       Optional<Pattern> supportedPlatformsRegex,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags) {
-    super(projectFilesystem, params, pathResolver);
+    super(buildTarget, projectFilesystem, params, pathResolver);
     this.frameworkPath = frameworkPath;
     this.ruleResolver = ruleResolver;
     this.exportedLinkerFlags = exportedLinkerFlags;
@@ -102,9 +103,9 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
     this.frameworks = frameworks;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
 
-    BuildTarget target = params.getBuildTarget();
     this.frameworkName = pathResolver.getAbsolutePath(frameworkPath).getFileName().toString();
-    this.out = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s").resolve(frameworkName);
+    this.out =
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s").resolve(frameworkName);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {

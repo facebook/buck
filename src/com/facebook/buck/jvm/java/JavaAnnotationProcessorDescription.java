@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -48,6 +49,7 @@ public class JavaAnnotationProcessorDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -61,7 +63,7 @@ public class JavaAnnotationProcessorDescription
         throw new HumanReadableException(
             String.format(
                 "%s: dependencies must produce JVM libraries; %s is a %s",
-                params.getBuildTarget(), dep.getBuildTarget(), dep.getType()));
+                buildTarget, dep.getBuildTarget(), dep.getType()));
       }
       propsBuilder.addDep(dep);
     }
@@ -74,6 +76,7 @@ public class JavaAnnotationProcessorDescription
 
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new JavaAnnotationProcessor(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(properties.getClasspathDeps()),
         pathResolver,

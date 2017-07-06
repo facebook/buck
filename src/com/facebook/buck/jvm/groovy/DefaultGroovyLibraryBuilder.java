@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -35,13 +36,14 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
 
   protected DefaultGroovyLibraryBuilder(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       JavacOptions javacOptions,
       GroovyBuckConfig groovyBuckConfig) {
-    super(targetGraph, projectFilesystem, params, buildRuleResolver, cellRoots);
+    super(targetGraph, buildTarget, projectFilesystem, params, buildRuleResolver, cellRoots);
     this.groovyBuckConfig = groovyBuckConfig;
     setJavacOptions(javacOptions);
   }

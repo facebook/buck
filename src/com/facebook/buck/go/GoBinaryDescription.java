@@ -64,6 +64,7 @@ public class GoBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -73,10 +74,11 @@ public class GoBinaryDescription
     GoPlatform platform =
         goBuckConfig
             .getPlatformFlavorDomain()
-            .getValue(params.getBuildTarget())
+            .getValue(buildTarget)
             .orElse(goBuckConfig.getDefaultPlatform());
 
     return GoDescriptors.createGoBinaryRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,

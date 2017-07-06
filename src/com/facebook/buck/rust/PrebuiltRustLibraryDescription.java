@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -49,6 +50,7 @@ public class PrebuiltRustLibraryDescription
   @Override
   public PrebuiltRustLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -58,7 +60,7 @@ public class PrebuiltRustLibraryDescription
     final SourcePathResolver pathResolver =
         new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
-    return new PrebuiltRustLibrary(projectFilesystem, params, pathResolver) {
+    return new PrebuiltRustLibrary(buildTarget, projectFilesystem, params, pathResolver) {
 
       @Override
       protected SourcePath getRlib() {

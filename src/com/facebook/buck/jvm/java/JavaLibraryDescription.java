@@ -38,7 +38,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,6 +75,7 @@ public class JavaLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -83,19 +83,17 @@ public class JavaLibraryDescription
       JavaLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    BuildTarget target = params.getBuildTarget();
-
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
-    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
-      BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
+      BuildTarget unflavored = BuildTarget.of(buildTarget.getUnflavoredBuildTarget());
       BuildRule baseLibrary = resolver.requireRule(unflavored);
 
       JarShape shape =
-          params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR)
+          buildTarget.getFlavors().contains(JavaLibrary.MAVEN_JAR)
               ? JarShape.MAVEN
               : JarShape.SINGLE;
 
@@ -129,6 +127,7 @@ public class JavaLibraryDescription
       BuildRuleParams emptyParams = params.withDeclaredDeps(deps.build()).withoutExtraDeps();
 
       return new Javadoc(
+          buildTarget,
           projectFilesystem,
           emptyParams,
           args.getMavenCoords(),
@@ -137,13 +136,12 @@ public class JavaLibraryDescription
           sources);
     }
 
-    BuildRuleParams paramsWithMavenFlavor = null;
+    BuildTarget buildTargetWithMavenFlavor = buildTarget;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
-      paramsWithMavenFlavor = params;
 
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
-      params = params.withoutFlavor(JavaLibrary.MAVEN_JAR);
+      buildTarget = buildTarget.withoutFlavors(JavaLibrary.MAVEN_JAR);
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
@@ -152,11 +150,13 @@ public class JavaLibraryDescription
               .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(projectFilesystem, params, args.getSrcs(), mavenCoords);
+        return new JavaSourceJar(
+            buildTarget, projectFilesystem, params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
+            buildTargetWithMavenFlavor,
             projectFilesystem,
-            Preconditions.checkNotNull(paramsWithMavenFlavor),
+            params,
             args.getSrcs(),
             mavenCoords,
             args.getMavenPomTemplate());
@@ -164,17 +164,23 @@ public class JavaLibraryDescription
     }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultJavaLibrary.builder(
-                targetGraph, projectFilesystem, params, resolver, cellRoots, javaBuckConfig)
+                targetGraph,
+                buildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                cellRoots,
+                javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage());
 
-    if (HasJavaAbi.isAbiTarget(target)) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
@@ -186,8 +192,9 @@ public class JavaLibraryDescription
       resolver.addToIndex(defaultJavaLibrary);
       return MavenUberJar.create(
           defaultJavaLibrary,
+          buildTargetWithMavenFlavor,
           projectFilesystem,
-          Preconditions.checkNotNull(paramsWithMavenFlavor),
+          params,
           args.getMavenCoords(),
           args.getMavenPomTemplate());
     }

@@ -76,14 +76,17 @@ public class CxxGtestTestTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     CxxGtestTest test =
         new CxxGtestTest(
+            target,
             filesystem,
-            TestBuildRuleParams.create(target),
+            TestBuildRuleParams.create(),
             ruleFinder,
             new CxxLink(
+                linkTarget,
                 filesystem,
-                TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:link")),
+                TestBuildRuleParams.create(),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
                 ImmutableList.of(),

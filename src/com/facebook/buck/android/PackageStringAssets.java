@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
@@ -60,12 +61,13 @@ public class PackageStringAssets extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final ImmutableSet<String> locales;
 
   public PackageStringAssets(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableSet<String> locales,
       FilteredResourcesProvider filteredResourcesProvider,
       SourcePath rDotTxtPath) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.locales = locales;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.rDotTxtPath = rDotTxtPath;

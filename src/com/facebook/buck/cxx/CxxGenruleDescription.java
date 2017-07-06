@@ -262,23 +262,25 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxGenruleDescriptionArg args)
       throws NoSuchBuildTargetException {
-    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
+    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
+          buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()),
           projectFilesystem,
-          params.withAppendedFlavor(cxxPlatform.get().getFlavor()),
+          params,
           resolver,
           cellRoots,
           args);
     }
-    return new CxxGenrule(projectFilesystem, params, resolver, args.getOut());
+    return new CxxGenrule(buildTarget, projectFilesystem, params, resolver, args.getOut());
   }
 
   @Override

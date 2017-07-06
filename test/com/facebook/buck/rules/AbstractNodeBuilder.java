@@ -117,7 +117,7 @@ public abstract class AbstractNodeBuilder<
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
-                targetGraph, filesystem, params, resolver, cellRoots, builtArg);
+                targetGraph, target, filesystem, params, resolver, cellRoots, builtArg);
     resolver.addToIndex(rule);
     return rule;
   }
@@ -154,7 +154,7 @@ public abstract class AbstractNodeBuilder<
 
   public BuildRuleParams createBuildRuleParams(BuildRuleResolver resolver) {
     TargetNode<?, ?> node = build();
-    return TestBuildRuleParams.create(target)
+    return TestBuildRuleParams.create()
         .withDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
         .withExtraDeps(resolver.getAllRules(node.getExtraDeps()));
   }

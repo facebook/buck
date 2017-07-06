@@ -75,6 +75,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   abstract ProjectFilesystem getProjectFilesystem();
 
+  abstract BuildTarget getBaseTarget();
+
   abstract BuildRuleParams getBaseParams();
 
   abstract BuildRuleResolver getRuleResolver();
@@ -113,7 +115,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   private CxxSource getNativeStarterCxxSource() {
     BuildTarget target =
-        BuildTarget.builder(getBaseParams().getBuildTarget())
+        BuildTarget.builder(getBaseTarget())
             .addFlavors(InternalFlavor.of("native-starter-cxx-source"))
             .build();
     BuildRule rule =
@@ -122,18 +124,16 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 target,
                 () -> {
                   BuildTarget templateTarget =
-                      BuildTarget.builder(getBaseParams().getBuildTarget())
+                      BuildTarget.builder(getBaseTarget())
                           .addFlavors(InternalFlavor.of("native-starter-cxx-source-template"))
                           .build();
                   WriteFile templateRule =
                       getRuleResolver()
                           .addToIndex(
                               new WriteFile(
+                                  templateTarget,
                                   getProjectFilesystem(),
-                                  getBaseParams()
-                                      .withBuildTarget(templateTarget)
-                                      .withoutDeclaredDeps()
-                                      .withoutExtraDeps(),
+                                  getBaseParams().withoutDeclaredDeps().withoutExtraDeps(),
                                   getNativeStarterCxxSourceTemplate(),
                                   BuildTargets.getGenPath(
                                       getProjectFilesystem(),
@@ -203,7 +203,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
             getProjectFilesystem(),
-            getBaseParams().getBuildTarget(),
+            getBaseTarget(),
             getRuleResolver(),
             getPathResolver(),
             getRuleFinder(),
@@ -272,7 +272,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   @Override
   public BuildTarget getBuildTarget() {
-    return getBaseParams().getBuildTarget();
+    return getBaseTarget();
   }
 
   @Override

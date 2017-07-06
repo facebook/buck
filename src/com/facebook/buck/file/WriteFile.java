@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -44,12 +45,14 @@ public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final boolean executable;
 
   public WriteFile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       String fileContents,
       Path output,
       boolean executable) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         fileContents.getBytes(StandardCharsets.UTF_8),
@@ -58,12 +61,13 @@ public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public WriteFile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       byte[] fileContents,
       Path output,
       boolean executable) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
 
     Preconditions.checkArgument(!output.isAbsolute(), "'%s' must not be absolute.", output);
 

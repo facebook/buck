@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -29,11 +30,12 @@ public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDe
   private final ResolvedJavacPluginProperties resolvedProperties;
 
   public JavaAnnotationProcessor(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       JavacPluginProperties properties) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
 
     this.properties = properties;
 

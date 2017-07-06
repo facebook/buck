@@ -131,6 +131,7 @@ public class GoTestDescription
   }
 
   private GoTestMain requireTestMainGenRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -138,14 +139,17 @@ public class GoTestDescription
       Path packageName)
       throws NoSuchBuildTargetException {
     Tool testMainGenerator =
-        GoDescriptors.getTestMainGenerator(goBuckConfig, projectFilesystem, params, resolver);
+        GoDescriptors.getTestMainGenerator(
+            goBuckConfig, buildTarget, projectFilesystem, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    BuildTarget buildTargetWithFlavor =
+        buildTarget.withAppendedFlavors(InternalFlavor.of("test-main-src"));
     GoTestMain generatedTestMain =
         new GoTestMain(
+            buildTargetWithFlavor,
             projectFilesystem,
             params
-                .withAppendedFlavor(InternalFlavor.of("test-main-src"))
                 .withDeclaredDeps(ImmutableSortedSet.copyOf(testMainGenerator.getDeps(ruleFinder)))
                 .withoutExtraDeps(),
             testMainGenerator,
@@ -158,6 +162,7 @@ public class GoTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -167,18 +172,20 @@ public class GoTestDescription
     GoPlatform platform =
         goBuckConfig
             .getPlatformFlavorDomain()
-            .getValue(params.getBuildTarget())
+            .getValue(buildTarget)
             .orElse(goBuckConfig.getDefaultPlatform());
 
-    if (params.getBuildTarget().getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
-      return createTestLibrary(projectFilesystem, params, resolver, args, platform);
+    if (buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
+      return createTestLibrary(buildTarget, projectFilesystem, params, resolver, args, platform);
     }
 
-    GoBinary testMain = createTestMainRule(projectFilesystem, params, resolver, args, platform);
+    GoBinary testMain =
+        createTestMainRule(buildTarget, projectFilesystem, params, resolver, args, platform);
     resolver.addToIndex(testMain);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testMain)).withoutExtraDeps(),
         ruleFinder,
@@ -191,26 +198,30 @@ public class GoTestDescription
   }
 
   private GoBinary createTestMainRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoTestDescriptionArg args,
       GoPlatform platform)
       throws NoSuchBuildTargetException {
-    Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
+    Path packageName = getGoPackageName(resolver, buildTarget, args);
 
-    BuildRuleParams testTargetParams = params.withAppendedFlavor(TEST_LIBRARY_FLAVOR);
     BuildRule testLibrary =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, testTargetParams);
+        new NoopBuildRuleWithDeclaredAndExtraDeps(
+            buildTarget.withAppendedFlavors(TEST_LIBRARY_FLAVOR), projectFilesystem, params);
     resolver.addToIndex(testLibrary);
 
     BuildRule generatedTestMain =
-        requireTestMainGenRule(projectFilesystem, params, resolver, args.getSrcs(), packageName);
+        requireTestMainGenRule(
+            buildTarget, projectFilesystem, params, resolver, args.getSrcs(), packageName);
+    BuildTarget testMainBuildTarget =
+        buildTarget.withAppendedFlavors(InternalFlavor.of("test-main"));
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
+            testMainBuildTarget,
             projectFilesystem,
             params
-                .withAppendedFlavor(InternalFlavor.of("test-main"))
                 .withDeclaredDeps(ImmutableSortedSet.of(testLibrary))
                 .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             resolver,
@@ -264,13 +275,14 @@ public class GoTestDescription
   }
 
   private GoCompile createTestLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoTestDescriptionArg args,
       GoPlatform platform)
       throws NoSuchBuildTargetException {
-    Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
+    Path packageName = getGoPackageName(resolver, buildTarget, args);
     GoCompile testLibrary;
     if (args.getLibrary().isPresent()) {
       // We should have already type-checked the arguments in the base rule.
@@ -298,6 +310,7 @@ public class GoTestDescription
 
       testLibrary =
           GoDescriptors.createGoCompileRule(
+              buildTarget,
               projectFilesystem,
               testTargetParams,
               resolver,
@@ -321,6 +334,7 @@ public class GoTestDescription
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(
+              buildTarget,
               projectFilesystem,
               params,
               resolver,

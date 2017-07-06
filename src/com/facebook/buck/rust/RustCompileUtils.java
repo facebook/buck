@@ -202,8 +202,9 @@ public class RustCompileUtils {
     return resolver.addToIndex(
         RustCompileRule.from(
             ruleFinder,
+            target,
             projectFilesystem,
-            params.withBuildTarget(target),
+            params,
             filename,
             rustConfig.getRustCompiler().resolve(resolver),
             rustConfig
@@ -218,6 +219,7 @@ public class RustCompileUtils {
   }
 
   public static RustCompileRule requireBuild(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -233,7 +235,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule)
       throws NoSuchBuildTargetException {
-    BuildTarget target = getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, crateType);
+    BuildTarget target = getCompileBuildTarget(buildTarget, cxxPlatform, crateType);
 
     // If this rule has already been generated, return it.
     Optional<RustCompileRule> existing =
@@ -286,6 +288,7 @@ public class RustCompileUtils {
   }
 
   public static BinaryWrapperRule createBinaryBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -303,7 +306,6 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       boolean isCheck)
       throws NoSuchBuildTargetException {
-    final BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
@@ -318,12 +320,11 @@ public class RustCompileUtils {
 
     String crate = crateName.orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    CxxPlatform cxxPlatform =
-        cxxPlatforms.getValue(params.getBuildTarget()).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform);
 
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         getRootModuleAndSources(
-            params.getBuildTarget(),
+            buildTarget,
             resolver,
             pathResolver,
             ruleFinder,
@@ -335,10 +336,8 @@ public class RustCompileUtils {
 
     // The target to use for the link rule.
     BuildTarget binaryTarget =
-        params
-            .getBuildTarget()
-            .withAppendedFlavors(
-                isCheck ? RustDescriptionEnhancer.RFCHECK : RustDescriptionEnhancer.RFBIN);
+        buildTarget.withAppendedFlavors(
+            isCheck ? RustDescriptionEnhancer.RFCHECK : RustDescriptionEnhancer.RFBIN);
 
     if (isCheck || !rustBuckConfig.getUnflavoredBinaries()) {
       binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
@@ -355,7 +354,7 @@ public class RustCompileUtils {
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   ruleFinder,
-                  params.getBuildTarget(),
+                  buildTarget,
                   projectFilesystem,
                   cxxPlatform,
                   params.getBuildDeps(),
@@ -365,8 +364,7 @@ public class RustCompileUtils {
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path absBinaryDir =
-          params
-              .getBuildTarget()
+          buildTarget
               .getCellPath()
               .resolve(RustCompileRule.getOutputDir(binaryTarget, projectFilesystem));
 
@@ -415,7 +413,7 @@ public class RustCompileUtils {
     final CommandTool executable = executableBuilder.build();
 
     return new BinaryWrapperRule(
-        projectFilesystem, params.copyAppendingExtraDeps(buildRule), ruleFinder) {
+        buildTarget, projectFilesystem, params.copyAppendingExtraDeps(buildRule), ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {

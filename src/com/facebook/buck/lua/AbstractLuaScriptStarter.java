@@ -48,6 +48,8 @@ abstract class AbstractLuaScriptStarter implements Starter {
 
   abstract ProjectFilesystem getProjectFilesystem();
 
+  abstract BuildTarget getBaseTarget();
+
   abstract BuildRuleParams getBaseParams();
 
   abstract BuildRuleResolver getRuleResolver();
@@ -81,18 +83,16 @@ abstract class AbstractLuaScriptStarter implements Starter {
   @Override
   public SourcePath build() {
     BuildTarget templateTarget =
-        BuildTarget.builder(getBaseParams().getBuildTarget())
+        BuildTarget.builder(getBaseTarget())
             .addFlavors(InternalFlavor.of("starter-template"))
             .build();
     WriteFile templateRule =
         getRuleResolver()
             .addToIndex(
                 new WriteFile(
+                    templateTarget,
                     getProjectFilesystem(),
-                    getBaseParams()
-                        .withBuildTarget(templateTarget)
-                        .withoutDeclaredDeps()
-                        .withoutExtraDeps(),
+                    getBaseParams().withoutDeclaredDeps().withoutExtraDeps(),
                     getPureStarterTemplate(),
                     BuildTargets.getGenPath(
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),

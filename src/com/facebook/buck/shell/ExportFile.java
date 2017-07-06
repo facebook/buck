@@ -100,6 +100,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final SourcePath src;
 
   public ExportFile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -107,7 +108,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
-    super(projectFilesystem, buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams, resolver);
     this.ruleFinder = ruleFinder;
     this.name = name;
     this.mode = mode;

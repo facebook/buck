@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -67,6 +68,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   private final Optional<SymlinkTree> sandboxTree;
 
   private CxxPreprocessAndCompile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<PreprocessorDelegate> preprocessDelegate,
@@ -77,7 +79,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.sandboxTree = sandboxTree;
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
@@ -92,11 +94,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
     this.precompiledHeaderRule = precompiledHeaderRule;
     this.sanitizer = sanitizer;
     Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR)
-            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
+            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "CxxPreprocessAndCompile should not be created with CxxStrip flavors");
     Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "CxxPreprocessAndCompile %s should not be created with LinkerMapMode flavor (%s)",
         this,
         LinkerMapMode.FLAVOR_DOMAIN);
@@ -104,6 +106,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
 
   /** @return a {@link CxxPreprocessAndCompile} step that compiles the given preprocessed source. */
   public static CxxPreprocessAndCompile compile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       CompilerDelegate compilerDelegate,
@@ -113,6 +116,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
+        buildTarget,
         projectFilesystem,
         params,
         Optional.empty(),
@@ -129,6 +133,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
    * @return a {@link CxxPreprocessAndCompile} step that preprocesses and compiles the given source.
    */
   public static CxxPreprocessAndCompile preprocessAndCompile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       PreprocessorDelegate preprocessorDelegate,
@@ -140,6 +145,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
+        buildTarget,
         projectFilesystem,
         params,
         Optional.of(preprocessorDelegate),

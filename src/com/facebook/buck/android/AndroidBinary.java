@@ -251,6 +251,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePath abiPath;
 
   AndroidBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -286,7 +287,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<String> dxMaxHeapSize,
       boolean isCacheable) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -314,7 +315,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Joiner.on(":")
             .join(FluentIterable.from(rulesToExcludeFromDex).transform(BuildRule::toString));
     this.enhancementResult = enhancementResult;
-    this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget(), getProjectFilesystem());
+    this.primaryDexPath = getPrimaryDexPath(buildTarget, getProjectFilesystem());
     this.reorderClassesIntraDex = reorderClassesIntraDex;
     this.dexReorderToolFile = dexReorderToolFile;
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;

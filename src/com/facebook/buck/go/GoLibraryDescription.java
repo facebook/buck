@@ -112,24 +112,25 @@ public class GoLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    Optional<GoPlatform> platform =
-        goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget());
+    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (platform.isPresent()) {
       return GoDescriptors.createGoCompileRule(
+          buildTarget,
           projectFilesystem,
           params,
           resolver,
           goBuckConfig,
           args.getPackageName()
               .map(Paths::get)
-              .orElse(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
+              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
           args.getSrcs(),
           args.getCompilerFlags(),
           args.getAssemblerFlags(),
@@ -139,7 +140,7 @@ public class GoLibraryDescription
               .append(args.getExportedDeps()));
     }
 
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
   @BuckStyleImmutable

@@ -110,16 +110,17 @@ public class CxxPrecompiledHeaderRuleTest {
     return BuildTargetFactory.newInstance(fullyQualifiedName);
   }
 
-  public BuildRuleParams newParams(BuildTarget target) {
-    return TestBuildRuleParams.create(target);
+  public BuildRuleParams newParams() {
+    return TestBuildRuleParams.create();
   }
 
   /** Note: creates the {@link CxxPrecompiledHeaderTemplate}, add to ruleResolver index. */
   public CxxPrecompiledHeaderTemplate newPCH(
       BuildTarget target, SourcePath headerSourcePath, ImmutableSortedSet<BuildRule> deps) {
     return new CxxPrecompiledHeaderTemplate(
+        target,
         new FakeProjectFilesystem(),
-        newParams(target).copyAppendingExtraDeps(deps),
+        newParams().copyAppendingExtraDeps(deps),
         ruleResolver,
         headerSourcePath);
   }
@@ -137,10 +138,10 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   public CxxSourceRuleFactory.Builder newFactoryBuilder(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     return CxxSourceRuleFactory.builder()
-        .setBaseBuildTarget(params.getBuildTarget())
+        .setBaseBuildTarget(buildTarget)
         .setProjectFilesystem(projectFilesystem)
         .setResolver(ruleResolver)
         .setRuleFinder(ruleFinder)
@@ -151,8 +152,8 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   public CxxSourceRuleFactory.Builder newFactoryBuilder(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, String flag) {
-    return newFactoryBuilder(projectFilesystem, params)
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, String flag) {
+    return newFactoryBuilder(buildTarget, projectFilesystem)
         .setCxxPreprocessorInput(
             ImmutableList.of(
                 CxxPreprocessorInput.builder()
@@ -229,9 +230,8 @@ public class CxxPrecompiledHeaderRuleTest {
     ruleResolver.addToIndex(pch);
 
     BuildTarget lib1Target = newTarget("//test:lib1");
-    BuildRuleParams lib1Params = newParams(lib1Target);
     CxxSourceRuleFactory factory1 =
-        newFactoryBuilder(new FakeProjectFilesystem(), lib1Params, "-frtti")
+        newFactoryBuilder(lib1Target, new FakeProjectFilesystem(), "-frtti")
             .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
             .build();
     CxxPreprocessAndCompile lib1 =
@@ -241,9 +241,8 @@ public class CxxPrecompiledHeaderRuleTest {
         lib1.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
 
     BuildTarget lib2Target = newTarget("//test:lib2");
-    BuildRuleParams lib2Params = newParams(lib2Target);
     CxxSourceRuleFactory factory2 =
-        newFactoryBuilder(new FakeProjectFilesystem(), lib2Params, "-frtti")
+        newFactoryBuilder(lib2Target, new FakeProjectFilesystem(), "-frtti")
             .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
             .build();
     CxxPreprocessAndCompile lib2 =
@@ -253,9 +252,8 @@ public class CxxPrecompiledHeaderRuleTest {
         lib2.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
 
     BuildTarget lib3Target = newTarget("//test:lib3");
-    BuildRuleParams lib3Params = newParams(lib3Target);
     CxxSourceRuleFactory factory3 =
-        newFactoryBuilder(new FakeProjectFilesystem(), lib3Params, "-fno-rtti")
+        newFactoryBuilder(lib3Target, new FakeProjectFilesystem(), "-fno-rtti")
             .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
             .build();
     CxxPreprocessAndCompile lib3 =
@@ -297,9 +295,8 @@ public class CxxPrecompiledHeaderRuleTest {
     ruleResolver.addToIndex(pch);
 
     BuildTarget libTarget = newTarget("//test:lib");
-    BuildRuleParams libParams = newParams(libTarget);
     CxxSourceRuleFactory factory1 =
-        newFactoryBuilder(new FakeProjectFilesystem(), libParams, "-flag-for-factory")
+        newFactoryBuilder(libTarget, new FakeProjectFilesystem(), "-flag-for-factory")
             .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
             .build();
     CxxPreprocessAndCompile lib =
@@ -346,9 +343,8 @@ public class CxxPrecompiledHeaderRuleTest {
             .build();
 
     BuildTarget lib1Target = newTarget("//some/other/dir:lib1");
-    BuildRuleParams lib1Params = newParams(lib1Target);
     CxxSourceRuleFactory lib1Factory =
-        newFactoryBuilder(new FakeProjectFilesystem(), lib1Params)
+        newFactoryBuilder(lib1Target, new FakeProjectFilesystem())
             .addCxxPreprocessorInput(cxxPreprocessorInput)
             .build();
     CxxPreprocessAndCompile lib1 =
@@ -364,9 +360,8 @@ public class CxxPrecompiledHeaderRuleTest {
     ruleResolver.addToIndex(pch);
 
     BuildTarget lib2Target = newTarget("//test:lib2");
-    BuildRuleParams lib2Params = newParams(lib2Target);
     CxxSourceRuleFactory lib2Factory =
-        newFactoryBuilder(new FakeProjectFilesystem(), lib2Params)
+        newFactoryBuilder(lib2Target, new FakeProjectFilesystem())
             .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
             .build();
     CxxPreprocessAndCompile lib2 =

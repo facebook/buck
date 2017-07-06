@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -46,13 +47,14 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @AddToRuleKey private final WorkerTool worker;
 
   protected JsBundle(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
       String bundleName,
       WorkerTool worker) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
     this.libraries = libraries;

@@ -45,13 +45,14 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
   @AddToRuleKey private final boolean executable;
 
   public WriteStringTemplateRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Path output,
       SourcePath template,
       ImmutableMap<String, String> values,
       boolean executable) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.output = output;
     this.template = template;
     this.values = values;
@@ -102,9 +103,9 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
       ImmutableMap<String, String> values,
       boolean executable) {
     return new WriteStringTemplateRule(
+        target,
         projectFilesystem,
         baseParams
-            .withBuildTarget(target)
             .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template)))
             .withoutExtraDeps(),
         output,

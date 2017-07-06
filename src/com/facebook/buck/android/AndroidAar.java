@@ -60,6 +60,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<SourcePath> classpathsToIncludeInJar;
 
   public AndroidAar(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AndroidManifest manifest,
@@ -69,8 +70,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Path> assembledNativeLibs,
       ImmutableSet<SourcePath> nativeLibAssetsDirectories,
       ImmutableSortedSet<SourcePath> classpathsToIncludeInJar) {
-    super(projectFilesystem, params);
-    BuildTarget buildTarget = params.getBuildTarget();
+    super(buildTarget, projectFilesystem, params);
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);
     this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");

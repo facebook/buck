@@ -77,6 +77,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final Linkage linkage;
 
   SwiftLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -86,7 +87,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<FrameworkPath> libraries,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;

@@ -93,6 +93,7 @@ public class JavaTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -100,11 +101,13 @@ public class JavaTestDescription
       JavaTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateJavacOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(
+            templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
+            buildTarget,
             projectFilesystem,
             params,
             args.getUseCxxLibraries(),
@@ -114,14 +117,12 @@ public class JavaTestDescription
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildRuleParams testsLibraryParams =
-        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultJavaLibrary.builder(
                 targetGraph,
+                buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
-                testsLibraryParams,
+                params,
                 resolver,
                 cellRoots,
                 javaBuckConfig)
@@ -130,17 +131,18 @@ public class JavaTestDescription
             .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage());
 
-    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
     JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
 
     Function<String, Arg> toMacroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         pathResolver,
@@ -223,6 +225,7 @@ public class JavaTestDescription
     public final ImmutableMap<String, String> nativeLibsEnvironment;
 
     public CxxLibraryEnhancement(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
@@ -233,7 +236,8 @@ public class JavaTestDescription
         throws NoSuchBuildTargetException {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(ruleFinder, projectFilesystem, params, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(
+                ruleFinder, buildTarget, projectFilesystem, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -285,13 +289,14 @@ public class JavaTestDescription
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
         SourcePathRuleFinder ruleFinder,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform)
         throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           ruleFinder,
-          buildRuleParams.getBuildTarget(),
+          buildTarget,
           projectFilesystem,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),

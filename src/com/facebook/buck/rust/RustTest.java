@@ -79,13 +79,14 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePathRuleFinder ruleFinder;
 
   protected RustTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       BinaryBuildRule testExeBuild,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
 
     this.testExeBuild = testExeBuild;
     this.ruleFinder = ruleFinder;

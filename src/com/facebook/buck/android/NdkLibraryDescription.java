@@ -326,6 +326,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
   @Override
   public NdkLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -339,19 +340,20 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     if (!args.getSrcs().isEmpty()) {
       sources = args.getSrcs();
     } else {
-      sources = findSources(projectFilesystem, params.getBuildTarget().getBasePath());
+      sources = findSources(projectFilesystem, buildTarget.getBasePath());
     }
     return new NdkLibrary(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
-        getGeneratedMakefilePath(params.getBuildTarget(), projectFilesystem),
+        getGeneratedMakefilePath(buildTarget, projectFilesystem),
         makefilePair.getFirst(),
         sources,
         args.getFlags(),
         args.getIsAsset(),
         ndkVersion,
-        MACRO_HANDLER.getExpander(params.getBuildTarget(), cellRoots, resolver));
+        MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver));
   }
 
   @BuckStyleImmutable

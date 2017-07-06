@@ -91,6 +91,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   SwiftCompile(
       CxxPlatform cxxPlatform,
       SwiftBuckConfig swiftBuckConfig,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool swiftCompiler,
@@ -104,7 +105,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps)
       throws NoSuchBuildTargetException {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
     this.swiftBuckConfig = swiftBuckConfig;
@@ -123,7 +124,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
     this.cxxDeps = cxxDeps;
-    performChecks(params);
+    performChecks(buildTarget);
   }
 
   @Override
@@ -132,14 +133,14 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     cxxDeps.appendToRuleKey(sink);
   }
 
-  private void performChecks(BuildRuleParams params) {
+  private void performChecks(BuildTarget buildTarget) {
     Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "SwiftCompile %s should not be created with LinkerMapMode flavor (%s)",
         this,
         LinkerMapMode.FLAVOR_DOMAIN);
     Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
+        !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
   private SwiftCompileStep makeCompileStep(SourcePathResolver resolver) {

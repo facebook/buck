@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
@@ -73,6 +74,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   private final SourcePathResolver pathResolver;
 
   public RelinkerRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -84,7 +86,11 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       SourcePath baseLibSourcePath,
       @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs) {
-    super(projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs), resolver);
+    super(
+        buildTarget,
+        projectFilesystem,
+        withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs),
+        resolver);
     this.pathResolver = resolver;
     this.cpuType = cpuType;
     this.objdump = objdump;
@@ -131,12 +137,11 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   }
 
   public SourcePath getLibFileSourcePath() {
-    return new ExplicitBuildTargetSourcePath(buildRuleParams.getBuildTarget(), getLibFilePath());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
   }
 
   public SourcePath getSymbolsNeededPath() {
-    return new ExplicitBuildTargetSourcePath(
-        buildRuleParams.getBuildTarget(), getSymbolsNeededOutPath());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getSymbolsNeededOutPath());
   }
 
   @Override
@@ -153,10 +158,11 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
       relinkerSteps.addAll(
           new CxxLink(
+                  getBuildTarget()
+                      .withAppendedFlavors(InternalFlavor.of("cxx-link"))
+                      .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                   getProjectFilesystem(),
-                  buildRuleParams
-                      .withAppendedFlavor(InternalFlavor.of("cxx-link"))
-                      .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
+                  buildRuleParams,
                   linker,
                   getLibFilePath(),
                   args,

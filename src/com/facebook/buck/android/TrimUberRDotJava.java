@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
@@ -68,12 +69,13 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Pattern.compile("^ *package ([\\w.]+);");
 
   TrimUberRDotJava(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<SourcePath> pathToRDotJavaDir,
       Collection<DexProducedFromJavaLibrary> allPreDexRules,
       Optional<String> keepResourcePattern) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.pathToRDotJavaDir = pathToRDotJavaDir;
     this.allPreDexRules = allPreDexRules;
     this.keepResourcePattern = keepResourcePattern;

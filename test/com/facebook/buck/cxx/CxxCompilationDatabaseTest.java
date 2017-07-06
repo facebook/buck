@@ -109,11 +109,12 @@ public class CxxCompilationDatabaseTest {
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
     BuildRuleParams compileBuildRuleParams =
-        TestBuildRuleParams.create(compileTarget)
+        TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
     rules.add(
         testBuildRuleResolver.addToIndex(
             CxxPreprocessAndCompile.preprocessAndCompile(
+                compileTarget,
                 filesystem,
                 compileBuildRuleParams,
                 new PreprocessorDelegate(

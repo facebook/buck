@@ -102,6 +102,7 @@ public class RobolectricTest extends JavaTest {
       };
 
   protected RobolectricTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -123,6 +124,7 @@ public class RobolectricTest extends JavaTest {
       Optional<String> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         new SourcePathResolver(ruleFinder),

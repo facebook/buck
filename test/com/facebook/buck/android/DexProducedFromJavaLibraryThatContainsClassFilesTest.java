@@ -109,9 +109,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(filesystem, params, javaLibraryRule);
+        new DexProducedFromJavaLibrary(buildTarget, filesystem, params, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
@@ -175,9 +175,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(projectFilesystem, params, javaLibrary);
+        new DexProducedFromJavaLibrary(buildTarget, projectFilesystem, params, javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
@@ -213,9 +213,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDexWithClasses =
-        new DexProducedFromJavaLibrary(projectFilesystem, params, accumulateClassNames);
+        new DexProducedFromJavaLibrary(
+            buildTarget, projectFilesystem, params, accumulateClassNames);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),
@@ -241,10 +242,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             .build(ruleResolver);
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params =
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//:target"));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
-        new DexProducedFromJavaLibrary(projectFilesystem, params, javaLibrary);
+        new DexProducedFromJavaLibrary(buildTarget, projectFilesystem, params, javaLibrary);
 
     FakeOnDiskBuildInfo onDiskBuildInfo =
         new FakeOnDiskBuildInfo()

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -27,8 +28,8 @@ public class NoopBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRuleWith
     implements SupportsInputBasedRuleKey {
 
   public NoopBuildRuleWithDeclaredAndExtraDeps(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-    super(projectFilesystem, params);
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 
   @Override

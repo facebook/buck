@@ -18,6 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -45,12 +46,13 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path output;
 
   public GoTestMain(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool testMainGen,
       ImmutableSet<SourcePath> testSources,
       Path testPackage) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.testMainGen = testMainGen;
     this.testSources = testSources;
     this.testPackage = testPackage;

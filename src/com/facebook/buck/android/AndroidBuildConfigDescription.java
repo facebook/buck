@@ -66,6 +66,7 @@ public class AndroidBuildConfigDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -73,11 +74,11 @@ public class AndroidBuildConfigDescription
       AndroidBuildConfigDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      BuildTarget configTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
+      BuildTarget configTarget = HasJavaAbi.getLibraryTarget(buildTarget);
       BuildRule configRule = resolver.requireRule(configTarget);
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
+          buildTarget,
           ruleFinder,
           projectFilesystem,
           params,
@@ -85,6 +86,7 @@ public class AndroidBuildConfigDescription
     }
 
     return createBuildRule(
+        buildTarget,
         projectFilesystem,
         params,
         args.getPackage(),
@@ -105,6 +107,7 @@ public class AndroidBuildConfigDescription
    *     {@link BuildRuleResolver}.
    */
   static AndroidBuildConfigJavaLibrary createBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String javaPackage,
@@ -134,29 +137,27 @@ public class AndroidBuildConfigDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget buildConfigBuildTarget;
-    if (!params.getBuildTarget().isFlavored()) {
+    if (!buildTarget.isFlavored()) {
       // android_build_config() case.
       Preconditions.checkArgument(!useConstantExpressions);
-      buildConfigBuildTarget = params.getBuildTarget().withFlavors(GEN_JAVA_FLAVOR);
+      buildConfigBuildTarget = buildTarget.withFlavors(GEN_JAVA_FLAVOR);
     } else {
       // android_binary() graph enhancement case.
       Preconditions.checkArgument(useConstantExpressions);
       buildConfigBuildTarget =
-          params
-              .getBuildTarget()
-              .withFlavors(
-                  InternalFlavor.of(
-                      GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
+          buildTarget.withFlavors(
+              InternalFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
     }
 
     // Create one build rule to generate BuildConfig.java.
-    BuildRuleParams buildConfigParams = params.withBuildTarget(buildConfigBuildTarget);
+    BuildRuleParams buildConfigParams = params;
     Optional<BuildRule> valuesFileRule = valuesFile.flatMap(ruleFinder::getRule);
     if (valuesFileRule.isPresent()) {
       buildConfigParams = buildConfigParams.copyAppendingExtraDeps(valuesFileRule.get());
     }
     AndroidBuildConfig androidBuildConfig =
         new AndroidBuildConfig(
+            buildConfigBuildTarget,
             projectFilesystem,
             buildConfigParams,
             javaPackage,
@@ -169,6 +170,7 @@ public class AndroidBuildConfigDescription
     BuildRuleParams javaLibraryParams =
         params.withDeclaredDeps(ImmutableSortedSet.of(androidBuildConfig)).withoutExtraDeps();
     return new AndroidBuildConfigJavaLibrary(
+        buildTarget,
         projectFilesystem,
         javaLibraryParams,
         pathResolver,

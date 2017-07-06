@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -47,11 +48,12 @@ public class PrebuiltJarTest {
   public void setUp() throws IOException {
     filesystem = new FakeProjectFilesystem(temp.newFolder());
 
-    BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//lib:junit"));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//lib:junit");
+    BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
 
     junitJarRule =
         new PrebuiltJar(
+            buildTarget,
             filesystem,
             buildRuleParams,
             new SourcePathResolver(

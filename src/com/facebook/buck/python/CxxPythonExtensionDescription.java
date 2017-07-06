@@ -327,6 +327,7 @@ public class CxxPythonExtensionDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
@@ -334,22 +335,16 @@ public class CxxPythonExtensionDescription
       final CxxPythonExtensionDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform =
-        cxxPlatforms.getFlavorAndValue(params.getBuildTarget());
-    if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
+    if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          ruleResolver,
-          args,
-          platform.get().getValue(),
-          params.getBuildTarget(),
-          projectFilesystem);
+          ruleResolver, args, platform.get().getValue(), buildTarget, projectFilesystem);
     }
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
-    final Optional<Map.Entry<Flavor, Type>> type =
-        LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget());
+    final Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     final Optional<Map.Entry<Flavor, PythonPlatform>> pythonPlatform =
-        pythonPlatforms.getFlavorAndValue(params.getBuildTarget());
+        pythonPlatforms.getFlavorAndValue(buildTarget);
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the
@@ -357,7 +352,7 @@ public class CxxPythonExtensionDescription
     if (type.isPresent() && platform.isPresent() && pythonPlatform.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       return createExtensionBuildRule(
-          params.getBuildTarget(),
+          buildTarget,
           projectFilesystem,
           ruleResolver,
           cellRoots,
@@ -370,10 +365,10 @@ public class CxxPythonExtensionDescription
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.getBaseModule());
-    String moduleName = args.getModuleName().orElse(params.getBuildTarget().getShortName());
+    Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
+    String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     final Path module = baseModule.resolve(getExtensionName(moduleName));
-    return new CxxPythonExtension(projectFilesystem, params) {
+    return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
 
       @Override
       protected BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform)
@@ -422,7 +417,7 @@ public class CxxPythonExtensionDescription
 
           @Override
           public BuildTarget getBuildTarget() {
-            return params.getBuildTarget().withAppendedFlavors(pythonPlatform.getFlavor());
+            return buildTarget.withAppendedFlavors(pythonPlatform.getFlavor());
           }
 
           @Override
@@ -444,10 +439,8 @@ public class CxxPythonExtensionDescription
             return NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(
-                        params
-                            .getBuildTarget()
-                            .withAppendedFlavors(
-                                pythonPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR),
+                        buildTarget.withAppendedFlavors(
+                            pythonPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR),
                         projectFilesystem,
                         ruleResolver,
                         pathResolver,

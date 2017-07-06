@@ -50,11 +50,13 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
 
   protected UnstrippedNativeLibraries(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> inputs) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams
             .withoutExtraDeps()

@@ -128,8 +128,9 @@ public class CopyNativeLibrariesTest {
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
+            target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(target),
+            TestBuildRuleParams.create(),
             ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.of(),
             ImmutableSet.of(),

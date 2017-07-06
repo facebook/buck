@@ -124,6 +124,7 @@ public class CxxBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -132,7 +133,7 @@ public class CxxBinaryDescription
       throws NoSuchBuildTargetException {
     return createBuildRule(
         targetGraph,
-        params.getBuildTarget(),
+        buildTarget,
         projectFilesystem,
         params.getExtraDeps(),
         resolver,
@@ -251,9 +252,9 @@ public class CxxBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxBinary cxxBinary =
         new CxxBinary(
+            target,
             projectFilesystem,
             new BuildRuleParams(
-                target,
                 () -> cxxLinkAndCompileRules.deps,
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()

@@ -41,8 +41,11 @@ public class OcamlBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildRule binary;
 
   public OcamlBinary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRule binary) {
-    super(projectFilesystem, params);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRule binary) {
+    super(buildTarget, projectFilesystem, params);
     this.binary = binary;
   }
 

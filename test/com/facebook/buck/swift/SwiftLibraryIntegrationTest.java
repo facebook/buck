@@ -89,9 +89,10 @@ public class SwiftLibraryIntegrationTest {
     resolver.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
-    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
+    BuildRuleParams libParams = TestBuildRuleParams.create();
     FakeCxxLibrary depRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
@@ -106,7 +107,7 @@ public class SwiftLibraryIntegrationTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildRuleParams params =
-        TestBuildRuleParams.create(buildTarget).withDeclaredDeps(ImmutableSortedSet.of(depRule));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(depRule));
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
 
@@ -114,6 +115,7 @@ public class SwiftLibraryIntegrationTest {
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraph.EMPTY,
+                buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -133,13 +135,14 @@ public class SwiftLibraryIntegrationTest {
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraph.EMPTY,
+                swiftCompileTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -172,13 +175,13 @@ public class SwiftLibraryIntegrationTest {
             pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));
 
-    BuildTarget linkTarget = buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     CxxLink linkRule =
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
+                buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
                 projectFilesystem,
-                params.withBuildTarget(linkTarget),
+                params,
                 resolver,
                 TestCellBuilder.createCellRoots(projectFilesystem),
                 args);

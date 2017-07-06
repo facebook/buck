@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -183,9 +184,10 @@ public class InputBasedRuleKeyFactoryTest {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
 
-    BuildRuleParams params = TestBuildRuleParams.create("//:rule");
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params = TestBuildRuleParams.create();
     BuildRule rule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(filesystem, params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
@@ -222,10 +224,11 @@ public class InputBasedRuleKeyFactoryTest {
             .setOut("out")
             .build(resolver, filesystem);
 
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params =
-        TestBuildRuleParams.create("//:rule").withDeclaredDeps(ImmutableSortedSet.of(dep));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(dep));
     BuildRule rule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(filesystem, params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
@@ -297,9 +300,10 @@ public class InputBasedRuleKeyFactoryTest {
     Path inputFile = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[1024], inputFile);
 
-    BuildRuleParams params = TestBuildRuleParams.create("//:rule");
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params = TestBuildRuleParams.create();
     BuildRule rule =
-        new NoopBuildRuleWithDeclaredAndExtraDeps(filesystem, params) {
+        new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
           NestedRuleKeyAppendableWithInput input =
               new NestedRuleKeyAppendableWithInput(new PathSourcePath(filesystem, inputFile));

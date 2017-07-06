@@ -19,13 +19,15 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 
 public abstract class PrebuiltHaskellLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements HaskellCompileDep, NativeLinkable, CxxPreprocessorDep {
 
-  public PrebuiltHaskellLibrary(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-    super(projectFilesystem, params);
+  public PrebuiltHaskellLibrary(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 }

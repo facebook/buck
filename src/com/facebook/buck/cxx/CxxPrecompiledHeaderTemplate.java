@@ -54,7 +54,6 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
-  public final BuildRuleParams params;
   public final BuildRuleResolver ruleResolver;
   public final SourcePath sourcePath;
   private final SourcePathRuleFinder ruleFinder;
@@ -62,12 +61,12 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   CxxPrecompiledHeaderTemplate(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       BuildRuleResolver ruleResolver,
       SourcePath sourcePath) {
-    super(projectFilesystem, buildRuleParams);
-    this.params = buildRuleParams;
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleResolver = ruleResolver;
     this.sourcePath = sourcePath;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
@@ -196,8 +195,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
   }
 
   private BuildTarget createAggregatedDepsTarget(CxxPlatform cxxPlatform) {
-    return params
-        .getBuildTarget()
+    return getBuildTarget()
         .withAppendedFlavors(cxxPlatform.getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR);
   }
 

@@ -65,13 +65,14 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
-        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(ndkLibrary));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(ndkLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            target,
             new FakeProjectFilesystem(),
             originalParams,
             ImmutableMap.of(),
@@ -138,13 +139,14 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
-        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            target,
             new FakeProjectFilesystem(),
             originalParams,
             nativePlatforms,
@@ -207,13 +209,14 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
-        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            target,
             new FakeProjectFilesystem(),
             originalParams,
             ImmutableMap.of(),
@@ -247,13 +250,14 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
-        TestBuildRuleParams.create(target).withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
+            target,
             new FakeProjectFilesystem(),
             originalParams,
             ImmutableMap.of(),

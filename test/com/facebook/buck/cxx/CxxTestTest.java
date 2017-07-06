@@ -55,13 +55,15 @@ public class CxxTestTest {
 
   private abstract static class FakeCxxTest extends CxxTest {
 
+    private static final BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
+
     private static BuildRuleParams createBuildParams() {
-      BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      return TestBuildRuleParams.create(target);
+      return TestBuildRuleParams.create();
     }
 
     public FakeCxxTest() {
       super(
+          buildTarget,
           new FakeProjectFilesystem(),
           createBuildParams(),
           new CommandTool.Builder().build(),

@@ -277,13 +277,14 @@ public class AppleDescriptions {
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Tool actool) {
-    TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
+    TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(
@@ -307,7 +308,7 @@ public class AppleDescriptions {
         if (appIcon.isPresent()) {
           throw new HumanReadableException(
               "At most one asset catalog in the dependencies of %s " + "can have a app_icon",
-              params.getBuildTarget());
+              buildTarget);
         }
 
         appIcon = arg.getAppIcon();
@@ -317,7 +318,7 @@ public class AppleDescriptions {
         if (launchImage.isPresent()) {
           throw new HumanReadableException(
               "At most one asset catalog in the dependencies of %s " + "can have a launch_image",
-              params.getBuildTarget());
+              buildTarget);
         }
 
         launchImage = arg.getLaunchImage();
@@ -327,7 +328,7 @@ public class AppleDescriptions {
         throw new HumanReadableException(
             "At most one asset catalog optimisation style can be "
                 + "specified in the dependencies %s",
-            params.getBuildTarget());
+            buildTarget);
       }
     }
 
@@ -344,20 +345,17 @@ public class AppleDescriptions {
       if (!baseName.toString().endsWith(".xcassets")) {
         throw new HumanReadableException(
             "Target %s had asset catalog dir %s - asset catalog dirs must end with .xcassets",
-            params.getBuildTarget(), assetCatalogDir);
+            buildTarget, assetCatalogDir);
       }
     }
 
-    BuildRuleParams assetCatalogParams =
-        params
-            .withAppendedFlavor(AppleAssetCatalog.FLAVOR)
-            .withoutDeclaredDeps()
-            .withoutExtraDeps();
+    BuildTarget assetCatalogBuildTarget = buildTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
 
     return Optional.of(
         new AppleAssetCatalog(
+            assetCatalogBuildTarget,
             projectFilesystem,
-            assetCatalogParams,
+            params.withoutDeclaredDeps().withoutExtraDeps(),
             applePlatform.getName(),
             targetSDKVersion,
             actool,
@@ -370,11 +368,12 @@ public class AppleDescriptions {
 
   public static Optional<CoreDataModel> createBuildRulesForCoreDataDependencies(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String moduleName,
       AppleCxxPlatform appleCxxPlatform) {
-    TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
+    TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
         AppleBuildRules.collectTransitiveBuildRules(
@@ -383,16 +382,16 @@ public class AppleDescriptions {
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    BuildRuleParams coreDataModelParams =
-        params.withAppendedFlavor(CoreDataModel.FLAVOR).withoutDeclaredDeps().withoutExtraDeps();
+    BuildTarget coreDataModelBuildTarget = buildTarget.withAppendedFlavors(CoreDataModel.FLAVOR);
 
     if (coreDataModelArgs.isEmpty()) {
       return Optional.empty();
     } else {
       return Optional.of(
           new CoreDataModel(
+              coreDataModelBuildTarget,
               projectFilesystem,
-              coreDataModelParams,
+              params.withoutDeclaredDeps().withoutExtraDeps(),
               appleCxxPlatform,
               moduleName,
               coreDataModelArgs
@@ -404,10 +403,11 @@ public class AppleDescriptions {
 
   public static Optional<SceneKitAssets> createBuildRulesForSceneKitAssetsDependencies(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleCxxPlatform appleCxxPlatform) {
-    TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
+    TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
         AppleBuildRules.collectTransitiveBuildRules(
@@ -416,16 +416,16 @@ public class AppleDescriptions {
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    BuildRuleParams sceneKitAssetsParams =
-        params.withAppendedFlavor(SceneKitAssets.FLAVOR).withoutDeclaredDeps().withoutExtraDeps();
+    BuildTarget sceneKitAssetsBuildTarget = buildTarget.withAppendedFlavors(SceneKitAssets.FLAVOR);
 
     if (sceneKitAssetsArgs.isEmpty()) {
       return Optional.empty();
     } else {
       return Optional.of(
           new SceneKitAssets(
+              sceneKitAssetsBuildTarget,
               projectFilesystem,
-              sceneKitAssetsParams,
+              params.withoutDeclaredDeps().withoutExtraDeps(),
               appleCxxPlatform,
               sceneKitAssetsArgs
                   .stream()
@@ -435,6 +435,7 @@ public class AppleDescriptions {
   }
 
   static AppleDebuggableBinary createAppleDebuggableBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -447,6 +448,7 @@ public class AppleDescriptions {
     Optional<AppleDsym> appleDsym =
         createAppleDsymForDebugFormat(
             debugFormat,
+            buildTarget,
             projectFilesystem,
             params,
             resolver,
@@ -462,13 +464,11 @@ public class AppleDescriptions {
     }
     AppleDebuggableBinary rule =
         new AppleDebuggableBinary(
+            strippedBinaryRule
+                .getBuildTarget()
+                .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
             projectFilesystem,
             params
-                .withBuildTarget(
-                    strippedBinaryRule
-                        .getBuildTarget()
-                        .withAppendedFlavors(
-                            AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()))
                 .withDeclaredDeps(
                     AppleDebuggableBinary.getRequiredRuntimeDeps(
                         debugFormat, strippedBinaryRule, unstrippedBinaryRule, appleDsym))
@@ -479,6 +479,7 @@ public class AppleDescriptions {
 
   private static Optional<AppleDsym> createAppleDsymForDebugFormat(
       AppleDebugFormat debugFormat,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -488,8 +489,7 @@ public class AppleDescriptions {
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
       BuildTarget dsymBuildTarget =
-          params
-              .getBuildTarget()
+          buildTarget
               .withoutFlavors(CxxStrip.RULE_FLAVOR)
               .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
               .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
@@ -500,8 +500,9 @@ public class AppleDescriptions {
         dsymRule =
             Optional.of(
                 createAppleDsym(
+                    dsymBuildTarget,
                     projectFilesystem,
-                    params.withBuildTarget(dsymBuildTarget),
+                    params,
                     resolver,
                     unstrippedBinaryRule,
                     cxxPlatformFlavorDomain,
@@ -515,6 +516,7 @@ public class AppleDescriptions {
   }
 
   static AppleDsym createAppleDsym(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -534,6 +536,7 @@ public class AppleDescriptions {
 
     AppleDsym appleDsym =
         new AppleDsym(
+            buildTarget,
             projectFilesystem,
             params
                 .withDeclaredDeps(
@@ -546,7 +549,7 @@ public class AppleDescriptions {
             appleCxxPlatform.getDsymutil(),
             appleCxxPlatform.getLldb(),
             unstrippedBinaryBuildRule.getSourcePathToOutput(),
-            AppleDsym.getDsymOutputPath(params.getBuildTarget(), projectFilesystem));
+            AppleDsym.getDsymOutputPath(buildTarget, projectFilesystem));
     resolver.addToIndex(appleDsym);
     return appleDsym;
   }
@@ -556,6 +559,7 @@ public class AppleDescriptions {
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -577,8 +581,8 @@ public class AppleDescriptions {
             cxxPlatformFlavorDomain,
             defaultCxxPlatform,
             appleCxxPlatforms,
-            params.getBuildTarget(),
-            MultiarchFileInfos.create(appleCxxPlatforms, params.getBuildTarget()));
+            buildTarget,
+            MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
 
     AppleBundleDestinations destinations;
 
@@ -594,10 +598,10 @@ public class AppleDescriptions {
 
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
-            targetGraph, resolver, Optional.empty(), targetGraph.get(params.getBuildTarget()));
+            targetGraph, resolver, Optional.empty(), targetGraph.get(buildTarget));
 
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
-    if (INCLUDE_FRAMEWORKS.getRequiredValue(params.getBuildTarget())) {
+    if (INCLUDE_FRAMEWORKS.getRequiredValue(buildTarget)) {
       for (BuildTarget dep : deps) {
         Optional<FrameworkDependencies> frameworkDependencies =
             resolver.requireMetadata(
@@ -633,13 +637,14 @@ public class AppleDescriptions {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
-    BuildRuleParams paramsWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(params);
+    BuildTarget buildTargetWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(buildTarget);
 
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
             targetGraph,
+            buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            paramsWithoutBundleSpecificFlavors,
+            params,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
@@ -649,15 +654,20 @@ public class AppleDescriptions {
     Optional<CoreDataModel> coreDataModel =
         createBuildRulesForCoreDataDependencies(
             targetGraph,
+            buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            paramsWithoutBundleSpecificFlavors,
-            AppleBundle.getBinaryName(params.getBuildTarget(), productName),
+            params,
+            AppleBundle.getBinaryName(buildTarget, productName),
             appleCxxPlatform);
     addToIndex(resolver, coreDataModel);
 
     Optional<SceneKitAssets> sceneKitAssets =
         createBuildRulesForSceneKitAssetsDependencies(
-            targetGraph, projectFilesystem, paramsWithoutBundleSpecificFlavors, appleCxxPlatform);
+            targetGraph,
+            buildTargetWithoutBundleSpecificFlavors,
+            projectFilesystem,
+            params,
+            appleCxxPlatform);
     addToIndex(resolver, sceneKitAssets);
 
     // TODO(beng): Sort through the changes needed to make project generation work with
@@ -667,7 +677,7 @@ public class AppleDescriptions {
             cxxPlatformFlavorDomain,
             defaultCxxPlatform,
             targetGraph,
-            paramsWithoutBundleSpecificFlavors.getBuildTarget().getFlavors(),
+            buildTargetWithoutBundleSpecificFlavors.getFlavors(),
             resolver,
             binary);
 
@@ -685,8 +695,7 @@ public class AppleDescriptions {
             .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
             .withoutFlavors(AppleDebuggableBinary.RULE_FLAVOR)
             .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
-    Optional<LinkerMapMode> linkerMapMode =
-        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    Optional<LinkerMapMode> linkerMapMode = LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
     if (linkerMapMode.isPresent()) {
       unstrippedTarget = unstrippedTarget.withAppendedFlavors(linkerMapMode.get().getFlavor());
     }
@@ -699,11 +708,11 @@ public class AppleDescriptions {
           getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
               .getBuildTarget()
               .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-      BuildRuleParams binaryParams = params.withBuildTarget(binaryBuildTarget);
       targetDebuggableBinaryRule =
           createAppleDebuggableBinary(
+              binaryBuildTarget,
               projectFilesystem,
-              binaryParams,
+              params,
               resolver,
               getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
               (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
@@ -714,8 +723,9 @@ public class AppleDescriptions {
       appleDsym =
           createAppleDsymForDebugFormat(
               debugFormat,
+              binaryBuildTarget,
               projectFilesystem,
-              binaryParams,
+              params,
               resolver,
               (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
               cxxPlatformFlavorDomain,
@@ -737,7 +747,7 @@ public class AppleDescriptions {
                 .addAll(Optionals.toStream(sceneKitAssets).iterator())
                 .addAll(
                     BuildRules.toBuildRulesFor(
-                        params.getBuildTarget(),
+                        buildTarget,
                         resolver,
                         RichStream.from(collectedResources.getAll())
                             .concat(frameworks.stream())
@@ -751,6 +761,7 @@ public class AppleDescriptions {
         collectFirstLevelAppleDependencyBundles(params.getBuildDeps(), destinations);
 
     return new AppleBundle(
+        buildTarget,
         projectFilesystem,
         bundleParamsWithFlavoredBinaryDep,
         resolver,
@@ -925,12 +936,12 @@ public class AppleDescriptions {
    * Strip flavors that only apply to a bundle from build targets that are passed to constituent
    * rules of the bundle, such as its associated binary, asset catalog, etc.
    */
-  private static BuildRuleParams stripBundleSpecificFlavors(BuildRuleParams params) {
-    return params.withBuildTarget(params.getBuildTarget().withoutFlavors(BUNDLE_SPECIFIC_FLAVORS));
+  private static BuildTarget stripBundleSpecificFlavors(BuildTarget buildTarget) {
+    return buildTarget.withoutFlavors(BUNDLE_SPECIFIC_FLAVORS);
   }
 
-  public static boolean flavorsDoNotAllowLinkerMapMode(BuildRuleParams params) {
-    ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+  public static boolean flavorsDoNotAllowLinkerMapMode(BuildTarget buildTarget) {
+    ImmutableSet<Flavor> flavors = buildTarget.getFlavors();
     return flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)

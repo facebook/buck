@@ -65,6 +65,7 @@ public class DLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -75,27 +76,23 @@ public class DLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
-    if (params.getBuildTarget().getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
+    if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          params.getBuildTarget(),
-          projectFilesystem,
-          params,
-          ruleFinder,
-          pathResolver,
-          args.getSrcs());
+          buildTarget, buildTarget, projectFilesystem, ruleFinder, pathResolver, args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
-        params.getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
+        buildTarget.withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
             .setLinkTree(new DefaultBuildTargetSourcePath(sourceTreeTarget))
             .setSources(args.getSrcs().getPaths())
             .build();
 
-    if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
+    if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
       buildRuleResolver.requireRule(sourceTreeTarget);
       return createStaticLibraryBuildRule(
+          buildTarget,
           projectFilesystem,
           params,
           buildRuleResolver,
@@ -109,11 +106,12 @@ public class DLibraryDescription
           CxxSourceRuleFactory.PicType.PDC);
     }
 
-    return new DLibrary(projectFilesystem, params, buildRuleResolver, dIncludes);
+    return new DLibrary(buildTarget, projectFilesystem, params, buildRuleResolver, dIncludes);
   }
 
   /** @return a BuildRule that creates a static library. */
   private BuildRule createStaticLibraryBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -129,6 +127,7 @@ public class DLibraryDescription
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(
+            buildTarget,
             projectFilesystem,
             params,
             ruleResolver,
@@ -143,12 +142,12 @@ public class DLibraryDescription
     // Write a build rule to create the archive for this library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            params.getBuildTarget(), cxxPlatform.getFlavor(), pic);
+            buildTarget, cxxPlatform.getFlavor(), pic);
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
             projectFilesystem,
-            params.getBuildTarget(),
+            buildTarget,
             cxxPlatform.getFlavor(),
             pic,
             cxxPlatform.getStaticLibraryExtension());
