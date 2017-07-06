@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -151,11 +150,11 @@ public class AndroidBuildConfigDescription
     }
 
     // Create one build rule to generate BuildConfig.java.
-    BuildRuleParams buildConfigParams =
-        params
-            .withBuildTarget(buildConfigBuildTarget)
-            .copyAppendingExtraDeps(
-                ruleFinder.filterBuildRuleInputs(Optionals.toStream(valuesFile)));
+    BuildRuleParams buildConfigParams = params.withBuildTarget(buildConfigBuildTarget);
+    Optional<BuildRule> valuesFileRule = valuesFile.flatMap(ruleFinder::getRule);
+    if (valuesFileRule.isPresent()) {
+      buildConfigParams = buildConfigParams.copyAppendingExtraDeps(valuesFileRule.get());
+    }
     AndroidBuildConfig androidBuildConfig =
         new AndroidBuildConfig(
             projectFilesystem,

@@ -26,7 +26,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
 public abstract class FrameworkPathArg implements Arg {
@@ -39,9 +38,12 @@ public abstract class FrameworkPathArg implements Arg {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(final SourcePathRuleFinder ruleFinder) {
-    Stream<SourcePath> sourcePaths =
-        frameworkPaths.stream().map(FrameworkPath::getSourcePath).flatMap(Optionals::toStream);
-    return ruleFinder.filterBuildRuleInputs(sourcePaths);
+    return frameworkPaths
+        .stream()
+        .map(FrameworkPath::getSourcePath)
+        .flatMap(Optionals::toStream)
+        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override

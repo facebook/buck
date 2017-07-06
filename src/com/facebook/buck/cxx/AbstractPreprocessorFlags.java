@@ -63,7 +63,10 @@ abstract class AbstractPreprocessorFlags {
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(ruleFinder.filterBuildRuleInputs(Optionals.toStream(getPrefixHeader())));
+    deps.addAll(
+        Optionals.toStream(getPrefixHeader())
+            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+            .iterator());
     for (CxxHeaders cxxHeaders : getIncludes()) {
       cxxHeaders.getDeps(ruleFinder).forEachOrdered(deps::add);
     }

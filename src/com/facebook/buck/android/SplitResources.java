@@ -34,8 +34,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -74,9 +74,11 @@ public class SplitResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/");
   }
 
-  private static ImmutableSet<BuildRule> getAllDeps(
+  private static Iterable<BuildRule> getAllDeps(
       SourcePathRuleFinder ruleFinder, SourcePath aaptOutputPath, SourcePath aaptRDotTxtPath) {
-    return ruleFinder.filterBuildRuleInputs(aaptOutputPath, aaptRDotTxtPath);
+    return RichStream.of(aaptOutputPath, aaptRDotTxtPath)
+        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+        .toOnceIterable();
   }
 
   @Override

@@ -1558,8 +1558,11 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return JavaLibraryClasspathProvider.getClasspathDeps(
-        ImmutableSet.copyOf(
-            ruleFinder.filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
+        enhancementResult
+            .getClasspathEntriesToDex()
+            .stream()
+            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Override
@@ -1592,9 +1595,10 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     if (ExopackageMode.enabledForResources(exopackageModes)) {
       deps.add(
-          ruleFinder
-              .filterBuildRuleInputs(enhancementResult.getExoResources())
+          enhancementResult
+              .getExoResources()
               .stream()
+              .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
               .map(BuildRule::getBuildTarget));
     }
     return deps.build().reduce(Stream.empty(), Stream::concat);
