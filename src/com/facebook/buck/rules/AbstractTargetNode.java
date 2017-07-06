@@ -144,7 +144,6 @@ abstract class AbstractTargetNode<T, U extends Description<T>>
   // ImplicitDepsInferringDescriptions may give different results for deps.
   //
   // Note that this method strips away selected versions, and may be buggy because of it.
-  @SuppressWarnings("unchecked")
   public <V, W extends Description<V>> TargetNode<V, W> copyWithDescription(W description) {
     return getTargetNodeFactory().copyNodeWithDescription(TargetNode.copyOf(this), description);
   }
