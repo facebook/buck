@@ -93,6 +93,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
@@ -113,6 +114,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -121,6 +123,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -141,6 +144,8 @@ public class BuildCommand extends AbstractCommand {
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
   private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
+  private static final String SHOW_JSON_OUTPUT_LONG_ARG = "--show-json-output";
+  private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   private static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
@@ -211,6 +216,12 @@ public class BuildCommand extends AbstractCommand {
     usage = "Print the absolute path to the output for each of the built rules."
   )
   private boolean showFullOutput;
+
+  @Option(name = SHOW_JSON_OUTPUT_LONG_ARG, usage = "Show output in JSON format.")
+  private boolean showJsonOutput;
+
+  @Option(name = SHOW_FULL_JSON_OUTPUT_LONG_ARG, usage = "Show full output in JSON format.")
+  private boolean showFullJsonOutput;
 
   @Option(name = SHOW_RULEKEY_LONG_ARG, usage = "Print the rulekey for each of the built rules.")
   private boolean showRuleKey;
@@ -530,7 +541,7 @@ public class BuildCommand extends AbstractCommand {
 
   private int processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
       throws IOException {
-    if (showOutput || showFullOutput || showRuleKey) {
+    if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
       showOutputs(params, graphs.actionGraph);
     }
     if (outputPathForSingleBuildTarget != null) {
@@ -800,6 +811,7 @@ public class BuildCommand extends AbstractCommand {
 
   private void showOutputs(
       CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver) {
+    TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
@@ -820,20 +832,39 @@ public class BuildCommand extends AbstractCommand {
                     pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
                 .map(
                     path ->
-                        showFullOutput ? path : params.getCell().getFilesystem().relativize(path));
-        params
-            .getConsole()
-            .getStdOut()
-            .printf(
-                "%s%s%s\n",
-                rule.getFullyQualifiedName(),
-                showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
-                showOutput || showFullOutput
-                    ? " " + outputPath.map(Object::toString).orElse("")
-                    : "");
+                        showFullOutput || showFullJsonOutput
+                            ? path
+                            : params.getCell().getFilesystem().relativize(path));
+        if (showJsonOutput || showFullJsonOutput) {
+          sortedJsonOutputs.put(
+              rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
+        } else {
+          params
+              .getConsole()
+              .getStdOut()
+              .printf(
+                  "%s%s%s\n",
+                  rule.getFullyQualifiedName(),
+                  showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
+                  showOutput || showFullOutput
+                      ? " " + outputPath.map(Object::toString).orElse("")
+                      : "");
+        }
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
       }
+    }
+
+    if (showJsonOutput || showFullJsonOutput) {
+      // Print the build rule information as JSON.
+      StringWriter stringWriter = new StringWriter();
+      try {
+        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      String output = stringWriter.getBuffer().toString();
+      params.getConsole().getStdOut().println(output);
     }
   }
 

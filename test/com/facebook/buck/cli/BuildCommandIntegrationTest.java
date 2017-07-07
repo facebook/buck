@@ -16,15 +16,20 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.environment.Platform.WINDOWS;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
@@ -42,7 +47,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    workspace.runBuckBuild("--just-build", "//:bar", "//:foo").assertSuccess();
+    workspace.runBuckBuild("--just-build", "//:bar", "//:foo", "//:ex ample").assertSuccess();
     assertThat(
         workspace.getBuildLog().getAllTargets(),
         Matchers.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:bar")));
@@ -72,6 +77,44 @@ public class BuildCommandIntegrationTest {
     String stdout = runBuckResult.getStdout();
     assertThat(stdout, Matchers.containsString("//:bar "));
     assertThat(stdout, Matchers.containsString(expectedOutputDirectory));
+  }
+
+  @Test
+  public void showJsonOutput() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult =
+        workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
+    runBuckResult.assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            "\"//:bar\" : \"buck-out/gen/bar/bar\",\n  \"//:ex ample\" : \"buck-out/gen/ex ample/example\",\n  \"//:foo\" : \"buck-out/gen/foo/foo\"\n}"));
+  }
+
+  @Test
+  public void showFullJsonOutput() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build/sub folder", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult =
+        workspace.runBuckBuild("--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
+    runBuckResult.assertSuccess();
+    Path expectedRootDirectory = tmp.getRoot();
+    String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            "{\n  \"//:bar\" : \""
+                + expectedOutputDirectory
+                + "/gen/bar/bar\",\n  \"//:ex ample\" : \""
+                + expectedOutputDirectory
+                + "/gen/ex ample/example\",\n  \"//:foo\" : \""
+                + expectedOutputDirectory
+                + "/gen/foo/foo\"\n}"));
   }
 
   @Test
