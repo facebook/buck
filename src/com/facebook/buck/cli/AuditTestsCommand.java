@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
-import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -77,7 +76,7 @@ public class AuditTestsCommand extends AbstractCommand {
                 pool.getExecutor(),
                 params.getCell(),
                 getEnableParserProfiling(),
-                SpeculativeParsing.of(true))) {
+                PerBuildState.SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params, parserState, pool.getExecutor(), getEnableParserProfiling());

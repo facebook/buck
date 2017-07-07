@@ -39,7 +39,7 @@ import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -174,7 +174,7 @@ public class XCodeProjectCommandHelper {
                       enableParserProfiling,
                       executor,
                       argsParser.apply(arguments),
-                      SpeculativeParsing.of(true),
+                      PerBuildState.SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
       projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
@@ -426,7 +426,7 @@ public class XCodeProjectCommandHelper {
                   enableParserProfiling,
                   executor,
                   specs,
-                  SpeculativeParsing.of(false),
+                  PerBuildState.SpeculativeParsing.DISABLED,
                   parserConfig.getDefaultFlavorsMode())
               .stream()
               .flatMap(Collection::stream)

@@ -135,7 +135,12 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(true))) {
+            this,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -149,7 +154,12 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException {
     try (PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
+            this,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.DISABLED)) {
       return state.getTargetNode(target);
     }
   }
@@ -196,7 +206,12 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
+            this,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.DISABLED)) {
       return getRawTargetNode(state, cell, targetNode);
     }
   }
@@ -228,7 +243,12 @@ public class Parser {
 
     try (final PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, rootCell, enableProfiling, SpeculativeParsing.of(true))) {
+            this,
+            eventBus,
+            executor,
+            rootCell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.ENABLED)) {
       return buildTargetGraph(state, eventBus, toExplore);
     }
   }
@@ -348,7 +368,12 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, rootCell, enableProfiling, SpeculativeParsing.of(true))) {
+            this,
+            eventBus,
+            executor,
+            rootCell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.ENABLED)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
@@ -375,7 +400,7 @@ public class Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing,
+      PerBuildState.SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 

@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
-import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
@@ -90,7 +89,7 @@ public class BuckQueryEnvironmentTest {
             executor,
             cell,
             /* enableProfiling */ false,
-            SpeculativeParsing.of(true));
+            PerBuildState.SpeculativeParsing.ENABLED);
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

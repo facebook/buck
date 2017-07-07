@@ -32,7 +32,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -53,7 +52,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import org.immutables.value.Value;
 
 public class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
@@ -84,6 +82,11 @@ public class PerBuildState implements AutoCloseable {
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
+
+  public enum SpeculativeParsing {
+    ENABLED,
+    DISABLED,
+  }
 
   public PerBuildState(
       Parser parser,
@@ -130,7 +133,8 @@ public class PerBuildState implements AutoCloseable {
                 ? executorService
                 : MoreExecutors.newDirectExecutorService(),
             eventBus,
-            parserConfig.getEnableParallelParsing() && speculativeParsing.value(),
+            parserConfig.getEnableParallelParsing()
+                && speculativeParsing == SpeculativeParsing.ENABLED,
             rawNodeParsePipeline);
 
     register(rootCell);
@@ -337,12 +341,5 @@ public class PerBuildState implements AutoCloseable {
     for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
       parser.getPermState().invalidatePath(buildFilePath);
     }
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractSpeculativeParsing {
-    @Value.Parameter
-    boolean value();
   }
 }
