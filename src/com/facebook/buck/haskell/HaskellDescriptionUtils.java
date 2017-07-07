@@ -17,7 +17,6 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -57,6 +56,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -258,11 +258,12 @@ public class HaskellDescriptionUtils {
       Iterable<Arg> linkerInputs,
       Iterable<? extends NativeLinkable> deps,
       Linker.LinkableDepType depType,
+      Path outputPath,
+      Optional<String> soname,
       boolean hsProfile)
       throws NoSuchBuildTargetException {
 
     Tool linker = haskellConfig.getLinker().resolve(resolver);
-    String name = target.getShortName();
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -272,14 +273,14 @@ public class HaskellDescriptionUtils {
 
     // Pass in the appropriate flags to link a shared library.
     if (linkType.equals(Linker.LinkType.SHARED)) {
-      name =
-          CxxDescriptionEnhancer.getSharedLibrarySoname(
-              Optional.empty(), target.withFlavors(), cxxPlatform);
       argsBuilder.addAll(StringArg.from("-shared", "-dynamic"));
-      argsBuilder.addAll(
-          StringArg.from(
-              MoreIterables.zipAndConcat(
-                  Iterables.cycle("-optl"), cxxPlatform.getLd().resolve(resolver).soname(name))));
+      soname.ifPresent(
+          name ->
+              argsBuilder.addAll(
+                  StringArg.from(
+                      MoreIterables.zipAndConcat(
+                          Iterables.cycle("-optl"),
+                          cxxPlatform.getLd().resolve(resolver).soname(name)))));
     }
 
     // Add in extra flags passed into this function.
@@ -363,7 +364,7 @@ public class HaskellDescriptionUtils {
                         .build())
                 .withoutExtraDeps(),
             linker,
-            name,
+            outputPath,
             args,
             linkerArgs,
             haskellConfig.shouldCacheLinks()));

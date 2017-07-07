@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
@@ -63,6 +64,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -470,6 +472,12 @@ public class HaskellLibraryDescription
             deps,
             Linker.LinkableDepType.SHARED,
             false);
+
+    String name =
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            Optional.empty(), target.withFlavors(), cxxPlatform);
+    Path outputPath = BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve(name);
+
     return HaskellDescriptionUtils.createLinkRule(
         target,
         projectFilesystem,
@@ -483,6 +491,8 @@ public class HaskellLibraryDescription
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
         Linker.LinkableDepType.SHARED,
+        outputPath,
+        Optional.of(name),
         false);
   }
 
