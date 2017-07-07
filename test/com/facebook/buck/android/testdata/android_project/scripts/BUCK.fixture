@@ -1,0 +1,15 @@
+python_binary(
+    name = "postfilter",
+    main_module = "scripts.postfilter",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":postfilter-lib",
+    ],
+)
+
+python_library(
+    name = "postfilter-lib",
+    srcs = [
+        "postfilter.py",
+    ],
+)

@@ -184,6 +184,21 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
+  public void testPostFilterResourcesCmd() throws IOException {
+    String target = "//apps/sample:app_post_filter_cmd";
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    result.assertSuccess();
+
+    Path apkFile =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+    ZipInspector zipInspector = new ZipInspector(apkFile);
+    zipInspector.assertFileExists("res/drawable/test_tiny_black.png");
+    zipInspector.assertFileExists("res/drawable/test_tiny_something.png");
+    zipInspector.assertFileExists("res/drawable/test_tiny_white.png");
+  }
+
+  @Test
   public void testApkWithStringsAsAssets() throws IOException {
     String target = "//apps/sample:app_comp_str";
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
