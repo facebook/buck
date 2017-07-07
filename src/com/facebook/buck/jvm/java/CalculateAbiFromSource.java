@@ -54,7 +54,12 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
   private final Optional<Path> resourcesRoot;
 
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
+
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final ZipArchiveDependencySupplier abiClasspath;
+
+  private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey private final ImmutableSet<Pattern> classesToRemoveFromJar;
 
   private final Path outputJar;
@@ -68,6 +73,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
+      ZipArchiveDependencySupplier abiClasspath,
       JavacToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
@@ -77,6 +83,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     this.ruleFinder = ruleFinder;
     this.srcs = srcs;
     this.resources = resources;
+    this.abiClasspath = abiClasspath;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.compileStepFactory = compileStepFactory;
     this.resourcesRoot = resourcesRoot;

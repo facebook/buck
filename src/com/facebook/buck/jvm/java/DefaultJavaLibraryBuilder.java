@@ -357,6 +357,7 @@ public class DefaultJavaLibraryBuilder {
           srcs,
           resources,
           getFinalCompileTimeClasspathSourcePaths(),
+          getAbiClasspath(),
           compileStepFactory,
           resourcesRoot,
           manifestFile,
