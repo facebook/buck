@@ -1,0 +1,6 @@
+[project]
+  ide = intellij
+
+  package_boundary_exceptions = \
+    project1, \
+    project2

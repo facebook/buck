@@ -20,8 +20,10 @@
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/dep2/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/dep2/gen" isTestSource="false" />
     </content>
-    <content url="file://$MODULE_DIR$">
+    <content url="file://$MODULE_DIR$/../../buck-out/gen/modules/dep2/dep2#resources-symlink-tree/res">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/gen/modules/dep2/dep2#resources-symlink-tree/res" isTestSource="false" packagePrefix="com.test" type="java-resource" />
+    </content>
+    <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/assets" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/res" isTestSource="false" />
     </content>

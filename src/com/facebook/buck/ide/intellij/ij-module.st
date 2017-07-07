@@ -55,14 +55,15 @@
         %if(generatedFolder.packagePrefix)%packagePrefix="%generatedFolder.packagePrefix%" %endif%%\\%
         %if(generatedFolder.isAndroidResources)%type="java-resource" %endif%/>
     </content>
-}%    <content url="%contentRoot.url%">
+}%%contentRoots:{contentRoot |
+    <content url="%contentRoot.url%">
 %contentRoot.folders:{folder |
       <%folder.type% url="%folder.url%" %\\%
         isTestSource="%folder.isTestSource%" %\\%
         %if(folder.packagePrefix)%packagePrefix="%folder.packagePrefix%" %endif%%\\%
         %if(folder.isAndroidResources)%type="java-resource" %endif%/>
 }%    </content>
-%if(sdk)%    <orderEntry type="jdk" jdkName="%sdk%" jdkType="%sdkType%" />
+}%%if(sdk)%    <orderEntry type="jdk" jdkName="%sdk%" jdkType="%sdkType%" />
 %else%    <orderEntry type="inheritedJdk" />
 %endif%
     <orderEntry type="sourceFolder" forTests="false" />
