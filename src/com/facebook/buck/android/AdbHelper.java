@@ -573,20 +573,4 @@ public class AdbHelper implements AndroidDevicesHelper {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
     }
   }
-
-  public static String tryToExtractInstrumentationTestRunnerFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
-    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
-
-    if (!Files.isRegularFile(pathToManifest)) {
-      throw new HumanReadableException(
-          "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
-    }
-
-    try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest).getInstrumentationTestRunner();
-    } catch (IOException e) {
-      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
-    }
-  }
 }

@@ -52,6 +52,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -106,6 +108,22 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       throw new HumanReadableException("Expecting one android device/emulator to be attached.");
     }
     return devices.get(0);
+  }
+
+  private static String tryToExtractInstrumentationTestRunnerFromManifest(
+      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+
+    if (!Files.isRegularFile(pathToManifest)) {
+      throw new HumanReadableException(
+          "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
+    }
+
+    try {
+      return DefaultAndroidManifestReader.forPath(pathToManifest).getInstrumentationTestRunner();
+    } catch (IOException e) {
+      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
+    }
   }
 
   @Override
@@ -200,7 +218,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     String packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
     String testRunner =
-        AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(pathResolver, apk.getApkInfo());
+        tryToExtractInstrumentationTestRunnerFromManifest(pathResolver, apk.getApkInfo());
 
     String ddmlib = getPathForResourceJar("ddmlib.jar");
     String kxml2 = getPathForResourceJar("kxml2.jar");
