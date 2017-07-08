@@ -105,16 +105,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
   }
 
-  public static AdbHelper get(ExecutionContext context, boolean restartOnFailure) {
-    Preconditions.checkArgument(context.getAdbOptions().isPresent());
-    Preconditions.checkArgument(context.getTargetDeviceOptions().isPresent());
-    return new AdbHelper(
-        context.getAdbOptions().get(),
-        context.getTargetDeviceOptions().get(),
-        context,
-        restartOnFailure);
-  }
-
+  @Override
   public ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException {
     ImmutableList<AndroidDevice> devices = devicesSupplier.get();
     if (!quiet && devices.size() > 1) {
@@ -214,18 +205,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     return failureCount == 0;
   }
 
-  /**
-   * Install apk on all matching devices. This functions performs device filtering based on three
-   * possible arguments:
-   *
-   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
-   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
-   * are passing the filter
-   *
-   * <p>If more than one device matches the filter this function will fail unless multi-install mode
-   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
-   * be used to install the apk if needed.
-   */
+  @Override
   @SuppressForbidden
   public boolean installApk(
       SourcePathResolver pathResolver,
@@ -260,6 +240,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     return success;
   }
 
+  @Override
   @SuppressForbidden
   public int startActivity(
       SourcePathResolver pathResolver,
@@ -321,6 +302,7 @@ public class AdbHelper implements AndroidDevicesHelper {
    *
    * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
    */
+  @Override
   public boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
       throws InterruptedException {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());

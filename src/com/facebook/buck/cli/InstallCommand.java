@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -396,8 +398,9 @@ public class InstallCommand extends BuildCommand {
       ExecutionContext executionContext,
       SourcePathResolver pathResolver)
       throws IOException, InterruptedException {
-    final AdbHelper adbHelper =
-        AdbHelper.get(executionContext, params.getBuckConfig().getRestartAdbOnFailure());
+    final AndroidDevicesHelper adbHelper =
+        AndroidDevicesHelperFactory.get(
+            executionContext, params.getBuckConfig().getRestartAdbOnFailure());
 
     // Uninstall the app first, if requested.
     if (shouldUninstallFirst()) {

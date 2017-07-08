@@ -16,7 +16,13 @@
 
 package com.facebook.buck.android.exopackage;
 
+import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.annotations.SuppressForbidden;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import javax.annotation.Nullable;
 
 /**
  * AndroidDevicesHelper provides a way to interact with multiple devices as AndroidDevices (rather
@@ -32,9 +38,48 @@ public interface AndroidDevicesHelper {
    * instead of an IDevice.
    */
   interface AdbDeviceCallable {
+
     boolean apply(AndroidDevice device) throws Exception;
   }
 
   boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException;
+
+  ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException;
+
+  /**
+   * Install apk on all matching devices. This functions performs device filtering based on three
+   * possible arguments:
+   *
+   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
+   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
+   * are passing the filter
+   *
+   * <p>If more than one device matches the filter this function will fail unless multi-install mode
+   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
+   * be used to install the apk if needed.
+   */
+  boolean installApk(
+      SourcePathResolver pathResolver,
+      HasInstallableApk hasInstallableApk,
+      boolean installViaSd,
+      boolean quiet,
+      @Nullable String packageName)
+      throws InterruptedException;
+
+  /**
+   * Uninstall apk from all matching devices.
+   *
+   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   */
+  boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
+      throws InterruptedException;
+
+  @SuppressForbidden
+  int startActivity(
+      SourcePathResolver pathResolver,
+      HasInstallableApk hasInstallableApk,
+      @Nullable String activity,
+      boolean waitForDebugger)
+      throws IOException, InterruptedException;
 }

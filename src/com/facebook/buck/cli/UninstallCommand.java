@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -153,12 +155,8 @@ public class UninstallCommand extends AbstractCommand {
 
     // We need this in case adb isn't already running.
     try (ExecutionContext context = createExecutionContext(params)) {
-      final AdbHelper adbHelper =
-          new AdbHelper(
-              adbOptions(params.getBuckConfig()),
-              targetDeviceOptions(),
-              context,
-              params.getBuckConfig().getRestartAdbOnFailure());
+      final AndroidDevicesHelper adbHelper =
+          AndroidDevicesHelperFactory.get(context, params.getBuckConfig().getRestartAdbOnFailure());
 
       // Find application package name from manifest and uninstall from matching devices.
       SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));

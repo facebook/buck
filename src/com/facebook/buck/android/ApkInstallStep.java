@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.AndroidDevice;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -36,7 +38,7 @@ public class ApkInstallStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    AdbHelper adbHelper = AdbHelper.get(context, true);
+    AndroidDevicesHelper adbHelper = AndroidDevicesHelperFactory.get(context, true);
     if (adbHelper.getDevices(true).isEmpty()) {
       return StepExecutionResult.SUCCESS;
     }
@@ -57,7 +59,7 @@ public class ApkInstallStep implements Step {
     StringBuilder builder = new StringBuilder();
 
     try {
-      AdbHelper adbHelper = AdbHelper.get(context, true);
+      AndroidDevicesHelper adbHelper = AndroidDevicesHelperFactory.get(context, true);
       for (AndroidDevice device : adbHelper.getDevices(true)) {
         if (builder.length() != 0) {
           builder.append("\n");
