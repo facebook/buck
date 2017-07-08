@@ -214,6 +214,149 @@ public class AdbHelper implements AndroidDevicesHelper {
     return failureCount == 0;
   }
 
+  /**
+   * Install apk on all matching devices. This functions performs device filtering based on three
+   * possible arguments:
+   *
+   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
+   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
+   * are passing the filter
+   *
+   * <p>If more than one device matches the filter this function will fail unless multi-install mode
+   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
+   * be used to install the apk if needed.
+   */
+  @SuppressForbidden
+  public boolean installApk(
+      SourcePathResolver pathResolver,
+      HasInstallableApk hasInstallableApk,
+      boolean installViaSd,
+      boolean quiet,
+      @Nullable String processName)
+      throws InterruptedException {
+    InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
+    if (!quiet) {
+      getBuckEventBus().post(started);
+    }
+    boolean success;
+    Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
+    if (exopackageInfo.isPresent()) {
+      // TODO(dreiss): Support SD installation.
+      success = installApkExopackage(pathResolver, hasInstallableApk, quiet, processName);
+    } else {
+      success = installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
+    }
+    if (!quiet) {
+      getBuckEventBus()
+          .post(
+              InstallEvent.finished(
+                  started,
+                  success,
+                  Optional.empty(),
+                  Optional.of(
+                      AdbHelper.tryToExtractPackageNameFromManifest(
+                          pathResolver, hasInstallableApk.getApkInfo()))));
+    }
+    return success;
+  }
+
+  @SuppressForbidden
+  public int startActivity(
+      SourcePathResolver pathResolver,
+      HasInstallableApk hasInstallableApk,
+      @Nullable String activity,
+      boolean waitForDebugger)
+      throws IOException, InterruptedException {
+
+    // Might need the package name and activities from the AndroidManifest.
+    Path pathToManifest =
+        pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getManifestPath());
+    AndroidManifestReader reader =
+        DefaultAndroidManifestReader.forPath(
+            hasInstallableApk.getProjectFilesystem().resolve(pathToManifest));
+
+    if (activity == null) {
+      // Get list of activities that show up in the launcher.
+      List<String> launcherActivities = reader.getLauncherActivities();
+
+      // Sanity check.
+      if (launcherActivities.isEmpty()) {
+        getConsole().printBuildFailure("No launchable activities found.");
+        return 1;
+      } else if (launcherActivities.size() > 1) {
+        getConsole().printBuildFailure("Default activity is ambiguous.");
+        return 1;
+      }
+
+      // Construct a component for the '-n' argument of 'adb shell am start'.
+      activity = reader.getPackage() + "/" + launcherActivities.get(0);
+    } else if (!activity.contains("/")) {
+      // If no package name was provided, assume the one in the manifest.
+      activity = reader.getPackage() + "/" + activity;
+    }
+
+    final String activityToRun = activity;
+
+    PrintStream stdOut = getConsole().getStdOut();
+    stdOut.println(String.format("Starting activity %s...", activityToRun));
+
+    StartActivityEvent.Started started =
+        StartActivityEvent.started(hasInstallableApk.getBuildTarget(), activityToRun);
+    getBuckEventBus().post(started);
+    boolean success =
+        adbCall(
+            "start activity",
+            (device) -> {
+              ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
+              return true;
+            },
+            false);
+    getBuckEventBus().post(StartActivityEvent.finished(started, success));
+
+    return success ? 0 : 1;
+  }
+
+  /**
+   * Uninstall apk from all matching devices.
+   *
+   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   */
+  public boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
+      throws InterruptedException {
+    Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
+
+    UninstallEvent.Started started = UninstallEvent.started(packageName);
+    getBuckEventBus().post(started);
+    boolean success =
+        adbCall(
+            "uninstall apk",
+            (device) -> {
+              ((RealAndroidDevice) device).uninstallApkFromDevice(packageName, shouldKeepUserData);
+              return true;
+            },
+            false);
+    getBuckEventBus().post(UninstallEvent.finished(started, success));
+    return success;
+  }
+
+  public static String tryToExtractPackageNameFromManifest(
+      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+
+    // Note that the file may not exist if AndroidManifest.xml is a generated file
+    // and the rule has not been built yet.
+    if (!Files.isRegularFile(pathToManifest)) {
+      throw new HumanReadableException(
+          "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
+    }
+
+    try {
+      return DefaultAndroidManifestReader.forPath(pathToManifest).getPackage();
+    } catch (IOException e) {
+      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
+    }
+  }
+
   private BuckEventBus getBuckEventBus() {
     return context.getBuckEventBus();
   }
@@ -402,52 +545,6 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
   }
 
-  /**
-   * Install apk on all matching devices. This functions performs device filtering based on three
-   * possible arguments:
-   *
-   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
-   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
-   * are passing the filter
-   *
-   * <p>If more than one device matches the filter this function will fail unless multi-install mode
-   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
-   * be used to install the apk if needed.
-   */
-  @SuppressForbidden
-  public boolean installApk(
-      SourcePathResolver pathResolver,
-      HasInstallableApk hasInstallableApk,
-      boolean installViaSd,
-      boolean quiet,
-      @Nullable String processName)
-      throws InterruptedException {
-    InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
-    if (!quiet) {
-      getBuckEventBus().post(started);
-    }
-    boolean success;
-    Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
-    if (exopackageInfo.isPresent()) {
-      // TODO(dreiss): Support SD installation.
-      success = installApkExopackage(pathResolver, hasInstallableApk, quiet, processName);
-    } else {
-      success = installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
-    }
-    if (!quiet) {
-      getBuckEventBus()
-          .post(
-              InstallEvent.finished(
-                  started,
-                  success,
-                  Optional.empty(),
-                  Optional.of(
-                      AdbHelper.tryToExtractPackageNameFromManifest(
-                          pathResolver, hasInstallableApk.getApkInfo()))));
-    }
-    return success;
-  }
-
   private boolean installApkExopackage(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
@@ -475,102 +572,5 @@ public class AdbHelper implements AndroidDevicesHelper {
             (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
             quiet);
     return success;
-  }
-
-  @SuppressForbidden
-  public int startActivity(
-      SourcePathResolver pathResolver,
-      HasInstallableApk hasInstallableApk,
-      @Nullable String activity,
-      boolean waitForDebugger)
-      throws IOException, InterruptedException {
-
-    // Might need the package name and activities from the AndroidManifest.
-    Path pathToManifest =
-        pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getManifestPath());
-    AndroidManifestReader reader =
-        DefaultAndroidManifestReader.forPath(
-            hasInstallableApk.getProjectFilesystem().resolve(pathToManifest));
-
-    if (activity == null) {
-      // Get list of activities that show up in the launcher.
-      List<String> launcherActivities = reader.getLauncherActivities();
-
-      // Sanity check.
-      if (launcherActivities.isEmpty()) {
-        getConsole().printBuildFailure("No launchable activities found.");
-        return 1;
-      } else if (launcherActivities.size() > 1) {
-        getConsole().printBuildFailure("Default activity is ambiguous.");
-        return 1;
-      }
-
-      // Construct a component for the '-n' argument of 'adb shell am start'.
-      activity = reader.getPackage() + "/" + launcherActivities.get(0);
-    } else if (!activity.contains("/")) {
-      // If no package name was provided, assume the one in the manifest.
-      activity = reader.getPackage() + "/" + activity;
-    }
-
-    final String activityToRun = activity;
-
-    PrintStream stdOut = getConsole().getStdOut();
-    stdOut.println(String.format("Starting activity %s...", activityToRun));
-
-    StartActivityEvent.Started started =
-        StartActivityEvent.started(hasInstallableApk.getBuildTarget(), activityToRun);
-    getBuckEventBus().post(started);
-    boolean success =
-        adbCall(
-            "start activity",
-            (device) -> {
-              ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
-              return true;
-            },
-            false);
-    getBuckEventBus().post(StartActivityEvent.finished(started, success));
-
-    return success ? 0 : 1;
-  }
-
-  /**
-   * Uninstall apk from all matching devices.
-   *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
-   */
-  public boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
-      throws InterruptedException {
-    Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
-
-    UninstallEvent.Started started = UninstallEvent.started(packageName);
-    getBuckEventBus().post(started);
-    boolean success =
-        adbCall(
-            "uninstall apk",
-            (device) -> {
-              ((RealAndroidDevice) device).uninstallApkFromDevice(packageName, shouldKeepUserData);
-              return true;
-            },
-            false);
-    getBuckEventBus().post(UninstallEvent.finished(started, success));
-    return success;
-  }
-
-  public static String tryToExtractPackageNameFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
-    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
-
-    // Note that the file may not exist if AndroidManifest.xml is a generated file
-    // and the rule has not been built yet.
-    if (!Files.isRegularFile(pathToManifest)) {
-      throw new HumanReadableException(
-          "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
-    }
-
-    try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest).getPackage();
-    } catch (IOException e) {
-      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
-    }
   }
 }
