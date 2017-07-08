@@ -44,8 +44,11 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasInstallHelpers;
+import com.facebook.buck.rules.InstallTrigger;
+import com.facebook.buck.rules.NoopInstallable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -67,9 +70,12 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -199,7 +205,8 @@ public class InstallCommand extends BuildCommand {
     }
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
+        TriggerCloseable triggerCloseable = new TriggerCloseable(params)) {
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {
@@ -304,7 +311,7 @@ public class InstallCommand extends BuildCommand {
         if (exitCode != 0) {
           return exitCode;
         }
-      } else {
+      } else if (!(buildRule instanceof NoopInstallable)) {
         params
             .getBuckEventBus()
             .post(
@@ -921,5 +928,54 @@ public class InstallCommand extends BuildCommand {
   @Override
   public boolean isReadOnly() {
     return false;
+  }
+
+  private static class TriggerCloseable implements Closeable {
+    private final Cell root;
+    private final CommandRunnerParams params;
+    private final Closer closer;
+
+    TriggerCloseable(CommandRunnerParams params) throws IOException {
+      this.params = params;
+      this.root = params.getCell();
+      this.closer = Closer.create();
+      for (Cell cell : root.getAllCells()) {
+        invalidateTrigger(cell);
+        closer.register(
+            () -> {
+              invalidateTrigger(cell);
+              Files.deleteIfExists(getAbsoluteTriggerPath(cell));
+            });
+        Path absoluteTriggerPath = getAbsoluteTriggerPath(cell);
+        cell.getFilesystem().createParentDirs(absoluteTriggerPath);
+        Files.write(
+            absoluteTriggerPath, params.getBuckEventBus().getBuildId().toString().getBytes());
+      }
+    }
+
+    @Override
+    public void close() throws IOException {
+      closer.close();
+    }
+
+    // TODO(cjhopman): This is a bit of a hack to properly invalidate all cached data. It would be
+    // nice if there were a more elegant way to do this.
+    private void invalidateTrigger(Cell cell) {
+      // This is necessary to invalidate all rulekeys that transitively depend on the trigger.
+      params
+          .getDefaultRuleKeyFactoryCacheRecycler()
+          .ifPresent(
+              recycler -> recycler.invalidatePath(cell.getFilesystem(), getTriggerPath(cell)));
+      // This invalidates the cached file hash in the filehashcache.
+      params.getFileHashCache().invalidate(getAbsoluteTriggerPath(cell));
+    }
+
+    private static Path getTriggerPath(Cell cell) {
+      return InstallTrigger.getTriggerPath(cell.getFilesystem());
+    }
+
+    private static Path getAbsoluteTriggerPath(Cell cell) {
+      return cell.getFilesystem().resolve(getTriggerPath(cell));
+    }
   }
 }

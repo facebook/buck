@@ -1,0 +1,9 @@
+install_trigger(
+    name = "install_trigger",
+    deps = [":normal_target"],
+)
+
+export_file(
+    name = "normal_target",
+    src = "data",
+)

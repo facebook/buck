@@ -149,8 +149,10 @@ public class ProjectWorkspace {
   private final Path templatePath;
   private final Path destPath;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
+  @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
   private static class ProjectFilesystemAndConfig {
+
     private final ProjectFilesystem projectFilesystem;
     private final Config config;
 
@@ -541,7 +543,10 @@ public class ProjectWorkspace {
     envBuilder.putAll(environmentOverrides);
     ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
-    Main main = new Main(stdout, stderr, stdin);
+    Main main =
+        knownBuildRuleTypesFactoryFactory == null
+            ? new Main(stdout, stderr, stdin)
+            : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
     int exitCode;
     try {
       exitCode =
@@ -644,6 +649,11 @@ public class ProjectWorkspace {
 
   public void disableThreadLimitOverride() throws IOException {
     removeBuckConfigLocalOption("build", "threads");
+  }
+
+  public void setKnownBuildRuleTypesFactoryFactory(
+      @Nullable Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory) {
+    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
   }
 
   public void copyFile(String source, String dest) throws IOException {

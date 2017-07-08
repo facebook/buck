@@ -297,17 +297,38 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
+  public interface KnownBuildRuleTypesFactoryFactory {
+    KnownBuildRuleTypesFactory create(
+        ProcessExecutor processExecutor, AndroidDirectoryResolver androidDirectoryResolver);
+  }
+
+  private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
+
   static {
     MacIpv6BugWorkaround.apply();
   }
 
+  /**
+   * This constructor allows integration tests to add/remove/modify known build rules (aka
+   * descriptions).
+   */
   @VisibleForTesting
-  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
+  public Main(
+      PrintStream stdOut,
+      PrintStream stdErr,
+      InputStream stdIn,
+      KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
+    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
+  }
+
+  @VisibleForTesting
+  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
+    this(stdOut, stdErr, stdIn, KnownBuildRuleTypesFactory::new);
   }
 
   /* Define all error handling surrounding main command */
@@ -568,7 +589,7 @@ public final class Main {
               context, parserConfig, projectWatchList, clientEnvironment, console, clock)) {
 
         KnownBuildRuleTypesFactory factory =
-            new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver);
+            knownBuildRuleTypesFactoryFactory.create(processExecutor, androidDirectoryResolver);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
