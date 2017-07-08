@@ -20,7 +20,6 @@ import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExec
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.android.exopackage.AndroidDevice;
@@ -401,23 +400,6 @@ public class AdbHelper implements AndroidDevicesHelper {
       this.exitCode = exitCode;
       this.output = output;
     }
-  }
-
-  /**
-   * This was made public for one specific call site in ExopackageInstaller. If you're reading this,
-   * you probably shouldn't call it. Pretend this method is private.
-   */
-  public static String checkReceiverOutput(String command, CollectingOutputReceiver receiver)
-      throws CommandFailedException {
-    String fullOutput = receiver.getOutput();
-    int colon = fullOutput.lastIndexOf(':');
-    String realOutput = fullOutput.substring(0, colon);
-    String exitCodeStr = fullOutput.substring(colon + 1);
-    int exitCode = Integer.parseInt(exitCodeStr);
-    if (exitCode != 0) {
-      throw new CommandFailedException(command, exitCode, realOutput);
-    }
-    return realOutput;
   }
 
   /**

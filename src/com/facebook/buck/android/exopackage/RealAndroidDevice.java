@@ -229,12 +229,25 @@ public class RealAndroidDevice implements AndroidDevice {
     return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
   }
 
+  private static String checkReceiverOutput(String command, CollectingOutputReceiver receiver)
+      throws AdbHelper.CommandFailedException {
+    String fullOutput = receiver.getOutput();
+    int colon = fullOutput.lastIndexOf(':');
+    String realOutput = fullOutput.substring(0, colon);
+    String exitCodeStr = fullOutput.substring(colon + 1);
+    int exitCode = Integer.parseInt(exitCodeStr);
+    if (exitCode != 0) {
+      throw new AdbHelper.CommandFailedException(command, exitCode, realOutput);
+    }
+    return realOutput;
+  }
+
   private String executeCommandWithErrorChecking(String command)
       throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
           IOException {
     CollectingOutputReceiver receiver = new CollectingOutputReceiver();
     device.executeShellCommand(command + ECHO_COMMAND_SUFFIX, receiver);
-    return AdbHelper.checkReceiverOutput(command, receiver);
+    return checkReceiverOutput(command, receiver);
   }
 
   /** Retrieves external storage location (SD card) from device. */
@@ -654,7 +667,7 @@ public class RealAndroidDevice implements AndroidDevice {
     }
 
     try {
-      AdbHelper.checkReceiverOutput(command, receiver);
+      checkReceiverOutput(command, receiver);
     } catch (Exception e) {
       if (shellException != null) {
         e.addSuppressed(shellException);
