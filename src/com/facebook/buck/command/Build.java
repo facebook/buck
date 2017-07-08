@@ -16,7 +16,6 @@
 
 package com.facebook.buck.command;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -38,28 +37,19 @@ import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -68,7 +58,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
@@ -78,7 +67,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -99,54 +87,14 @@ public class Build implements Closeable {
   public Build(
       BuildRuleResolver ruleResolver,
       Cell rootCell,
-      Optional<TargetDevice> targetDevice,
-      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
-      Console console,
-      long defaultTestTimeoutMillis,
-      boolean isCodeCoverageEnabled,
-      boolean isInclNoLocationClassesEnabled,
-      boolean isDebugEnabled,
-      boolean shouldReportAbsolutePaths,
-      RuleKeyDiagnosticsMode ruleKeyDiagnosticsMode,
-      BuckEventBus eventBus,
-      Platform platform,
-      ImmutableMap<String, String> environment,
       Clock clock,
-      ConcurrencyLimit concurrencyLimit,
-      Optional<AdbOptions> adbOptions,
-      Optional<TargetDeviceOptions> targetDeviceOptions,
-      Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
-      ProcessExecutor processExecutor,
-      Map<ExecutorPool, ListeningExecutorService> executors) {
+      ExecutionContext executionContext) {
     this.ruleResolver = ruleResolver;
     this.rootCell = rootCell;
-    this.executionContext =
-        ExecutionContext.builder()
-            .setConsole(console)
-            .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-            .setTargetDevice(targetDevice)
-            .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
-            .setCodeCoverageEnabled(isCodeCoverageEnabled)
-            .setInclNoLocationClassesEnabled(isInclNoLocationClassesEnabled)
-            .setDebugEnabled(isDebugEnabled)
-            .setRuleKeyDiagnosticsMode(ruleKeyDiagnosticsMode)
-            .setShouldReportAbsolutePaths(shouldReportAbsolutePaths)
-            .setBuckEventBus(eventBus)
-            .setPlatform(platform)
-            .setEnvironment(environment)
-            .setJavaPackageFinder(javaPackageFinder)
-            .setConcurrencyLimit(concurrencyLimit)
-            .setAdbOptions(adbOptions)
-            .setPersistentWorkerPools(persistentWorkerPools)
-            .setTargetDeviceOptions(targetDeviceOptions)
-            .setExecutors(executors)
-            .setCellPathResolver(rootCell.getCellPathResolver())
-            .setBuildCellRootPath(rootCell.getRoot())
-            .setProcessExecutor(processExecutor)
-            .build();
+    this.executionContext = executionContext;
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;
     this.javaPackageFinder = javaPackageFinder;

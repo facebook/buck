@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -39,7 +38,6 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
@@ -83,11 +81,8 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
-import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -98,17 +93,13 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -124,7 +115,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -321,47 +311,22 @@ public class BuildCommand extends AbstractCommand {
       BuckConfig buckConfig,
       BuildRuleResolver ruleResolver,
       Cell rootCell,
-      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       Console console,
-      BuckEventBus eventBus,
-      Optional<TargetDevice> targetDevice,
-      Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
-      Platform platform,
-      ImmutableMap<String, String> environment,
       Clock clock,
-      Optional<AdbOptions> adbOptions,
-      Optional<TargetDeviceOptions> targetDeviceOptions,
-      Map<ExecutorPool, ListeningExecutorService> executors) {
+      ExecutionContext executionContext) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
     }
     return new Build(
         ruleResolver,
         rootCell,
-        targetDevice,
-        androidPlatformTargetSupplier,
         buildEngine,
         artifactCache,
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-        console,
-        buckConfig.getDefaultTestTimeoutMillis(),
-        isCodeCoverageEnabled(),
-        buckConfig.getBooleanValue("test", "incl_no_location_classes", false),
-        isDebugEnabled(),
-        shouldReportAbsolutePaths(),
-        buckConfig.getRuleKeyDiagnosticsMode(),
-        eventBus,
-        platform,
-        environment,
         clock,
-        getConcurrencyLimit(buckConfig),
-        adbOptions,
-        targetDeviceOptions,
-        persistentWorkerPools,
-        new DefaultProcessExecutor(console),
-        executors);
+        executionContext);
   }
 
   @Nullable private Build lastBuild;
@@ -992,19 +957,38 @@ public class BuildCommand extends AbstractCommand {
                 rootCellBuckConfig,
                 actionGraphAndResolver.getResolver(),
                 params.getCell(),
-                params.getAndroidPlatformTargetSupplier(),
                 buildEngine,
                 artifactCache,
                 params.getConsole(),
-                params.getBuckEventBus(),
-                Optional.empty(),
-                params.getPersistentWorkerPools(),
-                rootCellBuckConfig.getPlatform(),
-                rootCellBuckConfig.getEnvironment(),
                 params.getClock(),
-                Optional.empty(),
-                Optional.empty(),
-                params.getExecutors())) {
+                ExecutionContext.builder()
+                    .setConsole(params.getConsole())
+                    .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                    .setTargetDevice(Optional.empty())
+                    .setDefaultTestTimeoutMillis(rootCellBuckConfig.getDefaultTestTimeoutMillis())
+                    .setCodeCoverageEnabled(isCodeCoverageEnabled())
+                    .setInclNoLocationClassesEnabled(
+                        rootCellBuckConfig.getBooleanValue(
+                            "test", "incl_no_location_classes", false))
+                    .setDebugEnabled(isDebugEnabled())
+                    .setRuleKeyDiagnosticsMode(rootCellBuckConfig.getRuleKeyDiagnosticsMode())
+                    .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
+                    .setBuckEventBus(params.getBuckEventBus())
+                    .setPlatform(rootCellBuckConfig.getPlatform())
+                    .setEnvironment(rootCellBuckConfig.getEnvironment())
+                    .setJavaPackageFinder(
+                        rootCellBuckConfig
+                            .getView(JavaBuckConfig.class)
+                            .createDefaultJavaPackageFinder())
+                    .setConcurrencyLimit(getConcurrencyLimit(rootCellBuckConfig))
+                    .setAdbOptions(Optional.empty())
+                    .setPersistentWorkerPools(params.getPersistentWorkerPools())
+                    .setTargetDeviceOptions(Optional.empty())
+                    .setExecutors(params.getExecutors())
+                    .setCellPathResolver(params.getCell().getCellPathResolver())
+                    .setBuildCellRootPath(params.getCell().getRoot())
+                    .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+                    .build())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           FluentIterable.from(targetsToBuild)

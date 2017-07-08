@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -47,10 +48,12 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
@@ -534,19 +537,42 @@ public class TestCommand extends BuildCommand {
                     params.getBuckConfig(),
                     actionGraphAndResolver.getResolver(),
                     params.getCell(),
-                    params.getAndroidPlatformTargetSupplier(),
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
                     params.getConsole(),
-                    params.getBuckEventBus(),
-                    getTargetDeviceOptional(),
-                    params.getPersistentWorkerPools(),
-                    params.getPlatform(),
-                    params.getEnvironment(),
                     params.getClock(),
-                    Optional.of(getAdbOptions(params.getBuckConfig())),
-                    Optional.of(getTargetDeviceOptions()),
-                    params.getExecutors())) {
+                    ExecutionContext.builder()
+                        .setConsole(params.getConsole())
+                        .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                        .setTargetDevice(getTargetDeviceOptional())
+                        .setDefaultTestTimeoutMillis(
+                            params.getBuckConfig().getDefaultTestTimeoutMillis())
+                        .setCodeCoverageEnabled(isCodeCoverageEnabled())
+                        .setInclNoLocationClassesEnabled(
+                            params
+                                .getBuckConfig()
+                                .getBooleanValue("test", "incl_no_location_classes", false))
+                        .setDebugEnabled(isDebugEnabled())
+                        .setRuleKeyDiagnosticsMode(
+                            params.getBuckConfig().getRuleKeyDiagnosticsMode())
+                        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
+                        .setBuckEventBus(params.getBuckEventBus())
+                        .setPlatform(params.getPlatform())
+                        .setEnvironment(params.getEnvironment())
+                        .setJavaPackageFinder(
+                            params
+                                .getBuckConfig()
+                                .getView(JavaBuckConfig.class)
+                                .createDefaultJavaPackageFinder())
+                        .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
+                        .setAdbOptions(Optional.of(getAdbOptions(params.getBuckConfig())))
+                        .setPersistentWorkerPools(params.getPersistentWorkerPools())
+                        .setTargetDeviceOptions(Optional.of(getTargetDeviceOptions()))
+                        .setExecutors(params.getExecutors())
+                        .setCellPathResolver(params.getCell().getCellPathResolver())
+                        .setBuildCellRootPath(params.getCell().getRoot())
+                        .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+                        .build())) {
 
           // Build all of the test rules.
           int exitCode =

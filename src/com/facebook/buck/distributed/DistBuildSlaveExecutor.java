@@ -50,6 +50,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -312,6 +313,14 @@ public class DistBuildSlaveExecutor {
         throws IOException, InterruptedException {
       // TODO(ruibm): Fix this to work with Android.
       MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
+      final ConcurrencyLimit concurrencyLimit =
+          new ConcurrencyLimit(
+              4,
+              distBuildConfig.getResourceAllocationFairness(),
+              4,
+              distBuildConfig.getDefaultResourceAmounts(),
+              distBuildConfig.getMaximumResourceAmounts().withCpu(4));
+      final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
       try (CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   Preconditions.checkNotNull(cachingBuildEngineDelegate),
@@ -339,33 +348,35 @@ public class DistBuildSlaveExecutor {
               new Build(
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
                   args.getRootCell(),
-                  Optional.empty(),
-                  getAndroidPlatformTargetSupplier(args),
                   buildEngine,
                   args.getArtifactCache(),
                   distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-                  args.getConsole(),
-                  /* defaultTestTimeoutMillis */ 1000,
-                  /* isCodeCoverageEnabled */ false,
-                  /* isInclNoLocationClassesEnabled */ false,
-                  /* isDebugEnabled */ false,
-                  /* shouldReportAbsolutePaths */ false,
-                  distBuildConfig.getRuleKeyDiagnosticsMode(),
-                  args.getBuckEventBus(),
-                  args.getPlatform(),
-                  distBuildConfig.getEnvironment(),
                   args.getClock(),
-                  new ConcurrencyLimit(
-                      4,
-                      distBuildConfig.getResourceAllocationFairness(),
-                      4,
-                      distBuildConfig.getDefaultResourceAmounts(),
-                      distBuildConfig.getMaximumResourceAmounts().withCpu(4)),
-                  Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  new DefaultProcessExecutor(args.getConsole()),
-                  args.getExecutors())) {
+                  ExecutionContext.builder()
+                      .setConsole(args.getConsole())
+                      .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
+                      .setTargetDevice(Optional.empty())
+                      .setDefaultTestTimeoutMillis(1000)
+                      .setCodeCoverageEnabled(false)
+                      .setInclNoLocationClassesEnabled(false)
+                      .setDebugEnabled(false)
+                      .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
+                      .setShouldReportAbsolutePaths(false)
+                      .setBuckEventBus(args.getBuckEventBus())
+                      .setPlatform(args.getPlatform())
+                      .setJavaPackageFinder(
+                          distBuildConfig
+                              .getView(JavaBuckConfig.class)
+                              .createDefaultJavaPackageFinder())
+                      .setConcurrencyLimit(concurrencyLimit)
+                      .setAdbOptions(Optional.empty())
+                      .setPersistentWorkerPools(Optional.empty())
+                      .setTargetDeviceOptions(Optional.empty())
+                      .setExecutors(args.getExecutors())
+                      .setCellPathResolver(args.getRootCell().getCellPathResolver())
+                      .setBuildCellRootPath(args.getRootCell().getRoot())
+                      .setProcessExecutor(processExecutor)
+                      .build())) {
 
         return build.executeAndPrintFailuresToEventBus(
             fullyQualifiedNameToBuildTarget(targetsToBuild),
