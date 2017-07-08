@@ -75,22 +75,22 @@ public class ExopackageInstaller {
   private final Optional<DexInfo> dexExoInfo;
 
   /**
-   * AdbInterface provides a way to interact with multiple devices as ExopackageDevices (rather than
+   * AdbInterface provides a way to interact with multiple devices as AndroidDevices (rather than
    * IDevices).
    *
    * <p>
    *
    * <p>All of ExopackageInstaller's interaction with devices and adb goes through this class and
-   * ExopackageDevice making it easy to provide different implementations in tests.
+   * AndroidDevice making it easy to provide different implementations in tests.
    */
   @VisibleForTesting
   public interface AdbInterface {
     /**
-     * This is basically the same as AdbHelper.AdbCallable except that it takes an ExopackageDevice
+     * This is basically the same as AdbHelper.AdbCallable except that it takes an AndroidDevice
      * instead of an IDevice.
      */
     interface AdbCallable {
-      boolean apply(ExopackageDevice device) throws Exception;
+      boolean apply(AndroidDevice device) throws Exception;
     }
 
     boolean adbCall(String description, AdbCallable func, boolean quiet)
@@ -123,7 +123,7 @@ public class ExopackageInstaller {
             @Override
             public boolean call(IDevice device) throws Exception {
               return func.apply(
-                  new RealExopackageDevice(
+                  new RealAndroidDevice(
                       eventBus, device, adbHelper, agentApkPath, nextAgentPort.getAndIncrement()));
             }
 
@@ -207,9 +207,9 @@ public class ExopackageInstaller {
   private class SingleDeviceInstaller {
 
     /** Device that we are installing onto. */
-    private final ExopackageDevice device;
+    private final AndroidDevice device;
 
-    private SingleDeviceInstaller(ExopackageDevice device) {
+    private SingleDeviceInstaller(AndroidDevice device) {
       this.device = device;
     }
 

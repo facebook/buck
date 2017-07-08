@@ -43,7 +43,7 @@ class ExopackageAgent {
    * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
    * without -fPIC. The java agent works fine on L as long as we don't use it for mkdir.
    */
-  private static boolean determineBestAgent(ExopackageDevice device) throws Exception {
+  private static boolean determineBestAgent(AndroidDevice device) throws Exception {
     String value = device.getProperty("ro.build.version.sdk");
     try {
       if (Integer.valueOf(value.trim()) > 19) {
@@ -68,7 +68,7 @@ class ExopackageAgent {
   }
 
   public static ExopackageAgent installAgentIfNecessary(
-      BuckEventBus eventBus, ExopackageDevice device, Path agentApkPath) {
+      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) {
     try {
       Optional<PackageInfo> agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       if (agentInfo.isPresent()
@@ -94,7 +94,7 @@ class ExopackageAgent {
     }
   }
 
-  private static void uninstallAgent(BuckEventBus eventBus, ExopackageDevice device)
+  private static void uninstallAgent(BuckEventBus eventBus, AndroidDevice device)
       throws InstallException {
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "uninstall_old_agent")) {
       device.uninstallPackage(AgentUtil.AGENT_PACKAGE_NAME);
@@ -102,7 +102,7 @@ class ExopackageAgent {
   }
 
   private static void installAgentApk(
-      BuckEventBus eventBus, ExopackageDevice device, Path agentApkPath) throws Exception {
+      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) throws Exception {
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
       File apkPath = agentApkPath.toFile();
       boolean success =

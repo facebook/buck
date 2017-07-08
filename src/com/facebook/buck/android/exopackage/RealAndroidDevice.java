@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 @VisibleForTesting
-public class RealExopackageDevice implements ExopackageDevice {
+public class RealAndroidDevice implements AndroidDevice {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
   /** Maximum length of commands that can be passed to "adb shell". */
@@ -64,7 +64,7 @@ public class RealExopackageDevice implements ExopackageDevice {
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
 
-  RealExopackageDevice(
+  RealAndroidDevice(
       BuckEventBus eventBus,
       IDevice device,
       AdbHelper adbHelper,

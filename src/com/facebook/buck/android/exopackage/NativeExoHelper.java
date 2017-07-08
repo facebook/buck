@@ -33,13 +33,13 @@ import java.util.Map;
 
 public class NativeExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
-  private final ExopackageDevice device;
+  private final AndroidDevice device;
   private final SourcePathResolver pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.NativeLibsInfo nativeLibsInfo;
 
   NativeExoHelper(
-      ExopackageDevice device,
+      AndroidDevice device,
       SourcePathResolver pathResolver,
       ProjectFilesystem projectFilesystem,
       ExopackageInfo.NativeLibsInfo nativeLibsInfo) {

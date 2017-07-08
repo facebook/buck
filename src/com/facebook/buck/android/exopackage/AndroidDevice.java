@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-public interface ExopackageDevice {
+public interface AndroidDevice {
   boolean installApkOnDevice(File apk, boolean installViaSd, boolean quiet);
 
   void stopPackage(String packageName) throws Exception;

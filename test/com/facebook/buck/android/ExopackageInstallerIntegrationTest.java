@@ -25,8 +25,8 @@ import static org.junit.Assume.assumeTrue;
 import com.android.common.SdkConstants;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.DexExoHelper;
-import com.facebook.buck.android.exopackage.ExopackageDevice;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.PackageInfo;
@@ -90,7 +90,7 @@ public class ExopackageInstallerIntegrationTest {
   private ExoState currentBuildState;
   private ProjectFilesystem filesystem;
   private ExecutionContext executionContext;
-  private TestExopackageDevice device;
+  private TestAndroidDevice device;
   private String apkVersionCode;
 
   @Before
@@ -102,7 +102,7 @@ public class ExopackageInstallerIntegrationTest {
     filesystem.mkdirs(dexDirectory);
     filesystem.mkdirs(nativeDirectory);
     filesystem.mkdirs(resourcesDirectory);
-    device = new TestExopackageDevice();
+    device = new TestAndroidDevice();
     apkVersionCode = "1";
     device.abi = SdkConstants.ABI_ARMEABI_V7A;
   }
@@ -438,7 +438,7 @@ public class ExopackageInstallerIntegrationTest {
    * This simulates the state of a real device enough that we can verify that exo installation
    * happens correctly.
    */
-  private class TestExopackageDevice implements ExopackageDevice {
+  private class TestAndroidDevice implements AndroidDevice {
     public String abi;
     // Persistent "device" state.
     private NavigableMap<String, String> deviceState;
@@ -454,7 +454,7 @@ public class ExopackageInstallerIntegrationTest {
     private int allowedInstalledLibs;
     private int allowedInstalledResources;
 
-    TestExopackageDevice() {
+    TestAndroidDevice() {
       deviceState = new TreeMap<>();
       directories = new HashSet<>();
       deviceAgentPackageInfo = Optional.empty();
