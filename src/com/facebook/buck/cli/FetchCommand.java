@@ -136,6 +136,37 @@ public class FetchCommand extends BuildCommand {
                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
                   params.getBuckConfig().getFileHashCacheMode());
+          ExecutionContext executionContext =
+              ExecutionContext.builder()
+                  .setConsole(params.getConsole())
+                  .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                  .setTargetDevice(Optional.empty())
+                  .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
+                  .setCodeCoverageEnabled(isCodeCoverageEnabled())
+                  .setInclNoLocationClassesEnabled(
+                      params
+                          .getBuckConfig()
+                          .getBooleanValue("test", "incl_no_location_classes", false))
+                  .setDebugEnabled(isDebugEnabled())
+                  .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
+                  .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
+                  .setBuckEventBus(params.getBuckEventBus())
+                  .setPlatform(params.getPlatform())
+                  .setEnvironment(params.getEnvironment())
+                  .setJavaPackageFinder(
+                      params
+                          .getBuckConfig()
+                          .getView(JavaBuckConfig.class)
+                          .createDefaultJavaPackageFinder())
+                  .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
+                  .setAdbOptions(Optional.empty())
+                  .setPersistentWorkerPools(params.getPersistentWorkerPools())
+                  .setTargetDeviceOptions(Optional.empty())
+                  .setExecutors(params.getExecutors())
+                  .setCellPathResolver(params.getCell().getCellPathResolver())
+                  .setBuildCellRootPath(params.getCell().getRoot())
+                  .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+                  .build();
           Build build =
               createBuild(
                   params.getBuckConfig(),
@@ -145,37 +176,7 @@ public class FetchCommand extends BuildCommand {
                   params.getArtifactCacheFactory().newInstance(),
                   params.getConsole(),
                   params.getClock(),
-                  ExecutionContext.builder()
-                      .setConsole(params.getConsole())
-                      .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
-                      .setTargetDevice(Optional.empty())
-                      .setDefaultTestTimeoutMillis(
-                          params.getBuckConfig().getDefaultTestTimeoutMillis())
-                      .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                      .setInclNoLocationClassesEnabled(
-                          params
-                              .getBuckConfig()
-                              .getBooleanValue("test", "incl_no_location_classes", false))
-                      .setDebugEnabled(isDebugEnabled())
-                      .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
-                      .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                      .setBuckEventBus(params.getBuckEventBus())
-                      .setPlatform(params.getPlatform())
-                      .setEnvironment(params.getEnvironment())
-                      .setJavaPackageFinder(
-                          params
-                              .getBuckConfig()
-                              .getView(JavaBuckConfig.class)
-                              .createDefaultJavaPackageFinder())
-                      .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
-                      .setAdbOptions(Optional.empty())
-                      .setPersistentWorkerPools(params.getPersistentWorkerPools())
-                      .setTargetDeviceOptions(Optional.empty())
-                      .setExecutors(params.getExecutors())
-                      .setCellPathResolver(params.getCell().getCellPathResolver())
-                      .setBuildCellRootPath(params.getCell().getRoot())
-                      .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
-                      .build())) {
+                  executionContext)) {
         exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,

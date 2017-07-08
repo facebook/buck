@@ -344,6 +344,32 @@ public class DistBuildSlaveExecutor {
                       new DefaultRuleKeyCache<>()),
                   distBuildConfig.getFileHashCacheMode());
           //TODO(shivanker): Supply the target device, adb options, and target device options to work with Android.
+          ExecutionContext executionContext =
+              ExecutionContext.builder()
+                  .setConsole(args.getConsole())
+                  .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
+                  .setTargetDevice(Optional.empty())
+                  .setDefaultTestTimeoutMillis(1000)
+                  .setCodeCoverageEnabled(false)
+                  .setInclNoLocationClassesEnabled(false)
+                  .setDebugEnabled(false)
+                  .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
+                  .setShouldReportAbsolutePaths(false)
+                  .setBuckEventBus(args.getBuckEventBus())
+                  .setPlatform(args.getPlatform())
+                  .setJavaPackageFinder(
+                      distBuildConfig
+                          .getView(JavaBuckConfig.class)
+                          .createDefaultJavaPackageFinder())
+                  .setConcurrencyLimit(concurrencyLimit)
+                  .setAdbOptions(Optional.empty())
+                  .setPersistentWorkerPools(Optional.empty())
+                  .setTargetDeviceOptions(Optional.empty())
+                  .setExecutors(args.getExecutors())
+                  .setCellPathResolver(args.getRootCell().getCellPathResolver())
+                  .setBuildCellRootPath(args.getRootCell().getRoot())
+                  .setProcessExecutor(processExecutor)
+                  .build();
           Build build =
               new Build(
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
@@ -352,31 +378,7 @@ public class DistBuildSlaveExecutor {
                   args.getArtifactCache(),
                   distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
                   args.getClock(),
-                  ExecutionContext.builder()
-                      .setConsole(args.getConsole())
-                      .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
-                      .setTargetDevice(Optional.empty())
-                      .setDefaultTestTimeoutMillis(1000)
-                      .setCodeCoverageEnabled(false)
-                      .setInclNoLocationClassesEnabled(false)
-                      .setDebugEnabled(false)
-                      .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
-                      .setShouldReportAbsolutePaths(false)
-                      .setBuckEventBus(args.getBuckEventBus())
-                      .setPlatform(args.getPlatform())
-                      .setJavaPackageFinder(
-                          distBuildConfig
-                              .getView(JavaBuckConfig.class)
-                              .createDefaultJavaPackageFinder())
-                      .setConcurrencyLimit(concurrencyLimit)
-                      .setAdbOptions(Optional.empty())
-                      .setPersistentWorkerPools(Optional.empty())
-                      .setTargetDeviceOptions(Optional.empty())
-                      .setExecutors(args.getExecutors())
-                      .setCellPathResolver(args.getRootCell().getCellPathResolver())
-                      .setBuildCellRootPath(args.getRootCell().getRoot())
-                      .setProcessExecutor(processExecutor)
-                      .build())) {
+                  executionContext)) {
 
         return build.executeAndPrintFailuresToEventBus(
             fullyQualifiedNameToBuildTarget(targetsToBuild),

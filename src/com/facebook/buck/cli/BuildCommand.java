@@ -930,6 +930,34 @@ public class BuildCommand extends AbstractCommand {
                 params,
                 new RuleKeyCacheRecycler.SettingsAffectingCache(
                     rootCellBuckConfig.getKeySeed(), actionGraphAndResolver.getActionGraph()));
+        ExecutionContext executionContext =
+            ExecutionContext.builder()
+                .setConsole(params.getConsole())
+                .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                .setTargetDevice(Optional.empty())
+                .setDefaultTestTimeoutMillis(rootCellBuckConfig.getDefaultTestTimeoutMillis())
+                .setCodeCoverageEnabled(isCodeCoverageEnabled())
+                .setInclNoLocationClassesEnabled(
+                    rootCellBuckConfig.getBooleanValue("test", "incl_no_location_classes", false))
+                .setDebugEnabled(isDebugEnabled())
+                .setRuleKeyDiagnosticsMode(rootCellBuckConfig.getRuleKeyDiagnosticsMode())
+                .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
+                .setBuckEventBus(params.getBuckEventBus())
+                .setPlatform(rootCellBuckConfig.getPlatform())
+                .setEnvironment(rootCellBuckConfig.getEnvironment())
+                .setJavaPackageFinder(
+                    rootCellBuckConfig
+                        .getView(JavaBuckConfig.class)
+                        .createDefaultJavaPackageFinder())
+                .setConcurrencyLimit(getConcurrencyLimit(rootCellBuckConfig))
+                .setAdbOptions(Optional.empty())
+                .setPersistentWorkerPools(params.getPersistentWorkerPools())
+                .setTargetDeviceOptions(Optional.empty())
+                .setExecutors(params.getExecutors())
+                .setCellPathResolver(params.getCell().getCellPathResolver())
+                .setBuildCellRootPath(params.getCell().getRoot())
+                .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+                .build();
         CachingBuildEngine buildEngine =
             new CachingBuildEngine(
                 cachingBuildEngineDelegate,
@@ -961,34 +989,7 @@ public class BuildCommand extends AbstractCommand {
                 artifactCache,
                 params.getConsole(),
                 params.getClock(),
-                ExecutionContext.builder()
-                    .setConsole(params.getConsole())
-                    .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
-                    .setTargetDevice(Optional.empty())
-                    .setDefaultTestTimeoutMillis(rootCellBuckConfig.getDefaultTestTimeoutMillis())
-                    .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                    .setInclNoLocationClassesEnabled(
-                        rootCellBuckConfig.getBooleanValue(
-                            "test", "incl_no_location_classes", false))
-                    .setDebugEnabled(isDebugEnabled())
-                    .setRuleKeyDiagnosticsMode(rootCellBuckConfig.getRuleKeyDiagnosticsMode())
-                    .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                    .setBuckEventBus(params.getBuckEventBus())
-                    .setPlatform(rootCellBuckConfig.getPlatform())
-                    .setEnvironment(rootCellBuckConfig.getEnvironment())
-                    .setJavaPackageFinder(
-                        rootCellBuckConfig
-                            .getView(JavaBuckConfig.class)
-                            .createDefaultJavaPackageFinder())
-                    .setConcurrencyLimit(getConcurrencyLimit(rootCellBuckConfig))
-                    .setAdbOptions(Optional.empty())
-                    .setPersistentWorkerPools(params.getPersistentWorkerPools())
-                    .setTargetDeviceOptions(Optional.empty())
-                    .setExecutors(params.getExecutors())
-                    .setCellPathResolver(params.getCell().getCellPathResolver())
-                    .setBuildCellRootPath(params.getCell().getRoot())
-                    .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
-                    .build())) {
+                executionContext)) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           FluentIterable.from(targetsToBuild)

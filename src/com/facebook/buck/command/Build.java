@@ -343,8 +343,10 @@ public class Build implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
-    executionContext.close();
+  public void close() {
+    // As time goes by, we add and remove things from this close() method. Instead of having to move
+    // Build instances in and out of try-with-resources blocks, just keep the close() method even
+    // when it doesn't do anything.
   }
 
   @Value.Immutable
