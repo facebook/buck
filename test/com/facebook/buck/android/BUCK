@@ -1,5 +1,6 @@
 STANDARD_TEST_SRCS = [
     "*Test.java",
+    "exopackage/*Test.java",
 ]
 
 STANDARD_INTEGRATION_TEST_SRCS = [

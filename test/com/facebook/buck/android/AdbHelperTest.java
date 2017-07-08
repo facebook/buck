@@ -17,15 +17,14 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
+import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
@@ -34,10 +33,8 @@ import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,18 +65,6 @@ public class AdbHelperTest {
     return device;
   }
 
-  private TestDevice createDeviceForShellCommandTest(final String output) {
-    return new TestDevice() {
-      @Override
-      public void executeShellCommand(
-          String cmd, IShellOutputReceiver receiver, long timeout, TimeUnit timeoutUnit) {
-        byte[] outputBytes = output.getBytes(StandardCharsets.UTF_8);
-        receiver.addOutput(outputBytes, 0, outputBytes.length);
-        receiver.flush();
-      }
-    };
-  }
-
   private AdbHelper createAdbHelper(AdbOptions adbOptions, TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
     return createAdbHelper(testContext, adbOptions, targetDeviceOptions);
@@ -90,12 +75,7 @@ public class AdbHelperTest {
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
-    return new AdbHelper(adbOptions, targetDeviceOptions, executionContext, true) {
-      @Override
-      protected boolean isDeviceTempWritable(IDevice device, String name) {
-        return true;
-      }
-    };
+    return new AdbHelper(adbOptions, targetDeviceOptions, executionContext, true);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -344,27 +324,6 @@ public class AdbHelperTest {
     }
   }
 
-  /** Verify that successful installation on device results in true. */
-  @Test
-  public void testSuccessfulDeviceInstall() {
-    File apk = new File("/some/file.apk");
-    final AtomicReference<String> apkPath = new AtomicReference<>();
-
-    TestDevice device =
-        new TestDevice() {
-          @Override
-          public void installPackage(String s, boolean b, String... strings)
-              throws InstallException {
-            apkPath.set(s);
-          }
-        };
-    device.setSerialNumber("serial#1");
-    device.setName("testDevice");
-
-    assertTrue(basicAdbHelper.installApkOnDevice(device, apk, false, false));
-    assertEquals(apk.getAbsolutePath(), apkPath.get());
-  }
-
   @Test
   public void testQuietDeviceInstall() throws InterruptedException {
     final File apk = new File("/some/file.apk");
@@ -386,11 +345,6 @@ public class AdbHelperTest {
     AdbHelper adbHelper =
         new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
           @Override
-          protected boolean isDeviceTempWritable(IDevice device, String name) {
-            return true;
-          }
-
-          @Override
           public List<IDevice> getDevices(boolean quiet) {
             return deviceList;
           }
@@ -400,7 +354,14 @@ public class AdbHelperTest {
             new AdbHelper.AdbCallable() {
               @Override
               public boolean call(IDevice device) throws Exception {
-                return basicAdbHelper.installApkOnDevice(device, apk, false, true);
+                return new RealAndroidDevice(
+                        testContext.getBuckEventBus(),
+                        device,
+                        testContext.getConsole(),
+                        null,
+                        -1,
+                        false)
+                    .installApkOnDevice(apk, false, true);
               }
 
               @Override
@@ -437,11 +398,6 @@ public class AdbHelperTest {
     AdbHelper adbHelper =
         new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
           @Override
-          protected boolean isDeviceTempWritable(IDevice device, String name) {
-            return true;
-          }
-
-          @Override
           public List<IDevice> getDevices(boolean quiet) {
             return deviceList;
           }
@@ -451,7 +407,14 @@ public class AdbHelperTest {
             new AdbHelper.AdbCallable() {
               @Override
               public boolean call(IDevice device) throws Exception {
-                return basicAdbHelper.installApkOnDevice(device, apk, false, false);
+                return new RealAndroidDevice(
+                        testContext.getBuckEventBus(),
+                        device,
+                        testContext.getConsole(),
+                        null,
+                        -1,
+                        false)
+                    .installApkOnDevice(apk, false, false);
               }
 
               @Override
@@ -466,122 +429,5 @@ public class AdbHelperTest {
     assertEquals("", testConsole.getTextWrittenToStdOut());
     assertEquals(
         "Successfully ran install apk on 1 device(s)\n", testConsole.getTextWrittenToStdErr());
-  }
-
-  /** Also make sure we're not erroneously parsing "Exception" and "Error". */
-  @Test
-  public void testDeviceStartActivitySuccess() {
-    TestDevice device =
-        createDeviceForShellCommandTest(
-            "Starting: Intent { cmp=com.example.ExceptionErrorActivity }\r\n");
-    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false));
-  }
-
-  @Test
-  public void testDeviceStartActivityAmDoesntExist() {
-    TestDevice device = createDeviceForShellCommandTest("sh: am: not found\r\n");
-    assertNotNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false));
-  }
-
-  @Test
-  public void testDeviceStartActivityActivityDoesntExist() {
-    String errorLine = "Error: Activity class {com.foo/.Activiqy} does not exist.\r\n";
-    TestDevice device =
-        createDeviceForShellCommandTest(
-            "Starting: Intent { cmp=com.foo/.Activiqy }\r\n" + "Error type 3\r\n" + errorLine);
-    assertEquals(
-        errorLine.trim(),
-        basicAdbHelper.deviceStartActivity(device, "com.foo/.Activiy", false).trim());
-  }
-
-  @Test
-  public void testDeviceStartActivityException() {
-    String errorLine =
-        "java.lang.SecurityException: Permission Denial: "
-            + "starting Intent { flg=0x10000000 cmp=com.foo/.Activity } from null "
-            + "(pid=27581, uid=2000) not exported from uid 10002\r\n";
-    TestDevice device =
-        createDeviceForShellCommandTest(
-            "Starting: Intent { cmp=com.foo/.Activity }\r\n"
-                + errorLine
-                + "  at android.os.Parcel.readException(Parcel.java:1425)\r\n"
-                + "  at android.os.Parcel.readException(Parcel.java:1379)\r\n"
-                +
-                // (...)
-                "  at dalvik.system.NativeStart.main(Native Method)\r\n");
-    assertEquals(
-        errorLine.trim(),
-        basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false).trim());
-  }
-
-  /** Verify that if failure reason is returned, installation is marked as failed. */
-  @Test
-  public void testFailedDeviceInstallWithReason() {
-    File apk = new File("/some/file.apk");
-    TestDevice device =
-        new TestDevice() {
-          @Override
-          public void installPackage(String s, boolean b, String... strings)
-              throws InstallException {
-            throw new InstallException("[SOME REASON]");
-          }
-        };
-    device.setSerialNumber("serial#1");
-    device.setName("testDevice");
-    assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false, false));
-  }
-
-  /** Verify that if exception is thrown during installation, installation is marked as failed. */
-  @Test
-  public void testFailedDeviceInstallWithException() {
-    File apk = new File("/some/file.apk");
-
-    TestDevice device =
-        new TestDevice() {
-          @Override
-          public void installPackage(String s, boolean b, String... strings)
-              throws InstallException {
-            throw new InstallException("Failed to install on test device.", null);
-          }
-        };
-    device.setSerialNumber("serial#1");
-    device.setName("testDevice");
-    assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false, false));
-  }
-
-  @Test
-  public void testDeviceStartActivityWaitForDebugger() throws Exception {
-    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
-    TestDevice device =
-        new TestDevice() {
-          @Override
-          public void executeShellCommand(
-              String command,
-              IShellOutputReceiver receiver,
-              long maxTimeToOutputResponse,
-              TimeUnit maxTimeUnits) {
-            runDeviceCommand.set(command);
-          }
-        };
-    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", true));
-    assertTrue(runDeviceCommand.get().contains(" -D"));
-  }
-
-  @Test
-  public void testDeviceStartActivityDoNotWaitForDebugger() throws Exception {
-    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
-    TestDevice device =
-        new TestDevice() {
-          @Override
-          public void executeShellCommand(
-              String command,
-              IShellOutputReceiver receiver,
-              long maxTimeToOutputResponse,
-              TimeUnit maxTimeUnits) {
-            runDeviceCommand.set(command);
-          }
-        };
-    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false));
-    assertFalse(runDeviceCommand.get().contains(" -D"));
   }
 }

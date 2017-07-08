@@ -124,7 +124,11 @@ public class ExopackageInstaller {
             public boolean call(IDevice device) throws Exception {
               return func.apply(
                   new RealAndroidDevice(
-                      eventBus, device, adbHelper, agentApkPath, nextAgentPort.getAndIncrement()));
+                      eventBus,
+                      device,
+                      adbHelper.getConsole(),
+                      agentApkPath,
+                      nextAgentPort.getAndIncrement()));
             }
 
             @Override
