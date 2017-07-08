@@ -85,7 +85,6 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
@@ -932,8 +931,7 @@ public class BuildCommand extends AbstractCommand {
                     rootCellBuckConfig.getKeySeed(), actionGraphAndResolver.getActionGraph()));
         ExecutionContext executionContext =
             ExecutionContext.builder()
-                .setConsole(params.getConsole())
-                .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                .from(createExecutionContext(params))
                 .setTargetDevice(Optional.empty())
                 .setDefaultTestTimeoutMillis(rootCellBuckConfig.getDefaultTestTimeoutMillis())
                 .setCodeCoverageEnabled(isCodeCoverageEnabled())
@@ -942,21 +940,10 @@ public class BuildCommand extends AbstractCommand {
                 .setDebugEnabled(isDebugEnabled())
                 .setRuleKeyDiagnosticsMode(rootCellBuckConfig.getRuleKeyDiagnosticsMode())
                 .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                .setBuckEventBus(params.getBuckEventBus())
-                .setPlatform(rootCellBuckConfig.getPlatform())
-                .setEnvironment(rootCellBuckConfig.getEnvironment())
-                .setJavaPackageFinder(
-                    rootCellBuckConfig
-                        .getView(JavaBuckConfig.class)
-                        .createDefaultJavaPackageFinder())
                 .setConcurrencyLimit(getConcurrencyLimit(rootCellBuckConfig))
                 .setAdbOptions(Optional.empty())
                 .setPersistentWorkerPools(params.getPersistentWorkerPools())
                 .setTargetDeviceOptions(Optional.empty())
-                .setExecutors(params.getExecutors())
-                .setCellPathResolver(params.getCell().getCellPathResolver())
-                .setBuildCellRootPath(params.getCell().getRoot())
-                .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
                 .build();
         CachingBuildEngine buildEngine =
             new CachingBuildEngine(

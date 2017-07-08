@@ -23,7 +23,6 @@ import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -41,7 +40,6 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
@@ -138,8 +136,7 @@ public class FetchCommand extends BuildCommand {
                   params.getBuckConfig().getFileHashCacheMode());
           ExecutionContext executionContext =
               ExecutionContext.builder()
-                  .setConsole(params.getConsole())
-                  .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+                  .from(createExecutionContext(params))
                   .setTargetDevice(Optional.empty())
                   .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
                   .setCodeCoverageEnabled(isCodeCoverageEnabled())
@@ -150,22 +147,10 @@ public class FetchCommand extends BuildCommand {
                   .setDebugEnabled(isDebugEnabled())
                   .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
                   .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                  .setBuckEventBus(params.getBuckEventBus())
-                  .setPlatform(params.getPlatform())
-                  .setEnvironment(params.getEnvironment())
-                  .setJavaPackageFinder(
-                      params
-                          .getBuckConfig()
-                          .getView(JavaBuckConfig.class)
-                          .createDefaultJavaPackageFinder())
                   .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
                   .setAdbOptions(Optional.empty())
                   .setPersistentWorkerPools(params.getPersistentWorkerPools())
                   .setTargetDeviceOptions(Optional.empty())
-                  .setExecutors(params.getExecutors())
-                  .setCellPathResolver(params.getCell().getCellPathResolver())
-                  .setBuildCellRootPath(params.getCell().getRoot())
-                  .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
                   .build();
           Build build =
               createBuild(
