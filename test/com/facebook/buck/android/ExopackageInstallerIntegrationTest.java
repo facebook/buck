@@ -608,6 +608,11 @@ public class ExopackageInstallerIntegrationTest {
       // noop
     }
 
+    @Override
+    public String getSerialNumber() {
+      return "fake.serial";
+    }
+
     public void setAllowedInstallCounts(
         int expectedApksInstalled,
         int expectedDexesInstalled,

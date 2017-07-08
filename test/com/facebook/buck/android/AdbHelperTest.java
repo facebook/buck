@@ -24,11 +24,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.facebook.buck.android.exopackage.AndroidDevice;
+import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -341,13 +345,7 @@ public class AdbHelperTest {
 
     final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
-    AdbHelper adbHelper =
-        new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
-          @Override
-          public List<IDevice> getDevices(boolean quiet) {
-            return deviceList;
-          }
-        };
+    AdbHelper adbHelper = createAdbHelper(deviceList);
     boolean success =
         adbHelper.adbCall(
             "install apk", (d) -> d.installApkOnDevice(apk, false, true, false), true);
@@ -376,13 +374,7 @@ public class AdbHelperTest {
 
     final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
-    AdbHelper adbHelper =
-        new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
-          @Override
-          public List<IDevice> getDevices(boolean quiet) {
-            return deviceList;
-          }
-        };
+    AdbHelper adbHelper = createAdbHelper(deviceList);
     boolean success =
         adbHelper.adbCall(
             "install apk", (d) -> d.installApkOnDevice(apk, false, false, false), false);
@@ -392,5 +384,20 @@ public class AdbHelperTest {
     assertEquals("", testConsole.getTextWrittenToStdOut());
     assertEquals(
         "Successfully ran install apk on 1 device(s)\n", testConsole.getTextWrittenToStdErr());
+  }
+
+  private AdbHelper createAdbHelper(final List<IDevice> deviceList) {
+    return new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), testContext, true) {
+      @Override
+      public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
+        return deviceList
+            .stream()
+            .map(
+                id ->
+                    (AndroidDevice)
+                        new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
+            .collect(MoreCollectors.toImmutableList());
+      }
+    };
   }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -58,7 +58,7 @@ public class ApkInstallStep implements Step {
 
     try {
       AdbHelper adbHelper = AdbHelper.get(context, true);
-      for (IDevice device : adbHelper.getDevices(true)) {
+      for (AndroidDevice device : adbHelper.getDevices(true)) {
         if (builder.length() != 0) {
           builder.append("\n");
         }

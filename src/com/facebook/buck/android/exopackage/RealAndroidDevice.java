@@ -560,6 +560,11 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   @Override
+  public String getSerialNumber() {
+    return device.getSerialNumber();
+  }
+
+  @Override
   public ImmutableSortedSet<Path> listDirRecursive(Path root) throws Exception {
     String lsOutput = executeCommandWithErrorChecking("ls -R " + root + " | cat");
     Set<Path> paths = new HashSet<>();

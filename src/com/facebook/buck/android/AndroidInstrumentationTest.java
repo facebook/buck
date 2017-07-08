@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
@@ -100,8 +100,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
-  private static IDevice getSingleDevice(AdbHelper adbHelper) throws InterruptedException {
-    List<IDevice> devices = adbHelper.getDevices(true);
+  private static AndroidDevice getSingleDevice(AdbHelper adbHelper) throws InterruptedException {
+    List<AndroidDevice> devices = adbHelper.getDevices(true);
     if (devices.isEmpty()) {
       throw new HumanReadableException("Expecting one android device/emulator to be attached.");
     }
@@ -152,7 +152,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     }
 
     AdbHelper adb = AdbHelper.get(executionContext, true);
-    IDevice device;
+    AndroidDevice device;
     try {
       device = getSingleDevice(adb);
     } catch (InterruptedException e) {
@@ -264,7 +264,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       final ExecutionContext context, final boolean isUsingTestSelectors) {
     return () -> {
       final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-      IDevice device;
+      AndroidDevice device;
       AdbHelper adbHelper = AdbHelper.get(context, true);
       try {
         device = getSingleDevice(adbHelper);

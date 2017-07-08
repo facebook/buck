@@ -54,4 +54,6 @@ public interface AndroidDevice {
   List<String> getDeviceAbis() throws Exception;
 
   void killProcess(String processName) throws Exception;
+
+  String getSerialNumber();
 }

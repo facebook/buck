@@ -23,6 +23,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
@@ -41,9 +42,11 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -187,7 +190,12 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private RealAndroidDevice createDevice(IDevice device) {
-    return new RealAndroidDevice(getBuckEventBus(), device, getConsole());
+    return new RealAndroidDevice(
+        getBuckEventBus(),
+        device,
+        getConsole(),
+        getApkFilePathFromProperties().orElse(null),
+        nextAgentPort.incrementAndGet());
   }
 
   private static boolean isAdbInitialized(AndroidDebugBridge adb) {
@@ -231,12 +239,12 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @SuppressForbidden
-  public List<IDevice> getDevices(boolean quiet) throws InterruptedException {
+  public ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
       getConsole().printBuildFailure("Failed to create adb connection.");
-      return new ArrayList<>();
+      return ImmutableList.of();
     }
 
     // Build list of matching devices.
@@ -250,7 +258,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                     "%d device(s) matches specified device filter (1 expected).\n"
                         + "Either disconnect other devices or enable multi-install mode (%s).",
                     devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-        return new ArrayList<>();
+        return ImmutableList.of();
       }
       if (!quiet) {
         // Report if multiple devices are matching the filter.
@@ -264,16 +272,29 @@ public class AdbHelper implements AndroidDevicesHelper {
       devices = filterDevices(adb.getDevices());
     }
     if (devices == null) {
-      return new ArrayList<>();
+      return ImmutableList.of();
     }
-    return devices;
+    return devices.stream().map(this::createDevice).collect(MoreCollectors.toImmutableList());
   }
 
+  /**
+   * Execute an {@link AdbDeviceCallable} for all matching devices. This functions performs device
+   * filtering based on three possible arguments:
+   *
+   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
+   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
+   * are passing the filter
+   *
+   * <p>If more than one device matches the filter this function will fail unless multi-install mode
+   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
+   * be used to install the apk if needed.
+   */
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @SuppressForbidden
-  private boolean adbCallImpl(AdbCallable adbCallable, String description, boolean quiet)
+  @Override
+  public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
-    List<IDevice> devices;
+    List<AndroidDevice> devices;
 
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
@@ -295,8 +316,8 @@ public class AdbHelper implements AndroidDevicesHelper {
             newMultiThreadExecutor(
                 new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
 
-    for (final IDevice device : devices) {
-      futures.add(executorService.submit(() -> adbCallable.call(device)));
+    for (final AndroidDevice device : devices) {
+      futures.add(executorService.submit(() -> func.apply(device)));
     }
 
     // Wait for all executions to complete or fail.
@@ -304,7 +325,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     try {
       results = Futures.allAsList(futures).get();
     } catch (ExecutionException ex) {
-      getConsole().printBuildFailure("Failed: " + adbCallable);
+      getConsole().printBuildFailure("Failed: " + description);
       ex.printStackTrace(getConsole().getStdErr());
       return false;
     } catch (InterruptedException e) {
@@ -353,39 +374,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   private static Optional<Path> getApkFilePathFromProperties() {
     String apkFileName = System.getProperty("buck.android_agent_path");
     return Optional.ofNullable(apkFileName).map(Paths::get);
-  }
-
-  /**
-   * Execute an {@link AdbCallable} for all matching devices. This functions performs device
-   * filtering based on three possible arguments:
-   *
-   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
-   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
-   * are passing the filter
-   *
-   * <p>If more than one device matches the filter this function will fail unless multi-install mode
-   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
-   * be used to install the apk if needed.
-   */
-  @Override
-  public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
-      throws InterruptedException {
-    Optional<Path> agentApkPath = getApkFilePathFromProperties();
-    return adbCallImpl(
-        (IDevice device) ->
-            func.apply(
-                new RealAndroidDevice(
-                    getBuckEventBus(),
-                    device,
-                    getConsole(),
-                    agentApkPath.orElse(null),
-                    nextAgentPort.getAndIncrement())),
-        description,
-        quiet);
-  }
-
-  private interface AdbCallable {
-    boolean call(IDevice device) throws Exception;
   }
 
   /** An exception that indicates that an executed command returned an unsuccessful exit code. */
