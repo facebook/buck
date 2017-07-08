@@ -21,7 +21,6 @@ import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -63,8 +62,8 @@ public class ExopackageInstaller {
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final SourcePathResolver pathResolver;
-  private final AndroidDevicesHelper adbHelper;
   private final HasInstallableApk apkRule;
+  private final AndroidDevice device;
   private final String packageName;
   private final Path dataRoot;
 
@@ -75,13 +74,13 @@ public class ExopackageInstaller {
   public ExopackageInstaller(
       SourcePathResolver pathResolver,
       ExecutionContext context,
-      AndroidDevicesHelper adbInterface,
-      HasInstallableApk apkRule) {
+      HasInstallableApk apkRule,
+      AndroidDevice device) {
     this.pathResolver = pathResolver;
-    this.adbHelper = adbInterface;
     this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = apkRule;
+    this.device = device;
     this.packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apkRule.getApkInfo());
     this.dataRoot = EXOPACKAGE_INSTALL_ROOT.resolve(packageName);
@@ -96,247 +95,212 @@ public class ExopackageInstaller {
         exopackageInfo.map(ExopackageInfo::getResourcesInfo).orElse(Optional.empty());
   }
 
-  /** Installs the app specified in the constructor. This object should be discarded afterward. */
-  public synchronized boolean install(boolean quiet, @Nullable String processName)
-      throws InterruptedException {
-    InstallEvent.Started started = InstallEvent.started(apkRule.getBuildTarget());
-    eventBus.post(started);
+  public boolean doInstall(@Nullable String processName) throws Exception {
+    if (exopackageEnabled()) {
+      device.mkDirP(dataRoot.toString());
+      ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
+      ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
+      ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
 
-    boolean success =
-        adbHelper.adbCall(
-            "install exopackage apk",
-            device -> new SingleDeviceInstaller(device).doInstall(processName),
-            quiet);
+      if (dexExoInfo.isPresent()) {
+        DexExoHelper dexExoHelper =
+            new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
+        installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
+        wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
+        metadata.putAll(dexExoHelper.getMetadataToInstall());
+      }
 
-    eventBus.post(
-        InstallEvent.finished(
-            started,
-            success,
-            Optional.empty(),
-            Optional.of(
-                AdbHelper.tryToExtractPackageNameFromManifest(
-                    pathResolver, apkRule.getApkInfo()))));
-    return success;
-  }
+      if (nativeExoInfo.isPresent()) {
+        NativeExoHelper nativeExoHelper =
+            new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
+        installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
+        wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
+        metadata.putAll(nativeExoHelper.getMetadataToInstall());
+      }
 
-  /** Helper class to manage the state required to install on a single device. */
-  private class SingleDeviceInstaller {
+      if (resourcesExoInfo.isPresent()) {
+        ResourcesExoHelper resourcesExoHelper =
+            new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
+        installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
+        wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
+        metadata.putAll(resourcesExoHelper.getMetadataToInstall());
+      }
 
-    /** Device that we are installing onto. */
-    private final AndroidDevice device;
-
-    private SingleDeviceInstaller(AndroidDevice device) {
-      this.device = device;
+      deleteUnwantedFiles(presentFiles, wantedPaths.build());
+      installMetadata(metadata.build());
     }
 
-    boolean doInstall(@Nullable String processName) throws Exception {
-      if (exopackageEnabled()) {
-        device.mkDirP(dataRoot.toString());
-        ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
-        ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
-        ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
+    final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
+    // TODO(dreiss): Support SD installation.
+    final boolean installViaSd = false;
 
-        if (dexExoInfo.isPresent()) {
-          DexExoHelper dexExoHelper =
-              new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
-          installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
-          wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
-          metadata.putAll(dexExoHelper.getMetadataToInstall());
+    if (shouldAppBeInstalled()) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
+        boolean success = device.installApkOnDevice(apk, installViaSd, false);
+        if (!success) {
+          return false;
         }
-
-        if (nativeExoInfo.isPresent()) {
-          NativeExoHelper nativeExoHelper =
-              new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
-          installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
-          wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
-          metadata.putAll(nativeExoHelper.getMetadataToInstall());
-        }
-
-        if (resourcesExoInfo.isPresent()) {
-          ResourcesExoHelper resourcesExoHelper =
-              new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
-          installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
-          wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
-          metadata.putAll(resourcesExoHelper.getMetadataToInstall());
-        }
-
-        deleteUnwantedFiles(presentFiles, wantedPaths.build());
-        installMetadata(metadata.build());
       }
-
-      final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
-      // TODO(dreiss): Support SD installation.
-      final boolean installViaSd = false;
-
-      if (shouldAppBeInstalled()) {
-        try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
-          boolean success = device.installApkOnDevice(apk, installViaSd, false);
-          if (!success) {
-            return false;
+    }
+    // TODO(dreiss): Make this work on Gingerbread.
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
+      // If a specific process name is given and we're not installing a full APK,
+      // just kill that process, otherwise kill everything in the package
+      if (shouldAppBeInstalled() || processName == null) {
+        device.stopPackage(packageName);
+      } else {
+        try {
+          device.killProcess(processName);
+        } catch (Exception e) {
+          if (e.getLocalizedMessage().contains("No such process")) {
+            LOG.warn(
+                "WARN: No running process matching %s, either it was not running or does not exist",
+                processName);
+          } else {
+            throw e;
           }
         }
       }
-      // TODO(dreiss): Make this work on Gingerbread.
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
-        // If a specific process name is given and we're not installing a full APK,
-        // just kill that process, otherwise kill everything in the package
-        if (shouldAppBeInstalled() || processName == null) {
-          device.stopPackage(packageName);
-        } else {
-          try {
-            device.killProcess(processName);
-          } catch (Exception e) {
-            if (e.getLocalizedMessage().contains("No such process")) {
-              LOG.warn(
-                  "WARN: No running process matching %s, either it was not running or does not exist",
-                  processName);
-            } else {
-              throw e;
-            }
-          }
-        }
-      }
+    }
 
+    return true;
+  }
+
+  private boolean exopackageEnabled() {
+    return dexExoInfo.isPresent() || nativeExoInfo.isPresent() || resourcesExoInfo.isPresent();
+  }
+
+  private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(
+            eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
+      return device.getPackageInfo(packageName);
+    }
+  }
+
+  private boolean shouldAppBeInstalled() throws Exception {
+    Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
+    if (!appPackageInfo.isPresent()) {
+      eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
       return true;
     }
 
-    private boolean exopackageEnabled() {
-      return dexExoInfo.isPresent() || nativeExoInfo.isPresent() || resourcesExoInfo.isPresent();
+    LOG.debug("App path: %s", appPackageInfo.get().apkPath);
+    String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
+    String localAppSignature =
+        AgentUtil.getJarSignature(
+            pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
+    LOG.debug("Local app signature: %s", localAppSignature);
+    LOG.debug("Remote app signature: %s", installedAppSignature);
+
+    if (!installedAppSignature.equals(localAppSignature)) {
+      LOG.debug("App signatures do not match.  Must re-install.");
+      return true;
     }
 
-    private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
-      try (SimplePerfEvent.Scope ignored =
-          SimplePerfEvent.scope(
-              eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
-        return device.getPackageInfo(packageName);
-      }
-    }
+    LOG.debug("App signatures match.  No need to install.");
+    return false;
+  }
 
-    private boolean shouldAppBeInstalled() throws Exception {
-      Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
-      if (!appPackageInfo.isPresent()) {
-        eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
-        return true;
-      }
+  private String getInstalledAppSignature(final String packagePath) throws Exception {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
+      String output = device.getSignature(packagePath);
 
-      LOG.debug("App path: %s", appPackageInfo.get().apkPath);
-      String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
-      String localAppSignature =
-          AgentUtil.getJarSignature(
-              pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
-      LOG.debug("Local app signature: %s", localAppSignature);
-      LOG.debug("Remote app signature: %s", installedAppSignature);
-
-      if (!installedAppSignature.equals(localAppSignature)) {
-        LOG.debug("App signatures do not match.  Must re-install.");
-        return true;
+      String result = output.trim();
+      if (result.contains("\n") || result.contains("\r")) {
+        throw new IllegalStateException("Unexpected return from get-signature:\n" + output);
       }
 
-      LOG.debug("App signatures match.  No need to install.");
-      return false;
+      return result;
     }
+  }
 
-    private String getInstalledAppSignature(final String packagePath) throws Exception {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
-        String output = device.getSignature(packagePath);
-
-        String result = output.trim();
-        if (result.contains("\n") || result.contains("\r")) {
-          throw new IllegalStateException("Unexpected return from get-signature:\n" + output);
-        }
-
-        return result;
-      }
-    }
-
-    private void installMissingFiles(
-        ImmutableSortedSet<Path> presentFiles,
-        ImmutableMap<Path, Path> wantedFilesToInstall,
-        String filesType)
-        throws Exception {
-      ImmutableSortedMap<Path, Path> filesToInstall =
-          wantedFilesToInstall
-              .entrySet()
-              .stream()
-              .filter(entry -> !presentFiles.contains(entry.getKey()))
-              .collect(MoreCollectors.toImmutableSortedMap(Map.Entry::getKey, Map.Entry::getValue));
-
-      installFiles(filesType, filesToInstall);
-    }
-
-    private void deleteUnwantedFiles(
-        ImmutableSortedSet<Path> presentFiles, ImmutableSet<Path> wantedFiles) {
-      ImmutableSortedSet<Path> filesToDelete =
-          presentFiles
-              .stream()
-              .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
-              .collect(MoreCollectors.toImmutableSortedSet());
-      deleteFiles(filesToDelete);
-    }
-
-    private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
-      filesToDelete
-          .stream()
-          .collect(
-              MoreCollectors.toImmutableListMultimap(
-                  path -> dataRoot.resolve(path).getParent(),
-                  path -> path.getFileName().toString()))
-          .asMap()
-          .forEach(
-              (dir, files) -> {
-                try {
-                  device.rmFiles(dir.toString(), files);
-                } catch (Exception e) {
-                  throw new RuntimeException(e);
-                }
-              });
-    }
-
-    private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)
-        throws Exception {
-      try (SimplePerfEvent.Scope ignored =
-              SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
-          AutoCloseable ignored1 = device.createForward()) {
-        // Make sure all the directories exist.
-        filesToInstall
-            .keySet()
+  private void installMissingFiles(
+      ImmutableSortedSet<Path> presentFiles,
+      ImmutableMap<Path, Path> wantedFilesToInstall,
+      String filesType)
+      throws Exception {
+    ImmutableSortedMap<Path, Path> filesToInstall =
+        wantedFilesToInstall
+            .entrySet()
             .stream()
-            .map(p -> dataRoot.resolve(p).getParent())
-            .distinct()
-            .forEach(
-                p -> {
-                  try {
-                    device.mkDirP(p.toString());
-                  } catch (Exception e) {
-                    throw new RuntimeException(e);
-                  }
-                });
-        // Install the files.
-        filesToInstall.forEach(
-            (devicePath, hostPath) -> {
-              Path destination = dataRoot.resolve(devicePath);
-              Path source = projectFilesystem.resolve(hostPath);
-              try (SimplePerfEvent.Scope ignored2 =
-                  SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-                device.installFile(destination, source);
+            .filter(entry -> !presentFiles.contains(entry.getKey()))
+            .collect(MoreCollectors.toImmutableSortedMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    installFiles(filesType, filesToInstall);
+  }
+
+  private void deleteUnwantedFiles(
+      ImmutableSortedSet<Path> presentFiles, ImmutableSet<Path> wantedFiles) {
+    ImmutableSortedSet<Path> filesToDelete =
+        presentFiles
+            .stream()
+            .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
+            .collect(MoreCollectors.toImmutableSortedSet());
+    deleteFiles(filesToDelete);
+  }
+
+  private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
+    filesToDelete
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableListMultimap(
+                path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
+        .asMap()
+        .forEach(
+            (dir, files) -> {
+              try {
+                device.rmFiles(dir.toString(), files);
               } catch (Exception e) {
                 throw new RuntimeException(e);
               }
             });
-      }
-    }
+  }
 
-    private void installMetadata(ImmutableMap<Path, String> metadataToInstall) throws Exception {
-      try (Closer closer = Closer.create()) {
-        Map<Path, Path> filesToInstall = new HashMap<>();
-        for (Map.Entry<Path, String> entry : metadataToInstall.entrySet()) {
-          NamedTemporaryFile temp = closer.register(new NamedTemporaryFile("metadata", "tmp"));
-          com.google.common.io.Files.write(
-              entry.getValue().getBytes(Charsets.UTF_8), temp.get().toFile());
-          filesToInstall.put(entry.getKey(), temp.get());
-        }
-        installFiles("metadata", ImmutableMap.copyOf(filesToInstall));
+  private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)
+      throws Exception {
+    try (SimplePerfEvent.Scope ignored =
+            SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
+        AutoCloseable ignored1 = device.createForward()) {
+      // Make sure all the directories exist.
+      filesToInstall
+          .keySet()
+          .stream()
+          .map(p -> dataRoot.resolve(p).getParent())
+          .distinct()
+          .forEach(
+              p -> {
+                try {
+                  device.mkDirP(p.toString());
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              });
+      // Install the files.
+      filesToInstall.forEach(
+          (devicePath, hostPath) -> {
+            Path destination = dataRoot.resolve(devicePath);
+            Path source = projectFilesystem.resolve(hostPath);
+            try (SimplePerfEvent.Scope ignored2 =
+                SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+              device.installFile(destination, source);
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          });
+    }
+  }
+
+  private void installMetadata(ImmutableMap<Path, String> metadataToInstall) throws Exception {
+    try (Closer closer = Closer.create()) {
+      Map<Path, Path> filesToInstall = new HashMap<>();
+      for (Map.Entry<Path, String> entry : metadataToInstall.entrySet()) {
+        NamedTemporaryFile temp = closer.register(new NamedTemporaryFile("metadata", "tmp"));
+        com.google.common.io.Files.write(
+            entry.getValue().getBytes(Charsets.UTF_8), temp.get().toFile());
+        filesToInstall.put(entry.getKey(), temp.get());
       }
+      installFiles("metadata", ImmutableMap.copyOf(filesToInstall));
     }
   }
 

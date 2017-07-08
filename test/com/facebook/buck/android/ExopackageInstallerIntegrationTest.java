@@ -26,7 +26,6 @@ import com.android.common.SdkConstants;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.android.exopackage.AndroidDevice;
-import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.DexExoHelper;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
@@ -640,18 +639,6 @@ public class ExopackageInstallerIntegrationTest {
     }
   }
 
-  private class FakeAdbInterface implements AndroidDevicesHelper {
-    @Override
-    public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
-        throws InterruptedException {
-      try {
-        return func.apply(device);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
   private void writeFile(Path p, String c) {
     try {
       debug("Writing: " + p);
@@ -792,11 +779,8 @@ public class ExopackageInstallerIntegrationTest {
     try {
       assertTrue(
           new ExopackageInstaller(
-                  pathResolver,
-                  executionContext,
-                  new FakeAdbInterface(),
-                  new FakeApkRule(pathResolver, apkInfo))
-              .install(true, null));
+                  pathResolver, executionContext, new FakeApkRule(pathResolver, apkInfo), device)
+              .doInstall(null));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }

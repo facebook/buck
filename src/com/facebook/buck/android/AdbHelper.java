@@ -482,25 +482,51 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean quiet,
       @Nullable String processName)
       throws InterruptedException {
-    Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
-    if (exopackageInfo.isPresent()) {
-      return new ExopackageInstaller(pathResolver, context, this, hasInstallableApk)
-          .install(quiet, processName);
-    }
     InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
     if (!quiet) {
       getBuckEventBus().post(started);
     }
+    boolean success;
+    Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
+    if (exopackageInfo.isPresent()) {
+      // TODO(dreiss): Support SD installation.
+      success = installApkExopackage(pathResolver, hasInstallableApk, quiet, processName);
+    } else {
+      success = installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
+    }
+    if (!quiet) {
+      getBuckEventBus()
+          .post(
+              InstallEvent.finished(
+                  started,
+                  success,
+                  Optional.empty(),
+                  Optional.of(
+                      AdbHelper.tryToExtractPackageNameFromManifest(
+                          pathResolver, hasInstallableApk.getApkInfo()))));
+    }
+    return success;
+  }
 
-    return installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet, started);
+  private boolean installApkExopackage(
+      SourcePathResolver pathResolver,
+      HasInstallableApk hasInstallableApk,
+      boolean quiet,
+      @Nullable String processName)
+      throws InterruptedException {
+    return adbCall(
+        "install exopackage apk",
+        device ->
+            new ExopackageInstaller(pathResolver, context, hasInstallableApk, device)
+                .doInstall(processName),
+        quiet);
   }
 
   private boolean installApkDirectly(
       SourcePathResolver pathResolver,
       final HasInstallableApk hasInstallableApk,
       final boolean installViaSd,
-      final boolean quiet,
-      InstallEvent.Started started)
+      final boolean quiet)
       throws InterruptedException {
     File apk = pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toFile();
     boolean success =
@@ -519,19 +545,6 @@ public class AdbHelper implements AndroidDevicesHelper {
               }
             },
             quiet);
-    if (!quiet) {
-      AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
-      getBuckEventBus()
-          .post(
-              InstallEvent.finished(
-                  started,
-                  success,
-                  Optional.empty(),
-                  Optional.of(
-                      AdbHelper.tryToExtractPackageNameFromManifest(
-                          pathResolver, hasInstallableApk.getApkInfo()))));
-    }
-
     return success;
   }
 
