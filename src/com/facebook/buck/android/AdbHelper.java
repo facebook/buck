@@ -46,6 +46,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -90,6 +92,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final TargetDeviceOptions deviceOptions;
   private final ExecutionContext context;
   private final boolean restartAdbOnFailure;
+  private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
 
   public AdbHelper(
       AdbOptions adbOptions,
@@ -100,6 +103,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.deviceOptions = deviceOptions;
     this.context = context;
     this.restartAdbOnFailure = restartAdbOnFailure;
+    this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
   }
 
   public static AdbHelper get(ExecutionContext context, boolean restartOnFailure) {
@@ -110,6 +114,105 @@ public class AdbHelper implements AndroidDevicesHelper {
         context.getTargetDeviceOptions().get(),
         context,
         restartOnFailure);
+  }
+
+  public ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException {
+    ImmutableList<AndroidDevice> devices = devicesSupplier.get();
+    if (!quiet && devices.size() > 1) {
+      // Report if multiple devices are matching the filter.
+      getConsole().getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+    }
+    return devices;
+  }
+
+  /**
+   * Execute an {@link AdbDeviceCallable} for all matching devices. This functions performs device
+   * filtering based on three possible arguments:
+   *
+   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
+   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
+   * are passing the filter
+   *
+   * <p>If more than one device matches the filter this function will fail unless multi-install mode
+   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
+   * be used to install the apk if needed.
+   */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  @SuppressForbidden
+  @Override
+  public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
+      throws InterruptedException {
+    List<AndroidDevice> devices;
+
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
+      devices = getDevices(quiet);
+      if (devices.size() == 0) {
+        return false;
+      }
+    }
+
+    int adbThreadCount = options.getAdbThreadCount();
+    if (adbThreadCount <= 0) {
+      adbThreadCount = devices.size();
+    }
+
+    // Start executions on all matching devices.
+    List<ListenableFuture<Boolean>> futures = new ArrayList<>();
+    ListeningExecutorService executorService =
+        listeningDecorator(
+            newMultiThreadExecutor(
+                new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
+
+    for (final AndroidDevice device : devices) {
+      futures.add(executorService.submit(() -> func.apply(device)));
+    }
+
+    // Wait for all executions to complete or fail.
+    List<Boolean> results = null;
+    try {
+      results = Futures.allAsList(futures).get();
+    } catch (ExecutionException ex) {
+      getConsole().printBuildFailure("Failed: " + description);
+      ex.printStackTrace(getConsole().getStdErr());
+      return false;
+    } catch (InterruptedException e) {
+      try {
+        Futures.allAsList(futures).cancel(true);
+      } catch (CancellationException ignored) {
+        // Rethrow original InterruptedException instead.
+      }
+      Thread.currentThread().interrupt();
+      throw e;
+    } finally {
+      MostExecutors.shutdownOrThrow(
+          executorService,
+          10,
+          TimeUnit.MINUTES,
+          new InterruptionFailedException("Failed to shutdown ExecutorService."));
+    }
+
+    int successCount = 0;
+    for (Boolean result : results) {
+      if (result) {
+        successCount++;
+      }
+    }
+    int failureCount = results.size() - successCount;
+
+    // Report results.
+    if (successCount > 0 && !quiet) {
+      getConsole()
+          .printSuccess(
+              String.format("Successfully ran %s on %d device(s)", description, successCount));
+    }
+    if (failureCount > 0) {
+      getConsole()
+          .printBuildFailure(
+              String.format("Failed to %s on %d device(s).", description, failureCount));
+    }
+
+    return failureCount == 0;
   }
 
   private BuckEventBus getBuckEventBus() {
@@ -239,9 +342,14 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @SuppressForbidden
-  public ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException {
+  private ImmutableList<AndroidDevice> getDevicesImpl() {
     // Initialize adb connection.
-    AndroidDebugBridge adb = createAdb(context);
+    AndroidDebugBridge adb;
+    try {
+      adb = createAdb(context);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
     if (adb == null) {
       getConsole().printBuildFailure("Failed to create adb connection.");
       return ImmutableList.of();
@@ -249,21 +357,15 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     // Build list of matching devices.
     List<IDevice> devices = filterDevices(adb.getDevices());
-    if (devices != null && devices.size() > 1) {
-      // Found multiple devices but multi-install mode is not enabled.
-      if (!options.isMultiInstallModeEnabled()) {
-        getConsole()
-            .printBuildFailure(
-                String.format(
-                    "%d device(s) matches specified device filter (1 expected).\n"
-                        + "Either disconnect other devices or enable multi-install mode (%s).",
-                    devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-        return ImmutableList.of();
-      }
-      if (!quiet) {
-        // Report if multiple devices are matching the filter.
-        getConsole().getStdOut().printf("Found " + devices.size() + " matching devices.\n");
-      }
+    // Found multiple devices but multi-install mode is not enabled.
+    if (devices != null && devices.size() > 1 && !options.isMultiInstallModeEnabled()) {
+      getConsole()
+          .printBuildFailure(
+              String.format(
+                  "%d device(s) matches specified device filter (1 expected).\n"
+                      + "Either disconnect other devices or enable multi-install mode (%s).",
+                  devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
+      return ImmutableList.of();
     }
 
     if (devices == null && restartAdbOnFailure) {
@@ -275,96 +377,6 @@ public class AdbHelper implements AndroidDevicesHelper {
       return ImmutableList.of();
     }
     return devices.stream().map(this::createDevice).collect(MoreCollectors.toImmutableList());
-  }
-
-  /**
-   * Execute an {@link AdbDeviceCallable} for all matching devices. This functions performs device
-   * filtering based on three possible arguments:
-   *
-   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
-   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
-   * are passing the filter
-   *
-   * <p>If more than one device matches the filter this function will fail unless multi-install mode
-   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
-   * be used to install the apk if needed.
-   */
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  @SuppressForbidden
-  @Override
-  public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
-      throws InterruptedException {
-    List<AndroidDevice> devices;
-
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
-      devices = getDevices(quiet);
-      if (devices.size() == 0) {
-        return false;
-      }
-    }
-
-    int adbThreadCount = options.getAdbThreadCount();
-    if (adbThreadCount <= 0) {
-      adbThreadCount = devices.size();
-    }
-
-    // Start executions on all matching devices.
-    List<ListenableFuture<Boolean>> futures = new ArrayList<>();
-    ListeningExecutorService executorService =
-        listeningDecorator(
-            newMultiThreadExecutor(
-                new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
-
-    for (final AndroidDevice device : devices) {
-      futures.add(executorService.submit(() -> func.apply(device)));
-    }
-
-    // Wait for all executions to complete or fail.
-    List<Boolean> results = null;
-    try {
-      results = Futures.allAsList(futures).get();
-    } catch (ExecutionException ex) {
-      getConsole().printBuildFailure("Failed: " + description);
-      ex.printStackTrace(getConsole().getStdErr());
-      return false;
-    } catch (InterruptedException e) {
-      try {
-        Futures.allAsList(futures).cancel(true);
-      } catch (CancellationException ignored) {
-        // Rethrow original InterruptedException instead.
-      }
-      Thread.currentThread().interrupt();
-      throw e;
-    } finally {
-      MostExecutors.shutdownOrThrow(
-          executorService,
-          10,
-          TimeUnit.MINUTES,
-          new InterruptionFailedException("Failed to shutdown ExecutorService."));
-    }
-
-    int successCount = 0;
-    for (Boolean result : results) {
-      if (result) {
-        successCount++;
-      }
-    }
-    int failureCount = results.size() - successCount;
-
-    // Report results.
-    if (successCount > 0 && !quiet) {
-      getConsole()
-          .printSuccess(
-              String.format("Successfully ran %s on %d device(s)", description, successCount));
-    }
-    if (failureCount > 0) {
-      getConsole()
-          .printBuildFailure(
-              String.format("Failed to %s on %d device(s).", description, failureCount));
-    }
-
-    return failureCount == 0;
   }
 
   private Console getConsole() {
