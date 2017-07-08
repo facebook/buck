@@ -467,7 +467,8 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     @Override
-    public boolean installApkOnDevice(File apk, boolean installViaSd, boolean quiet) {
+    public boolean installApkOnDevice(
+        File apk, boolean installViaSd, boolean quiet, boolean verifyTempWritable) {
       assertTrue(apk.isAbsolute());
       if (apk.equals(filesystem.resolve(agentPath).toFile())) {
         deviceAgentPackageInfo =

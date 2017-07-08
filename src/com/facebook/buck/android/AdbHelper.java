@@ -23,7 +23,6 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.NullOutputReceiver;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
@@ -57,7 +56,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -271,21 +269,10 @@ public class AdbHelper implements AndroidDevicesHelper {
     return devices;
   }
 
-  /**
-   * Execute an {@link AdbCallable} for all matching devices. This functions performs device
-   * filtering based on three possible arguments:
-   *
-   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
-   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
-   * are passing the filter
-   *
-   * <p>If more than one device matches the filter this function will fail unless multi-install mode
-   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
-   * be used to install the apk if needed.
-   */
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @SuppressForbidden
-  public boolean adbCall(AdbCallable adbCallable, boolean quiet) throws InterruptedException {
+  private boolean adbCallImpl(AdbCallable adbCallable, String description, boolean quiet)
+      throws InterruptedException {
     List<IDevice> devices;
 
     try (SimplePerfEvent.Scope ignored =
@@ -309,7 +296,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                 new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
 
     for (final IDevice device : devices) {
-      futures.add(executorService.submit(adbCallable.forDevice(device)));
+      futures.add(executorService.submit(() -> adbCallable.call(device)));
     }
 
     // Wait for all executions to complete or fail.
@@ -348,12 +335,12 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (successCount > 0 && !quiet) {
       getConsole()
           .printSuccess(
-              String.format("Successfully ran %s on %d device(s)", adbCallable, successCount));
+              String.format("Successfully ran %s on %d device(s)", description, successCount));
     }
     if (failureCount > 0) {
       getConsole()
           .printBuildFailure(
-              String.format("Failed to %s on %d device(s).", adbCallable, failureCount));
+              String.format("Failed to %s on %d device(s).", description, failureCount));
     }
 
     return failureCount == 0;
@@ -363,71 +350,42 @@ public class AdbHelper implements AndroidDevicesHelper {
     return context.getConsole();
   }
 
-  private static Path getApkFilePathFromProperties() {
+  private static Optional<Path> getApkFilePathFromProperties() {
     String apkFileName = System.getProperty("buck.android_agent_path");
-    if (apkFileName == null) {
-      throw new RuntimeException("Android agent apk path not specified in properties");
-    }
-    return Paths.get(apkFileName);
+    return Optional.ofNullable(apkFileName).map(Paths::get);
   }
 
+  /**
+   * Execute an {@link AdbCallable} for all matching devices. This functions performs device
+   * filtering based on three possible arguments:
+   *
+   * <p>-e (emulator-only) - only emulators are passing the filter -d (device-only) - only real
+   * devices are passing the filter -s (serial) - only device/emulator with specific serial number
+   * are passing the filter
+   *
+   * <p>If more than one device matches the filter this function will fail unless multi-install mode
+   * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
+   * be used to install the apk if needed.
+   */
   @Override
   public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
-    Path agentApkPath = getApkFilePathFromProperties();
-    return adbCall(
-        new AdbCallable() {
-          @Override
-          public boolean call(IDevice device) throws Exception {
-            return func.apply(
+    Optional<Path> agentApkPath = getApkFilePathFromProperties();
+    return adbCallImpl(
+        (IDevice device) ->
+            func.apply(
                 new RealAndroidDevice(
                     getBuckEventBus(),
                     device,
                     getConsole(),
-                    agentApkPath,
-                    nextAgentPort.getAndIncrement()));
-          }
-
-          @Override
-          public String toString() {
-            return description;
-          }
-        },
+                    agentApkPath.orElse(null),
+                    nextAgentPort.getAndIncrement())),
+        description,
         quiet);
   }
 
-  /** Base class for commands to be run against an {@link com.android.ddmlib.IDevice IDevice}. */
-  public abstract static class AdbCallable {
-
-    /**
-     * Perform the actions specified by this {@code AdbCallable} and return true on success.
-     *
-     * @param device the {@link com.android.ddmlib.IDevice IDevice} to run against
-     * @return {@code true} if the command succeeded.
-     */
-    public abstract boolean call(IDevice device) throws Exception;
-
-    /**
-     * Wraps this as a {@link java.util.concurrent.Callable Callable&lt;Boolean&gt;} whose {@link
-     * Callable#call() call()} method calls {@link AdbHelper.AdbCallable#call(IDevice)
-     * call(IDevice)} against the specified device.
-     *
-     * @param device the {@link com.android.ddmlib.IDevice IDevice} to run against.
-     * @return a {@code Callable}
-     */
-    public Callable<Boolean> forDevice(final IDevice device) {
-      return new Callable<Boolean>() {
-        @Override
-        public Boolean call() throws Exception {
-          return AdbCallable.this.call(device);
-        }
-
-        @Override
-        public String toString() {
-          return AdbCallable.this.toString();
-        }
-      };
-    }
+  private interface AdbCallable {
+    boolean call(IDevice device) throws Exception;
   }
 
   /** An exception that indicates that an executed command returned an unsuccessful exit code. */
@@ -531,19 +489,8 @@ public class AdbHelper implements AndroidDevicesHelper {
     File apk = pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toFile();
     boolean success =
         adbCall(
-            new AdbCallable() {
-              @Override
-              public boolean call(IDevice device) throws Exception {
-                return createDevice(device).installApkOnDevice(apk, installViaSd, quiet);
-              }
-
-              @Override
-              @SuppressForbidden
-              public String toString() {
-                return String.format(
-                    "install apk %s", hasInstallableApk.getBuildTarget().toString());
-              }
-            },
+            String.format("install apk %s", hasInstallableApk.getBuildTarget().toString()),
+            (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
             quiet);
     return success;
   }
@@ -593,23 +540,10 @@ public class AdbHelper implements AndroidDevicesHelper {
     getBuckEventBus().post(started);
     boolean success =
         adbCall(
-            new AdbHelper.AdbCallable() {
-              @Override
-              public boolean call(IDevice device) throws Exception {
-                String err =
-                    createDevice(device).deviceStartActivity(activityToRun, waitForDebugger);
-                if (err != null) {
-                  getConsole().printBuildFailure(err);
-                  return false;
-                } else {
-                  return true;
-                }
-              }
-
-              @Override
-              public String toString() {
-                return "start activity";
-              }
+            "start activity",
+            (device) -> {
+              ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
+              return true;
             },
             false);
     getBuckEventBus().post(StartActivityEvent.finished(started, success));
@@ -630,20 +564,10 @@ public class AdbHelper implements AndroidDevicesHelper {
     getBuckEventBus().post(started);
     boolean success =
         adbCall(
-            new AdbHelper.AdbCallable() {
-              @Override
-              public boolean call(IDevice device) throws Exception {
-                // Remove any exopackage data as well.  GB doesn't support "rm -f", so just ignore output.
-                device.executeShellCommand(
-                    "rm -r /data/local/tmp/exopackage/" + packageName,
-                    NullOutputReceiver.getReceiver());
-                return createDevice(device).uninstallApkFromDevice(packageName, shouldKeepUserData);
-              }
-
-              @Override
-              public String toString() {
-                return "uninstall apk";
-              }
+            "uninstall apk",
+            (device) -> {
+              ((RealAndroidDevice) device).uninstallApkFromDevice(packageName, shouldKeepUserData);
+              return true;
             },
             false);
     getBuckEventBus().post(UninstallEvent.finished(started, success));

@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
-import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
@@ -351,25 +350,7 @@ public class AdbHelperTest {
         };
     boolean success =
         adbHelper.adbCall(
-            new AdbHelper.AdbCallable() {
-              @Override
-              public boolean call(IDevice device) throws Exception {
-                return new RealAndroidDevice(
-                        testContext.getBuckEventBus(),
-                        device,
-                        testContext.getConsole(),
-                        null,
-                        -1,
-                        false)
-                    .installApkOnDevice(apk, false, true);
-              }
-
-              @Override
-              public String toString() {
-                return "install apk";
-              }
-            },
-            true);
+            "install apk", (d) -> d.installApkOnDevice(apk, false, true, false), true);
 
     assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
@@ -404,25 +385,7 @@ public class AdbHelperTest {
         };
     boolean success =
         adbHelper.adbCall(
-            new AdbHelper.AdbCallable() {
-              @Override
-              public boolean call(IDevice device) throws Exception {
-                return new RealAndroidDevice(
-                        testContext.getBuckEventBus(),
-                        device,
-                        testContext.getConsole(),
-                        null,
-                        -1,
-                        false)
-                    .installApkOnDevice(apk, false, false);
-              }
-
-              @Override
-              public String toString() {
-                return "install apk";
-              }
-            },
-            false);
+            "install apk", (d) -> d.installApkOnDevice(apk, false, false, false), false);
 
     assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());

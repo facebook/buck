@@ -24,7 +24,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AndroidDevice {
-  boolean installApkOnDevice(File apk, boolean installViaSd, boolean quiet);
+  default boolean installApkOnDevice(File apk, boolean installViaSd, boolean quiet) {
+    return installApkOnDevice(apk, installViaSd, quiet, true);
+  }
+
+  boolean installApkOnDevice(
+      File apk, boolean installViaSd, boolean quiet, boolean verifyTempWritable);
 
   void stopPackage(String packageName) throws Exception;
 

@@ -81,15 +81,13 @@ public class RealAndroidDevice implements AndroidDevice {
   private final Console console;
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
-  private final boolean shouldCheckTempDir;
 
   public RealAndroidDevice(
       BuckEventBus eventBus,
       IDevice device,
       Console console,
       @Nullable Path agentApkPath,
-      int agentPort,
-      boolean shouldCheckTempDir) {
+      int agentPort) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
@@ -102,16 +100,10 @@ public class RealAndroidDevice implements AndroidDevice {
                     Preconditions.checkNotNull(
                         agentApkPath, "Agent not configured for this device.")));
     this.agentPort = agentPort;
-    this.shouldCheckTempDir = shouldCheckTempDir;
-  }
-
-  public RealAndroidDevice(
-      BuckEventBus eventBus, IDevice device, Console console, Path agentApkPath, int agentPort) {
-    this(eventBus, device, console, agentApkPath, agentPort, true);
   }
 
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1, true);
+    this(buckEventBus, device, console, null, -1);
   }
 
   /**
@@ -331,6 +323,13 @@ public class RealAndroidDevice implements AndroidDevice {
   private String deviceUninstallPackage(String packageName, boolean keepData)
       throws InstallException {
     try {
+      try {
+        executeCommandWithErrorChecking(
+            String.format("rm -r %s/%s", ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT, packageName));
+      } catch (AdbHelper.CommandFailedException e) {
+        LOG.debug("Deleting old files failed with message: %s", e.getMessage());
+      }
+
       ErrorParsingReceiver receiver =
           new ErrorParsingReceiver() {
             @Override
@@ -411,9 +410,6 @@ public class RealAndroidDevice implements AndroidDevice {
   @VisibleForTesting
   @SuppressForbidden
   private boolean isDeviceTempWritable(String name) {
-    if (!shouldCheckTempDir) {
-      return true;
-    }
     StringBuilder loggingInfo = new StringBuilder();
     try {
       String output;
@@ -481,7 +477,8 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public boolean installApkOnDevice(File apk, boolean installViaSd, boolean quiet) {
+  public boolean installApkOnDevice(
+      File apk, boolean installViaSd, boolean quiet, boolean verifyTempWritable) {
     String name;
     if (device.isEmulator()) {
       name = device.getSerialNumber() + " (" + device.getAvdName() + ")";
@@ -493,7 +490,7 @@ public class RealAndroidDevice implements AndroidDevice {
       }
     }
 
-    if (!isDeviceTempWritable(name)) {
+    if (verifyTempWritable && !isDeviceTempWritable(name)) {
       return false;
     }
 

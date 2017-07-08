@@ -49,12 +49,7 @@ public class RealAndroidDeviceTest {
 
   private static RealAndroidDevice createAndroidDevice(IDevice device) {
     return new RealAndroidDevice(
-        BuckEventBusForTests.newInstance(),
-        device,
-        TestConsole.createNullConsole(),
-        null,
-        -1,
-        false);
+        BuckEventBusForTests.newInstance(), device, TestConsole.createNullConsole(), null, -1);
   }
 
   /** Verify that successful installation on device results in true. */
@@ -74,7 +69,7 @@ public class RealAndroidDeviceTest {
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    assertTrue(createAndroidDevice(device).installApkOnDevice(apk, false, false));
+    assertTrue(createAndroidDevice(device).installApkOnDevice(apk, false, false, false));
     assertEquals(apk.getAbsolutePath(), apkPath.get());
   }
 
@@ -138,7 +133,7 @@ public class RealAndroidDeviceTest {
         };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
-    assertFalse(createAndroidDevice(device).installApkOnDevice(apk, false, false));
+    assertFalse(createAndroidDevice(device).installApkOnDevice(apk, false, false, false));
   }
 
   /** Verify that if exception is thrown during installation, installation is marked as failed. */
@@ -156,7 +151,7 @@ public class RealAndroidDeviceTest {
         };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
-    assertFalse(createAndroidDevice(device).installApkOnDevice(apk, false, false));
+    assertFalse(createAndroidDevice(device).installApkOnDevice(apk, false, false, false));
   }
 
   @Test
