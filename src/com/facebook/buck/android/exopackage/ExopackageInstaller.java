@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.android.ddmlib.IDevice;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -53,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 /** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
@@ -65,7 +63,7 @@ public class ExopackageInstaller {
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final SourcePathResolver pathResolver;
-  private final AdbInterface adbHelper;
+  private final AndroidDevicesHelper adbHelper;
   private final HasInstallableApk apkRule;
   private final String packageName;
   private final Path dataRoot;
@@ -74,96 +72,10 @@ public class ExopackageInstaller {
   private final Optional<NativeLibsInfo> nativeExoInfo;
   private final Optional<DexInfo> dexExoInfo;
 
-  /**
-   * AdbInterface provides a way to interact with multiple devices as AndroidDevices (rather than
-   * IDevices).
-   *
-   * <p>
-   *
-   * <p>All of ExopackageInstaller's interaction with devices and adb goes through this class and
-   * AndroidDevice making it easy to provide different implementations in tests.
-   */
-  @VisibleForTesting
-  public interface AdbInterface {
-    /**
-     * This is basically the same as AdbHelper.AdbCallable except that it takes an AndroidDevice
-     * instead of an IDevice.
-     */
-    interface AdbCallable {
-      boolean apply(AndroidDevice device) throws Exception;
-    }
-
-    boolean adbCall(String description, AdbCallable func, boolean quiet)
-        throws InterruptedException;
-  }
-
-  static class RealAdbInterface implements AdbInterface {
-    private AdbHelper adbHelper;
-    private BuckEventBus eventBus;
-    private Path agentApkPath;
-
-    /**
-     * The next port number to use for communicating with the agent on a device. This resets for
-     * every instance of RealAdbInterface, but is incremented for every device we are installing on
-     * when using "-x".
-     */
-    private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
-
-    RealAdbInterface(BuckEventBus eventBus, AdbHelper adbHelper, Path agentApkPath) {
-      this.eventBus = eventBus;
-      this.adbHelper = adbHelper;
-      this.agentApkPath = agentApkPath;
-    }
-
-    @Override
-    public boolean adbCall(String description, AdbCallable func, boolean quiet)
-        throws InterruptedException {
-      return adbHelper.adbCall(
-          new AdbHelper.AdbCallable() {
-            @Override
-            public boolean call(IDevice device) throws Exception {
-              return func.apply(
-                  new RealAndroidDevice(
-                      eventBus,
-                      device,
-                      adbHelper.getConsole(),
-                      agentApkPath,
-                      nextAgentPort.getAndIncrement()));
-            }
-
-            @Override
-            public String toString() {
-              return description;
-            }
-          },
-          quiet);
-    }
-  }
-
-  private static Path getApkFilePathFromProperties() {
-    String apkFileName = System.getProperty("buck.android_agent_path");
-    if (apkFileName == null) {
-      throw new RuntimeException("Android agent apk path not specified in properties");
-    }
-    return Paths.get(apkFileName);
-  }
-
   public ExopackageInstaller(
       SourcePathResolver pathResolver,
       ExecutionContext context,
-      AdbHelper adbHelper,
-      HasInstallableApk apkRule) {
-    this(
-        pathResolver,
-        context,
-        new RealAdbInterface(context.getBuckEventBus(), adbHelper, getApkFilePathFromProperties()),
-        apkRule);
-  }
-
-  public ExopackageInstaller(
-      SourcePathResolver pathResolver,
-      ExecutionContext context,
-      AdbInterface adbInterface,
+      AndroidDevicesHelper adbInterface,
       HasInstallableApk apkRule) {
     this.pathResolver = pathResolver;
     this.adbHelper = adbInterface;

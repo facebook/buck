@@ -326,6 +326,7 @@ HELPERS_SRCS = [
     "AndroidPlatformTargetSupplier.java",
     "HasInstallableApk.java",
     "exopackage/AndroidDevice.java",
+    "exopackage/AndroidDevicesHelper.java",
     "exopackage/DexExoHelper.java",
     "exopackage/ExopackageAgent.java",
     "exopackage/ExopackageInstaller.java",

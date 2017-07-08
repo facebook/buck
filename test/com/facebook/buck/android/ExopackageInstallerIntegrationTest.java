@@ -26,6 +26,7 @@ import com.android.common.SdkConstants;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.android.exopackage.AndroidDevice;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.DexExoHelper;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
@@ -639,9 +640,9 @@ public class ExopackageInstallerIntegrationTest {
     }
   }
 
-  private class FakeAdbInterface implements ExopackageInstaller.AdbInterface {
+  private class FakeAdbInterface implements AndroidDevicesHelper {
     @Override
-    public boolean adbCall(String description, AdbCallable func, boolean quiet)
+    public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
         throws InterruptedException {
       try {
         return func.apply(device);

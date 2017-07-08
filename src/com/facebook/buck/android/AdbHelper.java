@@ -24,6 +24,7 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.NullOutputReceiver;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.annotations.SuppressForbidden;
@@ -52,6 +53,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,11 +61,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** Helper for executing commands over ADB, especially for multiple devices. */
-public class AdbHelper {
+public class AdbHelper implements AndroidDevicesHelper {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
@@ -75,6 +78,12 @@ public class AdbHelper {
    * The -s option overrides this.
    */
   static final String SERIAL_NUMBER_ENV = "ANDROID_SERIAL";
+
+  /**
+   * The next port number to use for communicating with the agent on a device. This resets for every
+   * instance of AdbHelper, but is incremented for every device on every call to adbCall().
+   */
+  private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
@@ -350,8 +359,41 @@ public class AdbHelper {
     return failureCount == 0;
   }
 
-  public Console getConsole() {
+  private Console getConsole() {
     return context.getConsole();
+  }
+
+  private static Path getApkFilePathFromProperties() {
+    String apkFileName = System.getProperty("buck.android_agent_path");
+    if (apkFileName == null) {
+      throw new RuntimeException("Android agent apk path not specified in properties");
+    }
+    return Paths.get(apkFileName);
+  }
+
+  @Override
+  public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
+      throws InterruptedException {
+    Path agentApkPath = getApkFilePathFromProperties();
+    return adbCall(
+        new AdbCallable() {
+          @Override
+          public boolean call(IDevice device) throws Exception {
+            return func.apply(
+                new RealAndroidDevice(
+                    getBuckEventBus(),
+                    device,
+                    getConsole(),
+                    agentApkPath,
+                    nextAgentPort.getAndIncrement()));
+          }
+
+          @Override
+          public String toString() {
+            return description;
+          }
+        },
+        quiet);
   }
 
   /** Base class for commands to be run against an {@link com.android.ddmlib.IDevice IDevice}. */
