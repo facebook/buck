@@ -530,15 +530,7 @@ public class TestCommand extends BuildCommand {
                         cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                         ruleKeyCacheScope.getCache()),
                     params.getBuckConfig().getFileHashCacheMode());
-            ExecutionContext executionContext =
-                ExecutionContext.builder()
-                    .from(createExecutionContext(params))
-                    .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                    .setDebugEnabled(isDebugEnabled())
-                    .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                    .setAdbOptions(Optional.of(getAdbOptions(params.getBuckConfig())))
-                    .setTargetDeviceOptions(Optional.of(getTargetDeviceOptions()))
-                    .build();
+            ExecutionContext executionContext = createExecutionContext(params);
             Build build =
                 createBuild(
                     params.getBuckConfig(),
@@ -597,6 +589,13 @@ public class TestCommand extends BuildCommand {
         }
       }
     }
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setAdbOptions(Optional.of(getAdbOptions(params.getBuckConfig())))
+        .setTargetDeviceOptions(Optional.of(getTargetDeviceOptions()));
   }
 
   @Override

@@ -266,6 +266,10 @@ public abstract class AbstractCommand implements Command {
   }
 
   protected ExecutionContext createExecutionContext(CommandRunnerParams params) {
+    return getExecutionContextBuilder(params).build();
+  }
+
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return ExecutionContext.builder()
         .setConsole(params.getConsole())
         .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
@@ -282,8 +286,7 @@ public abstract class AbstractCommand implements Command {
             params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
         .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
         .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
-        .setPersistentWorkerPools(params.getPersistentWorkerPools())
-        .build();
+        .setPersistentWorkerPools(params.getPersistentWorkerPools());
   }
 
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {

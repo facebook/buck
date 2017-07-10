@@ -134,16 +134,7 @@ public class FetchCommand extends BuildCommand {
                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
                   params.getBuckConfig().getFileHashCacheMode());
-          ExecutionContext executionContext =
-              ExecutionContext.builder()
-                  .from(createExecutionContext(params))
-                  .setTargetDevice(Optional.empty())
-                  .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                  .setDebugEnabled(isDebugEnabled())
-                  .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                  .setAdbOptions(Optional.empty())
-                  .setTargetDeviceOptions(Optional.empty())
-                  .build();
+          ExecutionContext executionContext = createExecutionContext(params);
           Build build =
               createBuild(
                   params.getBuckConfig(),

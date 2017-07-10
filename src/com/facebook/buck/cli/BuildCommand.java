@@ -929,16 +929,7 @@ public class BuildCommand extends AbstractCommand {
                 params,
                 new RuleKeyCacheRecycler.SettingsAffectingCache(
                     rootCellBuckConfig.getKeySeed(), actionGraphAndResolver.getActionGraph()));
-        ExecutionContext executionContext =
-            ExecutionContext.builder()
-                .from(createExecutionContext(params))
-                .setTargetDevice(Optional.empty())
-                .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                .setDebugEnabled(isDebugEnabled())
-                .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                .setAdbOptions(Optional.empty())
-                .setTargetDeviceOptions(Optional.empty())
-                .build();
+        ExecutionContext executionContext = createExecutionContext(params);
         CachingBuildEngine buildEngine =
             new CachingBuildEngine(
                 cachingBuildEngineDelegate,
@@ -980,6 +971,17 @@ public class BuildCommand extends AbstractCommand {
           params.getConsole(),
           getPathToBuildReport(rootCellBuckConfig));
     }
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setTargetDevice(Optional.empty())
+        .setCodeCoverageEnabled(isCodeCoverageEnabled())
+        .setDebugEnabled(isDebugEnabled())
+        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
+        .setAdbOptions(Optional.empty())
+        .setTargetDeviceOptions(Optional.empty());
   }
 
   @SuppressWarnings("unused")
