@@ -109,6 +109,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     List<AndroidDevice> devices = adbHelper.getDevices(true);
     if (devices.isEmpty()) {
       throw new HumanReadableException("Expecting one android device/emulator to be attached.");
+    } else if (devices.size() > 1) {
+      throw new HumanReadableException(
+          "Running android instrumentation tests with multiple devices is not supported.");
     }
     return devices.get(0);
   }
@@ -151,11 +154,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
-
-    if (executionContext.getAdbOptions().get().isMultiInstallModeEnabled()) {
-      throw new HumanReadableException(
-          "Running android instrumentation tests with multiple devices is not supported.");
-    }
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
