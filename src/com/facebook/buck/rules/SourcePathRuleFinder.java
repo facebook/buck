@@ -41,7 +41,7 @@ public class SourcePathRuleFinder {
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath sources) {
+  public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
     return RichStream.of(sources)
         .flatMap(FILTER_BUILD_RULE_INPUTS)
         .collect(MoreCollectors.toImmutableSet());
