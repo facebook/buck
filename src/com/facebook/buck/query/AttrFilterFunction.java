@@ -53,7 +53,8 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     QueryExpression argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
@@ -62,7 +63,7 @@ public class AttrFilterFunction implements QueryFunction {
     final Predicate<Object> predicate = input -> attrValue.equals(input.toString());
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryTarget target : argument.eval(env)) {
+    for (QueryTarget target : evaluator.eval(argument, env)) {
       ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);

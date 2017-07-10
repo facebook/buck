@@ -50,8 +50,9 @@ abstract class AbstractFunctionExpression extends QueryExpression {
   abstract ImmutableList<Argument> getArgs();
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env) throws QueryException {
-    return getFunction().eval(env, getArgs());
+  ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
+      throws QueryException {
+    return getFunction().eval(evaluator, env, getArgs());
   }
 
   @Override

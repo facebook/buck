@@ -31,6 +31,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
@@ -178,7 +179,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     preloadTargetPatterns(targetLiterals);
-    return expr.eval(this);
+    return new NoopQueryEvaluator().eval(expr, this);
   }
 
   public ImmutableSet<QueryTarget> evaluateQuery(String query)

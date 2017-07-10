@@ -21,6 +21,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -99,7 +100,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             "target",
             target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
-      Set<QueryTarget> queryTargets = parsedExp.eval(env);
+      Set<QueryTarget> queryTargets = new NoopQueryEvaluator().eval(parsedExp, env);
       return queryTargets.stream();
     } catch (QueryException e) {
       throw new MacroException("Error parsing/executing query from macro", e);

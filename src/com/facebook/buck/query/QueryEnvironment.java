@@ -164,11 +164,13 @@ public interface QueryEnvironment {
     /**
      * Called when a user-defined function is to be evaluated.
      *
+     * @param evaluator the evaluator for evaluating argument expressions.
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned by
      *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
      */
-    ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
+    ImmutableSet<QueryTarget> eval(
+        QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
         throws QueryException;
   }
 

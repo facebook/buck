@@ -47,9 +47,10 @@ public class InputsFunction implements QueryFunction {
 
   /** Evaluates to the direct inputs of the argument. */
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
-    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
+    Set<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     env.buildTransitiveClosure(argumentSet, 0);
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();

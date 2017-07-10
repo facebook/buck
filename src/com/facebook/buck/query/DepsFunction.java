@@ -79,6 +79,7 @@ public class DepsFunction implements QueryFunction {
   }
 
   private void forEachDep(
+      QueryEvaluator evaluator,
       QueryEnvironment env,
       QueryExpression depsExpression,
       Iterable<QueryTarget> targets,
@@ -86,7 +87,8 @@ public class DepsFunction implements QueryFunction {
       throws QueryException {
     for (QueryTarget target : targets) {
       Set<QueryTarget> deps =
-          depsExpression.eval(
+          evaluator.eval(
+              depsExpression,
               new TargetVariablesQueryEnvironment(
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
@@ -102,9 +104,10 @@ public class DepsFunction implements QueryFunction {
    * supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
-    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
+    Set<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     Optional<QueryExpression> deps =
         args.size() > 2 ? Optional.of(args.get(2).getExpression()) : Optional.empty();
@@ -127,7 +130,7 @@ public class DepsFunction implements QueryFunction {
             }
           };
       if (deps.isPresent()) {
-        forEachDep(env, deps.get(), current, consumer);
+        forEachDep(evaluator, env, deps.get(), current, consumer);
       } else {
         env.forEachFwdDep(current, consumer);
       }
@@ -163,7 +166,8 @@ public class DepsFunction implements QueryFunction {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
+    public ImmutableSet<QueryTarget> eval(
+        QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
         throws QueryException {
       Preconditions.checkArgument(args.size() == 0);
       return env.resolveTargetVariable(getName());

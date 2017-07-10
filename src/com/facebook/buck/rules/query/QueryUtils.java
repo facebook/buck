@@ -21,6 +21,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -66,7 +67,7 @@ public final class QueryUtils {
             "target",
             target.toString())) {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
-      Set<QueryTarget> queryTargets = parsedExp.eval(env);
+      Set<QueryTarget> queryTargets = new NoopQueryEvaluator().eval(parsedExp, env);
       return queryTargets
           .stream()
           .map(

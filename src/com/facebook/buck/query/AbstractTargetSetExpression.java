@@ -28,7 +28,7 @@ abstract class AbstractTargetSetExpression extends QueryExpression {
   abstract ImmutableSet<QueryTarget> getTargets();
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env) {
+  ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env) {
     return getTargets();
   }
 

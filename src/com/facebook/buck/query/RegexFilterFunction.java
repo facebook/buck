@@ -37,7 +37,8 @@ abstract class RegexFilterFunction implements QueryFunction {
       QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) throws QueryException;
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     Pattern compiledPattern;
     try {
@@ -47,7 +48,7 @@ abstract class RegexFilterFunction implements QueryFunction {
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<QueryTarget> targets = getExpressionToEval(args).eval(env);
+    Set<QueryTarget> targets = evaluator.eval(getExpressionToEval(args), env);
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
