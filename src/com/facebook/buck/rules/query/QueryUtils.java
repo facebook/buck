@@ -77,10 +77,10 @@ public final class QueryUtils {
                 return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
               });
     } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException("Error executing query from deps for " + target, e);
     }
   }
 

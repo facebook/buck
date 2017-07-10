@@ -114,8 +114,6 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
       return queryTargets.stream();
     } catch (QueryException e) {
       throw new MacroException("Error parsing/executing query from macro", e);
-    } catch (InterruptedException e) {
-      throw new MacroException("Error executing query", e);
     }
   }
 

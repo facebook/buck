@@ -53,8 +53,7 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(
-      QueryEnvironment env, ImmutableList<QueryEnvironment.Argument> args)
-      throws QueryException, InterruptedException {
+      QueryEnvironment env, ImmutableList<QueryEnvironment.Argument> args) throws QueryException {
     Preconditions.checkArgument(env instanceof GraphEnhancementQueryEnvironment);
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
 

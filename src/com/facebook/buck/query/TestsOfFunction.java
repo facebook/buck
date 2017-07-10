@@ -53,7 +53,7 @@ public class TestsOfFunction implements QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     Set<QueryTarget> targets = args.get(0).getExpression().eval(env);
     ImmutableSet.Builder<QueryTarget> tests = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {

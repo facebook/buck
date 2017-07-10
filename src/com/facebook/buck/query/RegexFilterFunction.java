@@ -34,12 +34,11 @@ abstract class RegexFilterFunction implements QueryFunction {
   protected abstract String getPattern(ImmutableList<Argument> args);
 
   protected abstract String getStringToFilter(
-      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target)
-      throws QueryException, InterruptedException;
+      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) throws QueryException;
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     Pattern compiledPattern;
     try {
       compiledPattern = Pattern.compile(getPattern(args));

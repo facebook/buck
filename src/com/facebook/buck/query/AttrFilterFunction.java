@@ -54,7 +54,7 @@ public class AttrFilterFunction implements QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     QueryExpression argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 

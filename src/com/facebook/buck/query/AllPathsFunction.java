@@ -71,7 +71,7 @@ public class AllPathsFunction implements QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 

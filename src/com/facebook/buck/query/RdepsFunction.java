@@ -80,7 +80,7 @@ public class RdepsFunction implements QueryFunction {
    */
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
     Predicate<QueryTarget> inUniversePredicate = env.getTransitiveClosure(universeSet)::contains;

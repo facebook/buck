@@ -42,8 +42,13 @@ public class QueryParserTest {
 
   @Before
   public void makeEnvironment() {
+    QueryEnvironment.TargetEvaluator targetEvaluator =
+        createMock(QueryEnvironment.TargetEvaluator.class);
+    expect(targetEvaluator.getType()).andStubReturn(QueryEnvironment.TargetEvaluator.Type.LAZY);
     queryEnvironment = createMock(QueryEnvironment.class);
     expect(queryEnvironment.getFunctions()).andStubReturn(QueryEnvironment.DEFAULT_QUERY_FUNCTIONS);
+    expect(queryEnvironment.getTargetEvaluator()).andReturn(targetEvaluator);
+    replay(targetEvaluator);
     replay(queryEnvironment);
   }
 

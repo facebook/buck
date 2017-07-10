@@ -51,8 +51,7 @@ abstract class AbstractTargetLiteral extends QueryExpression {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(QueryEnvironment env) throws QueryException {
     return env.getTargetsMatchingPattern(getPattern());
   }
 

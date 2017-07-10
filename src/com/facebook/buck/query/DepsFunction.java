@@ -83,7 +83,7 @@ public class DepsFunction implements QueryFunction {
       QueryExpression depsExpression,
       Iterable<QueryTarget> targets,
       Consumer<? super QueryTarget> consumer)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     for (QueryTarget target : targets) {
       Set<QueryTarget> deps =
           depsExpression.eval(
@@ -103,7 +103,7 @@ public class DepsFunction implements QueryFunction {
    */
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     Optional<QueryExpression> deps =
@@ -164,7 +164,7 @@ public class DepsFunction implements QueryFunction {
 
     @Override
     public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-        throws QueryException, InterruptedException {
+        throws QueryException {
       Preconditions.checkArgument(args.size() == 0);
       return env.resolveTargetVariable(getName());
     }

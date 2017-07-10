@@ -48,7 +48,7 @@ public class InputsFunction implements QueryFunction {
   /** Evaluates to the direct inputs of the argument. */
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
     env.buildTransitiveClosure(argumentSet, 0);
 

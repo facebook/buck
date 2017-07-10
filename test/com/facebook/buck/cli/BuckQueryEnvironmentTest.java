@@ -110,7 +110,7 @@ public class BuckQueryEnvironmentTest {
   }
 
   @Test
-  public void testResolveSingleTargets() throws QueryException, InterruptedException {
+  public void testResolveSingleTargets() throws QueryException {
     ImmutableSet<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
@@ -124,7 +124,7 @@ public class BuckQueryEnvironmentTest {
   }
 
   @Test
-  public void testResolveTargetPattern() throws QueryException, InterruptedException {
+  public void testResolveTargetPattern() throws QueryException {
     ImmutableSet<QueryTarget> expectedTargets =
         ImmutableSortedSet.of(
             createQueryBuildTarget("//example", "one"),

@@ -169,15 +169,36 @@ public interface QueryEnvironment {
      *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
      */
     ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-        throws QueryException, InterruptedException;
+        throws QueryException;
   }
+
+  /**
+   * A procedure for evaluating a target literal to {@link QueryTarget}. This evaluation can either
+   * happen immediately at parse time or be delayed until evalution of the entire query.
+   */
+  interface TargetEvaluator {
+    /** Returns the set of target nodes for the specified target pattern, in 'buck build' syntax. */
+    ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException;
+
+    Type getType();
+
+    enum Type {
+      IMMEDIATE,
+      LAZY
+    }
+  }
+
+  /** Returns an evaluator for target patterns. */
+  TargetEvaluator getTargetEvaluator();
 
   /**
    * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
    * syntax.
    */
-  ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
-      throws QueryException, InterruptedException;
+  default ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
+      throws QueryException {
+    return getTargetEvaluator().evaluateTarget(pattern);
+  }
 
   /** Returns the direct forward dependencies of the specified targets. */
   ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException;
@@ -188,7 +209,7 @@ public interface QueryEnvironment {
    * <p>Might apply more than once to the same target, so {@code action} should be idempotent.
    */
   default void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     getFwdDeps(targets).forEach(action);
   }
 
@@ -210,8 +231,7 @@ public interface QueryEnvironment {
    * <p>If a larger transitive closure was already built, returns it to improve incrementality,
    * since all depth-constrained methods filter it after it is built anyway.
    */
-  void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth)
-      throws InterruptedException, QueryException;
+  void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) throws QueryException;
 
   String getTargetKind(QueryTarget target) throws QueryException;
 

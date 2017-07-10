@@ -75,7 +75,7 @@ public class KindFunction extends RegexFilterFunction {
   @Override
   protected String getStringToFilter(
       QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     return env.getTargetKind(target);
   }
 }

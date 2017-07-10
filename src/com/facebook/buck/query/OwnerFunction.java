@@ -50,7 +50,7 @@ public class OwnerFunction implements QueryFunction {
 
   @Override
   public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+      throws QueryException {
 
     return env.getFileOwners(ImmutableList.of(args.get(0).getWord()));
   }
