@@ -41,6 +41,7 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -73,6 +74,8 @@ public abstract class AbstractCommand implements Command {
   )
   @SuppressWarnings("PMD.UnusedPrivateField")
   private int verbosityLevel = -1;
+
+  private volatile ExecutionContext executionContext;
 
   @Option(name = NUM_THREADS_LONG_ARG, aliases = "-j", usage = "Default is 1.25 * num processors.")
   @Nullable
@@ -220,7 +223,18 @@ public abstract class AbstractCommand implements Command {
         }
       }
     }
-    return runWithoutHelp(params);
+    try (Closeable closeable = prepareExecutionContext(params)) {
+      return runWithoutHelp(params);
+    }
+  }
+
+  protected Closeable prepareExecutionContext(CommandRunnerParams params) {
+    executionContext = createExecutionContext(params);
+    return () -> {
+      ExecutionContext context = executionContext;
+      executionContext = null;
+      context.close();
+    };
   }
 
   public abstract int runWithoutHelp(CommandRunnerParams params)
@@ -265,7 +279,11 @@ public abstract class AbstractCommand implements Command {
     return buildTargets.build();
   }
 
-  protected ExecutionContext createExecutionContext(CommandRunnerParams params) {
+  protected ExecutionContext getExecutionContext() {
+    return executionContext;
+  }
+
+  private ExecutionContext createExecutionContext(CommandRunnerParams params) {
     return getExecutionContextBuilder(params).build();
   }
 

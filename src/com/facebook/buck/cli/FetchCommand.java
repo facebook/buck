@@ -39,7 +39,6 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
@@ -134,7 +133,6 @@ public class FetchCommand extends BuildCommand {
                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
                   params.getBuckConfig().getFileHashCacheMode());
-          ExecutionContext executionContext = createExecutionContext(params);
           Build build =
               createBuild(
                   params.getBuckConfig(),
@@ -144,7 +142,7 @@ public class FetchCommand extends BuildCommand {
                   params.getArtifactCacheFactory().newInstance(),
                   params.getConsole(),
                   params.getClock(),
-                  executionContext)) {
+                  getExecutionContext())) {
         exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,

@@ -530,7 +530,6 @@ public class TestCommand extends BuildCommand {
                         cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
                         ruleKeyCacheScope.getCache()),
                     params.getBuckConfig().getFileHashCacheMode());
-            ExecutionContext executionContext = createExecutionContext(params);
             Build build =
                 createBuild(
                     params.getBuckConfig(),
@@ -540,7 +539,7 @@ public class TestCommand extends BuildCommand {
                     params.getArtifactCacheFactory().newInstance(),
                     params.getConsole(),
                     params.getClock(),
-                    executionContext)) {
+                    getExecutionContext())) {
 
           // Build all of the test rules.
           int exitCode =

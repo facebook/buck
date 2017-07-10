@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
@@ -154,17 +153,15 @@ public class UninstallCommand extends AbstractCommand {
     HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
     // We need this in case adb isn't already running.
-    try (ExecutionContext context = createExecutionContext(params)) {
-      final AndroidDevicesHelper adbHelper =
-          AndroidDevicesHelperFactory.get(context, params.getBuckConfig().getRestartAdbOnFailure());
+    final AndroidDevicesHelper adbHelper =
+        AndroidDevicesHelperFactory.get(
+            getExecutionContext(), params.getBuckConfig().getRestartAdbOnFailure());
 
-      // Find application package name from manifest and uninstall from matching devices.
-      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-      String appId =
-          AdbHelper.tryToExtractPackageNameFromManifest(
-              pathResolver, hasInstallableApk.getApkInfo());
-      return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
-    }
+    // Find application package name from manifest and uninstall from matching devices.
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    String appId =
+        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
+    return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
   }
 
   @Override

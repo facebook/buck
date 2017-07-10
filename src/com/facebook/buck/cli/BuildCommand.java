@@ -929,7 +929,6 @@ public class BuildCommand extends AbstractCommand {
                 params,
                 new RuleKeyCacheRecycler.SettingsAffectingCache(
                     rootCellBuckConfig.getKeySeed(), actionGraphAndResolver.getActionGraph()));
-        ExecutionContext executionContext = createExecutionContext(params);
         CachingBuildEngine buildEngine =
             new CachingBuildEngine(
                 cachingBuildEngineDelegate,
@@ -961,7 +960,7 @@ public class BuildCommand extends AbstractCommand {
                 artifactCache,
                 params.getConsole(),
                 params.getClock(),
-                executionContext)) {
+                getExecutionContext())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           FluentIterable.from(targetsToBuild)
