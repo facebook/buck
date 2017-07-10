@@ -277,16 +277,8 @@ public class InstallCommand extends BuildCommand {
           new SourcePathResolver(new SourcePathRuleFinder(build.getRuleResolver()));
 
       if (buildRule instanceof HasInstallableApk) {
-        ExecutionContext executionContext =
-            ExecutionContext.builder()
-                .from(build.getExecutionContext())
-                .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
-                .setTargetDeviceOptions(Optional.of(targetDeviceOptions()))
-                .setExecutors(params.getExecutors())
-                .setCellPathResolver(params.getCell().getCellPathResolver())
-                .build();
         exitCode =
-            installApk(params, (HasInstallableApk) buildRule, executionContext, pathResolver);
+            installApk(params, (HasInstallableApk) buildRule, getExecutionContext(), pathResolver);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -326,6 +318,13 @@ public class InstallCommand extends BuildCommand {
       }
     }
     return exitCode;
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
+        .setTargetDeviceOptions(Optional.of(targetDeviceOptions()));
   }
 
   private ImmutableSet<String> getInstallHelperTargets(
