@@ -38,10 +38,15 @@
   </component>
 %endif%
 %if(languageLevel)%
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="%languageLevel%" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="%languageLevel%" %\\%
+    %if(androidFacet.enabled)%inherit-compiler-output="false"%else%inherit-compiler-output="true"%endif%>
 %else%
-  <component name="NewModuleRootManager" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" %\\%
+    %if(androidFacet.enabled)%inherit-compiler-output="false"%else%inherit-compiler-output="true"%endif%>
 %endif%
+    %if(androidFacet.enabled)%
+    <output url="file://$MODULE_DIR$%androidFacet.compiler_output_path%" />
+    %endif%
     <exclude-output />
 %if(androidFacet.enabled)%
     <content url="file://$MODULE_DIR$%androidFacet.module_gen_path%">

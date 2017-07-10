@@ -385,6 +385,7 @@ public class IjProjectTemplateDataPreparer {
     addAndroidManifestPath(androidProperties, basePath, androidFacet);
     addAndroidProguardPath(androidProperties, androidFacet);
     addAndroidResourcePaths(androidProperties, module, androidFacet);
+    addAndroidCompilerOutputPath(androidProperties, basePath, androidFacet);
 
     return androidProperties;
   }
@@ -501,6 +502,30 @@ public class IjProjectTemplateDataPreparer {
       androidProperties.put(
           RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER, Joiner.on(";").join(relativeResourcePaths));
     }
+  }
+
+  private void addAndroidCompilerOutputPath(
+      Map<String, Object> androidProperties,
+      Path moduleBasePath,
+      IjModuleAndroidFacet androidFacet) {
+    String variantName = "debug";
+    Optional<Path> manifestPath = androidFacet.getManifestPath();
+    if (manifestPath.isPresent()) {
+      Path manifestParentPath = manifestPath.get().getParent();
+      variantName = manifestParentPath.getName(manifestParentPath.getNameCount() - 1).toString();
+    }
+
+    Path rootModulePath = Paths.get(projectConfig.getProjectRoot());
+    Path moduleRelativePath = rootModulePath.relativize(moduleBasePath);
+    Path moduleLibClassesPath = Paths.get(
+        rootModulePath.toString(),
+        "buck-out/bin",
+        moduleRelativePath.toString(),
+        "lib__src_" + variantName + "__classes");
+    Path compilerOutputPath = moduleBasePath.relativize(moduleLibClassesPath);
+    androidProperties.put(
+        "compiler_output_path",
+        "/" + MorePaths.pathWithUnixSeparators(compilerOutputPath));
   }
 
   private class IjFolderToIjSourceFolderTransform implements Function<IjFolder, IjSourceFolder> {
