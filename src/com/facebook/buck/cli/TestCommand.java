@@ -533,20 +533,10 @@ public class TestCommand extends BuildCommand {
             ExecutionContext executionContext =
                 ExecutionContext.builder()
                     .from(createExecutionContext(params))
-                    .setTargetDevice(getTargetDeviceOptional())
-                    .setDefaultTestTimeoutMillis(
-                        params.getBuckConfig().getDefaultTestTimeoutMillis())
                     .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                    .setInclNoLocationClassesEnabled(
-                        params
-                            .getBuckConfig()
-                            .getBooleanValue("test", "incl_no_location_classes", false))
                     .setDebugEnabled(isDebugEnabled())
-                    .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
                     .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                    .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
                     .setAdbOptions(Optional.of(getAdbOptions(params.getBuckConfig())))
-                    .setPersistentWorkerPools(params.getPersistentWorkerPools())
                     .setTargetDeviceOptions(Optional.of(getTargetDeviceOptions()))
                     .build();
             Build build =

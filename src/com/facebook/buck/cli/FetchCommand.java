@@ -138,18 +138,10 @@ public class FetchCommand extends BuildCommand {
               ExecutionContext.builder()
                   .from(createExecutionContext(params))
                   .setTargetDevice(Optional.empty())
-                  .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
                   .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                  .setInclNoLocationClassesEnabled(
-                      params
-                          .getBuckConfig()
-                          .getBooleanValue("test", "incl_no_location_classes", false))
                   .setDebugEnabled(isDebugEnabled())
-                  .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
                   .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                  .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
                   .setAdbOptions(Optional.empty())
-                  .setPersistentWorkerPools(params.getPersistentWorkerPools())
                   .setTargetDeviceOptions(Optional.empty())
                   .build();
           Build build =

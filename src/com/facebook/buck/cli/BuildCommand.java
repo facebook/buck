@@ -933,16 +933,10 @@ public class BuildCommand extends AbstractCommand {
             ExecutionContext.builder()
                 .from(createExecutionContext(params))
                 .setTargetDevice(Optional.empty())
-                .setDefaultTestTimeoutMillis(rootCellBuckConfig.getDefaultTestTimeoutMillis())
                 .setCodeCoverageEnabled(isCodeCoverageEnabled())
-                .setInclNoLocationClassesEnabled(
-                    rootCellBuckConfig.getBooleanValue("test", "incl_no_location_classes", false))
                 .setDebugEnabled(isDebugEnabled())
-                .setRuleKeyDiagnosticsMode(rootCellBuckConfig.getRuleKeyDiagnosticsMode())
                 .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-                .setConcurrencyLimit(getConcurrencyLimit(rootCellBuckConfig))
                 .setAdbOptions(Optional.empty())
-                .setPersistentWorkerPools(params.getPersistentWorkerPools())
                 .setTargetDeviceOptions(Optional.empty())
                 .build();
         CachingBuildEngine buildEngine =

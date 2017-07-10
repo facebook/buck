@@ -277,6 +277,12 @@ public abstract class AbstractCommand implements Command {
         .setCellPathResolver(params.getCell().getCellPathResolver())
         .setBuildCellRootPath(params.getCell().getRoot())
         .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+        .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
+        .setInclNoLocationClassesEnabled(
+            params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
+        .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
+        .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
+        .setPersistentWorkerPools(params.getPersistentWorkerPools())
         .build();
   }
 
