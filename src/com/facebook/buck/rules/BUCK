@@ -175,6 +175,9 @@ java_library(
         "CommonDescriptionArg.java",
         "HasContacts.java",
         "HasDeclaredDeps.java",
+        "HasDepsQuery.java",
+        "HasProvidedDeps.java",
+        "HasProvidedDepsQuery.java",
         "HasSrcs.java",
         "HasTestTimeout.java",
         "HasTests.java",
@@ -184,6 +187,7 @@ java_library(
     deps = [
         ":source_path",
         "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules/query:types",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",
@@ -224,7 +228,6 @@ java_immutables_library(
         "BuildRules.java",
         "BuildableContext.java",
         "ConstantToolProvider.java",
-        "DefaultTargetNodeToBuildRuleTransformer.java",
         "DependencyAggregation.java",
         "Description.java",
         "ExportDependencies.java",
@@ -292,6 +295,27 @@ java_immutables_library(
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/stringtemplate:stringtemplate",
+    ],
+)
+
+java_library(
+    name = "transformer",
+    srcs = [
+        "DefaultTargetNodeToBuildRuleTransformer.java",
+    ],
+    exported_deps = [
+        ":abstract_description_arg",
+        ":build_rule",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":interfaces",
+        ":rule_key",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules/query:query",
+        "//third-party/java/guava:guava",
     ],
 )
 
@@ -472,8 +496,8 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":build_rule",
         ":rule_key",
+        ":transformer",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

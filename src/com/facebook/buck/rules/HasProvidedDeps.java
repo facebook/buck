@@ -14,25 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.query;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedSet;
-import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractQuery {
-
-  abstract String getQuery();
-
-  @Nullable
+public interface HasProvidedDeps {
   @Value.NaturalOrder
-  abstract ImmutableSortedSet<BuildTarget> getResolvedQuery();
-
-  public static Query of(String query) {
-    return Query.of(query, null);
-  }
+  ImmutableSortedSet<BuildTarget> getProvidedDeps();
 }

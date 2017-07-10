@@ -37,7 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -186,17 +186,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       language = androidArgs.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
 
       if (androidArgs.getProvidedDepsQuery().isPresent()) {
+        Query providedDepsQuery = androidArgs.getProvidedDepsQuery().get();
+        Preconditions.checkNotNull(providedDepsQuery.getResolvedQuery());
         setProvidedDeps(
             RichStream.from(args.getProvidedDeps())
-                .concat(
-                    QueryUtils.resolveDepQuery(
-                            initialBuildTarget,
-                            androidArgs.getProvidedDepsQuery().get(),
-                            buildRuleResolver,
-                            cellRoots,
-                            targetGraph,
-                            args.getProvidedDeps())
-                        .map(BuildRule::getBuildTarget))
+                .concat(providedDepsQuery.getResolvedQuery().stream())
                 .toImmutableSortedSet(Ordering.natural()));
       }
       return setManifestFile(androidArgs.getManifest());
@@ -294,13 +288,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         return args.getDepsQuery().isPresent()
             ? Suppliers.memoize(
                 () ->
-                    QueryUtils.resolveDepQuery(
-                            initialBuildTarget,
-                            args.getDepsQuery().get(),
-                            buildRuleResolver,
-                            cellRoots,
-                            targetGraph,
-                            args.getDeps())
+                    Preconditions.checkNotNull(args.getDepsQuery().get().getResolvedQuery())
+                        .stream()
+                        .map(buildRuleResolver::getRule)
                         .collect(MoreCollectors.toImmutableList()))
             : ImmutableList::of;
       }

@@ -23,6 +23,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.query.QueryCache;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
@@ -113,6 +115,12 @@ public abstract class AbstractNodeBuilder<
     BuildRuleParams params = createBuildRuleParams(resolver);
 
     TArg builtArg = getPopulatedArg();
+
+    QueryCache cache = new QueryCache();
+    builtArg = QueryUtils.withDepsQuery(builtArg, target, cache, resolver, cellRoots, targetGraph);
+    builtArg =
+        QueryUtils.withProvidedDepsQuery(builtArg, target, cache, resolver, cellRoots, targetGraph);
+
     @SuppressWarnings("unchecked")
     TBuildRule rule =
         (TBuildRule)

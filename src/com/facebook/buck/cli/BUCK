@@ -211,6 +211,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules:target_graph_hashing",
+        "//src/com/facebook/buck/rules:transformer",
         "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",

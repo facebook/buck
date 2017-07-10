@@ -128,7 +128,15 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
             .addDep(sublibNode.getBuildTarget())
             .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    AndroidLibraryBuilder ruleBuilder =
+        AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addDep(libNode.getBuildTarget())
+            .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"));
+    TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> rule = ruleBuilder.build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
@@ -144,13 +152,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             new FakeBuildRule(
                 libNode.getBuildTarget(), pathResolver, ImmutableSortedSet.of(sublibRule)));
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-
-    BuildRule javaLibrary =
-        AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
-            .addDep(libNode.getBuildTarget())
-            .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"))
-            .build(resolver, targetGraph);
+    BuildRule javaLibrary = ruleBuilder.build(resolver, targetGraph);
 
     assertThat(javaLibrary.getBuildDeps(), Matchers.hasItems(libRule, sublibRule));
     // The bottom rule should be filtered since it does not match the regex
