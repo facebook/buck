@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
@@ -101,14 +102,22 @@ public class QueryCommandTest {
   @Test
   public void testRunMultiQuery() throws Exception {
     queryCommand.setArguments(ImmutableList.of("deps(%s)", "//foo:bar", "//foo:baz"));
+    QueryEnvironment.TargetEvaluator evaluator =
+        EasyMock.createNiceMock(QueryEnvironment.TargetEvaluator.class);
+    EasyMock.expect(evaluator.getType())
+        .andReturn(QueryEnvironment.TargetEvaluator.Type.LAZY)
+        .times(2);
     EasyMock.expect(env.getFunctions())
         .andReturn(BuckQueryEnvironment.DEFAULT_QUERY_FUNCTIONS)
         .anyTimes();
+    EasyMock.expect(env.getTargetEvaluator()).andReturn(evaluator).times(2);
     env.preloadTargetPatterns(ImmutableSet.of("//foo:bar", "//foo:baz"));
     EasyMock.expect(env.evaluateQuery("deps(//foo:bar)")).andReturn(ImmutableSet.of());
     EasyMock.expect(env.evaluateQuery("deps(//foo:baz)")).andReturn(ImmutableSet.of());
     EasyMock.replay(env);
+    EasyMock.replay(evaluator);
     queryCommand.formatAndRunQuery(params, env);
     EasyMock.verify(env);
+    EasyMock.verify(evaluator);
   }
 }

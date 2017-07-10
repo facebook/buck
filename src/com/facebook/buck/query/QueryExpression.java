@@ -72,6 +72,8 @@ public abstract class QueryExpression {
   /**
    * Collects all target patterns that are referenced anywhere within this query expression and adds
    * them to the given collection, which must be mutable.
+   *
+   * <p>This is intended to accumulate patterns from multiple expressions for preloading at once.
    */
   public void collectTargetPatterns(Collection<String> literals) {
     traverse(new TargetPatternCollector(literals));
@@ -79,6 +81,13 @@ public abstract class QueryExpression {
 
   /** Accepts and applies the given visitor. */
   public abstract void traverse(Visitor visitor);
+
+  /** Returns a set of all targets referenced from literals within this query expression. */
+  public ImmutableSet<QueryTarget> getTargets(QueryEnvironment env) throws QueryException {
+    QueryTargetCollector collector = new QueryTargetCollector(env);
+    traverse(collector);
+    return collector.getTargets();
+  }
 
   /** Returns this query expression pretty-printed. */
   @Override

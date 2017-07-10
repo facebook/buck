@@ -37,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -67,19 +66,9 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             ImmutableSet.of());
     try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
-      HashSet<String> targetLiterals = new HashSet<>();
-      parsedExp.collectTargetPatterns(targetLiterals);
-      return targetLiterals
+      return parsedExp
+          .getTargets(env)
           .stream()
-          .flatMap(
-              pattern -> {
-                try {
-                  return env.getTargetsMatchingPattern(pattern).stream();
-                } catch (QueryException e) {
-                  throw new HumanReadableException(
-                      e, "Error parsing target expression %s for target %s", pattern, target);
-                }
-              })
           .map(
               queryTarget -> {
                 Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

@@ -31,8 +31,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -93,18 +91,9 @@ public final class QueryUtils {
         new GraphEnhancementQueryEnvironment(
             Optional.empty(), Optional.empty(), cellPathResolver, parserPattern, ImmutableSet.of());
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
-    List<String> targetLiterals = new ArrayList<>();
-    parsedExp.collectTargetPatterns(targetLiterals);
-    return targetLiterals
+    return parsedExp
+        .getTargets(env)
         .stream()
-        .flatMap(
-            pattern -> {
-              try {
-                return env.getTargetsMatchingPattern(pattern).stream();
-              } catch (Exception e) {
-                throw new RuntimeException("Error parsing target expression", e);
-              }
-            })
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

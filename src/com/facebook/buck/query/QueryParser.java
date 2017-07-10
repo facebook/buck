@@ -39,11 +39,13 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -71,6 +73,7 @@ final class QueryParser {
   private final List<Lexer.Token> tokens;
   private final Iterator<Lexer.Token> tokenIterator;
   private final Map<String, QueryFunction> functions;
+  private final QueryEnvironment.TargetEvaluator targetEvaluator;
 
   /** Scan and parse the specified query expression. */
   static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
@@ -88,6 +91,7 @@ final class QueryParser {
     for (QueryFunction queryFunction : env.getFunctions()) {
       this.functions.put(queryFunction.getName(), queryFunction);
     }
+    this.targetEvaluator = env.getTargetEvaluator();
     this.tokens = tokens;
     this.tokenIterator = tokens.iterator();
     nextToken();
@@ -268,7 +272,12 @@ final class QueryParser {
             consume(TokenKind.RPAREN);
             return FunctionExpression.of(function, argsBuilder.build());
           } else {
-            return TargetLiteral.of(Preconditions.checkNotNull(word));
+            Preconditions.checkNotNull(word);
+            if (targetEvaluator.getType() == QueryEnvironment.TargetEvaluator.Type.LAZY) {
+              return TargetLiteral.of(word);
+            } else {
+              return TargetSetExpression.of(targetEvaluator.evaluateTarget(word));
+            }
           }
         }
       case LPAREN:
@@ -282,12 +291,22 @@ final class QueryParser {
         {
           nextToken();
           consume(TokenKind.LPAREN);
-          ImmutableList.Builder<TargetLiteral> wordsBuilder = ImmutableList.builder();
+          ImmutableList.Builder<String> wordsBuilder = ImmutableList.builder();
           while (token.kind == TokenKind.WORD) {
-            wordsBuilder.add(TargetLiteral.of(Preconditions.checkNotNull(consume(TokenKind.WORD))));
+            wordsBuilder.add(Preconditions.checkNotNull(consume(TokenKind.WORD)));
           }
           consume(TokenKind.RPAREN);
-          return SetExpression.of(wordsBuilder.build());
+
+          if (targetEvaluator.getType() == QueryEnvironment.TargetEvaluator.Type.LAZY) {
+            return SetExpression.of(
+                wordsBuilder.build().stream().map(TargetLiteral::of).collect(Collectors.toList()));
+          } else {
+            ImmutableSet.Builder<QueryTarget> targets = ImmutableSet.builder();
+            for (String word : wordsBuilder.build()) {
+              targets.addAll(targetEvaluator.evaluateTarget(word));
+            }
+            return TargetSetExpression.of(targets.build());
+          }
         }
         //$CASES-OMITTED$
       default:
