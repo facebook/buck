@@ -24,6 +24,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
@@ -39,26 +40,38 @@ import org.immutables.value.Value;
  * targets and paths referenced from those inputs.
  */
 @BuckStyleImmutable
-@Value.Immutable
+@Value.Immutable(builder = false)
 abstract class AbstractTargetNode<T, U extends Description<T>>
     implements Comparable<TargetNode<?, ?>>, ObeysVisibility {
 
+  @Value.Parameter
+  @Override
+  public abstract BuildTarget getBuildTarget();
+
+  @Value.Parameter
   public abstract TargetNodeFactory getTargetNodeFactory();
 
   /** @return A hash of the raw input from the build file used to construct the node. */
+  @Value.Parameter
   public abstract HashCode getRawInputsHashCode();
 
+  @Value.Parameter
   public abstract U getDescription();
 
+  @Value.Parameter
   public abstract T getConstructorArg();
 
+  @Value.Parameter
   public abstract ProjectFilesystem getFilesystem();
 
+  @Value.Parameter
   public abstract ImmutableSet<Path> getInputs();
 
+  @Value.Parameter
   public abstract ImmutableSet<BuildTarget> getDeclaredDeps();
 
-  public abstract ImmutableSet<BuildTarget> getExtraDeps();
+  @Value.Parameter
+  public abstract ImmutableSortedSet<BuildTarget> getExtraDeps();
 
   /**
    * BuildTargets which, when changed, may change the BuildRules produced by this TargetNode, but
@@ -69,14 +82,19 @@ abstract class AbstractTargetNode<T, U extends Description<T>>
    * against the TargetGraph (e.g. detecting the names of rules of a certain type) but don't use the
    * output of those detected rules.
    */
-  public abstract ImmutableSet<BuildTarget> getTargetGraphOnlyDeps();
+  @Value.Parameter
+  public abstract ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps();
 
+  @Value.Parameter
   public abstract CellPathResolver getCellNames();
 
+  @Value.Parameter
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
+  @Value.Parameter
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 
+  @Value.Parameter
   public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
   @Override

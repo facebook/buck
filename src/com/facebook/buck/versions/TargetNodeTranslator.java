@@ -309,10 +309,10 @@ public abstract class TargetNodeTranslator {
     Optional<A> constructorArg = translateConstructorArg(cellPathResolver, pattern, node);
     Optional<ImmutableSet<BuildTarget>> declaredDeps =
         translateSet(cellPathResolver, pattern, node.getDeclaredDeps());
-    Optional<ImmutableSet<BuildTarget>> extraDeps =
-        translateSet(cellPathResolver, pattern, node.getExtraDeps());
-    Optional<ImmutableSet<BuildTarget>> targetGraphOnlyDeps =
-        translateSet(cellPathResolver, pattern, node.getTargetGraphOnlyDeps());
+    Optional<ImmutableSortedSet<BuildTarget>> extraDeps =
+        translateSortedSet(cellPathResolver, pattern, node.getExtraDeps());
+    Optional<ImmutableSortedSet<BuildTarget>> targetGraphOnlyDeps =
+        translateSortedSet(cellPathResolver, pattern, node.getTargetGraphOnlyDeps());
 
     Optional<ImmutableMap<BuildTarget, Version>> newSelectedVersions =
         getSelectedVersions(node.getBuildTarget());
