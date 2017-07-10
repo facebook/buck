@@ -48,6 +48,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -89,18 +90,18 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
-  private final ExecutionContext context;
+  private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
 
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
-      ExecutionContext context,
+      Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
-    this.context = context;
+    this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
   }
@@ -340,7 +341,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private BuckEventBus getBuckEventBus() {
-    return context.getBuckEventBus();
+    return contextSupplier.get().getBuckEventBus();
   }
 
   /**
@@ -352,7 +353,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   @SuppressForbidden
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
-      context.getConsole().printBuildFailure("No devices are found.");
+      getConsole().printBuildFailure("No devices are found.");
       return null;
     }
 
@@ -375,9 +376,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         boolean serialMatches = true;
         if (deviceOptions.getSerialNumber().isPresent()) {
           serialMatches = device.getSerialNumber().equals(deviceOptions.getSerialNumber().get());
-        } else if (context.getEnvironment().containsKey(SERIAL_NUMBER_ENV)) {
-          serialMatches =
-              device.getSerialNumber().equals(context.getEnvironment().get(SERIAL_NUMBER_ENV));
+        } else if (getEnvironment().containsKey(SERIAL_NUMBER_ENV)) {
+          serialMatches = device.getSerialNumber().equals(getEnvironment().get(SERIAL_NUMBER_ENV));
         }
 
         boolean deviceTypeMatches;
@@ -399,13 +399,12 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     // Filtered out all devices.
     if (onlineDevices == 0) {
-      context.getConsole().printBuildFailure("No devices are found.");
+      getConsole().printBuildFailure("No devices are found.");
       return null;
     }
 
     if (devices.isEmpty()) {
-      context
-          .getConsole()
+      getConsole()
           .printBuildFailure(
               String.format(
                   "Found %d connected device(s), but none of them matches specified filter.",
@@ -414,6 +413,10 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     return devices;
+  }
+
+  private ImmutableMap<String, String> getEnvironment() {
+    return contextSupplier.get().getEnvironment();
   }
 
   private RealAndroidDevice createDevice(IDevice device) {
@@ -470,7 +473,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
-      adb = createAdb(context);
+      adb = createAdb(contextSupplier.get());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -504,7 +507,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private Console getConsole() {
-    return context.getConsole();
+    return contextSupplier.get().getConsole();
   }
 
   private static Optional<Path> getApkFilePathFromProperties() {
@@ -536,7 +539,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     return adbCall(
         "install exopackage apk",
         device ->
-            new ExopackageInstaller(pathResolver, context, hasInstallableApk, device)
+            new ExopackageInstaller(pathResolver, contextSupplier.get(), hasInstallableApk, device)
                 .doInstall(processName),
         quiet);
   }

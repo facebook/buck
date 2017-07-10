@@ -29,7 +29,7 @@ public class AndroidDevicesHelperFactory {
     return new AdbHelper(
         context.getAdbOptions().get(),
         context.getTargetDeviceOptions().get(),
-        context,
+        () -> context,
         restartOnFailure);
   }
 }
