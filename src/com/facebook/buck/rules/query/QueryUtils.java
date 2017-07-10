@@ -67,7 +67,7 @@ public final class QueryUtils {
             PerfEventId.of("resolve_dep_query"),
             "target",
             target.toString())) {
-      QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env.getFunctions());
+      QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryTarget> queryTargets = parsedExp.eval(env);
       return queryTargets
           .stream()
@@ -92,7 +92,7 @@ public final class QueryUtils {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(), Optional.empty(), cellPathResolver, parserPattern, ImmutableSet.of());
-    QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env.getFunctions());
+    QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
     List<String> targetLiterals = new ArrayList<>();
     parsedExp.collectTargetPatterns(targetLiterals);
     return targetLiterals

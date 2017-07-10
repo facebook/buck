@@ -66,7 +66,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
     try {
-      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env.getFunctions());
+      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
       HashSet<String> targetLiterals = new HashSet<>();
       parsedExp.collectTargetPatterns(targetLiterals);
       return targetLiterals
@@ -109,7 +109,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             PerfEventId.of("resolve_query_macro"),
             "target",
             target.toString())) {
-      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env.getFunctions());
+      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
       Set<QueryTarget> queryTargets = parsedExp.eval(env);
       return queryTargets.stream();
     } catch (QueryException e) {

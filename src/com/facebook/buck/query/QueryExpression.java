@@ -55,9 +55,8 @@ import java.util.Collection;
 public abstract class QueryExpression {
 
   /** Scan and parse the specified query expression. */
-  public static QueryExpression parse(
-      String query, Iterable<QueryEnvironment.QueryFunction> functions) throws QueryException {
-    return QueryParser.parse(query, functions);
+  public static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
+    return QueryParser.parse(query, env);
   }
 
   protected QueryExpression() {}

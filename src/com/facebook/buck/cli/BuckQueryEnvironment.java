@@ -181,7 +181,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   public ImmutableSet<QueryTarget> evaluateQuery(String query)
       throws QueryException, InterruptedException {
-    return evaluateQuery(QueryExpression.parse(query, getFunctions()));
+    return evaluateQuery(QueryExpression.parse(query, this));
   }
 
   @Override
