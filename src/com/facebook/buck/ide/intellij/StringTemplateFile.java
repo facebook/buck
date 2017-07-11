@@ -50,7 +50,7 @@ enum StringTemplateFile {
   }
 
   public ST getST() throws IOException {
-    URL templateUrl = Resources.getResource(StringTemplateFile.class, fileName);
+    URL templateUrl = Resources.getResource(StringTemplateFile.class, "templates/" + fileName);
     String template = Resources.toString(templateUrl, StandardCharsets.UTF_8);
     return new ST(template, DELIMITER, DELIMITER);
   }
