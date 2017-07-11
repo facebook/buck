@@ -30,6 +30,7 @@ java_library(
         "ExplicitBuildTargetSourcePath.java",
         "ForwardingBuildTargetSourcePath.java",
         "PathSourcePath.java",
+        "SourcePathResolver.java",
     ],
     exported_deps = [
         ":archive_member_source_path",
@@ -245,7 +246,6 @@ java_immutables_library(
         "RecordFileSha1Step.java",
         "RuleKeyAppendable.java",
         "RuleKeyObjectSink.java",
-        "SourcePathResolver.java",
         "SourcePathRuleFinder.java",
         "SourceRoot.java",
         "TargetGraph.java",
@@ -498,6 +498,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         ":rule_key",
+        ":source_path",
         ":transformer",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
