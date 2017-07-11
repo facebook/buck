@@ -40,7 +40,7 @@ import org.immutables.value.Value;
  * targets and paths referenced from those inputs.
  */
 @BuckStyleImmutable
-@Value.Immutable(builder = false)
+@Value.Immutable(builder = false, prehash = true)
 abstract class AbstractTargetNode<T, U extends Description<T>>
     implements Comparable<TargetNode<?, ?>>, ObeysVisibility {
 
