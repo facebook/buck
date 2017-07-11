@@ -12,6 +12,7 @@ java_library(
         "//src/com/facebook/buck/android/agent:agent-lib",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
+        "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/android/agent/util:util",
     ],
     deps = [
