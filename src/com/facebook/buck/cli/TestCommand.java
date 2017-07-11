@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
@@ -593,8 +594,12 @@ public class TestCommand extends BuildCommand {
   @Override
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return super.getExecutionContextBuilder(params)
-        .setAdbOptions(Optional.of(getAdbOptions(params.getBuckConfig())))
-        .setTargetDeviceOptions(Optional.of(getTargetDeviceOptions()));
+        .setAndroidDevicesHelper(
+            AndroidDevicesHelperFactory.get(
+                this::getExecutionContext,
+                params.getBuckConfig(),
+                getAdbOptions(params.getBuckConfig()),
+                getTargetDeviceOptions()));
   }
 
   @Override

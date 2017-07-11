@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
-import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
@@ -50,7 +49,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -153,8 +151,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
-    Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
-
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
@@ -170,7 +166,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
               ((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
 
-    AndroidDevicesHelper adb = AndroidDevicesHelperFactory.get(executionContext, true);
+    AndroidDevicesHelper adb = executionContext.getAndroidDevicesHelper().get();
     AndroidDevice device;
     try {
       device = getSingleDevice(adb);
@@ -284,7 +280,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     return () -> {
       final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
       AndroidDevice device;
-      AndroidDevicesHelper adbHelper = AndroidDevicesHelperFactory.get(context, true);
+      AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
       try {
         device = getSingleDevice(adbHelper);
       } catch (InterruptedException e) {

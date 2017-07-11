@@ -980,9 +980,7 @@ public class BuildCommand extends AbstractCommand {
         .setTargetDevice(Optional.empty())
         .setCodeCoverageEnabled(isCodeCoverageEnabled())
         .setDebugEnabled(isDebugEnabled())
-        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths())
-        .setAdbOptions(Optional.empty())
-        .setTargetDeviceOptions(Optional.empty());
+        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths());
   }
 
   @SuppressWarnings("unused")

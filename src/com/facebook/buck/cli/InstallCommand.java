@@ -278,8 +278,7 @@ public class InstallCommand extends BuildCommand {
           DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
 
       if (buildRule instanceof HasInstallableApk) {
-        exitCode =
-            installApk(params, (HasInstallableApk) buildRule, getExecutionContext(), pathResolver);
+        exitCode = installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -324,8 +323,12 @@ public class InstallCommand extends BuildCommand {
   @Override
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return super.getExecutionContextBuilder(params)
-        .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
-        .setTargetDeviceOptions(Optional.of(targetDeviceOptions()));
+        .setAndroidDevicesHelper(
+            AndroidDevicesHelperFactory.get(
+                this::getExecutionContext,
+                params.getBuckConfig(),
+                adbOptions(params.getBuckConfig()),
+                targetDeviceOptions()));
   }
 
   private ImmutableSet<String> getInstallHelperTargets(
@@ -393,14 +396,11 @@ public class InstallCommand extends BuildCommand {
   }
 
   private int installApk(
-      CommandRunnerParams params,
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
       SourcePathResolver pathResolver)
       throws IOException, InterruptedException {
-    final AndroidDevicesHelper adbHelper =
-        AndroidDevicesHelperFactory.get(
-            executionContext, params.getBuckConfig().getRestartAdbOnFailure());
+    final AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
 
     // Uninstall the app first, if requested.
     if (shouldUninstallFirst()) {
