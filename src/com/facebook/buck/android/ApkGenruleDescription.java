@@ -57,7 +57,6 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
               + "installable rule, such as android_binary() or apk_genrule().",
           buildTarget, args.getApk().getFullyQualifiedName());
     }
-    HasInstallableApk installableApk = (HasInstallableApk) apk;
 
     final Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
@@ -70,7 +69,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(originalExtraDeps.get())
-                        .add(installableApk)
+                        .add(apk)
                         .build())),
         ruleFinder,
         args.getSrcs(),
@@ -78,7 +77,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         bash,
         cmdExe,
         args.getType(),
-        installableApk.getSourcePathToOutput(),
+        apk.getSourcePathToOutput(),
         args.getIsCacheable());
   }
 
