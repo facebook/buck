@@ -20,90 +20,121 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.NavigableMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * This simulates the state of a real device enough that we can verify that exo installation happens
  * correctly.
  */
 public class TestAndroidDevice implements AndroidDevice {
-  private final String abi;
-  // Persistent "device" state.
-  private final NavigableMap<String, String> deviceState;
-  private final Set<Path> directories;
-  private final Path apkPath;
-  private final Path agentApkPath;
-  private final Path installRoot;
-  private final String apkVersionCode;
-  private final Path apkDevicePath;
-  private final ProjectFilesystem filesystem;
-  private final String apkPackageName;
+  public static final String PACKAGE_INFO_PATH = "package.info";
+  private static final Path APK_INSTALL_DIR = Paths.get("/data/app/");
+  public static final Path APK_FILE_NAME = Paths.get("base.apk");
+  public final String abi;
 
-  private Optional<PackageInfo> deviceAgentPackageInfo;
-  private Optional<PackageInfo> fakePackageInfo;
-  private String packageSignature;
+  // Directory that holds persistent "device" state.
+  private final Path stateDirectory;
+  private final String serial;
+  private final ApkInfoReader apkInfoReader;
+
+  public Map<String, Path> getInstalledApks() throws Exception {
+    return listDirRecursive(APK_INSTALL_DIR)
+        .stream()
+        .filter(p -> p.getFileName().equals(APK_FILE_NAME))
+        .collect(
+            MoreCollectors.toImmutableMap(
+                p -> p.getParent().getFileName().toString(),
+                p -> resolve(APK_INSTALL_DIR.resolve(p))));
+  }
+
+  public Map<Path, Path> getInstalledFiles() throws Exception {
+    return Files.walk(stateDirectory)
+        .filter(s -> s.toFile().isFile())
+        .filter(p -> !p.startsWith(resolve(APK_INSTALL_DIR)))
+        .collect(MoreCollectors.toImmutableMap(this::toDevicePath, p -> p));
+  }
+
+  public interface ApkInfoReader {
+    ApkInfo read(File apk);
+  }
+
+  public static class ApkInfo {
+    final String packageName;
+    final String versionCode;
+
+    public ApkInfo(String packageName, String versionCode) {
+      this.packageName = packageName;
+      this.versionCode = versionCode;
+    }
+  }
 
   public TestAndroidDevice(
-      String abi,
-      Path apkPath,
-      Path agentApkPath,
-      Path installRoot,
-      String apkVersionCode,
-      Path apkDevicePath,
-      ProjectFilesystem filesystem,
-      String apkPackageName) {
+      ApkInfoReader apkInfoReader, Path stateDirectory, String serial, String abi) {
     this.abi = abi;
-    this.apkPath = apkPath;
-    this.agentApkPath = agentApkPath;
-    this.installRoot = installRoot;
-    this.apkVersionCode = apkVersionCode;
-    this.apkDevicePath = apkDevicePath;
-    this.filesystem = filesystem;
-    this.apkPackageName = apkPackageName;
-    this.deviceState = new TreeMap<>();
-    this.directories = new HashSet<>();
-    this.deviceAgentPackageInfo = Optional.empty();
-    this.fakePackageInfo = Optional.empty();
+    this.stateDirectory = stateDirectory;
+    this.serial = serial;
+    this.apkInfoReader = apkInfoReader;
   }
 
   @Override
   public boolean installApkOnDevice(
       File apk, boolean installViaSd, boolean quiet, boolean verifyTempWritable) {
     assertTrue(apk.isAbsolute());
-    if (apk.equals(agentApkPath.toFile())) {
-      deviceAgentPackageInfo =
-          Optional.of(
-              new PackageInfo(
-                  "/data/app/Agent.apk", "/data/data/whatever", AgentUtil.AGENT_VERSION_CODE));
-      return true;
-    } else if (apk.equals(apkPath.toFile())) {
-      fakePackageInfo =
-          Optional.of(
-              new PackageInfo(
-                  apkDevicePath.toString(), "/data/data/whatever_else", apkVersionCode));
-      try {
-        deviceState.put(apkDevicePath.toString(), filesystem.computeSha1(apkPath).toString());
-        packageSignature = AgentUtil.getJarSignature(apk.toString());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-      return true;
+    try {
+      ApkInfo apkInfo = apkInfoReader.read(apk);
+      Optional<PackageInfo> previousInfo = getPackageInfo(apkInfo.packageName);
+      previousInfo.ifPresent(
+          info -> {
+            if (info.versionCode.compareTo(apkInfo.versionCode) > 0) {
+              throw new RuntimeException();
+            }
+          });
+      Files.createDirectories(getPackageDirectory(apkInfo.packageName));
+      writePackageInfo(apkInfo);
+      Files.copy(
+          apk.toPath(), getApkPath(apkInfo.packageName), StandardCopyOption.REPLACE_EXISTING);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    throw new UnsupportedOperationException("apk path=" + apk);
+    return true;
+  }
+
+  private void writePackageInfo(ApkInfo apkInfo) throws IOException {
+    // apk path, native lib path, version code
+    Path packageDirectory = getPackageDirectory(apkInfo.packageName);
+    Path packageInfoPath = packageDirectory.resolve(PACKAGE_INFO_PATH);
+    Path apkPath = getApkPath(apkInfo.packageName);
+    Files.write(
+        packageInfoPath,
+        ImmutableList.of(
+            toDevicePath(apkPath).toString(),
+            toDevicePath(packageDirectory.resolve("libs")).toString(),
+            apkInfo.versionCode));
+  }
+
+  private Path toDevicePath(Path packageDirectory) {
+    return Paths.get("/").resolve(stateDirectory.relativize(packageDirectory));
+  }
+
+  private Path getApkPath(String packageName) {
+    return getPackageDirectory(packageName).resolve(APK_FILE_NAME);
+  }
+
+  private Path getPackageDirectory(String packageName) {
+    return resolve(APK_INSTALL_DIR.resolve(packageName));
   }
 
   @Override
@@ -112,41 +143,48 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
-    if (packageName.equals(AgentUtil.AGENT_PACKAGE_NAME)) {
-      return deviceAgentPackageInfo;
-    } else if (packageName.equals(apkPackageName)) {
-      return fakePackageInfo;
+  public Optional<PackageInfo> getPackageInfo(String packageName) throws IOException {
+    Path packageInfoPath = getPackageDirectory(packageName).resolve(PACKAGE_INFO_PATH);
+    if (packageInfoPath.toFile().exists()) {
+      List<String> lines = Files.readAllLines(packageInfoPath);
+      Preconditions.checkState(lines.size() == 3);
+      return Optional.of(new PackageInfo(lines.get(0), lines.get(1), lines.get(2)));
+    } else {
+      return Optional.empty();
     }
-    throw new UnsupportedOperationException("Tried to get package info " + packageName);
   }
 
   @Override
   public void uninstallPackage(String packageName) throws InstallException {
-    throw new UnsupportedOperationException();
+    try {
+      MoreFiles.deleteRecursively(getPackageDirectory(packageName));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
   public String getSignature(String packagePath) throws Exception {
-    assertTrue(deviceState.containsKey(packagePath));
-    return packageSignature;
+    Path apkPath = resolve(packagePath);
+    if (apkPath.toFile().exists()) {
+      return AgentUtil.getJarSignature(apkPath.toString());
+    }
+    return "";
   }
 
   @Override
   public ImmutableSortedSet<Path> listDirRecursive(Path dirPath) throws Exception {
-    String dir = dirPath.toString();
-    return deviceState
-        .subMap(dir, false, dir + new String(Character.toChars(255)), false)
-        .keySet()
-        .stream()
-        .map(f -> dirPath.relativize(Paths.get(f)))
+    Path devicePath = resolve(dirPath);
+    return Files.walk(devicePath)
+        .filter(s -> s.toFile().isFile())
+        .map(devicePath::relativize)
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   @Override
   public void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception {
     for (String s : filesToDelete) {
-      deviceState.remove(dirPath + "/" + s);
+      Files.delete(resolve(dirPath).resolve(s));
     }
   }
 
@@ -161,22 +199,14 @@ public class TestAndroidDevice implements AndroidDevice {
     // TODO(cjhopman): verify port and agentCommand
     assertTrue(targetDevicePath.isAbsolute());
     assertTrue(source.isAbsolute());
-    assertTrue(
-        String.format(
-            "Exopackage should only install files to the install root (%s, %s)",
-            installRoot, targetDevicePath),
-        targetDevicePath.startsWith(installRoot));
-    MoreAsserts.assertContainsOne(directories, targetDevicePath.getParent());
-    deviceState.put(targetDevicePath.toString(), filesystem.readFileIfItExists(source).get());
+    Path targetPath = resolve(targetDevicePath);
+    assertTrue(targetPath.getParent().toFile().exists());
+    Files.copy(source, targetPath);
   }
 
   @Override
   public void mkDirP(String dir) throws Exception {
-    Path dirPath = Paths.get(dir);
-    while (dirPath != null) {
-      directories.add(dirPath);
-      dirPath = dirPath.getParent();
-    }
+    Files.createDirectories(resolve(dir));
   }
 
   @Override
@@ -200,10 +230,15 @@ public class TestAndroidDevice implements AndroidDevice {
 
   @Override
   public String getSerialNumber() {
-    return "fake.serial";
+    return serial;
   }
 
-  public NavigableMap<String, String> getDeviceState() {
-    return deviceState;
+  private Path resolve(String path) {
+    return resolve(Paths.get(path));
+  }
+
+  private Path resolve(Path path) {
+    Preconditions.checkArgument(path.isAbsolute());
+    return stateDirectory.resolve(path.getRoot().relativize(path));
   }
 }

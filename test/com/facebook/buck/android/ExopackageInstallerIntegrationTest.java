@@ -35,13 +35,17 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -63,6 +67,7 @@ public class ExopackageInstallerIntegrationTest {
       ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
 
   @Rule public final TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public final TemporaryPaths deviceStateDirectory = new TemporaryPaths();
   private final Path apkPath = Paths.get("fake.apk");
   private final Path manifestPath = Paths.get("AndroidManifest.xml");
   private final Path dexDirectory = Paths.get("dex-dir");
@@ -71,7 +76,6 @@ public class ExopackageInstallerIntegrationTest {
   private final Path dexManifest = Paths.get("dex.manifest");
   private final Path nativeManifest = Paths.get("native.manifest");
   private final Path agentPath = Paths.get("agent.apk");
-  private final Path apkDevicePath = Paths.get("/data/app/Fake.apk");
 
   private ExoState currentBuildState;
   private ProjectFilesystem filesystem;
@@ -96,16 +100,12 @@ public class ExopackageInstallerIntegrationTest {
   // This should be done first in a test case as it doesn't clear the state directory (and we don't
   // expect BUCK to handle a device changing its abi).
   private void setupDeviceWithAbi(String abi) {
-    testDevice =
+    this.testDevice =
         new TestAndroidDevice(
-            abi,
-            filesystem.resolve(apkPath),
-            filesystem.resolve(agentPath),
-            INSTALL_ROOT,
-            apkVersionCode,
-            apkDevicePath,
-            filesystem,
-            FAKE_PACKAGE_NAME);
+            (apk) -> new TestAndroidDevice.ApkInfo(FAKE_PACKAGE_NAME, apkVersionCode),
+            deviceStateDirectory.getRoot(),
+            "fake.serial",
+            abi);
     this.device =
         new InstallLimitingAndroidDevice(
             testDevice, INSTALL_ROOT, filesystem.resolve(apkPath), filesystem.resolve(agentPath));
@@ -146,7 +146,8 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   private boolean devicePathExists(String path) {
-    return testDevice.getDeviceState().containsKey(INSTALL_ROOT.resolve(path).toString());
+    Path resolved = INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT).resolve(path);
+    return deviceStateDirectory.getRoot().resolve(resolved).toFile().exists();
   }
 
   @Test
@@ -452,14 +453,15 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   class ExpectedStateBuilder {
-    Map<String, String> expectedState = new TreeMap<>();
+    Map<String, String> expectedApkState = new TreeMap<>();
+    Map<String, String> expectedFilesState = new TreeMap<>();
 
-    void addApk(Path devicePath, Path hostPath) throws IOException {
-      expectedState.put(devicePath.toString(), filesystem.computeSha1(hostPath).toString());
+    void addApk(String packageName, Path hostPath) throws IOException {
+      expectedApkState.put(packageName, filesystem.computeSha1(hostPath).toString());
     }
 
     void addExoFile(String devicePath, String content) {
-      expectedState.put(INSTALL_ROOT.resolve(devicePath).toString(), content);
+      expectedFilesState.put(INSTALL_ROOT.resolve(devicePath).toString(), content);
     }
   }
 
@@ -476,7 +478,7 @@ public class ExopackageInstallerIntegrationTest {
     writeFakeApk(currentBuildState.apkContent);
     writeFile(manifestPath, currentBuildState.manifestContent);
 
-    builder.addApk(apkDevicePath, apkPath);
+    builder.addApk(FAKE_PACKAGE_NAME, apkPath);
 
     SourcePath apkSourcePath = new PathSourcePath(filesystem, apkPath);
     SourcePath manifestSourcePath = new PathSourcePath(filesystem, manifestPath);
@@ -587,8 +589,39 @@ public class ExopackageInstallerIntegrationTest {
       throw new RuntimeException(e);
     }
 
-    assertEquals(builder.expectedState, testDevice.getDeviceState());
+    verifyDeviceState(builder);
     device.assertExpectedInstallsAreConsumed();
+  }
+
+  private void verifyDeviceState(ExpectedStateBuilder expectedState) throws Exception {
+    Map<String, String> installedApks =
+        Maps.transformValues(
+            testDevice.getInstalledApks(),
+            (p -> {
+              try {
+                return filesystem.computeSha1(p).toString();
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            }));
+    assertEquals(expectedState.expectedApkState, installedApks);
+    Map<String, String> installedFiles =
+        testDevice
+            .getInstalledFiles()
+            .entrySet()
+            .stream()
+            .collect(
+                MoreCollectors.toImmutableMap(
+                    entry -> entry.getKey().toString(),
+                    entry -> {
+                      try {
+                        return Files.toString(
+                            Preconditions.checkNotNull(entry.getValue()).toFile(), Charsets.UTF_8);
+                      } catch (IOException e) {
+                        throw new RuntimeException(e);
+                      }
+                    }));
+    assertEquals(expectedState.expectedFilesState, installedFiles);
   }
 
   private void writeFakeApk(String apkContent) throws IOException {
