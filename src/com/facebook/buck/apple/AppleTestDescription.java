@@ -279,7 +279,7 @@ public class AppleTestDescription
             appleConfig.cacheBundlesAndPackages());
     resolver.addToIndex(bundle);
 
-    Optional<SourcePath> xctool = getXctool(buildTarget, projectFilesystem, params, resolver);
+    Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new AppleTest(
@@ -309,10 +309,7 @@ public class AppleTestDescription
   }
 
   private Optional<SourcePath> getXctool(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
@@ -329,7 +326,7 @@ public class AppleTestDescription
             params.withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule)).withoutExtraDeps();
         resolver.addToIndex(
             new AbstractBuildRuleWithDeclaredAndExtraDeps(
-                buildTarget, projectFilesystem, unzipXctoolParams) {
+                unzipXctoolTarget, projectFilesystem, unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context, BuildableContext buildableContext) {
