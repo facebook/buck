@@ -126,7 +126,7 @@ public class CachingBuildEngineFactory {
           buildRuleResolver,
           buildInfoStoreManager,
           ruleFinder,
-          new SourcePathResolver(ruleFinder),
+          DefaultSourcePathResolver.from(ruleFinder),
           ruleKeyFactories.get(),
           resourceAwareSchedulingInfo,
           logBuildRuleFailuresInline,

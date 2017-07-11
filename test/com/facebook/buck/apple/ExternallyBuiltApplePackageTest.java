@@ -29,6 +29,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -76,7 +77,7 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void sdkrootEnvironmentVariableIsSet() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -102,7 +103,7 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void outputContainsCorrectExtension() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -122,7 +123,7 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void commandContainsCorrectCommand() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(this.resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(this.resolver));
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -185,7 +186,7 @@ public class ExternallyBuiltApplePackageTest {
         0,
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
-        new SourcePathResolver(ruleFinder),
+        DefaultSourcePathResolver.from(ruleFinder),
         ruleFinder);
   }
 }

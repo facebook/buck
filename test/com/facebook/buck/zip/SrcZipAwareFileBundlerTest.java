@@ -21,11 +21,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellPathResolver;
@@ -70,7 +70,7 @@ public class SrcZipAwareFileBundlerTest {
     bundler.copy(
         filesystem,
         FakeBuildContext.withSourcePathResolver(
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())))),

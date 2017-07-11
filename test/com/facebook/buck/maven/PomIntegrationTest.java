@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -77,7 +78,7 @@ public class PomIntegrationTest {
   private final BuildRuleResolver ruleResolver =
       new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   private final SourcePathResolver pathResolver =
-      new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
 
@@ -197,7 +198,7 @@ public class PomIntegrationTest {
           BuildTargetFactory.newInstance(target),
           filesystem,
           TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-          new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)));
       this.coords = coords;
       this.pomTemplate = pomTemplate;
     }

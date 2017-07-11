@@ -38,6 +38,7 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
@@ -107,7 +108,7 @@ public class DistBuildFileHashesTest {
       buildRuleResolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-      sourcePathResolver = new SourcePathResolver(ruleFinder);
+      sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       BuckConfig buckConfig = createBuckConfig();

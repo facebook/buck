@@ -103,7 +103,7 @@ public class SymlinkTreeTest {
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
@@ -156,7 +156,7 @@ public class SymlinkTreeTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
@@ -202,7 +202,7 @@ public class SymlinkTreeTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(symlinkTreeBuildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -283,7 +283,8 @@ public class SymlinkTreeTest {
   public void resolveDuplicateRelativePathsIsNoopWhenThereAreNoDuplicates() {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     ImmutableSortedSet<SourcePath> sourcePaths =
         ImmutableSortedSet.of(
@@ -303,7 +304,8 @@ public class SymlinkTreeTest {
   public void resolveDuplicateRelativePaths() throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("one").toFile().mkdir();
     tmp.getRoot().resolve("two").toFile().mkdir();
     ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRoot().resolve("one"));
@@ -327,7 +329,8 @@ public class SymlinkTreeTest {
   public void resolveDuplicateRelativePathsWithConflicts() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("a-fs").toFile().mkdir();
     tmp.getRoot().resolve("b-fs").toFile().mkdir();
     tmp.getRoot().resolve("c-fs").toFile().mkdir();

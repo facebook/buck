@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -208,7 +209,7 @@ public class DistBuildFileHashesIntegrationTest {
             BuckEventBusForTests.newInstance(), true, false, targetGraph, KEY_SEED);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();

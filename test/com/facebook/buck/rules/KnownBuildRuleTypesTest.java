@@ -173,7 +173,7 @@ public class KnownBuildRuleTypesTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(javac, MorePaths.asByteSource(javac).hash(Hashing.sha1())));

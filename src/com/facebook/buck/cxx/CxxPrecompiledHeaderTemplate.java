@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -70,7 +71,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
     this.ruleResolver = ruleResolver;
     this.sourcePath = sourcePath;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    this.pathResolver = new SourcePathResolver(ruleFinder);
+    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {

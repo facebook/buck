@@ -64,6 +64,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -530,7 +531,8 @@ public class BuildCommand extends AbstractCommand {
 
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
         SourcePathResolver pathResolver =
-            new SourcePathResolver(new SourcePathRuleFinder(graphs.actionGraph.getResolver()));
+            DefaultSourcePathResolver.from(
+                new SourcePathRuleFinder(graphs.actionGraph.getResolver()));
         projectFilesystem.copyFile(
             pathResolver.getAbsolutePath(output), outputPathForSingleBuildTarget);
       }
@@ -584,7 +586,7 @@ public class BuildCommand extends AbstractCommand {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     DistBuildFileHashes distributedBuildFileHashes =
         new DistBuildFileHashes(
@@ -779,7 +781,7 @@ public class BuildCommand extends AbstractCommand {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (showRuleKey) {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed());
       ruleKeyFactory =

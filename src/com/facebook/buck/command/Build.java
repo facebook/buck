@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
@@ -158,7 +159,7 @@ public class Build implements Closeable {
             .setBuildContext(
                 BuildContext.builder()
                     .setSourcePathResolver(
-                        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)))
+                        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
                     .setBuildCellRootPath(rootCell.getRoot())
                     .setJavaPackageFinder(javaPackageFinder)
                     .setEventBus(executionContext.getBuckEventBus())
@@ -279,7 +280,7 @@ public class Build implements Closeable {
         BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
 
         SourcePathResolver pathResolver =
-            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
         BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
 
         if (isKeepGoing) {

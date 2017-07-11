@@ -63,6 +63,7 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -153,7 +154,7 @@ public class SuperConsoleEventBusListenerTest {
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -543,7 +544,7 @@ public class SuperConsoleEventBusListenerTest {
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -1019,7 +1020,7 @@ public class SuperConsoleEventBusListenerTest {
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -1270,7 +1271,7 @@ public class SuperConsoleEventBusListenerTest {
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -1518,7 +1519,7 @@ public class SuperConsoleEventBusListenerTest {
   @Test
   public void testFailingTest() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -1794,7 +1795,7 @@ public class SuperConsoleEventBusListenerTest {
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

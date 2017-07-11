@@ -25,9 +25,9 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.step.Step;
@@ -49,7 +49,7 @@ public class JsBundleWorkerJobArgsTest {
     scenario = JsTestScenario.builder().build();
     context =
         FakeBuildContext.withSourcePathResolver(
-            new SourcePathResolver(new SourcePathRuleFinder(scenario.resolver)));
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
     fakeBuildableContext = new FakeBuildableContext();
   }
 

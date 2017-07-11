@@ -45,6 +45,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -331,7 +332,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // Verify that android_build_config() was processed correctly.
     Flavor flavor = InternalFlavor.of("buildconfig_com_example_buck");
     final SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget enhancedBuildConfigTarget =
         BuildTarget.builder(apkTarget).addFlavors(flavor).build();
     assertEquals(
@@ -547,7 +548,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     FakeBuildRule resourcesDep =
         ruleResolver.addToIndex(

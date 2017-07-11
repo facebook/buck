@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
@@ -70,7 +71,7 @@ public class ExportFileDescription
 
     SourcePath src;
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
           && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {

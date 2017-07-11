@@ -37,7 +37,7 @@ public class FakeBuildEngineTest {
   public void buildRuleFutureHasResult() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -68,7 +68,7 @@ public class FakeBuildEngineTest {
   public void buildRuleResultIsPresent() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -86,7 +86,7 @@ public class FakeBuildEngineTest {
   public void buildRuleIsBuilt() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -104,7 +104,7 @@ public class FakeBuildEngineTest {
   public void unbuiltRuleIsNotBuilt() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -123,7 +123,7 @@ public class FakeBuildEngineTest {
   public void ruleKeyIsPresent() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

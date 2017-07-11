@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -158,7 +159,8 @@ public class UninstallCommand extends AbstractCommand {
             getExecutionContext(), params.getBuckConfig().getRestartAdbOnFailure());
 
     // Find application package name from manifest and uninstall from matching devices.
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     String appId =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
     return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;

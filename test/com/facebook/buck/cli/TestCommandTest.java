@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.RelativeCellName;
@@ -52,7 +53,7 @@ public class TestCommandTest {
   @Test
   public void testFilterBuilds() throws CmdLineException {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -89,7 +90,7 @@ public class TestCommandTest {
   @Test
   public void testLabelConjunctionsWithInclude() throws CmdLineException {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -119,7 +120,7 @@ public class TestCommandTest {
   @Test
   public void testLabelConjunctionsWithExclude() throws CmdLineException {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -154,7 +155,7 @@ public class TestCommandTest {
         new FakeTestRule(
             ImmutableSet.of("a", "b", "c"),
             BuildTargetFactory.newInstance("//:for"),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -175,7 +176,7 @@ public class TestCommandTest {
         new FakeTestRule(
             ImmutableSet.of("a", "b", "c"),
             BuildTargetFactory.newInstance("//:for"),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -191,7 +192,7 @@ public class TestCommandTest {
   @Test
   public void testNoTransitiveTests() throws CmdLineException {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -231,7 +232,7 @@ public class TestCommandTest {
   @Test
   public void testNoTransitiveTestsWhenLabelExcludeWins() throws CmdLineException {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -315,7 +316,7 @@ public class TestCommandTest {
         new FakeTestRule(
             /* labels */ ImmutableSet.of(excludedLabel),
             BuildTargetFactory.newInstance("//example:test"),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),

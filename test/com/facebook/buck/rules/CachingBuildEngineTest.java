@@ -166,7 +166,7 @@ public class CachingBuildEngineTest {
       new SourcePathRuleFinder(
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
-      new SourcePathResolver(DEFAULT_RULE_FINDER);
+      DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
   private static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
   private static final RuleKeyFieldLoader FIELD_LOADER = new RuleKeyFieldLoader(0);
   private static final DefaultRuleKeyFactory NOOP_RULE_KEY_FACTORY =
@@ -238,7 +238,7 @@ public class CachingBuildEngineTest {
       resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       ruleFinder = new SourcePathRuleFinder(resolver);
-      pathResolver = new SourcePathResolver(ruleFinder);
+      pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       defaultRuleKeyFactory =
           new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, pathResolver, ruleFinder);
       inputBasedRuleKeyFactory =

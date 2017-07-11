@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -74,7 +75,8 @@ public class JavaAnnotationProcessorDescription
     propsBuilder.setSupportsAbiGenerationFromSource(args.isSupportsAbiGenerationFromSource());
     JavacPluginProperties properties = propsBuilder.build();
 
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     return new JavaAnnotationProcessor(
         buildTarget,
         projectFilesystem,

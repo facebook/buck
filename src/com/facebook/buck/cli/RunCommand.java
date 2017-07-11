@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -147,7 +148,7 @@ public final class RunCommand extends AbstractCommand {
     // or some other process that is meant to "run forever," then it's pretty common to do:
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
     SourcePathResolver resolver =
-        new SourcePathResolver(new SourcePathRuleFinder(build.getRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
     Tool executable = binaryBuildRule.getExecutableCommand();
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     ProcessExecutorParams processExecutorParams =

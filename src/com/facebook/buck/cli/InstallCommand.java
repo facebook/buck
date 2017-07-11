@@ -47,6 +47,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.InstallTrigger;
@@ -274,7 +275,7 @@ public class InstallCommand extends BuildCommand {
 
       BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
       SourcePathResolver pathResolver =
-          new SourcePathResolver(new SourcePathRuleFinder(build.getRuleResolver()));
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
 
       if (buildRule instanceof HasInstallableApk) {
         exitCode =

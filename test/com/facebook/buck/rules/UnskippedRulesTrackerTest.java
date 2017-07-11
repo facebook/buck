@@ -63,7 +63,7 @@ public class UnskippedRulesTrackerTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    sourcePathResolver = new SourcePathResolver(ruleFinder);
+    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);
     eventBus = new DefaultBuckEventBus(new FakeClock(1), new BuildId());

@@ -25,10 +25,10 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -111,7 +111,7 @@ public class WorkerMacroArgTest {
     BuildRule nonWorkerBuildRule =
         new FakeBuildRule(
             BuildTargetFactory.newInstance("//:not_worker_rule"),
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
     resolver.addToIndex(nonWorkerBuildRule);
 
     MacroHandler macroHandler =

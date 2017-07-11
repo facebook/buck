@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -97,7 +98,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     params = JsUtil.withWorkerDependencyOnly(params, resolver, args.getWorker());
 
     final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
     try {
       sourcesToFlavors =

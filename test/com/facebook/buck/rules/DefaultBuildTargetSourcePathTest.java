@@ -33,7 +33,8 @@ public class DefaultBuildTargetSourcePathTest {
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     rule.setOutputFile(null);
     resolver.addToIndex(rule);
@@ -51,7 +52,8 @@ public class DefaultBuildTargetSourcePathTest {
   public void mustUseProjectFilesystemToResolvePathToFile() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     rule.setOutputFile("cheese");
     resolver.addToIndex(rule);

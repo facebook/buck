@@ -24,6 +24,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
@@ -69,7 +70,8 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   public String expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
       throws MacroException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     return expand(pathResolver, resolve(resolver, input));
   }
 

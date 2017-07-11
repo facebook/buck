@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -70,7 +71,7 @@ public class CxxCompilationDatabaseTest {
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(testBuildRuleResolver));
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(

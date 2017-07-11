@@ -206,7 +206,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
-    this.pathResolver = new SourcePathResolver(ruleFinder);
+    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     this.buildInfoStoreManager = buildInfoStoreManager;
 
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();

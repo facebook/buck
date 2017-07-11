@@ -23,6 +23,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -70,7 +71,8 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       QueryOutputsMacro input,
       QueryResults precomputedWork)
       throws MacroException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     return precomputedWork
         .results
         .stream()

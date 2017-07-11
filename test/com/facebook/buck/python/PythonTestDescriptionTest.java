@@ -31,6 +31,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -144,7 +145,8 @@ public class PythonTestDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     PythonTest test = builder.build(resolver, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
     ImmutableList<? extends Step> buildSteps =
@@ -571,7 +573,7 @@ public class PythonTestDescriptionTest {
             new RuleKeyFieldLoader(0),
             StackedFileHashCache.createDefaultHashCaches(
                 rule.getProjectFilesystem(), FileHashCacheMode.PREFIX_TREE),
-            new SourcePathResolver(ruleFinder),
+            DefaultSourcePathResolver.from(ruleFinder),
             ruleFinder);
     return ruleKeyFactory.build(rule);
   }

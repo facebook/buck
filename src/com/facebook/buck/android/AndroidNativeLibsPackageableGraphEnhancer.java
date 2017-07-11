@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -96,7 +97,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.originalBuildTarget = originalBuildTarget;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
-    this.pathResolver = new SourcePathResolver(ruleFinder);
+    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     this.buildRuleParams = originalParams;
     this.ruleResolver = ruleResolver;
     this.nativePlatforms = nativePlatforms;

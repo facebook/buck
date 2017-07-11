@@ -215,7 +215,7 @@ public class TargetNodeVisibilityTest {
           buildTarget,
           projectFilesystem,
           params,
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
     }
 
     @BuckStyleImmutable

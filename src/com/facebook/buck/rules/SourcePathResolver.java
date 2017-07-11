@@ -41,7 +41,7 @@ public class SourcePathResolver {
 
   private final SourcePathRuleFinder ruleFinder;
 
-  public SourcePathResolver(SourcePathRuleFinder ruleFinder) {
+  SourcePathResolver(SourcePathRuleFinder ruleFinder) {
     this.ruleFinder = ruleFinder;
   }
 

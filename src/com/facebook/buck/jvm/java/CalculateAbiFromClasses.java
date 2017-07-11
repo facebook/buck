@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -90,7 +91,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
         libraryParams
             .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library)))
             .withoutExtraDeps(),
-        new SourcePathResolver(ruleFinder),
+        DefaultSourcePathResolver.from(ruleFinder),
         library,
         sourceAbiCompatible);
   }

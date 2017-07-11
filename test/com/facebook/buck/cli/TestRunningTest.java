@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
@@ -123,7 +124,7 @@ public class TestRunningTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder = createMock(DefaultJavaPackageFinder.class);
@@ -160,7 +161,7 @@ public class TestRunningTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder = createMock(DefaultJavaPackageFinder.class);
@@ -195,7 +196,7 @@ public class TestRunningTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder = createMock(DefaultJavaPackageFinder.class);
@@ -225,7 +226,7 @@ public class TestRunningTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder = createMock(DefaultJavaPackageFinder.class);
@@ -276,7 +277,7 @@ public class TestRunningTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder = createMock(DefaultJavaPackageFinder.class);
@@ -436,7 +437,7 @@ public class TestRunningTest {
             separateTest1Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -454,7 +455,7 @@ public class TestRunningTest {
             separateTest2Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -472,7 +473,7 @@ public class TestRunningTest {
             separateTest3Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -514,7 +515,7 @@ public class TestRunningTest {
             service,
             fakeBuildEngine,
             stepRunner,
-            FakeBuildContext.withSourcePathResolver(new SourcePathResolver(ruleFinder)),
+            FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder)),
             ruleFinder);
 
     assertThat(ret, equalTo(0));
@@ -555,7 +556,7 @@ public class TestRunningTest {
             separateTest1Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -573,7 +574,7 @@ public class TestRunningTest {
             separateTest2Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -591,7 +592,7 @@ public class TestRunningTest {
             separateTest3Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -610,7 +611,7 @@ public class TestRunningTest {
             parallelTest1Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -629,7 +630,7 @@ public class TestRunningTest {
             parallelTest2Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -648,7 +649,7 @@ public class TestRunningTest {
             parallelTest3Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
@@ -713,7 +714,7 @@ public class TestRunningTest {
             service,
             fakeBuildEngine,
             stepRunner,
-            FakeBuildContext.withSourcePathResolver(new SourcePathResolver(ruleFinder)),
+            FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder)),
             ruleFinder);
 
     assertThat(ret, equalTo(0));
@@ -800,7 +801,7 @@ public class TestRunningTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeTestRule failingTest =
         new FakeTestRule(
             failingTestTarget,

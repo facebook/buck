@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -56,7 +57,7 @@ public class BuildThreadStateRendererTest {
   private static final Function<Long, String> FORMAT_TIME_FUNCTION =
       timeMs -> String.format(Locale.US, "%.1fs", timeMs / 1000.0);
   private static final SourcePathResolver PATH_RESOLVER =
-      new SourcePathResolver(
+      DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
               new BuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

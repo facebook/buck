@@ -35,7 +35,8 @@ public class BuildTargetSourcePathTest {
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     rule.setOutputFile(null);
     resolver.addToIndex(rule);
@@ -53,7 +54,8 @@ public class BuildTargetSourcePathTest {
   public void mustUseProjectFilesystemToResolvePathToFile() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildRule rule =
         new FakeBuildRule(target, pathResolver) {
           @Override
@@ -81,7 +83,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void explicitlySetPath() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -97,7 +99,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void explicitlySetSourcePathExplicitTarget() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -120,7 +122,8 @@ public class BuildTargetSourcePathTest {
   public void explicitlySetSourcePathImplicitTarget() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     FakeBuildRule rule1 =
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:baz"), pathResolver);
     resolver.addToIndex(rule1);
@@ -143,7 +146,8 @@ public class BuildTargetSourcePathTest {
   public void explicitlySetSourcePathChainsToPathSourcePath() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     FakeBuildRule rule1 =
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:rule1"), pathResolver);
     resolver.addToIndex(rule1);
@@ -169,7 +173,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void sameBuildTargetsWithDifferentPathsAreDifferent() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

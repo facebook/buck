@@ -31,6 +31,7 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -78,7 +79,7 @@ public class MavenCoordinatesMacroExpanderTest {
         FakeBuildRule.class.isAssignableFrom(HasMavenCoordinates.class));
 
     SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildRule rule = new FakeBuildRule("//test:foo", sourcePathResolver);
 
     try {

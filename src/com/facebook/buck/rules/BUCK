@@ -228,6 +228,7 @@ java_immutables_library(
         "BuildRules.java",
         "BuildableContext.java",
         "ConstantToolProvider.java",
+        "DefaultSourcePathResolver.java",
         "DependencyAggregation.java",
         "Description.java",
         "ExportDependencies.java",

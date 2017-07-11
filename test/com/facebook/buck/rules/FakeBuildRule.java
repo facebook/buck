@@ -73,7 +73,7 @@ public class FakeBuildRule extends AbstractBuildRuleWithResolver implements Buil
   }
 
   private static SourcePathResolver newSourcePathResolver() {
-    return new SourcePathResolver(
+    return DefaultSourcePathResolver.from(
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

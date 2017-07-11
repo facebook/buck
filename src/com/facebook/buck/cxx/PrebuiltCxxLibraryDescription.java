@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -327,7 +328,7 @@ public class PrebuiltCxxLibraryDescription
       throws NoSuchBuildTargetException {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyHeaders(
             buildTarget, ruleFinder, pathResolver, "exported_headers", args.getExportedHeaders()));
@@ -360,7 +361,7 @@ public class PrebuiltCxxLibraryDescription
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     String soname =
         getSoname(
@@ -507,7 +508,7 @@ public class PrebuiltCxxLibraryDescription
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     SourcePath sharedLibrary =
         requireSharedLibrary(
@@ -603,7 +604,7 @@ public class PrebuiltCxxLibraryDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     final boolean headerOnly = args.getHeaderOnly().orElse(false);
     final boolean forceStatic = args.getForceStatic().orElse(false);
     return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {

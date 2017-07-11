@@ -45,6 +45,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -220,7 +221,7 @@ public class CxxLuaExtensionDescription
           ruleResolver, args, cxxPlatform, buildTarget, projectFilesystem);
     }
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String extensionName = getExtensionName(buildTarget, cxxPlatform);
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -288,7 +289,7 @@ public class CxxLuaExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxLuaExtension(buildTarget, projectFilesystem, params) {
 
       @Override

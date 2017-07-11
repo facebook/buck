@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -51,7 +52,7 @@ public class CxxPrepareForLinkStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> dummyArgs =
@@ -139,7 +140,7 @@ public class CxxPrepareForLinkStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =

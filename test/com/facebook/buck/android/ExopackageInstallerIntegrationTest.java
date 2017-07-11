@@ -33,6 +33,7 @@ import com.facebook.buck.android.exopackage.PackageInfo;
 import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
@@ -675,7 +676,7 @@ public class ExopackageInstallerIntegrationTest {
       int expectedLibsInstalled,
       int expectedResourcesInstalled)
       throws Exception {
-    SourcePathResolver pathResolver = new SourcePathResolver(null);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(null);
 
     ExpectedStateBuilder builder = new ExpectedStateBuilder();
 

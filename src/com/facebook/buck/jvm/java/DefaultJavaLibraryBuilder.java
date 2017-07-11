@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -92,7 +93,7 @@ public class DefaultJavaLibraryBuilder {
     this.javaBuckConfig = javaBuckConfig;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    sourcePathResolver = new SourcePathResolver(ruleFinder);
+    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
   }
 
@@ -111,7 +112,7 @@ public class DefaultJavaLibraryBuilder {
     this.cellRoots = cellRoots;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    sourcePathResolver = new SourcePathResolver(ruleFinder);
+    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     javaBuckConfig = null;
   }
 

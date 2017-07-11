@@ -46,6 +46,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
@@ -322,7 +323,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
@@ -384,7 +385,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
-                  new SourcePathResolver(new SourcePathRuleFinder(resolver)), args.getSrcs())
+                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
+                  args.getSrcs())
               .isEmpty();
       return hasSwiftSource
           ? Optional.of(
@@ -394,7 +396,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
         delegateArgsBuilder,
         args,
         buildTarget);

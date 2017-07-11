@@ -25,11 +25,11 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -98,7 +98,8 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
     compileStepFactory.setCompileAbi(outputJar);
     this.outputJarContents =
-        new JarContentsSupplier(new SourcePathResolver(ruleFinder), getSourcePathToOutput());
+        new JarContentsSupplier(
+            DefaultSourcePathResolver.from(ruleFinder), getSourcePathToOutput());
   }
 
   @Override

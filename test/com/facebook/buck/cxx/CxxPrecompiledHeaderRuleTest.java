@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -102,7 +103,7 @@ public class CxxPrecompiledHeaderRuleTest {
   public final BuildRuleResolver ruleResolver =
       new BuildRuleResolver(TargetGraph.EMPTY, transformer);
   public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-  public final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+  public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
   public final Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(ruleResolver);
 
@@ -145,7 +146,7 @@ public class CxxPrecompiledHeaderRuleTest {
         .setProjectFilesystem(projectFilesystem)
         .setResolver(ruleResolver)
         .setRuleFinder(ruleFinder)
-        .setPathResolver(new SourcePathResolver(ruleFinder))
+        .setPathResolver(DefaultSourcePathResolver.from(ruleFinder))
         .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
         .setPicType(AbstractCxxSourceRuleFactory.PicType.PIC)
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);

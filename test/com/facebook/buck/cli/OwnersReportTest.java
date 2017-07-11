@@ -31,9 +31,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -76,7 +76,7 @@ public class OwnersReportTest {
           buildTarget,
           projectFilesystem,
           params,
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
     }
 
     @BuckStyleImmutable

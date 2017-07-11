@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -112,7 +113,8 @@ public class OcamlRuleBuilder {
       final ImmutableList<String> linkerFlags,
       boolean buildNativePlugin)
       throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     boolean noYaccOrLexSources =
         FluentIterable.from(srcs)
             .transform(OcamlSource::getSource)
@@ -209,7 +211,7 @@ public class OcamlRuleBuilder {
                     .filter(CxxPreprocessorDep.class::isInstance)));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(params.getBuildDeps())
@@ -363,7 +365,7 @@ public class OcamlRuleBuilder {
                     .filter(CxxPreprocessorDep.class::isInstance)));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(params.getBuildDeps())

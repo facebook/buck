@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -56,7 +57,7 @@ public class LuaLibraryDescription
       CellPathResolver cellRoots,
       final LuaLibraryDescriptionArg args) {
     final SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(buildTarget, projectFilesystem, params) {
 
       @Override

@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
@@ -413,7 +414,7 @@ public class AppleBinaryDescription
     ImmutableSortedSet<BuildTarget> extraCxxDeps = extraCxxDepsBuilder.build();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     Optional<Path> stubBinaryPath = getStubBinaryPath(buildTarget, args);
     if (shouldUseStubBinary(buildTarget) && stubBinaryPath.isPresent()) {
@@ -478,7 +479,7 @@ public class AppleBinaryDescription
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
           delegateArg,
           args,
           buildTarget);

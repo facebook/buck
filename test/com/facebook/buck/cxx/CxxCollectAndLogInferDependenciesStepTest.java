@@ -30,6 +30,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -218,7 +219,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(testBuildRuleResolver));
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
@@ -286,7 +287,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(testBuildRuleResolver));
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 

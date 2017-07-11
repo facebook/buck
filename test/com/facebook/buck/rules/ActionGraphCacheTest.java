@@ -266,7 +266,7 @@ public class ActionGraphCacheTest {
       Iterable<BuildRule> buildRules, BuildRuleResolver buildRuleResolver) {
     RuleKeyFieldLoader ruleKeyFieldLoader = new RuleKeyFieldLoader(0);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
         new ContentAgnosticRuleKeyFactory(ruleKeyFieldLoader, pathResolver, ruleFinder);
 

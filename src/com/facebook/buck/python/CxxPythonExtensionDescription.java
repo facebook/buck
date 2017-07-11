@@ -47,6 +47,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -277,7 +278,7 @@ public class CxxPythonExtensionDescription
       CxxPythonExtensionDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     String extensionName = getExtensionName(moduleName);
     Path extensionPath =
@@ -364,7 +365,7 @@ public class CxxPythonExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     final Path module = baseModule.resolve(getExtensionName(moduleName));
