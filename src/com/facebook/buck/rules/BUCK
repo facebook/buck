@@ -22,9 +22,10 @@ java_library(
     deps = ["//third-party/java/guava:guava"],
 )
 
-java_library(
+java_immutables_library(
     name = "source_path",
     srcs = [
+        "AbstractExopackageInfo.java",
         "BuildTargetSourcePath.java",
         "DefaultBuildTargetSourcePath.java",
         "ExplicitBuildTargetSourcePath.java",
@@ -41,6 +42,7 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
     ],
 )
@@ -207,7 +209,6 @@ java_immutables_library(
         "AbstractBuildRuleType.java",
         "AbstractBuildRuleWithDeclaredAndExtraDeps.java",
         "AbstractBuildRuleWithResolver.java",
-        "AbstractExopackageInfo.java",
         "AbstractExternalTestRunnerTestSpec.java",
         "AbstractSourceWithFlags.java",
         "AbstractTargetGraphAndBuildTargets.java",
