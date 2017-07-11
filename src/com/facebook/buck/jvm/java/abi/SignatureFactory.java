@@ -28,6 +28,7 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -340,6 +341,13 @@ class SignatureFactory {
           protected Boolean defaultAction(TypeMirror e, Void aVoid) {
             throw new IllegalArgumentException(
                 String.format("Unexpected type kind: %s", e.getKind()));
+          }
+
+          @Override
+          public Boolean visitError(ErrorType t, Void aVoid) {
+            // We don't really know, but if there's an ErrorType it means compilation is going to
+            // fail anyway so it doesn't matter.
+            return false;
           }
 
           @Override

@@ -18,6 +18,20 @@ java_library(
     ],
 )
 
+java_library(
+    name = "main-errors",
+    deps = [
+        ":lib-errors",
+    ],
+)
+
+java_library(
+    name = "lib-errors",
+    srcs = [
+        "LibErrors.java",
+    ],
+)
+
 java_annotation_processor(
     name = "ap",
     deps = [

@@ -93,4 +93,10 @@ public class CalculateAbiFromSourceIntegrationTest {
               .getValue(CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME));
     }
   }
+
+  @Test
+  public void testErrorsReportedGracefully() throws IOException {
+    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
+    buildResult.assertFailure("cannot find symbol");
+  }
 }
