@@ -24,9 +24,12 @@ import com.facebook.buck.android.exopackage.DexExoHelper;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
+import com.google.common.base.Joiner;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /** This allows limiting the number of apks/dexes/etc that are installed to a device. Useful */
 class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
@@ -35,6 +38,11 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
   private int allowedInstalledDexes;
   private int allowedInstalledLibs;
   private int allowedInstalledResources;
+
+  private List<Path> installedApks;
+  private List<Path> installedDexes;
+  private List<Path> installedLibs;
+  private List<Path> installedResources;
 
   private final Path apkPath;
   private final Path agentApkPath;
@@ -51,14 +59,22 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     allowedInstalledDexes = 0;
     allowedInstalledLibs = 0;
     allowedInstalledResources = 0;
+
+    installedApks = new ArrayList<>();
+    installedDexes = new ArrayList<>();
+    installedLibs = new ArrayList<>();
+    installedResources = new ArrayList<>();
   }
 
   @Override
   public boolean installApkOnDevice(
       File apk, boolean installViaSd, boolean quiet, boolean verifyTempWritable) {
     if (apk.equals(apkPath.toFile())) {
+      installedApks.add(apk.toPath());
       allowedInstalledApks--;
-      assertTrue(allowedInstalledApks >= 0);
+      assertTrue(
+          String.format("Installed paths: [%s]", Joiner.on(", ").join(installedApks)),
+          allowedInstalledApks >= 0);
     } else {
       if (!apk.equals(agentApkPath.toFile())) {
         throw new UnsupportedOperationException("apk path=" + apk);
@@ -76,20 +92,30 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
         targetDevicePath.startsWith(installRoot));
 
     Path relativePath = installRoot.relativize(targetDevicePath);
+
     if (relativePath.startsWith(DexExoHelper.SECONDARY_DEX_DIR)) {
+      installedDexes.add(source);
       if (!relativePath.getFileName().equals(Paths.get("metadata.txt"))) {
         allowedInstalledDexes--;
-        assertTrue(allowedInstalledDexes >= 0);
+        assertTrue(
+            String.format("Installed paths: [%s]", Joiner.on(", ").join(installedDexes)),
+            allowedInstalledDexes >= 0);
       }
     } else if (relativePath.startsWith(NativeExoHelper.NATIVE_LIBS_DIR)) {
+      installedLibs.add(source);
       if (!relativePath.getFileName().equals(Paths.get("metadata.txt"))) {
         allowedInstalledLibs--;
-        assertTrue(allowedInstalledLibs >= 0);
+        assertTrue(
+            String.format("Installed paths: [%s]", Joiner.on(", ").join(installedLibs)),
+            allowedInstalledLibs >= 0);
       }
     } else if (relativePath.startsWith(ResourcesExoHelper.RESOURCES_DIR)) {
+      installedResources.add(source);
       if (!relativePath.getFileName().equals(Paths.get("metadata.txt"))) {
         allowedInstalledResources--;
-        assertTrue(allowedInstalledResources >= 0);
+        assertTrue(
+            String.format("Installed paths: [%s]", Joiner.on(", ").join(installedResources)),
+            allowedInstalledResources >= 0);
       }
     } else {
       fail("Unrecognized target path (" + relativePath + ")");
@@ -106,6 +132,11 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     this.allowedInstalledDexes = expectedDexesInstalled;
     this.allowedInstalledLibs = expectedLibsInstalled;
     this.allowedInstalledResources = expectedResourcesInstalled;
+
+    installedApks.clear();
+    installedDexes.clear();
+    installedLibs.clear();
+    installedResources.clear();
   }
 
   public void assertExpectedInstallsAreConsumed() {
