@@ -16,9 +16,7 @@
 
 package com.facebook.buck.android.exopackage;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -59,12 +57,6 @@ public class TestAndroidDevice implements AndroidDevice {
   private Optional<PackageInfo> fakePackageInfo;
   private String packageSignature;
 
-  // Per install state.
-  private int allowedInstalledApks;
-  private int allowedInstalledDexes;
-  private int allowedInstalledLibs;
-  private int allowedInstalledResources;
-
   public TestAndroidDevice(
       String abi,
       Path apkPath,
@@ -86,11 +78,6 @@ public class TestAndroidDevice implements AndroidDevice {
     this.directories = new HashSet<>();
     this.deviceAgentPackageInfo = Optional.empty();
     this.fakePackageInfo = Optional.empty();
-
-    this.allowedInstalledApks = 0;
-    this.allowedInstalledDexes = 0;
-    this.allowedInstalledLibs = 0;
-    this.allowedInstalledResources = 0;
   }
 
   @Override
@@ -114,8 +101,6 @@ public class TestAndroidDevice implements AndroidDevice {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      allowedInstalledApks--;
-      assertTrue(allowedInstalledApks >= 0);
       return true;
     }
     throw new UnsupportedOperationException("apk path=" + apk);
@@ -183,26 +168,6 @@ public class TestAndroidDevice implements AndroidDevice {
         targetDevicePath.startsWith(installRoot));
     MoreAsserts.assertContainsOne(directories, targetDevicePath.getParent());
     deviceState.put(targetDevicePath.toString(), filesystem.readFileIfItExists(source).get());
-
-    targetDevicePath = installRoot.relativize(targetDevicePath);
-    if (targetDevicePath.startsWith(DexExoHelper.SECONDARY_DEX_DIR)) {
-      if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
-        allowedInstalledDexes--;
-        assertTrue(allowedInstalledDexes >= 0);
-      }
-    } else if (targetDevicePath.startsWith(NativeExoHelper.NATIVE_LIBS_DIR)) {
-      if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
-        allowedInstalledLibs--;
-        assertTrue(allowedInstalledLibs >= 0);
-      }
-    } else if (targetDevicePath.startsWith(ResourcesExoHelper.RESOURCES_DIR)) {
-      if (!targetDevicePath.getFileName().equals(Paths.get("metadata.txt"))) {
-        allowedInstalledResources--;
-        assertTrue(allowedInstalledResources >= 0);
-      }
-    } else {
-      fail("Unrecognized target path (" + targetDevicePath + ")");
-    }
   }
 
   @Override
@@ -236,24 +201,6 @@ public class TestAndroidDevice implements AndroidDevice {
   @Override
   public String getSerialNumber() {
     return "fake.serial";
-  }
-
-  public void setAllowedInstallCounts(
-      int expectedApksInstalled,
-      int expectedDexesInstalled,
-      int expectedLibsInstalled,
-      int expectedResourcesInstalled) {
-    this.allowedInstalledApks = expectedApksInstalled;
-    this.allowedInstalledDexes = expectedDexesInstalled;
-    this.allowedInstalledLibs = expectedLibsInstalled;
-    this.allowedInstalledResources = expectedResourcesInstalled;
-  }
-
-  public void assertExpectedInstallsAreConsumed() {
-    assertEquals("apk should be installed but wasn't", 0, allowedInstalledApks);
-    assertEquals("fewer dexes installed than expected", 0, allowedInstalledDexes);
-    assertEquals("fewer libs installed than expected", 0, allowedInstalledLibs);
-    assertEquals("fewer resources installed than expected", 0, allowedInstalledResources);
   }
 
   public NavigableMap<String, String> getDeviceState() {

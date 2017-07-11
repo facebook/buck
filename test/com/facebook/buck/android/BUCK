@@ -8,7 +8,9 @@ STANDARD_INTEGRATION_TEST_SRCS = [
 ]
 
 UTILS_SRCS = [
+    "DelegatingAndroidDevice.java",
     "FakeAndroidDirectoryResolver.java",
+    "InstallLimitingAndroidDevice.java",
     "exopackage/TestAndroidDevice.java",
 ]
 

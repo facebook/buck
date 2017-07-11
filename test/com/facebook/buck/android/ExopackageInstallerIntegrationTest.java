@@ -76,7 +76,8 @@ public class ExopackageInstallerIntegrationTest {
   private ExoState currentBuildState;
   private ProjectFilesystem filesystem;
   private ExecutionContext executionContext;
-  private TestAndroidDevice device;
+  private TestAndroidDevice testDevice;
+  private InstallLimitingAndroidDevice device;
   private String apkVersionCode;
 
   @Before
@@ -95,7 +96,7 @@ public class ExopackageInstallerIntegrationTest {
   // This should be done first in a test case as it doesn't clear the state directory (and we don't
   // expect BUCK to handle a device changing its abi).
   private void setupDeviceWithAbi(String abi) {
-    device =
+    testDevice =
         new TestAndroidDevice(
             abi,
             filesystem.resolve(apkPath),
@@ -105,6 +106,9 @@ public class ExopackageInstallerIntegrationTest {
             apkDevicePath,
             filesystem,
             FAKE_PACKAGE_NAME);
+    this.device =
+        new InstallLimitingAndroidDevice(
+            testDevice, INSTALL_ROOT, filesystem.resolve(apkPath), filesystem.resolve(agentPath));
   }
 
   @Test
@@ -142,7 +146,7 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   private boolean devicePathExists(String path) {
-    return device.getDeviceState().containsKey(INSTALL_ROOT.resolve(path).toString());
+    return testDevice.getDeviceState().containsKey(INSTALL_ROOT.resolve(path).toString());
   }
 
   @Test
@@ -583,7 +587,7 @@ public class ExopackageInstallerIntegrationTest {
       throw new RuntimeException(e);
     }
 
-    assertEquals(builder.expectedState, device.getDeviceState());
+    assertEquals(builder.expectedState, testDevice.getDeviceState());
     device.assertExpectedInstallsAreConsumed();
   }
 
