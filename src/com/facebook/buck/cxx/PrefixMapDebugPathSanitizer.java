@@ -26,6 +26,7 @@ import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * This sanitizer works by depending on the compiler's -fdebug-prefix-map flag to properly ensure
@@ -77,9 +78,18 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     // contained in) another, it must be processed after that other one. To ensure that we can
     // process them in the correct order, they are inserted into allPaths in order of length
     // (shortest first) so that prefixes will be handled correctly.
-    RichStream.from(prefixMap.entrySet())
-        .<Map.Entry<Path, String>>map(
-            e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().toString()))
+    RichStream.<Map.Entry<Path, String>>empty()
+        // GCC has a bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71850) where it won't
+        // properly pass arguments down to subprograms using argsfiles, which can make it prone to
+        // argument list too long errors, so avoid adding `-fdebug-prefix-map` flags for each
+        // `prefixMap` entry.
+        .concat(
+            isGcc
+                ? Stream.empty()
+                : prefixMap
+                    .entrySet()
+                    .stream()
+                    .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().toString())))
         .concat(RichStream.from(getAllPaths(Optional.of(workingDir))))
         .sorted(Comparator.comparingInt(entry -> entry.getKey().toString().length()))
         .map(p -> getDebugPrefixMapFlag(p.getKey(), p.getValue()))

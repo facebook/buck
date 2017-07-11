@@ -142,10 +142,12 @@ public class CxxCompilationDatabaseIntegrationTest {
         target.withFlavors(
             InternalFlavor.of("default"), InternalFlavor.of("compile-" + sanitize("foo.cpp.o")));
     Map<String, String> prefixMap = new TreeMap<>(Comparator.comparingInt(String::length));
-    prefixMap.put(libraryExportedHeaderSymlinkTreeFolder + "/", "");
     prefixMap.put(rootPath.toString(), ".");
-    if (sandboxSources) {
-      prefixMap.put("buck-out/gen/binary_with_dep#default,sandbox/", "");
+    if (Platform.detect() == Platform.MACOS) {
+      prefixMap.put(libraryExportedHeaderSymlinkTreeFolder + "/", "");
+      if (sandboxSources) {
+        prefixMap.put("buck-out/gen/binary_with_dep#default,sandbox/", "");
+      }
     }
     assertHasEntry(
         fileToEntry,
@@ -221,11 +223,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             InternalFlavor.of("default"),
             InternalFlavor.of("compile-pic-" + sanitize("bar.cpp.o")));
     Map<String, String> prefixMap = new TreeMap<>(Comparator.comparingInt(String::length));
-    prefixMap.put(headerSymlinkTreeFolder + "/", "");
-    prefixMap.put(exportedHeaderSymlinkTreeFolder + "/", "");
     prefixMap.put(rootPath.toString(), ".");
-    if (sandboxSources) {
-      prefixMap.put("buck-out/gen/library_with_header#default,sandbox/", "");
+    if (Platform.detect() == Platform.MACOS) {
+      prefixMap.put(headerSymlinkTreeFolder + "/", "");
+      prefixMap.put(exportedHeaderSymlinkTreeFolder + "/", "");
+      if (sandboxSources) {
+        prefixMap.put("buck-out/gen/library_with_header#default,sandbox/", "");
+      }
     }
     assertHasEntry(
         fileToEntry,
@@ -300,7 +304,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-x")
             .add("c++")
             .addAll(
-                sandboxSources
+                sandboxSources && Platform.detect() == Platform.MACOS
                     ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
                     : ImmutableList.of())
             .add("-fdebug-prefix-map=" + rootPath + "=.")
@@ -358,7 +362,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-x")
             .add("c++")
             .addAll(
-                sandboxSources
+                sandboxSources && Platform.detect() == Platform.MACOS
                     ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
                     : ImmutableList.of())
             .add("-fdebug-prefix-map=" + rootPath + "=.")
