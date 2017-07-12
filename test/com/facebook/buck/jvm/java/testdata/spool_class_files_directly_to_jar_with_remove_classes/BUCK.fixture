@@ -1,7 +1,6 @@
 java_library(
   name = 'a',
   srcs = ['A.java', 'B.java', 'C.java', 'RemovableZ.java'],
-  resources = ['test/pkg/RemovableZ.txt'],
   remove_classes = ['test.pkg.RemovableZ', '^*removable*', '^*deletable*'],
 )
 

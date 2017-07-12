@@ -50,14 +50,6 @@ public class RemoveClassesPatternsMatcherTest {
   }
 
   @Test
-  public void testNeverMatchesNonClasses() {
-    RemoveClassesPatternsMatcher patternsMatcher =
-        new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("test")));
-
-    assertFalse(patternsMatcher.shouldRemoveClass(new ZipEntry("com/example/Foo/Foo.txt")));
-  }
-
-  @Test
   public void testMatchesPrefix() {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("test")));

@@ -69,7 +69,6 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -77,7 +76,6 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -840,9 +838,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
         "No class files should be stored on disk.",
-        Arrays.stream(classesDir.toFile().listFiles())
-            .filter(file -> file.getName().endsWith(".class"))
-            .collect(Collectors.toList()),
+        ImmutableList.copyOf(classesDir.toFile().listFiles()),
         hasSize(0));
 
     Path jarPath =
@@ -854,7 +850,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("test/pkg/A.class");
     zipInspector.assertFileExists("test/pkg/B.class");
     zipInspector.assertFileExists("test/pkg/C.class");
-    zipInspector.assertFileExists("test/pkg/RemovableZ.txt");
     zipInspector.assertFileDoesNotExist("test/pkg/RemovableZ.class");
     zipInspector.assertFileDoesNotExist("test/pkg/B$removableB.class");
     zipInspector.assertFileDoesNotExist("test/pkg/C$deletableC.class");
@@ -880,15 +875,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector = new ZipInspector(jarPath);
     zipInspector.assertFileExists("test/pkg/A.class");
     zipInspector.assertFileExists("test/pkg/B.class");
-    zipInspector.assertFileExists("test/pkg/RemovableC.txt");
     zipInspector.assertFileDoesNotExist("test/pkg/RemovableC.class");
     zipInspector.assertFileDoesNotExist("test/pkg/B$MemberD.class");
     zipInspector.assertFileDoesNotExist("DeletableB.class");
   }
 
   @Test
-  public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessorAndRemoveClasses()
-      throws IOException {
+  public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessor() throws IOException {
     setUpProjectWorkspaceForScenario("spool_class_files_directly_to_jar_with_annotation_processor");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
@@ -908,9 +901,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.getPath(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
     assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
     assertThat(
-        "There should be two source files in disk, from the two generated classes.",
+        "There should one source file in disk, from the Immutable class.",
         ImmutableList.copyOf(sourcesDir.toFile().listFiles()),
-        hasSize(2));
+        hasSize(1));
 
     Path jarPath =
         workspace.getPath(BuildTargets.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
@@ -919,8 +912,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector = new ZipInspector(jarPath);
     zipInspector.assertFileDoesNotExist("ImmutableC.java");
     zipInspector.assertFileExists("ImmutableC.class");
-    zipInspector.assertFileDoesNotExist("RemovableD.class");
-    zipInspector.assertFileExists("RemovableD");
   }
 
   @Test

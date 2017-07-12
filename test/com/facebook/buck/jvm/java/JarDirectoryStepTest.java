@@ -335,10 +335,7 @@ public class JarDirectoryStepTest {
     Path zipup = folder.newFolder();
     Path first =
         createZip(
-            zipup.resolve("first.zip"),
-            "dir/file1.txt",
-            "dir/file2.class",
-            "com/example/Main.class");
+            zipup.resolve("first.zip"), "dir/file1.txt", "dir/file2.txt", "com/example/Main.class");
 
     JarDirectoryStep step =
         new JarDirectoryStep(
