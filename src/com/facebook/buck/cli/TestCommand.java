@@ -594,6 +594,7 @@ public class TestCommand extends BuildCommand {
   @Override
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return super.getExecutionContextBuilder(params)
+        .setTargetDevice(getTargetDeviceOptional())
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
                 this::getExecutionContext,
