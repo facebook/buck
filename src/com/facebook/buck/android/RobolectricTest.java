@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,7 +57,6 @@ public class RobolectricTest extends JavaTest {
 
   private static final Logger LOG = Logger.get(RobolectricTest.class);
 
-  private final SourcePathRuleFinder ruleFinder;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
   private final Optional<SourcePath> robolectricManifest;
   private final Optional<String> robolectricRuntimeDependency;
@@ -75,32 +73,6 @@ public class RobolectricTest extends JavaTest {
   private static final String ROBOLECTRIC_MANIFEST = "buck.robolectric_manifest";
 
   private static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
-
-  private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
-      input -> {
-        ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();
-        for (HasAndroidResourceDeps hasAndroidResourceDeps : input.getAndroidResourceDeps()) {
-          SourcePath resSourcePath = hasAndroidResourceDeps.getRes();
-          if (resSourcePath == null) {
-            continue;
-          }
-          Optionals.addIfPresent(getRuleFinder().getRule(resSourcePath), resourceDeps);
-        }
-        return resourceDeps.build();
-      };
-
-  private final Function<DummyRDotJava, ImmutableSet<BuildRule>> assetsRulesFunction =
-      input -> {
-        ImmutableSet.Builder<BuildRule> assetsDeps = ImmutableSet.builder();
-        for (HasAndroidResourceDeps hasAndroidResourceDeps : input.getAndroidResourceDeps()) {
-          SourcePath assetsSourcePath = hasAndroidResourceDeps.getAssets();
-          if (assetsSourcePath == null) {
-            continue;
-          }
-          Optionals.addIfPresent(getRuleFinder().getRule(assetsSourcePath), assetsDeps);
-        }
-        return assetsDeps.build();
-      };
 
   protected RobolectricTest(
       BuildTarget buildTarget,
@@ -149,7 +121,6 @@ public class RobolectricTest extends JavaTest {
         forkMode,
         stdOutLogLevel,
         stdErrLogLevel);
-    this.ruleFinder = ruleFinder;
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
@@ -240,17 +211,16 @@ public class RobolectricTest extends JavaTest {
                 // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
                 // to run this test.
                 Optionals.toStream(optionalDummyRDotJava),
-                optionalDummyRDotJava.map(resourceRulesFunction).orElse(ImmutableSet.of()).stream(),
-                optionalDummyRDotJava.map(assetsRulesFunction).orElse(ImmutableSet.of()).stream(),
+                Optionals.toStream(optionalDummyRDotJava)
+                    .flatMap(input -> input.getAndroidResourceDeps().stream())
+                    .flatMap(input -> Stream.of(input.getRes(), input.getAssets()))
+                    .filter(Objects::nonNull)
+                    .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS),
                 // It's possible that the user added some tool as a dependency, so make sure we
                 // promote this rules first-order deps to runtime deps, so that these potential
                 // tools are available when this test runs.
                 getBuildDeps().stream())
             .reduce(Stream.empty(), Stream::concat)
             .map(BuildRule::getBuildTarget));
-  }
-
-  public SourcePathRuleFinder getRuleFinder() {
-    return ruleFinder;
   }
 }
