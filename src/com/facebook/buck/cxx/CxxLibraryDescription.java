@@ -488,7 +488,6 @@ public class CxxLibraryDescription
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        resolver,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, resolver, ruleFinder, pathResolver, Optional.empty(), args),

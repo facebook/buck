@@ -80,7 +80,7 @@ public class ShTestTest extends EasyMockSupport {
             /* contacts */ ImmutableSet.of());
 
     assertThat(
-        shTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        shTest.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
         containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
 }

@@ -354,7 +354,6 @@ public class RustCompileUtils {
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                  ruleFinder,
                   buildTarget,
                   projectFilesystem,
                   cxxPlatform,
@@ -414,7 +413,7 @@ public class RustCompileUtils {
     final CommandTool executable = executableBuilder.build();
 
     return new BinaryWrapperRule(
-        buildTarget, projectFilesystem, params.copyAppendingExtraDeps(buildRule), ruleFinder) {
+        buildTarget, projectFilesystem, params.copyAppendingExtraDeps(buildRule)) {
 
       @Override
       public Tool getExecutableCommand() {

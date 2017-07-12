@@ -329,7 +329,9 @@ public class PythonTestDescriptionTest {
     ShBinary pexExecutor = pexExecutorBuilder.build(resolver);
     PythonTest binary = builder.build(resolver, filesystem, targetGraph);
     assertThat(
-        binary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        binary
+            .getRuntimeDeps(new SourcePathRuleFinder(resolver))
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(pexExecutor.getBuildTarget()));
   }
 

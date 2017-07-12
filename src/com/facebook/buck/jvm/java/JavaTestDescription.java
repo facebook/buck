@@ -237,8 +237,7 @@ public class JavaTestDescription
         throws NoSuchBuildTargetException {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(
-                ruleFinder, buildTarget, projectFilesystem, params, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(buildTarget, projectFilesystem, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -261,8 +260,7 @@ public class JavaTestDescription
                   nativeLibsSymlinkTree
                       .getProjectFilesystem()
                       .relativize(nativeLibsSymlinkTree.getRoot()),
-                  filteredLinks.build(),
-                  ruleFinder);
+                  filteredLinks.build());
         }
 
         resolver.addToIndex(nativeLibsSymlinkTree);
@@ -289,14 +287,12 @@ public class JavaTestDescription
     }
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
-        SourcePathRuleFinder ruleFinder,
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform)
         throws NoSuchBuildTargetException {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-          ruleFinder,
           buildTarget,
           projectFilesystem,
           cxxPlatform,

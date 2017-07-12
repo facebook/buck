@@ -1578,7 +1578,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<Stream<BuildTarget>> deps = Stream.builder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
         && enhancementResult.getCopyNativeLibraries().isPresent()) {

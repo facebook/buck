@@ -94,7 +94,6 @@ import java.util.stream.Stream;
 public class ExportFile extends AbstractBuildRuleWithResolver
     implements HasOutputName, HasRuntimeDeps {
 
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ExportFileDescription.Mode mode;
   @AddToRuleKey private final SourcePath src;
@@ -103,13 +102,11 @@ public class ExportFile extends AbstractBuildRuleWithResolver
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
     super(buildTarget, projectFilesystem, buildRuleParams, resolver);
-    this.ruleFinder = ruleFinder;
     this.name = name;
     this.mode = mode;
     this.src = src;
@@ -180,7 +177,7 @@ public class ExportFile extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
     Optional<BuildRule> rule = ruleFinder.getRule(src);

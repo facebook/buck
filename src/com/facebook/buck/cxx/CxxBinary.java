@@ -49,7 +49,6 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         SupportsInputBasedRuleKey {
 
   private final BuildRuleResolver ruleResolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;
   private final Tool executable;
@@ -62,7 +61,6 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       BuildRule linkRule,
       Tool executable,
@@ -71,7 +69,6 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget platformlessTarget) {
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
-    this.ruleFinder = ruleFinder;
     this.cxxPlatform = cxxPlatform;
     this.linkRule = linkRule;
     this.executable = executable;
@@ -167,7 +164,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(getDeclaredDeps().stream(), executable.getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }

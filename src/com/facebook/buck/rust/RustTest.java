@@ -76,20 +76,17 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final Pattern FAILURES_LIST_PATTERN = Pattern.compile("^failures:$");
   private final Path testOutputFile;
   private final Path testStdoutFile;
-  private final SourcePathRuleFinder ruleFinder;
 
   protected RustTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       BinaryBuildRule testExeBuild,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts) {
     super(buildTarget, projectFilesystem, params);
 
     this.testExeBuild = testExeBuild;
-    this.ruleFinder = ruleFinder;
     this.labels = labels;
     this.contacts = contacts;
     this.testOutputFile = getProjectFilesystem().resolve(getPathToTestResults());
@@ -287,7 +284,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
             getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);

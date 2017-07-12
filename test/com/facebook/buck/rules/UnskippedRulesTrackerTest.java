@@ -239,7 +239,7 @@ public class UnskippedRulesTrackerTest {
     }
 
     @Override
-    public Stream<BuildTarget> getRuntimeDeps() {
+    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
       return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
   }

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class DefaultWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 

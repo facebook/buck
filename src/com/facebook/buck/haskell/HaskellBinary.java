@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableSet;
 
@@ -37,11 +36,10 @@ public class HaskellBinary extends BinaryWrapperRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
       Tool binary,
       SourcePath output) {
-    super(buildTarget, projectFilesystem, buildRuleParams, ruleFinder);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.deps = deps;
     this.binary = binary;
     this.output = output;

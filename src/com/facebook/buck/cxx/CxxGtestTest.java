@@ -69,7 +69,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
   private static final String NOTRUN = "notrun";
 
-  private final SourcePathRuleFinder ruleFinder;
   private final BuildRule binary;
   private final long maxTestOutputSize;
 
@@ -77,7 +76,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       BuildRule binary,
       Tool executable,
       ImmutableMap<String, String> env,
@@ -104,7 +102,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         contacts,
         runTestSeparately,
         testRuleTimeoutMs);
-    this.ruleFinder = ruleFinder;
     this.binary = binary;
     this.maxTestOutputSize = maxTestOutputSize;
   }
@@ -209,9 +206,9 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
   // always available to run the test.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
-        super.getRuntimeDeps(),
+        super.getRuntimeDeps(ruleFinder),
         getExecutableCommand().getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
   }
 

@@ -62,7 +62,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   // to re-run the tests if the input changes.
   //
   // We should upate the Python test rule to account for this.
-  private final SourcePathRuleFinder ruleFinder;
   private final SymlinkTree linkTree;
   @AddToRuleKey private final Tool python;
   @AddToRuleKey private final Supplier<String> script;
@@ -78,7 +77,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       String pexExtension,
       ImmutableSet<String> preloadLibraries,
       boolean legacyOutputPath,
-      SourcePathRuleFinder ruleFinder,
       SymlinkTree linkTree,
       Tool python,
       Supplier<String> script) {
@@ -93,7 +91,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         preloadLibraries,
         pexExtension,
         legacyOutputPath);
-    this.ruleFinder = ruleFinder;
     this.linkTree = linkTree;
     this.python = python;
     this.script = script;
@@ -111,7 +108,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       String pexExtension,
       ImmutableSet<String> preloadLibraries,
       boolean legacyOutputPath,
-      SourcePathRuleFinder ruleFinder,
       SymlinkTree linkTree,
       Tool python) {
     return new PythonInPlaceBinary(
@@ -126,7 +122,6 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         pexExtension,
         preloadLibraries,
         legacyOutputPath,
-        ruleFinder,
         linkTree,
         python,
         getScript(
@@ -219,9 +214,9 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return RichStream.<BuildTarget>empty()
-        .concat(super.getRuntimeDeps())
+        .concat(super.getRuntimeDeps(ruleFinder))
         .concat(Stream.of(linkTree.getBuildTarget()))
         .concat(getComponents().getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
   }

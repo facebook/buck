@@ -520,7 +520,6 @@ public class LuaBinaryDescription
       BuildTarget linkTreeTarget,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return resolver.addToIndex(
@@ -528,8 +527,7 @@ public class LuaBinaryDescription
             linkTreeTarget,
             filesystem,
             root,
-            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
-            ruleFinder));
+            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem()))));
   }
 
   /**
@@ -572,7 +570,6 @@ public class LuaBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       final SourcePath starter,
       final LuaPackageComponents components) {
@@ -584,7 +581,6 @@ public class LuaBinaryDescription
                 getModulesSymlinkTreeTarget(buildTarget),
                 projectFilesystem,
                 resolver,
-                ruleFinder,
                 getModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                 components.getModules()));
 
@@ -609,7 +605,6 @@ public class LuaBinaryDescription
                   getPythonModulesSymlinkTreeTarget(buildTarget),
                   projectFilesystem,
                   resolver,
-                  ruleFinder,
                   getPythonModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                   pythonModules));
       pythonModulesLinktree.add(symlinkTree);
@@ -623,7 +618,6 @@ public class LuaBinaryDescription
                   getNativeLibsSymlinkTreeTarget(buildTarget),
                   projectFilesystem,
                   resolver,
-                  ruleFinder,
                   getNativeLibsSymlinkTreeRoot(buildTarget, projectFilesystem),
                   addVersionLessLibraries(cxxPlatform, components.getNativeLibraries())));
       nativeLibsLinktree.add(symlinkTree);
@@ -735,14 +729,7 @@ public class LuaBinaryDescription
             components);
       case INPLACE:
         return getInPlaceBinary(
-            buildTarget,
-            projectFilesystem,
-            params,
-            resolver,
-            ruleFinder,
-            cxxPlatform,
-            starter,
-            components);
+            buildTarget, projectFilesystem, params, resolver, cxxPlatform, starter, components);
     }
     throw new IllegalStateException(
         String.format("%s: unexpected package style %s", buildTarget, packageStyle));
@@ -804,7 +791,6 @@ public class LuaBinaryDescription
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(binary.getDeps(ruleFinder)),
-        ruleFinder,
         getOutputPath(buildTarget, projectFilesystem),
         binary,
         args.getMainModule(),

@@ -110,7 +110,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+            buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   @Test
@@ -162,8 +162,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             ImmutableMap.of(
                 Paths.get("different/link"),
                 new PathSourcePath(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            ruleFinder);
+                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =

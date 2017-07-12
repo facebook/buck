@@ -63,7 +63,6 @@ import java.util.stream.Stream;
 public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
-  private final SourcePathRuleFinder ruleFinder;
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
   @AddToRuleKey private final Supplier<ImmutableMap<String, String>> env;
   @AddToRuleKey private final PythonBinary binary;
@@ -76,7 +75,6 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
       Supplier<ImmutableMap<String, String>> env,
       PythonBinary binary,
@@ -85,7 +83,6 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.env = env;
     this.binary = binary;
@@ -99,7 +96,6 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       Supplier<ImmutableMap<String, String>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,
@@ -110,7 +106,6 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(binary)).withoutExtraDeps(),
-        ruleFinder,
         params.getDeclaredDeps(),
         env,
         binary,
@@ -212,10 +207,10 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // a {@link PythonBinary} rule, which is the actual test binary.  Therefore, we *need* this
   // rule around to run this test, so model this via the {@link HasRuntimeDeps} interface.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return RichStream.<BuildTarget>empty()
         .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
-        .concat(binary.getRuntimeDeps())
+        .concat(binary.getRuntimeDeps(ruleFinder))
         .concat(
             binary
                 .getExecutableCommand()

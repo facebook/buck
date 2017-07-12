@@ -46,7 +46,6 @@ import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
 
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Tool builder;
   @AddToRuleKey private final ImmutableList<String> buildArgs;
   private final Tool pathToPexExecuter;
@@ -60,7 +59,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
-      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       Tool builder,
       ImmutableList<String> buildArgs,
@@ -83,7 +81,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         preloadLibraries,
         pexExtension,
         legacyOutputPath);
-    this.ruleFinder = ruleFinder;
     this.builder = builder;
     this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;
@@ -120,7 +117,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                     .build())
             .withoutExtraDeps(),
         params.getDeclaredDeps(),
-        ruleFinder,
         pythonPlatform,
         builder,
         buildArgs,
@@ -201,9 +197,9 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return RichStream.<BuildTarget>empty()
-        .concat(super.getRuntimeDeps())
+        .concat(super.getRuntimeDeps(ruleFinder))
         .concat(pathToPexExecuter.getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
   }
 

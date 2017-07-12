@@ -185,7 +185,6 @@ public class HaskellBinaryDescription
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                  ruleFinder,
                   buildTarget,
                   projectFilesystem,
                   cxxPlatform,
@@ -277,7 +276,6 @@ public class HaskellBinaryDescription
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(linkRule),
-        ruleFinder,
         deps,
         executable,
         linkRule.getSourcePathToOutput());

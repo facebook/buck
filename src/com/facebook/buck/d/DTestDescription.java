@@ -92,7 +92,6 @@ public class DTestDescription
                 DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
                 buildTarget,
                 projectFilesystem,
-                ruleFinder,
                 pathResolver,
                 args.getSrcs()));
 

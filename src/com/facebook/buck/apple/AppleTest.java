@@ -100,7 +100,6 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
   private Optional<Long> testRuleTimeoutMs;
-  private final SourcePathRuleFinder ruleFinder;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
@@ -184,8 +183,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String testLogLevel,
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
-      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
-      SourcePathRuleFinder ruleFinder) {
+      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath) {
     super(buildTarget, projectFilesystem, params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -200,7 +198,6 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
-    this.ruleFinder = ruleFinder;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.empty();
@@ -455,7 +452,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         Stream.concat(Stream.of(testBundle), Optionals.toStream(testHostApp))
             .map(BuildRule::getBuildTarget),

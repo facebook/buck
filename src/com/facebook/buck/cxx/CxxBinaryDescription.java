@@ -260,7 +260,6 @@ public class CxxBinaryDescription
                         .build(),
                 ImmutableSortedSet.of()),
             resolver,
-            ruleFinder,
             cxxPlatform,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,

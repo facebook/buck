@@ -74,7 +74,6 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   // Extra time to wait for the process to exit on top of the test timeout
   private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
 
-  private final SourcePathRuleFinder ruleFinder;
   private final GoBinary testMain;
 
   private final ImmutableSet<String> labels;
@@ -87,7 +86,6 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
       GoBinary testMain,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
@@ -95,7 +93,6 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources) {
     super(buildTarget, projectFilesystem, buildRuleParams);
-    this.ruleFinder = ruleFinder;
     this.testMain = testMain;
     this.labels = labels;
     this.contacts = contacts;
@@ -285,7 +282,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         Stream.of((testMain.getBuildTarget())),
         resources

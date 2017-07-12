@@ -70,8 +70,8 @@ public class CxxCompilationDatabaseTest {
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver testSourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(testBuildRuleResolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(testBuildRuleResolver);
+    SourcePathResolver testSourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -156,7 +156,7 @@ public class CxxCompilationDatabaseTest {
     testBuildRuleResolver.addToIndex(compilationDatabase);
 
     assertThat(
-        compilationDatabase.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        compilationDatabase.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
         Matchers.contains(
             exportedSymlinkTree.getBuildTarget(), privateSymlinkTree.getBuildTarget()));
 

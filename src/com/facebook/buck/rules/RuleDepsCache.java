@@ -25,10 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /** A cache of rule deps. */
 public class RuleDepsCache {
   private final Map<BuildRule, SortedSet<BuildRule>> cache;
-  private BuildRuleResolver resolver;
+  private final BuildRuleResolver resolver;
+  private final SourcePathRuleFinder ruleFinder;
 
   public RuleDepsCache(BuildRuleResolver resolver) {
     this.resolver = resolver;
+    this.ruleFinder = new SourcePathRuleFinder(resolver);
     this.cache = new ConcurrentHashMap<>();
   }
 
@@ -43,6 +45,6 @@ public class RuleDepsCache {
     return SortedSets.union(
         rule.getBuildDeps(),
         resolver.getAllRules(
-            RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps()).toOnceIterable()));
+            RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder)).toOnceIterable()));
   }
 }

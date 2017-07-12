@@ -183,12 +183,10 @@ public class GoTestDescription
         createTestMainRule(buildTarget, projectFilesystem, params, resolver, args, platform);
     resolver.addToIndex(testMain);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new GoTest(
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testMain)).withoutExtraDeps(),
-        ruleFinder,
         testMain,
         args.getLabels(),
         args.getContacts(),

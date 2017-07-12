@@ -337,7 +337,9 @@ public class RobolectricTestRuleTest {
     BuildRule assetsGenRule = resolver.requireRule(assetsGenRuleTarget);
 
     assertThat(
-        robolectricTest.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        robolectricTest
+            .getRuntimeDeps(new SourcePathRuleFinder(resolver))
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItems(resGenRule.getBuildTarget(), assetsGenRule.getBuildTarget()));
   }
 }

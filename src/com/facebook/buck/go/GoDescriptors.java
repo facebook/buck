@@ -129,8 +129,7 @@ abstract class GoDescriptors {
     ImmutableList<BuildRule> linkableDeps = linkableDepsBuilder.build();
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree =
-        makeSymlinkTree(target, projectFilesystem, pathResolver, ruleFinder, linkables);
+    SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, pathResolver, linkables);
     resolver.addToIndex(symlinkTree);
 
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
@@ -229,7 +228,6 @@ abstract class GoDescriptors {
             target,
             projectFilesystem,
             pathResolver,
-            ruleFinder,
             requireTransitiveGoLinkables(
                 buildTarget,
                 resolver,
@@ -369,7 +367,6 @@ abstract class GoDescriptors {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       ImmutableSet<GoLinkable> linkables) {
     ImmutableMap.Builder<Path, SourcePath> treeMapBuilder = ImmutableMap.builder();
     for (GoLinkable linkable : linkables) {
@@ -392,7 +389,7 @@ abstract class GoDescriptors {
 
     Path root = BuildTargets.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree(buildTarget, projectFilesystem, root, treeMap, ruleFinder);
+    return new SymlinkTree(buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**

@@ -106,8 +106,7 @@ public class SymlinkTreeTest {
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.
-    symlinkTreeBuildRule =
-        new SymlinkTree(buildTarget, projectFilesystem, outputPath, links, ruleFinder);
+    symlinkTreeBuildRule = new SymlinkTree(buildTarget, projectFilesystem, outputPath, links);
   }
 
   @Test
@@ -150,8 +149,7 @@ public class SymlinkTreeTest {
             ImmutableMap.of(
                 Paths.get("different/link"),
                 new PathSourcePath(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            ruleFinder);
+                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
@@ -241,8 +239,7 @@ public class SymlinkTreeTest {
             buildTarget,
             projectFilesystem,
             outputPath,
-            ImmutableMap.of(Paths.get("link"), dep.getSourcePathToOutput()),
-            ruleFinder);
+            ImmutableMap.of(Paths.get("link"), dep.getSourcePathToOutput()));
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
     // target hashing to "aaaa".
@@ -272,8 +269,7 @@ public class SymlinkTreeTest {
             ImmutableMap.of(
                 Paths.get("../something"),
                 new PathSourcePath(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))),
-            ruleFinder);
+                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))));
     int exitCode =
         symlinkTree.getVerifyStep().execute(TestExecutionContext.newInstance()).getExitCode();
     assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));

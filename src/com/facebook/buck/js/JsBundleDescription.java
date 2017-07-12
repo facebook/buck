@@ -109,7 +109,6 @@ public class JsBundleDescription
           buildTarget,
           projectFilesystem,
           JsUtil.copyParamsWithDependencies(params),
-          ruleFinder,
           DefaultSourcePathResolver.from(ruleFinder),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,

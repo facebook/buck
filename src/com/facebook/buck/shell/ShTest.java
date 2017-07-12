@@ -175,7 +175,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   // A shell test has no real build dependencies.  Instead interpret the dependencies as runtime
   // dependencies, as these are always components that the shell test needs available to run.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 

@@ -356,7 +356,6 @@ public class PythonTestDescription
         buildTarget,
         projectFilesystem,
         params,
-        ruleFinder,
         testEnv,
         binary,
         args.getLabels(),

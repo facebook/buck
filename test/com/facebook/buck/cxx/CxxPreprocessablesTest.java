@@ -185,8 +185,6 @@ public class CxxPreprocessablesTest {
   public void createHeaderSymlinkTreeBuildRuleHasNoDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup up the main build target and build params, which some random dep.  We'll make
@@ -214,12 +212,7 @@ public class CxxPreprocessablesTest {
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree =
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-            target,
-            filesystem,
-            root,
-            links,
-            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY,
-            ruleFinder);
+            target, filesystem, root, links, CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY);
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and

@@ -138,7 +138,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   // use this interface to access the underlying R.java package, so make sure it's available when
   // a dependent is building against us.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.of(unzipAar.getBuildTarget());
   }
 }

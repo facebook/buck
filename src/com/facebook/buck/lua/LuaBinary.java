@@ -44,14 +44,12 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final String mainModule;
   private final LuaPackageComponents components;
   private final Tool lua;
-  private final SourcePathRuleFinder ruleFinder;
   private final LuaConfig.PackageStyle packageStyle;
 
   public LuaBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
       Path output,
       Tool wrappedBinary,
       String mainModule,
@@ -59,7 +57,6 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool lua,
       LuaConfig.PackageStyle packageStyle) {
     super(buildTarget, projectFilesystem, buildRuleParams);
-    this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(!output.isAbsolute());
     this.output = output;
     this.wrappedBinary = wrappedBinary;
@@ -106,7 +103,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(getDeclaredDeps().stream(), wrappedBinary.getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }

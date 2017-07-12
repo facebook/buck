@@ -171,7 +171,6 @@ abstract class DDescriptionUtils {
       BuildTarget target,
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       SourceList sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
@@ -181,8 +180,7 @@ abstract class DDescriptionUtils {
         BuildTargets.getGenPath(projectFilesystem, baseBuildTarget, "%s"),
         MoreMaps.transformKeys(
             sources.toNameMap(baseBuildTarget, pathResolver, "srcs"),
-            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
-        ruleFinder);
+            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())));
   }
 
   private static ImmutableMap<BuildTarget, DLibrary> getTransitiveDLibraryRules(

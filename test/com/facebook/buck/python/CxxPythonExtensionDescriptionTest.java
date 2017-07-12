@@ -492,7 +492,9 @@ public class CxxPythonExtensionDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(resolver);
     assertThat(
-        cxxPythonExtension.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        cxxPythonExtension
+            .getRuntimeDeps(new SourcePathRuleFinder(resolver))
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(cxxBinary.getBuildTarget()));
   }
 

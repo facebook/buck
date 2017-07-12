@@ -129,7 +129,6 @@ public class RustTestDescription
         buildTarget,
         projectFilesystem,
         testParams,
-        ruleFinder,
         testExeBuild,
         args.getLabels(),
         args.getContacts());

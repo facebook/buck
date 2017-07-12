@@ -892,7 +892,9 @@ public class PythonBinaryDescriptionTest {
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(resolver);
     assertThat(
-        standaloneBinary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        standaloneBinary
+            .getRuntimeDeps(new SourcePathRuleFinder(resolver))
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(pyTool.getBuildTarget()));
   }
 

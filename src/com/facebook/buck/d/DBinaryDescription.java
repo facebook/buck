@@ -91,7 +91,6 @@ public class DBinaryDescription
                 DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
                 buildTarget,
                 projectFilesystem,
-                ruleFinder,
                 pathResolver,
                 args.getSrcs()));
 
@@ -125,7 +124,6 @@ public class DBinaryDescription
         buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
-        ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getSourcePathToOutput());
   }

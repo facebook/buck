@@ -28,6 +28,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -71,7 +72,7 @@ public class OcamlBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // Since this rule doesn't actual generate the binary it references, and is just a wrapper for
   // the real binary rule, mark that rule as a runtime dep.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.of(binary.getBuildTarget());
   }
 }

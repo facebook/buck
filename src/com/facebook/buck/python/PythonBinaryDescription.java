@@ -144,7 +144,6 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -175,8 +174,7 @@ public class PythonBinaryDescription
                     .putAll(components.getModules())
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
-                    .build(),
-                ruleFinder));
+                    .build()));
 
     return PythonInPlaceBinary.from(
         buildTarget,
@@ -190,7 +188,6 @@ public class PythonBinaryDescription
         extension.orElse(pythonBuckConfig.getPexExtension()),
         preloadLibraries,
         pythonBuckConfig.legacyOutputPath(),
-        ruleFinder,
         linkTree,
         pythonPlatform.getEnvironment());
   }
@@ -217,7 +214,6 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             resolver,
-            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,

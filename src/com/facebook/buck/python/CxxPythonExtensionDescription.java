@@ -462,7 +462,7 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public Stream<BuildTarget> getRuntimeDeps() {
+      public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
         return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
       }
     };

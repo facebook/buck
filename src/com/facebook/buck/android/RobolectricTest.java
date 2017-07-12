@@ -231,10 +231,10 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         // Inherit any runtime deps from `JavaTest`.
-        super.getRuntimeDeps(),
+        super.getRuntimeDeps(ruleFinder),
         Stream.of(
                 // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
                 // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)

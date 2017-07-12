@@ -102,10 +102,9 @@ public class AndroidResourceDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(ruleFinder, buildTarget, projectFilesystem, args.getRes(), "res");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getRes(), "res");
     } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(
-          ruleFinder, buildTarget, projectFilesystem, args.getAssets(), "assets");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getAssets(), "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
@@ -185,7 +184,6 @@ public class AndroidResourceDescription
   }
 
   private SymlinkTree createSymlinkTree(
-      SourcePathRuleFinder ruleFinder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
@@ -214,7 +212,7 @@ public class AndroidResourceDescription
     }
     Path symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree(buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+    return new SymlinkTree(buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

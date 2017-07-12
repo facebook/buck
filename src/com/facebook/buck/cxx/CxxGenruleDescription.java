@@ -714,7 +714,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           symlinkTree =
               resolver.addToIndex(
                   CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                      new SourcePathRuleFinder(resolver),
                       buildTarget,
                       filesystem,
                       cxxPlatform,

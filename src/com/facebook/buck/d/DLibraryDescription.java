@@ -79,7 +79,7 @@ public class DLibraryDescription
 
     if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget, buildTarget, projectFilesystem, ruleFinder, pathResolver, args.getSrcs());
+          buildTarget, buildTarget, projectFilesystem, pathResolver, args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
