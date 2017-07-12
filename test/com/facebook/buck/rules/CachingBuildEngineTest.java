@@ -1756,12 +1756,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -1846,12 +1848,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -1920,12 +1924,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -1995,12 +2001,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return inputsBefore::contains;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2091,12 +2099,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2179,12 +2189,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2302,12 +2314,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return ImmutableSet.of(path)::contains;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2400,12 +2414,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2514,12 +2530,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2618,12 +2636,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2758,12 +2778,14 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+            public Predicate<SourcePath> getCoveredByDepFilePredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
-            public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+            public Predicate<SourcePath> getExistenceOfInterestPredicate(
+                SourcePathResolver pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2870,12 +2892,13 @@ public class CachingBuildEngineTest {
       }
 
       @Override
-      public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+      public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
         return (SourcePath path) -> true;
       }
 
       @Override
-      public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+      public Predicate<SourcePath> getExistenceOfInterestPredicate(
+          SourcePathResolver pathResolver) {
         return (SourcePath path) -> false;
       }
 

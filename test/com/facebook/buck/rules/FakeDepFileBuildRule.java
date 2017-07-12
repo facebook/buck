@@ -89,12 +89,12 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     return coveredPredicate;
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
     return interestingPredicate;
   }
 

@@ -435,7 +435,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     SourcePath sourcePath = annotationProcessorAbiRule.getSourcePathToOutput();
     assertFalse(
         "The predicate for dep file shouldn't contain annotation processor deps",
-        libraryTwo.getCoveredByDepFilePredicate().test(sourcePath));
+        libraryTwo
+            .getCoveredByDepFilePredicate(
+                DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
+            .test(sourcePath));
   }
 
   /** Verify adding an annotation processor java binary with options. */

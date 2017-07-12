@@ -451,14 +451,14 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     // a hash set is intentionally used to achieve constant time look-up
-    return abiClasspath.getArchiveMembers(getResolver()).collect(MoreCollectors.toImmutableSet())
+    return abiClasspath.getArchiveMembers(pathResolver).collect(MoreCollectors.toImmutableSet())
         ::contains;
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
     // Annotation processors might enumerate all files under a certain path and then generate
     // code based on that list (without actually reading the files), making the list of files
     // itself a used dependency that must be part of the dependency-based key. We don't
@@ -467,7 +467,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
     // the listing of META-INF to the rule key.
     return (SourcePath path) ->
         (path instanceof ArchiveMemberSourcePath)
-            && getResolver()
+            && pathResolver
                 .getRelativeArchiveMemberPath(path)
                 .getMemberPath()
                 .startsWith(METADATA_DIR);

@@ -90,8 +90,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
             rule,
             keyType,
             depFileEntries,
-            rule.getCoveredByDepFilePredicate(),
-            rule.getExistenceOfInterestPredicate(),
+            rule.getCoveredByDepFilePredicate(pathResolver),
+            rule.getExistenceOfInterestPredicate(pathResolver),
             RuleKeyBuilder.createDefaultHasher());
     ruleKeyFieldLoader.setFields(builder, rule, keyType.toRuleKeyType());
     Result<RuleKey> result = builder.buildResult(RuleKey::new);
