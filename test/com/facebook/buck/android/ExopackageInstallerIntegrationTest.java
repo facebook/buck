@@ -429,8 +429,8 @@ public class ExopackageInstallerIntegrationTest {
   private class FakeApkRule extends FakeBuildRule implements HasInstallableApk {
     private ApkInfo apkInfo;
 
-    public FakeApkRule(SourcePathResolver resolver, ApkInfo apkInfo) {
-      super(BuildTargetFactory.newInstance("//fake-apk-rule:apk"), filesystem, resolver);
+    public FakeApkRule(ApkInfo apkInfo) {
+      super(BuildTargetFactory.newInstance("//fake-apk-rule:apk"), filesystem);
       this.apkInfo = apkInfo;
     }
 
@@ -582,8 +582,7 @@ public class ExopackageInstallerIntegrationTest {
         expectedResourcesInstalled);
     try {
       assertTrue(
-          new ExopackageInstaller(
-                  pathResolver, executionContext, new FakeApkRule(pathResolver, apkInfo), device)
+          new ExopackageInstaller(pathResolver, executionContext, new FakeApkRule(apkInfo), device)
               .doInstall(null));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

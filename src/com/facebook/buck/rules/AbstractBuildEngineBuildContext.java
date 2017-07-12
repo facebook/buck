@@ -50,8 +50,8 @@ abstract class AbstractBuildEngineBuildContext {
   /**
    * Creates an {@link OnDiskBuildInfo}.
    *
-   * <p>This method should be visible to {@link AbstractBuildRuleWithResolver}, but not {@link
-   * BuildRule}s in general.
+   * <p>This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s in
+   * general.
    */
   OnDiskBuildInfo createOnDiskBuildInfoFor(
       BuildTarget target, ProjectFilesystem filesystem, BuildInfoStore buildInfoStore) {
@@ -61,8 +61,8 @@ abstract class AbstractBuildEngineBuildContext {
   /**
    * Creates an {@link BuildInfoRecorder}.
    *
-   * <p>This method should be visible to {@link AbstractBuildRuleWithResolver}, but not {@link
-   * BuildRule}s in general.
+   * <p>This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s in
+   * general.
    */
   BuildInfoRecorder createBuildInfoRecorder(
       BuildTarget buildTarget, ProjectFilesystem filesystem, BuildInfoStore buildInfoStore) {

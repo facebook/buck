@@ -87,8 +87,7 @@ public class CommandToolTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    FakeBuildRule rule = new FakeBuildRule("//some:target", pathResolver);
+    FakeBuildRule rule = new FakeBuildRule("//some:target");
     rule.setOutputFile("foo");
     ruleResolver.addToIndex(rule);
     SourcePath path = rule.getSourcePathToOutput();

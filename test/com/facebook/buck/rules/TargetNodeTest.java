@@ -155,11 +155,7 @@ public class TargetNodeTest {
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         ExampleDescriptionArg args) {
-      return new FakeBuildRule(
-          buildTarget,
-          projectFilesystem,
-          params,
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
+      return new FakeBuildRule(buildTarget, projectFilesystem, params);
     }
   }
 

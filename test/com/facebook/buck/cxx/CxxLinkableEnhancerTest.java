@@ -83,10 +83,9 @@ public class CxxLinkableEnhancerTest {
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        SourcePathResolver resolver,
         NativeLinkableInput staticInput,
         NativeLinkableInput sharedInput) {
-      super(buildTarget, projectFilesystem, params, resolver);
+      super(buildTarget, projectFilesystem, params);
       this.staticInput = Preconditions.checkNotNull(staticInput);
       this.sharedInput = Preconditions.checkNotNull(sharedInput);
     }
@@ -123,7 +122,6 @@ public class CxxLinkableEnhancerTest {
 
   private static FakeNativeLinkable createNativeLinkable(
       String target,
-      SourcePathResolver resolver,
       NativeLinkableInput staticNativeLinkableInput,
       NativeLinkableInput sharedNativeLinkableInput,
       BuildRule... deps) {
@@ -132,7 +130,6 @@ public class CxxLinkableEnhancerTest {
         buildTarget,
         new FakeProjectFilesystem(),
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-        resolver,
         staticNativeLinkableInput,
         sharedNativeLinkableInput);
   }
@@ -200,10 +197,7 @@ public class CxxLinkableEnhancerTest {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
     FakeBuildRule fakeBuildRule =
         new FakeBuildRule(
-            fakeBuildTarget,
-            new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
-            pathResolver);
+            fakeBuildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create());
     fakeBuildRule.setOutputFile("foo");
     resolver.addToIndex(fakeBuildRule);
 
@@ -215,7 +209,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of());
     FakeNativeLinkable nativeLinkable =
-        createNativeLinkable("//:dep", pathResolver, nativeLinkableInput, nativeLinkableInput);
+        createNativeLinkable("//:dep", nativeLinkableInput, nativeLinkableInput);
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
     CxxLink cxxLink =
@@ -356,8 +350,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput sharedInput =
         NativeLinkableInput.of(
             ImmutableList.of(StringArg.of(sharedArg)), ImmutableSet.of(), ImmutableSet.of());
-    FakeNativeLinkable nativeLinkable =
-        createNativeLinkable("//:dep", pathResolver, staticInput, sharedInput);
+    FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep", staticInput, sharedInput);
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink =
@@ -473,16 +466,16 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput bottomInput =
         NativeLinkableInput.of(
             ImmutableList.of(StringArg.of(sentinel)), ImmutableSet.of(), ImmutableSet.of());
-    BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
+    BuildRule bottom = createNativeLinkable("//:bottom", bottomInput, bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
     // traversals to the bottom native linkable.
-    BuildRule middle = new FakeBuildRule("//:middle", pathResolver, bottom);
+    BuildRule middle = new FakeBuildRule("//:middle", bottom);
 
     // Create a native linkable that sits at the top of the dep chain.
     NativeLinkableInput topInput =
         NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
-    BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
+    BuildRule top = createNativeLinkable("//:top", topInput, topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.

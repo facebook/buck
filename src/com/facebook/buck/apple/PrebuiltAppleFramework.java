@@ -31,7 +31,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -61,7 +61,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
+public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements CxxPreprocessorDep, NativeLinkable, HasOutputName {
 
   @AddToRuleKey(stringify = true)
@@ -95,7 +95,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithResolver
       ImmutableSet<FrameworkPath> frameworks,
       Optional<Pattern> supportedPlatformsRegex,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags) {
-    super(buildTarget, projectFilesystem, params, pathResolver);
+    super(buildTarget, projectFilesystem, params);
     this.frameworkPath = frameworkPath;
     this.ruleResolver = ruleResolver;
     this.exportedLinkerFlags = exportedLinkerFlags;

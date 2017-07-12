@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
-public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
+public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps implements TestRule {
 
   private final ImmutableSet<String> labels;
   private final Optional<Path> pathToTestOutputDirectory;
@@ -39,15 +39,11 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   private final Callable<TestResults> interpretedTestResults;
 
   public FakeTestRule(
-      ImmutableSet<String> labels,
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
+      ImmutableSet<String> labels, BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
     this(
         target,
         new FakeProjectFilesystem(),
         TestBuildRuleParams.create().withDeclaredDeps(deps),
-        resolver,
         labels);
   }
 
@@ -55,13 +51,11 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSet<String> labels) {
     this(
         buildTarget,
         projectFilesystem,
         buildRuleParams,
-        resolver,
         labels,
         Optional.empty(),
         false, // runTestSeparately
@@ -75,13 +69,12 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSet<String> labels,
       Optional<Path> pathToTestOutputDirectory,
       boolean runTestSeparately,
       ImmutableList<Step> testSteps,
       Callable<TestResults> interpretedTestResults) {
-    super(buildTarget, projectFilesystem, buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.labels = labels;
     this.pathToTestOutputDirectory = pathToTestOutputDirectory;
     this.runTestSeparately = runTestSeparately;

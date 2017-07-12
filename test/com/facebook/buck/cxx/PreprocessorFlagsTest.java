@@ -105,7 +105,7 @@ public class PreprocessorFlagsTest {
       FakeFileHashCache hashCache =
           FakeFileHashCache.createFromStrings(
               ImmutableMap.of("different", Strings.repeat("d", 40)));
-      BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
+      BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       DefaultRuleKeyFactory.Builder<HashCode> builder;
       builder =
@@ -138,7 +138,7 @@ public class PreprocessorFlagsTest {
       final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       final FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
-      final BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
+      final BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       class TestData {
         public RuleKey generate(String prefix) {

@@ -28,13 +28,10 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
@@ -62,9 +59,8 @@ public class CxxPreprocessablesTest {
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        SourcePathResolver resolver,
         CxxPreprocessorInput input) {
-      super(buildTarget, projectFilesystem, params, resolver);
+      super(buildTarget, projectFilesystem, params);
       this.input = Preconditions.checkNotNull(input);
     }
 
@@ -93,22 +89,17 @@ public class CxxPreprocessablesTest {
   }
 
   private static FakeCxxPreprocessorDep createFakeCxxPreprocessorDep(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      CxxPreprocessorInput input,
-      BuildRule... deps) {
+      BuildTarget target, CxxPreprocessorInput input, BuildRule... deps) {
     return new FakeCxxPreprocessorDep(
         target,
         new FakeProjectFilesystem(),
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-        resolver,
         input);
   }
 
   private static FakeCxxPreprocessorDep createFakeCxxPreprocessorDep(
-      String target, SourcePathResolver resolver, CxxPreprocessorInput input, BuildRule... deps) {
-    return createFakeCxxPreprocessorDep(
-        BuildTargetFactory.newInstance(target), resolver, input, deps);
+      String target, CxxPreprocessorInput input, BuildRule... deps) {
+    return createFakeCxxPreprocessorDep(BuildTargetFactory.newInstance(target), input, deps);
   }
 
   @Rule public ExpectedException exception = ExpectedException.none();
@@ -134,11 +125,6 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveCxxPreprocessorInput() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(
             new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()));
@@ -152,7 +138,7 @@ public class CxxPreprocessablesTest {
             .putPreprocessorFlags(CxxSource.Type.CXX, StringArg.of("-Dtest=yes"))
             .build();
     BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep1");
-    FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, pathResolver, input1);
+    FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, input1);
 
     // Setup another simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:cpp2");
@@ -163,13 +149,12 @@ public class CxxPreprocessablesTest {
             .putPreprocessorFlags(CxxSource.Type.CXX, StringArg.of("-DBLAH"))
             .build();
     BuildTarget depTarget2 = BuildTargetFactory.newInstance("//:dep2");
-    FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, pathResolver, input2);
+    FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, input2);
 
     // Create a normal dep which depends on the two CxxPreprocessorDep rules above.
     BuildTarget depTarget3 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep3");
     CxxPreprocessorInput nothing = CxxPreprocessorInput.EMPTY;
-    FakeCxxPreprocessorDep dep3 =
-        createFakeCxxPreprocessorDep(depTarget3, pathResolver, nothing, dep1, dep2);
+    FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3, nothing, dep1, dep2);
 
     // Verify that getTransitiveCxxPreprocessorInput gets all CxxPreprocessorInput objects
     // from the relevant rules above.
@@ -223,11 +208,6 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
       throws Exception {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -235,15 +215,15 @@ public class CxxPreprocessablesTest {
     StringArg sentinal = StringArg.of("bottom");
     CxxPreprocessorInput bottomInput =
         CxxPreprocessorInput.builder().putPreprocessorFlags(CxxSource.Type.C, sentinal).build();
-    BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", pathResolver, bottomInput);
+    BuildRule bottom = createFakeCxxPreprocessorDep("//:bottom", bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
     // traversals to the bottom native linkable.
-    BuildRule middle = new FakeBuildRule("//:middle", pathResolver, bottom);
+    BuildRule middle = new FakeBuildRule("//:middle", bottom);
 
     // Create a native linkable that sits at the top of the dep chain.
     CxxPreprocessorInput topInput = CxxPreprocessorInput.EMPTY;
-    BuildRule top = createFakeCxxPreprocessorDep("//:top", pathResolver, topInput, middle);
+    BuildRule top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.

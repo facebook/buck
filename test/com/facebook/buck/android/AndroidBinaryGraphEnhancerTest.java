@@ -548,11 +548,10 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     FakeBuildRule resourcesDep =
         ruleResolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//:resource_dep"), pathResolver));
+            new FakeBuildRule(BuildTargetFactory.newInstance("//:resource_dep")));
     resourcesDep.setOutputFile("foo");
 
     BuildTarget resourceTarget = BuildTargetFactory.newInstance("//:resources");

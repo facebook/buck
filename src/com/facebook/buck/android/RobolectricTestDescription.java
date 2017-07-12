@@ -186,7 +186,6 @@ public class RobolectricTestDescription
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
-        ruleFinder,
         testsLibrary,
         args.getLabels(),
         args.getContacts(),

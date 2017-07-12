@@ -437,10 +437,6 @@ public class TestRunningTest {
             separateTest1Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("separateTestStep1OutputDir")),
             true, // runTestSeparately
@@ -455,10 +451,6 @@ public class TestRunningTest {
             separateTest2Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("separateTestStep2OutputDir")),
             true, // runTestSeparately
@@ -473,10 +465,6 @@ public class TestRunningTest {
             separateTest3Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("separateTestStep3OutputDir")),
             true, // runTestSeparately
@@ -556,10 +544,6 @@ public class TestRunningTest {
             separateTest1Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("separateTestStep1OutputDir")),
             true, // runTestSeparately
@@ -574,10 +558,6 @@ public class TestRunningTest {
             separateTest2Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("separateTestStep2OutputDir")),
             true, // runTestSeparately
@@ -592,10 +572,6 @@ public class TestRunningTest {
             separateTest3Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("separateTestStep3OutputDir")),
             true, // runTestSeparately
@@ -611,10 +587,6 @@ public class TestRunningTest {
             parallelTest1Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("parallelTestStep1OutputDir")),
             false, // runTestSeparately
@@ -630,10 +602,6 @@ public class TestRunningTest {
             parallelTest2Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("parallelTestStep2OutputDir")),
             false, // runTestSeparately
@@ -649,10 +617,6 @@ public class TestRunningTest {
             parallelTest3Target,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(),
             Optional.of(Paths.get("parallelTestStep3OutputDir")),
             false, // runTestSeparately
@@ -807,7 +771,6 @@ public class TestRunningTest {
             failingTestTarget,
             new FakeProjectFilesystem(),
             TestBuildRuleParams.create(),
-            resolver,
             ImmutableSet.of(),
             Optional.of(Paths.get("failingTestStep1OutputDir")),
             true, // runTestSeparately

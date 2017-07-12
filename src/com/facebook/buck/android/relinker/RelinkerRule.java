@@ -26,7 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -60,7 +60,8 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideScheduleRule {
+class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements OverrideScheduleRule {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
   @AddToRuleKey private final NdkCxxPlatforms.TargetCpuType cpuType;
@@ -87,10 +88,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs) {
     super(
-        buildTarget,
-        projectFilesystem,
-        withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs),
-        resolver);
+        buildTarget, projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs));
     this.pathResolver = resolver;
     this.cpuType = cpuType;
     this.objdump = objdump;

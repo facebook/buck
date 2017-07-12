@@ -25,7 +25,7 @@ import com.facebook.buck.jvm.java.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -57,6 +56,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 import javax.xml.transform.TransformerException;
 import org.apache.maven.model.Dependency;
@@ -159,7 +159,7 @@ public class PomIntegrationTest {
   private MavenPublishable createMavenPublishable(
       String target, String mavenCoords, @Nullable SourcePath pomTemplate, BuildRule... deps) {
     return ruleResolver.addToIndex(
-        new PublishedViaMaven(target, filesystem, ruleResolver, mavenCoords, pomTemplate, deps));
+        new PublishedViaMaven(target, filesystem, mavenCoords, pomTemplate, deps));
   }
 
   private static void serializePom(Model pomModel, Path destination) throws IOException {
@@ -182,25 +182,21 @@ public class PomIntegrationTest {
     }
   }
 
-  private static class PublishedViaMaven extends AbstractBuildRuleWithResolver
-      implements MavenPublishable {
+  private static class PublishedViaMaven extends AbstractBuildRule implements MavenPublishable {
     @Nullable @AddToRuleKey private final SourcePath pomTemplate;
     @AddToRuleKey private final String coords;
+    private final ImmutableSortedSet<BuildRule> deps;
 
     public PublishedViaMaven(
         String target,
         ProjectFilesystem filesystem,
-        BuildRuleResolver ruleResolver,
         String coords,
         @Nullable SourcePath pomTemplate,
         BuildRule... deps) {
-      super(
-          BuildTargetFactory.newInstance(target),
-          filesystem,
-          TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)));
+      super(BuildTargetFactory.newInstance(target), filesystem);
       this.coords = coords;
       this.pomTemplate = pomTemplate;
+      this.deps = ImmutableSortedSet.copyOf(deps);
     }
 
     @Override
@@ -210,7 +206,7 @@ public class PomIntegrationTest {
 
     @Override
     public Iterable<BuildRule> getPackagedDependencies() {
-      return getDeclaredDeps();
+      return deps;
     }
 
     @Override
@@ -221,6 +217,11 @@ public class PomIntegrationTest {
     @Override
     public Optional<String> getMavenCoords() {
       return Optional.of(coords);
+    }
+
+    @Override
+    public SortedSet<BuildRule> getBuildDeps() {
+      return deps;
     }
 
     @Override

@@ -747,12 +747,7 @@ public class DirArtifactCacheTest {
     private final SourcePath file;
 
     private BuildRuleForTest(Path file) {
-      super(
-          BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()),
-          DefaultSourcePathResolver.from(
-              new SourcePathRuleFinder(
-                  new BuildRuleResolver(
-                      TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))));
+      super(BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()));
       // TODO(15468825) - PathSourcePath should be relative!11!!11!1!!!
       this.file = new PathSourcePath(new FakeProjectFilesystem(), file);
     }

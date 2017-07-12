@@ -27,11 +27,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -52,11 +49,6 @@ public class CxxLibraryTest {
 
   @Test
   public void cxxLibraryInterfaces() throws Exception {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
     CxxPlatform cxxPlatform =
@@ -70,12 +62,10 @@ public class CxxLibraryTest {
         BuildTargetFactory.newInstance("//:privatesymlink");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule archive =
-        new FakeBuildRule("//:archive", pathResolver).setOutputFile("libarchive.a");
+    final BuildRule archive = new FakeBuildRule("//:archive").setOutputFile("libarchive.a");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule sharedLibrary =
-        new FakeBuildRule("//:shared", pathResolver).setOutputFile("libshared.so");
+    final BuildRule sharedLibrary = new FakeBuildRule("//:shared").setOutputFile("libshared.so");
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "lib.so";
 
@@ -158,8 +148,6 @@ public class CxxLibraryTest {
   public void headerOnlyExports() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
@@ -170,8 +158,7 @@ public class CxxLibraryTest {
         target.withAppendedFlavors(
             cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
-        new FakeBuildRule(
-            staticPicLibraryTarget, projectFilesystem, TestBuildRuleParams.create(), pathResolver));
+        new FakeBuildRule(staticPicLibraryTarget, projectFilesystem, TestBuildRuleParams.create()));
 
     FrameworkPath frameworkPath =
         FrameworkPath.ofSourcePath(

@@ -185,8 +185,7 @@ public class ExportFileTest {
     pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     FakeBuildRule rule =
-        resolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//example:one"), pathResolver));
+        resolver.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
 
     builder.setSrc(new DefaultBuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = builder.build(resolver, projectFilesystem);

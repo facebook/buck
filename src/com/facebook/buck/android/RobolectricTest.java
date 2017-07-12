@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -78,7 +77,6 @@ public class RobolectricTest extends JavaTest {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
       JavaLibrary compiledTestsLibrary,
       Set<String> labels,
       Set<String> contacts,
@@ -100,7 +98,6 @@ public class RobolectricTest extends JavaTest {
         buildTarget,
         projectFilesystem,
         buildRuleParams,
-        DefaultSourcePathResolver.from(ruleFinder),
         compiledTestsLibrary,
         optionalDummyRDotJava
             .map(

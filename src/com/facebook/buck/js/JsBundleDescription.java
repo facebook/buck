@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -103,13 +102,11 @@ public class JsBundleDescription
       BuildTarget bundleTarget = buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP);
       resolver.requireRule(bundleTarget);
       JsBundleOutputs bundleOutputs = resolver.getRuleWithType(bundleTarget, JsBundleOutputs.class);
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
       return new ExportFile(
           buildTarget,
           projectFilesystem,
           JsUtil.copyParamsWithDependencies(params),
-          DefaultSourcePathResolver.from(ruleFinder),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToSourceMap());

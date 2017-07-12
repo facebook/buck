@@ -20,7 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -91,7 +91,7 @@ import java.util.stream.Stream;
  * of the file to be saved.
  */
 // TODO(simons): Extend to also allow exporting a rule.
-public class ExportFile extends AbstractBuildRuleWithResolver
+public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasOutputName, HasRuntimeDeps {
 
   @AddToRuleKey private final String name;
@@ -102,11 +102,10 @@ public class ExportFile extends AbstractBuildRuleWithResolver
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
-    super(buildTarget, projectFilesystem, buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.name = name;
     this.mode = mode;
     this.src = src;

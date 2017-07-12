@@ -26,12 +26,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.FluentIterable;
@@ -46,9 +43,8 @@ public class NdkLibraryDescriptionTest {
 
     private final SourcePath input;
 
-    public FakeNativeLinkable(
-        String target, SourcePathResolver resolver, SourcePath input, BuildRule... deps) {
-      super(target, resolver, deps);
+    public FakeNativeLinkable(String target, SourcePath input, BuildRule... deps) {
+      super(target, deps);
       this.input = input;
     }
 
@@ -86,26 +82,18 @@ public class NdkLibraryDescriptionTest {
   public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
-    FakeBuildRule transitiveInput =
-        resolver.addToIndex(new FakeBuildRule("//:transitive_input", pathResolver));
+    FakeBuildRule transitiveInput = resolver.addToIndex(new FakeBuildRule("//:transitive_input"));
     transitiveInput.setOutputFile("out");
     FakeNativeLinkable transitiveDep =
         resolver.addToIndex(
-            new FakeNativeLinkable(
-                "//:transitive_dep", pathResolver, transitiveInput.getSourcePathToOutput()));
-    FakeBuildRule firstOrderInput =
-        resolver.addToIndex(new FakeBuildRule("//:first_order_input", pathResolver));
+            new FakeNativeLinkable("//:transitive_dep", transitiveInput.getSourcePathToOutput()));
+    FakeBuildRule firstOrderInput = resolver.addToIndex(new FakeBuildRule("//:first_order_input"));
     firstOrderInput.setOutputFile("out");
     FakeNativeLinkable firstOrderDep =
         resolver.addToIndex(
             new FakeNativeLinkable(
-                "//:first_order_dep",
-                pathResolver,
-                firstOrderInput.getSourcePathToOutput(),
-                transitiveDep));
+                "//:first_order_dep", firstOrderInput.getSourcePathToOutput(), transitiveDep));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRule ndkLibrary =

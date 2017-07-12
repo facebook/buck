@@ -21,15 +21,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
@@ -58,13 +52,7 @@ public class NativeLinkablesTest {
         NativeLinkableInput nativeLinkableInput,
         ImmutableMap<String, SourcePath> sharedLibraries,
         BuildRule... ruleDeps) {
-      super(
-          BuildTargetFactory.newInstance(target),
-          DefaultSourcePathResolver.from(
-              new SourcePathRuleFinder(
-                  new BuildRuleResolver(
-                      TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
-          ImmutableSortedSet.copyOf(ruleDeps));
+      super(BuildTargetFactory.newInstance(target), ImmutableSortedSet.copyOf(ruleDeps));
       this.deps = ImmutableList.copyOf(deps);
       this.exportedDeps = ImmutableList.copyOf(exportedDeps);
       this.preferredLinkage = preferredLinkage;
@@ -251,10 +239,6 @@ public class NativeLinkablesTest {
 
   @Test
   public void nonNativeLinkableDepsAreIgnored() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     FakeNativeLinkable c =
         new FakeNativeLinkable(
             "//:c",
@@ -263,7 +247,7 @@ public class NativeLinkablesTest {
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("c")).build(),
             ImmutableMap.of());
-    FakeBuildRule b = new FakeBuildRule("//:b", pathResolver, c);
+    FakeBuildRule b = new FakeBuildRule("//:b", c);
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",

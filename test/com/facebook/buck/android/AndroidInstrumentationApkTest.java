@@ -58,12 +58,11 @@ public class AndroidInstrumentationApkTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget javaLibrary1Target = BuildTargetFactory.newInstance("//java/com/example:lib1");
-    final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target, pathResolver);
+    final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
 
     FakeJavaLibrary javaLibrary2 =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance("//java/com/example:lib2"),
-            pathResolver,
             /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
 
           @Override
@@ -74,12 +73,11 @@ public class AndroidInstrumentationApkTest {
         };
 
     BuildTarget javaLibrary3Target = BuildTargetFactory.newInstance("//java/com/example:lib3");
-    final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(javaLibrary3Target, pathResolver);
+    final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(javaLibrary3Target);
 
     FakeJavaLibrary javaLibrary4 =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance("//java/com/example:lib4"),
-            pathResolver,
             /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
           @Override
           public ImmutableSet<SourcePath> getTransitiveClasspaths() {

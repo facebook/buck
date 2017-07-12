@@ -24,7 +24,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -57,7 +57,7 @@ import java.util.Set;
 import java.util.SortedSet;
 
 @BuildsAnnotationProcessor
-public class PrebuiltJar extends AbstractBuildRuleWithResolver
+public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         ExportDependencies,
         HasClasspathEntries,
@@ -93,7 +93,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithResolver
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
       final boolean provided) {
-    super(buildTarget, projectFilesystem, params, resolver);
+    super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
     this.gwtJar = gwtJar;

@@ -27,56 +27,34 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
 
-public class FakeBuildRule extends AbstractBuildRuleWithResolver implements BuildRule {
+public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps implements BuildRule {
 
   @Nullable private Path outputFile;
 
-  public FakeBuildRule(
-      BuildTarget target, SourcePathResolver resolver, ImmutableSortedSet<BuildRule> deps) {
-    this(
-        target,
-        new FakeProjectFilesystem(),
-        TestBuildRuleParams.create().withDeclaredDeps(deps),
-        resolver);
+  public FakeBuildRule(BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
+    this(target, new FakeProjectFilesystem(), TestBuildRuleParams.create().withDeclaredDeps(deps));
   }
 
   public FakeBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver) {
-    super(buildTarget, projectFilesystem, buildRuleParams, resolver);
+      BuildRuleParams buildRuleParams) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
   }
 
-  public FakeBuildRule(BuildTarget buildTarget, SourcePathResolver resolver) {
-    this(buildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create(), resolver);
+  public FakeBuildRule(BuildTarget buildTarget) {
+    this(buildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create());
   }
 
-  public FakeBuildRule(
-      BuildTarget target,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
-      BuildRule... deps) {
+  public FakeBuildRule(BuildTarget target, ProjectFilesystem filesystem, BuildRule... deps) {
     this(
         target,
         filesystem,
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-        resolver);
-  }
-
-  public FakeBuildRule(String target, SourcePathResolver resolver, BuildRule... deps) {
-    this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), resolver, deps);
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)));
   }
 
   public FakeBuildRule(String target, BuildRule... deps) {
-    this(target, newSourcePathResolver(), deps);
-  }
-
-  private static SourcePathResolver newSourcePathResolver() {
-    return DefaultSourcePathResolver.from(
-        new SourcePathRuleFinder(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), deps);
   }
 
   @Override

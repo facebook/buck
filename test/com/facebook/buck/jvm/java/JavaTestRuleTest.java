@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -97,17 +96,15 @@ public class JavaTestRuleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     FakeJavaLibrary transitiveDep =
         resolver.addToIndex(
-            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_dep"), pathResolver));
+            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_dep")));
 
     FakeJavaLibrary firstOrderDep =
         resolver.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:first_order_dep"),
-                pathResolver,
                 ImmutableSortedSet.of(transitiveDep)));
 
     JavaTest rule =

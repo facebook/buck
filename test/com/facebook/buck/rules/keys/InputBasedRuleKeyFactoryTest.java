@@ -77,7 +77,7 @@ public class InputBasedRuleKeyFactoryTest {
     Path depOutput = Paths.get("output");
     FakeBuildRule dep =
         resolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), filesystem, pathResolver));
+            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), filesystem));
     dep.setOutputFile(depOutput.toString());
     filesystem.writeContentsToPath(
         "hello", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
@@ -506,7 +506,7 @@ public class InputBasedRuleKeyFactoryTest {
       Object... objects) {
     return new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder)
         .build(
-            new FakeBuildRule("//fake:target", resolver) {
+            new FakeBuildRule("//fake:target") {
               @AddToRuleKey List<Object> ruleObjects = Arrays.asList(objects);
             });
   }

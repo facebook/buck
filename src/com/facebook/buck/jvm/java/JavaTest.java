@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -89,7 +89,7 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class JavaTest extends AbstractBuildRuleWithResolver
+public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule,
         HasClasspathEntries,
         HasRuntimeDeps,
@@ -148,7 +148,6 @@ public class JavaTest extends AbstractBuildRuleWithResolver
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<String> labels,
@@ -164,7 +163,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    super(buildTarget, projectFilesystem, params, resolver);
+    super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
 
     for (Either<SourcePath, Path> path : additionalClasspathEntries) {

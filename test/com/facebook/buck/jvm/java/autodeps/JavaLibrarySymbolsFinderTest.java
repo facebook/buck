@@ -117,7 +117,7 @@ public class JavaLibrarySymbolsFinderTest {
             () -> {
               SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
               if (input instanceof ExplicitBuildTargetSourcePath) {
-                return Optional.of(new FakeBuildRule(fakeBuildTarget, pathResolver));
+                return Optional.of(new FakeBuildRule(fakeBuildTarget));
               } else {
                 return Optional.empty();
               }

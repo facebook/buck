@@ -211,11 +211,7 @@ public class TargetNodeVisibilityTest {
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeRuleDescriptionArg args) {
-      return new FakeBuildRule(
-          buildTarget,
-          projectFilesystem,
-          params,
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
+      return new FakeBuildRule(buildTarget, projectFilesystem, params);
     }
 
     @BuckStyleImmutable

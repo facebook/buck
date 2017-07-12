@@ -284,7 +284,7 @@ public class RuleKeyTest {
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
-    BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
+    BuildRule buildRule = new FakeBuildRule(buildTarget);
 
     RuleKey empty1 =
         new DefaultRuleKeyFactory(0, new DummyFileHashCache(), resolver, ruleFinder)
@@ -384,8 +384,8 @@ public class RuleKeyTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    FakeBuildRule fake1 = new FakeBuildRule("//:fake1", pathResolver);
-    FakeBuildRule fake2 = new FakeBuildRule("//:fake2", pathResolver);
+    FakeBuildRule fake1 = new FakeBuildRule("//:fake1");
+    FakeBuildRule fake2 = new FakeBuildRule("//:fake2");
     resolver.addToIndex(fake1);
     resolver.addToIndex(fake2);
 
@@ -457,7 +457,7 @@ public class RuleKeyTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    final FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake", pathResolver);
+    final FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake");
     resolver.addToIndex(fakeBuildRule);
 
     ExplicitBuildTargetSourcePath archive1 =
@@ -796,7 +796,7 @@ public class RuleKeyTest {
           public void set(Path path, HashCode hashCode) {}
         };
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
-    BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
+    BuildRule buildRule = new FakeBuildRule(buildTarget);
     return new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder)
         .newBuilderForTesting(buildRule);
   }

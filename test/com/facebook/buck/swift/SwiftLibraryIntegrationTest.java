@@ -100,8 +100,8 @@ public class SwiftLibraryIntegrationTest {
             symlinkTarget,
             BuildTargetFactory.newInstance("//:privateheader"),
             BuildTargetFactory.newInstance("//:privatesymlink"),
-            new FakeBuildRule("//:archive", pathResolver),
-            new FakeBuildRule("//:shared", pathResolver),
+            new FakeBuildRule("//:archive"),
+            new FakeBuildRule("//:shared"),
             Paths.get("output/path/lib.so"),
             "lib.so",
             ImmutableSortedSet.of());

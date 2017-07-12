@@ -84,7 +84,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     FakeJavaLibrary javaLibraryRule =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
-            pathResolver,
             filesystem,
             ImmutableSortedSet.of()) {
           @Override

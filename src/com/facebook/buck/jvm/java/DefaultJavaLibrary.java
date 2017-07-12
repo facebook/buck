@@ -22,7 +22,7 @@ import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
@@ -85,7 +85,7 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
+public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements JavaLibrary,
         HasClasspathEntries,
         ExportDependencies,
@@ -189,7 +189,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithResolver
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
-    super(buildTarget, projectFilesystem, params, resolver);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
 

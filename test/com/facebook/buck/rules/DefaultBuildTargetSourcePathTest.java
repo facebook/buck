@@ -35,7 +35,7 @@ public class DefaultBuildTargetSourcePathTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
     resolver.addToIndex(rule);
     SourcePath path = new DefaultBuildTargetSourcePath(target);
@@ -54,7 +54,7 @@ public class DefaultBuildTargetSourcePathTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile("cheese");
     resolver.addToIndex(rule);
 

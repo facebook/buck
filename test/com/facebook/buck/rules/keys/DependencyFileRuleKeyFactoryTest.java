@@ -92,10 +92,10 @@ public class DependencyFileRuleKeyFactoryTest {
     SourcePath unusedSourcePath = new DefaultBuildTargetSourcePath(unusedTarget);
     SourcePath noncoveredSourcePath = new DefaultBuildTargetSourcePath(noncoveredTarget);
     SourcePath interestingSourcePath = new DefaultBuildTargetSourcePath(interestingTarget);
-    ruleResolver.addToIndex(new FakeBuildRule(usedTarget, pathResolver).setOutputFile("used"));
-    ruleResolver.addToIndex(new FakeBuildRule(unusedTarget, pathResolver).setOutputFile("unused"));
-    ruleResolver.addToIndex(new FakeBuildRule(noncoveredTarget, pathResolver).setOutputFile("nc"));
-    ruleResolver.addToIndex(new FakeBuildRule(interestingTarget, pathResolver).setOutputFile("in"));
+    ruleResolver.addToIndex(new FakeBuildRule(usedTarget).setOutputFile("used"));
+    ruleResolver.addToIndex(new FakeBuildRule(unusedTarget).setOutputFile("unused"));
+    ruleResolver.addToIndex(new FakeBuildRule(noncoveredTarget).setOutputFile("nc"));
+    ruleResolver.addToIndex(new FakeBuildRule(interestingTarget).setOutputFile("in"));
 
     testKeysWhenInputContentsChanges(
         ruleFinder,

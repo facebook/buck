@@ -111,8 +111,7 @@ public class RuleKeyLoggerListenerTest {
                         Optional.empty(),
                         "//topspin",
                         "//downtheline"))
-                .build(),
-            null);
+                .build());
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
     BuildRuleEvent.Started started =
         TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));

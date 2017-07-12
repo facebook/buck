@@ -24,12 +24,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -46,9 +44,7 @@ public class AndroidManifestDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule ruleWithOutput =
-        new FakeBuildRule(
-            BuildTargetFactory.newInstance("//foo:bar"),
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver))) {
+        new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar")) {
           @Override
           public SourcePath getSourcePathToOutput() {
             return new ExplicitBuildTargetSourcePath(

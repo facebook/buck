@@ -454,8 +454,6 @@ public class AndroidBinaryTest {
   public void transitivePrebuiltJarsAreFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildRule keystoreRule = addKeystoreRule(resolver);
 
     BuildRule prebuiltJarGen =
@@ -472,7 +470,6 @@ public class AndroidBinaryTest {
         resolver.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:immediate_dep"),
-                pathResolver,
                 ImmutableSortedSet.of(transitivePrebuiltJarDep)));
 
     BuildRule rule =

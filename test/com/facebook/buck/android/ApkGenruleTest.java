@@ -131,7 +131,7 @@ public class ApkGenruleTest {
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())
-            .setApk(new FakeInstallable(apkTarget, pathResolver).getBuildTarget())
+            .setApk(new FakeInstallable(apkTarget).getBuildTarget())
             .setBash("")
             .setCmd("python signer.py $APK key.properties > $OUT")
             .setCmdExe("")
@@ -295,8 +295,8 @@ public class ApkGenruleTest {
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
-    public FakeInstallable(BuildTarget buildTarget, SourcePathResolver resolver) {
-      super(buildTarget, resolver);
+    public FakeInstallable(BuildTarget buildTarget) {
+      super(buildTarget);
     }
 
     @Override

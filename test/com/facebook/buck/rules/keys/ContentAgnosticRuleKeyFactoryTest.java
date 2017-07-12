@@ -72,7 +72,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
     Path depOutput = Paths.get(filename);
     FakeBuildRule dep =
         resolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), fileSystem, pathResolver));
+            new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), fileSystem));
     dep.setOutputFile(depOutput.toString());
     fileSystem.writeContentsToPath(
         fileContents, pathResolver.getRelativePath(dep.getSourcePathToOutput()));

@@ -87,7 +87,7 @@ public class ExportFileDescription
               buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
     }
 
-    return new ExportFile(buildTarget, projectFilesystem, params, pathResolver, name, mode, src);
+    return new ExportFile(buildTarget, projectFilesystem, params, name, mode, src);
   }
 
   /** If the src field is absent, add the name field to the list of inputs. */

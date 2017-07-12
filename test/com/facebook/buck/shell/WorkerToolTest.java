@@ -70,10 +70,7 @@ public class WorkerToolTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildRule nonBinaryBuildRule =
-        new FakeBuildRule(
-            BuildTargetFactory.newInstance("//:fake"),
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
+    BuildRule nonBinaryBuildRule = new FakeBuildRule(BuildTargetFactory.newInstance("//:fake"));
     resolver.addToIndex(nonBinaryBuildRule);
 
     BuildTarget workerTarget = BuildTargetFactory.newInstance("//:worker_rule");

@@ -86,14 +86,12 @@ public class CxxSourceRuleFactoryTest {
   }
 
   public static class CxxSourceRuleFactoryTests {
-    private static FakeBuildRule createFakeBuildRule(
-        String target, SourcePathResolver resolver, BuildRule... deps) {
+    private static FakeBuildRule createFakeBuildRule(String target, BuildRule... deps) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
       return new FakeBuildRule(
           buildTarget,
           new FakeProjectFilesystem(),
-          TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
-          resolver);
+          TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)));
     }
 
     @Test
@@ -104,7 +102,7 @@ public class CxxSourceRuleFactoryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-      FakeBuildRule dep = resolver.addToIndex(new FakeBuildRule("//:dep1", pathResolver));
+      FakeBuildRule dep = resolver.addToIndex(new FakeBuildRule("//:dep1"));
 
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.builder().addRules(dep.getBuildTarget()).build();
@@ -210,9 +208,7 @@ public class CxxSourceRuleFactoryTest {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-      FakeBuildRule dep =
-          createFakeBuildRule(
-              "//:test", DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
+      FakeBuildRule dep = createFakeBuildRule("//:test");
       dep.setOutputFile("foo");
       resolver.addToIndex(dep);
       SourcePath input = dep.getSourcePathToOutput();

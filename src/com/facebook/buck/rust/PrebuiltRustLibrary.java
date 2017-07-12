@@ -18,14 +18,13 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
@@ -36,14 +35,12 @@ import com.google.common.collect.ImmutableList;
  * compile with PIC relocation so that its compatible with all other modes. Later we may want to
  * allow per-flavor files.
  */
-abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithResolver implements RustLinkable {
+abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements RustLinkable {
 
   public PrebuiltRustLibrary(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    super(buildTarget, projectFilesystem, params, resolver);
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 
   /**
