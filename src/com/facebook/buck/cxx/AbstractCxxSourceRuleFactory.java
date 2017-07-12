@@ -680,7 +680,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
     // Now build a new pp-delegate specially for this PCH rule.
     PreprocessorDelegate preprocessorDelegate =
-        pchTemplate.buildPreprocessorDelegate(getCxxPlatform(), preprocessor, compilerFlags);
+        pchTemplate.buildPreprocessorDelegate(
+            getPathResolver(), getCxxPlatform(), preprocessor, compilerFlags);
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
@@ -692,7 +693,8 @@ abstract class AbstractCxxSourceRuleFactory {
       depsBuilder.add(rule);
     }
 
-    depsBuilder.add(pchTemplate.requireAggregatedDepsRule(getCxxPlatform()));
+    depsBuilder.add(
+        pchTemplate.requireAggregatedDepsRule(getResolver(), getRuleFinder(), getCxxPlatform()));
     depsBuilder.add(preprocessorDelegate);
 
     return buildPrecompiledHeader(

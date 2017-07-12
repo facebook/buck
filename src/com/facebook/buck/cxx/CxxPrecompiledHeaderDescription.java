@@ -52,7 +52,6 @@ public class CxxPrecompiledHeaderDescription
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.getDeps())),
-        ruleResolver,
         args.getSrc());
   }
 

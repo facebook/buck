@@ -122,7 +122,6 @@ public class CxxPrecompiledHeaderRuleTest {
         target,
         new FakeProjectFilesystem(),
         newParams().copyAppendingExtraDeps(deps),
-        ruleResolver,
         headerSourcePath);
   }
 

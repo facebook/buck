@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -55,23 +54,16 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
-  public final BuildRuleResolver ruleResolver;
   public final SourcePath sourcePath;
-  private final SourcePathRuleFinder ruleFinder;
-  private final SourcePathResolver pathResolver;
 
   /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   CxxPrecompiledHeaderTemplate(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      BuildRuleResolver ruleResolver,
       SourcePath sourcePath) {
     super(buildTarget, projectFilesystem, buildRuleParams);
-    this.ruleResolver = ruleResolver;
     this.sourcePath = sourcePath;
-    this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {
@@ -177,7 +169,8 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  private ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps(
+      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform)) {
       builder.addAll(input.getDeps(ruleResolver, ruleFinder));
@@ -200,7 +193,8 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
         .withAppendedFlavors(cxxPlatform.getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR);
   }
 
-  public DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
+  public DependencyAggregation requireAggregatedDepsRule(
+      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
     BuildTarget depAggTarget = createAggregatedDepsTarget(cxxPlatform);
 
     Optional<DependencyAggregation> existingRule =
@@ -211,13 +205,18 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
     DependencyAggregation depAgg =
         new DependencyAggregation(
-            depAggTarget, getProjectFilesystem(), getPreprocessDeps(cxxPlatform));
+            depAggTarget,
+            getProjectFilesystem(),
+            getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform));
     ruleResolver.addToIndex(depAgg);
     return depAgg;
   }
 
   public PreprocessorDelegate buildPreprocessorDelegate(
-      CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Preprocessor preprocessor,
+      CxxToolFlags preprocessorFlags) {
     ImmutableList<CxxHeaders> includes = getIncludes(cxxPlatform);
     try {
       CxxHeaders.checkConflictingHeaders(includes);
