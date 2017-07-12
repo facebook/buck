@@ -56,14 +56,15 @@ public class AndroidAppModularityDescription
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
             Optional.of(args.getApplicationModuleConfigs()), targetGraph, buildTarget);
-    AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            buildTarget, args.getNoDx(), /*resourcesToExclude*/ ImmutableSet.of(), apkModuleGraph);
-    collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(params.getBuildDeps()));
-    AndroidPackageableCollection packageableCollection = collector.build();
 
-    return new AndroidAppModularity(buildTarget, projectFilesystem, params, packageableCollection);
+    AndroidAppModularityGraphEnhancer graphEnhancer =
+        new AndroidAppModularityGraphEnhancer(
+            buildTarget, params, resolver, args.getNoDx(), apkModuleGraph);
+
+    AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    return new AndroidAppModularity(
+        buildTarget, projectFilesystem, params.withExtraDeps(result.getFinalDeps()), result);
   }
 
   @BuckStyleImmutable

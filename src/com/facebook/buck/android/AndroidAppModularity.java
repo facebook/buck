@@ -37,15 +37,15 @@ import java.util.Optional;
 
 public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  protected final AndroidPackageableCollection packageableCollection;
+  protected final AndroidAppModularityGraphEnhancementResult result;
 
   AndroidAppModularity(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      AndroidPackageableCollection packageableCollection) {
+      AndroidAppModularityGraphEnhancementResult result) {
     super(buildTarget, projectFilesystem, params);
-    this.packageableCollection = packageableCollection;
+    this.result = result;
   }
 
   @Override
@@ -66,7 +66,8 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();
     additionalDexStoreToJarPathMapBuilder.putAll(
-        packageableCollection
+        result
+            .getPackageableCollection()
             .getModuleMappedClasspathEntriesToDex()
             .entries()
             .stream()
