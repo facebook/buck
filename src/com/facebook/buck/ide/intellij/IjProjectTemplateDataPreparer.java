@@ -508,20 +508,28 @@ public class IjProjectTemplateDataPreparer {
       Map<String, Object> androidProperties,
       Path moduleBasePath,
       IjModuleAndroidFacet androidFacet) {
-    String variantName = "debug";
+    // The variant is the combination of the Android build type and product flavor.
+    String variantName;
     Optional<Path> manifestPath = androidFacet.getManifestPath();
     if (manifestPath.isPresent()) {
       Path manifestParentPath = manifestPath.get().getParent();
       variantName = manifestParentPath.getName(manifestParentPath.getNameCount() - 1).toString();
+    } else {
+      // fallback value in case we could not parse it from the manifest path (should not occur)
+      variantName = "debug";
     }
 
     Path rootModulePath = Paths.get(projectConfig.getProjectRoot());
     Path moduleRelativePath = rootModulePath.relativize(moduleBasePath);
+
+    // IntelliJ may not be able to find classes on the compiler output path
+    // if the jar_spool_mode is set to direct_to_jar.
     Path moduleLibClassesPath = Paths.get(
         rootModulePath.toString(),
         "buck-out/bin",
         moduleRelativePath.toString(),
         "lib__src_" + variantName + "__classes");
+
     Path compilerOutputPath = moduleBasePath.relativize(moduleLibClassesPath);
     androidProperties.put(
         "compiler_output_path",

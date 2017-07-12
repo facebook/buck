@@ -15,7 +15,8 @@
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/../buck-out/bin/modules/lib__src_debug__classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../buck-out/android/modules/gen">
       <sourceFolder url="file://$MODULE_DIR$/../buck-out/android/modules/gen" isTestSource="false" />
