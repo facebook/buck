@@ -80,6 +80,9 @@ class BuckRepo(BuckTool):
     def _get_resource(self, resource, exe=False):
         return self._join_buck_dir(RESOURCES[resource.name])
 
+    def _get_buck_version_timestamp(self):
+        return self._get_git_commit_timestamp()
+
     def _get_buck_version_uid(self):
         with Tracing('BuckRepo._get_buck_version_uid'):
 

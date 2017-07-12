@@ -169,6 +169,9 @@ class BuckTool(object):
     def _get_buck_version_uid(self):
         raise NotImplementedError()
 
+    def _get_buck_version_timestamp(self):
+        raise NotImplementedError()
+
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
 
@@ -406,6 +409,7 @@ class BuckTool(object):
                 return 0
 
             return returncode
+
 
     def kill_buckd(self):
         with Tracing('BuckTool.kill_buckd'):
