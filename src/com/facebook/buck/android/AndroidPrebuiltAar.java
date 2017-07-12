@@ -21,7 +21,6 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
-import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -85,8 +84,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         Optional.of(
             new ExplicitBuildTargetSourcePath(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* tests */ ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY);
+        /* tests */ ImmutableSortedSet.of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

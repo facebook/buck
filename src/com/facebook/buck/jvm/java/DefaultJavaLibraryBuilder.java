@@ -127,8 +127,7 @@ public class DefaultJavaLibraryBuilder {
         .setTests(args.getTests())
         .setManifestFile(args.getManifestFile())
         .setMavenCoords(args.getMavenCoords())
-        .setSourceAbisAllowed(args.getGenerateAbiFromSource().orElse(sourceAbisAllowed))
-        .setClassesToRemoveFromJar(new RemoveClassesPatternsMatcher(args.getRemoveClasses()));
+        .setSourceAbisAllowed(args.getGenerateAbiFromSource().orElse(sourceAbisAllowed));
   }
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
