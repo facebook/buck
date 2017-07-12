@@ -230,12 +230,24 @@
     </javac>
   </target>
 
+  <path id="testrunner.classpath">
+    <fileset refid="testrunner.jars" />
+  </path>
+
+  <fileset dir="${third-party.dir}/java" id="testrunner.jars">
+    <include name="ddmlib/ddmlib-25.2.0.jar" />
+    <include name="guava/guava-20.0.jar" />
+    <include name="jsr/jsr305.jar" />
+    <include name="junit/junit-4.12.jar" />
+    <include name="testng/testng-6.8.jar" />
+  </fileset>
+
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
            includes="com/facebook/buck/log/AppendableLogRecord.java,com/facebook/buck/testrunner/**,com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/jvm/java/runner/**"
            destdir="${testrunner.classes.dir}"
-           classpathref="junit"
+           classpathref="testrunner.classpath"
            debug="on"
            includeAntRuntime="no"
            >

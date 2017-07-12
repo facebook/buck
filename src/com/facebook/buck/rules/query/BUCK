@@ -40,6 +40,7 @@ java_library(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
     ],

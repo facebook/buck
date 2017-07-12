@@ -31,6 +31,7 @@ import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Threads;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -125,7 +126,7 @@ public final class QueryUtils {
           .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     } catch (QueryException e) {
       if (e.getCause() instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
       }
       throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
     }

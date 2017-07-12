@@ -59,6 +59,7 @@ import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -360,7 +361,7 @@ public class TestRunning {
                   } catch (CancellationException ignored) {
                     // Rethrow original InterruptedException instead.
                   }
-                  Thread.currentThread().interrupt();
+                  Threads.interruptCurrentThread();
                   throw new HumanReadableException(e, "Test cancelled");
                 }
                 LOG.debug("Done running serial tests.");
@@ -386,7 +387,7 @@ public class TestRunning {
       } catch (CancellationException ignored) {
         // Rethrow original InterruptedException instead.
       }
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
       throw e;
     }
 

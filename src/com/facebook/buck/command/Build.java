@@ -47,6 +47,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
@@ -238,7 +239,7 @@ public class Build implements Closeable {
         } catch (CancellationException ignored) {
           // Rethrow original InterruptedException instead.
         }
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
       }
       throw e;
     }

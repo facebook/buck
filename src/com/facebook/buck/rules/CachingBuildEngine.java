@@ -55,6 +55,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -1179,7 +1180,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
                 // Reset interrupted flag once failure has been recorded.
                 if (thrown instanceof InterruptedException) {
-                  Thread.currentThread().interrupt();
+                  Threads.interruptCurrentThread();
                 }
               }
             }));
@@ -1601,7 +1602,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
         throw new InterruptedException();
       }
     }
@@ -1633,7 +1634,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
         throw new InterruptedException();
       }
     }

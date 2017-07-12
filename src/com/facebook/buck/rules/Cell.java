@@ -31,6 +31,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Threads;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -90,7 +91,7 @@ public class Cell {
                         filesystem.getRootPath()),
                     e);
               } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                Threads.interruptCurrentThread();
                 throw new RuntimeException(
                     String.format(
                         "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
