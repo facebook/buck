@@ -200,11 +200,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
               new ClasspathChecker(),
               Optional.of(
                   DirectToJarOutputSettings.of(
-                      outputJar,
-                      buildTimeOptions.getClassesToRemoveFromJar(),
-                      entriesToJar,
-                      mainClass,
-                      manifestFile)),
+                      outputJar, classesToRemoveFromJar, entriesToJar, mainClass, manifestFile)),
               abiJar));
     } else {
       super.createCompileToJarStep(
@@ -226,7 +222,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           usedClassesFileWriter,
           steps,
           buildableContext,
-          javacOptions.getClassesToRemoveFromJar());
+          classesToRemoveFromJar);
     }
   }
 

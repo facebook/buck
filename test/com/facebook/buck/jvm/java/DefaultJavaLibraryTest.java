@@ -1414,7 +1414,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setManifestFile(Optional.empty())
               .setMavenCoords(Optional.empty())
               .setTests(ImmutableSortedSet.of())
-              .setClassesToRemoveFromJar(options.getClassesToRemoveFromJar())
               .build();
 
       ruleResolver.addToIndex(javaLibrary);
