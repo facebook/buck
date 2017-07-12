@@ -31,6 +31,7 @@ import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
 
 enum StringTemplateFile {
+  ANDROID_MANIFEST("AndroidManifest.st"),
   MODULE_TEMPLATE("ij-module.st"),
   MODULE_INDEX_TEMPLATE("ij-module-index.st"),
   MISC_TEMPLATE("ij-misc.st"),

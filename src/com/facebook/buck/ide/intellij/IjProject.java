@@ -85,7 +85,6 @@ public class IjProject {
             sourcePathResolver,
             ruleFinder,
             projectFilesystem,
-            projectConfig,
             requiredBuildTargets);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(projectFilesystem, moduleFactoryResolver, projectConfig);

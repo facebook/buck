@@ -259,6 +259,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratingAndroidManifest() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("generate_android_manifest");
+  }
+
+  @Test
   public void testPreprocessScript() throws InterruptedException, IOException {
     ProcessResult result = runBuckProjectAndVerify("preprocess_script_test");
 

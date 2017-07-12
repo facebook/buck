@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
-import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -44,7 +43,6 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   private final SourcePathResolver sourcePathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
-  private final IjProjectConfig projectConfig;
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargets;
 
   DefaultIjModuleFactoryResolver(
@@ -52,13 +50,11 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargets) {
     this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
     this.ruleFinder = ruleFinder;
     this.projectFilesystem = projectFilesystem;
-    this.projectConfig = projectConfig;
     this.requiredBuildTargets = requiredBuildTargets;
   }
 
@@ -84,12 +80,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
-    Optional<Path> defaultAndroidManifestPath =
-        projectConfig.getAndroidManifest().map(Path::toAbsolutePath);
-    return manifestPath
-        .map(sourcePathResolver::getAbsolutePath)
-        .map(Optional::of)
-        .orElse(defaultAndroidManifestPath);
+    return manifestPath.map(sourcePathResolver::getAbsolutePath).map(projectFilesystem::relativize);
   }
 
   @Override

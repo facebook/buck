@@ -437,18 +437,43 @@ public class IjProjectTemplateDataPreparer {
       Map<String, Object> androidProperties,
       Path moduleBasePath,
       IjModuleAndroidFacet androidFacet) {
-    Optional<Path> androidManifestPath = androidFacet.getManifestPath();
-    Path manifestPath;
-    if (androidManifestPath.isPresent()) {
-      manifestPath =
-          projectFilesystem.resolve(moduleBasePath).relativize(androidManifestPath.get());
-    } else {
-      manifestPath =
-          moduleBasePath.relativize(Paths.get("").resolve("android_res/AndroidManifest.xml"));
+    Optional<Path> androidManifestPath = getAndroidManifestPath(androidFacet);
+
+    if (!androidManifestPath.isPresent()) {
+      return;
     }
+
+    Path manifestPath =
+        projectFilesystem
+            .resolve(moduleBasePath)
+            .relativize(projectFilesystem.resolve(androidManifestPath.get()));
+
     if (!"AndroidManifest.xml".equals(manifestPath.toString())) {
       androidProperties.put(ANDROID_MANIFEST_TEMPLATE_PARAMETER, "/" + manifestPath);
     }
+  }
+
+  private Optional<Path> getAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
+    ImmutableSet<Path> androidManifestPaths = androidFacet.getManifestPaths();
+
+    if (androidManifestPaths.size() == 1) {
+      return Optional.of(androidManifestPaths.iterator().next());
+    }
+
+    if (projectConfig.isGeneratingAndroidManifestEnabled()) {
+      Optional<String> packageName = androidFacet.getPackageName();
+      if (packageName.isPresent()) {
+        return Optional.of(
+            androidFacet
+                .getGeneratedSourcePath()
+                .resolve(packageName.get().replace('.', '/'))
+                .resolve("AndroidManifest.xml"));
+      } else if (androidManifestPaths.size() > 0) {
+        return Optional.of(androidManifestPaths.iterator().next());
+      }
+    }
+
+    return projectConfig.getAndroidManifest();
   }
 
   private void addAndroidProguardPath(

@@ -1853,6 +1853,16 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
+  {param name: 'default_android_manifest_path' /}
+  {param example_value: 'shared/AndroidManifest.xml' /}
+  {param description}
+    The default manifest file that should be used in Android IntelliJ modules when buck cannot
+    detect the correct manifest to use.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
   {param name: 'java_library_sdk_names' /}
   {param example_value: '1.6 => Java SDK 1.6, 1.8 => Java SDK 1.8' /}
   {param description}
@@ -1912,6 +1922,20 @@ cxx_library(
   {param example_value: '1.8' /}
   {param description}
     SDK name for Java modules.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'generate_android_manifest' /}
+  {param example_value: 'true' /}
+  {param description}
+    Forces Buck to generate "AndroidManifest.xml" files for Android IntelliJ modules. The generated
+    manifests contain package name only to allow Android IntelliJ plugin resolve references to
+    resources correctly.
+    <p>Manifests are generated for modules that have information about package name and have either
+    none or more than one targets with Android manifests. When a module has exactly one target with
+    Android manifest this manifest is used as a manifest in the module.</p>
   {/param}
 {/call}
 
@@ -2513,20 +2537,6 @@ your <code>.buckjavaargs</code> file</a>:
       <li><code>intellij</code></li>
       <li><code>xcode</code></li>
     </ul>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'project' /}
-  {param name: 'default_android_manifest' /}
-  {param example_value: '//shared/AndroidManifest.xml' /}
-  {param description}
-    The default manifest file that should be used when a project is being generated for an Android
-    rule (like {call buck.android_library /}), but
-    there is no <code>AndroidManifest.xml</code> file in the same directory as the{sp}
-    {call buck.build_file /} the rule is defined in.  IDEs for Android
-    projects need a manifest file, and this setting provides a convenient fallback without having
-    boilerplate manifest files all over your project.
   {/param}
 {/call}
 

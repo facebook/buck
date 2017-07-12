@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -71,7 +72,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class DefaultIjModuleFactoryTest {
@@ -535,7 +535,8 @@ public class DefaultIjModuleFactoryTest {
             moduleBasePath, ImmutableSet.of(androidBinary), Collections.emptySet());
 
     assertTrue(module.getAndroidFacet().isPresent());
-    assertEquals(Paths.get(manifestName), module.getAndroidFacet().get().getManifestPath().get());
+    assertThat(
+        module.getAndroidFacet().get().getManifestPaths(), contains(Paths.get(manifestName)));
   }
 
   @Test
@@ -733,6 +734,6 @@ public class DefaultIjModuleFactoryTest {
     IjFolder cxxLibraryModel =
         new SourceFolder(
             Paths.get("cpp/lib"), false, ImmutableSortedSet.of(Paths.get("cpp/lib/foo.cpp")));
-    assertThat(module.getFolders(), Matchers.contains(cxxLibraryModel));
+    assertThat(module.getFolders(), contains(cxxLibraryModel));
   }
 }
