@@ -326,8 +326,7 @@ public class AppleCxxPlatforms {
         new PrefixMapDebugPathSanitizer(
             DebugPathSanitizer.getPaddedDir(
                 ".", config.getDebugPathSanitizerLimit(), File.separatorChar),
-            sanitizerPaths.build(),
-            CxxToolProvider.Type.CLANG);
+            sanitizerPaths.build());
     DebugPathSanitizer assemblerDebugPathSanitizer =
         new MungingDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(),

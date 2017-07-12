@@ -559,7 +559,7 @@ public class NdkCxxPlatforms {
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     ImmutableBiMap<Path, String> sanitizePaths = sanitizePathsBuilder.build();
     PrefixMapDebugPathSanitizer compilerDebugPathSanitizer =
-        new PrefixMapDebugPathSanitizer(".", sanitizePaths, type);
+        new PrefixMapDebugPathSanitizer(".", sanitizePaths);
     MungingDebugPathSanitizer assemblerDebugPathSanitizer =
         new MungingDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(), File.separatorChar, Paths.get("."), sanitizePaths);

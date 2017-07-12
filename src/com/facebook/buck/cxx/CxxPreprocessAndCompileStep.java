@@ -154,7 +154,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         .addAll(compiler.languageArgs(inputLanguage))
         .addAll(
             sanitizer.getCompilationFlags(
-                filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
+                compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
         .add("-c")
         .addAll(
             depFile
