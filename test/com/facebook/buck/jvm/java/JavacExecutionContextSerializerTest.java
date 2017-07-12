@@ -72,9 +72,7 @@ public class JavacExecutionContextSerializerTest {
     DirectToJarOutputSettings directToJarOutputSettings =
         DirectToJarOutputSettings.of(
             Paths.get("/some/path"),
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))),
+            ImmutableSet.of(Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE)),
             ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
             Optional.of("hello I am main class"),
             Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
@@ -151,24 +149,13 @@ public class JavacExecutionContextSerializerTest {
         output.getDirectToJarOutputSettings().get().getManifestFile(),
         Matchers.equalToObject(directToJarOutputSettings.getManifestFile()));
     assertThat(
-        output
-            .getDirectToJarOutputSettings()
-            .get()
-            .getClassesToRemoveFromJar()
-            .getPatterns()
-            .size(),
-        Matchers.equalToObject(
-            directToJarOutputSettings.getClassesToRemoveFromJar().getPatterns().size()));
+        output.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar().size(),
+        Matchers.equalToObject(directToJarOutputSettings.getClassesToRemoveFromJar().size()));
 
     ImmutableList<Pattern> inputPatterns =
-        directToJarOutputSettings.getClassesToRemoveFromJar().getPatterns().asList();
+        directToJarOutputSettings.getClassesToRemoveFromJar().asList();
     ImmutableList<Pattern> outputPatterns =
-        output
-            .getDirectToJarOutputSettings()
-            .get()
-            .getClassesToRemoveFromJar()
-            .getPatterns()
-            .asList();
+        output.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar().asList();
 
     for (int i = 0; i < inputPatterns.size(); i++) {
       Pattern inputPattern = inputPatterns.get(i);

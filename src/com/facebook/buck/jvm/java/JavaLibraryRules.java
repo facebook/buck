@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** Common utilities for working with {@link JavaLibrary} objects. */
@@ -70,7 +72,7 @@ public class JavaLibraryRules {
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar,
+      ImmutableSet<Pattern> classesToRemoveFromJar,
       ImmutableList.Builder<Step> steps) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.

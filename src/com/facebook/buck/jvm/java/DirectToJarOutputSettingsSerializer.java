@@ -46,7 +46,7 @@ public class DirectToJarOutputSettingsSerializer {
 
     ImmutableList.Builder<ImmutableMap<String, Object>> serializedPatterns =
         ImmutableList.builder();
-    for (Pattern pattern : settings.getClassesToRemoveFromJar().getPatterns()) {
+    for (Pattern pattern : settings.getClassesToRemoveFromJar()) {
       serializedPatterns.add(
           ImmutableMap.<String, Object>of(
               CLASSES_TO_REMOVE_PATTERN, pattern.pattern(),
@@ -106,10 +106,6 @@ public class DirectToJarOutputSettingsSerializer {
     }
 
     return DirectToJarOutputSettings.of(
-        outputPath,
-        new RemoveClassesPatternsMatcher(classesToRemove.build()),
-        entries.build(),
-        mainClass,
-        manifestFile);
+        outputPath, classesToRemove.build(), entries.build(), mainClass, manifestFile);
   }
 }

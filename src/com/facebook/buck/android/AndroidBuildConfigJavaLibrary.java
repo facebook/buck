@@ -24,7 +24,6 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -79,7 +79,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* manifest file */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY);
+        /* classesToRemoveFromJar */ ImmutableSet.of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),

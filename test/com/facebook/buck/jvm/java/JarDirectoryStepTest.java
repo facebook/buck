@@ -233,7 +233,7 @@ public class JarDirectoryStepTest {
             /* main class */ null,
             tmp.resolve("manifest"),
             /* merge manifest */ true,
-            /* blacklist */ RemoveClassesPatternsMatcher.EMPTY);
+            /* blacklist */ ImmutableSet.of());
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
@@ -345,8 +345,7 @@ public class JarDirectoryStepTest {
             "com.example.Main",
             /* manifest file */ null,
             /* merge manifests */ true,
-            /* blacklist */ new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(Pattern.compile(".*2.*"))));
+            /* blacklist */ ImmutableSet.of(Pattern.compile(".*2.*")));
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -376,9 +375,8 @@ public class JarDirectoryStepTest {
             "com.example.A",
             /* manifest file */ null,
             /* merge manifests */ true,
-            /* blacklist */ new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("com.example.B"), Pattern.compile("com.example.C"))));
+            /* blacklist */ ImmutableSet.of(
+                Pattern.compile("com.example.B"), Pattern.compile("com.example.C")));
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -548,7 +546,7 @@ public class JarDirectoryStepTest {
             /* main class */ null,
             manifestFile,
             mergeEntries,
-            /* blacklist */ RemoveClassesPatternsMatcher.EMPTY);
+            /* blacklist */ ImmutableSet.of());
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 

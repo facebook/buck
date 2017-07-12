@@ -93,7 +93,7 @@ public class JavaBinaryTest {
                 null,
                 /* merge manifests */ true,
                 null,
-                /* blacklist */ RemoveClassesPatternsMatcher.EMPTY,
+                /* blacklist */ ImmutableSet.of(),
                 ImmutableSet.of(),
                 ImmutableSet.of(),
                 /* cache */ true));

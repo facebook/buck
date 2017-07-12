@@ -33,10 +33,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
@@ -104,7 +106,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar,
+      ImmutableSet<Pattern> classesToRemoveFromJar,
       Path outputJar,
       ImmutableList.Builder<Step> steps) {
     steps.add(
@@ -160,7 +162,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
 
     String spoolMode = javacOptions.getSpoolMode().name();
     // In order to use direct spooling to the Jar:

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestJar;
 import com.facebook.buck.zip.JarBuilder;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -58,7 +59,7 @@ public class JavaInMemoryFileManagerTest {
         new JavaInMemoryFileManager(
             ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
             Paths.get(URI.create("file:///tmp/test.jar!/")),
-            /*classesToBeRemovedFromJar */ RemoveClassesPatternsMatcher.EMPTY);
+            /*classesToBeRemovedFromJar */ ImmutableSet.of());
   }
 
   @Test

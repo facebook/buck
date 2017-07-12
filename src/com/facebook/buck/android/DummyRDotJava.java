@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
-import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -49,6 +48,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -267,7 +267,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
             /* manifestFile */ null,
             /* mergeManifests */ true,
             /* hashEntries */ true,
-            /* blacklist */ RemoveClassesPatternsMatcher.EMPTY));
+            /* blacklist */ ImmutableSet.of()));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));

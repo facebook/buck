@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -103,10 +104,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   public abstract List<String> getExtraArguments();
 
-  @Value.Default
-  public RemoveClassesPatternsMatcher getClassesToRemoveFromJar() {
-    return RemoveClassesPatternsMatcher.EMPTY;
-  }
+  public abstract Set<Pattern> getClassesToRemoveFromJar();
 
   protected abstract Optional<String> getBootclasspath();
 

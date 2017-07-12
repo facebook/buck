@@ -851,8 +851,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("test/pkg/B.class");
     zipInspector.assertFileExists("test/pkg/C.class");
     zipInspector.assertFileDoesNotExist("test/pkg/RemovableZ.class");
-    zipInspector.assertFileDoesNotExist("test/pkg/B$removableB.class");
-    zipInspector.assertFileDoesNotExist("test/pkg/C$deletableC.class");
+    zipInspector.assertFileDoesNotExist("B$removableB.class");
+    zipInspector.assertFileDoesNotExist("C$deletableD.class");
   }
 
   @Test

@@ -33,9 +33,7 @@ public class DirectToJarOutputSettingsSerializerTest {
     DirectToJarOutputSettings input =
         DirectToJarOutputSettings.of(
             Paths.get("/some/path"),
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))),
+            ImmutableSet.of(Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE)),
             ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
             Optional.of("hello I am main class"),
             Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
@@ -50,11 +48,11 @@ public class DirectToJarOutputSettingsSerializerTest {
     assertThat(output.getMainClass(), Matchers.equalToObject(input.getMainClass()));
     assertThat(output.getManifestFile(), Matchers.equalToObject(input.getManifestFile()));
     assertThat(
-        output.getClassesToRemoveFromJar().getPatterns().size(),
-        Matchers.equalToObject(input.getClassesToRemoveFromJar().getPatterns().size()));
-    for (int i = 0; i < input.getClassesToRemoveFromJar().getPatterns().size(); i++) {
-      Pattern inputPattern = input.getClassesToRemoveFromJar().getPatterns().asList().get(i);
-      Pattern outputPattern = output.getClassesToRemoveFromJar().getPatterns().asList().get(i);
+        output.getClassesToRemoveFromJar().size(),
+        Matchers.equalToObject(input.getClassesToRemoveFromJar().size()));
+    for (int i = 0; i < input.getClassesToRemoveFromJar().size(); i++) {
+      Pattern inputPattern = input.getClassesToRemoveFromJar().asList().get(i);
+      Pattern outputPattern = output.getClassesToRemoveFromJar().asList().get(i);
       assertThat(outputPattern.pattern(), Matchers.equalToObject(inputPattern.pattern()));
       assertThat(outputPattern.flags(), Matchers.equalTo(inputPattern.flags()));
     }
@@ -65,9 +63,7 @@ public class DirectToJarOutputSettingsSerializerTest {
     DirectToJarOutputSettings input =
         DirectToJarOutputSettings.of(
             Paths.get("/some/path"),
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))),
+            ImmutableSet.of(Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE)),
             ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
             Optional.empty(),
             Optional.empty());

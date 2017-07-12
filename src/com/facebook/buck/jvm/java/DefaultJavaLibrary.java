@@ -63,6 +63,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -136,7 +137,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
+  private final ImmutableSet<Pattern> classesToRemoveFromJar;
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final CompileToJarStepFactory compileStepFactory;
@@ -187,7 +188,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;

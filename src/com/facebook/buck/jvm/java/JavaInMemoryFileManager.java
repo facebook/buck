@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.JarBuilder;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -52,18 +54,18 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private StandardJavaFileManager delegate;
   private Set<String> directoryPaths;
   private Map<String, JarFileObject> fileForOutputPaths;
-  private RemoveClassesPatternsMatcher classesToRemoveFromJar;
+  private PatternsMatcher classesToRemoveFromJar;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
       Path jarPath,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(standardManager);
     this.delegate = standardManager;
     this.jarPath = jarPath;
     this.directoryPaths = new HashSet<>();
     this.fileForOutputPaths = new HashMap<>();
-    this.classesToRemoveFromJar = classesToRemoveFromJar;
+    this.classesToRemoveFromJar = new PatternsMatcher(classesToRemoveFromJar);
   }
 
   /**
@@ -105,7 +107,8 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     String path = getPath(className, kind);
 
     // If the class is to be removed from the Jar create a NoOp FileObject.
-    if (classesToRemoveFromJar.shouldRemoveClass(className)) {
+    if (classesToRemoveFromJar.hasPatterns()
+        && classesToRemoveFromJar.matches(className.toString())) {
       LOG.info(
           "%s was excluded from the Jar because it matched a remove_classes pattern.",
           className.toString());
