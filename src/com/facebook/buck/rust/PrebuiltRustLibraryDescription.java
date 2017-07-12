@@ -75,7 +75,7 @@ public class PrebuiltRustLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType) {
         return new RustLibraryArg(
-            getResolver(), args.getCrate(), args.getRlib(), direct, getBuildDeps());
+            pathResolver, args.getCrate(), args.getRlib(), direct, getBuildDeps());
       }
 
       @Override
