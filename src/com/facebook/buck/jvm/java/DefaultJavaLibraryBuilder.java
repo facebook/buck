@@ -37,14 +37,12 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
@@ -70,7 +68,8 @@ public class DefaultJavaLibraryBuilder {
   protected Optional<SourcePath> manifestFile = Optional.empty();
   protected Optional<String> mavenCoords = Optional.empty();
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-  protected ImmutableSet<Pattern> classesToRemoveFromJar = ImmutableSet.of();
+  protected RemoveClassesPatternsMatcher classesToRemoveFromJar =
+      RemoveClassesPatternsMatcher.EMPTY;
   protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
@@ -215,7 +214,7 @@ public class DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder setClassesToRemoveFromJar(
-      ImmutableSet<Pattern> classesToRemoveFromJar) {
+      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     this.classesToRemoveFromJar = classesToRemoveFromJar;
     return this;
   }

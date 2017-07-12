@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
@@ -58,7 +57,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Nullable @AddToRuleKey private final SourcePath metaInfDirectory;
 
-  @AddToRuleKey private final ImmutableSet<Pattern> blacklist;
+  @AddToRuleKey private final RemoveClassesPatternsMatcher blacklist;
 
   private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
   private final ImmutableSet<SourcePath> transitiveClasspaths;
@@ -74,7 +73,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
-      ImmutableSet<Pattern> blacklist,
+      RemoveClassesPatternsMatcher blacklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
       ImmutableSet<SourcePath> transitiveClasspaths,
       boolean cache) {

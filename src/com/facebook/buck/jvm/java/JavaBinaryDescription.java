@@ -115,7 +115,7 @@ public class JavaBinaryDescription
             args.getManifestFile().orElse(null),
             args.getMergeManifests().orElse(true),
             args.getMetaInfDirectory().orElse(null),
-            args.getBlacklist(),
+            new RemoveClassesPatternsMatcher(args.getBlacklist()),
             transitiveClasspathDeps,
             transitiveClasspaths,
             javaBuckConfig.shouldCacheBinaries());
