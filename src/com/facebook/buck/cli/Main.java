@@ -136,6 +136,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1232,7 +1233,9 @@ public final class Main {
     context.addClientListener(
         () -> {
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
-            LOG.info("killing background processes on client disconnection");
+            LOG.info(
+                "BuckIsDyingException: killing background processes on client disconnection"
+                    + Throwables.getStackTraceAsString(new Throwable()));
             // Process no longer wants work done on its behalf.
             BgProcessKiller.killBgProcesses();
           }
