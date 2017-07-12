@@ -38,6 +38,27 @@ public class PatternsMatcherTest {
   }
 
   @Test
+  public void testDoesNotMatchPrefix() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("test"));
+
+    assertFalse(patternsMatcher.matches("test_pattern"));
+  }
+
+  @Test
+  public void testDoesNotMatchSuffix() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("pattern"));
+
+    assertFalse(patternsMatcher.matches("test_pattern"));
+  }
+
+  @Test
+  public void testDoesNotMatchInfix() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("_"));
+
+    assertFalse(patternsMatcher.matches("test_pattern"));
+  }
+
+  @Test
   public void testDoesNotMatchPattern() {
     PatternsMatcher patternsMatcher =
         new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));

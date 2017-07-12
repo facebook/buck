@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -38,7 +38,7 @@ public class PatternsMatcher {
     hasPatterns = rawPatterns.iterator().hasNext();
   }
 
-  public PatternsMatcher(Set<Pattern> compiledPatterns) {
+  public PatternsMatcher(ImmutableSet<Pattern> compiledPatterns) {
     patterns = compiledPatterns;
     hasPatterns = !compiledPatterns.isEmpty();
   }
