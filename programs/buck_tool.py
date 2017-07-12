@@ -87,6 +87,9 @@ class CommandLineArgs:
     def is_help(self):
         return self.command is None or "--help" in self.command_options
 
+    def is_version(self):
+        return self.command is None and "--version" in self.buck_options
+
 
 class RestartBuck(Exception):
     pass
@@ -200,6 +203,10 @@ class BuckTool(object):
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
+
+                if self._command_line.is_version():
+                    print("buck version {}".format(buck_version_uid))
+                    return 0
 
                 use_buckd = self._use_buckd
                 if not self._command_line.is_help():

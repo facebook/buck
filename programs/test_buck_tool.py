@@ -52,6 +52,7 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.buck_options, ["--version"])
         self.assertEqual(args.command_options, [])
         self.assertTrue(args.is_help(), "--version does not require a build")
+        self.assertTrue(args.is_version())
 
     def test_command_help(self):
         args = CommandLineArgs(["buck", "clean", "--help"])
