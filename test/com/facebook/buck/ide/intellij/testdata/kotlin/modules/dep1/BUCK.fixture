@@ -1,0 +1,16 @@
+kotlin_library(
+	name = 'src_main',
+	srcs = glob([
+		'src/main/kotlin/**/*.kt',
+	]),
+	tests = [
+		':test_main',
+	],
+)
+
+kotlin_test(
+	name = 'test_main',
+	srcs = glob([
+		'src/test/kotlin/**/*.kt',
+	]),
+)

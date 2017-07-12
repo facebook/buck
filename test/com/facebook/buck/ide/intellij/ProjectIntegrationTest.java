@@ -136,6 +136,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testKotlinRules() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("kotlin");
+  }
+
+  @Test
   public void testPrebuiltJarWithJavadoc() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_prebuilt_jar");
   }
