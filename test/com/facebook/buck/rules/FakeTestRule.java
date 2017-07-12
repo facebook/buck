@@ -112,7 +112,9 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext, boolean isUsingTestSelectors) {
+      ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return interpretedTestResults;
   }
 

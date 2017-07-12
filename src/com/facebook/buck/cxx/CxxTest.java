@@ -168,7 +168,9 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext executionContext, boolean isUsingTestSelectors) {
+      final ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
           getBuildTarget(),

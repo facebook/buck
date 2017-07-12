@@ -386,12 +386,14 @@ public class JavaTest extends AbstractBuildRuleWithResolver
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context, final boolean isUsingTestSelectors) {
+      final ExecutionContext context,
+      SourcePathResolver pathResolver,
+      final boolean isUsingTestSelectors) {
     final ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
       // were run by its deps. In this case, return an empty TestResults.
-      Set<String> testClassNames = getClassNamesForSources(getResolver());
+      Set<String> testClassNames = getClassNamesForSources(pathResolver);
       if (testClassNames.isEmpty()) {
         return TestResults.of(
             getBuildTarget(),

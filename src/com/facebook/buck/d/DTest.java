@@ -120,7 +120,9 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext executionContext, boolean isUsingTestSelectors) {
+      final ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       ResultType resultType = ResultType.FAILURE;
 

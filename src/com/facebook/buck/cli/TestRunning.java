@@ -189,6 +189,7 @@ public class TestRunning {
           getCachingCallable(
               test.interpretTestResults(
                   executionContext,
+                  buildContext.getSourcePathResolver(),
                   /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty()));
 
       final Map<String, UUID> testUUIDMap = new HashMap<>();

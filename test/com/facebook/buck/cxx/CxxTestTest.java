@@ -21,12 +21,17 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -144,6 +149,8 @@ public class CxxTestTest {
     final Path expectedOutput = Paths.get("output");
     final Path expectedResults = Paths.get("results");
 
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
 
@@ -176,10 +183,14 @@ public class CxxTestTest {
             return ImmutableList.of();
           }
         };
+    ruleResolver.addToIndex(cxxTest);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     Callable<TestResults> result =
-        cxxTest.interpretTestResults(executionContext, /* isUsingTestSelectors */ false);
+        cxxTest.interpretTestResults(
+            executionContext,
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)),
+            /* isUsingTestSelectors */ false);
     result.call();
   }
 }

@@ -79,7 +79,7 @@ public class RustCompileUtils {
   // - `-C relocation-model=pic/static/default/dynamic-no-pic` according to flavor
   // - `--emit metadata` if flavor is "check"
   // - `--crate-type lib/rlib/dylib/cdylib/staticlib` according to flavor
-  protected static RustCompileRule createBuild(
+  private static RustCompileRule createBuild(
       BuildTarget target,
       String crateName,
       ProjectFilesystem projectFilesystem,
@@ -389,7 +389,7 @@ public class RustCompileUtils {
     }
 
     final RustCompileRule buildRule =
-        RustCompileUtils.createBuild(
+        createBuild(
             binaryTarget,
             crate,
             projectFilesystem,
