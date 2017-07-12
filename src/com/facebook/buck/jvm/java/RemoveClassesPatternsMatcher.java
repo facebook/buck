@@ -33,7 +33,7 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey {
   }
 
   public boolean shouldRemoveClass(ZipEntry entry) {
-    if (patterns.isEmpty()) {
+    if (patterns.isEmpty() || !entry.getName().endsWith(".class")) {
       return false;
     }
 
