@@ -56,6 +56,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
@@ -562,7 +563,7 @@ public class ProjectWorkspace {
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
     }
 
     return new ProcessResult(
