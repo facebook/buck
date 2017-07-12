@@ -1,0 +1,16 @@
+groovy_library(
+	name = 'src_main',
+	srcs = glob([
+		'src/main/groovy/**/*.groovy',
+	]),
+	tests = [
+		':test_main',
+	],
+)
+
+groovy_test(
+	name = 'test_main',
+	srcs = glob([
+		'src/test/groovy/**/*.groovy',
+	]),
+)

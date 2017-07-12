@@ -18,6 +18,7 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -133,6 +134,11 @@ public class ProjectIntegrationTest {
   @Test
   public void testAndroidResourcesInDependencies() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_android_resources");
+  }
+
+  @Test
+  public void testGroovyRules() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("groovy");
   }
 
   @Test
