@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
+import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
 import com.intellij.debugger.DebugEnvironment;
 import com.intellij.debugger.DebuggerManagerEx;
 import com.intellij.debugger.DefaultDebugEnvironment;
@@ -134,11 +135,11 @@ class TestExecutionState implements RunProfileState {
     }
     handler.start();
     final OSProcessHandler result = handler.getHandler();
-    showProgress(result, title);
+    schedulePostExecutionActions(result, title);
     return result;
   }
 
-  private void showProgress(final OSProcessHandler result, final String title) {
+  private void schedulePostExecutionActions(final OSProcessHandler result, final String title) {
     final ProgressManager manager = ProgressManager.getInstance();
     ApplicationManager.getApplication()
         .invokeLater(
@@ -150,6 +151,9 @@ class TestExecutionState implements RunProfileState {
                         result.waitFor();
                       } finally {
                         indicator.cancel();
+                      }
+                      if (!BuckToolWindowFactory.isRunToolWindowVisible(mProject)) {
+                        BuckToolWindowFactory.showRunToolWindow(mProject);
                       }
                     }
                   });

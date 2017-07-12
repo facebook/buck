@@ -504,9 +504,6 @@ public class BuckEventsConsumer
   }
 
   public void showTestResults() {
-    if (!mTestResultsList.isEmpty() && !BuckToolWindowFactory.isToolWindowVisible(mProject)) {
-      BuckToolWindowFactory.showToolWindow(mProject);
-    }
     float duration = (mTestingEndTimestamp - mTestingStartTimestamp) / 1000;
 
     final StringBuilder message =
