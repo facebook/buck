@@ -87,7 +87,6 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
         sourceFilePaths,
         invokingRule,
         resolver,
-        ruleFinder,
         filesystem,
         declaredClasspathEntries,
         outputDirectory,

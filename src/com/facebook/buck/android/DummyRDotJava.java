@@ -72,7 +72,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   private final JarContentsSupplier outputJarContentsSupplier;
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey CompileToJarStepFactory compileStepFactory;
   @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
@@ -125,7 +124,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
         projectFilesystem,
         params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
-    this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
         androidResourceDeps
@@ -250,7 +248,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
         javaSourceFilePaths,
         getBuildTarget(),
         context.getSourcePathResolver(),
-        ruleFinder,
         getProjectFilesystem(),
         /* declared classpath */ ImmutableSortedSet.of(),
         rDotJavaClassesFolder,

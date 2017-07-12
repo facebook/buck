@@ -137,7 +137,6 @@ public class JavaBinaryDescription
                               .add(innerJar)
                               .addAll(nativeLibraries.values())
                               .build()))),
-              ruleFinder,
               JavacFactory.create(ruleFinder, javaBuckConfig, null),
               javacOptions,
               innerJar,
