@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -98,5 +99,39 @@ public class CalculateAbiFromSourceIntegrationTest {
   public void testErrorsReportedGracefully() throws IOException {
     ProjectWorkspace.ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
     buildResult.assertFailure("cannot find symbol");
+  }
+
+  @Test
+  public void testAbiJarExcludesRemovedClasses() throws IOException {
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main-stripped");
+    ProjectWorkspace.ProcessResult buildResult =
+        workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    buildResult.assertFailure("cannot find symbol");
+
+    // Make sure we built the source ABI
+    BuildTarget abiTarget = BuildTargetFactory.newInstance("//:lib-stripped#source-abi");
+    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget.getFullyQualifiedName());
+
+    Path abiJarPath =
+        filesystem.getPathForRelativePath(
+            BuildTargets.getGenPath(filesystem, abiTarget, "lib__%s__output/lib-stripped-abi.jar"));
+    assertTrue(Files.exists(abiJarPath));
+
+    // Check that the jar does not have an entry for the removed class
+    try (JarFile abiJar = new JarFile(abiJarPath.toFile())) {
+      assertThat(
+          abiJar.stream().map(JarEntry::getName).collect(Collectors.toSet()),
+          Matchers.containsInAnyOrder(
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "com/",
+              "com/example/",
+              "com/example/buck/",
+              "com/example/buck/Lib.class"));
+
+      // And the manifest doesn't have one either
+      Manifest manifest = abiJar.getManifest();
+      assertNull(manifest.getAttributes("com/example/buck/Test.class"));
+    }
   }
 }
