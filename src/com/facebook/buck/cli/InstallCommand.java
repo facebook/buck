@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AndroidBinary;
+import com.facebook.buck.android.AndroidInstallConfig;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
@@ -252,7 +254,7 @@ public class InstallCommand extends BuildCommand {
         // a build. That ensures that the target graph and action graph are the same between install
         // and build commands.
         ((HasInstallHelpers) rule)
-            .getHelpers()
+            .getInstallHelpers()
             .forEach(
                 helper -> {
                   Preconditions.checkState(
@@ -278,7 +280,8 @@ public class InstallCommand extends BuildCommand {
           DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
 
       if (buildRule instanceof HasInstallableApk) {
-        exitCode = installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver);
+        exitCode =
+            installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver, params);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -398,22 +401,55 @@ public class InstallCommand extends BuildCommand {
   private int installApk(
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver)
+      SourcePathResolver pathResolver,
+      CommandRunnerParams params)
       throws IOException, InterruptedException {
     final AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
 
-    // Uninstall the app first, if requested.
-    if (shouldUninstallFirst()) {
-      String packageName =
-          AdbHelper.tryToExtractPackageNameFromManifest(
-              pathResolver, hasInstallableApk.getApkInfo());
-      adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
-      // Perhaps the app wasn't installed to begin with, shouldn't stop us.
+    boolean concurrentInstallEnabled = false;
+    // concurrentInstall is currently only implemented for AndroidBinary (and not subclasses).
+    if (hasInstallableApk.getClass().equals(AndroidBinary.class)
+        && new AndroidInstallConfig(params.getBuckConfig())
+            .getConcurrentInstallEnabled(Optional.of(params.getBuckEventBus()))) {
+      concurrentInstallEnabled = true;
     }
 
-    if (!adbHelper.installApk(
-        pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
-      return 1;
+    if (!concurrentInstallEnabled) {
+      // Uninstall the app first, if requested.
+      if (shouldUninstallFirst()) {
+        String packageName =
+            AdbHelper.tryToExtractPackageNameFromManifest(
+                pathResolver, hasInstallableApk.getApkInfo());
+        adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
+        // Perhaps the app wasn't installed to begin with, shouldn't stop us.
+      }
+
+      if (!adbHelper.installApk(
+          pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
+        return 1;
+      }
+    } else if (shouldUninstallFirst()) {
+      // TODO(cjhopman): Figure out how to support this (maybe write some options to the trigger
+      // file).
+      params
+          .getConsole()
+          .printErrorText("concurrent_install does not support uninstalling (-u/--uninstall)");
+    } else {
+      // Send some of the normal events and messages so that the user receives similar messages/UI
+      // as in non-concurrent install.
+      // TODO(cjhopman): Figure out what to do about killing a process.
+      InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
+      params.getBuckEventBus().post(started);
+      adbHelper.adbCall("concurrent install", (device) -> true, false);
+      InstallEvent.Finished finished =
+          InstallEvent.finished(
+              started,
+              true,
+              Optional.empty(),
+              Optional.of(
+                  AdbHelper.tryToExtractPackageNameFromManifest(
+                      pathResolver, hasInstallableApk.getApkInfo())));
+      params.getBuckEventBus().post(finished);
     }
 
     // We've installed the application successfully.

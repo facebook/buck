@@ -51,6 +51,9 @@ BUCK_CONFIG_SRCS = [
 java_immutables_library(
     name = "config",
     srcs = BUCK_CONFIG_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
+    ],
     resources = [
         ":guava.jar",
     ],
@@ -63,7 +66,6 @@ java_immutables_library(
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
         "//src/com/facebook/buck/util/environment:platform",
     ],
 )

@@ -396,8 +396,8 @@ public class AndroidBinaryDescription
     BuildRule installer;
     if (androidInstallConfig.getConcurrentInstallEnabled(
         Optional.ofNullable(resolver.getEventBus()))) {
-      binary.getClass();
-      throw new UnsupportedOperationException("concurrent_install not yet supported");
+      installer =
+          new ExoInstaller(buildTarget, filesystem, new SourcePathRuleFinder(resolver), binary);
     } else {
       installer =
           new NoopBuildRule(buildTarget, filesystem) {

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
@@ -160,6 +162,17 @@ public class UninstallCommand extends AbstractCommand {
     String appId =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
     return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setAndroidDevicesHelper(
+            AndroidDevicesHelperFactory.get(
+                this::getExecutionContext,
+                params.getBuckConfig(),
+                adbOptions(params.getBuckConfig()),
+                targetDeviceOptions()));
   }
 
   @Override

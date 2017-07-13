@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +45,8 @@ import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * These tests verify that the on-device state is properly updated when running `buck install
@@ -55,6 +58,7 @@ import org.junit.Test;
  * assets/non-main-resources pushes a single file. Modifying main-resources/java_resources will push
  * both the main apk and a single resource file.
  */
+@RunWith(Parameterized.class)
 public class AndroidBinaryInstallIntegrationTest {
   private static final String FAKE_PACKAGE_NAME = "buck.exotest.fake";
   private static final Path INSTALL_ROOT =
@@ -62,6 +66,16 @@ public class AndroidBinaryInstallIntegrationTest {
   private static final Path CONFIG_PATH = Paths.get("state.config");
   private static final String BINARY_TARGET = "//:binary";
   private static final Path APK_PATH = Paths.get("buck-out/gen/binary.apk");
+
+  @Parameterized.Parameters(name = "concurrentInstall: {0}")
+  public static Collection<Object[]> data() {
+    return ImmutableList.of(
+        new Object[] {AndroidInstallConfig.ConcurrentInstall.ENABLED},
+        new Object[] {AndroidInstallConfig.ConcurrentInstall.DISABLED});
+  }
+
+  @Parameterized.Parameter(0)
+  public AndroidInstallConfig.ConcurrentInstall concurrentInstallType;
 
   @Rule public final TemporaryPaths tmpFolder = new TemporaryPaths();
   @Rule public final TemporaryPaths deviceStateDirectory = new TemporaryPaths();
@@ -83,6 +97,8 @@ public class AndroidBinaryInstallIntegrationTest {
     projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exopackage_integration", tmpFolder);
     projectWorkspace.setUp();
+    projectWorkspace.addBuckConfigLocalOption(
+        "install", "concurrent_install", concurrentInstallType.toString());
     filesystem = new ProjectFilesystem(tmpFolder.getRoot());
     executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     currentBuildState = null;

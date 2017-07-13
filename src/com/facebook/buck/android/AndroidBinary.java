@@ -40,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -116,7 +117,11 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, HasInstallableApk {
+    implements SupportsInputBasedRuleKey,
+        HasClasspathEntries,
+        HasRuntimeDeps,
+        HasInstallableApk,
+        HasInstallHelpers {
 
   /**
    * The filename of the solidly compressed libraries if compressAssetLibraries is set to true. This
@@ -441,6 +446,11 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setManifestPath(getManifestPath())
         .setExopackageInfo(getExopackageInfo())
         .build();
+  }
+
+  @Override
+  public Stream<BuildTarget> getInstallHelpers() {
+    return Stream.of(getBuildTarget().withFlavors(AndroidBinaryDescription.INSTALL_FLAVOR));
   }
 
   @Override
