@@ -141,7 +141,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @SuppressForbidden
   @Override
-  public boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
+  public synchronized boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
     List<AndroidDevice> devices;
 
