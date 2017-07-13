@@ -508,15 +508,20 @@ public class IjProjectTemplateDataPreparer {
       Map<String, Object> androidProperties,
       Path moduleBasePath,
       IjModuleAndroidFacet androidFacet) {
-    // The variant is the combination of the Android build type and product flavor.
-    String variantName;
-    Optional<Path> manifestPath = androidFacet.getManifestPath();
-    if (manifestPath.isPresent()) {
-      Path manifestParentPath = manifestPath.get().getParent();
-      variantName = manifestParentPath.getName(manifestParentPath.getNameCount() - 1).toString();
-    } else {
-      // fallback value in case we could not parse it from the manifest path (should not occur)
-      variantName = "debug";
+    // The variant is the combination of the Android build type and product flavor. We use "debug"
+    // for the fallback value in case we could not parse it from the manifest path.
+    String variantName = "debug";
+
+    Optional<Path> androidManifestPath = getAndroidManifestPath(androidFacet);
+    if (androidManifestPath.isPresent()) {
+      Path manifestPath =
+          projectFilesystem
+              .resolve(moduleBasePath)
+              .relativize(projectFilesystem.resolve(androidManifestPath.get()));
+      Path manifestParentPath = manifestPath.getParent();
+      if (manifestParentPath != null && manifestParentPath.getNameCount() > 0) {
+        variantName = manifestParentPath.getName(manifestParentPath.getNameCount() - 1).toString();
+      }
     }
 
     Path rootModulePath = Paths.get(projectConfig.getProjectRoot());
