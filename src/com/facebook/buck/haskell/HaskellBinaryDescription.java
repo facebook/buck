@@ -41,7 +41,7 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDepsQuery;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -53,12 +53,12 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -156,9 +156,8 @@ public class HaskellBinaryDescription
     args.getDepsQuery()
         .ifPresent(
             query ->
-                Preconditions.checkNotNull(query.getResolvedQuery())
-                    .stream()
-                    .map(resolver::getRule)
+                QueryUtils.resolveDepQuery(
+                        buildTarget, query, resolver, cellRoots, targetGraph, args.getDeps())
                     .filter(NativeLinkable.class::isInstance)
                     .forEach(depsBuilder::add));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
@@ -348,7 +347,7 @@ public class HaskellBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractHaskellBinaryDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  interface AbstractHaskellBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
 
     @Value.Default
     default SourceList getSrcs() {
@@ -363,6 +362,8 @@ public class HaskellBinaryDescription
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
       return PatternMatchedCollection.of();
     }
+
+    Optional<Query> getDepsQuery();
 
     Optional<String> getMain();
 

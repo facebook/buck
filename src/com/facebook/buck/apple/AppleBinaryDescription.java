@@ -436,6 +436,7 @@ public class AppleBinaryDescription
           pathResolver, delegateArg, args, buildTarget);
       return resolver.addToIndex(
           delegate.createBuildRule(
+              targetGraph,
               buildTarget,
               projectFilesystem,
               params.getExtraDeps(),

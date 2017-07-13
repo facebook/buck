@@ -18,8 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.query.QueryCache;
-import com.facebook.buck.rules.query.QueryUtils;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -27,13 +25,7 @@ import java.util.Set;
 
 /** Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}. */
 public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
-  private final QueryCache cache;
 
-  public DefaultTargetNodeToBuildRuleTransformer() {
-    cache = new QueryCache();
-  }
-
-  @SuppressWarnings("unchecked")
   @Override
   public <T, U extends Description<T>> BuildRule transform(
       TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode)
@@ -44,6 +36,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     ImmutableSet.Builder<BuildTarget> extraDepsBuilder = new ImmutableSet.Builder<>();
     ImmutableSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder = new ImmutableSet.Builder<>();
     if (description instanceof ImplicitDepsInferringDescription) {
+      @SuppressWarnings("unchecked")
       ImplicitDepsInferringDescription<T> castedDescription =
           (ImplicitDepsInferringDescription<T>) description;
       castedDescription.findDepsForTargetFromConstructorArgs(
@@ -60,23 +53,6 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     Set<BuildTarget> extraDeps = Sets.union(targetNode.getExtraDeps(), extraDepsBuilder.build());
     Set<BuildTarget> targetGraphOnlyDeps =
         Sets.union(targetNode.getTargetGraphOnlyDeps(), targetGraphOnlyDepsBuilder.build());
-
-    arg =
-        QueryUtils.withDepsQuery(
-            arg,
-            targetNode.getBuildTarget(),
-            cache,
-            ruleResolver,
-            targetNode.getCellNames(),
-            targetGraph);
-    arg =
-        QueryUtils.withProvidedDepsQuery(
-            arg,
-            targetNode.getBuildTarget(),
-            cache,
-            ruleResolver,
-            targetNode.getCellNames(),
-            targetGraph);
 
     // The params used for the Buildable only contain the declared parameters. However, the deps of
     // the rule include not only those, but also any that were picked up through the deps declared

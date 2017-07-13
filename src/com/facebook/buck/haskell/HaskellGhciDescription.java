@@ -40,7 +40,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDepsQuery;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -50,6 +50,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
@@ -327,7 +328,7 @@ public class HaskellGhciDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
     @Value.Default
     default SourceList getSrcs() {
       return SourceList.EMPTY;
@@ -346,6 +347,8 @@ public class HaskellGhciDescription
     default boolean getEnableProfiling() {
       return false;
     }
+
+    Optional<Query> getDepsQuery();
 
     Optional<BuildTarget> getGhciBinDep();
 

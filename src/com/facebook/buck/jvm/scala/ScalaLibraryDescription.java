@@ -27,7 +27,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.HasProvidedDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
@@ -100,12 +99,14 @@ public class ScalaLibraryDescription
 
   // Note: scala does not have a exported_deps because scala needs the transitive closure of
   // dependencies to compile. deps is effectively exported_deps.
-  interface CoreArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasProvidedDeps, HasSrcs, HasTests {
+  interface CoreArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getResources();
 
     ImmutableList<String> getExtraArguments();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getProvidedDeps();
 
     @Hint(isInput = false)
     Optional<Path> getResourcesRoot();

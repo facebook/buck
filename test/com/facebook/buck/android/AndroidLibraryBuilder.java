@@ -83,11 +83,6 @@ public class AndroidLibraryBuilder
     return this;
   }
 
-  public AndroidLibraryBuilder setProvidedDepsQuery(Query query) {
-    getArgForPopulating().setProvidedDepsQuery(Optional.of(query));
-    return this;
-  }
-
   public AndroidLibraryBuilder addSrc(Path path) {
     getArgForPopulating().addSrcs(new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;

@@ -34,11 +34,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDepsQuery;
-import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
@@ -142,8 +141,7 @@ public class AndroidLibraryDescription
             buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
-  public interface CoreArg
-      extends JavaLibraryDescription.CoreArg, HasDepsQuery, HasProvidedDepsQuery {
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
     Optional<SourcePath> getManifest();
 
     Optional<String> getResourceUnionPackage();
@@ -151,6 +149,10 @@ public class AndroidLibraryDescription
     Optional<String> getFinalRName();
 
     Optional<JvmLanguage> getLanguage();
+
+    Optional<Query> getDepsQuery();
+
+    Optional<Query> getProvidedDepsQuery();
   }
 
   @BuckStyleImmutable

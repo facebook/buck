@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -49,6 +50,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -75,6 +77,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class CxxDescriptionEnhancer {
@@ -690,6 +693,7 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
+      TargetGraph targetGraph,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
@@ -716,10 +720,11 @@ public class CxxDescriptionEnhancer {
     // Add in deps found via deps query.
     ImmutableList<BuildRule> depQueryDeps =
         args.getDepsQuery()
-            .map(query -> Preconditions.checkNotNull(query.getResolvedQuery()))
-            .orElse(ImmutableSortedSet.of())
-            .stream()
-            .map(resolver::getRule)
+            .map(
+                query ->
+                    QueryUtils.resolveDepQuery(
+                        target, query, resolver, cellRoots, targetGraph, args.getDeps()))
+            .orElse(Stream.of())
             .collect(MoreCollectors.toImmutableList());
     depsBuilder.addAll(depQueryDeps);
     // Add any extra deps passed in.
