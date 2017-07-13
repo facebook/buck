@@ -367,7 +367,7 @@ public class DistBuildStateTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    projectFilesystem, FileHashCacheMode.PREFIX_TREE))),
+                    projectFilesystem, FileHashCacheMode.DEFAULT))),
         new DistBuildCellIndexer(rootCell),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0,

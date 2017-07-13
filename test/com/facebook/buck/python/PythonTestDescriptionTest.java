@@ -574,7 +574,7 @@ public class PythonTestDescriptionTest {
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(0),
             StackedFileHashCache.createDefaultHashCaches(
-                rule.getProjectFilesystem(), FileHashCacheMode.PREFIX_TREE),
+                rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
             DefaultSourcePathResolver.from(ruleFinder),
             ruleFinder);
     return ruleKeyFactory.build(rule);

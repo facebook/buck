@@ -146,15 +146,15 @@ public class DistBuildFileHashesTest {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
       cacheList.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              projectFilesystem, FileHashCacheMode.PREFIX_TREE));
+              projectFilesystem, FileHashCacheMode.DEFAULT));
       cacheList.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              secondProjectFilesystem, FileHashCacheMode.PREFIX_TREE));
+              secondProjectFilesystem, FileHashCacheMode.DEFAULT));
       for (Path path : javaFs.getRootDirectories()) {
         if (Files.isDirectory(path)) {
           cacheList.add(
               DefaultFileHashCache.createDefaultFileHashCache(
-                  new ProjectFilesystem(path), FileHashCacheMode.PREFIX_TREE));
+                  new ProjectFilesystem(path), FileHashCacheMode.DEFAULT));
         }
       }
       return new StackedFileHashCache(cacheList.build());

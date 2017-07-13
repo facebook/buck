@@ -215,15 +215,14 @@ public class DistBuildFileHashesIntegrationTest {
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     allCaches.add(
         DefaultFileHashCache.createDefaultFileHashCache(
-            rootCell.getFilesystem(), FileHashCacheMode.PREFIX_TREE));
+            rootCell.getFilesystem(), FileHashCacheMode.DEFAULT));
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
       allCaches.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              cell.getFilesystem(), FileHashCacheMode.PREFIX_TREE));
+              cell.getFilesystem(), FileHashCacheMode.DEFAULT));
     }
-    allCaches.addAll(
-        DefaultFileHashCache.createOsRootDirectoriesCaches(FileHashCacheMode.PREFIX_TREE));
+    allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches(FileHashCacheMode.DEFAULT));
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
 
     return new DistBuildFileHashes(

@@ -47,7 +47,7 @@ public class CachingBuildEngineFactory {
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
   private boolean logBuildRuleFailuresInline = true;
   private BuildInfoStoreManager buildInfoStoreManager;
-  private FileHashCacheMode fileHashCacheMode = FileHashCacheMode.PREFIX_TREE;
+  private FileHashCacheMode fileHashCacheMode = FileHashCacheMode.DEFAULT;
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver, BuildInfoStoreManager buildInfoStoreManager) {

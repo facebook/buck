@@ -129,7 +129,7 @@ public class JavaLibrarySymbolsFinderTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    projectFilesystem, FileHashCacheMode.PREFIX_TREE)));
+                    projectFilesystem, FileHashCacheMode.DEFAULT)));
     final DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =
