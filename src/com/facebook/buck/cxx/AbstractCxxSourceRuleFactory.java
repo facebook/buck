@@ -45,9 +45,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -57,16 +54,18 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
-import javax.annotation.Nonnull;
+import javax.annotation.concurrent.NotThreadSafe;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
+@NotThreadSafe
 abstract class AbstractCxxSourceRuleFactory {
 
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
@@ -164,23 +163,39 @@ abstract class AbstractCxxSourceRuleFactory {
     return result;
   }
 
-  private final LoadingCache<CxxSource.Type, ImmutableList<Arg>> preprocessorFlags =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<CxxSource.Type, ImmutableList<Arg>>() {
-                @Override
-                public ImmutableList<Arg> load(@Nonnull CxxSource.Type type) {
-                  ImmutableList.Builder<Arg> builder = ImmutableList.builder();
-                  for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
-                    builder.addAll(input.getPreprocessorFlags().get(type));
-                  }
-                  return builder.build();
-                }
-              });
+  private final Function<CxxSource.Type, ImmutableList<Arg>> rulePreprocessorFlags =
+      memoize(
+          type ->
+              getCxxPreprocessorInput()
+                  .stream()
+                  .flatMap(input -> input.getPreprocessorFlags().get(type).stream())
+                  .collect(MoreCollectors.toImmutableList()));
 
-  private final LoadingCache<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
+  private final Function<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
       preprocessorDelegates =
-          CacheBuilder.newBuilder().build(new PreprocessorDelegateCacheLoader());
+          memoize(
+              key -> {
+                Preprocessor preprocessor =
+                    CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
+                        .resolve(getResolver());
+                PreprocessorDelegate delegate =
+                    new PreprocessorDelegate(
+                        getPathResolver(),
+                        getCxxPlatform().getCompilerDebugPathSanitizer(),
+                        getCxxPlatform().getHeaderVerification(),
+                        getProjectFilesystem().getRootPath(),
+                        preprocessor,
+                        PreprocessorFlags.of(
+                            getPrefixHeader(),
+                            computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
+                            getIncludes(),
+                            getFrameworks()),
+                        CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                            getCxxPlatform(), getPathResolver()),
+                        getSandboxTree(),
+                        /* leadingIncludePaths */ Optional.empty());
+                return new PreprocessorDelegateCacheValue(delegate);
+              });
 
   /**
    * Returns the no-op rule that aggregates the preprocessor dependencies.
@@ -286,10 +301,6 @@ abstract class AbstractCxxSourceRuleFactory {
     return sanitizedArgs(CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), type));
   }
 
-  private ImmutableList<Arg> getRulePreprocessorFlags(CxxSource.Type type) {
-    return preprocessorFlags.getUnchecked(type);
-  }
-
   private ImmutableList<Arg> getPlatformCompileFlags(CxxSource.Type type) {
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
 
@@ -385,7 +396,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxToolFlags.explicitBuilder()
         .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
         .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
-        .addAllRuleFlags(getRulePreprocessorFlags(type))
+        .addAllRuleFlags(rulePreprocessorFlags.apply(type))
         // Add custom per-file flags.
         .addAllRuleFlags(sanitizedArgs(sourceFlags))
         .build();
@@ -426,14 +437,14 @@ abstract class AbstractCxxSourceRuleFactory {
                   depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
                   PreprocessorDelegateCacheValue preprocessorDelegateValue =
-                      preprocessorDelegates.getUnchecked(
+                      preprocessorDelegates.apply(
                           PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
                   depsBuilder.add(preprocessorDelegateValue.getPreprocessorDelegate());
 
                   CxxToolFlags ppFlags =
                       CxxToolFlags.copyOf(
                           getPlatformPreprocessorFlags(source.getType()),
-                          getRulePreprocessorFlags(source.getType()));
+                          rulePreprocessorFlags.apply(source.getType()));
 
                   CxxToolFlags cFlags = computeCompilerFlags(source.getType(), source.getFlags());
 
@@ -478,7 +489,7 @@ abstract class AbstractCxxSourceRuleFactory {
     depsBuilder.add(compilerDelegate);
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
-        preprocessorDelegates.getUnchecked(
+        preprocessorDelegates.apply(
             PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
     depsBuilder.add(preprocessorDelegate);
@@ -894,16 +905,20 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   public ImmutableList<Arg> getFlagsForSource(CxxSource source, boolean allowIncludePathFlags) {
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
-        preprocessorDelegates.getUnchecked(
+        preprocessorDelegates.apply(
             PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     CxxToolFlags flags = computeCompilerFlags(source.getType(), source.getFlags());
     PreprocessorDelegateCacheValue.HashStrings hashStrings = preprocessorDelegateValue.get(flags);
     return allowIncludePathFlags ? hashStrings.fullFlags : hashStrings.baseFlags;
   }
 
-  static class PreprocessorDelegateCacheValue {
+  private static class PreprocessorDelegateCacheValue {
     private final PreprocessorDelegate preprocessorDelegate;
-    private final LoadingCache<CxxToolFlags, HashStrings> commandHashCache;
+
+    // Note: this hash call is mainly for the benefit of precompiled headers, to produce
+    // the PCH's hash of build flags.  (Since there's no PCH yet, the PCH argument is
+    // passed as empty here.)
+    private final Function<CxxToolFlags, HashStrings> commandHashCache = memoize(HashStrings::new);
 
     class HashStrings {
       /** List of build flags (as strings), except for those related to header search paths. */
@@ -936,18 +951,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
     PreprocessorDelegateCacheValue(PreprocessorDelegate preprocessorDelegate) {
       this.preprocessorDelegate = preprocessorDelegate;
-      this.commandHashCache =
-          CacheBuilder.newBuilder()
-              .build(
-                  new CacheLoader<CxxToolFlags, HashStrings>() {
-                    @Override
-                    public HashStrings load(CxxToolFlags key) {
-                      // Note: this hash call is mainly for the benefit of precompiled headers, to produce
-                      // the PCH's hash of build flags.  (Since there's no PCH yet, the PCH argument is
-                      // passed as empty here.)
-                      return new HashStrings(key);
-                    }
-                  });
     }
 
     PreprocessorDelegate getPreprocessorDelegate() {
@@ -956,7 +959,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     @VisibleForTesting
     public HashStrings get(CxxToolFlags flags) {
-      return this.commandHashCache.getUnchecked(flags);
+      return this.commandHashCache.apply(flags);
     }
 
     String getBaseHash(CxxToolFlags flags) {
@@ -968,30 +971,9 @@ abstract class AbstractCxxSourceRuleFactory {
     }
   }
 
-  private class PreprocessorDelegateCacheLoader
-      extends CacheLoader<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue> {
-
-    @Override
-    public PreprocessorDelegateCacheValue load(@Nonnull PreprocessorDelegateCacheKey key) {
-      Preprocessor preprocessor =
-          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
-              .resolve(getResolver());
-      PreprocessorDelegate delegate =
-          new PreprocessorDelegate(
-              getPathResolver(),
-              getCxxPlatform().getCompilerDebugPathSanitizer(),
-              getCxxPlatform().getHeaderVerification(),
-              getProjectFilesystem().getRootPath(),
-              preprocessor,
-              PreprocessorFlags.of(
-                  getPrefixHeader(),
-                  computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
-                  getIncludes(),
-                  getFrameworks()),
-              CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
-              getSandboxTree(),
-              /* leadingIncludePaths */ Optional.empty());
-      return new PreprocessorDelegateCacheValue(delegate);
-    }
+  /** Quick and dirty memoized function. */
+  private static <K, V> Function<K, V> memoize(Function<K, V> mappingFunction) {
+    HashMap<K, V> cache = new HashMap<>();
+    return k -> cache.computeIfAbsent(k, mappingFunction);
   }
 }
