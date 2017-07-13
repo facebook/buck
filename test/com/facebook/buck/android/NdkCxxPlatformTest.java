@@ -126,13 +126,13 @@ public class NdkCxxPlatformTest {
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
           rule =
-              cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
+              cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
                   source,
                   CxxSource.of(CxxSource.Type.CXX, new FakeSourcePath(source), ImmutableList.of()));
           break;
         case COMPILE:
           rule =
-              cxxSourceRuleFactory.createCompileBuildRule(
+              cxxSourceRuleFactory.requireCompileBuildRule(
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,

@@ -96,7 +96,7 @@ public class PrecompiledHeaderFeatureTest {
               .setPrefixHeader(new FakeSourcePath(headerFilename))
               .setPrecompiledHeader(Optional.empty())
               .build()
-              .createPreprocessAndCompileBuildRule(
+              .requirePreprocessAndCompileBuildRule(
                   "foo.c", preconfiguredCxxSourceBuilder().build());
       boolean hasPchFlag =
           commandLineContainsPchFlag(
@@ -201,7 +201,7 @@ public class PrecompiledHeaderFeatureTest {
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
                   .build();
           BuildRule rule =
-              factory.createPreprocessAndCompileBuildRule(
+              factory.requirePreprocessAndCompileBuildRule(
                   "foo.c", preconfiguredCxxSourceBuilder().addFlags("-I", from.toString()).build());
           return FluentIterable.from(rule.getBuildDeps())
               .filter(CxxPrecompiledHeader.class)
@@ -238,7 +238,7 @@ public class PrecompiledHeaderFeatureTest {
                   .setPrefixHeader(new FakeSourcePath(("foo.h")))
                   .build();
           BuildRule rule =
-              factory.createPreprocessAndCompileBuildRule(
+              factory.requirePreprocessAndCompileBuildRule(
                   "foo.c", preconfiguredCxxSourceBuilder().build());
           return FluentIterable.from(rule.getBuildDeps())
               .filter(CxxPrecompiledHeader.class)
@@ -278,7 +278,7 @@ public class PrecompiledHeaderFeatureTest {
                   .setPrefixHeader(new FakeSourcePath(("foo.h")))
                   .build();
           BuildRule rule =
-              factory.createPreprocessAndCompileBuildRule(
+              factory.requirePreprocessAndCompileBuildRule(
                   "foo.c", preconfiguredCxxSourceBuilder().build());
           return FluentIterable.from(rule.getBuildDeps())
               .filter(CxxPrecompiledHeader.class)

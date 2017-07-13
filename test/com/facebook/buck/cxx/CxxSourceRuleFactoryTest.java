@@ -834,7 +834,7 @@ public class CxxSourceRuleFactoryTest {
               input,
               ImmutableList.of());
       CxxPreprocessAndCompile cxxCompile =
-          cxxSourceRuleFactory.createCompileBuildRule(name, cxxSource);
+          cxxSourceRuleFactory.requireCompileBuildRule(name, cxxSource);
       assertThat(
           cxxCompile.makeMainStep(sourcePathResolver, scratchDir, false).getCommand(),
           hasItems("-x", expected));
