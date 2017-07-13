@@ -114,15 +114,13 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   }
 
   private CxxSource getNativeStarterCxxSource() {
-    BuildTarget target =
-        BuildTarget.builder(getBaseTarget())
-            .addFlavors(InternalFlavor.of("native-starter-cxx-source"))
-            .build();
     BuildRule rule =
         getRuleResolver()
             .computeIfAbsent(
-                target,
-                () -> {
+                BuildTarget.builder(getBaseTarget())
+                    .addFlavors(InternalFlavor.of("native-starter-cxx-source"))
+                    .build(),
+                target -> {
                   BuildTarget templateTarget =
                       BuildTarget.builder(getBaseTarget())
                           .addFlavors(InternalFlavor.of("native-starter-cxx-source-template"))

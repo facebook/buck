@@ -172,15 +172,14 @@ public class CxxDescriptionEnhancer {
       HeaderVisibility headerVisibility,
       boolean shouldCreateHeadersSymlinks) {
     BuildTarget untypedTarget = CxxLibraryDescription.getUntypedBuildTarget(buildTarget);
-    BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-            untypedTarget, headerVisibility, cxxPlatform.getFlavor());
 
-    // Check the cache...
     return (HeaderSymlinkTree)
         ruleResolver.computeIfAbsent(
-            headerSymlinkTreeTarget,
-            () ->
+            // TODO(yiding): this build target gets recomputed in createHeaderSymlinkTree, it should
+            // be passed down instead.
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                untypedTarget, headerVisibility, cxxPlatform.getFlavor()),
+            (ignored) ->
                 createHeaderSymlinkTree(
                     untypedTarget,
                     projectFilesystem,
@@ -1003,7 +1002,7 @@ public class CxxDescriptionEnhancer {
     return (CxxLink)
         resolver.computeIfAbsentThrowing(
             linkRuleTarget,
-            () ->
+            ignored ->
                 // Generate the final link rule.  We use the top-level target as the link rule's
                 // target, so that it corresponds to the actual binary we build.
                 CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -1039,12 +1038,10 @@ public class CxxDescriptionEnhancer {
       StripStyle stripStyle,
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform) {
-    BuildTarget stripBuildTarget =
-        baseBuildTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor());
     return (CxxStrip)
         resolver.computeIfAbsent(
-            stripBuildTarget,
-            () ->
+            baseBuildTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
+            stripBuildTarget ->
                 new CxxStrip(
                     stripBuildTarget,
                     projectFilesystem,

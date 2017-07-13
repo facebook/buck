@@ -128,21 +128,15 @@ public class HaskellGhciDescription
       CxxPlatform cxxPlatform,
       ImmutableList<NativeLinkable> sortedNativeLinkables)
       throws NoSuchBuildTargetException {
-
-    BuildTarget ruleTarget =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    baseTarget.getCellPath(),
-                    Optional.empty(),
-                    baseTarget.getBaseName(),
-                    baseTarget.getShortName() + ".omnibus-shared-object"))
-            .build()
-            .withAppendedFlavors(baseTarget.getFlavors());
-
     return resolver.computeIfAbsentThrowing(
-        ruleTarget,
-        () -> {
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                baseTarget.getCellPath(),
+                Optional.empty(),
+                baseTarget.getBaseName(),
+                baseTarget.getShortName() + ".omnibus-shared-object"),
+            baseTarget.getFlavors()),
+        ruleTarget -> {
           ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
 
           for (NativeLinkable nativeLinkable : sortedNativeLinkables) {

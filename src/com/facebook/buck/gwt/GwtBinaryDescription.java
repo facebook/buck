@@ -100,17 +100,15 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
           return rule.getBuildDeps();
         }
 
-        BuildTarget gwtModuleTarget =
-            BuildTargets.createFlavoredBuildTarget(
-                javaLibrary.getBuildTarget().checkUnflavored(), JavaLibrary.GWT_MODULE_FLAVOR);
-
         Optional<BuildRule> gwtModule;
         if (javaLibrary.getSourcePathToOutput() != null) {
           gwtModule =
               Optional.of(
                   resolver.computeIfAbsent(
-                      gwtModuleTarget,
-                      () -> {
+                      BuildTargets.createFlavoredBuildTarget(
+                          javaLibrary.getBuildTarget().checkUnflavored(),
+                          JavaLibrary.GWT_MODULE_FLAVOR),
+                      gwtModuleTarget -> {
                         ImmutableSortedSet<SourcePath> filesForGwtModule =
                             ImmutableSortedSet.<SourcePath>naturalOrder()
                                 .addAll(javaLibrary.getSources())

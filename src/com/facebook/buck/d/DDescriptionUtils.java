@@ -227,7 +227,7 @@ abstract class DDescriptionUtils {
     return (DCompileBuildRule)
         buildRuleResolver.computeIfAbsentThrowing(
             compileTarget,
-            () -> {
+            ignored -> {
               Tool compiler = dBuckConfig.getDCompiler();
 
               Map<BuildTarget, DIncludes> transitiveIncludes = new TreeMap<>();

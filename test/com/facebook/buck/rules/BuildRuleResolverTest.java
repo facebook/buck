@@ -154,7 +154,8 @@ public class BuildRuleResolverTest {
     BuildRule returnedBuildRule =
         resolver.computeIfAbsent(
             target,
-            () -> {
+            passedTarget -> {
+              assertEquals(passedTarget, target);
               supplierInvoked.incrementAndGet();
               return buildRule;
             });
@@ -164,7 +165,8 @@ public class BuildRuleResolverTest {
     returnedBuildRule =
         resolver.computeIfAbsent(
             target,
-            () -> {
+            passedTarget -> {
+              assertEquals(passedTarget, target);
               supplierInvoked.incrementAndGet();
               return buildRule;
             });
