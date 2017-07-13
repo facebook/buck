@@ -276,13 +276,6 @@ abstract class AbstractCxxSourceRuleFactory {
         .build();
   }
 
-  public static boolean isCompileFlavoredBuildTarget(BuildTarget target) {
-    return target
-        .getFlavors()
-        .stream()
-        .anyMatch(flavor -> flavor.getName().startsWith(COMPILE_FLAVOR_PREFIX));
-  }
-
   // Use a "lazy" method here to memoize the sanitizer function.  This is necessary as it's used to
   // construct `SanitizedArg` objects for flags which get put in `CxxToolFlags` objects which, in
   // turn, are used to index a cache for computing precompiled header hashes.  Therefore, the hash
