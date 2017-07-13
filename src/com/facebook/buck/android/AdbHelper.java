@@ -95,6 +95,9 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final boolean restartAdbOnFailure;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
 
+  private static Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests =
+      Optional.empty();
+
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
@@ -105,6 +108,12 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
+  }
+
+  @VisibleForTesting
+  public static void setDevicesSupplierForTests(
+      Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests) {
+    AdbHelper.devicesSupplierForTests = devicesSupplierForTests;
   }
 
   @Override
@@ -471,6 +480,9 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @SuppressForbidden
   private ImmutableList<AndroidDevice> getDevicesImpl() {
+    if (devicesSupplierForTests.isPresent()) {
+      return devicesSupplierForTests.get().get();
+    }
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {

@@ -1,0 +1,4 @@
+// Put data in the identifier. This makes it easy to extract with readelf/objdump/etc.
+int data__{data}__() {{
+  return 0;
+}}
