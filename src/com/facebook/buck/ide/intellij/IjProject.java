@@ -104,7 +104,11 @@ public class IjProject {
             javaPackageFinder);
     IjProjectTemplateDataPreparer templateDataPreparer =
         new IjProjectTemplateDataPreparer(
-            parsingJavaPackageFinder, moduleGraph, projectFilesystem, projectConfig);
+            parsingJavaPackageFinder,
+            moduleGraph,
+            projectFilesystem,
+            projectConfig,
+            buildRuleResolver);
     IjProjectWriter writer =
         new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem);
 

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
+
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.DependencyType;
@@ -34,6 +36,10 @@ import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -86,16 +92,19 @@ public class IjProjectTemplateDataPreparer {
   private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private final ImmutableSet<IjModule> modulesToBeWritten;
   private final ImmutableSet<IjLibrary> librariesToBeWritten;
+  private final BuildRuleResolver buildRuleResolver;
 
   public IjProjectTemplateDataPreparer(
       JavaPackageFinder javaPackageFinder,
       IjModuleGraph moduleGraph,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      BuildRuleResolver buildRuleResolver) {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
+    this.buildRuleResolver = buildRuleResolver;
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.librariesToBeWritten = moduleGraph.getLibraries();
@@ -385,7 +394,7 @@ public class IjProjectTemplateDataPreparer {
     addAndroidManifestPath(androidProperties, basePath, androidFacet);
     addAndroidProguardPath(androidProperties, androidFacet);
     addAndroidResourcePaths(androidProperties, module, androidFacet);
-    addAndroidCompilerOutputPath(androidProperties, basePath, androidFacet);
+    addAndroidCompilerOutputPath(androidProperties, module, basePath);
 
     return androidProperties;
   }
@@ -506,21 +515,19 @@ public class IjProjectTemplateDataPreparer {
 
   private void addAndroidCompilerOutputPath(
       Map<String, Object> androidProperties,
-      Path moduleBasePath,
-      IjModuleAndroidFacet androidFacet) {
-    // The variant is the combination of the Android build type and product flavor. We use "debug"
-    // for the fallback value in case we could not parse it from the manifest path.
-    String variantName = "debug";
+      IjModule module,
+      Path moduleBasePath) {
+    // This is the fallback default in case we can't find a valid build target name
+    String targetName = "src_release";
 
-    Optional<Path> androidManifestPath = getAndroidManifestPath(androidFacet);
-    if (androidManifestPath.isPresent()) {
-      Path manifestPath =
-          projectFilesystem
-              .resolve(moduleBasePath)
-              .relativize(projectFilesystem.resolve(androidManifestPath.get()));
-      Path manifestParentPath = manifestPath.getParent();
-      if (manifestParentPath != null && manifestParentPath.getNameCount() > 0) {
-        variantName = manifestParentPath.getName(manifestParentPath.getNameCount() - 1).toString();
+    if (module.getTargets() != null) {
+      for (BuildTarget target : module.getTargets()) {
+        BuildRule buildRule = buildRuleResolver.getRule(target);
+        if ((buildRule instanceof AndroidLibrary
+            || buildRule instanceof JavaLibrary) && !target.getShortName().contains("aidl")) {
+          targetName = target.getShortName();
+          break;
+        }
       }
     }
 
@@ -533,7 +540,7 @@ public class IjProjectTemplateDataPreparer {
         rootModulePath.toString(),
         "buck-out/bin",
         moduleRelativePath.toString(),
-        "lib__src_" + variantName + "__classes");
+        "lib__" + targetName + "__classes");
 
     Path compilerOutputPath = moduleBasePath.relativize(moduleLibClassesPath);
     androidProperties.put(

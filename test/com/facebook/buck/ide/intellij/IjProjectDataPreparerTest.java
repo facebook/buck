@@ -40,7 +40,10 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -52,16 +55,17 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import org.junit.Before;
+import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
 
 public class IjProjectDataPreparerTest {
 
   private FakeProjectFilesystem filesystem;
   private JavaPackageFinder javaPackageFinder;
+  private BuildRuleResolver buildRuleResolver;
 
   @Before
   public void setUp() {
@@ -69,6 +73,8 @@ public class IjProjectDataPreparerTest {
     javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
             ImmutableSet.of("/java/", "/javatests/"));
+    buildRuleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   }
 
   @Test
@@ -92,7 +98,11 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
+            javaPackageFinder,
+            moduleGraph,
+            filesystem,
+            IjTestProjectConfig.create(),
+            buildRuleResolver);
 
     ContentRoot contentRoot = dataPreparer.getContentRoots(baseModule).asList().get(0);
     assertEquals("file://$MODULE_DIR$", contentRoot.getUrl());
@@ -184,7 +194,11 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
+            javaPackageFinder,
+            moduleGraph,
+            filesystem,
+            IjTestProjectConfig.create(),
+            buildRuleResolver);
 
     assertEquals(
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
@@ -267,7 +281,11 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
+            javaPackageFinder,
+            moduleGraph,
+            filesystem,
+            IjTestProjectConfig.create(),
+            buildRuleResolver);
 
     assertThat(
         dataPreparer.getModulesToBeWritten(),
@@ -316,7 +334,11 @@ public class IjProjectDataPreparerTest {
             ImmutableSet.of(guavaTargetNode, baseTargetNode, baseTestsTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
+            javaPackageFinder,
+            moduleGraph,
+            filesystem,
+            IjTestProjectConfig.create(),
+            buildRuleResolver);
 
     // Libraries don't go into the index.
     assertEquals(
@@ -394,7 +416,8 @@ public class IjProjectDataPreparerTest {
             javaPackageFinder,
             moduleGraph,
             filesystemForExcludesTest,
-            IjTestProjectConfig.create());
+            IjTestProjectConfig.create(),
+            buildRuleResolver);
 
     assertEquals(
         ImmutableSet.of(Paths.get("java/com/src/foo")),
