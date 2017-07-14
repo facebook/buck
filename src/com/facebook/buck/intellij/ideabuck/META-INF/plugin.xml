@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.9</version>
+  <version>3.0</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -22,6 +22,11 @@
   <change-notes><![CDATA[
 
   <ul>
+      <li>
+        <b>3.0</b>
+          Make plugin compatible with IntelliJ 2017.1.
+      </li>
+
       <li>
         <b>2.9</b>
           Add an ability to run tests from editor.
@@ -125,7 +130,7 @@
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="162.0" until-build="171.3019"/>
+  <idea-version since-build="171.3019"/>
 
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
