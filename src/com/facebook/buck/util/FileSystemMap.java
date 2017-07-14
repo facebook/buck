@@ -181,11 +181,13 @@ public class FileSystemMap<T> {
       stack.push(root);
       Entry<T> entry = root;
       // Walk the tree to fetch the node requested by the path, or the closest intermediate node.
+      boolean partial = false;
       for (Path p : path) {
         entry = entry.subLevels.get(p);
         // We're trying to remove a path that doesn't exist, no point in going deeper.
         // Break and proceed to remove whatever path we found so far.
         if (entry == null) {
+          partial = true;
           break;
         }
         stack.push(entry);
@@ -203,8 +205,18 @@ public class FileSystemMap<T> {
         path = path.subpath(0, stack.size() - 1);
         Entry<T> leaf = stack.pop();
         // If we reached the leaf, then remove the leaf and everything below it (if any).
-        removeSubtreeFromMap(leaf);
-        stack.peek().subLevels.remove(path.getFileName());
+        if (partial) {
+          map.remove(leaf.key);
+          if (leaf.size() == 0 && path != null && !stack.empty()) {
+            stack.peek().subLevels.remove(path.getFileName());
+          } else {
+            leaf.set(null);
+          }
+        } else {
+          removeSubtreeFromMap(leaf);
+          stack.peek().subLevels.remove(path.getFileName());
+        }
+
         // Plus, check everything above in order to remove unused stumps.
         while (!stack.empty()) {
           // This will never throw NPE because if it does, then the stack was empty at the beginning
