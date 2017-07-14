@@ -192,6 +192,14 @@ import org.kohsuke.args4j.CmdLineException;
 
 public final class Main {
 
+  /**
+   * Force JNA to be initialized early to avoid deadlock race condition.
+   *
+   * <p>See: https://github.com/java-native-access/jna/issues/652
+   */
+  @SuppressWarnings("unused")
+  public static final int JNA_POINTER_SIZE = Pointer.SIZE;
+
   /** Trying again won't help. */
   public static final int FAIL_EXIT_CODE = 1;
 
