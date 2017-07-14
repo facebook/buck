@@ -35,11 +35,31 @@ import java.util.Optional;
 public class AppleSimulatorDiscovery {
   private static final Logger LOG = Logger.get(AppleSimulatorDiscovery.class);
 
+  private static final int SIMCTL_LIST_MAX_RETRY_COUNT = 3;
+
   // Utility class, do not instantiate.
   private AppleSimulatorDiscovery() {}
 
-  /** Discovers information about Apple simulators installed on the system. */
   public static ImmutableSet<AppleSimulator> discoverAppleSimulators(
+      ProcessExecutor processExecutor, Path simctlPath) throws InterruptedException, IOException {
+    int count = 0;
+    while (true) {
+      try {
+        return tryDiscoverAppleSimulators(processExecutor, simctlPath);
+      } catch (IOException e) {
+        count++;
+        if (count < SIMCTL_LIST_MAX_RETRY_COUNT) {
+          LOG.debug(e, "Failed to run tryDiscoverAppleSimulators()");
+        } else {
+          LOG.debug(e, "Failed all attempts to run tryDiscoverAppleSimulators()");
+          throw e;
+        }
+      }
+    }
+  }
+
+  /** Discovers information about Apple simulators installed on the system. */
+  private static ImmutableSet<AppleSimulator> tryDiscoverAppleSimulators(
       ProcessExecutor processExecutor, Path simctlPath) throws InterruptedException, IOException {
     LOG.debug("Running xcrun simctl list to get list of simulators");
     ProcessExecutorParams processExecutorParams =

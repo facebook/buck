@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -151,5 +153,28 @@ public class AppleSimulatorDiscoveryTest {
                 .build());
 
     assertThat(simulatorProfile, is(equalTo(expected)));
+  }
+
+  @Test
+  public void appleSimulatorsDiscoveredFromRetrySimctlList()
+      throws IOException, InterruptedException {
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of("path/to/simctl", "list"))
+            .build();
+
+    ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
+        ImmutableList.builder();
+    fakeProcessesBuilder.add(
+        new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(42, "", "")));
+    fakeProcessesBuilder.add(
+        new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(42, "", "")));
+    fakeProcessesBuilder.add(
+        new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(0, "", "")));
+
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+
+    AppleSimulatorDiscovery.discoverAppleSimulators(
+        fakeProcessExecutor, Paths.get("path/to/simctl"));
   }
 }
