@@ -144,6 +144,9 @@
     <lang.importOptimizer
         language="Buck"
         implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckImportOptimizer"/>
+    <lang.foldingBuilder
+        language="Buck"
+        implementationClass="com.facebook.buck.intellij.ideabuck.folding.BuckFoldingBuilder"/>
     <completion.contributor
         language="Buck"
         implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckCompletionContributor"/>
