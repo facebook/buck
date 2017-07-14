@@ -25,10 +25,8 @@ import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExopackageInfo;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -426,20 +424,6 @@ public class ExopackageInstallerIntegrationTest {
     }
   }
 
-  private class FakeApkRule extends FakeBuildRule implements HasInstallableApk {
-    private ApkInfo apkInfo;
-
-    public FakeApkRule(ApkInfo apkInfo) {
-      super(BuildTargetFactory.newInstance("//fake-apk-rule:apk"), filesystem);
-      this.apkInfo = apkInfo;
-    }
-
-    @Override
-    public ApkInfo getApkInfo() {
-      return apkInfo;
-    }
-  }
-
   private void writeFile(Path p, String c) {
     try {
       debug("Writing: " + p);
@@ -582,8 +566,9 @@ public class ExopackageInstallerIntegrationTest {
         expectedResourcesInstalled);
     try {
       assertTrue(
-          new ExopackageInstaller(pathResolver, executionContext, new FakeApkRule(apkInfo), device)
-              .doInstall(null));
+          new ExopackageInstaller(
+                  pathResolver, executionContext, filesystem, FAKE_PACKAGE_NAME, device)
+              .doInstall(apkInfo, null));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }

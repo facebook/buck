@@ -552,8 +552,14 @@ public class AdbHelper implements AndroidDevicesHelper {
     return adbCall(
         "install exopackage apk",
         device ->
-            new ExopackageInstaller(pathResolver, contextSupplier.get(), hasInstallableApk, device)
-                .doInstall(processName),
+            new ExopackageInstaller(
+                    pathResolver,
+                    contextSupplier.get(),
+                    hasInstallableApk.getProjectFilesystem(),
+                    tryToExtractPackageNameFromManifest(
+                        pathResolver, hasInstallableApk.getApkInfo()),
+                    device)
+                .doInstall(hasInstallableApk.getApkInfo(), processName),
         quiet);
   }
 

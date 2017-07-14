@@ -17,7 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.ApkInfo;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -26,9 +26,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
-import com.facebook.buck.rules.ExopackageInfo.DexInfo;
-import com.facebook.buck.rules.ExopackageInfo.NativeLibsInfo;
-import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreCollectors;
@@ -62,59 +59,47 @@ public class ExopackageInstaller {
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
   private final SourcePathResolver pathResolver;
-  private final HasInstallableApk apkRule;
   private final AndroidDevice device;
   private final String packageName;
   private final Path dataRoot;
 
-  private final Optional<ResourcesInfo> resourcesExoInfo;
-  private final Optional<NativeLibsInfo> nativeExoInfo;
-  private final Optional<DexInfo> dexExoInfo;
-
   public ExopackageInstaller(
       SourcePathResolver pathResolver,
       ExecutionContext context,
-      HasInstallableApk apkRule,
+      ProjectFilesystem projectFilesystem,
+      String packageName,
       AndroidDevice device) {
     this.pathResolver = pathResolver;
-    this.projectFilesystem = apkRule.getProjectFilesystem();
+    this.projectFilesystem = projectFilesystem;
     this.eventBus = context.getBuckEventBus();
-    this.apkRule = apkRule;
     this.device = device;
-    this.packageName =
-        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apkRule.getApkInfo());
+    this.packageName = packageName;
     this.dataRoot = EXOPACKAGE_INSTALL_ROOT.resolve(packageName);
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
-
-    Optional<ExopackageInfo> exopackageInfo = apkRule.getApkInfo().getExopackageInfo();
-    this.nativeExoInfo =
-        exopackageInfo.map(ExopackageInfo::getNativeLibsInfo).orElse(Optional.empty());
-    this.dexExoInfo = exopackageInfo.map(ExopackageInfo::getDexInfo).orElse(Optional.empty());
-    this.resourcesExoInfo =
-        exopackageInfo.map(ExopackageInfo::getResourcesInfo).orElse(Optional.empty());
   }
 
   /** @return Returns true. */
   // TODO(cjhopman): This return value is silly. Change it to be void.
-  public boolean doInstall(@Nullable String processName) throws Exception {
-    if (exopackageEnabled()) {
+  public boolean doInstall(ApkInfo apkInfo, @Nullable String processName) throws Exception {
+    if (exopackageEnabled(apkInfo)) {
       device.mkDirP(dataRoot.toString());
       ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
-      installMissingExopackageFiles(presentFiles);
-      finishExoFileInstallation(presentFiles);
+      ExopackageInfo exoInfo = apkInfo.getExopackageInfo().get();
+      installMissingExopackageFiles(presentFiles, exoInfo);
+      finishExoFileInstallation(presentFiles, exoInfo);
     }
-    installApkIfNecessary();
-    killApp(processName);
+    installApkIfNecessary(apkInfo);
+    killApp(apkInfo, processName);
     return true;
   }
 
-  private void killApp(@Nullable String processName) throws Exception {
+  private void killApp(ApkInfo apkInfo, @Nullable String processName) throws Exception {
     // TODO(dreiss): Make this work on Gingerbread.
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
       // If a specific process name is given and we're not installing a full APK,
       // just kill that process, otherwise kill everything in the package
-      if (shouldAppBeInstalled() || processName == null) {
+      if (shouldAppBeInstalled(apkInfo) || processName == null) {
         device.stopPackage(packageName);
       } else {
         try {
@@ -133,12 +118,12 @@ public class ExopackageInstaller {
     }
   }
 
-  private void installApkIfNecessary() throws Exception {
-    final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
+  private void installApkIfNecessary(ApkInfo apkInfo) throws Exception {
+    final File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
     // TODO(dreiss): Support SD installation.
     final boolean installViaSd = false;
 
-    if (shouldAppBeInstalled()) {
+    if (shouldAppBeInstalled(apkInfo)) {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
         boolean success = device.installApkOnDevice(apk, installViaSd, false);
         if (!success) {
@@ -148,27 +133,29 @@ public class ExopackageInstaller {
     }
   }
 
-  private void finishExoFileInstallation(ImmutableSortedSet<Path> presentFiles) throws Exception {
+  private void finishExoFileInstallation(
+      ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
     ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
     ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
 
-    if (dexExoInfo.isPresent()) {
+    if (exoInfo.getDexInfo().isPresent()) {
       DexExoHelper dexExoHelper =
-          new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
+          new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
       wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
       metadata.putAll(dexExoHelper.getMetadataToInstall());
     }
 
-    if (nativeExoInfo.isPresent()) {
+    if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
-          new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
+          new NativeExoHelper(
+              device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
       wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
       metadata.putAll(nativeExoHelper.getMetadataToInstall());
     }
 
-    if (resourcesExoInfo.isPresent()) {
+    if (exoInfo.getResourcesInfo().isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
-          new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
+          new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
       wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
       metadata.putAll(resourcesExoHelper.getMetadataToInstall());
     }
@@ -177,29 +164,37 @@ public class ExopackageInstaller {
     installMetadata(metadata.build());
   }
 
-  private void installMissingExopackageFiles(ImmutableSortedSet<Path> presentFiles)
-      throws Exception {
-    if (dexExoInfo.isPresent()) {
+  private void installMissingExopackageFiles(
+      ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
+    if (exoInfo.getDexInfo().isPresent()) {
       DexExoHelper dexExoHelper =
-          new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
+          new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
       installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
     }
 
-    if (nativeExoInfo.isPresent()) {
+    if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
-          new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
+          new NativeExoHelper(
+              device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
       installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
     }
 
-    if (resourcesExoInfo.isPresent()) {
+    if (exoInfo.getResourcesInfo().isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
-          new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
+          new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
       installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
     }
   }
 
-  private boolean exopackageEnabled() {
-    return dexExoInfo.isPresent() || nativeExoInfo.isPresent() || resourcesExoInfo.isPresent();
+  private boolean exopackageEnabled(ApkInfo apkInfo) {
+    return apkInfo
+        .getExopackageInfo()
+        .map(
+            exoInfo ->
+                exoInfo.getDexInfo().isPresent()
+                    || exoInfo.getNativeLibsInfo().isPresent()
+                    || exoInfo.getResourcesInfo().isPresent())
+        .orElse(false);
   }
 
   private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
@@ -210,7 +205,7 @@ public class ExopackageInstaller {
     }
   }
 
-  private boolean shouldAppBeInstalled() throws Exception {
+  private boolean shouldAppBeInstalled(ApkInfo apkInfo) throws Exception {
     Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
     if (!appPackageInfo.isPresent()) {
       eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
@@ -220,8 +215,7 @@ public class ExopackageInstaller {
     LOG.debug("App path: %s", appPackageInfo.get().apkPath);
     String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
     String localAppSignature =
-        AgentUtil.getJarSignature(
-            pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toString());
+        AgentUtil.getJarSignature(pathResolver.getAbsolutePath(apkInfo.getApkPath()).toString());
     LOG.debug("Local app signature: %s", localAppSignature);
     LOG.debug("Remote app signature: %s", installedAppSignature);
 
