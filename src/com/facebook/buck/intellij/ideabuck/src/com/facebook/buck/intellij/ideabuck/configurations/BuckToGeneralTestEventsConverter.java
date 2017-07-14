@@ -118,12 +118,12 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
       if (suite.getTestResults().isEmpty()) {
         continue;
       }
-      final String locationUrl = null;
-      processor.onSuiteStarted(new TestSuiteStartedEvent(suite.getTestCaseName(), locationUrl));
+      processor.onSuiteStarted(new TestSuiteStartedEvent(suite.getTestCaseName(), null));
 
       for (TestResultsSummary test : suite.getTestResults()) {
         final String testName = test.getTestName();
-        processor.onTestStarted(new TestStartedEvent(testName, null));
+        String locationUrl = String.format("java:test://%s.%s", test.getTestCaseName(), testName);
+        processor.onTestStarted(new TestStartedEvent(testName, locationUrl));
         final String stdOut = test.getStdOut();
         if (stdOut != null) {
           processor.onTestOutput(new TestOutputEvent(testName, stdOut, true));
