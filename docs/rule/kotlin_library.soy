@@ -34,7 +34,13 @@ of the compiled class files and resources.
   {param name: 'srcs' /}
   {param default: '[]' /}
   {param desc}
-  The set of <code>.kt</code> or <code>.kts</code> files to compile for this rule.
+  The set of <code>.kt</code>, <code>.kts</code>, or <code>.java</code> files to compile for this
+  rule.  If <code>.java</code> files are included, in additon to compiling the Kotlin files, the
+  Java files will be compiled as if by the <code>{call buck.java_library /}</code> target, and the
+  <code>.class</code> files will be included in the output JAR.  Specifying both Kotlin and Java
+  sources files allows the resolution of inter-dependencies and circular references between the
+  Kotlin and Java classes.  <i>(Mixed compilation of Kotlin and Java files requires Kotlin v1.1.3 or
+  newer).</i>
   {/param}
 {/call}
 
