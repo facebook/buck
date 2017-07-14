@@ -450,7 +450,8 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getInstallHelpers() {
-    return Stream.of(getBuildTarget().withFlavors(AndroidBinaryDescription.INSTALL_FLAVOR));
+    return Stream.of(
+        getBuildTarget().withFlavors(AndroidBinaryInstallGraphEnhancer.INSTALL_FLAVOR));
   }
 
   @Override
