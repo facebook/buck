@@ -107,8 +107,7 @@ public class IjProject {
             parsingJavaPackageFinder,
             moduleGraph,
             projectFilesystem,
-            projectConfig,
-            buildRuleResolver);
+            projectConfig);
     IjProjectWriter writer =
         new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem);
 

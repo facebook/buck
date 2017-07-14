@@ -60,6 +60,8 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     IjModuleAndroidFacet.Builder builder = context.getOrCreateAndroidFacetBuilder();
     Optional<Path> manifestPath = moduleFactoryResolver.getLibraryAndroidManifestPath(target);
     manifestPath.ifPresent(builder::addManifestPaths);
+
+    context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
   @Override

@@ -48,6 +48,7 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
     addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
+    context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
   @Override

@@ -712,6 +712,12 @@ public class DefaultIjModuleFactoryTest {
                   TargetNode<? extends JvmLibraryArg, ?> targetNode) {
                 return Optional.empty();
               }
+
+              @Override
+              public Optional<Path> getCompilerOutputPath(
+                  TargetNode<? extends JvmLibraryArg, ?> targetNode) {
+                return Optional.empty();
+              }
             },
             projectConfig);
     return new DefaultIjModuleFactory(projectFilesystem, typeRegistry);

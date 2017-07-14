@@ -24,6 +24,7 @@ import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
@@ -121,6 +122,13 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     }
 
     return JavaLibraryRules.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
+  }
+
+  @Override
+  public Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode) {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    Path compilerOutputPath = DefaultJavaLibrary.getClassesDir(buildTarget, projectFilesystem);
+    return Optional.ofNullable(compilerOutputPath);
   }
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {

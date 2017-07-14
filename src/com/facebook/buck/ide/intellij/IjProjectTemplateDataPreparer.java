@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
@@ -36,10 +35,6 @@ import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -92,19 +87,16 @@ public class IjProjectTemplateDataPreparer {
   private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private final ImmutableSet<IjModule> modulesToBeWritten;
   private final ImmutableSet<IjLibrary> librariesToBeWritten;
-  private final BuildRuleResolver buildRuleResolver;
 
   public IjProjectTemplateDataPreparer(
       JavaPackageFinder javaPackageFinder,
       IjModuleGraph moduleGraph,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig,
-      BuildRuleResolver buildRuleResolver) {
+      IjProjectConfig projectConfig) {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
-    this.buildRuleResolver = buildRuleResolver;
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.librariesToBeWritten = moduleGraph.getLibraries();
@@ -513,39 +505,26 @@ public class IjProjectTemplateDataPreparer {
     }
   }
 
+  /**
+   * IntelliJ may not be able to find classes on the compiler output path
+   * if the jar_spool_mode is set to direct_to_jar.
+   */
   private void addAndroidCompilerOutputPath(
       Map<String, Object> androidProperties,
       IjModule module,
       Path moduleBasePath) {
-    // This is the fallback default in case we can't find a valid build target name
-    String targetName = "src_release";
+    // The compiler output path is relative to the project root
+    Optional<Path> compilerOutputPath = module.getCompilerOutputPath();
+    if (compilerOutputPath.isPresent()) {
+      Path rootModulePath = Paths.get(projectConfig.getProjectRoot());
+      Path moduleToRootPath = moduleBasePath.relativize(rootModulePath);
+      Path moduleRelativecompilerOutputPath = Paths.get(
+          moduleToRootPath.toString(), compilerOutputPath.get().toString());
 
-    if (module.getTargets() != null) {
-      for (BuildTarget target : module.getTargets()) {
-        BuildRule buildRule = buildRuleResolver.getRule(target);
-        if ((buildRule instanceof AndroidLibrary
-            || buildRule instanceof JavaLibrary) && !target.getShortName().contains("aidl")) {
-          targetName = target.getShortName();
-          break;
-        }
-      }
+      androidProperties.put(
+          "compiler_output_path",
+          "/" + MorePaths.pathWithUnixSeparators(moduleRelativecompilerOutputPath));
     }
-
-    Path rootModulePath = Paths.get(projectConfig.getProjectRoot());
-    Path moduleRelativePath = rootModulePath.relativize(moduleBasePath);
-
-    // IntelliJ may not be able to find classes on the compiler output path
-    // if the jar_spool_mode is set to direct_to_jar.
-    Path moduleLibClassesPath = Paths.get(
-        rootModulePath.toString(),
-        "buck-out/bin",
-        moduleRelativePath.toString(),
-        "lib__" + targetName + "__classes");
-
-    Path compilerOutputPath = moduleBasePath.relativize(moduleLibClassesPath);
-    androidProperties.put(
-        "compiler_output_path",
-        "/" + MorePaths.pathWithUnixSeparators(compilerOutputPath));
   }
 
   private class IjFolderToIjSourceFolderTransform implements Function<IjFolder, IjSourceFolder> {

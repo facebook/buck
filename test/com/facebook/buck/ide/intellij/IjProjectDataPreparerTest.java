@@ -98,11 +98,7 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            buildRuleResolver);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     ContentRoot contentRoot = dataPreparer.getContentRoots(baseModule).asList().get(0);
     assertEquals("file://$MODULE_DIR$", contentRoot.getUrl());
@@ -194,11 +190,7 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            buildRuleResolver);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     assertEquals(
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
@@ -281,11 +273,7 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            buildRuleResolver);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     assertThat(
         dataPreparer.getModulesToBeWritten(),
@@ -334,11 +322,7 @@ public class IjProjectDataPreparerTest {
             ImmutableSet.of(guavaTargetNode, baseTargetNode, baseTestsTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            buildRuleResolver);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     // Libraries don't go into the index.
     assertEquals(
@@ -413,11 +397,7 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystemForExcludesTest,
-            IjTestProjectConfig.create(),
-            buildRuleResolver);
+            javaPackageFinder, moduleGraph, filesystemForExcludesTest, IjTestProjectConfig.create());
 
     assertEquals(
         ImmutableSet.of(Paths.get("java/com/src/foo")),
