@@ -40,10 +40,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -65,7 +62,6 @@ public class IjProjectDataPreparerTest {
 
   private FakeProjectFilesystem filesystem;
   private JavaPackageFinder javaPackageFinder;
-  private BuildRuleResolver buildRuleResolver;
 
   @Before
   public void setUp() {
@@ -73,8 +69,6 @@ public class IjProjectDataPreparerTest {
     javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
             ImmutableSet.of("/java/", "/javatests/"));
-    buildRuleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   }
 
   @Test
