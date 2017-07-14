@@ -130,10 +130,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -807,6 +809,60 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty())));
+      }
+    }
+
+    @Test
+    public void multipleTopLevelRulesDontBlockEachOther() throws Exception {
+      Exchanger<Boolean> exchanger = new Exchanger<>();
+      Step exchangerStep =
+          new AbstractExecutionStep("interleaved_step") {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              try {
+                // Forces both rules to wait for the other at this point.
+                exchanger.exchange(true, 6, TimeUnit.SECONDS);
+              } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+              }
+              return StepExecutionResult.SUCCESS;
+            }
+          };
+      BuildRule interleavedRuleOne =
+          createRule(
+              filesystem,
+              resolver,
+              /* deps */ ImmutableSortedSet.of(),
+              /* buildSteps */ ImmutableList.of(exchangerStep),
+              /* postBuildSteps */ ImmutableList.of(),
+              /* pathToOutputFile */ null,
+              ImmutableList.of(InternalFlavor.of("interleaved-1")));
+      resolver.addToIndex(interleavedRuleOne);
+      BuildRule interleavedRuleTwo =
+          createRule(
+              filesystem,
+              resolver,
+              /* deps */ ImmutableSortedSet.of(),
+              /* buildSteps */ ImmutableList.of(exchangerStep),
+              /* postBuildSteps */ ImmutableList.of(),
+              /* pathToOutputFile */ null,
+              ImmutableList.of(InternalFlavor.of("interleaved-2")));
+      resolver.addToIndex(interleavedRuleTwo);
+
+      // The engine needs a couple of threads to ensure that it can schedule multiple steps at the same time.
+      try (CachingBuildEngine cachingBuildEngine =
+          cachingBuildEngineFactory()
+              .setExecutorService(listeningDecorator(Executors.newFixedThreadPool(4)))
+              .build()) {
+        BuildEngineResult engineResultOne =
+            cachingBuildEngine.build(
+                buildContext, TestExecutionContext.newInstance(), interleavedRuleOne);
+        BuildEngineResult engineResultTwo =
+            cachingBuildEngine.build(
+                buildContext, TestExecutionContext.newInstance(), interleavedRuleTwo);
+        assertThat(engineResultOne.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
+        assertThat(engineResultTwo.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
       }
     }
 
