@@ -94,7 +94,7 @@ public class ExopackageInstaller {
     return true;
   }
 
-  private void killApp(ApkInfo apkInfo, @Nullable String processName) throws Exception {
+  public void killApp(ApkInfo apkInfo, @Nullable String processName) throws Exception {
     // TODO(dreiss): Make this work on Gingerbread.
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
       // If a specific process name is given and we're not installing a full APK,
@@ -118,7 +118,7 @@ public class ExopackageInstaller {
     }
   }
 
-  private void installApkIfNecessary(ApkInfo apkInfo) throws Exception {
+  public void installApkIfNecessary(ApkInfo apkInfo) throws Exception {
     final File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
     // TODO(dreiss): Support SD installation.
     final boolean installViaSd = false;
@@ -133,7 +133,7 @@ public class ExopackageInstaller {
     }
   }
 
-  private void finishExoFileInstallation(
+  public void finishExoFileInstallation(
       ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
     ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
     ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
@@ -164,7 +164,7 @@ public class ExopackageInstaller {
     installMetadata(metadata.build());
   }
 
-  private void installMissingExopackageFiles(
+  public void installMissingExopackageFiles(
       ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
     if (exoInfo.getDexInfo().isPresent()) {
       DexExoHelper dexExoHelper =
@@ -241,7 +241,7 @@ public class ExopackageInstaller {
     }
   }
 
-  private void installMissingFiles(
+  public void installMissingFiles(
       ImmutableSortedSet<Path> presentFiles,
       ImmutableMap<Path, Path> wantedFilesToInstall,
       String filesType)

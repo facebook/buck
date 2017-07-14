@@ -31,6 +31,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -40,53 +41,20 @@ import java.util.SortedSet;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public class ExoInstaller extends AbstractBuildRule implements HasRuntimeDeps {
+/** Installs a non-exopackage apk. */
+public class AndroidBinaryNonExoInstaller extends AbstractBuildRule implements HasRuntimeDeps {
   @AddToRuleKey private final InstallTrigger trigger;
-  @AddToRuleKey private final ImmutableList<SourcePath> exoSourcePaths;
   @AddToRuleKey private final HasInstallableApk apk;
 
   private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
 
-  protected ExoInstaller(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
-      HasInstallableApk apk) {
+  protected AndroidBinaryNonExoInstaller(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, HasInstallableApk apk) {
     super(buildTarget, projectFilesystem);
+    Preconditions.checkState(!apk.getApkInfo().getExopackageInfo().isPresent());
     this.trigger = new InstallTrigger(projectFilesystem);
     this.apk = apk;
-    this.exoSourcePaths = getApkInfoSourcePaths(apk.getApkInfo());
-    this.depsSupplier =
-        Suppliers.memoize(
-            () -> ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(exoSourcePaths)));
-  }
-
-  private static ImmutableList<SourcePath> getApkInfoSourcePaths(ApkInfo apkInfo) {
-    ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
-    builder.add(apkInfo.getApkPath());
-    builder.add(apkInfo.getManifestPath());
-    apkInfo
-        .getExopackageInfo()
-        .ifPresent(
-            exoInfo -> {
-              exoInfo
-                  .getDexInfo()
-                  .ifPresent(
-                      dexInfo -> {
-                        builder.add(dexInfo.getDirectory(), dexInfo.getMetadata());
-                      });
-              exoInfo
-                  .getNativeLibsInfo()
-                  .ifPresent(
-                      nativeLibsInfo -> {
-                        builder.add(nativeLibsInfo.getDirectory());
-                        builder.add(nativeLibsInfo.getMetadata());
-                      });
-              exoInfo
-                  .getResourcesInfo()
-                  .ifPresent(resourcesInfo -> builder.addAll(resourcesInfo.getResourcesPaths()));
-            });
-    return builder.build();
+    this.depsSupplier = Suppliers.memoize(() -> ImmutableSortedSet.of((BuildRule) apk));
   }
 
   @Override

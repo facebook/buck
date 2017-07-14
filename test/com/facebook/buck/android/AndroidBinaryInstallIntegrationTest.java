@@ -207,6 +207,18 @@ public class AndroidBinaryInstallIntegrationTest {
   }
 
   @Test
+  public void testExoFullInstallAfterUninstall() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3);
+    testDevice.uninstallPackage(FAKE_PACKAGE_NAME);
+    testDevice.rmFiles(
+        INSTALL_ROOT.toString(),
+        testDevice.listDirRecursive(INSTALL_ROOT).stream().map(Path::toString)::iterator);
+    checkExoInstall(1, 2, 2, 3);
+  }
+
+  @Test
   public void testExoNoopReinstall() throws Exception {
     setDefaultFullBuildState();
 

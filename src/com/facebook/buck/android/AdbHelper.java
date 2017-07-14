@@ -335,7 +335,10 @@ public class AdbHelper implements AndroidDevicesHelper {
   public static String tryToExtractPackageNameFromManifest(
       SourcePathResolver pathResolver, ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+    return tryToExtractPackageNameFromManifest(pathToManifest);
+  }
 
+  static String tryToExtractPackageNameFromManifest(Path pathToManifest) {
     // Note that the file may not exist if AndroidManifest.xml is a generated file
     // and the rule has not been built yet.
     if (!Files.isRegularFile(pathToManifest)) {
