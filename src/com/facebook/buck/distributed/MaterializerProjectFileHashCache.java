@@ -273,6 +273,11 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
+  public Optional<HashCode> getIfPresent(Path path) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
     materializeIfNeeded(archiveMemberRelPath.getArchivePath());
     return delegate.get(archiveMemberRelPath);

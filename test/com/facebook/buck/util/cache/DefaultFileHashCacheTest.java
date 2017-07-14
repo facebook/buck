@@ -61,7 +61,7 @@ public class DefaultFileHashCacheTest {
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
-    assertTrue("Cache should contain path", cache.willGet(path));
+    assertTrue("Cache should contain path", cache.getIfPresent(path).isPresent());
   }
 
   @Test
@@ -83,9 +83,9 @@ public class DefaultFileHashCacheTest {
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
-    assertTrue("Cache should contain path", cache.willGet(path));
+    assertTrue("Cache should contain path", cache.getIfPresent(path).isPresent());
     cache.invalidate(path);
-    assertFalse("Cache should not contain pain", cache.willGet(path));
+    assertFalse("Cache should not contain pain", cache.getIfPresent(path).isPresent());
   }
 
   @Test
@@ -94,9 +94,9 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, FILE_HASH_CACHE_MODE);
     Path path = new File("SomeClass.java").toPath();
-    assertFalse("Cache should not contain pain", cache.willGet(path));
+    assertFalse("Cache should not contain pain", cache.getIfPresent(path).isPresent());
     cache.invalidate(path);
-    assertFalse("Cache should not contain pain", cache.willGet(path));
+    assertFalse("Cache should not contain pain", cache.getIfPresent(path).isPresent());
   }
 
   @Test
@@ -151,9 +151,9 @@ public class DefaultFileHashCacheTest {
     assertTrue(cache.willGet(child2));
 
     cache.invalidate(dir);
-    assertNull(cache.fileHashCacheEngine.getIfPresent(dir));
-    assertNull(cache.fileHashCacheEngine.getIfPresent(child1));
-    assertNull(cache.fileHashCacheEngine.getIfPresent(child2));
+    assertFalse(cache.getIfPresent(dir).isPresent());
+    assertFalse(cache.getIfPresent(child1).isPresent());
+    assertFalse(cache.getIfPresent(child2).isPresent());
   }
 
   @Test

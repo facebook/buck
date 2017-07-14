@@ -27,6 +27,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   private static final Function<BuildJobStateFileHashEntry, HashCode>
@@ -70,6 +71,11 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   @Override
   public long getSize(Path relPath) throws IOException {
     return delegate.getSize(relPath);
+  }
+
+  @Override
+  public Optional<HashCode> getIfPresent(Path path) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
