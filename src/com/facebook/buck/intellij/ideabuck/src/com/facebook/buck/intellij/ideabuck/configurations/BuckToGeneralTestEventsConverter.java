@@ -135,9 +135,8 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
         if (test.getType() == ResultType.FAILURE) {
           processor.onTestFailure(
               new TestFailedEvent(testName, "", test.getStacktrace(), true, null, null));
-        } else {
-          processor.onTestFinished(new TestFinishedEvent(testName, test.getTime()));
         }
+        processor.onTestFinished(new TestFinishedEvent(testName, test.getTime()));
       }
       processor.onSuiteFinished(new TestSuiteFinishedEvent(suite.getTestCaseName()));
     }
