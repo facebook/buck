@@ -47,6 +47,7 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -197,8 +198,8 @@ public class DefaultRuleKeyFactoryTest {
             .build(RuleKey::new);
 
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
-    try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
-      try (RuleKeyScopedHasher.Scope appendableScope =
+    try (Scope keyScope = builder.getScopedHasher().keyScope("field")) {
+      try (Scope appendableScope =
           builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
         builder.getScopedHasher().getHasher().putRuleKey(subKey);
       }
@@ -240,8 +241,8 @@ public class DefaultRuleKeyFactoryTest {
             .build(RuleKey::new);
 
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
-    try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
-      try (RuleKeyScopedHasher.Scope appendableScope =
+    try (Scope keyScope = builder.getScopedHasher().keyScope("field")) {
+      try (Scope appendableScope =
           builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
         builder.getScopedHasher().getHasher().putRuleKey(subKey);
       }
@@ -297,8 +298,8 @@ public class DefaultRuleKeyFactoryTest {
     RuleKey ruleSubKey = factory.build(appendableRule);
 
     DefaultRuleKeyFactory.Builder<HashCode> builder = factory.newBuilderForTesting(rule);
-    try (RuleKeyScopedHasher.Scope keyScope = builder.getScopedHasher().keyScope("field")) {
-      try (RuleKeyScopedHasher.Scope appendableScope =
+    try (Scope keyScope = builder.getScopedHasher().keyScope("field")) {
+      try (Scope appendableScope =
           builder.getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.BUILD_RULE)) {
         builder.getScopedHasher().getHasher().putRuleKey(ruleSubKey);
       }

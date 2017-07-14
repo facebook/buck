@@ -56,12 +56,4 @@ public interface BuckEvent extends BuckEventExternalInterface {
 
   /** @return key used to determine whether this event is related to another event. */
   EventKey getEventKey();
-
-  /**
-   * A more specific interface that doesn't throw rather than using {@link AutoCloseable} directly.
-   */
-  interface Scope extends AutoCloseable {
-    @Override
-    void close();
-  }
 }

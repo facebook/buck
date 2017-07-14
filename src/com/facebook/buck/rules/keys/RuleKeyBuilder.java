@@ -19,7 +19,6 @@ package com.facebook.buck.rules.keys;
 import static com.facebook.buck.rules.keys.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.RuleKeyHasher.Wrapper;
 import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
-import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.Scope;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
@@ -42,6 +41,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

@@ -23,7 +23,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
@@ -55,6 +54,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -377,7 +377,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     if (manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-      try (BuckEvent.Scope scope =
+      try (Scope scope =
           BuildRuleCacheEvent.startCacheCheckScope(
               context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
         return performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
@@ -429,7 +429,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     if (inputRuleKey.isPresent()) {
 
       // Perform the cache fetch.
-      try (BuckEvent.Scope scope =
+      try (Scope scope =
           BuildRuleCacheEvent.startCacheCheckScope(
               context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
         // Input-based rule keys.
@@ -455,7 +455,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // 1. Check if it's already built.
-    try (BuildRuleEvent.Scope scope =
+    try (Scope scope =
         BuildRuleEvent.resumeSuspendScope(
             buildContext.getEventBus(),
             rule,
@@ -1387,7 +1387,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transform(
             depKeys,
             (List<RuleKey> input) -> {
-              try (BuildRuleEvent.Scope scope =
+              try (Scope scope =
                   BuildRuleEvent.ruleKeyCalculationScope(
                       context.getEventBus(),
                       rule,
@@ -1742,7 +1742,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             .map(MoreFunctions.fromJsonFunction(DependencyFileEntry.class))
             .collect(MoreCollectors.toImmutableList());
 
-    try (BuckEvent.Scope scope =
+    try (Scope scope =
         RuleKeyCalculationEvent.scope(
             context.getEventBus(), RuleKeyCalculationEvent.Type.DEP_FILE)) {
       return Optional.of(
@@ -1845,7 +1845,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuildRule rule, BuckEventBus eventBus)
       throws IOException {
-    try (BuckEvent.Scope scope =
+    try (Scope scope =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.MANIFEST)) {
       return Optional.of(
           ruleKeyFactories
@@ -1947,7 +1947,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private Optional<RuleKey> calculateInputBasedRuleKey(BuildRule rule, BuckEventBus eventBus) {
-    try (BuckEvent.Scope scope =
+    try (Scope scope =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
       return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
     } catch (SizeLimiter.SizeLimitException ex) {
@@ -2055,7 +2055,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private <F, T> AsyncFunction<F, T> ruleAsyncFunction(
       final BuildRule rule, final BuckEventBus eventBus, final AsyncFunction<F, T> delegate) {
     return input -> {
-      try (BuildRuleEvent.Scope event =
+      try (Scope event =
           BuildRuleEvent.resumeSuspendScope(
               eventBus,
               rule,
@@ -2089,7 +2089,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     Preconditions.checkNotNull(firstFailure);
                     return Optional.of(BuildResult.canceled(rule, firstFailure));
                   }
-                  try (BuildRuleEvent.Scope scope =
+                  try (Scope scope =
                       BuildRuleEvent.resumeSuspendScope(
                           context.getEventBus(),
                           rule,
