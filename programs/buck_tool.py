@@ -235,7 +235,7 @@ class BuckTool(object):
                 if use_buckd and self._is_buckd_running():
                     with Tracing('buck', args={'command': sys.argv[1:]}):
                         exit_code = 2
-                        last_diagnostic_time = 0
+                        busy_diagnostic_displayed = False
                         while exit_code == 2:
                             with NailgunConnection(
                                     self._buck_project.get_buckd_transport_address(),
@@ -251,10 +251,13 @@ class BuckTool(object):
                                 if exit_code == 2:
                                     env['BUCK_BUILD_ID'] = str(uuid.uuid4())
                                     now = time.time()
-                                    if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
-                                        print('Daemon is busy, waiting for it to become free...',
+                                    if not busy_diagnostic_displayed:
+                                        print("Buck daemon is busy with another command. " +
+                                              "Waiting for it to become free...\n" +
+                                              "You can use 'buck kill' to kill buck " +
+                                              "if you suspect buck is stuck.",
                                               file=sys.stderr)
-                                        last_diagnostic_time = now
+                                        busy_diagnostic_displayed = True
                                     time.sleep(1)
                         return exit_code
 
