@@ -174,7 +174,6 @@ java_library(
 java_library(
     name = "abstract_description_arg",
     srcs = [
-        "AbstractDescriptionArg.java",
         "CommonDescriptionArg.java",
         "HasContacts.java",
         "HasDeclaredDeps.java",

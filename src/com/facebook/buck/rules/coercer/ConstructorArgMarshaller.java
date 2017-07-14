@@ -75,8 +75,7 @@ public class ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
-   * @param dtoClass The type of the constructor dto to be populated, either an
-   *     AbstractDescriptionArg or an Immutable.
+   * @param dtoClass The type of the immutable constructor dto to be populated.
    * @param declaredDeps A builder to be populated with the declared dependencies.
    * @return The fully populated DTO.
    */
