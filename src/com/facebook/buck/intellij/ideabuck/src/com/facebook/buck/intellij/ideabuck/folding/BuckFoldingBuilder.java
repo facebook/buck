@@ -16,7 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.folding;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
+import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckExpressionImpl;
+import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckPropertyLvalueImpl;
+import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckRuleBlockImpl;
+import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckRuleNameImpl;
 import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckValueArrayImpl;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
@@ -25,6 +31,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.CompositeElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.ArrayList;
@@ -33,7 +40,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** A first pass at folding support for BUCK files - folds arrays but not rules */
+/** Folds rules and arrays */
 public class BuckFoldingBuilder extends FoldingBuilderEx {
 
   /** We fold large arrays by default; this constant defines "large" */
@@ -48,16 +55,19 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
       @NotNull PsiElement root, @NotNull Document document, boolean quick) {
     List<FoldingDescriptor> descriptors = new ArrayList<>();
 
-    Collection<BuckValueArrayImpl> arrays =
-        PsiTreeUtil.findChildrenOfType(root, BuckValueArrayImpl.class);
-    for (final BuckValueArrayImpl array : arrays) {
-      descriptors.add(
-          new FoldingDescriptor(
-              array.getNode(),
-              new TextRange(
-                  array.getTextRange().getStartOffset() + 1,
-                  array.getTextRange().getEndOffset() - 1)));
-    }
+    PsiTreeUtil.findChildrenOfAnyType(root, BuckRuleBlockImpl.class, BuckValueArrayImpl.class)
+        .stream()
+        .forEach(
+            element -> {
+              int offset = element instanceof BuckRuleBlockImpl ? 0 : 1;
+              descriptors.add(
+                  new FoldingDescriptor(
+                      element.getNode(),
+                      new TextRange(
+                          element.getTextRange().getStartOffset() + offset,
+                          element.getTextRange().getEndOffset() - offset)));
+            });
+
     return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
   }
 
@@ -67,9 +77,47 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
     if (!(astNode instanceof CompositeElement)) {
       return null;
     }
-    int size = countValues((CompositeElement) astNode);
+
+    CompositeElement compositeElement = (CompositeElement) astNode;
+    IElementType type = compositeElement.getElementType();
+
+    if (type.equals(BuckTypes.VALUE_ARRAY)) {
+      return getArrayPlaceholderText(compositeElement);
+    } else if (type.equals(BuckTypes.RULE_BLOCK)) {
+      return getRulePlaceholderText(compositeElement);
+    } else {
+      return null;
+    }
+  }
+
+  private String getArrayPlaceholderText(CompositeElement compositeElement) {
+    int size = countValues(compositeElement);
     // Return null (the default value) if countValues() returns an error code
     return size < 0 ? null : Integer.toString(size);
+  }
+
+  private String getRulePlaceholderText(CompositeElement compositeElement) {
+    PsiElement psiElement = compositeElement.getPsi();
+    BuckRuleNameImpl buckRuleName = PsiTreeUtil.findChildOfType(psiElement, BuckRuleNameImpl.class);
+    if (buckRuleName == null) {
+      return null;
+    }
+
+    String name = null;
+    Collection<BuckPropertyLvalueImpl> lvalues =
+        PsiTreeUtil.findChildrenOfType(psiElement, BuckPropertyLvalueImpl.class);
+    for (BuckPropertyLvalueImpl lvalue : lvalues) {
+      if (lvalue.getText().equals("name")) {
+        PsiElement element = lvalue;
+        do {
+          element = element.getNextSibling();
+        } while (!(element instanceof BuckExpressionImpl));
+        name = element.getText();
+        break;
+      }
+    }
+
+    return String.format(isNullOrEmpty(name) ? "%s" : "%s(%s)", buckRuleName.getText(), name);
   }
 
   @Override
@@ -78,9 +126,23 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
       return false;
     }
     CompositeElement compositeElement = (CompositeElement) astNode;
-    // The debugger suggests that we can use reference equality, here, but .equals() seems safer
-    return BuckTypes.VALUE_ARRAY.equals(compositeElement.getElementType())
-        && countValues(compositeElement) >= DEFAULT_FOLDING_SIZE;
+    IElementType type = compositeElement.getElementType();
+
+    if (type.equals(BuckTypes.VALUE_ARRAY)) {
+      return getArrayIsCollapsedByDefault(compositeElement);
+    } else if (type.equals(BuckTypes.RULE_BLOCK)) {
+      return getRuleIsCollapsedByDefault();
+    } else {
+      return false;
+    }
+  }
+
+  private boolean getArrayIsCollapsedByDefault(CompositeElement compositeElement) {
+    return countValues(compositeElement) >= DEFAULT_FOLDING_SIZE;
+  }
+
+  private boolean getRuleIsCollapsedByDefault() {
+    return false;
   }
 
   private int countValues(CompositeElement compositeElement) {
