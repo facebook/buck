@@ -1,0 +1,15 @@
+{
+    "_README_WHAT_IS_THIS_DIFF_": "This diff is temporary, and will be replaced once the \"convert-pull-request-to-internal-diff\" sandcastle job finishes. For more details, see https:\/\/fburl.com\/pr-import-on-sandcastle",
+    "repository": {
+        "fbid": 184700698365387,
+        "name": "facebook\/buck"
+    },
+    "pull_request": {
+        "fbid": 1398612423528055,
+        "number": 1422,
+        "name": "Kotlin documentation enhancements.",
+        "author": "brettwooldridge",
+        "initiator": "mzlee"
+    },
+    "head_sha": "fe8ee1cf062aba2de69d2342a43289fd13c1c45f"
+}
