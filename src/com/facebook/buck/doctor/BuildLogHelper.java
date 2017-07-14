@@ -62,7 +62,7 @@ public class BuildLogHelper {
     for (Path logFile : getAllBuckLogFiles()) {
       BuildLogEntry entry = newBuildLogEntry(logFile);
       if (entry.getCommandArgs().isPresent()
-          && !entry.getCommandArgs().get().matches(".*\\b(rage|doctor|server|launch)\\b.*")) {
+          && !entry.getCommandArgs().get().matches("^(rage|doctor|server|launch)\\b.*")) {
         logEntries.add(newBuildLogEntry(logFile));
       }
     }
