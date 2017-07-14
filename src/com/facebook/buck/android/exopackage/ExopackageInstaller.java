@@ -95,53 +95,21 @@ public class ExopackageInstaller {
         exopackageInfo.map(ExopackageInfo::getResourcesInfo).orElse(Optional.empty());
   }
 
+  /** @return Returns true. */
+  // TODO(cjhopman): This return value is silly. Change it to be void.
   public boolean doInstall(@Nullable String processName) throws Exception {
     if (exopackageEnabled()) {
       device.mkDirP(dataRoot.toString());
       ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
-      ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
-      ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
-
-      if (dexExoInfo.isPresent()) {
-        DexExoHelper dexExoHelper =
-            new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
-        installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
-        wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
-        metadata.putAll(dexExoHelper.getMetadataToInstall());
-      }
-
-      if (nativeExoInfo.isPresent()) {
-        NativeExoHelper nativeExoHelper =
-            new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
-        installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
-        wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
-        metadata.putAll(nativeExoHelper.getMetadataToInstall());
-      }
-
-      if (resourcesExoInfo.isPresent()) {
-        ResourcesExoHelper resourcesExoHelper =
-            new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
-        installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
-        wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
-        metadata.putAll(resourcesExoHelper.getMetadataToInstall());
-      }
-
-      deleteUnwantedFiles(presentFiles, wantedPaths.build());
-      installMetadata(metadata.build());
+      installMissingExopackageFiles(presentFiles);
+      finishExoFileInstallation(presentFiles);
     }
+    installApkIfNecessary();
+    killApp(processName);
+    return true;
+  }
 
-    final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
-    // TODO(dreiss): Support SD installation.
-    final boolean installViaSd = false;
-
-    if (shouldAppBeInstalled()) {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
-        boolean success = device.installApkOnDevice(apk, installViaSd, false);
-        if (!success) {
-          return false;
-        }
-      }
-    }
+  private void killApp(@Nullable String processName) throws Exception {
     // TODO(dreiss): Make this work on Gingerbread.
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
       // If a specific process name is given and we're not installing a full APK,
@@ -161,9 +129,73 @@ public class ExopackageInstaller {
           }
         }
       }
+      device.stopPackage(packageName);
+    }
+  }
+
+  private void installApkIfNecessary() throws Exception {
+    final File apk = pathResolver.getAbsolutePath(apkRule.getApkInfo().getApkPath()).toFile();
+    // TODO(dreiss): Support SD installation.
+    final boolean installViaSd = false;
+
+    if (shouldAppBeInstalled()) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
+        boolean success = device.installApkOnDevice(apk, installViaSd, false);
+        if (!success) {
+          throw new RuntimeException("Installing Apk failed.");
+        }
+      }
+    }
+  }
+
+  private void finishExoFileInstallation(ImmutableSortedSet<Path> presentFiles) throws Exception {
+    ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
+    ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
+
+    if (dexExoInfo.isPresent()) {
+      DexExoHelper dexExoHelper =
+          new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
+      wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
+      metadata.putAll(dexExoHelper.getMetadataToInstall());
     }
 
-    return true;
+    if (nativeExoInfo.isPresent()) {
+      NativeExoHelper nativeExoHelper =
+          new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
+      wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
+      metadata.putAll(nativeExoHelper.getMetadataToInstall());
+    }
+
+    if (resourcesExoInfo.isPresent()) {
+      ResourcesExoHelper resourcesExoHelper =
+          new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
+      wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
+      metadata.putAll(resourcesExoHelper.getMetadataToInstall());
+    }
+
+    deleteUnwantedFiles(presentFiles, wantedPaths.build());
+    installMetadata(metadata.build());
+  }
+
+  private void installMissingExopackageFiles(ImmutableSortedSet<Path> presentFiles)
+      throws Exception {
+    if (dexExoInfo.isPresent()) {
+      DexExoHelper dexExoHelper =
+          new DexExoHelper(pathResolver, projectFilesystem, dexExoInfo.get());
+      installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
+    }
+
+    if (nativeExoInfo.isPresent()) {
+      NativeExoHelper nativeExoHelper =
+          new NativeExoHelper(device, pathResolver, projectFilesystem, nativeExoInfo.get());
+      installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
+    }
+
+    if (resourcesExoInfo.isPresent()) {
+      ResourcesExoHelper resourcesExoHelper =
+          new ResourcesExoHelper(pathResolver, projectFilesystem, resourcesExoInfo.get());
+      installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
+    }
   }
 
   private boolean exopackageEnabled() {
