@@ -47,33 +47,42 @@ class AndroidBinaryInstallGraphEnhancer {
     this.androidInstallConfig = androidInstallConfig;
   }
 
-  private BuildRule createExoInstaller(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
-      AndroidBinary binary,
-      AndroidInstallConfig androidInstallConfig) {
-    BuildRule installer;
+  public void enhance(BuildRuleResolver resolver) {
     if (androidInstallConfig.getConcurrentInstallEnabled(
         Optional.ofNullable(resolver.getEventBus()))) {
-      installer =
-          new ExoInstaller(buildTarget, filesystem, new SourcePathRuleFinder(resolver), binary);
+      if (exopackageEnabled()) {
+        enhanceForConcurrentExopackageInstall(resolver);
+      } else {
+        enhanceForConcurrentInstall(resolver);
+      }
     } else {
-      installer =
-          new NoopBuildRule(buildTarget, filesystem) {
-            @Override
-            public SortedSet<BuildRule> getBuildDeps() {
-              return ImmutableSortedSet.of();
-            }
-          };
+      enhanceForLegacyInstall(resolver);
     }
-    resolver.addToIndex(installer);
-    return installer;
   }
 
-  public void enhance(BuildRuleResolver resolver) {
+  private boolean exopackageEnabled() {
+    return androidBinary.getApkInfo().getExopackageInfo().isPresent();
+  }
+
+  private void enhanceForConcurrentExopackageInstall(BuildRuleResolver resolver) {
     resolver.addToIndex(
-        createExoInstaller(
-            buildTarget, projectFilesystem, resolver, androidBinary, androidInstallConfig));
+        new ExoInstaller(
+            buildTarget, projectFilesystem, new SourcePathRuleFinder(resolver), androidBinary));
+  }
+
+  private void enhanceForConcurrentInstall(BuildRuleResolver resolver) {
+    resolver.addToIndex(
+        new ExoInstaller(
+            buildTarget, projectFilesystem, new SourcePathRuleFinder(resolver), androidBinary));
+  }
+
+  private void enhanceForLegacyInstall(BuildRuleResolver resolver) {
+    resolver.addToIndex(
+        new NoopBuildRule(buildTarget, projectFilesystem) {
+          @Override
+          public SortedSet<BuildRule> getBuildDeps() {
+            return ImmutableSortedSet.of();
+          }
+        });
   }
 }
