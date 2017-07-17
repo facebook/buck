@@ -33,7 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,6 +44,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -198,9 +198,11 @@ public class MiniAapt implements Step {
   public void resourceUnion() throws IOException {
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
-          FluentIterable.from(filesystem.readLines(depRTxt))
+          filesystem
+              .readLines(depRTxt)
+              .stream()
               .filter(input -> !Strings.isNullOrEmpty(input))
-              .toList();
+              .collect(Collectors.toList());
       for (String line : lines) {
         Optional<RDotTxtEntry> entry = RDotTxtEntry.parse(line);
         Preconditions.checkState(entry.isPresent());
@@ -543,9 +545,11 @@ public class MiniAapt implements Step {
     definitionsBuilder.addAll(resourceCollector.getResources());
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
-          FluentIterable.from(filesystem.readLines(depRTxt))
+          filesystem
+              .readLines(depRTxt)
+              .stream()
               .filter(input -> !Strings.isNullOrEmpty(input))
-              .toList();
+              .collect(Collectors.toList());
       for (String line : lines) {
         Optional<RDotTxtEntry> entry = RDotTxtEntry.parse(line);
         Preconditions.checkState(entry.isPresent());

@@ -41,11 +41,11 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -252,11 +252,11 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         assetsSrcs,
         manifestFile,
         () ->
-            FluentIterable.from(buildRuleParams.getBuildDeps())
+            RichStream.from(buildRuleParams.getBuildDeps())
                 .filter(HasAndroidResourceDeps.class)
                 .filter(input -> input.getRes() != null)
-                .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
-                .toSortedSet(Ordering.natural()),
+                .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
+                .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion,
         isGrayscaleImageProcessingEnabled);
