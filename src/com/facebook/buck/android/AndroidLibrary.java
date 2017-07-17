@@ -96,7 +96,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
-      JavacOptions javacOptions,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests) {
@@ -106,7 +105,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         params,
         resolver,
         jarBuildStepsFactory,
-        javacOptions.getGeneratedSourceFolderName(),
         proguardConfig,
         fullJarDeclaredDeps,
         fullJarExportedDeps,
@@ -217,7 +215,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             fullJarExportedDeps,
             fullJarProvidedDeps,
             getAbiJar(),
-            Preconditions.checkNotNull(javacOptions),
             mavenCoords,
             androidManifest,
             tests);

@@ -110,7 +110,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
-  private final Optional<Path> generatedSourceFolder;
 
   public static DefaultJavaLibraryBuilder builder(
       TargetGraph targetGraph,
@@ -141,7 +140,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildRuleParams params,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
-      Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
@@ -194,7 +192,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
-    this.generatedSourceFolder = generatedSourceFolder;
   }
 
   public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -282,7 +279,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return generatedSourceFolder;
+    return JavaLibraryRules.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
   }
 
   @Override

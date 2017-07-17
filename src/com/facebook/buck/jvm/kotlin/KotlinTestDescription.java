@@ -116,8 +116,7 @@ public class KotlinTestDescription
                 kotlinBuckConfig,
                 javaBuckConfig)
             .setArgs(args)
-            .setJavacOptions(javacOptions)
-            .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName());
+            .setJavacOptions(javacOptions);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();

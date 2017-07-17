@@ -168,13 +168,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     // Add annotation processors.
     AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
     if (!annotationProcessingParams.isEmpty()) {
-      // Specify where to generate sources so IntelliJ can pick them up.
-      Path generateTo = annotationProcessingParams.getGeneratedSourceFolderName();
-      if (generateTo != null) {
-        //noinspection ConstantConditions
-        optionsConsumer.addOptionValue("s", filesystem.resolve(generateTo).toString());
-      }
-
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
           annotationProcessingParams.getAnnotationProcessors(filesystem, pathResolver);
 
@@ -245,9 +238,5 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     JavacOptions.Builder builder = JavacOptions.builder();
 
     return builder.from(options);
-  }
-
-  public final Optional<Path> getGeneratedSourceFolderName() {
-    return Optional.ofNullable(getAnnotationProcessingParams().getGeneratedSourceFolderName());
   }
 }

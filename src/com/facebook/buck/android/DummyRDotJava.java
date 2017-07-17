@@ -251,6 +251,8 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem(),
         /* declared classpath */ ImmutableSortedSet.of(),
         rDotJavaClassesFolder,
+        Optional.of(
+            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
         Optional.empty(),
         pathToSrcsList,
         NoOpClassUsageFileWriter.instance(),

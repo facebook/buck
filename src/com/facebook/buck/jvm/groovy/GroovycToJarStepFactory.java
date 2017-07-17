@@ -57,6 +57,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ClassUsageFileWriter usedClassesFileWriter,

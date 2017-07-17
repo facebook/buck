@@ -134,6 +134,8 @@ public class JavaLibraryRules {
                   context.getBuildCellRootPath(), filesystem, scratchDir)));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
+      Optional<Path> generatedCodeDirectory = getAnnotationPath(filesystem, target);
+
       ImmutableSortedSet<Path> javaSrcs =
           srcs.stream()
               .map(context.getSourcePathResolver()::getRelativePath)
@@ -148,6 +150,7 @@ public class JavaLibraryRules {
           filesystem,
           compileTimeClasspathPaths,
           outputDirectory,
+          generatedCodeDirectory,
           workingDirectory,
           pathToSrcsList,
           postprocessClassesCommands,
@@ -178,6 +181,10 @@ public class JavaLibraryRules {
       }
       buildableContext.recordArtifact(output);
     }
+  }
+
+  public static Optional<Path> getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return Optional.of(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
   }
 
   static void addAccumulateClassNamesStep(

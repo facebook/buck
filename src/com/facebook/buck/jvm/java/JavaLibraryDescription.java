@@ -177,7 +177,6 @@ public class JavaLibraryDescription
                 javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)
-            .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
             .setTrackClassUsage(javacOptions.trackClassUsage());
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {

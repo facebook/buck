@@ -90,6 +90,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> classpathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ClassUsageFileWriter usedClassesFileWriter,

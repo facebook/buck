@@ -67,6 +67,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ClassUsageFileWriter usedClassesFileWriter,
@@ -75,15 +76,18 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
 
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
-    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
+    boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
+    if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
-      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
+      addAnnotationGenFolderStep(
+          generatedCodeDirectory, filesystem, steps, buildableContext, context);
     }
 
     steps.add(
         new JavacStep(
             outputDirectory,
             usedClassesFileWriter,
+            generatingCode ? generatedCodeDirectory : Optional.empty(),
             workingDirectory,
             sourceFilePaths,
             pathToSrcsList,
@@ -149,6 +153,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
@@ -182,12 +187,14 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     if (isSpoolingToJarEnabled) {
       final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
       // Javac requires that the root directory for generated sources already exists.
-      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext, context);
+      addAnnotationGenFolderStep(
+          generatedCodeDirectory, filesystem, steps, buildableContext, context);
 
       steps.add(
           new JavacStep(
               outputDirectory,
               usedClassesFileWriter,
+              generatedCodeDirectory,
               workingDirectory,
               sourceFilePaths,
               pathToSrcsList,
@@ -212,6 +219,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           filesystem,
           declaredClasspathEntries,
           outputDirectory,
+          generatedCodeDirectory,
           workingDirectory,
           pathToSrcsList,
           postprocessClassesCommands,
@@ -227,12 +235,11 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   private static void addAnnotationGenFolderStep(
-      JavacOptions buildTimeOptions,
+      Optional<Path> annotationGenFolder,
       ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    Optional<Path> annotationGenFolder = buildTimeOptions.getGeneratedSourceFolderName();
     if (annotationGenFolder.isPresent()) {
       steps.addAll(
           MakeCleanDirectoryStep.of(

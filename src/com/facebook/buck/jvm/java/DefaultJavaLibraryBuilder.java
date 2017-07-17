@@ -57,7 +57,6 @@ public class DefaultJavaLibraryBuilder {
   protected final SourcePathRuleFinder ruleFinder;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
-  protected Optional<Path> generatedSourceFolder = Optional.empty();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
   protected ImmutableSortedSet<BuildRule> fullJarExportedDeps = ImmutableSortedSet.of();
@@ -157,11 +156,6 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setGeneratedSourceFolder(Optional<Path> generatedSourceFolder) {
-    this.generatedSourceFolder = generatedSourceFolder;
-    return this;
-  }
-
   public DefaultJavaLibraryBuilder setProguardConfig(Optional<SourcePath> proguardConfig) {
     this.proguardConfig = proguardConfig;
     return this;
@@ -256,7 +250,6 @@ public class DefaultJavaLibraryBuilder {
           getFinalParams(),
           sourcePathResolver,
           getJarBuildStepsFactory(),
-          generatedSourceFolder,
           proguardConfig,
           getFinalFullJarDeclaredDeps(),
           fullJarExportedDeps,

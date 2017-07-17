@@ -74,6 +74,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ClassUsageFileWriter usedClassesFileWriter,
@@ -122,6 +123,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
                   .addAll(declaredClasspathEntries)
                   .build(),
               outputDirectory,
+              generatedCodeDirectory,
               workingDirectory,
               pathToSrcsList,
               usedClassesFileWriter,

@@ -206,7 +206,6 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getBuildTarget(), unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
-        /* javacOptions */ javacOptions,
         new JavacToJarStepFactory(
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,

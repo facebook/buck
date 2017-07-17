@@ -144,6 +144,7 @@ public class DummyRDotJavaTest {
                         rDotJavaBinFolder,
                         NoOpClassUsageFileWriter.instance(),
                         Optional.empty(),
+                        Optional.empty(),
                         javaSourceFiles,
                         BuildTargets.getGenPath(
                             filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),

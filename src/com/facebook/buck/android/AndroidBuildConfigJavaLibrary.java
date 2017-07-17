@@ -75,7 +75,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 androidBuildConfig.getSourcePathToOutput()),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY),
-        javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.empty(),
         /* declaredDeps */ params.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.of(),

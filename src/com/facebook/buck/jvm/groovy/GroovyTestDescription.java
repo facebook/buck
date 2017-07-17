@@ -107,8 +107,7 @@ public class GroovyTestDescription
                 cellRoots,
                 javacOptions,
                 groovyBuckConfig)
-            .setArgs(args)
-            .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
+            .setArgs(args);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
