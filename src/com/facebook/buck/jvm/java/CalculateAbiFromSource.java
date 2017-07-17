@@ -35,12 +35,10 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
@@ -60,7 +58,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
   private final ZipArchiveDependencySupplier abiClasspath;
 
   private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
-  @AddToRuleKey private final ImmutableSet<Pattern> classesToRemoveFromJar;
+  @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
   private final Path outputJar;
   private final JarContentsSupplier outputJarContents;
@@ -77,7 +75,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
       JavacToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
-      ImmutableSet<Pattern> classesToRemoveFromJar) {
+      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     super(buildTarget, projectFilesystem, params);
 
     this.ruleFinder = ruleFinder;

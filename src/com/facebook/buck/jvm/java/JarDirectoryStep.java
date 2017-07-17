@@ -22,12 +22,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.zip.JarBuilder;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** Creates a JAR file from a collection of directories/ZIP/JAR files. */
@@ -54,7 +52,7 @@ public class JarDirectoryStep implements Step {
   private final boolean hashEntries;
 
   /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
-  private final ImmutableSet<Pattern> blacklist;
+  private final RemoveClassesPatternsMatcher blacklist;
 
   public JarDirectoryStep(
       ProjectFilesystem filesystem,
@@ -69,7 +67,7 @@ public class JarDirectoryStep implements Step {
         mainClass,
         manifestFile,
         true,
-        ImmutableSet.of());
+        RemoveClassesPatternsMatcher.EMPTY);
   }
 
   public JarDirectoryStep(
@@ -79,7 +77,7 @@ public class JarDirectoryStep implements Step {
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,
-      ImmutableSet<Pattern> blacklist) {
+      RemoveClassesPatternsMatcher blacklist) {
     this(
         filesystem,
         pathToOutputFile,
@@ -113,7 +111,7 @@ public class JarDirectoryStep implements Step {
       @Nullable Path manifestFile,
       boolean mergeManifests,
       boolean hashEntries,
-      ImmutableSet<Pattern> blacklist) {
+      RemoveClassesPatternsMatcher blacklist) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
     this.entriesToJar = entriesToJar;
@@ -161,7 +159,7 @@ public class JarDirectoryStep implements Step {
             .setManifestFile(manifestFile != null ? filesystem.resolve(manifestFile) : null)
             .setShouldMergeManifests(mergeManifests)
             .setShouldHashEntries(hashEntries)
-            .setEntryPatternBlacklist(blacklist)
+            .setRemoveEntryPredicate(blacklist::shouldRemoveClass)
             .createJarFile(filesystem.resolve(pathToOutputFile)));
   }
 }

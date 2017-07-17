@@ -20,6 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -43,7 +44,6 @@ import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -161,7 +161,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .setMainClass(Optional.<String>empty().orElse(null))
                   .setManifestFile(Optional.<Path>empty().orElse(null))
                   .setShouldMergeManifests(true)
-                  .setEntryPatternBlacklist(ImmutableSet.of())
+                  .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass)
                   .createJarFile(filesystem.resolve(uberClassesJar));
             }
             return StepExecutionResult.SUCCESS;
