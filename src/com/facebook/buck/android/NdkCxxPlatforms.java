@@ -168,8 +168,13 @@ public class NdkCxxPlatforms {
   }
 
   public static String getDefaultClangVersionForNdk(Optional<String> ndkVersion) {
-    if (ndkVersion.isPresent() && getNdkMajorVersion(ndkVersion.get()) < 11) {
-      return "3.5";
+    if (ndkVersion.isPresent()) {
+      int ndkMajorVersion = getNdkMajorVersion(ndkVersion.get());
+      if (ndkMajorVersion < 11) {
+        return "3.5";
+      } else if (ndkMajorVersion >= 15) {
+        return "5.0";
+      }
     }
     return "3.8";
   }
